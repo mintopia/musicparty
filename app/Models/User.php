@@ -148,23 +148,23 @@ class User extends Authenticatable
             return $this->api;
         }
 
-        $session = new Session(
+        $this->session = new Session(
             config('services.spotify.client_id'),
             config('services.spotify.client_secret'),
         );
 
         if ($this->spotify_token_expires_at < $cutoff) {
             Log::debug("[User:{$this->id}] Refreshing expiring access token");
-            $session->refreshAccessToken($this->spotify_refresh_token);
-            $this->spotify_access_token = $session->getAccessToken();
-            $this->spotify_token_expires_at = new Carbon($session->getTokenExpiration());
+            $this->session->refreshAccessToken($this->spotify_refresh_token);
+            $this->spotify_access_token = $this->session->getAccessToken();
+            $this->spotify_token_expires_at = new Carbon($this->session->getTokenExpiration());
             $this->save();
         } else {
-            $session->setAccessToken($this->spotify_access_token);
+            $this->session->setAccessToken($this->spotify_access_token);
         }
 
         Log::debug("[User:{$this->id}] Creating new API connection");
-        $this->api = new SpotifyWebAPI([], $session);
+        $this->api = new SpotifyWebAPI([], $this->session);
         return $this->api;
     }
 
