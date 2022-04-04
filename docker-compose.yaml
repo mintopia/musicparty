@@ -1,0 +1,103 @@
+version: "3"
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    restart: unless-stopped
+    ports:
+      - 8000:8000
+    environment:
+      - XDEBUG_CONFIG=client_host=host.docker.internal
+      - PHP_IDE_CONFIG=serverName=musicparty
+      - XDEBUG_MODE=debug
+    volumes:
+      - ./:/var/www
+    depends_on:
+      - db
+      - redis
+
+  scheduler:
+    image: 1and1internet/php-build-environment:8.1
+    entrypoint: [ "php" ]
+    command: "artisan schedule:work"
+    user: "1000"
+    volumes:
+      - ./:/app/
+    depends_on:
+      - db
+      - redis
+
+  redis:
+    image: redis:6.0
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.5-focal
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  composer:
+    profiles: [ "composer" ]
+    image: 1and1internet/php-build-environment:8.1
+    entrypoint: [ "composer" ]
+    command: [ "--version" ]
+    user: "1000"
+    volumes:
+      - ./:/app
+
+  test:
+    profiles: [ "test" ]
+    image: 1and1internet/php-build-environment:8.1-xdebug
+    entrypoint: [ "vendor/bin/phpunit" ]
+    command: [ "" ]
+    user: "1000"
+    volumes:
+      - ./:/app
+
+  lint:
+    profiles: [ "lint" ]
+    image: 1and1internet/php-build-environment:8.1
+    entrypoint: [ "vendor/bin/parallel-lint", "--exclude", "vendor", "." ]
+    user: "1000"
+    volumes:
+      - ./:/app
+
+  phpcs:
+    profiles: [ "phpcs" ]
+    image: 1and1internet/php-build-environment:8.1
+    entrypoint: [ "vendor/bin/phpcs", "-pn", "--standard=PSR12", "app/", "tests/" ]
+    command: [ "" ]
+    user: "1000"
+    volumes:
+      - ./:/app
+
+  phpcs-fixer:
+    profiles: [ "phpcs-fixer" ]
+    image: 1and1internet/php-build-environment:8.1
+    entrypoint: [ "vendor/bin/phpcbf", "-pn", "--standard=PSR12", "app/", "tests/" ]
+    command: [ "" ]
+    user: "1000"
+    volumes:
+      - ./:/app
+
+  artisan:
+    profiles: [ "artisan" ]
+    image: 1and1internet/php-build-environment:8.1-xdebug
+    entrypoint: [ "/app/artisan" ]
+    user: "1000"
+    volumes:
+      - ./:/app/
+    depends_on:
+      - db
+      - redis
+
+volumes:
+  dbdata:
+    driver: local
