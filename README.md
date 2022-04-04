@@ -90,6 +90,7 @@ services:
         user: "1000"
         env_file: .env
         restart: unless-stopped
+        scale: 2
         depends_on:
             - db
             - redis

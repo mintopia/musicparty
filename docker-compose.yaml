@@ -45,6 +45,7 @@ services:
     command: "artisan queue:work"
     user: "1000"
     env_file: .env
+    scale: 2
     volumes:
       - ./:/app
     depends_on:
