@@ -76,7 +76,9 @@
                             @endauth
                             @guest
                                 <div class="nav-item d-none d-md-flex">
-                                    <a href="{{ route('login') }}"><img src="/assets/images/discord_login.png" alt="Login with Discord" /></a>
+                                    <a href="{{ route('login') }}">
+                                        Login with Discord
+                                    </a>
                                 </div>
                             @endguest
                         </div>

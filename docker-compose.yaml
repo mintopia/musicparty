@@ -1,12 +1,24 @@
 version: "3"
 services:
-  app:
+  nginx:
     build:
       context: .
-      dockerfile: Dockerfile.dev
+      dockerfile: docker/develop/Dockerfile.nginx
     restart: unless-stopped
     ports:
       - 8000:8000
+    volumes:
+      - ./:/var/www
+    links:
+      - php-fpm
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile.php-fpm
+    restart: unless-stopped
     environment:
       - XDEBUG_CONFIG=client_host=host.docker.internal
       - PHP_IDE_CONFIG=serverName=musicparty
@@ -17,13 +29,12 @@ services:
       - db
       - redis
 
-  scheduler:
-    image: 1and1internet/php-build-environment:8.1
+  daemon:
+    image: musicparty-php-fpm:latest
     entrypoint: [ "php" ]
-    command: "artisan schedule:work"
+    command: "artisan party:daemon"
     user: "1000"
-    volumes:
-      - ./:/app/
+    env_file: .env
     depends_on:
       - db
       - redis

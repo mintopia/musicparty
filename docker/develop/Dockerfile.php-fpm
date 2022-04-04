@@ -1,0 +1,29 @@
+FROM php:8.1-fpm-alpine
+LABEL maintainer="jess@mintopia.net"
+
+RUN apk update \
+    && apk --no-cache add \
+        ${PHPIZE_DEPS} \
+        freetype-dev\
+        libpng-dev \
+        libjpeg-turbo-dev \
+    && pecl install -o -f redis \
+    && pecl install -f xdebug \
+    && docker-php-ext-enable xdebug \
+    && rm -rf /tmp/pear \
+    && docker-php-ext-install \
+        bcmath \
+        pdo_mysql \
+    && docker-php-ext-configure gd \
+        --with-freetype \
+        --with-jpeg \
+    && docker-php-ext-install gd \
+    && docker-php-ext-enable redis \
+    && apk del --no-cache ${PHPIZE_DEPS} \
+    && rm -vrf /tmp/pear /var/cache/apk/* \
+    && mkdir -p /tmp \
+    && chown -R 1000:1000 /tmp
+
+WORKDIR /var/www/
+USER 1000
+ENV HOME /tmp

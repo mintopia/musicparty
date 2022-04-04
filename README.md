@@ -28,17 +28,95 @@ The following features are planned:
 
 ## Installation
 
-No docker-compose and docker images yet. Instead it's a manual installation.
+No CI/CD yet for building images, but an example deployment in production would be a .env file looking like this:
 
-1. Create a MariaDB/MySQL DB
-2. Create Spotify and Discord applications for auth. Make a note of client IDs and Secrets and configure redirect URIs.
-3. Copy the `example.env` to `.env`
-4. Set the DB credentials, Spotify and Discord IDs and make sure app URL is correct for Spotify and Discord.
-5. Run `php artisan key:generate` and `php artisan migrate`. This adds an application key for encrypting client tokens and sets up the database schema.
-6. Run the site using whatever PHP way you want or use `php artisan serve` to run a local site
-7. Go to the site and login. The first user is made admin and will have permission to create a party.
-8. Create a party
-9. Run the daemon to update party status every 15 seconds using `php artisan party:daemon`.
+```
+APP_KEY=
+APP_URL=https://musicparty.example.com
+
+DB_DATABASE=musicparty
+DB_USERNAME=musicparty
+DB_PASSWORD=
+
+PUSHER_APP_KEY=
+PUSHER_APP_SECRET=
+
+SPOTIFY_CLIENT_ID=
+SPOTIFY_CLIENT_SECRET=
+
+DISCORD_CLIENT_ID=
+DISCORD_CLIENT_SECRET=
+
+```
+
+The defaults for other env settings are based on a docker setup similar to the one below and for running in production.
+
+You would then a docker-compose something like this:
+
+```yaml
+version: '3'
+services:
+  nginx:
+    image: musicparty-nginx:latest
+    ports:
+      - 8000:8000
+    links:
+      - php-fpm
+    restart: unless-stopped
+    depends_on:
+      - php-fpm
+
+  php-fpm:
+    image: musicparty-php-fpm:latest
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+
+  daemon:
+    image: musicparty-php-fpm:latest
+    entrypoint: [ "php" ]
+    command: "artisan party:daemon"
+    user: "1000"
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - db
+      - redis
+
+  artisan:
+      image: musicparty-php-fpm:latest
+      entrypoint: [ "php", "artisan" ]
+      user: "1000"
+      env_file: .env
+      depends_on:
+          - db
+          - redis
+      profiles:
+          - artisan
+
+  redis:
+    image: redis:6.0
+    restart: unless-stopped
+
+  db:
+    image: mariadb:10.5-focal
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD}"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+volumes:
+  dbdata:
+    driver: local
+```
+
+Run the stack with `docker-compose up -d` and the DB migrations using `docker-compose run --rm artisan migrate`.
 
 ## Usage
 
@@ -46,11 +124,22 @@ When it's running, it will create a managed Spotify playlist called something li
 
 ## Known Issues
 
-After a while, Spotify stops updating the Playlist on clients - the playlist is updated, but the clients don't get told the changes. When this happens, the only way to resolve it is to create a new playlist. You can do this using `php artisan party:fixplaylist <code>`.
+After a while, Spotify stops updating the Playlist on clients - the playlist is updated, but the clients don't get told the changes. When this happens, the only way to resolve it is to create a new playlist. You can do this using `docker-compose run --rm artisan party:fixplaylist <code>`.
 
 ## Development
 
 I'm terrible at UI/UX, if anyone would like to contribute to make this look good and knows Vue/Blade/Laravel, please dive in and help. Collaboration is on the UK LAN Techs discord.
+
+There is a docker-compose and compose files for running a dev environment with the source code bind mounted. You can bring up the stack by doing the following:
+
+1. Copy `.env.example` to `.env`
+2. Edit `.env` as appropriate
+3. Run `docker-compose up -d`
+4. Run `docker-compose run --rm artisan migrate` to run DB migrations
+
+By default the stack will now be running on `http://localhost:8000`.
+
+A full set of typical PHP development tools are defined in docker-compose and can be run using the `docker-compose run --rm <tool>` syntax, eg. `artisan`, `composer`, `phpunit`.
 
 ## Thanks
 
@@ -58,6 +147,8 @@ This would not exist without the support of the following:
 
 - UK LAN Techs
 - Jason 'Mohero' Rivers
+- Chris 'Cheez' Stretton
+- Development Team Serenity at Fasthosts for the PHP build environment images
 
 ## License
 
