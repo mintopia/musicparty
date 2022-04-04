@@ -9,8 +9,6 @@ services:
       - 8000:8000
     volumes:
       - ./:/var/www
-    links:
-      - php-fpm
     depends_on:
       - php-fpm
 

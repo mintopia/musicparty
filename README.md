@@ -60,8 +60,6 @@ services:
         image: ghcr.io/mintopia/musicparty-nginx:develop
         ports:
             - 8000:8000
-        links:
-            - php-fpm
         restart: unless-stopped
         depends_on:
             - php-fpm
