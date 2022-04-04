@@ -59,7 +59,7 @@ services:
     nginx:
         image: ghcr.io/mintopia/musicparty-nginx:develop
         ports:
-            - 8000:8000
+            - 8000:80
         restart: unless-stopped
         depends_on:
             - php-fpm
@@ -72,10 +72,34 @@ services:
             - db
             - redis
 
-    daemon:
+    short-scheduler:
         image: ghcr.io/mintopia/musicparty-php-fpm:develop
         entrypoint: [ "php" ]
-        command: "artisan party:daemon"
+        command: "artisan short-schedule:run"
+        user: "1000"
+        env_file: .env
+        restart: unless-stopped
+        depends_on:
+            - db
+            - redis
+
+    worker:
+        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        entrypoint: [ "php" ]
+        command: "artisan queue:work"
+        user: "1000"
+        env_file: .env
+        restart: unless-stopped
+        depends_on:
+            - db
+            - redis
+
+    websockets:
+        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        ports:
+            - 6001:6001
+        entrypoint: [ "php" ]
+        command: "artisan websockets:serve"
         user: "1000"
         env_file: .env
         restart: unless-stopped

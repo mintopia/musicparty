@@ -6,7 +6,7 @@ services:
       dockerfile: docker/develop/Dockerfile.nginx
     restart: unless-stopped
     ports:
-      - 8000:8000
+      - 8000:80
     volumes:
       - ./:/var/www
     depends_on:
@@ -27,12 +27,40 @@ services:
       - db
       - redis
 
-  daemon:
-    image: musicparty-php-fpm:latest
+  short-schedule:
+    image: 1and1internet/php-build-environment:8.1-xdebug
     entrypoint: [ "php" ]
-    command: "artisan party:daemon"
+    command: "artisan short-schedule:run"
     user: "1000"
     env_file: .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+
+  worker:
+    image: 1and1internet/php-build-environment:8.1-xdebug
+    entrypoint: [ "php" ]
+    command: "artisan queue:work"
+    user: "1000"
+    env_file: .env
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+
+  websockets:
+    image: 1and1internet/php-build-environment:8.1-xdebug
+    entrypoint: [ "php" ]
+    command: "artisan websockets:serve"
+    user: "1000"
+    ports:
+      - 6001:6001
+    env_file: .env
+    volumes:
+      - ./:/app
     depends_on:
       - db
       - redis

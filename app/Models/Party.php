@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\SpotifyStatusUpdatedEvent;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -216,7 +217,6 @@ class Party extends Model
             $this->song_id = null;
             $this->song_started_at = null;
             $this->save();
-            return $this;
         } elseif ($current) {
             $song = Song::fromSpotify($current->item);
             if ($song->id != $this->song_id) {
@@ -226,6 +226,7 @@ class Party extends Model
                 $this->save();
             }
         }
+        SpotifyStatusUpdatedEvent::dispatch($this);
         return $this;
     }
 

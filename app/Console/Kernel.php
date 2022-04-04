@@ -18,6 +18,11 @@ class Kernel extends ConsoleKernel
         // $schedule->command('inspire')->hourly();
     }
 
+    protected function shortSchedule(\Spatie\ShortSchedule\ShortSchedule $shortSchedule)
+    {
+        $shortSchedule->command('party:update')->everySeconds(15)->withoutOverlapping();
+    }
+
     /**
      * Register the commands for the application.
      *
