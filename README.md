@@ -28,7 +28,7 @@ The following features are planned:
 
 ## Installation
 
-No CI/CD yet for building images, but an example deployment in production would be a .env file looking like this:
+An example deployment in production would be something like this for a `.env` file.
 
 ```
 APP_KEY=
@@ -56,64 +56,64 @@ You would then a docker-compose something like this:
 ```yaml
 version: '3'
 services:
-  nginx:
-    image: musicparty-nginx:latest
-    ports:
-      - 8000:8000
-    links:
-      - php-fpm
-    restart: unless-stopped
-    depends_on:
-      - php-fpm
+    nginx:
+        image: ghcr.io/mintopia/musicparty-nginx:develop
+        ports:
+            - 8000:8000
+        links:
+            - php-fpm
+        restart: unless-stopped
+        depends_on:
+            - php-fpm
 
-  php-fpm:
-    image: musicparty-php-fpm:latest
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - db
-      - redis
+    php-fpm:
+        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        env_file: .env
+        restart: unless-stopped
+        depends_on:
+            - db
+            - redis
 
-  daemon:
-    image: musicparty-php-fpm:latest
-    entrypoint: [ "php" ]
-    command: "artisan party:daemon"
-    user: "1000"
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - db
-      - redis
+    daemon:
+        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        entrypoint: [ "php" ]
+        command: "artisan party:daemon"
+        user: "1000"
+        env_file: .env
+        restart: unless-stopped
+        depends_on:
+            - db
+            - redis
 
-  artisan:
-      image: musicparty-php-fpm:latest
-      entrypoint: [ "php", "artisan" ]
-      user: "1000"
-      env_file: .env
-      depends_on:
-          - db
-          - redis
-      profiles:
-          - artisan
+    artisan:
+        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        entrypoint: [ "php", "artisan" ]
+        user: "1000"
+        env_file: .env
+        depends_on:
+            - db
+            - redis
+        profiles:
+            - artisan
 
-  redis:
-    image: redis:6.0
-    restart: unless-stopped
+    redis:
+        image: redis:6.0
+        restart: unless-stopped
 
-  db:
-    image: mariadb:10.5-focal
-    restart: unless-stopped
-    environment:
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE: "${DB_DATABASE}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
-    volumes:
-      - dbdata:/var/lib/mysql
+    db:
+        image: mariadb:10.5-focal
+        restart: unless-stopped
+        environment:
+            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
+            MYSQL_DATABASE: "${DB_DATABASE}"
+            MYSQL_USER: "${DB_USERNAME}"
+            MYSQL_PASSWORD: "${DB_PASSWORD}"
+        volumes:
+            - dbdata:/var/lib/mysql
 
 volumes:
-  dbdata:
-    driver: local
+    dbdata:
+        driver: local
 ```
 
 Run the stack with `docker-compose up -d` and the DB migrations using `docker-compose run --rm artisan migrate`.
