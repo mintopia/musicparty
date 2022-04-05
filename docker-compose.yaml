@@ -128,6 +128,16 @@ services:
     volumes:
       - ./:/app
 
+  npm:
+    profiles: [ "npm" ]
+    image: node:16
+    entrypoint: [ "npm" ]
+    command: [ "" ]
+    user: "1000"
+    working_dir: /app
+    volumes:
+      - ./:/app
+
   artisan:
     profiles: [ "artisan" ]
     image: 1and1internet/php-build-environment:8.1-xdebug
