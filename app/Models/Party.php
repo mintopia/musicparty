@@ -6,6 +6,7 @@ use App\Events\SpotifyStatusUpdatedEvent;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -131,81 +132,11 @@ class Party extends Model
     {
         Log::info("[Party:{$this->id}] Updating state");
         $this->updateCurrentSong();
-        $this->updateHistory();
-        $this->updatePlaylist();
+        $playlist = $this->getPlaylist();
+        $this->updateHistory($playlist);
+        $this->updatePlaylist($playlist);
         $this->backfillUpcomingSongs();
         return $this;
-    }
-
-    protected function updatePlaylist()
-    {
-        Log::debug("[Party:{$this->id}] Updating playlist");
-        $playlist = $this->getPlaylist();
-        $toAdd = self::PLAYLIST_LENGTH - $playlist->tracks->total;
-        if ($toAdd < 1) {
-            Log::debug("[Party:{$this->id}] No tracks to add");
-            return;
-        }
-
-        $songsToAdd = $this->upcoming()
-            ->whereNull('queued_at')
-            ->orderBy('votes', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->limit($toAdd)
-            ->get();
-
-        if ($songsToAdd->isEmpty()) {
-            Log::debug("[Party:{$this->id}] Found no songs in the upcoming songs list to backfill");
-            return;
-        }
-
-        $trackIds = [];
-        foreach ($songsToAdd as $song) {
-            $trackIds[] = $song->song->spotify_id;
-        }
-        $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds);
-        foreach ($songsToAdd as $song) {
-            Log::debug("[Party:{$this->id}] Added [{$song->song->spotify_id}] {$song->song->name} from party playlist");
-            $song->queued_at = Carbon::now();
-            $song->save();
-        }
-    }
-
-    protected function backfillUpcomingSongs()
-    {
-        Log::debug("[Party:{$this->id}] Backfilling upcoming songs");
-        $toAdd = self::MINIMUM_UPCOMING - $this->upcoming()->whereNull('queued_at')->count();
-        if ($toAdd <= 0) {
-            return;
-        }
-
-        $tracks = [];
-        $offset = 0;
-        do {
-            $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
-                'limit' => 50,
-                'offset' => $offset,
-                'market' => $this->user->market,
-           ]);
-            $tracks = array_merge($tracks, $response->items);
-            $offset += 50;
-        } while ($response->next !== null);
-
-        for ($i = 0; $i < $toAdd; $i++) {
-            $index = mt_rand(0, count($tracks) - 1);
-            $track = $tracks[$index];
-            $song = Song::fromSpotify($track->track);
-            Log::debug("[Party:{$this->id}] Adding [{$song->spotify_id}] {$song->name} from backup playlist");
-            $upcoming = new UpcomingSong;
-            $upcoming->party()->associate($this);
-            $upcoming->song()->associate($song);
-            $upcoming->save();
-        }
-    }
-
-    protected function getPlaylist(): object
-    {
-        return $this->user->getSpotifyApi()->getPlaylist($this->playlist_id);
     }
 
     protected function updateCurrentSong(): Party
@@ -230,7 +161,7 @@ class Party extends Model
         return $this;
     }
 
-    protected function updateHistory(): Party
+    protected function updateHistory(object $playlist): Party
     {
         Log::debug("[Party:{$this->id}] Updating history");
 
@@ -244,12 +175,14 @@ class Party extends Model
         $this->save();
 
         // Playlist MAY be relinked to playable tracks
-        $playlist = $this->getPlaylist();
         $relinked = [];
         foreach ($playlist->tracks->items as $index => $plItem) {
-            $relinked[$plItem->track->id] = $this->user->getSpotifyApi()->getTrack($plItem->track->id, [
-                'market' => $this->user->market,
-            ]);
+            $key = "party.{$this->id}.relinked.{$plItem->track->id}";
+            $relinked[$plItem->track->id] = Cache::remember($key, 86400, function() use ($plItem) {
+                return $this->user->getSpotifyApi()->getTrack($plItem->track->id, [
+                    'market' => $this->user->market,
+                ]);
+            });
         }
 
         // If playlist entry is in history, remove it from playlist
@@ -289,7 +222,7 @@ class Party extends Model
             $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
 
             foreach ($toRemove as $track) {
-                Log::debug("[Party:{$this->id}] Removing [{$track->id}] {$track->name}");
+                Log::info("[Party:{$this->id}] Removing [{$track->id}] {$track->name}");
                 $song = Song::fromSpotify($track);
                 $playedSong = new PlayedSong;
                 $playedSong->party()->associate($this);
@@ -300,5 +233,83 @@ class Party extends Model
         }
 
         return $this;
+    }
+
+    protected function updatePlaylist(object $playlist)
+    {
+        Log::debug("[Party:{$this->id}] Updating playlist");
+        $toAdd = self::PLAYLIST_LENGTH - $playlist->tracks->total;
+        if ($toAdd < 1) {
+            Log::debug("[Party:{$this->id}] No tracks to add");
+            return;
+        }
+
+        $songsToAdd = $this->upcoming()
+            ->whereNull('queued_at')
+            ->orderBy('votes', 'DESC')
+            ->orderBy('created_at', 'ASC')
+            ->limit($toAdd)
+            ->get();
+
+        if ($songsToAdd->isEmpty()) {
+            Log::debug("[Party:{$this->id}] Found no songs in the upcoming songs list to backfill");
+            return;
+        }
+
+        $trackIds = [];
+        foreach ($songsToAdd as $song) {
+            $trackIds[] = $song->song->spotify_id;
+        }
+        $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds);
+        foreach ($songsToAdd as $song) {
+            Log::info("[Party:{$this->id}] Added [{$song->song->spotify_id}] {$song->song->name} to party playlist");
+            $song->queued_at = Carbon::now();
+            $song->save();
+        }
+    }
+
+    protected function backfillUpcomingSongs()
+    {
+        Log::debug("[Party:{$this->id}] Backfilling upcoming songs");
+        $toAdd = self::MINIMUM_UPCOMING - $this->upcoming()->whereNull('queued_at')->count();
+        if ($toAdd <= 0) {
+            return;
+        }
+
+        $tracks = Cache::remember("party.{$this->id}.backupplaylist", 300, function() {
+            return $this->getBackupPlaylistTracks();
+        });
+
+        for ($i = 0; $i < $toAdd; $i++) {
+            $index = mt_rand(0, count($tracks) - 1);
+            $track = $tracks[$index];
+            $song = Song::fromSpotify($track->track);
+            Log::info("[Party:{$this->id}] Adding [{$song->spotify_id}] {$song->name} from backup playlist");
+            $upcoming = new UpcomingSong;
+            $upcoming->party()->associate($this);
+            $upcoming->song()->associate($song);
+            $upcoming->save();
+        }
+    }
+
+    protected function getBackupPlaylistTracks(): array
+    {
+        $tracks = [];
+        $offset = 0;
+        do {
+            $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
+                'limit' => 50,
+                'offset' => $offset,
+                'market' => $this->user->market,
+            ]);
+            $tracks = array_merge($tracks, $response->items);
+            $offset += 50;
+        } while ($response->next !== null);
+        return $tracks;
+    }
+
+    protected function getPlaylist(): object
+    {
+        return $this->user->getSpotifyApi()->getPlaylist($this->playlist_id);
     }
 }
