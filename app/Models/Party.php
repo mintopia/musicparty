@@ -132,14 +132,14 @@ class Party extends Model
     {
         Log::info("[Party:{$this->id}] Updating state");
         $this->updateCurrentSong();
-        $this->updateHistory();
-        $this->updatePlaylist();
+        $playlist = $this->updateHistory();
+        $this->updatePlaylist($playlist);
         $this->backfillUpcomingSongs();
         Log::info("[Party:{$this->id}] Finished updating state");
         return $this;
     }
 
-    protected function updateCurrentSong(): Party
+    protected function updateCurrentSong()
     {
         Log::debug("[Party:{$this->id}] Updating current song");
         $current = $this->user->getSpotifyStatus();
@@ -158,10 +158,9 @@ class Party extends Model
             }
         }
         SpotifyStatusUpdatedEvent::dispatch($this);
-        return $this;
     }
 
-    protected function updateHistory(): Party
+    protected function updateHistory(): object
     {
         Log::debug("[Party:{$this->id}] Updating history");
         $playlist = $this->getPlaylist();
@@ -231,15 +230,16 @@ class Party extends Model
                 $playedSong->played_at = new Carbon($track->played_at);
                 $playedSong->save();
             }
+
+            $playlist = $this->getPlaylist();
         }
 
-        return $this;
+        return $playlist;
     }
 
-    protected function updatePlaylist()
+    protected function updatePlaylist(object $playlist)
     {
         Log::debug("[Party:{$this->id}] Updating playlist");
-        $playlist = $this->getPlaylist();
         $toAdd = self::PLAYLIST_LENGTH - $playlist->tracks->total;
         if ($toAdd < 1) {
             Log::debug("[Party:{$this->id}] No tracks to add");
