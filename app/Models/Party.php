@@ -132,10 +132,10 @@ class Party extends Model
     {
         Log::info("[Party:{$this->id}] Updating state");
         $this->updateCurrentSong();
-        $playlist = $this->getPlaylist();
-        $this->updateHistory($playlist);
-        $this->updatePlaylist($playlist);
+        $this->updateHistory();
+        $this->updatePlaylist();
         $this->backfillUpcomingSongs();
+        Log::info("[Party:{$this->id}] Finished updating state");
         return $this;
     }
 
@@ -161,14 +161,15 @@ class Party extends Model
         return $this;
     }
 
-    protected function updateHistory(object $playlist): Party
+    protected function updateHistory(): Party
     {
         Log::debug("[Party:{$this->id}] Updating history");
+        $playlist = $this->getPlaylist();
 
         // Our history, not always complete. Track IDs are relinked
         $options = [
             'limit' => 20,
-            'market' => 'GB',
+            'market' => $this->user->market,
         ];
         $history = $this->user->getSpotifyApi()->getMyRecentTracks($options)->items;
         $this->history_updated_at = Carbon::now();
@@ -176,7 +177,7 @@ class Party extends Model
 
         // Playlist MAY be relinked to playable tracks
         $relinked = [];
-        foreach ($playlist->tracks->items as $index => $plItem) {
+        foreach ($playlist->tracks->items as $plItem) {
             $key = "party.{$this->id}.relinked.{$plItem->track->id}";
             $relinked[$plItem->track->id] = Cache::remember($key, 86400, function() use ($plItem) {
                 return $this->user->getSpotifyApi()->getTrack($plItem->track->id, [
@@ -235,9 +236,10 @@ class Party extends Model
         return $this;
     }
 
-    protected function updatePlaylist(object $playlist)
+    protected function updatePlaylist()
     {
         Log::debug("[Party:{$this->id}] Updating playlist");
+        $playlist = $this->getPlaylist();
         $toAdd = self::PLAYLIST_LENGTH - $playlist->tracks->total;
         if ($toAdd < 1) {
             Log::debug("[Party:{$this->id}] No tracks to add");
