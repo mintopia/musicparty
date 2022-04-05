@@ -22,7 +22,6 @@ The following features are planned:
  - Discord role/presence verification
  - Websocket/Pusher based status updates to browser
  - Automatic Playlist Reinitialisation
- - More frequent polling at track transition boundaries
  - Autoplay Mode - forces playback on the specified device
  - Spotify Controls
 
@@ -72,10 +71,10 @@ services:
             - db
             - redis
 
-    short-scheduler:
+    scheduler:
         image: ghcr.io/mintopia/musicparty-php-fpm:develop
         entrypoint: [ "php" ]
-        command: "artisan short-schedule:run"
+        command: "artisan schedule:run"
         user: "1000"
         env_file: .env
         restart: unless-stopped

@@ -27,11 +27,11 @@ services:
       - db
       - redis
 
-  short-schedule:
+  scheduler:
     image: 1and1internet/php-build-environment:8.1-xdebug
     restart: unless-stopped
     entrypoint: [ "php" ]
-    command: "artisan short-schedule:run"
+    command: "artisan schedule:run"
     user: "1000"
     env_file: .env
     volumes:

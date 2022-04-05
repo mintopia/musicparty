@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\SpotifyStatusUpdatedEvent;
+use App\Jobs\PartyUpdate;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -39,8 +40,6 @@ use Illuminate\Support\Facades\Log;
  * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\UpcomingSong[] $upcoming
  * @property-read int|null $upcoming_count
  * @property-read \App\Models\User $user
- * @property \Illuminate\Support\Carbon|null $history_updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Party whereHistoryUpdatedAt($value)
  * @property int|null $song_id
  * @property string|null $song_started_at
  * @property-read \App\Models\Song|null $song
@@ -58,8 +57,8 @@ class Party extends Model
 
     protected $casts = [
         'status' => 'object',
-        'history_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
+        'state_updated_at' => 'datetime',
     ];
 
     public function getRouteKeyName()
@@ -135,8 +134,34 @@ class Party extends Model
         $playlist = $this->updateHistory();
         $this->updatePlaylist($playlist);
         $this->backfillUpcomingSongs();
+        $this->state_updated_at = Carbon::now();
+        $this->save();
         Log::info("[Party:{$this->id}] Finished updating state");
         return $this;
+    }
+
+    public function getNextUpdateDelay()
+    {
+        if (!$this->song) {
+            return 15;
+        }
+
+        if (!$this->user->status || !$this->user->status->is_playing) {
+            return 15;
+        }
+
+        $remaining = ($this->song->length - $this->user->status->progress_ms) / 1000;
+        if ($remaining <= 5) {
+            return 2;
+        }
+        if ($remaining <= 10) {
+            return 5;
+        }
+        if ($remaining <= 20) {
+            return 10;
+        }
+
+        return 15;
     }
 
     protected function updateCurrentSong()
@@ -171,8 +196,6 @@ class Party extends Model
             'market' => $this->user->market,
         ];
         $history = $this->user->getSpotifyApi()->getMyRecentTracks($options)->items;
-        $this->history_updated_at = Carbon::now();
-        $this->save();
 
         // Playlist MAY be relinked to playable tracks
         $relinked = [];
