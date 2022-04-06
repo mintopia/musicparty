@@ -43,7 +43,7 @@ class SpotifySearchService
             $voted = [];
             $upcomingIds = $upcomingSongs->pluck('id');
             if ($upcomingIds) {
-                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('id');
+                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('id')->toArray();
             }
 
             foreach ($upcomingSongs as $ucSong) {
