@@ -13,7 +13,6 @@
         "laravel/sanctum": "^2.14.1",
         "laravel/tinker": "^2.7",
         "laravel/ui": "^3.4",
-        "livewire/livewire": "^2.10",
         "pusher/pusher-php-server": "^7.0",
         "socialiteproviders/discord": "^4.1",
         "socialiteproviders/spotify": "^4.1"

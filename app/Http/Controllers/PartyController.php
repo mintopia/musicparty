@@ -10,7 +10,7 @@ class PartyController extends Controller
     public function create(Request $request)
     {
         return view('parties.create', [
-            'playlists' => $this->getPlaylists($request),
+            'playlists' => $request->user()->getPlaylists(),
         ]);
     }
 
@@ -21,17 +21,6 @@ class PartyController extends Controller
         $this->updateParty($request, $party);
         $party->save();
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
-    }
-
-    public function index(Request $request)
-    {
-        $query = Party::query();
-
-
-        $parties = $query->paginate();
-        return view('parties.index', [
-            'parties' => $parties,
-        ]);
     }
 
     public function show(Party $party)
@@ -46,8 +35,8 @@ class PartyController extends Controller
             ->whereNull('queued_at')
             ->with(['song', 'song.artists', 'song.album'])
             ->orderBy('votes', 'DESC')
-            ->orderBy('updated_at', 'DESC')
-            ->get();
+            ->orderBy('created_at', 'ASC')
+            ->paginate();
 
         return view('parties.show', [
             'party' => $party,
@@ -87,32 +76,10 @@ class PartyController extends Controller
         $code = $request->input('code');
         $party = Party::whereCode($code)->first();
         if ($party) {
-            return response()->redirectToRoute('parties.guest', $party->code);
+            return response()->redirectToRoute('parties.show', $party->code);
         } else {
             return response()->redirectToRoute('home')->with('errorMessage', 'Invalid party code entered');
         }
-    }
-
-    protected function guest(Party $party)
-    {
-        $next = $party->upcoming()
-            ->whereNotNull('queued_at')
-            ->with(['song', 'song.artists', 'song.album', 'user_votes'])
-            ->orderBy('queued_at', 'DESC')
-            ->first();
-
-        $upcoming = $party->upcoming()
-            ->whereNull('queued_at')
-            ->with(['song', 'song.artists', 'song.album', 'user_votes'])
-            ->orderBy('votes', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->paginate();
-
-        return view('parties.guest', [
-            'party' => $party,
-            'upcoming' => $upcoming,
-            'next' => $next,
-        ]);
     }
 
     protected function updateParty(Request $request, Party $party): Party
@@ -121,14 +88,5 @@ class PartyController extends Controller
         $party->backup_playlist_id = $request->input('backup_playlist_id');
 
         return $party;
-    }
-
-    protected function getPlaylists(Request $request): array
-    {
-        $playlists = [];
-        foreach ($request->user()->getPlaylists() as $playlist) {
-            $playlists[$playlist->id] = $playlist->name;
-        }
-        return $playlists;
     }
 }

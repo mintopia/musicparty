@@ -18037,6 +18037,12 @@ textarea.form-control-lg {
   content: "\f793";
 }
 
+html {
+  min-height: 100%;
+  position: relative;
+  padding-bottom: 4em;
+}
+
 .cover-bg {
   background: linear-gradient(rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.85)), url(/images/cover.jpg?a4105386ad34cfe71162e91dabcc2997) no-repeat center center fixed;
   background-size: cover;
@@ -18045,4 +18051,25 @@ textarea.form-control-lg {
 .bg-discord {
   background-color: #5865f2;
   color: #ffffff;
+}
+
+.bg-spotify {
+  background-color: #1d8954;
+  color: #ffffff;
+}
+
+.user-menu-avatar {
+  margin-top: -1rem !important;
+  margin-bottom: -0.6rem !important;
+  height: 2.6em;
+  width: 2.6em;
+}
+
+.user-menu-text {
+  margin-top: -1rem !important;
+  margin-bottom: -0.6rem !important;
+}
+
+.party-album {
+  height: 3em;
 }

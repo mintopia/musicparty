@@ -2,11 +2,13 @@
 namespace App\Services;
 
 use App\Models\Party;
+use App\Models\User;
+use App\Models\Vote;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 
 class SpotifySearchService
 {
-    public function __construct(protected Party $party)
+    public function __construct(protected Party $party, protected User $user)
     {
 
     }
@@ -37,10 +39,17 @@ class SpotifySearchService
             $upcomingSongs = $this->party->upcoming()->with('song')->whereNull('queued_at')->whereHas('song', function ($query) use ($ids) {
                 $query->whereIn('spotify_id', $ids);
             })->get();
+
+            $voted = [];
+            $upcomingIds = $upcomingSongs->pluck('id');
+            if ($upcomingIds) {
+                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('id');
+            }
+
             foreach ($upcomingSongs as $ucSong) {
                 $augmented[$ucSong->song->spotify_id] = (object) [
                     'votes' => $ucSong->votes,
-                    'hasVoted' => false,
+                    'hasVoted' => array_key_exists($ucSong->id, $voted),
                 ];
             }
         }
@@ -48,7 +57,7 @@ class SpotifySearchService
         foreach ($results->items as $item) {
             if (array_key_exists($item->id, $augmented)) {
                 $item->votes = $augmented[$item->id]->votes;
-                $item->hasVoted = false;
+                $item->hasVoted = $augmented[$item->id]->hasVoted;
             } else {
                 $item->votes = 0;
                 $item->hasVoted = false;

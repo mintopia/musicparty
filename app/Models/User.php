@@ -129,9 +129,9 @@ class User extends Authenticatable
         return $this->hasMany(Vote::class);
     }
 
-    public function parties()
+    public function party()
     {
-        return $this->hasMany(Party::class);
+        return $this->hasOne(Party::class);
     }
 
     public function getSpotifyApi()
