@@ -24,6 +24,8 @@ RUN apk update \
     && mkdir -p /tmp \
     && chown -R 1000:1000 /tmp
 
+COPY docker/fpm.conf /etc/php/www.conf
+
 WORKDIR /var/www/
 USER 1000
 ENV HOME /tmp
