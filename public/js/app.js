@@ -23223,12 +23223,13 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 window.Pusher = __webpack_require__(/*! pusher-js */ "./node_modules/pusher-js/dist/web/pusher.js");
 window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   broadcaster: 'pusher',
-  key: "musicparty",
-  cluster: "mt1",
-  wsHost: "localhost",
-  wsPort: "6001",
+  key: window.echoConfig.key,
+  cluster: window.echoConfig.cluster,
+  wsHost: window.echoConfig.wsHost,
+  wsPort: window.echoConfig.wsPort,
   forceTLS: false,
-  disableStats: true
+  disableStats: true,
+  enabledTransports: ['ws', 'wss']
 });
 
 /***/ }),

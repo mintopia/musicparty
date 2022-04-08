@@ -118,6 +118,7 @@
 
 
         </div>
+        @include('partials._javascript')
         <script src="/js/app.js"></script>
         @yield('footer')
     </body>
