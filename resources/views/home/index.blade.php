@@ -38,7 +38,7 @@
                             Continue your Party
                         </a>
                     </p>
-                @elseif (Auth::user()->spotify->id)
+                @elseif (Auth::user()->spotify_id)
                     <p class="text-center mt-5">
                         <a href="{{ route('parties.create') }}" class="btn-lg btn btn-primary">
                             <i class="bi bi-music-note-list"></i>

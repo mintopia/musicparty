@@ -2,6 +2,8 @@
 
 namespace App\Observers;
 
+use App\Events\Party\UpdatedEvent;
+use App\Events\Party\UpdatedEventOwner;
 use App\Models\Party;
 
 class PartyObserver
@@ -31,7 +33,8 @@ class PartyObserver
      */
     public function updated(Party $party)
     {
-        // Publish Update
+        UpdatedEvent::dispatch($party);
+        UpdatedEventOwner::dispatch($party);
     }
 
     /**

@@ -3,9 +3,7 @@
 @section('content')
 
     <div class="container-fluid">
-        <div class="row">
-            {{ $party->name }}
-        </div>
+        @include('parties._player')
 
         <div class="row">
             <div class="col-10 offset-1 mt-5 mb-5">
@@ -24,22 +22,20 @@
                     @foreach ($tracks as $track)
                         <tr class="pt-2 pb-2">
                             <td>
-                                <img data-field="album" src="{{ $track->album->images[0]->url }}" title="{{ $track->album->name}}" class="img-fluid party-album float-start me-3" />
-                                <span data-field="title">{{ $track->name }}</span>
+                                <img src="{{ $track->album->images[0]->url }}" title="{{ $track->album->name}}" class="img-fluid party-album float-start me-3" />
+                                <span>{{ $track->name }}</span>
                                 <br />
                                 <small>
-                                    <span data-field="artists" class="text-truncate" style="max-width: 70%;">{{ collect($track->artists)->pluck('name')->join(', ') }}</span>
-                                    &middot;
-                                    <span data-field="votes">
-                                        @if ($track->votes == 0)
-                                            Fallback Track
-                                        @else
+                                    <span class="text-truncate" style="max-width: 70%;">{{ collect($track->artists)->pluck('name')->join(', ') }}</span>
+                                    <span>
+                                        @if ($track->votes > 0)
+                                            &middot;
                                             {{ $track->votes }} vote{{ $track->votes != 1 ? 's' : '' }}
                                         @endif
                                     </span>
                                 </small>
                             </td>
-                            <td class="text-end fs-4 fw-bold pe-2" data-field="actions">
+                            <td class="text-end fs-4 fw-bold pe-2">
                                 @if ($track->hasVoted)
                                     <i class="bi bi-heart-fill"></i>
                                 @else

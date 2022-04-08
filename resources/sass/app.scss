@@ -49,3 +49,11 @@ html {
 .party-album {
     height: 3em;
 }
+
+.striped-bg:nth-child(odd) {
+    background-color: #212529;
+}
+
+.striped-bg:nth-child(even) {
+    background-color: #2c3034;
+}

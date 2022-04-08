@@ -89,4 +89,17 @@ class Song extends Model
         }
         return $song;
     }
+
+    public function toApi(): array
+    {
+        return [
+            'spotify_id' => $this->spotify_id,
+            'name' => $this->name,
+            'album' => $this->album->toApi(),
+            'artists' => $this->artists->map(function (Artist $artist) {
+                return $artist->toApi();
+            })->toArray(),
+            'length' => $this->length,
+        ];
+    }
 }

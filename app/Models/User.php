@@ -8,6 +8,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\HasApiTokens;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\Session;
@@ -67,7 +68,7 @@ use SpotifyWebAPI\Session;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     protected ?SpotifyWebAPI $api = null;
     protected ?Session $session = null;

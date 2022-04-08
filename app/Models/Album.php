@@ -49,4 +49,13 @@ class Album extends Model
         $album->save();
         return $album;
     }
+
+    public function toApi(): array
+    {
+        return [
+            'spotify_id' => $this->spotify_id,
+            'name' => $this->name,
+            'image_url' => $this->image_url,
+        ];
+    }
 }

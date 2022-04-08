@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Party;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -13,6 +14,11 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
-Broadcast::channel('App.Models.User.{id}', function ($user, $id) {
-    return (int) $user->id === (int) $id;
+
+Broadcast::channel('party.{party}', function ($user, Party $party) {
+    return true;
+});
+
+Broadcast::channel('party.{party}.owner', function($user, Party $party) {
+    return $party->user_id === $user->id;
 });

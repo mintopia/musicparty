@@ -43,22 +43,24 @@ class SpotifySearchService
             $voted = [];
             $upcomingIds = $upcomingSongs->pluck('id');
             if ($upcomingIds) {
-                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('id')->toArray();
+                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('upcoming_song_id')->toArray();
             }
 
             foreach ($upcomingSongs as $ucSong) {
                 $augmented[$ucSong->song->spotify_id] = (object) [
                     'votes' => $ucSong->votes,
-                    'hasVoted' => array_key_exists($ucSong->id, $voted),
+                    'hasVoted' => in_array($ucSong->id, $voted),
                 ];
             }
         }
 
         foreach ($results->items as $item) {
             if (array_key_exists($item->id, $augmented)) {
+                $item->upcoming = true;
                 $item->votes = $augmented[$item->id]->votes;
                 $item->hasVoted = $augmented[$item->id]->hasVoted;
             } else {
+                $item->upcoming = false;
                 $item->votes = 0;
                 $item->hasVoted = false;
             }

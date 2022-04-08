@@ -26,7 +26,7 @@ Route::middleware('auth')->group(function() {
     // Routes that require spotify
     Route::middleware('can:create,App\Models\Party')->group(function() {
         Route::resource('/parties', PartyController::class, [
-            'except' => ['show', 'list'],
+            'except' => ['show', 'list', 'store', 'create'],
         ]);
         Route::get('/parties/{party}/upcoming/{upcomingsong}/delete', [UpcomingSongController::class, 'delete'])->name('parties.upcoming.delete');
     });
