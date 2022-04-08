@@ -106,7 +106,7 @@
                         <div class="flex-grow-1">
                             <small>
                                 <span class="navbar-text">Copyright &copy; {{ date('Y') }}</span>
-                                <a class="link-primary" href="https://github.com/mintopia">Mintopia</a>
+                                <a class="link-primary ms-1" href="https://github.com/mintopia">Mintopia</a>
                             </small>
                         </div>
                         <div class="text-end">
