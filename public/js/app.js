@@ -23228,8 +23228,7 @@ window.Echo = new laravel_echo__WEBPACK_IMPORTED_MODULE_0__["default"]({
   wsHost: window.echoConfig.wsHost,
   wsPort: window.echoConfig.wsPort,
   forceTLS: false,
-  disableStats: true,
-  enabledTransports: ['ws', 'wss']
+  disableStats: true
 });
 
 /***/ }),
