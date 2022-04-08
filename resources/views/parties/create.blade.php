@@ -23,7 +23,7 @@
                 @include('parties._form')
                 <div class="card-footer text-right">
                     <div class="d-flex">
-                        <a class="btn btn-link" href="{{ route('parties.index') }}">Cancel</a>
+                        <a class="btn btn-link" href="{{ route('home') }}">Cancel</a>
                         <button class="btn btn-primary ml-auto" type="submit">Save</button>
                     </div>
                 </div>

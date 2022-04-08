@@ -18,7 +18,6 @@ Route::middleware('auth')->group(function() {
 
     Route::post('/parties/join', [PartyController::class, 'join'])->name('parties.join');
 
-    Route::get('/parties/{party}', [PartyController::class, 'show'])->name('parties.show');
     Route::get('/parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
     Route::get('/parties/{party}/search', [UpcomingSongController::class, 'search'])->name('parties.upcoming.search');
     Route::get('/parties/{party}/vote/{id}', [UpcomingSongController::class, 'vote'])->name('parties.upcoming.vote');
@@ -26,8 +25,12 @@ Route::middleware('auth')->group(function() {
     // Routes that require spotify
     Route::middleware('can:create,App\Models\Party')->group(function() {
         Route::resource('/parties', PartyController::class, [
-            'except' => ['show', 'list', 'store', 'create'],
+            'except' => ['index', 'show'],
         ]);
+        Route::post('/parties', [PartyController::class, 'store'])->name('parties.store');
+
         Route::get('/parties/{party}/upcoming/{upcomingsong}/delete', [UpcomingSongController::class, 'delete'])->name('parties.upcoming.delete');
     });
+
+    Route::get('/parties/{party}', [PartyController::class, 'show'])->name('parties.show');
 });

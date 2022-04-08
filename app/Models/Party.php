@@ -391,6 +391,19 @@ class Party extends Model
     {
         $status = $this->user->status;
 
+        if (!$status) {
+            return (object) [
+                'device' => null,
+                'repeat' => null,
+                'shuffle' => null,
+                'active' => false,
+                'is_playing' => false,
+                'progress' => null,
+                'length' => null,
+                'updated_at' => Carbon::now()->toIso8601String(),
+            ];
+        }
+
         if ($asOwner) {
             $data = [
                 'device' => (object) [
