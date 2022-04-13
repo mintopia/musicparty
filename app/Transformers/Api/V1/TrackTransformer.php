@@ -37,7 +37,7 @@ class TrackTransformer extends TransformerAbstract
             'album' => (object) [
                 'spotify_id' => $track->album->id,
                 'name' => $track->album->name,
-                'image_url' => $track->album->images[0]->url,
+                'image_url' => count($track->album->images) ? $track->album->images[0]->url : null,
             ],
             'artists' => array_map(function ($artist) {
                 return (object) [
