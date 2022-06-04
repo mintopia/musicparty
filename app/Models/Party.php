@@ -159,10 +159,10 @@ class Party extends Model
             $playlist = $this->updateHistory();
             $this->updatePlaylist($playlist);
             $this->backfillUpcomingSongs();
-            $this->state_updated_at = Carbon::now();
         } else {
             Log::info("[Party:{$this->id}] Currently playing song has not changed, no further updates");
         }
+        $this->state_updated_at = Carbon::now();
         $this->save();
         Log::info("[Party:{$this->id}] Finished updating state");
         return $this;
