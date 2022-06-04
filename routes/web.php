@@ -23,6 +23,9 @@ Route::middleware('auth')->group(function() {
     Route::get('/parties/{party}/search', [UpcomingSongController::class, 'search'])->name('parties.upcoming.search');
     Route::post('/parties/{party}/vote', [UpcomingSongController::class, 'vote'])->name('parties.upcoming.vote');
 
+    Route::get('/auth/spotify/search', [AuthController::class, 'spotify_search_link'])->name('auth.spotify_search.link');
+    Route::get('/auth/spotify/search/redirect', [AuthController::class, 'spotify_search_redirect'])->name('auth.spotify_search.redirect');
+
     // Routes that require spotify
     Route::middleware('can:create,App\Models\Party')->group(function() {
         Route::resource('/parties', PartyController::class);

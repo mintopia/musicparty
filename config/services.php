@@ -48,6 +48,13 @@ return [
         ],
     ],
 
+    'spotify_search' => [
+        'client_id' => env('SPOTIFY_SEARCH_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_SEARCH_CLIENT_SECRET'),
+        'refresh_token' => env('SPOTIFY_SEARCH_REFRESH_TOKEN'),
+        'redirect' => env('SPOTIFY_SEARCH_REDIRECT_URI'),
+    ],
+
     'discord' => [
         'client_id' => env('DISCORD_CLIENT_ID'),
         'client_secret' => env('DISCORD_CLIENT_SECRET'),

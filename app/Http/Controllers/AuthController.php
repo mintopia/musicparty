@@ -6,6 +6,7 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
+use SocialiteProviders\Spotify\Provider;
 
 class AuthController extends Controller
 {
@@ -38,5 +39,18 @@ class AuthController extends Controller
         $spotifyUser = Socialite::driver('spotify')->user();
         $request->user()->updateFromSpotify($spotifyUser);
         return response()->redirectToRoute('home')->with('successMessage', 'Your Spotify account has been linked');
+    }
+
+    protected function spotify_search_link(Request $request)
+    {
+        $provider = Socialite::buildProvider(Provider::class, config('services.spotify_search'));
+        return $provider->redirect();
+    }
+
+    protected function spotify_search_redirect(Request $request)
+    {
+        $provider = Socialite::buildProvider(Provider::class, config('services.spotify_search'));
+        $user = $provider->user();
+        dd($user);
     }
 }

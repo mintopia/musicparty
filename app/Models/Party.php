@@ -143,25 +143,18 @@ class Party extends Model
     public function getNextUpdateDelay()
     {
         if (!$this->song) {
-            return 15;
+            return 60;
         }
 
         if (!$this->user->status || !$this->user->status->is_playing) {
-            return 15;
+            return 60;
         }
 
         $remaining = ($this->song->length - $this->user->status->progress_ms) / 1000;
-        if ($remaining <= 5) {
-            return 2;
+        if ($remaining > 60) {
+            return 60;
         }
-        if ($remaining <= 10) {
-            return 5;
-        }
-        if ($remaining <= 20) {
-            return 10;
-        }
-
-        return 15;
+        return floor($remaining / 2);
     }
 
     protected function updateCurrentSong()
