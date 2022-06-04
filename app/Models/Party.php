@@ -181,7 +181,7 @@ class Party extends Model
         if ($remaining > 60) {
             return 60;
         }
-        return max(2, floor($remaining / 2));
+        return max(5, floor($remaining / 2));
     }
 
     protected function updateCurrentSong()
