@@ -153,15 +153,10 @@ class Party extends Model
             return $this;
         }
         $this->noUpdate = false;
-        $songChanged = $this->updateCurrentSong();
-        if ($songChanged) {
-            Log::info("[Party:{$this->id}] Song has changed, updating history, playlist and backfilling");
-            $playlist = $this->updateHistory();
-            $this->updatePlaylist($playlist);
-            $this->backfillUpcomingSongs();
-        } else {
-            Log::info("[Party:{$this->id}] Currently playing song has not changed, no further updates");
-        }
+        $this->updateCurrentSong();
+        $playlist = $this->updateHistory();
+        $this->updatePlaylist($playlist);
+        $this->backfillUpcomingSongs();
         $this->state_updated_at = Carbon::now();
         $this->save();
         Log::info("[Party:{$this->id}] Finished updating state");
