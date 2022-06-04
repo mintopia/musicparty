@@ -153,11 +153,16 @@ class Party extends Model
             return $this;
         }
         $this->noUpdate = false;
-        $this->updateCurrentSong();
-        $playlist = $this->updateHistory();
-        $this->updatePlaylist($playlist);
-        $this->backfillUpcomingSongs();
-        $this->state_updated_at = Carbon::now();
+        $songChanged = $this->updateCurrentSong();
+        if ($songChanged) {
+            Log::info("[Party:{$this->id}] Song has changed, updating history, playlist and backfilling");
+            $playlist = $this->updateHistory();
+            $this->updatePlaylist($playlist);
+            $this->backfillUpcomingSongs();
+            $this->state_updated_at = Carbon::now();
+        } else {
+            Log::info("[Party:{$this->id}] Currently playing song has not changed, no further updates");
+        }
         $this->save();
         Log::info("[Party:{$this->id}] Finished updating state");
         return $this;
@@ -193,6 +198,7 @@ class Party extends Model
             $this->song_id = null;
             $this->song_started_at = null;
             $this->save();
+            return true;
         } elseif ($current) {
             $song = Song::fromSpotify($current->item);
             if ($song->id != $this->song_id) {
@@ -200,8 +206,10 @@ class Party extends Model
                 $this->song()->associate($song);
                 $this->song_started_at = Carbon::now()->subMilli($current->progress_ms);
                 $this->save();
+                return true;
             }
         }
+        return false;
     }
 
     protected function updateHistory(): object
