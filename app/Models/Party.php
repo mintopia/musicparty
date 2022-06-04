@@ -398,7 +398,7 @@ class Party extends Model
         $status = $this->user->status;
 
         if (!$status) {
-            return (object) [
+            return (object)[
                 'device' => null,
                 'repeat' => null,
                 'shuffle' => null,
@@ -412,7 +412,7 @@ class Party extends Model
 
         if ($asOwner) {
             $data = [
-                'device' => (object) [
+                'device' => (object)[
                     'id' => $status->device->id,
                     'name' => $status->device->name,
                     'type' => $status->device->type,
@@ -429,7 +429,11 @@ class Party extends Model
             ];
         }
 
-        $data['active'] = $status->context->uri == "spotify:playlist:{$this->playlist_id}";
+        if (property_exists($status, 'context') && property_exists($status->context, 'uri')) {
+            $data['active'] = $status->context->uri == "spotify:playlist:{$this->playlist_id}";
+        } else {
+            $data['active'] = false;
+        }
 
         if (!$this->song || $status->item->id != $this->song->spotify_id) {
             $data['is_playing'] = false;
