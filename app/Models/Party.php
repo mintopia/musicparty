@@ -61,6 +61,8 @@ class Party extends Model
         'state_updated_at' => 'datetime',
     ];
 
+    public $noUpdate = false;
+
     public function getRouteKeyName()
     {
         return 'code';
@@ -81,6 +83,14 @@ class Party extends Model
         return $this->hasMany(UpcomingSong::class);
     }
 
+    public function next()
+    {
+        return $this->upcoming()
+            ->whereNotNull('queued_at')
+            ->orderBy('queued_at', 'DESC')
+            ->first();
+    }
+
     public function song()
     {
         return $this->belongsTo(Song::class);
@@ -93,9 +103,15 @@ class Party extends Model
         }
 
         $this->code = '';
-        for ($i = 0; $i < self::CODE_LENGTH; $i++) {
-            $start = mt_rand(0, strlen(self::CODE_CHARSET) - 1);
-            $this->code .= substr(self::CODE_CHARSET, $start, 1);
+        while ($this->code === '') {
+            $code = '';
+            for ($i = 0; $i < self::CODE_LENGTH; $i++) {
+                $start = mt_rand(0, strlen(self::CODE_CHARSET) - 1);
+                $code .= substr(self::CODE_CHARSET, $start, 1);
+            }
+            if (Party::whereCode($code)->count() === 0) {
+                $this->code = $code;
+            }
         }
     }
 
@@ -130,6 +146,13 @@ class Party extends Model
     public function updateState(): Party
     {
         Log::info("[Party:{$this->id}] Updating state");
+        $cutoff = Carbon::now()->subSeconds(2);
+        if ($this->state_updated_at >= $cutoff) {
+            Log::debug("[Party:{$this->id}] Already updated state recently");
+            $this->noUpdate = true;
+            return $this;
+        }
+        $this->noUpdate = false;
         $this->updateCurrentSong();
         $playlist = $this->updateHistory();
         $this->updatePlaylist($playlist);
@@ -140,8 +163,12 @@ class Party extends Model
         return $this;
     }
 
-    public function getNextUpdateDelay()
+    public function getNextUpdateDelay(): ?int
     {
+        if ($this->noUpdate) {
+            return null;
+        }
+
         if (!$this->song) {
             return 60;
         }
@@ -175,7 +202,6 @@ class Party extends Model
                 $this->save();
             }
         }
-        SpotifyStatusUpdatedEvent::dispatch($this);
     }
 
     protected function updateHistory(): object
@@ -266,6 +292,7 @@ class Party extends Model
             ->whereNull('queued_at')
             ->orderBy('votes', 'DESC')
             ->orderBy('created_at', 'ASC')
+            ->orderBy('id', 'ASC')
             ->limit($toAdd)
             ->get();
 
@@ -298,9 +325,24 @@ class Party extends Model
             return $this->getBackupPlaylistTracks();
         });
 
+        $existingIds = $this->upcoming()
+            ->where(function($query) {
+                $query->whereNull('queued_at')
+                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));})
+            ->with('song')
+            ->get()
+            ->pluck('song.spotify_id')
+            ->toArray();
+
+        $tracks = array_filter($tracks, function ($track) use ($existingIds) {
+            return !in_array($track->track->id, $existingIds);
+        });
+
+        $toAdd = min($toAdd, count($tracks));
+        shuffle($tracks);
+
         for ($i = 0; $i < $toAdd; $i++) {
-            $index = mt_rand(0, count($tracks) - 1);
-            $track = $tracks[$index];
+            $track = $tracks[$i];
             $song = Song::fromSpotify($track->track);
             Log::info("[Party:{$this->id}] Adding [{$song->spotify_id}] {$song->name} from backup playlist");
             $upcoming = new UpcomingSong;
@@ -329,5 +371,77 @@ class Party extends Model
     protected function getPlaylist(): object
     {
         return $this->user->getSpotifyApi()->getPlaylist($this->playlist_id);
+    }
+
+    public function getState(?User $user, bool $asOwner = false): array
+    {
+        if ($user && $user->id === $this->user_id) {
+            $asOwner = true;
+        }
+
+        $next = $this->next();
+
+        return [
+            'code' => $this->code,
+            'name' => $this->name,
+            'backup_playlist_id' => $asOwner ? $this->backup_playlist_id : null,
+            'status' => $this->getStatus($asOwner),
+            'now' => $this->song ? (object) $this->song->toApi() : null,
+            'next' => $next ? (object) $next->toApi() : null,
+            'created_at' => $this->created_at->toIso8601String(),
+            'updated_at' => $this->updated_at->toIso8601String(),
+        ];
+    }
+
+    protected function getStatus(bool $asOwner): object
+    {
+        $status = $this->user->status;
+
+        if (!$status) {
+            return (object) [
+                'device' => null,
+                'repeat' => null,
+                'shuffle' => null,
+                'active' => false,
+                'is_playing' => false,
+                'progress' => null,
+                'length' => null,
+                'updated_at' => Carbon::now()->toIso8601String(),
+            ];
+        }
+
+        if ($asOwner) {
+            $data = [
+                'device' => (object) [
+                    'id' => $status->device->id,
+                    'name' => $status->device->name,
+                    'type' => $status->device->type,
+                    'volume' => $status->device->volume_percent,
+                ],
+                'repeat' => $status->repeat_state,
+                'shuffle' => $status->shuffle_state,
+            ];
+        } else {
+            $data = [
+                'device' => null,
+                'repeat' => null,
+                'shuffle' => null,
+            ];
+        }
+
+        $data['active'] = $status->context->uri == "spotify:playlist:{$this->playlist_id}";
+
+        if (!$this->song || $status->item->id != $this->song->spotify_id) {
+            $data['is_playing'] = false;
+            $data['progress'] = null;
+            $data['length'] = null;
+        } else {
+            $data['is_playing'] = $status->is_playing;
+            $data['progress'] = $status->progress_ms;
+            $data['length'] = $this->song->length;
+        }
+        $data['updated_at'] = $this->user->status_updated_at->toIso8601String();
+
+        return (object) $data;
     }
 }

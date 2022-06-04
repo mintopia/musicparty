@@ -2,18 +2,22 @@
 namespace App\Services;
 
 use App\Models\Party;
+use App\Services\SpotifyAPIRequest;
 use Carbon\Carbon;
+use App\Models\User;
+use App\Models\Vote;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 
 class SpotifySearchService
 {
-    protected ?Session $session;
-    protected ?SpotifyWebAPI $api;
+    protected ?Session $session = null;
+    protected ?SpotifyWebAPI $api = null;
 
-    public function __construct(protected Party $party)
+    public function __construct(protected Party $party, protected User $user)
     {
 
     }
@@ -48,7 +52,8 @@ class SpotifySearchService
         }
         $this->session->setAccessToken($accessToken->token);
 
-        $this->api = new SpotifyWebAPI([], $this->session);
+        $request = new SpotifyAPIRequest();
+        $this->api = new SpotifyWebAPI([], $this->session, $request);
         return $this->api;
     }
 
@@ -79,19 +84,28 @@ class SpotifySearchService
             $upcomingSongs = $this->party->upcoming()->with('song')->whereNull('queued_at')->whereHas('song', function ($query) use ($ids) {
                 $query->whereIn('spotify_id', $ids);
             })->get();
+
+            $voted = [];
+            $upcomingIds = $upcomingSongs->pluck('id');
+            if ($upcomingIds) {
+                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('upcoming_song_id')->toArray();
+            }
+
             foreach ($upcomingSongs as $ucSong) {
                 $augmented[$ucSong->song->spotify_id] = (object) [
                     'votes' => $ucSong->votes,
-                    'hasVoted' => false,
+                    'hasVoted' => in_array($ucSong->id, $voted),
                 ];
             }
         }
 
         foreach ($results->items as $item) {
             if (array_key_exists($item->id, $augmented)) {
+                $item->upcoming = true;
                 $item->votes = $augmented[$item->id]->votes;
-                $item->hasVoted = false;
+                $item->hasVoted = $augmented[$item->id]->hasVoted;
             } else {
+                $item->upcoming = false;
                 $item->votes = 0;
                 $item->hasVoted = false;
             }

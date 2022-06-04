@@ -46,4 +46,12 @@ class Artist extends Model
         $artist->save();
         return $artist;
     }
+
+    public function toApi(): array
+    {
+        return [
+            'spotify_id' => $this->spotify_id,
+            'name' => $this->name,
+        ];
+    }
 }

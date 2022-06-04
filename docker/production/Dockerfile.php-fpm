@@ -37,6 +37,7 @@ RUN apk update \
     && mkdir -p /tmp \
     && chown -R 1000:1000 /tmp
 
+COPY docker/fpm.conf /etc/php/www.conf
 COPY --from=build --chown=1000:1000 /app/ /var/www/
 
 WORKDIR /var/www/

@@ -3,8 +3,10 @@
 namespace App\Providers;
 
 use App\Models\Party;
+use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Observers\PartyObserver;
+use App\Observers\UpcomingSongObserver;
 use App\Observers\VoteObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
@@ -40,6 +42,7 @@ class EventServiceProvider extends ServiceProvider
     {
         Party::observe(PartyObserver::class);
         Vote::observe(VoteObserver::class);
+        UpcomingSong::observe(UpcomingSongObserver::class);
     }
 
     /**

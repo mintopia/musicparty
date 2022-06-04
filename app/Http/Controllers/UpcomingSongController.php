@@ -16,7 +16,7 @@ class UpcomingSongController extends Controller
     protected function search(Request $request, Party $party)
     {
         if ($request->input('query')) {
-            $searchService = new SpotifySearchService($party);
+            $searchService = new SpotifySearchService($party, $request->user());
             $results = $searchService->search(
                 $request->input('query'),
                 $request->input('page', 1),
@@ -32,15 +32,15 @@ class UpcomingSongController extends Controller
         ]);
     }
 
-    protected function vote(Request $request, Party $party)
+    protected function vote(Request $request, Party $party, string $id)
     {
-        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
-            $query->where('spotify_id', $request->input('id'));
+        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($id) {
+            $query->where('spotify_id', $id);
         })->first();
 
         if (!$upcoming) {
             try {
-                $song = $party->user->getSpotifyApi()->getTrack($request->input('id'), [
+                $song = $party->user->getSpotifyApi()->getTrack($id, [
                     'market' => $party->user->market,
                 ]);
             } catch (SpotifyWebAPIException $e) {
@@ -54,7 +54,7 @@ class UpcomingSongController extends Controller
         }
 
         if ($upcoming->hasVoted($request->user())) {
-            return response()->redirectToRoute('parties.guest', $party->code)->with('errorMessage', 'You have already voted for this song');
+            return response()->redirectToRoute('parties.show', $party->code)->with('errorMessage', 'You have already voted for this song');
         }
 
         $vote = new Vote;
@@ -62,6 +62,12 @@ class UpcomingSongController extends Controller
         $vote->user()->associate($request->user());
         $vote->save();
 
-        return response()->redirectToRoute('parties.guest', $party->code)->with('successMessage', 'Your vote has been counted');
+        return redirect()->back()->with('successMessage', 'Your vote has been counted');
+    }
+
+    protected function delete(Party $party, UpcomingSong $upcomingsong)
+    {
+        $upcomingsong->delete();
+        return redirect()->back();
     }
 }

@@ -6,21 +6,18 @@ A collaborative party music jukebox using Spotify.
 
 ## Planned Features
 
-This is still a VERY early alpha, with about 2 days dev work on it. It is barely functional and doesn't have any features like deleting upcoming tracks.
+This is still a VERY early alpha, with about 6 days dev work on it. It is barely functional and doesn't have any features like deleting upcoming tracks.
 
 The following features are planned:
 
  - TV Mode
- - Verifying unique party codes
- - Deleting upcoming songs
- - A UI that actually looks good and is usable
+ - A UI that actually looks good and is usable - Getting there!
  - Extra description/messaging
  - Much better descriptions
  - User banning/limiting
  - Allow/Deny lists for tracks, albums, etc.
  - Export playback history to another playlist
  - Discord role/presence verification
- - Websocket/Pusher based status updates to browser
  - Automatic Playlist Reinitialisation
  - Autoplay Mode - forces playback on the specified device
  - Spotify Controls
@@ -39,6 +36,8 @@ DB_PASSWORD=
 
 PUSHER_APP_KEY=
 PUSHER_APP_SECRET=
+MIX_PUSHER_CLIENT_HOSTNAME=
+MIX_PUSHER_CLIENT_PORT=
 
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
@@ -74,7 +73,7 @@ services:
     scheduler:
         image: ghcr.io/mintopia/musicparty-php-fpm:develop
         entrypoint: [ "php" ]
-        command: "artisan schedule:run"
+        command: "artisan schedule:work"
         user: "1000"
         env_file: .env
         restart: unless-stopped

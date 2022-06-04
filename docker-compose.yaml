@@ -31,7 +31,7 @@ services:
     image: 1and1internet/php-build-environment:8.1-xdebug
     restart: unless-stopped
     entrypoint: [ "php" ]
-    command: "artisan schedule:run"
+    command: "artisan schedule:work"
     user: "1000"
     env_file: .env
     volumes:

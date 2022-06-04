@@ -2,12 +2,14 @@
 
 namespace App\Models;
 
+use App\Services\SpotifyAPIRequest;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 use Illuminate\Support\Facades\Log;
+use Laravel\Sanctum\HasApiTokens;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\Session;
@@ -67,7 +69,7 @@ use SpotifyWebAPI\Session;
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, HasApiTokens;
 
     protected ?SpotifyWebAPI $api = null;
     protected ?Session $session = null;
@@ -129,9 +131,9 @@ class User extends Authenticatable
         return $this->hasMany(Vote::class);
     }
 
-    public function parties()
+    public function party()
     {
-        return $this->hasMany(Party::class);
+        return $this->hasOne(Party::class);
     }
 
     public function getSpotifyApi()
@@ -164,7 +166,9 @@ class User extends Authenticatable
         }
 
         Log::debug("[User:{$this->id}] Creating new API connection");
-        $this->api = new SpotifyWebAPI([], $this->session);
+
+        $request = new SpotifyAPIRequest();
+        $this->api = new SpotifyWebAPI([], $this->session, $request);
         return $this->api;
     }
 

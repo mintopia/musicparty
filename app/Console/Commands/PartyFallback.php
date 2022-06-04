@@ -33,7 +33,7 @@ class PartyFallback extends Command
     public function handle()
     {
         $parties = Party::where(function ($query) {
-            $cutoff = Carbon::now()->subSeconds(30);
+            $cutoff = Carbon::now()->subSeconds(90);
             $query->where('state_updated_at', '<=', $cutoff)->orWhereNull('state_updated_at');
         })->get();
 

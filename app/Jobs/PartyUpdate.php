@@ -33,7 +33,11 @@ class PartyUpdate implements ShouldQueue
     {
         $this->party->updateState();
         $delay = $this->party->getNextUpdateDelay();
-        Log::debug("[Party:{$this->party->id}] Next update in {$delay}s");
-        PartyUpdate::dispatch($this->party)->delay($delay);
+        if ($delay === null) {
+            Log::debug("[Party:{$this->party->id}] No further update required");
+        } else {
+            Log::debug("[Party:{$this->party->id}] Next update in {$delay}s");
+            PartyUpdate::dispatch($this->party)->delay($delay);
+        }
     }
 }

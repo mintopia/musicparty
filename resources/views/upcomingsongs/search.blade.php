@@ -1,67 +1,50 @@
 @extends('layouts.application')
 
 @section('content')
-    <div class="page-header">
-        <h1>{{ $party->name }}</h1>
-    </div>
 
-    <h2>Search</h2>
+    <div class="container-fluid">
+        @include('parties._player')
 
-    <form action="{{ route('parties.upcoming.search', $party->code) }}" method="GET" class="form-inline mb-3">
-        <input type="text" class="form-control" value="{{ $query }}" name="query" />
-        <button type="submit" class="btn btn-primary">Search</button>
-    </form>
-
-    <h2>Results</h2>
-
-    <div class="card">
-        <div class="table-responsive">
-            <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
-                <thead>
-                <tr>
-                    <th>Name</th>
-                    <th>Artists</th>
-                    <th>Album</th>
-                    <th>Length</th>
-                    <th>Votes</th>
-                    <th></th>
-                </tr>
-                </thead>
-                <tbody>
-                @foreach($tracks as $track)
-                    <tr>
-                        <td>{{ $track->name }}</td>
-                        <td>
-                            {{ collect($track->artists)->pluck('name')->join(', ') }}
-                        </td>
-                        <td>{{ $track->album->name }}</td>
-                        <td>{{ (new \Carbon\Carbon(0))->addMilliseconds($track->duration_ms)->format('i:s') }}</td>
-                        <td>{{ $track->votes }}</td>
-                        <td>
-                            @if ($track->hasVoted)
-                                <button class="btn btn-outline-primary" disabled>Vote</button>
-                            @else
-                                <form class="form-inline" method="post" action="{{ route('parties.upcoming.vote', [$party->code]) }}">
-                                    {{ csrf_field() }}
-                                    <input type="hidden" name="id" value="{{ $track->id }}" />
-                                    <button type="submit" class="btn btn-primary">Vote</button>
-                                </form>
-                            @endif
-                        </td>
-                    </tr>
-                @endforeach
-                </tbody>
-            </table>
+        <div class="row">
+            <div class="col-10 offset-1 mt-5 mb-5">
+                <form action="{{ route('parties.upcoming.search', $party->code) }}" method="GET">
+                    <div class="input-group input-group-lg">
+                        <input type="text" class="form-control form-control" name="query" placeholder="Search" value="{{ $query }}" />
+                        <button type="submit" class="btn btn-primary">Search</button>
+                    </div>
+                </form>
+            </div>
         </div>
 
-
-        @if ($tracks->total() > $tracks->count() )
+        @if ($tracks->total() > 0)
             <div class="row">
-                <div class="col-lg-12">
-                    <div class="card">
-                        {{ $tracks->links() }} }}
-                    </div>
-                </div>
+                <table class="table table-dark table-striped align-middle table-responsive">
+                    @foreach ($tracks as $track)
+                        <tr class="pt-2 pb-2">
+                            <td>
+                                <img src="{{ $track->album->images[0]->url }}" title="{{ $track->album->name}}" class="img-fluid party-album float-start me-3" />
+                                <span>{{ $track->name }}</span>
+                                <br />
+                                <small>
+                                    <span class="text-truncate" style="max-width: 70%;">{{ collect($track->artists)->pluck('name')->join(', ') }}</span>
+                                    <span>
+                                        @if ($track->votes > 0)
+                                            &middot;
+                                            {{ $track->votes }} vote{{ $track->votes != 1 ? 's' : '' }}
+                                        @endif
+                                    </span>
+                                </small>
+                            </td>
+                            <td class="text-end fs-4 fw-bold pe-2">
+                                @if ($track->hasVoted)
+                                    <i class="bi bi-heart-fill"></i>
+                                @else
+                                    <a href="{{ route('parties.upcoming.vote', [$party->code, $track->id]) }}" class="link-light"> <i class="bi bi-heart"></i></a>
+                                @endif
+                            </td>
+                        </tr>
+                    @endforeach
+                </table>
             </div>
         @endif
     </div>

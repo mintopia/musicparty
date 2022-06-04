@@ -11,8 +11,8 @@
             <div class="form-group">
                 <label class="form-label" for="backup_playlist_id">Backup Playlist</label>
                 <select name="backup_playlist_id" id="backup_playlist_id" class="form-control">
-                    @foreach ($playlists as $id => $name)
-                        <option value="{{ $id }}" @if(old('backup_playlist_id') == $id) selected="selected"@endif>{{ $name }}</option>
+                    @foreach ($playlists as $playlist)
+                        <option value="{{ $playlist->id }}" @if(old('backup_playlist_id') == $playlist->id) selected="selected"@endif>{{ $playlist->name }}</option>
                     @endforeach
                 </select>
                 @error('backup_playlist_id')

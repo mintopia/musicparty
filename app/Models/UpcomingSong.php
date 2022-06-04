@@ -35,6 +35,10 @@ class UpcomingSong extends Model
 {
     use HasFactory;
 
+    protected $casts = [
+        'queued_at' => 'datetime',
+    ];
+
     public function song()
     {
         return $this->belongsTo(Song::class);
@@ -68,5 +72,26 @@ class UpcomingSong extends Model
             }
         }
         return false;
+    }
+
+    public function vote(User $user): ?Vote
+    {
+        if ($this->hasVoted($user)) {
+            return null;
+        }
+
+        $vote = new Vote;
+        $vote->upcoming_song()->associate($this);
+        $vote->user()->associate($user);
+        $vote->save();
+        return $vote;
+    }
+
+    public function toApi(): array
+    {
+        $data = $this->song->toApi();
+        $data['votes'] = $this->votes;
+        $data['queued_at'] = $this->queued_at != null ? $this->queued_at->toIso8601String() : null;
+        return $data;
     }
 }
