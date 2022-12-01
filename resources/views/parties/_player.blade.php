@@ -1,6 +1,6 @@
 <player
     name="{{ $party->name }}"
     code="{{ $party->code }}"
-    canmanage="{{ $party->user_id == Auth::user()->id ? true : false }}"
+    canmanage="{{ $party->isAdmin(Auth::user()) ? true : false }}"
     initialstate='@json($party->getState(Auth::user()))'>
 </player>
