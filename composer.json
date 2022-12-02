@@ -5,7 +5,7 @@
     "keywords": ["laravel"],
     "license": "MIT",
     "require": {
-        "php": "^8.0.2",
+        "php": "^8.1",
         "beyondcode/laravel-websockets": "^1.13",
         "doctrine/dbal": "^3.3",
         "guzzlehttp/guzzle": "^7.2",

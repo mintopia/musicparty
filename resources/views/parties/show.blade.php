@@ -16,6 +16,6 @@
             </div>
         </div>
 
-        <upcoming party="{{ $party->code }}" can_delete="{{ $party->user_id == Auth::user()->id ? true : false }}" />
+        <upcoming party="{{ $party->code }}" can_delete="{{ $party->isAdmin(Auth::user()) ? true : false }}" />
     </div>
 @endsection

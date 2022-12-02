@@ -96,6 +96,20 @@ class Party extends Model
         return $this->belongsTo(Song::class);
     }
 
+    public function isAdmin(?User $user = null): bool
+    {
+        if (!$user) {
+            return false;
+        }
+        if ($user->admin) {
+            return true;
+        }
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+        return false;
+    }
+
     public function setCode()
     {
         if ($this->code) {
@@ -378,10 +392,9 @@ class Party extends Model
 
     public function getState(?User $user, bool $asOwner = false): array
     {
-        if ($user && $user->id === $this->user_id) {
-            $asOwner = true;
+        if (!$asOwner) {
+            $asOwner = $this->isAdmin($user);
         }
-
         $next = $this->next();
 
         return [
