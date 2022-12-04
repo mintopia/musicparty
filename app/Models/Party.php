@@ -145,7 +145,7 @@ class Party extends Model
         $api->play('', [
             'context_uri' => "spotify:playlist:{$this->playlist_id}",
             'offset' => [
-                'uri' => "spotify:track:{$this->next()->song->spotify_id}",
+                'uri' => "spotify:track:{$this->song->spotify_id}",
             ],
         ]);
     }

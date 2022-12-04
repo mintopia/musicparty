@@ -27,26 +27,45 @@ The following features are planned:
 An example deployment in production would be something like this for a `.env` file.
 
 ```
+
+HOSTNAME=musicparty.example.com
+PROTOCOL=http://
+PORT=80
+
+
+APP_URL=${PROTOCOL}${HOSTNAME}
+#App key should be any valid, either use php to generate this or https://generate-random.org/laravel-key-generator
 APP_KEY=
-APP_URL=https://musicparty.example.com
+
 
 DB_DATABASE=musicparty
 DB_USERNAME=musicparty
+#Add you own dbpassword here for security
 DB_PASSWORD=
 
-PUSHER_APP_KEY=
+#
+PUSHER_APP_KEY=musicparty
+#Generate a new secret here using UUID4 (https://generate-random.org/uuid-generator)
 PUSHER_APP_SECRET=
-MIX_PUSHER_CLIENT_HOSTNAME=
-MIX_PUSHER_CLIENT_PORT=
+#
+MIX_PUSHER_CLIENT_HOSTNAME=${HOSTNAME}
+MIX_PUSHER_CLIENT_PORT=${PORT}
 
+#Create two new apps from spotify.
+#You will need to set the redirect uri to ${PROTOCOL}${HOSTNAME}/auth/spotify/search/redirect when you create them
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
 
 SPOTIFY_SEARCH_CLIENT_ID=
 SPOTIFY_SEARCH_CLIENT_SECRET=
+SPOTIFY_SEARCH_REDIRECT_URI=${APP_URL}/auth/spotify/search/redirect
+#UI required for this, available in debug output, will fall back to SPOTIFY_CLIENT_ID if not set
 SPOTIFY_SEARCH_REFRESH_TOKEN=
 
+#Create a new discord app at https://discord.com/developers/applications
+#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${HOSTNAME}/auth/spotify/search/redirect
 DISCORD_CLIENT_ID=
+#OAuth2 Secret from the OAuth2 settings in Discord
 DISCORD_CLIENT_SECRET=
 
 ```
@@ -61,7 +80,7 @@ services:
     nginx:
         image: ghcr.io/mintopia/musicparty-nginx:develop
         ports:
-            - 8000:80
+            - ${PORT}:80
         restart: unless-stopped
         depends_on:
             - php-fpm
@@ -162,7 +181,7 @@ There is a docker-compose and compose files for running a dev environment with t
 3. Run `docker-compose up -d`
 4. Run `docker-compose run --rm artisan migrate` to run DB migrations
 
-By default the stack will now be running on `http://localhost:8000`.
+By default the stack will now be running on `http://localhost:port`.
 
 A full set of typical PHP development tools are defined in docker-compose and can be run using the `docker-compose run --rm <tool>` syntax, eg. `artisan`, `composer`, `phpunit`.
 
