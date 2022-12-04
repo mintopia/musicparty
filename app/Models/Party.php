@@ -45,6 +45,12 @@ use Illuminate\Support\Facades\Log;
  * @property-read \App\Models\Song|null $song
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongStartedAt($value)
+ * @property \Illuminate\Support\Carbon|null $state_updated_at
+ * @property string|null $device_id
+ * @property int $active
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereStateUpdatedAt($value)
  */
 class Party extends Model
 {
@@ -158,6 +164,40 @@ class Party extends Model
         }
     }
 
+    public function isPlaylistBroken(?string $playlistUri = null): bool
+    {
+        // If we aren't active, we can't be broken
+        if (!$this->active) {
+            return false;
+        }
+
+        // Get Spotify Status if more than 10 seconds old
+        if ($this->user->status_updated_at <= Carbon::now()->subSeconds(10)) {
+            $this->user->getSpotifyStatus();
+        }
+
+        // If we're playing something, we can't be broken
+        if ($this->user->status && $this->user->status->is_playing) {
+            return false;
+        }
+
+        if ($playlistUri === null) {
+            $playlistUri = "spotify:playlist:{$this->playlist_id}";
+        }
+
+        // We might be broken, check our track history
+        $recentTracks = $this->user->getSpotifyApi()->getMyRecentTracks();
+        if (!$recentTracks->items) {
+            return false;
+        }
+
+        if ($recentTracks->items[0]->context->uri !== $playlistUri) {
+            return false;
+        }
+
+        return true;
+    }
+
     protected function shouldForcePlayback(?string $oldPlaylistUri): bool
     {
         // First scenario - we are playing inside our current playlist, we want to restart playback
@@ -167,17 +207,7 @@ class Party extends Model
         }
 
         // Second scenario - the last thing we played was current playlist and we have stopped
-        if (!$this->user->status || !$this->user->status->is_playing) {
-            // Check our track history
-            $recentTracks = $this->user->getSpotifyApi()->getMyRecentTracks();
-            if ($recentTracks->items) {
-                if ($recentTracks->items[0]->context->uri === $oldPlaylistUri) {
-                    return true;
-                }
-            }
-        }
-
-        return false;
+        return $this->isPlaylistBroken($oldPlaylistUri);
     }
 
     public function createPlaylist()
@@ -204,6 +234,17 @@ class Party extends Model
             $this->noUpdate = true;
             return $this;
         }
+
+        if (!$this->active) {
+            Log::debug("[Party:{$this->id}] Party is not active");
+            return $this;
+        }
+
+        if ($this->isPlaylistBroken()) {
+            Log::info("[Party:{$this->id}] Playlist is broken, fixing");
+            $this->fixPlaylist(true);
+        }
+
         $this->noUpdate = false;
         $this->updateCurrentSong();
         $playlist = $this->updateHistory();

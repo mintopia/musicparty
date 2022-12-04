@@ -66,6 +66,9 @@ use SpotifyWebAPI\Session;
  * @property string|null $status_updated_at
  * @method static \Illuminate\Database\Eloquent\Builder|User whereStatus($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereStatusUpdatedAt($value)
+ * @property-read \App\Models\Party|null $party
+ * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Sanctum\PersonalAccessToken[] $tokens
+ * @property-read int|null $tokens_count
  */
 class User extends Authenticatable
 {
