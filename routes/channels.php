@@ -20,5 +20,5 @@ Broadcast::channel('party.{party}', function ($user, Party $party) {
 });
 
 Broadcast::channel('party.{party}.owner', function($user, Party $party) {
-    return $party->user_id === $user->id;
+    return $party->isAdmin($user);
 });
