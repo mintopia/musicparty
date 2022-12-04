@@ -19,7 +19,7 @@ class PartyDebug extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Debug output for party';
 
     /**
      * Execute the console command.
@@ -32,7 +32,7 @@ class PartyDebug extends Command
         $party = Party::whereCode($code)->first();
         if (!$party) {
             $this->output->error('Party not found');
-            return 1;
+            return self::FAILURE;
         }
 
         $this->output->writeln("Party {$party->code} Debug\n");
