@@ -129,7 +129,7 @@ class Party extends Model
         }
     }
 
-    public function fixPlaylist()
+    public function fixPlaylist(bool $force = false)
     {
         $playlist = $this->getPlaylist();
         $trackIds = collect($playlist->tracks->items)->pluck('track.id');
@@ -137,17 +137,20 @@ class Party extends Model
         $api = $this->user->getSpotifyApi();
 
         $api->unfollowPlaylist($this->playlist_id);
+        $oldPlaylistUri = "spotify:playlist:{$this->playlist_id}";
         $this->playlist_id = null;
         $this->createPlaylist();
         $this->save();
 
         $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
-        $api->play('', [
-            'context_uri' => "spotify:playlist:{$this->playlist_id}",
-            'offset' => [
-                'uri' => "spotify:track:{$this->song->spotify_id}",
-            ],
-        ]);
+        if ($this->user->status && $this->user->status->context && $this->user->status->context->uri == $oldPlaylistUri || $force) {}
+            $api->play('', [
+                'context_uri' => "spotify:playlist:{$this->playlist_id}",
+                'offset' => [
+                    'uri' => "spotify:track:{$this->song->spotify_id}",
+                ],
+            ]);
+        }
     }
 
     public function createPlaylist()
