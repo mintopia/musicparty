@@ -120,12 +120,20 @@ class Party extends Model
         $playlist = $this->getPlaylist();
         $trackIds = collect($playlist->tracks->items)->pluck('track.id');
 
-        $this->user->getSpotifyApi()->unfollowPlaylist($this->playlist_id);
+        $api = $this->user->getSpotifyApi();
+
+        $api->unfollowPlaylist($this->playlist_id);
         $this->playlist_id = null;
         $this->createPlaylist();
         $this->save();
 
-        $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
+        $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
+        $api->play('', [
+            'context_uri' => "spotify:playlist:{$this->playlist_id}",
+            'offset' => [
+                'uri' => "spotify:track:{$this->next()->song->spotify_id}",
+            ],
+        ]);
     }
 
     public function createPlaylist()
