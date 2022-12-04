@@ -12,14 +12,14 @@ class PartyFixPlaylist extends Command
      *
      * @var string
      */
-    protected $signature = 'party:fixplaylist {party : The code of the party}';
+    protected $signature = 'party:fixplaylist {party : The code of the party} {--f|force : Force playback}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Fix a playlist';
 
     /**
      * Execute the console command.
@@ -30,12 +30,13 @@ class PartyFixPlaylist extends Command
     {
         $code = $this->argument('party');
         $party = Party::whereCode($code)->first();
+        $force = $this->option('force');
         if (!$party) {
             $this->output->error('Party not found');
-            return 1;
+            return self::FAILURE;
         }
-        $party->fixPlaylist();
+        $party->fixPlaylist($force);
         $this->output->writeln("Recreated playlist for [Party:{$party->id}] {$party->name}");
-        return 0;
+        return self::SUCCESS;
     }
 }
