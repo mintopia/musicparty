@@ -37,13 +37,19 @@ class PartyDebug extends Command
 
         $this->output->writeln("Party {$party->code} Debug\n");
         $this->output->writeln("Playlist ID: {$party->playlist_id}");
-        $this->output->writeln("Track: {$party->user->status->item->name}");
-        $this->output->writeln("\nDevice Status\n");
-        dump($party->user->status->device);
-        $this->output->writeln("\nContext\n");
-        dump($party->user->status->context);
-        $this->output->writeln("\nIs Playing\n");
-        dump($party->user->status->is_playing);
-        return 0;
+        if ($party->user->status) {
+            if ($party->user->status->item) {
+                $this->output->writeln("Track: {$party->user->status->item->name}");
+            }
+            $this->output->writeln("\nDevice Status\n");
+            dump($party->user->status->device);
+            $this->output->writeln("\nContext\n");
+            dump($party->user->status->context);
+            $this->output->writeln("\nIs Playing\n");
+            dump($party->user->status->is_playing);
+        } else {
+            dump($party->user->status);
+        }
+        return self::SUCCESS;
     }
 }

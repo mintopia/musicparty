@@ -19,7 +19,7 @@ class PartyFixPlaylist extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Fix a playlist';
 
     /**
      * Execute the console command.
@@ -33,10 +33,10 @@ class PartyFixPlaylist extends Command
         $force = $this->option('force');
         if (!$party) {
             $this->output->error('Party not found');
-            return 1;
+            return self::FAILURE;
         }
         $party->fixPlaylist($force);
         $this->output->writeln("Recreated playlist for [Party:{$party->id}] {$party->name}");
-        return 0;
+        return self::SUCCESS;
     }
 }

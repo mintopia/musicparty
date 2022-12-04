@@ -134,6 +134,7 @@ class Party extends Model
         $playlist = $this->getPlaylist();
         $trackIds = collect($playlist->tracks->items)->pluck('track.id');
 
+        $this->user->getSpotifyStatus();
         $api = $this->user->getSpotifyApi();
 
         $api->unfollowPlaylist($this->playlist_id);
@@ -143,14 +144,40 @@ class Party extends Model
         $this->save();
 
         $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
-        if ($this->user->status && $this->user->status->context && $this->user->status->context->uri == $oldPlaylistUri || $force) {}
-            $api->play('', [
+        $trackToPlay = $this->song->spotify_id ?? $this->next()->song->spotify_id;
+
+        $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
+
+        if ($forcePlayback) {
+            $api->play($this->device_id, [
                 'context_uri' => "spotify:playlist:{$this->playlist_id}",
                 'offset' => [
-                    'uri' => "spotify:track:{$this->song->spotify_id}",
+                    'uri' => "spotify:track:{$trackToPlay}",
                 ],
             ]);
         }
+    }
+
+    protected function shouldForcePlayback(?string $oldPlaylistUri): bool
+    {
+        // First scenario - we are playing inside our current playlist, we want to restart playback
+        $currentPlaylistUri = $this->user->status->context->uri ?? null;
+        if ($currentPlaylistUri && $currentPlaylistUri === $oldPlaylistUri) {
+            return true;
+        }
+
+        // Second scenario - the last thing we played was current playlist and we have stopped
+        if (!$this->user->status || !$this->user->status->is_playing) {
+            // Check our track history
+            $recentTracks = $this->user->getSpotifyApi()->getMyRecentTracks();
+            if ($recentTracks->items) {
+                if ($recentTracks->items[0]->context->uri === $oldPlaylistUri) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     public function createPlaylist()
@@ -221,10 +248,18 @@ class Party extends Model
             return true;
         } elseif ($current) {
             $song = Song::fromSpotify($current->item);
+            $shouldSave = false;
+            if ($current->device && $current->device->id !== $this->device_id) {
+                $this->device_id = $current->device->id;
+                $shouldSave = true;
+            }
             if ($song->id != $this->song_id) {
                 Log::info("[Party:{$this->id}] Updating current song to [{$song->spotify_id}] {$song->name}");
                 $this->song()->associate($song);
                 $this->song_started_at = Carbon::now()->subMilli($current->progress_ms);
+                $shouldSave = true;
+            }
+            if ($shouldSave) {
                 $this->save();
                 return true;
             }
