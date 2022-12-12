@@ -63,7 +63,7 @@ SPOTIFY_SEARCH_REDIRECT_URI=${APP_URL}/auth/spotify/search/redirect
 SPOTIFY_SEARCH_REFRESH_TOKEN=
 
 #Create a new discord app at https://discord.com/developers/applications
-#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${HOSTNAME}/auth/spotify/search/redirect
+#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${HOSTNAME}/auth/discord/search/redirect
 DISCORD_CLIENT_ID=
 #OAuth2 Secret from the OAuth2 settings in Discord
 DISCORD_CLIENT_SECRET=
