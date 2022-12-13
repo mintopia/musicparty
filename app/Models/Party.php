@@ -532,7 +532,7 @@ class Party extends Model
             ];
         }
 
-        if (property_exists($status, 'context') && property_exists($status->context, 'uri')) {
+        if (property_exists($status, 'context') && $status->context && property_exists($status->context, 'uri')) {
             $data['active'] = $status->context->uri == "spotify:playlist:{$this->playlist_id}";
         } else {
             $data['active'] = false;
