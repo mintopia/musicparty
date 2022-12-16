@@ -28,12 +28,12 @@ An example deployment in production would be something like this for a `.env` fi
 
 ```
 
-HOSTNAME=musicparty.example.com
+FQDN=musicparty.example.com
 PROTOCOL=http://
 PORT=80
 
 
-APP_URL=${PROTOCOL}${HOSTNAME}
+APP_URL=${PROTOCOL}${FQDN}
 #App key should be any valid, either use php to generate this or https://generate-random.org/laravel-key-generator
 APP_KEY=
 
@@ -48,11 +48,11 @@ PUSHER_APP_KEY=musicparty
 #Generate a new secret here using UUID4 (https://generate-random.org/uuid-generator)
 PUSHER_APP_SECRET=
 #
-MIX_PUSHER_CLIENT_HOSTNAME=${HOSTNAME}
+MIX_PUSHER_CLIENT_HOSTNAME=${FQDN}
 MIX_PUSHER_CLIENT_PORT=${PORT}
 
 #Create two new apps from spotify.
-#You will need to set the redirect uri to ${PROTOCOL}${HOSTNAME}/auth/spotify/search/redirect when you create them
+#You will need to set the redirect uri to ${PROTOCOL}${FQDN}/auth/spotify/search/redirect when you create them
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
 
@@ -63,7 +63,7 @@ SPOTIFY_SEARCH_REDIRECT_URI=${APP_URL}/auth/spotify/search/redirect
 SPOTIFY_SEARCH_REFRESH_TOKEN=
 
 #Create a new discord app at https://discord.com/developers/applications
-#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${HOSTNAME}/auth/discord/search/redirect
+#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${FQDN}/auth/discord/search/redirect
 DISCORD_CLIENT_ID=
 #OAuth2 Secret from the OAuth2 settings in Discord
 DISCORD_CLIENT_SECRET=
