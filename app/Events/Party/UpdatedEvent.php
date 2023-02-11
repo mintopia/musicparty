@@ -26,6 +26,9 @@ class UpdatedEvent implements ShouldBroadcast
 
     public function broadcastOn()
     {
-        return new PrivateChannel("party.{$this->party->code}");
+        return [
+            new PrivateChannel("party.{$this->party->code}"),
+            new Channel("party.{$this->party->code}"),
+        ];
     }
 }
