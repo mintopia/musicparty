@@ -17,7 +17,8 @@
         "pusher/pusher-php-server": "^7.0",
         "socialiteproviders/discord": "^4.1",
         "socialiteproviders/spotify": "^4.1",
-        "spatie/laravel-fractal": "^6.0"
+        "spatie/laravel-fractal": "^6.0",
+        "treblle/treblle-laravel": "^2.8"
     },
     "require-dev": {
         "barryvdh/laravel-ide-helper": "^2.12",
