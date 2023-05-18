@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up()
     {
-        Schema::table('party', function (Blueprint $table) {
+        Schema::table('parties', function (Blueprint $table) {
             $table->string('mode')->default('playlist')->after('active');
         });
     }
@@ -25,7 +25,7 @@ return new class extends Migration
      */
     public function down()
     {
-        Schema::table('party', function (Blueprint $table) {
+        Schema::table('parties', function (Blueprint $table) {
             $table->dropColumn('mode');
         });
     }
