@@ -154,6 +154,10 @@ class Party extends Model
 
         $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
 
+        if ($this->mode !== 'playlist') {
+            $forcePlayback = false;
+        }
+
         if ($forcePlayback) {
             $api->play($this->device_id, [
                 'context_uri' => "spotify:playlist:{$this->playlist_id}",
@@ -200,6 +204,10 @@ class Party extends Model
 
     protected function shouldForcePlayback(?string $oldPlaylistUri): bool
     {
+        if ($this->mode !== 'playlist') {
+            return false;
+        }
+
         // First scenario - we are playing inside our current playlist, we want to restart playback
         $currentPlaylistUri = $this->user->status->context->uri ?? null;
         if ($currentPlaylistUri && $currentPlaylistUri === $oldPlaylistUri) {
@@ -411,6 +419,10 @@ class Party extends Model
         }
         $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds);
         foreach ($songsToAdd as $song) {
+            if ($this->mode === 'queue') {
+                Log::info("[Party:{$this->id}] Adding [{$song->song->spotify_id}] {$song->song->name} to queue");
+                $this->user->getSpotifyApi()->queue($song->song->spotify_id);
+            }
             Log::info("[Party:{$this->id}] Added [{$song->song->spotify_id}] {$song->song->name} to party playlist");
             $song->queued_at = Carbon::now();
             $song->save();
