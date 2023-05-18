@@ -34,6 +34,7 @@ class PartyFallback extends Command
     {
         $parties = Party::where(function ($query) {
             $cutoff = Carbon::now()->subSeconds(90);
+            $query->where('active', true);
             $query->where('state_updated_at', '<=', $cutoff)->orWhereNull('state_updated_at');
         })->get();
 
