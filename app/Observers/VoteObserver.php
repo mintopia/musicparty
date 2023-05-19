@@ -3,6 +3,7 @@
 namespace App\Observers;
 
 use App\Models\Vote;
+use Illuminate\Support\Facades\Log;
 
 class VoteObserver
 {
@@ -15,6 +16,7 @@ class VoteObserver
     public function created(Vote $vote)
     {
         $vote->upcoming_song->updateVotes();
+        Log::debug("[Party:{$vote->upcoming_song->party_id}] {$vote->user->nickname} has voted for {$vote->upcoming_song->song->name}");
     }
 
     /**
