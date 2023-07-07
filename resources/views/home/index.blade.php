@@ -58,10 +58,11 @@
                 @endif
             @else
                 <p class="text-center mt-5">
-                    <a href="{{ route('login') }}" class="bg-discord btn-lg btn">
+                    <a onclick="doLogin()" class="bg-discord btn-lg btn">
                         <i class="bi bi-discord"></i>
                         Login with Discord
                     </a>
+                    
                 </p>
             @endauth
         </div>
