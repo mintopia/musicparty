@@ -28,7 +28,7 @@ services:
       - redis
 
   scheduler:
-    image: 1and1internet/php-build-environment:8.1-xdebug
+    image: 1and1internet/php-build-environment:8.2-xdebug
     restart: unless-stopped
     entrypoint: [ "php" ]
     command: "artisan schedule:work"
@@ -41,7 +41,7 @@ services:
       - redis
 
   worker:
-    image: 1and1internet/php-build-environment:8.1-xdebug
+    image: 1and1internet/php-build-environment:8.2-xdebug
     restart: unless-stopped
     entrypoint: [ "php" ]
     command: "artisan queue:work"
@@ -55,7 +55,7 @@ services:
       - redis
 
   websockets:
-    image: 1and1internet/php-build-environment:8.1-xdebug
+    image: 1and1internet/php-build-environment:8.2-xdebug
     restart: unless-stopped
     entrypoint: [ "php" ]
     command: "artisan websockets:serve"
@@ -86,7 +86,7 @@ services:
 
   composer:
     profiles: [ "composer" ]
-    image: 1and1internet/php-build-environment:8.1
+    image: 1and1internet/php-build-environment:8.2
     entrypoint: [ "composer" ]
     command: [ "--version" ]
     user: "1000"
@@ -95,7 +95,7 @@ services:
 
   test:
     profiles: [ "test" ]
-    image: 1and1internet/php-build-environment:8.1-xdebug
+    image: 1and1internet/php-build-environment:8.2-xdebug
     entrypoint: [ "vendor/bin/phpunit" ]
     command: [ "" ]
     user: "1000"
@@ -104,7 +104,7 @@ services:
 
   lint:
     profiles: [ "lint" ]
-    image: 1and1internet/php-build-environment:8.1
+    image: 1and1internet/php-build-environment:8.2
     entrypoint: [ "vendor/bin/parallel-lint", "--exclude", "vendor", "." ]
     user: "1000"
     volumes:
@@ -112,7 +112,7 @@ services:
 
   phpcs:
     profiles: [ "phpcs" ]
-    image: 1and1internet/php-build-environment:8.1
+    image: 1and1internet/php-build-environment:8.2
     entrypoint: [ "vendor/bin/phpcs", "-pn", "--standard=PSR12", "app/", "tests/" ]
     command: [ "" ]
     user: "1000"
@@ -121,7 +121,7 @@ services:
 
   phpcs-fixer:
     profiles: [ "phpcs-fixer" ]
-    image: 1and1internet/php-build-environment:8.1
+    image: 1and1internet/php-build-environment:8.2
     entrypoint: [ "vendor/bin/phpcbf", "-pn", "--standard=PSR12", "app/", "tests/" ]
     command: [ "" ]
     user: "1000"
@@ -140,8 +140,8 @@ services:
 
   artisan:
     profiles: [ "artisan" ]
-    image: 1and1internet/php-build-environment:8.1-xdebug
-    entrypoint: [ "php", "artisan" ]
+    image: 1and1internet/php-build-environment:8.2-xdebug
+    entrypoint: [ "/app/artisan" ]
     user: "1000"
     volumes:
       - ./:/app/
