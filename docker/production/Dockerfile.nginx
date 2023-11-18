@@ -18,5 +18,4 @@ LABEL maintainer="jess@mintopia.net"
 
 COPY --from=build --chown=1000:1000 /app/ /var/www
 
-RUN rm /etc/nginx/conf.d/default.conf
 COPY docker/default.conf /etc/nginx/templates/conf.d/default.conf.template

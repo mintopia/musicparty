@@ -9,6 +9,6 @@ RUN apk update \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/pear \
     && apk del --no-cache ${PHPIZE_DEPS} \
-    && rm -vrf /tmp/pear /var/cache/apk/* \
+    && rm -vrf /tmp/pear /var/cache/apk/*
 
 USER 1000
