@@ -78,7 +78,7 @@ You would then a docker-compose something like this:
 version: '3'
 services:
     nginx:
-        image: ghcr.io/mintopia/musicparty-nginx:develop
+        image: ghcr.io/mintopia/musicparty-nginx:latest
         ports:
             - ${PORT}:80
         restart: unless-stopped
@@ -86,7 +86,7 @@ services:
             - php-fpm
 
     php-fpm:
-        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        image: ghcr.io/mintopia/musicparty-php-fpm:latest
         env_file: .env
         restart: unless-stopped
         depends_on:
@@ -94,7 +94,7 @@ services:
             - redis
 
     scheduler:
-        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        image: ghcr.io/mintopia/musicparty-php-fpm:latest
         entrypoint: [ "php" ]
         command: "artisan schedule:work"
         user: "1000"
@@ -105,7 +105,7 @@ services:
             - redis
 
     worker:
-        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        image: ghcr.io/mintopia/musicparty-php-fpm:latest
         entrypoint: [ "php" ]
         command: "artisan queue:work"
         user: "1000"
@@ -117,7 +117,7 @@ services:
             - redis
 
     websockets:
-        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        image: ghcr.io/mintopia/musicparty-php-fpm:latest
         ports:
             - 6001:6001
         entrypoint: [ "php" ]
@@ -130,7 +130,7 @@ services:
             - redis
 
     artisan:
-        image: ghcr.io/mintopia/musicparty-php-fpm:develop
+        image: ghcr.io/mintopia/musicparty-php-fpm:latest
         entrypoint: [ "php", "artisan" ]
         user: "1000"
         env_file: .env
@@ -141,7 +141,7 @@ services:
             - artisan
 
     redis:
-        image: redis:6.0
+        image: redis:6.2.6
         restart: unless-stopped
 
     db:
@@ -161,6 +161,23 @@ volumes:
 ```
 
 Run the stack with `docker-compose up -d` and the DB migrations using `docker-compose run --rm artisan migrate`.
+
+### Performance
+
+By default the production containers run using nginx and php-fpm with a very conservative number of workers. You can control the number with the following environment variables in `.env` or directly on the `php-fpm` container:
+
+```
+FPM_PM_MAX_CHILDREN=50
+FPM_PM_START_SERVERS=10
+FPM_PM_MIN_SPARE_SERVERS=5
+FPM_PM_MAX_SPARE_SERVERS=10
+```
+
+These are used in the FPM configuration file, you can find more on configuring it in the php-fpm documentation.
+
+### Performance Monitoring
+
+You can monitor the nginx and php-fpm status using `/nginx-status` and `/fpm-status` HTTP endpoints. By default these are only allowed to be used by localhost and they shouldn't be exposed to the internet. You can control the IP range allowed to access them using the `STATUS_ALLOW` environment variable on the nginx container. It supports anything available for an `allow` command in nginx config.
 
 ## Usage
 
