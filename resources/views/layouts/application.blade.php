@@ -45,10 +45,37 @@
                             </li>
                         @else
                             <li class="nav-item">
-                                <a class="nav-link active" aria-current="page" href="{{ route('login') }}">
+                                <a class="nav-link active" aria-current="page" onclick="doLogin()">
                                     <i class="bi bi-discord"></i>
                                     Login with Discord
                                 </a>
+                                <component :is="'script'" style="display:none">
+                                    function doLogin() {
+                                        if (window.location !== window.parent.location) {
+                                            /* If we are in an iframe popup the login window */
+                                            const popup = window.open("{{ route('login') }}", "popup", "popup=true");
+                                            const checkPopup = setInterval(() => {
+                                                try {
+                                                    if (popup.window.location.href
+                                                        .includes("/auth/discord/redirect") || popup.window.location.href == location.href) {
+                                                            popup.close();
+                                                            location.reload();
+                                                        }
+                                                }
+                                                catch(err) {
+                                                    /* Capture cors exception when discord is active */
+                                                }
+
+                                                if (!popup || !popup.closed) return;
+                                                /* Clear the refresh timer if the popup no longer exists or has been closed */
+                                                clearInterval(checkPopup);
+                                            }, 500);
+                                        } else {
+                                            /* Not in an iframe, go direct */
+                                            location.href="{{ route('login') }}"
+                                        }
+                                    }
+                                </component>
                             </li>
                         @endauth
                     </ul>

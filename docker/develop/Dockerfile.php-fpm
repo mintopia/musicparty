@@ -4,8 +4,7 @@ LABEL maintainer="jess@mintopia.net"
 USER root
 
 RUN apk update \
-    && apk --no-cache add \
-        ${PHPIZE_DEPS} linux-headers\
+    && apk --no-cache add ${PHPIZE_DEPS} linux-headers \
     && pecl install -f xdebug \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/pear \
