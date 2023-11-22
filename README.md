@@ -111,7 +111,8 @@ services:
         user: "1000"
         env_file: .env
         restart: unless-stopped
-        scale: 2
+        deploy:
+            replicas: 2
         depends_on:
             - db
             - redis
@@ -166,18 +167,32 @@ Run the stack with `docker-compose up -d` and the DB migrations using `docker-co
 
 By default the production containers run using nginx and php-fpm with a very conservative number of workers. You can control the number with the following environment variables in `.env` or directly on the `php-fpm` container:
 
-```
-FPM_PM_MAX_CHILDREN=50
+```dotenv
+FPM_PM_MAX_CHILDREN=40
 FPM_PM_START_SERVERS=10
-FPM_PM_MIN_SPARE_SERVERS=5
-FPM_PM_MAX_SPARE_SERVERS=10
+FPM_PM_MIN_SPARE_SERVERS=10
+FPM_PM_MAX_SPARE_SERVERS=30
 ```
 
 These are used in the FPM configuration file, you can find more on configuring it in the php-fpm documentation.
 
 ### Performance Monitoring
 
-You can monitor the nginx and php-fpm status using `/nginx-status` and `/fpm-status` HTTP endpoints. By default these are only allowed to be used by localhost and they shouldn't be exposed to the internet. You can control the IP range allowed to access them using the `STATUS_ALLOW` environment variable on the nginx container. It supports anything available for an `allow` command in nginx config.
+You can monitor the nginx and php-fpm status using `/nginx-status` and `/fpm-status` HTTP endpoints. There is also an FPM ping endpoint at `/fpm-ping`.
+
+By default these are only allowed to be used by localhost and they shouldn't be exposed to the internet. You can control the IP range allowed to access them using the `STATUS_ALLOW` environment variable on the nginx container. It supports anything available for an `allow` command in nginx config.
+
+If you want to change these paths, set the environment variables `NGINX_STATUS_PATH`, `FPM_STATUS_PATH` and `FPM_PING_PATH` on both nginx and php-fpm.
+
+For example, if you wanted to use an unpredicatable string in the URL and allow access to all IPs:
+
+```dotenv
+STATUS_ALLOW=0.0.0.0/0
+
+FPM_STATUS_PATH=/410a821c-ac93-4b07-8652-7924937ce920/fpm-status
+FPM_PING_PATH=/410a821c-ac93-4b07-8652-7924937ce920/fpm-ping
+NGINX_STATUS_PATH=/410a821c-ac93-4b07-8652-7924937ce920/nginx-status
+```
 
 ## Usage
 
