@@ -192,7 +192,7 @@ a {
             if (this.canmanage) {
                 channel += '.owner';
             }
-            Echo.private(channel).listen('Party\\UpdatedEvent', (payload) => {
+            Echo.private(channel).listen('App\\Events\\Party\\UpdatedEvent', (payload) => {
                 this.updateState(payload);
             });
         },
