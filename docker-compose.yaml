@@ -142,7 +142,7 @@ services:
   artisan:
     profiles: [ "artisan" ]
     image: 1and1internet/php-build-environment:8.2-xdebug
-    entrypoint: [ "/app/artisan" ]
+    entrypoint: [ "php", "artisan" ]
     user: "1000"
     volumes:
       - ./:/app/

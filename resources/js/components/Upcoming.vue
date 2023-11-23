@@ -174,11 +174,11 @@
         },
 
         mounted() {
-            Echo.private(`party.${this.party}`).listen('App\\Events\\UpcomingSong\\UpdatedEvent', (payload) => {
+            Echo.private(`party.${this.party}`).listen('UpcomingSong\\UpdatedEvent', (payload) => {
                 this.addOrUpdateItem(payload);
                 this.sortUpcoming();
             });
-            Echo.private(`party.${this.party}`).listen('App\\Events\\UpcomingSong\\RemovedEvent', (payload) => {
+            Echo.private(`party.${this.party}`).listen('UpcomingSong\\RemovedEvent', (payload) => {
                 this.removeItem(payload.id);
             });
         },
