@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Vote;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 class VoteObserver
 {
@@ -17,6 +18,11 @@ class VoteObserver
     {
         $vote->upcoming_song->updateVotes();
         Log::debug("[Party:{$vote->upcoming_song->party_id}] {$vote->user->nickname} has voted for {$vote->upcoming_song->song->name}");
+        try {
+            Redis::incr("metrics.votes.{$vote->upcoming_song->party_id}", 1);
+        } catch (\Exception $ex) {
+            // Do Nothing
+        }
     }
 
     /**
