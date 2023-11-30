@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Prometheus\Collectors\Horizon\CurrentMasterSupervisorCollector;
@@ -50,11 +51,54 @@ class PrometheusServiceProvider extends ServiceProvider
             ->value(function() {
                 return Redis::get('metrics.exceptions') ?? 0;
             });
+
+        Prometheus::addGauge('Jobs Successfully Processed')
+            ->helpText('The number of jobs processed')
+            ->label('job')
+            ->value(function() {
+                return $this->getMultipleFromRedis('metrics.jobs.processed');
+            });
+
+        Prometheus::addGauge('Queue Jobs Successfully Processed')
+            ->helpText('The number of jobs processed by queue')
+            ->label('queue')
+            ->value(function() {
+                return $this->getMultipleFromRedis('metrics.jobs.processed');
+            });
+
+        Prometheus::addGauge('Jobs Failed')
+            ->helpText('The number of jobs failed by job')
+            ->label('job')
+            ->value(function() {
+                return $this->getMultipleFromRedis('metrics.jobs.failed');
+            });
+
+        Prometheus::addGauge('Queue Jobs Failed')
+            ->helpText('The number of jobs failed by queue')
+            ->label('queue')
+            ->value(function() {
+                return $this->getMultipleFromRedis('metrics.jobs.failed');
+            });
+
+        Prometheus::addGauge('Queue Size')
+            ->helpText('The number of jobs processed by queue')
+            ->label('queue')
+            ->value(function() {
+                $result = [];
+                foreach (config('prometheus.queues') as $queueName) {
+                    $size = Queue::size($queueName) ?? 0;
+                    return [$size, [$queueName]];
+                }
+                return $result;
+            });
     }
 
     protected function getMultipleFromRedis(string $prefix): array
     {
         $keys = Redis::keys("{$prefix}.*");
+        if (!$keys) {
+            return [];
+        }
         $lookup = [];
         $names = [];
         foreach ($keys as $key) {

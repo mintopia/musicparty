@@ -38,4 +38,6 @@ return [
     'actions' => [
         'render_collectors' => Spatie\Prometheus\Actions\RenderCollectorsAction::class,
     ],
+
+    'queues' => explode(',', env('PROMETHEUS_QUEUES', 'default')),
 ];
