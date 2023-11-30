@@ -176,10 +176,6 @@ p {
         mounted() {
             this.updateState(JSON.parse(this.initialstate));
             let channel = `party.${this.code}`;
-
-            if (this.canmanage) {
-                channel += '.owner';
-            }
             Echo.private(channel).listen('Party\\UpdatedEvent', (payload) => {
                 this.updateState(payload);
             });
