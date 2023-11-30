@@ -5,12 +5,11 @@ services:
       context: .
       dockerfile: docker/develop/Dockerfile.nginx
     restart: unless-stopped
-    ports:
-      - 8000:80
     volumes:
       - ./:/var/www
     depends_on:
       - php-fpm
+      - websockets
 
   php-fpm:
     build:
