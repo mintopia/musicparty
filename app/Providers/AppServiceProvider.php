@@ -2,10 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\User;
 use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pulse\Facades\Pulse;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -39,6 +42,10 @@ class AppServiceProvider extends ServiceProvider
             } catch (\Exception $ex) {
                 // Do Nothing
             }
+        });
+
+        Pulse::users(function(Collection $ids) {
+            return User::whereKey($ids)->get(['id', 'nickname', 'email']);
         });
     }
 }
