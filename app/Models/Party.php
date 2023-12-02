@@ -489,9 +489,9 @@ class Party extends Model
         return $this->user->getSpotifyApi()->getPlaylist($this->playlist_id);
     }
 
-    public function getState(?User $user, bool $asOwner = false): array
+    public function getState(?User $user = null, bool $asOwner = false): array
     {
-        if (!$asOwner) {
+        if (!$asOwner && $user) {
             $asOwner = $this->isAdmin($user);
         }
         $next = $this->next();
