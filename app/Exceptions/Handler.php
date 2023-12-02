@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Redis;
 use Throwable;
 
 class Handler extends ExceptionHandler
@@ -35,7 +36,11 @@ class Handler extends ExceptionHandler
     public function register()
     {
         $this->reportable(function (Throwable $e) {
-            //
+            try {
+                Redis::incr('metrics.exceptions', 1);
+            } catch (\Exception $ex) {
+                // Do Nothing
+            }
         });
     }
 }

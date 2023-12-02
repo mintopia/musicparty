@@ -5,6 +5,7 @@ services:
       context: .
       dockerfile: docker/develop/Dockerfile.nginx
     restart: unless-stopped
+    env_file: .env
     volumes:
       - ./:/var/www
     depends_on:
@@ -20,6 +21,7 @@ services:
       - XDEBUG_CONFIG=client_host=host.docker.internal
       - PHP_IDE_CONFIG=serverName=musicparty
       - XDEBUG_MODE=debug
+    env_file: .env
     volumes:
       - ./:/var/www
     depends_on:
@@ -47,7 +49,7 @@ services:
     user: "1000"
     env_file: .env
     deploy:
-      replicas: 2
+      replicas: 1
     volumes:
       - ./:/app
     depends_on:
@@ -60,8 +62,6 @@ services:
     entrypoint: [ "php" ]
     command: "artisan websockets:serve"
     user: "1000"
-    ports:
-      - 6001:6001
     env_file: .env
     volumes:
       - ./:/app
