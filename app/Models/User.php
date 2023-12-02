@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Services\SpotifyAPIRequest;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -196,5 +197,12 @@ class User extends Authenticatable
         $this->status_updated_at = Carbon::now();
         $this->save();
         return $this->status;
+    }
+
+    protected function name(): Attribute
+    {
+        return Attribute::make(
+            get: fn (mixed $value, array $attributes) => $attributes['nickname'],
+        );
     }
 }
