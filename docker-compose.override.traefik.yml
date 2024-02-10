@@ -1,0 +1,12 @@
+services:
+  nginx:
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.nginx-control.rule=Host(`musicparty`)"
+    networks:
+      - default
+      - frontend
+
+networks:
+  frontend:
+    external: true

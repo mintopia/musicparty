@@ -1,15 +1,16 @@
-/**
- * First we will load all of this project's JavaScript dependencies which
- * includes Vue and other libraries. It is a great starting point when
- * building robust, powerful web applications using Vue and Laravel.
- */
-
-require('./bootstrap');
-
+import '~tabler/dist/js/tabler.min.js';
+import './bootstrap';
+import '../sass/app.scss';
+import '../sass/tabler-icons.scss';
+import.meta.glob([
+    '../img/**',
+    '../fonts/**',
+]);
 import { createApp } from 'vue'
-const app = createApp({})
+import Player from './components/Player.vue'
 
-const files = require.context('./', true, /\.vue$/i)
-files.keys().map(key => app.component(key.split('/').pop().split('.')[0], files(key).default))
+const app = createApp()
+
+app.component('player', Player)
 
 app.mount('#app')

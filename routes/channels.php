@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\Party;
-use Illuminate\Support\Facades\Broadcast;
-
 /*
 |--------------------------------------------------------------------------
 | Broadcast Channels
@@ -14,11 +11,13 @@ use Illuminate\Support\Facades\Broadcast;
 |
 */
 
+use App\Models\Party;
+use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('party.{party}', function ($user, Party $party) {
     return true;
 });
 
 Broadcast::channel('party.{party}.owner', function($user, Party $party) {
-    return $party->isAdmin($user);
+    return false;
 });

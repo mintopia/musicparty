@@ -1,10 +1,11 @@
 FROM ghcr.io/mintopia/php-docker-php-fpm:latest
-LABEL maintainer="jess@mintopia.net"
+LABEL maintainer="jessica.smith@digicert.com"
 
 USER root
 
 RUN apk update \
-    && apk --no-cache add ${PHPIZE_DEPS} linux-headers \
+    && apk --no-cache add \
+        ${PHPIZE_DEPS} linux-headers\
     && pecl install -f xdebug \
     && docker-php-ext-enable xdebug \
     && rm -rf /tmp/pear \

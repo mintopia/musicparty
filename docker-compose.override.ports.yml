@@ -1,0 +1,8 @@
+services:
+  nginx:
+    ports:
+      - 8000:80
+
+networks:
+  frontend:
+    external: true

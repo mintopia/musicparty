@@ -2,7 +2,6 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Prometheus\Collectors\Horizon\CurrentMasterSupervisorCollector;
@@ -21,84 +20,34 @@ class PrometheusServiceProvider extends ServiceProvider
         // HTTP Metrics
         Prometheus::addGauge('HTTP Requests')
             ->helpText('The number of handled HTTP requests')
-            ->value(function() {
-                return Redis::get('metrics.http.requests') ?? 0;
+            ->value(function () {
+                return Redis::get("metrics.http.requests") ?? 0;
             });
 
         Prometheus::addGauge('HTTP Methods')
             ->helpText('The numbers of each HTTP method used')
             ->label('method')
-            ->value(function() {
+            ->value(function () {
                 return $this->getMultipleFromRedis('metrics.http.method');
             });
 
         Prometheus::addGauge('HTTP Status Codes')
             ->helpText('The numbers of each HTTP status code returned')
             ->label('code')
-            ->value(function() {
+            ->value(function () {
                 return $this->getMultipleFromRedis('metrics.http.status');
-            });
-
-        Prometheus::addGauge('Votes')
-            ->helpText('The number of votes for a song')
-            ->label('party')
-            ->value(function() {
-                return $this->getMultipleFromRedis('metrics.votes');
             });
 
         Prometheus::addGauge('Uncaught Exceptions')
             ->helpText('The number of uncaught exceptions')
-            ->value(function() {
-                return Redis::get('metrics.exceptions') ?? 0;
-            });
-
-        Prometheus::addGauge('Jobs Successfully Processed')
-            ->helpText('The number of jobs processed')
-            ->label('job')
-            ->value(function() {
-                return $this->getMultipleFromRedis('metrics.jobs.processed');
-            });
-
-        Prometheus::addGauge('Queue Jobs Successfully Processed')
-            ->helpText('The number of jobs processed by queue')
-            ->label('queue')
-            ->value(function() {
-                return $this->getMultipleFromRedis('metrics.jobs.processed');
-            });
-
-        Prometheus::addGauge('Jobs Failed')
-            ->helpText('The number of jobs failed by job')
-            ->label('job')
-            ->value(function() {
-                return $this->getMultipleFromRedis('metrics.jobs.failed');
-            });
-
-        Prometheus::addGauge('Queue Jobs Failed')
-            ->helpText('The number of jobs failed by queue')
-            ->label('queue')
-            ->value(function() {
-                return $this->getMultipleFromRedis('metrics.jobs.failed');
-            });
-
-        Prometheus::addGauge('Queue Size')
-            ->helpText('The number of jobs processed by queue')
-            ->label('queue')
-            ->value(function() {
-                $result = [];
-                foreach (config('prometheus.queues') as $queueName) {
-                    $size = Queue::size($queueName) ?? 0;
-                    return [$size, [$queueName]];
-                }
-                return $result;
+            ->value(function () {
+                return Redis::get("metrics.exceptions") ?? 0;
             });
     }
 
     protected function getMultipleFromRedis(string $prefix): array
     {
         $keys = Redis::keys("{$prefix}.*");
-        if (!$keys) {
-            return [];
-        }
         $lookup = [];
         $names = [];
         foreach ($keys as $key) {
@@ -106,6 +55,9 @@ class PrometheusServiceProvider extends ServiceProvider
             $name = end($parts);
             $names[] = $name;
             $lookup[] = "{$prefix}.{$name}";
+        }
+        if (!$lookup) {
+            return [];
         }
         $values = Redis::mget($lookup);
         $result = [];

@@ -1,59 +1,141 @@
-// Fonts
-@import url('https://fonts.googleapis.com/css?family=Nunito');
+@import '~tabler/src/scss/tabler';
+@import url('https://rsms.me/inter/inter.css');
 
-// Variables
-@import 'variables';
 
-// Bootstrap
-@import '~bootstrap/scss/bootstrap';
-@import "~bootstrap-icons/font/bootstrap-icons";
 
-html {
-    min-height: 100%;
-    position: relative;
-    padding-bottom: 4em;
+:root {
+    --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+    --control-color-discord: #5865F2;
+    --control-color-discord-rgb: '88, 101, 242';
 }
-.cover-bg {
-    background: linear-gradient(
-            rgba(0, 0, 0, 0.85),
-            rgba(0, 0, 0, 0.85)
-    ), url('../img/cover.jpg') no-repeat center center fixed;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    background-size: cover;
+
+body {
+    font-feature-settings: "cv03", "cv04", "cv11";
+}
+
+.card {
+    --tblr-card-cap-padding-y: 1rem;
+}
+
+.navbar-brand-image {
+    height: 4rem;
+}
+
+.navbar-vertical.navbar-expand-lg {
+    overflow-y: auto;
+}
+
+.page-title {
+    line-height: var(--tblr-line-height-h2);
+}
+
+.navbar {
+    .breadcrumb {
+        padding-top: 0.4rem;
+    }
+}
+
+.btn-discord {
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-border-color: transparent;
+    --tblr-btn-color: var(--tblr-primary-fg);
+    --tblr-btn-bg: #5865F2;
+    --tblr-btn-hover-color: var(--tblr-primary-fg);
+    --tblr-btn-hover-bg: rgba(88, 101, 242, .8);
+    --tblr-btn-active-color: var(--tblr-primary-fg);
+    --tblr-btn-active-bg: rgba(88, 101, 242, .8);
+    --tblr-btn-disabled-bg: #5865F2;
+    --tblr-btn-disabled-color: var(--tblr-primary-fg);
+    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
 }
 
 .bg-discord {
-    background-color: #5865f2;
-    color: #ffffff;
+    --tblr-bg-opacity: 1;
+    background-color: rgba(88, 101, 242, var(--tblr-bg-opacity)) !important;
 }
 
-.bg-spotify {
-    background-color: #1d8954;
-    color: #ffffff;
+.text-discord-fg {
+    color: var(--tblr-light) !important;
 }
 
-.user-menu-avatar {
-    margin-top: -1rem !important;
-    margin-bottom: -0.6rem !important;
-    height: 2.6em;
-    width: 2.6em;
+.btn-steam {
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-border-color: transparent;
+    --tblr-btn-color: var(--tblr-primary-fg);
+    --tblr-btn-bg: #00adee;
+    --tblr-btn-hover-color: var(--tblr-primary-fg);
+    --tblr-btn-hover-bg: rgba(0, 173, 238, .8);
+    --tblr-btn-active-color: var(--tblr-primary-fg);
+    --tblr-btn-active-bg: rgba(0, 173, 238, .8);
+    --tblr-btn-disabled-bg: #00adee;
+    --tblr-btn-disabled-color: var(--tblr-primary-fg);
+    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
 }
 
-.user-menu-text {
-    margin-top: -1rem !important;
-    margin-bottom: -0.6rem !important;
+.bg-steam {
+    --tblr-bg-opacity: 1;
+    background-color: rgba(0, 173, 238, var(--tblr-bg-opacity)) !important;
 }
 
-.party-album {
-    height: 3em;
+.text-steam-fg {
+    color: var(--tblr-light) !important;
 }
 
-.striped-bg:nth-child(odd) {
-    background-color: #212529;
+.btn-twitch {
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-border-color: transparent;
+    --tblr-btn-color: var(--tblr-primary-fg);
+    --tblr-btn-bg: #9146FF;
+    --tblr-btn-hover-color: var(--tblr-primary-fg);
+    --tblr-btn-hover-bg: rgba(145, 70, 255, .8);
+    --tblr-btn-active-color: var(--tblr-primary-fg);
+    --tblr-btn-active-bg: rgba(145, 70, 255, .8);
+    --tblr-btn-disabled-bg: #9146FF;
+    --tblr-btn-disabled-color: var(--tblr-primary-fg);
+    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
 }
 
-.striped-bg:nth-child(even) {
-    background-color: #2c3034;
+.bg-twitch {
+    --tblr-bg-opacity: 1;
+    background-color: rgba(145, 70, 255, var(--tblr-bg-opacity)) !important;
+}
+
+.text-twitch-fg {
+    color: var(--tblr-light) !important;
+}
+
+.seating-plan {
+    position: relative;
+    background-repeat: no-repeat;
+
+    .seat {
+        position: absolute;
+        width: 1.9em;
+        height: 1.9em;
+        border: 2px solid var(--tblr-gray);
+        border-radius: 2px;
+        padding: 0;
+        overflow: hidden;
+    }
+
+    .seat-clan {
+        background-color: #3d8bfd;
+    }
+
+    .seat-mine {
+        background-color: #ffc107;
+    }
+
+    .seat.taken {
+        background-color: #dc3545;
+    }
+
+    .seat.disabled {
+        background-color: #adb5bd;
+    }
+
+
 }
