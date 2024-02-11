@@ -20,7 +20,7 @@ RUN mkdir -p /app
 COPY --from=build /app/ /app
 
 RUN \
-        npm install && \
+        npm install --production=false && \
         npm run build
 
 
