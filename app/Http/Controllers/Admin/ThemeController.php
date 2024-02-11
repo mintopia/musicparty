@@ -74,11 +74,6 @@ class ThemeController extends Controller
                 'css',
                 'primary',
                 'nav_background',
-                'seat_available',
-                'seat_disabled',
-                'seat_taken',
-                'seat_clan',
-                'seat_selected',
             ];
             foreach ($map as $prop) {
                 $theme->{$prop} = $request->input($prop);

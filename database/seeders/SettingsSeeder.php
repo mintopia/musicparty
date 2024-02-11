@@ -50,7 +50,7 @@ class SettingsSeeder extends Seeder
 
             'defaultparty' => (object)[
                 'name' => 'Default Party Code',
-                'validation' => 'sometimes|string|max:100|min:4',
+                'validation' => 'sometimes|nullable|string|max:100|min:4',
                 'description' => 'If specified, users will be automatically taken to this party',
             ],
 

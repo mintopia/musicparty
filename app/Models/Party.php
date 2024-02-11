@@ -115,13 +115,14 @@ class Party extends Model
 
     public function getState(): object
     {
+        $next = $this->next();
         return (object)[
             'code' => $this->code,
             'name' => $this->name,
             'backup_playlist_id' => $this->backup_playlist_id,
             'status' => $this->getStatus(),
             'now' => $this->song->toApi() ?? null,
-            'next' => $this->next()->toApi() ?? null,
+            'next' => $next ? $next->toApi() : null,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];

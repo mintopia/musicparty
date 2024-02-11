@@ -31,11 +31,6 @@ class ThemeUpdateRequest extends FormRequest
                 'css' => 'sometimes|string|nullable',
                 'primary' => 'required|hex_color',
                 'nav_background' => 'required|hex_color',
-                'seat_available' => 'required|hex_color',
-                'seat_disabled' => 'required|hex_color',
-                'seat_taken' => 'required|hex_color',
-                'seat_clan' => 'required|hex_color',
-                'seat_selected' => 'required|hex_color',
             ]);
         }
         return $rules;
