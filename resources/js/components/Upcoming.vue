@@ -124,6 +124,7 @@
                     vote: value,
                 }).then((response) => {
                     this.addOrUpdateItem(response.data.data);
+                    this.sortUpcoming();
                 }).catch((error) => {
                     // Do Nothing
                 });
