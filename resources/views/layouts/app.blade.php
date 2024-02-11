@@ -5,7 +5,17 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
 
-    @vite(['resources/css/app.css'])
+    <script>
+        window.pusherConfig = {
+            appKey: '{{ env('VITE_PUSHER_APP_KEY') }}',
+            host: '{{ env('VITE_PUSHER_HOST') }}',
+            port: {{ env('VITE_PUSHER_PORT') }},
+            scheme: '{{ env('VITE_PUSHER_SCHEME') }}',
+            cluster: '{{ env('VITE_PUSHER_APP_CLUSTER') }}',
+        };
+    </script>
+
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 
@@ -230,7 +240,6 @@
     </div>
 </div>
 </div>
-@vite(['resources/js/app.js'])
 @stack('footer')
 </body>
 </html>
