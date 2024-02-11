@@ -2,50 +2,43 @@
 
 namespace App\Providers;
 
-use App\Models\User;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Queue;
-use Illuminate\Support\Facades\Redis;
+use App\Models\Setting;
+use App\Models\SocialProvider;
+use App\Models\Theme;
+use App\Services\DiscordApi;
+use App\Services\SpotifySearchService;
+use App\Services\UpcomingSongAugmentService;
+use GuzzleHttp\Client;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
-use Laravel\Pulse\Facades\Pulse;
 
 class AppServiceProvider extends ServiceProvider
 {
     /**
      * Register any application services.
-     *
-     * @return void
      */
-    public function register()
+    public function register(): void
     {
+        $this->app->bind(UpcomingSongAugmentService::class);
     }
 
     /**
      * Bootstrap any application services.
-     *
-     * @return void
      */
-    public function boot()
+    public function boot(): void
     {
-        Queue::after(function(JobProcessed $event) {
-            $name = $event->job->resolveName();
-            $queue = $event->job->getQueue();
-            try {
-                if ($event->job->hasFailed()) {
-                    Redis::incr("metrics.jobs.failed.{$name}", 1);
-                    Redis::incr("metrics.queues.failed.{$queue}", 1);
-                } else {
-                    Redis::incr("metrics.jobs.processed.{$name}", 1);
-                    Redis::incr("metrics.queues.processed.{$queue}", 1);
-                }
-            } catch (\Exception $ex) {
-                // Do Nothing
-            }
+        Blade::directive('setting', function(string $expression, $default = null) {
+            return "<?php echo App\Models\Setting::fetch($expression, $default); ?>";
         });
 
-        Pulse::users(function(Collection $ids) {
-            return User::whereKey($ids)->get(['id', 'nickname', 'email']);
+        view()->composer(['layouts.app', 'layouts.login'],function($view) {
+                $currentTheme = Theme::whereActive(true)->first();
+                $darkMode = false;
+                if ($currentTheme) {
+                    $darkMode = $currentTheme->dark_mode;
+                }
+                $view->with('currentTheme', $currentTheme);
+                $view->with('darkMode', $darkMode);
         });
     }
 }

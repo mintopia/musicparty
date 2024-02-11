@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Models\Setting;
 
 class HomeController extends Controller
 {
-    protected function index()
+    public function home()
     {
-        return view('home.index');
+        if (Setting::fetch('defaultparty')) {
+            return response()->redirectToRoute('parties.show', Setting::fetch('defaultparty'));
+        }
+        return view('home.home');
     }
 }

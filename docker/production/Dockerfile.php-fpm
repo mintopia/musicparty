@@ -1,5 +1,5 @@
 FROM 1and1internet/php-build-environment:8.2 AS build
-LABEL maintainer="jess@mintopia.net"
+LABEL maintainer="jessica.smith@digicert.com"
 
 WORKDIR /app/
 USER 1000
@@ -13,7 +13,19 @@ RUN composer install \
         --optimize-autoloader \
         --prefer-dist
 
-FROM ghcr.io/mintopia/php-docker-php-fpm:latest
-LABEL maintainer="jess@mintopia.net"
+FROM node:20 AS npm
+WORKDIR /app/
+ENV HOME /tmp
+RUN mkdir -p /app
+COPY --from=build /app/ /app
 
-COPY --from=build --chown=1000:1000 /app/ /var/www/
+RUN \
+        npm install && \
+        npm run build
+
+
+FROM ghcr.io/mintopia/php-docker-php-fpm:latest
+LABEL maintainer="jessica.smith@digicert.com"
+
+COPY --from=npm --chown=1000:1000 /app/ /var/www/
+COPY --chown=root:root --chmod=775 docker/production/docker-php-entrypoint /usr/local/bin

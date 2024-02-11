@@ -15,19 +15,28 @@ class UpdatedEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
+    /**
+     * Create a new event instance.
+     */
     public function __construct(protected Party $party)
     {
     }
 
-    public function broadcastWith()
+    public function broadcastWith():array
     {
-        return $this->party->getState(null, false);
+        $state = $this->party->getState();
+        return (array)$state;
     }
+
+    /**
+     * Get the channels the event should broadcast on.
+     *
+     * @return array<int, \Illuminate\Broadcasting\Channel>
+     */
 
     public function broadcastOn()
     {
         return [
-            new PrivateChannel("party.{$this->party->code}"),
             new Channel("party.{$this->party->code}"),
         ];
     }

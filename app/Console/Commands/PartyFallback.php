@@ -4,10 +4,8 @@ namespace App\Console\Commands;
 
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
-use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
-use SpotifyWebAPI\SpotifyWebAPI;
 
 class PartyFallback extends Command
 {
@@ -23,23 +21,20 @@ class PartyFallback extends Command
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Force parties to be updated if they need updating';
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle()
     {
-        $parties = Party::where(function ($query) {
-            $cutoff = Carbon::now()->subSeconds(90);
-            $query->where('active', true);
-            $query->where('state_updated_at', '<=', $cutoff)->orWhereNull('state_updated_at');
+        $parties = Party::whereActive(true)->where(function ($query) {
+            $cutoff = now()->subSeconds(90);
+            $query->where('last_updated_at', '<=', $cutoff)->orWhereNull('last_updated_at');
         })->get();
 
         foreach ($parties as $party) {
-            Log::info("[Party:{$party->id}] Overdue an update, triggering fallback");
+            Log::info("{$party}: Overdue an update, triggering fallback");
             PartyUpdate::dispatch($party);
         }
         return self::SUCCESS;

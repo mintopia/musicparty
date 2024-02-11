@@ -12,30 +12,26 @@ class PartyUpdateState extends Command
      *
      * @var string
      */
-    protected $signature = 'party:update {party : The code of the party}';
+    protected $signature = 'party:updatestate {party}';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Update party state';
+    protected $description = 'Update the state for a party';
 
     /**
      * Execute the console command.
-     *
-     * @return int
      */
     public function handle()
     {
-        $code = $this->argument('party');
+        $code = $this->input->getArgument('party');
         $party = Party::whereCode($code)->first();
         if (!$party) {
-            $this->output->error('Party not found');
+            $this->error("Unable to find a party with code {$code}");
             return self::FAILURE;
         }
-
-        $this->output->writeln("[Party:{$party->id}] {$party->code}] Updating State\n");
         $party->updateState();
         return self::SUCCESS;
     }

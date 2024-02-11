@@ -1,28 +1,58 @@
 <template>
     <div>
-        <TransitionGroup name="list" tag="div">
-            <div class="row striped-bg" v-for="song in upcoming" :key="song.id">
-                <div class="d-flex flex-fill p-2">
-                    <div class="flex-grow-1">
-                        <img v-bind:src="song.album.image_url" v-bind:title="song.album.name" class="img-fluid party-album float-start me-3" />
-                        <span>{{ song.name }}</span>
-                        <br />
-                        <small>
-                            <span class="text-truncate" style="max-width: 70vw;">{{ combineArtists(song.artists) }}</span>
-                            &middot;
-                            <span v-if="song.votes > 1">{{ song.votes }} votes</span>
-                            <span v-else-if="song.votes === 1">1 vote</span>
-                            <span v-else>Fallback Track</span>
-                        </small>
+        <div v-if="upcoming.length > 0" class="card">
+            <div class="list-group card-list-group">
+                <TransitionGroup name="list" tag="div">
+                    <div class="list-group-item" v-for="song in upcoming" :key="song.id">
+                        <div class="row g-2 align-items-center">
+                            <div class="col-auto">
+                                <img v-bind:src="song.album.image_url" v-bind:title="song.album.name" class="rounded" width="60" height="60">
+                            </div>
+                            <div class="col">
+                                {{ song.name }}
+                                <div class="text-secondary">
+                                    {{ combineArtists(song.artists) }}
+                                </div>
+                                <div class="text-muted">
+                                    <template v-if="song.user">Requested by {{ song.user }}</template>
+                                    <template v-else>Fallback Track</template>
+                                </div>
+                            </div>
+                            <div class="col-auto text-secondary">{{ formatMs(song.length) }}</div>
+                            <div class="col-auto text-center">
+                                <div class="row">
+                                    <template v-if="can_downvote">
+                                        <div class="col-4">
+                                            <i v-if="song.vote <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(song.id, 1)"></i>
+                                            <i v-if="song.vote === 1" class="icon ti ti-arrow-big-up-filled cursor-pointer text-success" @click="vote(song.id, 0)"></i>
+                                        </div>
+                                        <div class="col-4">
+                                            {{ song.score }}
+                                        </div>
+                                        <div class="col-4">
+                                            <i v-if="song.vote >= 0" class="icon ti ti-arrow-big-down cursor-pointer" @click="vote(song.id, -1)"></i>
+                                            <i v-if="song.vote === -1" class="icon ti ti-arrow-big-down-filled cursor-pointer text-danger" @click="vote(song.id, 0)"></i>
+                                        </div>
+                                    </template>
+                                    <template v-else>
+                                        <div class="col-4">
+                                            <i v-if="song.vote <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(song.id, 1)"></i>
+                                            <i v-if="song.vote === 1" class="icon ti ti-heart-filled cursor-pointer text-success" @click="vote(song.id, 0)"></i>
+                                        </div>
+                                        <div class="col-8">
+                                            {{ song.score }}
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            <div v-if="can_manage" class="col-auto lh-1">
+                                <i class="icon ti ti-x cursor-pointer" @click="deleteSong(song.id)"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="text-end fs-4 fw-bold pt-2">
-                        <i v-if="can_delete" class="bi bi-x-lg me-2" @click="deleteSong(song.id)"></i>
-                        <i v-if="song.voted" class="bi bi-heart-fill"></i>
-                        <i v-else class="bi bi-heart" @click="vote(song.id)"></i>
-                    </div>
-                </div>
+                </TransitionGroup>
             </div>
-        </TransitionGroup>
+        </div>
         <VueEternalLoading :load="getPage">
             <template #loading>
                 <div class="text-center text-muted p-2">
@@ -38,7 +68,7 @@
 
             <template #no-more>
                 <div class="text-center text-muted p-2">
-                    There are no upcoming songs
+                    There are no more upcoming songs
                 </div>
             </template>
 
@@ -51,13 +81,6 @@
     </div>
 </template>
 <style>
-    .bi-heart {
-        cursor: pointer;
-    }
-
-    .bi-x-lg {
-        cursor: pointer;
-    }
 
     .list-move,
     .list-enter-active,
@@ -75,47 +98,44 @@
     }
 </style>
 <script>
-    import { VueEternalLoading, LoadAction } from '@ts-pro/vue-eternal-loading';
+    import { VueEternalLoading } from '@ts-pro/vue-eternal-loading';
 
     export default {
         components: {
             VueEternalLoading,
         },
         props: [
-            'can_delete',
+            'can_manage',
+            'can_downvote',
             'party',
+            'initialstate',
         ],
         data() {
             return {
                 page: 1,
+                code: null,
                 upcoming: [],
             }
         },
 
         methods: {
-            vote(song_id) {
-                this.upcoming.some((song, index) => {
-                    if (song.id === song_id) {
-                        if (!song.voted) {
-                            song.voted = true;
-                            song.votes++;
-                        }
-                        this.upcoming.splice(index, 1, song);
-                        return true;
-                    }
-                    return false;
+            vote(song_id, value) {
+                axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {
+                    vote: value,
+                }).then((response) => {
+                    this.addOrUpdateItem(response.data.data);
+                }).catch((error) => {
+                    // Do Nothing
                 });
-                this.sortUpcoming();
-                axios.post(`/api/v1/parties/${this.party}/upcoming/${song_id}/vote`);
             },
 
             deleteSong(song_id) {
                 this.removeItem(song_id);
-                axios.delete(`/api/v1/parties/${this.party}/upcoming/${song_id}`);
+                axios.delete(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}`);
             },
 
             getPage({ loaded }) {
-                axios.get(`/api/v1/parties/${this.party}/upcoming`, {
+                axios.get(`/api/v1/parties/${this.party}/upcomingsongs`, {
                     params: {
                         page: this.page
                     }
@@ -128,6 +148,8 @@
                         this.sortUpcoming();
                     }
                     loaded(response.data.data.length, 20);
+                }).catch((error) => {
+                    // Do Nothing
                 });
             },
 
@@ -137,23 +159,23 @@
 
             sortUpcoming() {
                 this.upcoming.sort((alpha, bravo) => {
-                    if (alpha.votes == bravo.votes) {
+                    if (alpha.score === bravo.score) {
                         let diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
                         if (diff === 0) {
                             return Math.sign(alpha.id - bravo.id);
                         }
                         return diff;
                     } else {
-                        return Math.sign(bravo.votes - alpha.votes);
+                        return Math.sign(bravo.score - alpha.score);
                     }
                 });
             },
 
-            addOrUpdateItem(newItem) {
+            addOrUpdateItem(newItem, fromPubSub = false) {
                 let result = this.upcoming.some((existing, index) => {
                     if (existing.id === newItem.id) {
-                        if (newItem.voted === undefined) {
-                            newItem.voted = existing.voted;
+                        if (fromPubSub) {
+                            newItem.vote = existing.vote;
                         }
                         this.upcoming.splice(index, 1, newItem);
                         return true;
@@ -161,26 +183,35 @@
                     return false;
                 });
                 if (!result) {
-                    if (newItem.voted === undefined) {
-                        newItem.voted = false;
-                    }
                     this.upcoming.push(newItem);
                 }
             },
 
             removeItem(id) {
                 this.upcoming = this.upcoming.filter(song => song.id !== id);
-            }
+            },
+
+            formatMs(ms) {
+                const mins = Math.floor(ms / 60000);
+                const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
+                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+            },
         },
 
         mounted() {
             Echo.private(`party.${this.party}`).listen('UpcomingSong\\UpdatedEvent', (payload) => {
-                this.addOrUpdateItem(payload);
+                this.addOrUpdateItem(payload, true);
                 this.sortUpcoming();
             });
             Echo.private(`party.${this.party}`).listen('UpcomingSong\\RemovedEvent', (payload) => {
                 this.removeItem(payload.id);
             });
+            const initial = JSON.parse(this.initialstate);
+            if (initial) {
+                initial.forEach((item) => {
+                    this.addOrUpdateItem(item);
+                });
+            }
         },
 
         created() {

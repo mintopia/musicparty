@@ -2,70 +2,46 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ToString;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\Song
- *
- * @property int $id
- * @property string $spotify_id
- * @property string $name
- * @property string $artist
- * @property string $artist_id
- * @property string $album
- * @property string $album_id
- * @property int $length
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Song newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Song newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Song query()
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereAlbum($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereAlbumId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereArtist($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereArtistId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereLength($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereSpotifyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Song whereUpdatedAt($value)
- * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\PlayedSongs[] $played
- * @property-read int|null $played_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\UpcomingSong[] $upcoming
- * @property-read int|null $upcoming_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Artist[] $artists
- * @property-read int|null $artists_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Party[] $parties
- * @property-read int|null $parties_count
+ * @mixin IdeHelperSong
  */
 class Song extends Model
 {
-    use HasFactory;
+    use HasFactory, ToString;
 
-    public function upcoming()
+    public function toStringName(): string
+    {
+        return $this->name;
+    }
+
+    public function upcoming(): HasMany
     {
         return $this->hasMany(UpcomingSong::class);
     }
 
-    public function played()
+    public function played(): HasMany
     {
         return $this->hasMany(PlayedSong::class);
     }
 
-    public function album()
+    public function album(): BelongsTo
     {
         return $this->belongsTo(Album::class);
     }
 
-    public function parties()
+    public function parties(): HasMany
     {
         return $this->hasMany(Party::class);
     }
 
-    public function artists()
+    public function artists(): BelongsToMany
     {
         return $this->belongsToMany(Artist::class)->withTimestamps();
     }
