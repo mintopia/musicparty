@@ -21,6 +21,8 @@ namespace App\Models{
  * @property string $image_url
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Song> $songs
+ * @property-read int|null $songs_count
  * @method static \Illuminate\Database\Eloquent\Builder|Album newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Album newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Album query()
@@ -44,6 +46,8 @@ namespace App\Models{
  * @property string $spotify_id
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Song> $songs
+ * @property-read int|null $songs_count
  * @method static \Illuminate\Database\Eloquent\Builder|Artist newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Artist newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Artist query()
@@ -103,6 +107,8 @@ namespace App\Models{
  * @property string $code
  * @property string $name
  * @property int $user_id
+ * @property int|null $song_id
+ * @property \Illuminate\Support\Carbon|null $song_started_at
  * @property int $active
  * @property int $queue
  * @property int $force
@@ -111,16 +117,23 @@ namespace App\Models{
  * @property int $process_requests
  * @property int $downvotes
  * @property int|null $max_song_length
+ * @property int|null $no_repeat_interval
  * @property string|null $device_id
+ * @property string|null $recent_device_id
  * @property string|null $device_name
  * @property string|null $playlist_id
  * @property string|null $backup_playlist_id
  * @property string|null $backup_playlist_name
- * @property string|null $last_updated_at
+ * @property \Illuminate\Support\Carbon|null $last_updated_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PlayedSong> $history
+ * @property-read int|null $history_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $members
  * @property-read int|null $members_count
+ * @property-read \App\Models\Song|null $song
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UpcomingSong> $upcoming
+ * @property-read int|null $upcoming_count
  * @property-read \App\Models\User $user
  * @method static \Illuminate\Database\Eloquent\Builder|Party newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|Party newQuery()
@@ -140,9 +153,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereLastUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereMaxSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereNoRepeatInterval($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party wherePlaylistId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereProcessRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereQueue($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereRecentDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongStartedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereUserId($value)
  * @mixin \Eloquent
@@ -187,7 +204,7 @@ namespace App\Models{
  *
  * @property int $id
  * @property string $code
- * @property string $text
+ * @property string $name
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $member
@@ -198,11 +215,41 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereCode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereText($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 	class IdeHelperPartyMemberRole {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\PlayedSong
+ *
+ * @property int $id
+ * @property int $song_id
+ * @property int $party_id
+ * @property string $played_at
+ * @property int $likes
+ * @property int $dislikes
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Party $party
+ * @property-read \App\Models\Song $song
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong query()
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereDislikes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereLikes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong wherePlayedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+	class IdeHelperPlayedSong {}
 }
 
 namespace App\Models{
@@ -344,6 +391,41 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * App\Models\Song
+ *
+ * @property int $id
+ * @property string $spotify_id
+ * @property string $name
+ * @property int $length
+ * @property int $album_id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Album $album
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Artist> $artists
+ * @property-read int|null $artists_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Party> $parties
+ * @property-read int|null $parties_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PlayedSong> $played
+ * @property-read int|null $played_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UpcomingSong> $upcoming
+ * @property-read int|null $upcoming_count
+ * @method static \Illuminate\Database\Eloquent\Builder|Song newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Song newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Song query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereAlbumId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereLength($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereSpotifyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Song whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+	class IdeHelperSong {}
+}
+
+namespace App\Models{
+/**
  * App\Models\Theme
  *
  * @property int $id
@@ -378,15 +460,55 @@ namespace App\Models{
 
 namespace App\Models{
 /**
+ * App\Models\UpcomingSong
+ *
+ * @property int $id
+ * @property int $party_id
+ * @property int $song_id
+ * @property int $score
+ * @property int $upvotes
+ * @property int $downvotes
+ * @property \Illuminate\Support\Carbon|null $queued_at
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $user_id
+ * @property-read \App\Models\Party $party
+ * @property-read \App\Models\Song $song
+ * @property-read \App\Models\User|null $user
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vote> $votes
+ * @property-read int|null $votes_count
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong query()
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereDownvotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereQueuedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereUpvotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereUserId($value)
+ * @mixin \Eloquent
+ */
+	class IdeHelperUpcomingSong {}
+}
+
+namespace App\Models{
+/**
  * App\Models\User
  *
  * @property int $id
  * @property string $nickname
+ * @property string $market
  * @property string|null $avatar
  * @property \Illuminate\Support\Carbon|null $terms_agreed_at
  * @property int $first_login
  * @property \Illuminate\Support\Carbon|null $last_login
  * @property int $suspended
+ * @property object|null $status
+ * @property \Illuminate\Support\Carbon|null $status_updated_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\LinkedAccount> $accounts
@@ -395,10 +517,14 @@ namespace App\Models{
  * @property-read int|null $notifications_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Party> $parties
  * @property-read int|null $parties_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $partyMembers
+ * @property-read int|null $party_members_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
  * @property-read int|null $tokens_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vote> $votes
+ * @property-read int|null $votes_count
  * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
  * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
@@ -408,12 +534,41 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User whereFirstLogin($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereLastLogin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|User whereMarket($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereNickname($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|User whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|User whereStatusUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereSuspended($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereTermsAgreedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
 	class IdeHelperUser {}
+}
+
+namespace App\Models{
+/**
+ * App\Models\Vote
+ *
+ * @property int $id
+ * @property int $upcoming_song_id
+ * @property int $user_id
+ * @property int $value
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\UpcomingSong $upcomingSong
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote query()
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereUpcomingSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Vote whereValue($value)
+ * @mixin \Eloquent
+ */
+	class IdeHelperVote {}
 }
 

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('party_member_roles', function (Blueprint $table) {
             $table->id();
             $table->string('code')->unique();
-            $table->string('text');
+            $table->string('name');
             $table->timestamps();
         });
     }

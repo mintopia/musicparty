@@ -14,7 +14,9 @@ use App\Models\Theme;
 use App\Models\Ticket;
 use App\Models\TicketProvider;
 use App\Models\TicketType;
+use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Models\Vote;
 use App\Observers\ClanMembershipObserver;
 use App\Observers\ClanObserver;
 use App\Observers\EmailAddressObserver;
@@ -27,7 +29,9 @@ use App\Observers\ThemeObserver;
 use App\Observers\TicketObserver;
 use App\Observers\TicketProviderObserver;
 use App\Observers\TicketTypeObserver;
+use App\Observers\UpcomingSongObserver;
 use App\Observers\UserObserver;
+use App\Observers\VoteObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -45,6 +49,8 @@ class EventServiceProvider extends ServiceProvider
         Setting::class => SettingObserver::class,
         Theme::class => ThemeObserver::class,
         Party::class => PartyObserver::class,
+        Vote::class => VoteObserver::class,
+        UpcomingSong::class => UpcomingSongObserver::class,
     ];
     /**
      * The event to listener mappings for the application.

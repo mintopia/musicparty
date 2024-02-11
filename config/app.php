@@ -31,6 +31,8 @@ return [
 
     'env' => env('APP_ENV', 'production'),
 
+    'version' => env('APP_VERSION', '2.0.0'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode
@@ -165,7 +167,7 @@ return [
          */
         App\Providers\AppServiceProvider::class,
         App\Providers\AuthServiceProvider::class,
-        // App\Providers\BroadcastServiceProvider::class,
+        App\Providers\BroadcastServiceProvider::class,
         App\Providers\PrometheusServiceProvider::class,
         App\Providers\EventServiceProvider::class,
         App\Providers\RouteServiceProvider::class,

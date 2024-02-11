@@ -56,6 +56,16 @@ class User extends Authenticatable
         return $this->hasMany(Party::class);
     }
 
+    public function partyMembers(): HasMany
+    {
+        return $this->hasMany(PartyMember::class);
+    }
+
+    public function votes(): HasMany
+    {
+        return $this->hasMany(Vote::class);
+    }
+
     public function hasRole(string|Role $role): bool
     {
         if ($role instanceof Role) {

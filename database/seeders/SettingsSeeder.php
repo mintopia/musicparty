@@ -47,6 +47,13 @@ class SettingsSeeder extends Seeder
                 'validation' => 'sometimes|nullable|string|url:http,https',
                 'description' => 'URL for a favicon to use',
             ],
+
+            'defaultparty' => (object)[
+                'name' => 'Default Party Code',
+                'validation' => 'sometimes|string|max:100|min:4',
+                'description' => 'If specified, users will be automatically taken to this party',
+            ],
+
         ];
         foreach ($settings as $code => $setting) {
             $this->updateSetting($code, $setting);

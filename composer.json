@@ -5,7 +5,6 @@
     "license": "MIT",
     "require": {
         "php": "^8.1",
-        "aws/aws-sdk-php": "^3.293",
         "beyondcode/laravel-websockets": "^1.14",
         "guzzlehttp/guzzle": "^7.2",
         "jwilsson/spotify-web-api-php": "^6.0",
@@ -43,7 +42,10 @@
             "App\\": "app/",
             "Database\\Factories\\": "database/factories/",
             "Database\\Seeders\\": "database/seeders/"
-        }
+        },
+        "files": [
+            "app/helpers.php"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

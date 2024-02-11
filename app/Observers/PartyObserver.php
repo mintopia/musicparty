@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Events\Party\UpdatedEvent;
 use App\Models\Party;
 use Illuminate\Support\Str;
 
@@ -36,30 +37,7 @@ class PartyObserver
      */
     public function updated(Party $party): void
     {
-        //
+        UpdatedEvent::dispatch($party);
     }
 
-    /**
-     * Handle the Party "deleted" event.
-     */
-    public function deleted(Party $party): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Party "restored" event.
-     */
-    public function restored(Party $party): void
-    {
-        //
-    }
-
-    /**
-     * Handle the Party "force deleted" event.
-     */
-    public function forceDeleted(Party $party): void
-    {
-        //
-    }
 }

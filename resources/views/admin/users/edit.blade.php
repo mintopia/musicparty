@@ -5,7 +5,7 @@
 @section('breadcrumbs')
     @include('admin.users._breadcrumbs')
     <li class="breadcrumb-item active"><a href="{{ route('admin.users.edit', $user->id) }}">Edit</a>
-        @endsection
+@endsection
 
         @section('content')
             <div class="page-header mt-0">

@@ -18,9 +18,9 @@
     @stack('head')
     @include('partials._theme')
 </head>
-<body @if($darkMode) data-bs-theme="dark" @endif>
+<body @if($darkMode) data-bs-theme="dark" @endif class="mb-0">
 <div id="app">
-    <div class="page">
+    <div class="page d-flex flex-column vh-100 ">
     <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
@@ -41,16 +41,36 @@
 
             <div class="collapse navbar-collapse" id="sidebar-menu">
                 <ul class="navbar-nav pt-lg-3">
-                    <li class="nav-item @if(($activenav ?? null) === 'home') active @endif">
-                        <a class="nav-link" href="{{ route('home') }}">
-                            <span class="nav-link-icon d-md-none d-lg-inline-block">
-                                <i class="icon ti ti-home"></i>
-                            </span>
-                            <span class="nav-link-title">
-                                Home
-                            </span>
-                        </a>
-                    </li>
+                    @if(!App\Models\Setting::fetch('defaultparty'))
+                        <li class="nav-item @if(($activenav ?? null) === 'home') active @endif">
+                            <a class="nav-link" href="{{ route('home') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <i class="icon ti ti-home"></i>
+                                </span>
+                                <span class="nav-link-title">
+                                    Home
+                                </span>
+                            </a>
+                        </li>
+                    @endif
+                    @foreach(Auth::user()->partyMembers()->with(['party'])->get() as $member)
+                        <li class="nav-item dropdown @if(($activenav ?? null) === "party:{$member->party->code}") active @endif">
+                            <a class="nav-link dropdown-toggle @if(($activenav ?? null) === "party:{$member->party->code}") show @endif"
+                               href="#navbar-party-{{ $member->party->code }}" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <i class="icon ti ti-playlist"></i>
+                                </span>
+                                <span class="nav-link-title">
+                                    {{ $member->party->name }}
+                                </span>
+                            </a>
+                            <div class="dropdown-menu @if(($activenav ?? null) === "party:{$member->party->code}") show @endif"
+                                 data-bs-popper="static">
+                                <a class="dropdown-item" href="{{ route('parties.show', $member->party->code) }}">Queue</a>
+                                <a class="dropdown-item" href="{{ route('parties.show', $member->party->code) }}">Search</a>
+                            </div>
+                        </li>
+                    @endforeach
                     @can('create', \App\Models\Party::class)
                         <li class="nav-item @if(($activenav ?? null) === 'party.create') active @endif">
                             <a class="nav-link" href="{{ route('parties.create') }}">
@@ -120,29 +140,27 @@
                 </div>
             </div>
         @endif
-        @if(isset($hidetopnav) && !$hidetopnav)
-            <header class="navbar d-print-none">
-                <div class="container-xl">
-                    <div class="navbar-nav flex-row">
-                        <div class="d-flex py-2 px-0">
-                            <ol class="breadcrumb" aria-label="breadcrumbs">
-                                @yield('breadcrumbs')
-                            </ol>
-                        </div>
-                    </div>
-
-                    <div class="nav-item">
-                        <a href="{{ route('user.profile') }}" class="nav-link d-flex lh-1 text-reset p-0">
-                            <span class="avatar avatar-sm"
-                                  style="background-image: url('{{ Auth::user()->avatarUrl() }}');"></span>
-                            <div class="d-none d-sm-block ps-2">
-                                <div>{{ Auth::user()->nickname }}</div>
-                            </div>
-                        </a>
+        <header class="navbar d-print-none">
+            <div class="container-xl">
+                <div class="navbar-nav flex-row">
+                    <div class="d-flex py-2 px-0">
+                        <ol class="breadcrumb" aria-label="breadcrumbs">
+                            @yield('breadcrumbs')
+                        </ol>
                     </div>
                 </div>
-            </header>
-        @endif
+
+                <div class="nav-item">
+                    <a href="{{ route('user.profile') }}" class="nav-link d-flex lh-1 text-reset p-0">
+                        <span class="avatar avatar-sm"
+                              style="background-image: url('{{ Auth::user()->avatarUrl() }}');"></span>
+                        <div class="d-none d-sm-block ps-2">
+                            <div>{{ Auth::user()->nickname }}</div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </header>
         @yield('header')
         @stack('precontainer')
         <div class="page-body">
@@ -174,7 +192,7 @@
                 @yield('content')
             </div>
         </div>
-        <footer class="footer footer-transparent d-print-none">
+        <footer class="footer footer-transparent d-print-none mt-auto pb-2">
             <div class="container-xl">
                 <div class="row text-center align-items-center flex-row-reverse">
                     <div class="col-lg-auto ms-lg-auto">
@@ -196,7 +214,13 @@
                             <li class="list-inline-item">
                                 Copyright &copy; {{ date('Y') }}
                                 <a href="{{ route('home') }}" class="link-secondary">@setting('name')</a>.
-                                All rights reserved.
+                                All rights reserved
+                            </li>
+                            <li class="list-inline-item">
+                                Made with <i class="icon ti ti-heart-filled text-pink"></i> by <a class="link-muted" href="https://github.com/mintopia">Mintopia</a>
+                            </li>
+                            <li class="list-inline-item">
+                                <a href="https://github.com/mintopia/musicparty" class="link-muted link-underline-opacity-0"><i class="icon ti ti-brand-github-filled"></i>GitHub</a>
                             </li>
                         </ul>
                     </div>

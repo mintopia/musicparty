@@ -3,8 +3,15 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PartyRequest;
+use App\Http\Requests\SearchRequest;
+use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
+use App\Models\PartyMember;
+use App\Models\UpcomingSong;
+use App\Services\SpotifySearchService;
+use App\Services\UpcomingSongAugmentService;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use SpotifyWebAPI\SpotifyWebAPI;
 
 class PartyController extends Controller
@@ -37,10 +44,58 @@ class PartyController extends Controller
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
 
-    public function show(Party $party)
+    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party)
     {
+        $member = $party->getMember($request->user());
+        $upcomingSongs = $party->upcoming()
+            ->with(['user', 'song'])
+            ->whereNull('queued_at')
+            ->orderBy('score', 'DESC')
+            ->orderBy('created_at', 'ASC')
+            ->orderBy('id', 'ASC')
+            ->take(20)
+            ->get();
+
+        $augmentData = $augmentService->augmentCollection($upcomingSongs, $request->user());
+        $upcoming = $upcomingSongs->map(function(UpcomingSong $song) use ($request, $augmentData) {
+            $resource = new UpcomingSongResource($song);
+            $resource->augment($augmentData[$song->id] ?? null);
+            return $resource->toArray($request);
+        });
+
         return view('parties.show', [
             'party' => $party,
+            'member' => $member,
+            'upcoming' => $upcoming->toArray(),
+            'canManage' => $party->canBeManagedBy($request->user()),
+        ]);
+    }
+
+    public function search(SearchRequest $request, Party $party)
+    {
+        $member = $party->getMember($request->user());
+
+        $params = [
+            'query' => $request->input('query'),
+        ];
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = $request->input('perPage', 20);
+        if ($perPage !== 20) {
+            $params['perPage'] = $perPage;
+        }
+
+        $results = null;
+        if ($params['query']) {
+            $searchService = new SpotifySearchService($party, $member);
+            $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+        }
+
+        return view('parties.search', [
+            'party' => $party,
+            'member' => $member,
+            'canManage' => $party->canBeManagedBy($request->user()),
+            'params' => (object)$params,
+            'results' => $results,
         ]);
     }
 

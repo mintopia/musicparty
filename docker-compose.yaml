@@ -21,6 +21,8 @@ services:
     depends_on:
       - redis
       - db
+    ports:
+      - 6001:6001
     entrypoint: [ "php" ]
     command: "artisan websockets:serve"
 
@@ -49,6 +51,19 @@ services:
     env_file: .env
     deploy:
       replicas: 1
+    volumes:
+      - ./:/app
+    depends_on:
+      - db
+      - redis
+
+  scheduler:
+    image: 1and1internet/php-build-environment:8.2-xdebug
+    restart: unless-stopped
+    entrypoint: [ "php" ]
+    command: "artisan schedule:run"
+    user: "1000"
+    env_file: .env
     volumes:
       - ./:/app
     depends_on:

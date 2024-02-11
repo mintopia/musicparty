@@ -33,8 +33,6 @@ use Illuminate\Support\Facades\Route;
 
 // Always available
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
-Route::any('webhooks/tickets/{ticketprovider:code}', [WebhookController::class, 'tickets'])->name('webhooks.tickets');
-
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -52,6 +50,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
         Route::resource('parties', PartyController::class);
+        Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');
