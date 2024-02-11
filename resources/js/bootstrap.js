@@ -28,11 +28,11 @@ window.Pusher = Pusher;
 
 window.Echo = new Echo({
      broadcaster: 'pusher',
-     key: window.pusherConfig.appKey ?? import.meta.env.VITE_PUSHER_APP_KEY,
-     cluster: window.pusherConfig.cluster ?? import.meta.env.VITE_PUSHER_APP_CLUSTER ?? 'mt1',
-     wsHost: window.pusherConfig.host ?? import.meta.env.VITE_PUSHER_HOST ? import.meta.env.VITE_PUSHER_HOST : `ws-${import.meta.env.VITE_PUSHER_APP_CLUSTER}.pusher.com`,
-     wsPort: window.pusherConfig.port ?? import.meta.env.VITE_PUSHER_PORT ?? 80,
-     wssPort: window.pusherConfig.port ?? import.meta.env.VITE_PUSHER_PORT ?? 443,
-     forceTLS: (window.pusherConfig.scheme ?? import.meta.env.VITE_PUSHER_SCHEME ?? 'https') === 'https',
+     key: window.pusherConfig.appKey,
+     cluster: window.pusherConfig.cluster,
+     wsHost: window.pusherConfig.host,
+     wsPort: window.pusherConfig.port,
+     wssPort: window.pusherConfig.port,
+     forceTLS: window.pusherConfig.scheme,
      enabledTransports: ['ws', 'wss'],
 });
