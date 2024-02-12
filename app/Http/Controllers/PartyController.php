@@ -132,6 +132,7 @@ class PartyController extends Controller
             $party->backup_playlist_id = $request->input('backup_playlist_id');
         }
         $party->allow_requests = (bool)$request->input('allow_requests');
+        $party->active = (bool)$request->input('active');
         $party->explicit = (bool)$request->input('explicit');
         $party->downvotes = (bool)$request->input('downvotes');
         $party->queue = (bool)$request->input('queue');
@@ -140,6 +141,9 @@ class PartyController extends Controller
         $party->device_id = $request->input('device_id');
         if ($request->has('max_song_length') && $request->input('max_song_length') > 0) {
             $party->max_song_length = $request->input('max_song_length');
+        }
+        if ($request->has('no_repeat_interval') && $request->input('no_repeat_interval') > 0) {
+            $party->no_repeat_interval = $request->input('no_repeat_interval');
         }
         $party->save();
     }

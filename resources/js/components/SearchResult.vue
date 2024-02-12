@@ -30,7 +30,7 @@
                         <span class="text-yellow">
                             <template v-for="index in 5">
                                 <i v-if="Math.round(state.popularity / 20) >= index" class="icon ti ti-star-filled" v-bind:title="'Rating: ' + state.popularity + ' / 100'"></i>
-                                <i v-else class="icon ti ti-star" v-bind:title="'Rating: ' + state.popularity + ' / 100'"></i>
+                                <i v-else class="icon ti ti-star" v-bind:title="'Popularity: ' + state.popularity + ' / 100'"></i>
                             </template>
                         </span>
                     </template>

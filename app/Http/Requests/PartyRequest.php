@@ -33,16 +33,18 @@ class PartyRequest extends FormRequest
             'allow_requests' => 'sometimes|boolean',
             'explicit' => 'sometimes|boolean',
             'downvotes' => 'sometimes|boolean',
-            'process_requests' => 'sometimes|boolean',
+            'active' => 'sometimes|boolean',
             'queue' => 'sometimes|boolean',
             'force' => 'sometimes|boolean',
             'device_id' => [
                 'sometimes',
+                'nullable',
                 'string',
                 'in:' . collect($this->user()->getDevices())->pluck('id')->implode(','),
                 'nullable',
             ],
             'max_song_length' => 'sometimes|integer|min:1|nullable',
+            'no_repeat_interval' => 'sometimes|integer|min:1|nullable'
         ];
     }
 }

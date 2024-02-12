@@ -85,7 +85,7 @@
             <div class="col-md-6">
                 <label class="form-label">Song Cooldown</label>
                 <div class="input-group">
-                    <input type="text" name="max_song_length" class="form-control @error('no_repeat_interval') is-invalid @enderror"
+                    <input type="text" name="no_repeat_interval" class="form-control @error('no_repeat_interval') is-invalid @enderror"
                            value="{{ old('no_repeat_interval', $party->no_repeat_interval ?? '') }}">
                     <span class="input-group-text">seconds</span>
                 </div>
