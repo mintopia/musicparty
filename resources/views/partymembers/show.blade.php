@@ -97,7 +97,7 @@
                                         <div class="col-auto">
                                             <img src="{{ $vote->upcomingSong->song->album->image_url }}" height="40" width="40" title="{{ $vote->upcomingSong->song->album->name }}"/>
                                         </div>
-                                        <div class="col ps-2">
+                                        <div class="col ps-2 text-wrap">
                                             <a href="{{ route('parties.songs.show', [$party->code, $vote->upcomingSong->id]) }}">
                                                 {{ $vote->upcomingSong->song->name }}
                                             </a>

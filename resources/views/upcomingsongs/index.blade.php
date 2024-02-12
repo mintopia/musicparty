@@ -93,7 +93,7 @@
                                         <div class="col-auto">
                                             <img src="{{ $song->song->album->image_url }}" height="40" width="40" title="{{ $song->song->album->name }}"/>
                                         </div>
-                                        <div class="col ps-2">
+                                        <div class="col ps-2 text-wrap">
                                             <a href="{{ route('parties.songs.show', [$party->code, $song->id]) }}">
                                                 {{ $song->song->name }}
                                             </a>
