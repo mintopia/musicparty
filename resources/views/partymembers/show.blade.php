@@ -84,7 +84,7 @@
                     <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
                         <thead>
                         <tr>
-                            <th colspan="2">Song</th>
+                            <th>Song</th>
                             <th class="text-center">Vote</th>
                             <th>Time</th>
                         </tr>
@@ -92,15 +92,19 @@
                         <tbody>
                         @foreach($votes as $vote)
                             <tr>
-                                <td class="pe-0">
-                                    <img src="{{ $vote->upcomingSong->song->album->image_url }}" height="40" width="40" title="{{ $vote->upcomingSong->song->album->name }}"/>
-                                </td>
-                                <td class="ps-0">
-                                    <a href="{{ route('parties.songs.show', [$party->code, $vote->upcomingSong->id]) }}">
-                                        {{ $vote->upcomingSong->song->name }}
-                                    </a>
-                                    <div class="text-secondary">
-                                        {{ $vote->upcomingSong->song->artists->pluck('name')->implode(', ') }}
+                                <td>
+                                    <div class="d-flex">
+                                        <div class="col-auto">
+                                            <img src="{{ $vote->upcomingSong->song->album->image_url }}" height="40" width="40" title="{{ $vote->upcomingSong->song->album->name }}"/>
+                                        </div>
+                                        <div class="col ps-2">
+                                            <a href="{{ route('parties.songs.show', [$party->code, $vote->upcomingSong->id]) }}">
+                                                {{ $vote->upcomingSong->song->name }}
+                                            </a>
+                                            <div class="text-secondary text-wrap">
+                                                {{ $vote->upcomingSong->song->artists->pluck('name')->implode(', ') }}
+                                            </div>
+                                        </div>
                                     </div>
                                 </td>
                                 <td class="text-center">
