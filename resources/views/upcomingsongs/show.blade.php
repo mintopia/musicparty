@@ -64,7 +64,7 @@
                                     <div class="datagrid-title">Requested By</div>
                                     <div class="datagrid-content">
                                         @if($song->user)
-                                            {{ $song->user->nickname }}
+                                            <a href="{{ route('parties.users.show', [$party->code, $song->user->getPartyMember($party)]) }}">{{ $song->user->nickname }}</a>
                                         @else
                                             Fallback Track
                                         @endif
@@ -113,7 +113,9 @@
                             <tbody>
                             @foreach($votes as $vote)
                                 <tr>
-                                    <td>{{ $vote->user->nickname }}</td>
+                                    <td>
+                                        <a href="{{ route('parties.users.show', [$party->code, $vote->user->getPartyMember($party)]) }}">{{ $vote->user->nickname }}</a>
+                                    </td>
                                     <td class="text-center">
                                         @if ($vote->value > 0)
                                             <i class="icon ti ti-arrow-big-up-filled text-success"></i>

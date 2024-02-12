@@ -200,4 +200,14 @@ class User extends Authenticatable
         $this->save();
         return $this->status;
     }
+
+    public function getPartyMember(Party $party): ?PartyMember
+    {
+        foreach($this->partyMembers as $member) {
+            if ($member->party_id === $party->id) {
+                return $member;
+            }
+        }
+        return null;
+    }
 }
