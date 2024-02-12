@@ -5,7 +5,7 @@
 @section('breadcrumbs')
     <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
     <li class="breadcrumb-item"><a href="{{ route('parties.show', $party->code) }}">{{ $party->name }}</a>
-    <li class="breadcrumb-item"><a href="{{ route('parties.songs.index', $party->code) }}">Users</a>
+    <li class="breadcrumb-item"><a href="{{ route('parties.songs.index', $party->code) }}">Songs</a>
     <li class="breadcrumb-item active"><a href="{{ route('parties.songs.show', [$party->code, $song->id]) }}">{{ $song->song->name }}</a>
 @endsection
 @push('precontainer')
