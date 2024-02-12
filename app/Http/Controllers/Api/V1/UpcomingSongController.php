@@ -18,7 +18,6 @@ class UpcomingSongController extends Controller
 {
     public function __construct()
     {
-        $this->authorizeResource(Party::class, 'party');
         $this->authorizeResource(UpcomingSong::class, 'upcomingsong');
     }
 
