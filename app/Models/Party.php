@@ -249,7 +249,7 @@ class Party extends Model
         $api->unfollowPlaylist($this->playlist_id);
         $oldPlaylistUri = "spotify:playlist:{$this->playlist_id}";
         $this->playlist_id = null;
-        $this->createPlaylist();
+        $this->updatePlaylist();
         $this->save();
 
         $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
