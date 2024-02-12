@@ -27,6 +27,7 @@ class PartyController extends Controller
             'play' => $party->play(),
             'pause' => $party->pause(),
             'next' => $party->nextTrack(),
+            'previous' => $party->previousTrack(),
         };
 
         $party->updateState();

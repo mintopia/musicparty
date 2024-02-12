@@ -102,6 +102,9 @@ class Party extends Model
 
         if (!$this->active) {
             Log::debug("{$this}: Party is not active");
+            // Still update current song, in case they're using it manually and still want it reflected on screen
+            $this->updateCurrentSong();
+            $this->updateHistory();
             return $this;
         }
 
@@ -128,8 +131,8 @@ class Party extends Model
             'name' => $this->name,
             'backup_playlist_id' => $this->backup_playlist_id,
             'status' => $this->getStatus(),
-            'now' => $this->song->toApi() ?? null,
-            'next' => $next ? $next->toApi() : null,
+            'now' => $this->song?->toApi(),
+            'next' => $next?->toApi(),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];
@@ -195,6 +198,14 @@ class Party extends Model
     public function nextTrack(): void
     {
         $this->user->getSpotifyApi()->next($this->recent_device_id);
+    }
+
+    public function previousTrack(): void
+    {
+        $this->user->getSpotifyApi()->seek([
+            'position_ms' => 0,
+            'device_id' => $this->recent_device_id,
+        ]);
     }
 
 
@@ -468,10 +479,35 @@ class Party extends Model
         return max(5, floor($remaining / 2));
     }
 
+    protected function forcePlayback(?object $current): ?object
+    {
+        if (!$this->force || !$this->device_id) {
+            return $current;
+        }
+
+        if ($current && property_exists($current, 'item') && $current->item) {
+            return $current;
+        }
+
+        $devices = $this->user->getDevices();
+        foreach ($devices as $device) {
+            if ($device->id == $this->device_id) {
+                Log::info("{$this}: Forcing playback on {$device->name}");
+                $this->user->getSpotifyApi()->play($this->device_id, [
+                    'context_uri' => "spotify:playlist:{$this->playlist_id}",
+                ]);
+                return $this->user->getSpotifyStatus();
+            }
+        }
+        return $current;
+    }
+
     protected function updateCurrentSong()
     {
         Log::debug("{$this}: Updating current song");
         $current = $this->user->getSpotifyStatus();
+        $current = $this->forcePlayback($current);
+
         if ($this->song_id && (!$current || !property_exists($current, 'item') || !$current->item)) {
             Log::info("{$this}: Not playing anything");
             $this->song_id = null;

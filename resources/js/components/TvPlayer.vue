@@ -1,51 +1,68 @@
 <template>
-    <div>
-        <div class="player p-0">
-            <div class="blur-bg py-3 border-bottom border-primary text-white" v-bind:style="getBackgroundImageStyle()">
-                <div class="container-xl">
-                    <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-                        <template v-if="state && state.now !== null">
-                            <div class="row">
-                                <div class="col-auto">
-                                    <img class="albumart" v-bind:src="state.now.album.image_url" />
+    <div class="player p-0 vh-100 w-100 bg-black text-white">
+        <div class="blur-bg p-3 vh-100 w-100" v-bind:style="getBackgroundImageStyle()">
+            <h1 class="d-flex mb-7">
+                <div class="col">
+                    <template v-if="state !== null">{{ state.name }}</template>
+                </div>
+                <div class="col-auto text-end">
+                    {{ code }}
+                </div>
+            </h1>
+            <div class="container-xl-fluid d-flex">
+                <div class="col-xl-8 offset-xl-2 mt-auto">
+                    <template v-if="state && state.now !== null">
+                        <div class="row">
+                            <div class="col-auto">
+                                <img class="albumart" v-bind:src="state.now.album.image_url" />
+                            </div>
+                            <div class="col fs-1 pt-4">
+                                <div class="fs-0 pb-3 overflow-hidden"><strong>{{ state.now.name }}</strong></div>
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-users fs-1"></i>
+                                    {{ combineArtists(state.now.artists) }}
                                 </div>
-                                <div class="col">
-                                    <div class="fs-2 pb-3 overflow-hidden"><strong>{{ state.now.name }}</strong></div>
-                                    <div class="pb-2 overflow-hidden">
-                                        <i class="icon ti ti-users"></i>
-                                        {{ combineArtists(state.now.artists) }}
+                                <div class="pb-3 overflow-hidden">
+                                    <i class="icon-lg ti ti-vinyl fs-1"></i>
+                                    {{ state.now.album.name }}
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>
+                                </div>
+                                <div class="d-flex">
+                                    <div class="col">
+                                        {{ currentTime }}
                                     </div>
-                                    <div class="pb-3 overflow-hidden">
-                                        <i class="icon ti ti-vinyl"></i>
-                                        {{ state.now.album.name }}
-                                    </div>
-                                    <div class="progress">
-                                        <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>
-                                    </div>
-                                    <div class="d-flex">
-                                        <div class="w-25">
-                                            {{ currentTime }}
-                                        </div>
-                                        <div class="w-50 text-center">
-                                            <i @click="control('previous')" v-if="can_manage" class="icon ti ti-player-skip-back-filled cursor-pointer me-2"></i>
-                                            <i @click="control('pause')" v-if="state.status.isPlaying && can_manage" class="icon ti ti-player-pause-filled cursor-pointer me-2"></i>
-                                            <i @click="control('play')" v-if="!state.status.isPlaying && can_manage" class="icon ti ti-player-play-filled cursor-pointer me-2"></i>
-                                            <i @click="control('next')" v-if="can_manage" class="icon ti ti-player-skip-forward-filled cursor-pointer"></i>
-                                        </div>
-                                        <div class="w-25 text-end">
-                                            {{  endTime }}
-                                        </div>
+                                    <div class="col text-end">
+                                        {{  endTime }}
                                     </div>
                                 </div>
                             </div>
-                        </template>
-                        <template v-else>
-                            <div class="empty text-muted">
-                                <i class="icon icon-lg ti ti-music-off"></i>
-                                There is nothing playing
+                        </div>
+                        <h2 v-if="state.next !== null" class="mt-4">Next</h2>
+                        <div v-if="state.next !== null" class="row text-muted">
+                            <div class="col-auto bg-black">
+                                <img class="albumart-small" v-bind:src="state.next.album.image_url" />
                             </div>
-                        </template>
-                    </div>
+                            <div class="col fs-1 pt-4">
+                                <div class="fs-0 pb-3 overflow-hidden"><strong>{{ state.next.name }}</strong></div>
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-users fs-1"></i>
+                                    {{ combineArtists(state.next.artists) }}
+                                </div>
+                                <div class="pb-3 overflow-hidden">
+                                    <i class="icon-lg ti ti-vinyl fs-1"></i>
+                                    {{ state.next.album.name }}
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="empty text-muted fs-0">
+                            <i class="icon icon-lg ti ti-music-off"></i>
+                            There is nothing playing
+                        </div>
+                    </template>
                 </div>
             </div>
         </div>
@@ -67,7 +84,11 @@
     }
 
     img.albumart {
-        max-width: 11em;
+        max-width: 20em;
+    }
+
+    img.albumart-small {
+        max-width: 12em;
     }
 
     .progress {
@@ -78,13 +99,16 @@
     .smooth-progress-bar {
         transition: width 1s linear;
     }
+
+    .fs-0 {
+        font-size: 2rem !important;
+    }
 </style>
 <script>
     export default {
         props: [
             'code',
             'initialstate',
-            'can_manage',
         ],
         data() {
             return {
@@ -114,14 +138,6 @@
                     return false;
                 }
                 return true;
-            },
-
-            control(action) {
-                axios.post(`/api/v1/parties/${this.code}/control`, {
-                    action: action,
-                }).then((response) => {
-                    this.updateState(response.data.data.status);
-                });
             },
 
             getBackgroundImageStyle() {

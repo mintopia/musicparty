@@ -155,6 +155,7 @@ The following features are on the roadmap:
 This would not exist without the support of the following:
 
 - UK LAN Techs
+- Moogle
 
 ## License
 

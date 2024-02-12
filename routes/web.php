@@ -37,6 +37,7 @@ use Illuminate\Support\Facades\Route;
 
 // Always available
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {

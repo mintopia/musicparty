@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
             return "<?php echo App\Models\Setting::fetch($expression, $default); ?>";
         });
 
-        view()->composer(['layouts.app', 'layouts.login'],function($view) {
+        view()->composer(['layouts.app', 'layouts.login', 'parties.tv'],function($view) {
                 $currentTheme = Theme::whereActive(true)->first();
                 $darkMode = false;
                 if ($currentTheme) {

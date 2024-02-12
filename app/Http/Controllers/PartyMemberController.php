@@ -61,7 +61,7 @@ class PartyMemberController extends Controller
         $members = $query->paginate($perPage)->appends($params);
         return view('partymembers.index', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => true,
             'members' => $members,
             'roles' => PartyMemberRole::all(),
             'filters' => (object)$params,
@@ -103,7 +103,7 @@ class PartyMemberController extends Controller
 
         return view('partymembers.show', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => true,
             'member' => $user,
             'votes' => $votes,
             'filters' => (object)$params,

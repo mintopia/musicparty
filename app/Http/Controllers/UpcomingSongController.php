@@ -75,7 +75,7 @@ class UpcomingSongController extends Controller
         $songs = $query->paginate($perPage)->appends($params);
         return view('upcomingsongs.index', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => true,
             'songs' => $songs,
             'types' => [(object)[
                 'code' => 'queued',
@@ -100,7 +100,7 @@ class UpcomingSongController extends Controller
         $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
         return view('upcomingsongs.show', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => true,
             'song' => $song,
             'votes' => $votes,
             'other' => $other,

@@ -71,6 +71,13 @@ class PartyController extends Controller
         ]);
     }
 
+    public function tv(Party $party)
+    {
+        return view('parties.tv', [
+            'party' => $party,
+        ]);
+    }
+
     public function search(SearchRequest $request, Party $party)
     {
         $member = $party->getMember($request->user());
@@ -99,6 +106,23 @@ class PartyController extends Controller
         ]);
     }
 
+    public function edit(Party $party)
+    {
+        return view('parties.edit', [
+            'party' => $party,
+            'canManage' => true,
+            'playlists' => $party->user->getPlaylists(),
+            'devices' => $party->user->getDevices(),
+        ]);
+    }
+
+    public function update(PartyRequest $request, Party $party)
+    {
+        $this->updateObject($party, $request);
+        $party->save();
+        return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been updated');
+    }
+
     protected function updateObject(Party $party, Request $request): void
     {
         $party->name = $request->input('name');
@@ -110,7 +134,6 @@ class PartyController extends Controller
         $party->allow_requests = (bool)$request->input('allow_requests');
         $party->explicit = (bool)$request->input('explicit');
         $party->downvotes = (bool)$request->input('downvotes');
-        $party->process_requests = (bool)$request->input('process_requests');
         $party->queue = (bool)$request->input('queue');
         $party->force = (bool)$request->input('force');
         $party->device_name = null;

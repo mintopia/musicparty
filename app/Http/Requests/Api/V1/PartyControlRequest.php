@@ -22,7 +22,7 @@ class PartyControlRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => 'required|string|in:play,pause,next',
+            'action' => 'required|string|in:play,pause,next,previous',
         ];
     }
 }
