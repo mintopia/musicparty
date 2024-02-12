@@ -193,7 +193,7 @@ class User extends Authenticatable
         return $this->playlists;
     }
 
-    public function getSpotifyStatus(): object
+    public function getSpotifyStatus(): ?object
     {
         $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo();
         $this->status_updated_at = Carbon::now();
