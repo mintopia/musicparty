@@ -154,9 +154,7 @@
                         @foreach($other as $otherSong)
                             <tr>
                                 <td>
-                                    <span title="{{ $otherSong->created_at->format('Y-m-d H:i:s') }}">
-                                        {{ $otherSong->created_at->diffForHumans() }}
-                                    </span>
+                                    <a href="{{ route('parties.song.show', [$party->code, $otherSong->id]) }}" title="{{ $otherSong->created_at->format('Y-m-d H:i:s') }}">{{ $otherSong->created_at->diffForHumans() }}</a>
                                 </td>
                                 <td class="text-center">{{ $otherSong->votes_count }}</td>
                                 <td class="text-center">{{ $otherSong->score }}</td>
