@@ -86,6 +86,12 @@
                         </div>
                     </div>
                 </div>
+                <div class="card-footer align-content-end d-flex btn-list">
+                    <a href="https://open.spotify.com/track/{{ $song->song->spotify_id }}" class="ms-auto btn btn-green text-white" target="_blank">
+                        <i class="icon ti ti-brand-spotify"></i>
+                        View on Spotify
+                    </a>
+                </div>
             </div>
         </div>
     </div>
