@@ -21,7 +21,7 @@
                             <div class="col-auto text-secondary">{{ formatMs(song.length) }}</div>
                             <div class="col-auto text-center">
                                 <div class="row">
-                                    <template v-if="can_downvote">
+                                    <template v-if="can_downvote == 1">
                                         <div class="col-4">
                                             <i v-if="song.vote <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(song.id, 1)"></i>
                                             <i v-if="song.vote === 1" class="icon ti ti-arrow-big-up-filled cursor-pointer text-success" @click="vote(song.id, 0)"></i>

@@ -25,8 +25,8 @@ class UpcomingSongController extends Controller
     public function index(UpcomingSongAugmentService $augmentService, Request $request, Party $party)
     {
         $params = [];
-        if ($request->has('perPage')) {
-            $params['perPage'] = $request->input('perPage');
+        if ($request->has('per_page')) {
+            $params['per_page'] = $request->input('per_page');
         }
         $page = $party->upcoming()
             ->with(['user', 'song'])
@@ -34,7 +34,7 @@ class UpcomingSongController extends Controller
             ->orderBy('score', 'DESC')
             ->orderBy('created_at', 'ASC')
             ->orderBy('id', 'ASC')
-            ->paginate($params['perPage'] ?? 20)->appends($params);
+            ->paginate($params['per_page'] ?? 20)->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 
         $augmentedData = $augmentService->augmentCollection(collect($page->items()), $request->user());

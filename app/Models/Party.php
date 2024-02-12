@@ -70,10 +70,17 @@ class Party extends Model
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        if ($childType === 'upcomingsong') {
-            return $this->upcoming()->whereId($value)->first();
+        switch ($childType) {
+            case 'upcomingsong':
+            case 'song':
+                return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
+
+            case 'user':
+                return $this->members()->whereId($value)->with(['user', 'role'])->first();
+
+            default:
+                return parent::resolveChildRouteBinding($childType, $value, $field);
         }
-        return parent::resolveChildRouteBinding($childType, $value, $field);
     }
 
     public function next()
@@ -553,7 +560,7 @@ class Party extends Model
             return true;
         }
         return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
-                return $query->whereIn('code', ['owner', 'moderator']);
+                return $query->whereIn('code', ['owner']);
             })->count() > 0;
     }
 }

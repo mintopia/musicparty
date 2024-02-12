@@ -23,9 +23,13 @@ use App\Http\Controllers\EmailAddressController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PartyMemberController;
+use App\Http\Controllers\PlayedSongController;
 use App\Http\Controllers\SeatingPlanController;
 use App\Http\Controllers\TicketController;
+use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\VoteController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -49,7 +53,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/spotify', [UserController::class, 'spotify'])->name('user.spotify');
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
-        Route::resource('parties', PartyController::class);
+        Route::resource('parties', PartyController::class)->except(['destroy']);
+        Route::middleware('can:update,party')->group(function() {
+            Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
+            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
+
+        });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');

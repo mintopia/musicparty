@@ -44,7 +44,7 @@ class UpcomingSong extends Model
         $data = $this->song->toApi();
         $data['score'] = $this->score;
         $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
-        $data['user'] = $this->user->name ?? null;
+        $data['user'] = $this->user->nickname ?? null;
         return $data;
     }
 

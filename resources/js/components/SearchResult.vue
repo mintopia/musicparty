@@ -41,7 +41,7 @@
             </div>
             <div class="col-auto text-center w-8" v-if="state.upcoming">
                 <div class="row">
-                    <template v-if="can_downvote">
+                    <template v-if="can_downvote == 1">
                         <div class="col-5 text-end">
                             <i v-if="state.vote <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(1)"></i>
                             <i v-if="state.vote === 1" class="icon ti ti-arrow-big-up-filled cursor-pointer text-success" @click="vote(0)"></i>
@@ -55,11 +55,11 @@
                         </div>
                     </template>
                     <template v-else>
-                        <div class="col-4">
-                            <i v-if="state.vote <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(state.upcoming_id, 1)"></i>
-                            <i v-if="state.vote === 1" class="icon ti ti-heart-filled cursor-pointer text-success" @click="vote(state.upcoming_id, 0)"></i>
+                        <div class="col-7 text-end">
+                            <i v-if="state.vote <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(1)"></i>
+                            <i v-if="state.vote === 1" class="icon ti ti-heart-filled cursor-pointer text-success" @click="vote(0)"></i>
                         </div>
-                        <div class="col-8">
+                        <div class="col-5 text-start">
                             {{ state.score }}
                         </div>
                     </template>

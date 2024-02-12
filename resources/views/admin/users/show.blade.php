@@ -117,7 +117,7 @@
                     </div>
                 </div>
                 <div class="card-footer align-content-end d-flex btn-list">
-                    <a href="{{ route('admin.users.delete', $user->id) }}" class="btn btn-outline-danger">
+                    <a href="{{ route('admin.users.delete', $user->id) }}" class=" ms-auto btn btn-outline-danger">
                         <i class="icon ti ti-trash"></i>
                         Delete
                     </a>

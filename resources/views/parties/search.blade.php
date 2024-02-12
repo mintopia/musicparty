@@ -12,7 +12,9 @@
 @endpush
 @section('content')
     <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-        <h1>Search</h1>
+        <div class="page-header mt-0">
+            <h1>Search</h1>
+        </div>
         <form action="{{ route('parties.search', $party->code) }}" method="get">
             <div class="d-flex">
                 <div class="flex-grow-1">

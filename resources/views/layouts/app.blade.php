@@ -30,7 +30,7 @@
 </head>
 <body @if($darkMode) data-bs-theme="dark" @endif class="mb-0">
 <div id="app">
-    <div class="page d-flex flex-column vh-100 ">
+    <div class="page d-flex flex-column" style="min-height: 100vh;">
     <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
         <div class="container-fluid">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#sidebar-menu"
@@ -77,7 +77,12 @@
                             <div class="dropdown-menu @if(($activenav ?? null) === "party:{$member->party->code}") show @endif"
                                  data-bs-popper="static">
                                 <a class="dropdown-item" href="{{ route('parties.show', $member->party->code) }}">Queue</a>
-                                <a class="dropdown-item" href="{{ route('parties.show', $member->party->code) }}">Search</a>
+                                <a class="dropdown-item" href="{{ route('parties.search', $member->party->code) }}">Search</a>
+                                @if($member->party->canBeManagedBy($member->user))
+                                    <a class="dropdown-item" href="{{ route('parties.songs.index', $member->party->code) }}">Songs</a>
+                                    <a class="dropdown-item" href="{{ route('parties.users.index', $member->party->code) }}">Users</a>
+                                    <a class="dropdown-item" href="{{ route('parties.edit', $member->party->code) }}">Settings</a>
+                                @endif
                             </div>
                         </li>
                     @endforeach
