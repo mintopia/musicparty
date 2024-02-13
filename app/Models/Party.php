@@ -108,11 +108,6 @@ class Party extends Model
             return $this;
         }
 
-        if ($this->isPlaylistBroken()) {
-            Log::info("{$this} Playlist is broken, fixing");
-            $this->fixPlaylist(true);
-        }
-
         $this->updateCurrentSong();
         $playlist = $this->updateHistory();
         $this->syncPlaylist($playlist);
@@ -187,21 +182,25 @@ class Party extends Model
 
     public function play(): void
     {
+        Log::debug("{$this}: Spotify API -> play()");
         $this->user->getSpotifyApi()->play($this->recent_device_id, ['foo' => 'bar']);
     }
 
     public function pause(): void
     {
+        Log::debug("{$this}: Spotify API -> pause()");
         $this->user->getSpotifyApi()->pause($this->recent_device_id);
     }
 
     public function nextTrack(): void
     {
+        Log::debug("{$this}: Spotify API -> next()");
         $this->user->getSpotifyApi()->next($this->recent_device_id);
     }
 
     public function previousTrack(): void
     {
+        Log::debug("{$this}: Spotify API -> seek()");
         $this->user->getSpotifyApi()->seek([
             'position_ms' => 0,
             'device_id' => $this->recent_device_id,
@@ -211,7 +210,7 @@ class Party extends Model
 
     protected function getPlaylist(): object
     {
-        return $this->user->getSpotifyApi()->getPlaylist($this->playlist_id);
+        return $this->user->getPlaylist($this->playlist_id);
     }
 
     public function isPlaylistBroken(?string $playlistUri = null): bool
@@ -221,10 +220,7 @@ class Party extends Model
             return false;
         }
 
-        // Get Spotify Status if more than 10 seconds old
-        if ($this->user->status_updated_at <= Carbon::now()->subSeconds(10)) {
-            $this->user->getSpotifyStatus();
-        }
+        $this->user->getSpotifyStatus();
 
         // If we're playing something, we can't be broken
         if ($this->user->status && $this->user->status->is_playing) {
@@ -236,7 +232,7 @@ class Party extends Model
         }
 
         // We might be broken, check our track history
-        $recentTracks = $this->user->getSpotifyApi()->getMyRecentTracks();
+        $recentTracks = $this->user->getRecentTracks();
         if (!$recentTracks->items) {
             return false;
         }
@@ -251,24 +247,31 @@ class Party extends Model
 
     public function fixPlaylist(bool $force = false)
     {
+        if (!$force && !$this->isPlaylistBroken()) {
+            return;
+        }
+
         $playlist = $this->getPlaylist();
         $trackIds = collect($playlist->tracks->items)->pluck('track.id');
 
         $this->user->getSpotifyStatus();
         $api = $this->user->getSpotifyApi();
 
+        Log::debug("{$this}: Spotify API -> unfollowPlaylist({$this->playlist_id})");
         $api->unfollowPlaylist($this->playlist_id);
         $oldPlaylistUri = "spotify:playlist:{$this->playlist_id}";
         $this->playlist_id = null;
         $this->updatePlaylist();
         $this->save();
 
+        Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->playlist_id}, [...])");
         $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
         $trackToPlay = $this->song->spotify_id ?? $this->next()->song->spotify_id;
 
         $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
 
         if ($forcePlayback ) {
+            Log::debug("{$this}: Spotify API -> play({$this->playlist_id}, [...])");
             $api->play($this->recent_device_id, [
                 'context_uri' => "spotify:playlist:{$this->playlist_id}",
                 'offset' => [
@@ -297,17 +300,15 @@ class Party extends Model
         $playlist = $this->getPlaylist();
 
         // Our history, not always complete. Track IDs are relinked
-        $options = [
-            'limit' => 20,
-            'market' => $this->user->market,
-        ];
-        $history = $this->user->getSpotifyApi()->getMyRecentTracks($options)->items;
+        $history = $this->user->getRecentTracks()->items;
 
         // Playlist MAY be relinked to playable tracks
         $relinked = [];
         foreach ($playlist->tracks->items as $plItem) {
             $key = "party.{$this->id}.relinked.{$plItem->track->id}";
             $relinked[$plItem->track->id] = Cache::remember($key, 86400, function() use ($plItem) {
+
+                Log::debug("{$this}: Spotify API -> getTrack({$plItem->track->id})");
                 return $this->user->getSpotifyApi()->getTrack($plItem->track->id, [
                     'market' => $this->user->market,
                 ]);
@@ -348,6 +349,7 @@ class Party extends Model
                     return ['uri' => $entry->id];
                 }, $toRemove),
             ];
+            Log::debug("{$this}: Spotify API -> deletePlaylistTracks({$this->playlist_id}, [])");
             $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
 
             foreach ($toRemove as $track) {
@@ -392,10 +394,12 @@ class Party extends Model
         foreach ($songsToAdd as $song) {
             $trackIds[] = $song->song->spotify_id;
         }
+        Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->playlist_id}, [])");
         $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds);
         foreach ($songsToAdd as $song) {
             if ($this->queue) {
                 Log::info("{$this}: Adding {$song->song} to queue");
+                Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
                 $this->user->getSpotifyApi()->queue($song->song->spotify_id);
             }
             Log::info("{$this}: Added {$song->song} to party playlist");
@@ -407,6 +411,10 @@ class Party extends Model
     public function updateDeviceName(): void
     {
         if (!$this->device_id) {
+            return;
+        }
+
+        if (!$this->isDirty('device_id')) {
             return;
         }
 
@@ -425,6 +433,7 @@ class Party extends Model
     {
         $api = $this->user->getSpotifyApi();
         if (!$this->playlist_id) {
+            Log::debug("{$this}: Spotify API -> createPlaylist()");
             $playlist = $api->createPlaylist($api->me()->id, [
                 'name' => "Music Party - {$this->code}",
                 'description' => 'Automatically controlled Music Party playlist',
@@ -435,6 +444,7 @@ class Party extends Model
         } else {
             $playlist = $api->getPlaylist($this->playlist_id);
             if ($playlist->name !== "Music Party - {$this->code}") {
+                Log::debug("{$this}: Spotify API -> updatePlaylist()");
                 $api->updatePlaylist($this->playlist_id, [
                     'name' => "Music Party - {$this->code}",
                 ]);
@@ -498,6 +508,7 @@ class Party extends Model
         foreach ($devices as $device) {
             if ($device->id == $this->device_id) {
                 Log::info("{$this}: Forcing playback on {$device->name}");
+                Log::debug("{$this}: Spotify API -> play()");
                 $this->user->getSpotifyApi()->play($this->device_id, [
                     'context_uri' => "spotify:playlist:{$this->playlist_id}",
                 ]);
@@ -584,6 +595,8 @@ class Party extends Model
         $tracks = [];
         $offset = 0;
         do {
+
+            Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
             $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
                 'limit' => 50,
                 'offset' => $offset,

@@ -15,6 +15,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sanctum:prune-expired --hours=24')->daily();
         $schedule->command('telescope:prune')->daily();
         $schedule->command('party:fallback')->everyMinute();
+        $schedule->command('party:check')->everyFifteenMinutes();
     }
 
     /**

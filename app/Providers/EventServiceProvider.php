@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Listeners\MessageLoggedListener;
 use App\Models\Clan;
 use App\Models\ClanMembership;
 use App\Models\EmailAddress;
@@ -35,6 +36,7 @@ use App\Observers\VoteObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
+use Illuminate\Log\Events\MessageLogged;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
 use SocialiteProviders\LaravelPassport\LaravelPassportExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
@@ -67,6 +69,9 @@ class EventServiceProvider extends ServiceProvider
             TwitchExtendSocialite::class . '@handle',
             LaravelPassportExtendSocialite::class . '@handle',
             SpotifyExtendSocialite::class.'@handle',
+        ],
+        MessageLogged::class => [
+            MessageLoggedListener::class,
         ],
     ];
 

@@ -14,6 +14,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 use SpotifyWebAPI\Request;
@@ -39,6 +40,9 @@ class User extends Authenticatable
     protected ?Session $session = null;
     protected ?array $playlists = null;
     protected ?array $devices = null;
+    protected ?object $recentTracks = null;
+    protected array $playlistCache = [];
+    protected $hasUpdatedStatus = false;
 
     /**
      * @return HasMany<LinkedAccount>
@@ -169,7 +173,10 @@ class User extends Authenticatable
             return [];
         }
 
-        $this->devices = $api->getMyDevices()->devices;
+        $this->devices = Cache::remember("users.{$this->id}.devices", 300, function() use ($api) {
+            Log::debug("{$this}: Spotify API -> getMyDevices()");
+            return $api->getMyDevices()->devices;
+        });
         return $this->devices;
     }
 
@@ -186,6 +193,7 @@ class User extends Authenticatable
         $this->playlists = [];
         $offset = 0;
         do {
+            Log::debug("{$this}: Spotify API -> getMyPlaylists({$offset})");
             $result = $api->getMyPlaylists(['limit' => 50, 'offset' => $offset]);
             $this->playlists = array_merge($this->playlists, $result->items);
             $offset += 50;
@@ -193,8 +201,12 @@ class User extends Authenticatable
         return $this->playlists;
     }
 
-    public function getSpotifyStatus(): ?object
+    public function getSpotifyStatus(bool $forced = false): ?object
     {
+        if ($this->hasUpdatedStatus && !$forced) {
+            return $this->status;
+        }
+        Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
         $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo();
         $this->status_updated_at = Carbon::now();
         $this->save();
@@ -209,5 +221,30 @@ class User extends Authenticatable
             }
         }
         return null;
+    }
+
+    public function getRecentTracks(bool $force = false): ?object
+    {
+        if (!$force && $this->recentTracks !== null) {
+            return $this->recentTracks();
+        }
+
+        Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
+        $this->recentTracks = $this->getSpotifyApi()->getMyRecentTracks([
+            'limit' => 20,
+            'market' => $this->market,
+        ]);
+        return $this->recentTracks;
+    }
+
+    public function getPlaylist(string $id, bool $force = false): ?object
+    {
+        if (!$force && isset($this->playlistCache[$id])) {
+            return $this->playlistCache[$id];
+        }
+
+        Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
+        $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id);
+        return $this->playlistCache[$id];
     }
 }
