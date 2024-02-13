@@ -485,8 +485,13 @@ class Party extends Model
             return $current;
         }
 
-        if ($current && property_exists($current, 'item') && $current->item && $current->is_playing) {
-            return $current;
+        if ($current && property_exists($current, 'item') && $current->item) {
+            if ($current->is_playing) {
+                return $current;
+            } elseif ($this->song && $current->item->id == $this->song->spotify_id && $current->device->id == $this->device_id) {
+                // Our current song, on our device, and it's paused. Let's not play anything - they can control it using the webpage
+                return $current;
+            }
         }
 
         $devices = $this->user->getDevices();
