@@ -27,7 +27,7 @@
         @endif
         @include('partials._theme')
     </head>
-    <body class="vh-100 overflow-hidden m-0 p-0">
+    <body class="vh-100 overflow-hidden m-0 p-0 bg-black">
         <div id="app">
             <tv-player
                 code="{{ $party->code }}"
