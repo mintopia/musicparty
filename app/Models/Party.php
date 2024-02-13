@@ -485,7 +485,7 @@ class Party extends Model
             return $current;
         }
 
-        if ($current && property_exists($current, 'item') && $current->item) {
+        if ($current && property_exists($current, 'item') && $current->item && $current->is_playing) {
             return $current;
         }
 
