@@ -30,12 +30,10 @@ class Setting extends Model implements Sortable
     public static function fetch(string $code, $default = null)
     {
         if (isset(static::$cached[$code])) {
-            Log::debug("Fetched settings.{$code} from setting cache");
             return static::$cached[$code];
         }
         $key = "settings.{$code}";
         if ($setting = Cache::get($key)) {
-            Log::debug("Fetched {$key} from application cache");
             if ($setting->value === null) {
                 return $default;
             }
@@ -47,7 +45,6 @@ class Setting extends Model implements Sortable
             return $setting->value;
         }
         $setting = Setting::whereCode($code)->first();
-        Log::debug("Fetching {$key} from database");
         if ($setting === null) {
             Cache::put($key, $setting);
             static::$cached[$code] = null;
