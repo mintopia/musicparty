@@ -144,10 +144,7 @@ class User extends Authenticatable
             // Create new API
             Log::debug("{$this}: Creating new API connection");
             $request = new Request();
-            $this->api = new SpotifyWebAPI([
-                'auto_refresh' => true,
-                'auto_retry' => true,
-            ], $this->session, $request);
+            $this->api = new SpotifyWebAPI([], $this->session, $request);
         }
 
 
