@@ -32,7 +32,8 @@ class PartyUpdate implements ShouldQueue, ShouldBeUnique
      */
     public function middleware(): array
     {
-        return [new WithoutOverlapping($this->party->id)->dontRelease()->expireAfter(120)];
+        $middleware = (new WithoutOverlapping($this->party->id))->dontRelease()->expireAfter(120);
+        return [$middleware];
     }
     
     /**
@@ -48,7 +49,13 @@ class PartyUpdate implements ShouldQueue, ShouldBeUnique
      */
     public function handle(): void
     {
+        $cutoff = now()->subSeconds(5);
+        if ($this->party->last_updated_at > $cutoff) {
+            Log::debug("{$this->party}: No further processing");
+            return;
+        }
         $this->party->updateState();
+
         $delay = $this->party->getNextUpdateDelay();
         if ($delay === null) {
             Log::debug("{$this->party}: No further update required");
