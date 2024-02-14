@@ -364,7 +364,7 @@ class Party extends Model
 
             // Return playlist with removed tracks removed - saves a call to the API
             foreach ($playlist->tracks->items as $key => $item) {
-                if (in_array($item->id, $toRemove)) {
+                if (in_array($item->track->id, $toRemove)) {
                     unset($playlist->track->items[$key]);
                 }
             }
