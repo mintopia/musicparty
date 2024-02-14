@@ -10,6 +10,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 
 class PartyUpdate implements ShouldQueue, ShouldBeUnique
 {
@@ -22,6 +23,16 @@ class PartyUpdate implements ShouldQueue, ShouldBeUnique
     public function uniqueId(): string
     {
         return $this->party->id;
+    }
+    
+    /**
+     * Get the middleware the job should pass through.
+     *
+     * @return array<int, object>
+     */
+    public function middleware(): array
+    {
+        return [new WithoutOverlapping($this->party->id)->dontRelease()->expireAfter(120)];
     }
     
     /**
