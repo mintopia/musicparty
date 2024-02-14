@@ -362,7 +362,12 @@ class Party extends Model
                 $playedSong->save();
             }
 
-            $playlist = $this->getPlaylist();
+            // Return playlist with removed tracks removed - saves a call to the API
+            foreach ($playlist->tracks->items as $key => $item) {
+                if (in_array($item->id, $toRemove)) {
+                    unset($playlist->track->items[$key]);
+                }
+            }
         }
 
         return $playlist;
