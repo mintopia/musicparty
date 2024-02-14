@@ -362,9 +362,9 @@ class Party extends Model
                 $playedSong->save();
             }
 
-            // Return playlist with removed tracks removed - saves a call to the API
             $playlist = $this->getPlaylist(true);
-
+        }
+        
         return $playlist;
     }
 
