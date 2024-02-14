@@ -26,7 +26,7 @@ class PartyRequest extends FormRequest
             'backup_playlist_id' => [
                 'required',
                 'string',
-                'in:other,' . collect($this->user()->getPlaylists())->pluck('id')->implode(','),
+                'in:other,' . collect($this->party->user->getPlaylists())->pluck('id')->implode(','),
 
             ],
             'custom_backup_playlist_id' => 'required_if:backup_playlist_id,other|string|nullable',
