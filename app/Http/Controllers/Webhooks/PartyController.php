@@ -3,6 +3,7 @@ namespace App\Http\Controllers\Webhooks;
 
 use App\Models\Party;
 use App\Requests\Webhooks\PartyLibrespotRequest;
+use App\Http\Controllers\Controller;
 
 class PartyController extends Controller
 {
