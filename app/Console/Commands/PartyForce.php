@@ -26,7 +26,8 @@ class PartyForce extends Command
      */
     public function handle()
     {
-        $query = Party::whereActive(true)->wherePoll(false)->whereForce(true)->whereNotNull('device_id')->whereNull('song_id');
+        $cutoff = now()->subMinutes(15);
+        $query = Party::whereActive(true)->wherePoll(false)->whereForce(true)->whereNotNull('device_id')->where('last_updated_at', '<', $cutoff);
         $code = $this->argument('code');
         if ($code !== null) {
             $party = $query->whereCode($code)->first();
