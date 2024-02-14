@@ -208,9 +208,9 @@ class Party extends Model
     }
 
 
-    protected function getPlaylist(): object
+    protected function getPlaylist(bool $force = false): object
     {
-        return $this->user->getPlaylist($this->playlist_id);
+        return $this->user->getPlaylist($this->playlist_id, $force);
     }
 
     public function isPlaylistBroken(?string $playlistUri = null): bool
@@ -363,12 +363,7 @@ class Party extends Model
             }
 
             // Return playlist with removed tracks removed - saves a call to the API
-            foreach ($playlist->tracks->items as $key => $item) {
-                if (in_array($item->track->id, $toRemove)) {
-                    unset($playlist->track->items[$key]);
-                }
-            }
-        }
+            $playlist = $this->getPlaylist(true);
 
         return $playlist;
     }
