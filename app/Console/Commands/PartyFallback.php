@@ -28,7 +28,7 @@ class PartyFallback extends Command
      */
     public function handle()
     {
-        $parties = Party::whereActive(true)->where(function ($query) {
+        $parties = Party::wherePoll(true)->whereActive(true)->where(function ($query) {
             $cutoff = now()->subSeconds(90);
             $query->where('last_updated_at', '<=', $cutoff)->orWhereNull('last_updated_at');
         })->get();

@@ -25,7 +25,8 @@ class Party extends Model
         'allow_requests' => true,
         'explicit' => true,
         'downvotes' => true,
-        'process_requests' => true,
+        'poll' => true,
+        'active' => true,
     ];
 
     protected $casts = [
@@ -364,7 +365,7 @@ class Party extends Model
 
             $playlist = $this->getPlaylist(true);
         }
-        
+
         return $playlist;
     }
 
@@ -474,6 +475,10 @@ class Party extends Model
 
     public function getNextUpdateDelay(): ?int
     {
+        if (!$this->poll) {
+            return null;
+        }
+
         if (!$this->song) {
             return 60;
         }

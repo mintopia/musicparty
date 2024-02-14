@@ -1,9 +1,11 @@
 <?php
 namespace App\Http\Controllers\Webhooks;
 
+use App\Http\Requests\Webhooks\PartyLibrespotRequest;
+use App\Jobs\PartyUpdate;
 use App\Models\Party;
-use App\Requests\Webhooks\PartyLibrespotRequest;
 use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Log;
 
 class PartyController extends Controller
 {
@@ -12,16 +14,12 @@ class PartyController extends Controller
         switch ($request->input('event')) {
             case 'started':
             case 'playing':
-                // TODO: Dispatch Event
-                Log::debug("{$party}: Received librespot webhook for {$request->input('event')}");
-                break;
-            
             case 'paused':
             case 'stopped':
-                Log::debug("{$party}: Received librespot webhook for {$request->input('event')}");
-                // TODO: Dispatch Event
+                Log::debug("{$party}: Received librespot webhook event: {$request->input('event')}");
+                PartyUpdate::dispatch($party)->onQueue('partyupdates')->afterResponse();
                 break;
-            
+
             default:
                 break;
         }

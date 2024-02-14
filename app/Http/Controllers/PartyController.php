@@ -137,6 +137,7 @@ class PartyController extends Controller
         $party->downvotes = (bool)$request->input('downvotes');
         $party->queue = (bool)$request->input('queue');
         $party->force = (bool)$request->input('force');
+        $party->poll = (bool)$request->input('poll');
         $party->device_name = null;
         $party->device_id = $request->input('device_id');
         if ($request->has('max_song_length') && $request->input('max_song_length') > 0) {

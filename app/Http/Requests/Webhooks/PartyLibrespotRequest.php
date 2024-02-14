@@ -27,16 +27,16 @@ class PartyLibrespotRequest extends FormRequest
             'oldTrackId' => 'required_if:event,changed|string',
             'newTrackId' => 'required_if:event,changed|string',
             'trackId' => [
-                Rule::requiredIf(in_array($request->input('event'), ['started', 'stopped', 'preloading', 'paused', 'playing'])),
+                Rule::requiredIf(in_array($this->input('event'), ['started', 'stopped', 'preloading', 'paused', 'playing'])),
                 'string',
             ],
             'durationMs' => [
-                Rule::requiredIf(in_array($request->input('event'), ['paused', 'playing'])),
-                int,
+                Rule::requiredIf(in_array($this->input('event'), ['paused', 'playing'])),
+                'int',
             ],
             'positionMs' => [
-                Rule::requiredIf(in_array($request->input('event'), ['paused', 'playing'])),
-                int,
+                Rule::requiredIf(in_array($this->input('event'), ['paused', 'playing'])),
+                'int',
             ],
             'volume' => 'required_if:event,volume_set|int',
         ];

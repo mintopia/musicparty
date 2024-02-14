@@ -2,7 +2,6 @@
 
 use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PingController;
-use App\Http\Controllers\Api\V1\SeatingPlanController;
 use App\Http\Controllers\Api\V1\UpcomingSongController;
 use App\Http\Controllers\Api\V1\VoteController;
 use Illuminate\Support\Facades\Route;
