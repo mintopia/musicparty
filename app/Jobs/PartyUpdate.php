@@ -5,14 +5,14 @@ namespace App\Jobs;
 use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Contracts\Queue\ShouldBeUnique;
+use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 
-class PartyUpdate implements ShouldQueue, ShouldBeUnique
+class PartyUpdate implements ShouldQueue, ShouldBeUniqueUntilProcessing
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
     public int $uniqueFor = 3600;
@@ -61,7 +61,7 @@ class PartyUpdate implements ShouldQueue, ShouldBeUnique
             Log::debug("{$this->party}: No further update required");
         } else {
             Log::debug("{$this->party}: Next update in {$delay}s");
-            PartyUpdate::dispatch($this->party)->delay($delay);
+            PartyUpdate::dispatch($this->party)->delay($delay)->onQueue('partyupdates');
         }
     }
 }
