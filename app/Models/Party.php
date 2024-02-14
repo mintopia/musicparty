@@ -559,9 +559,7 @@ class Party extends Model
             return;
         }
 
-        $tracks = Cache::remember("party.{$this->id}.backupplaylist", 600, function() {
-            return $this->getBackupPlaylistTracks();
-        });
+        $tracks = $this->getBackupPlaylistTracks();
 
         $existingIds = $this->upcoming()
             ->where(function($query) {
@@ -590,8 +588,14 @@ class Party extends Model
         }
     }
 
-    protected function getBackupPlaylistTracks(): array
+    public function getBackupPlaylistTracks(bool $force = false): array
     {
+        $cacheKey = "party.{$this->id}.backupplaylist";
+        $tracks = Cache::get($cacheKey);
+        if ($tracks !== null) {
+            return $tracks;
+        }
+
         $tracks = [];
         $offset = 0;
         do {
@@ -605,6 +609,8 @@ class Party extends Model
             $tracks = array_merge($tracks, $response->items);
             $offset += 50;
         } while ($response->next !== null);
+
+        Cache::put($cacheKey, $tracks, 3600);
         return $tracks;
     }
 
