@@ -31,6 +31,7 @@ use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\WebhookController;
+use App\Http\Controllers\Webhooks\PartyController as WebhookPartyController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -44,6 +45,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('login/signup', [UserController::class, 'signup'])->name('login.signup');
     Route::match(['PUT', 'PATCH'], 'login/signup', [UserController::class, 'signup_process'])->name('login.signup.process');
+
+    Route::post('webhooks/parties/{party}/librespot', [WebhookPartyController::class, 'librespot'])->middleware('can:update,Party')->name('webhooks.parties.update');
 
     Route::middleware(RedirectOnFirstLoginMiddleware::class)->group(function () {
 
