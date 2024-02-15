@@ -298,10 +298,10 @@ class Party extends Model
     protected function updateHistory(): object
     {
         Log::debug("{$this} Updating history");
-        $playlist = $this->getPlaylist();
+        $playlist = $this->getPlaylist(true);
 
         // Our history, not always complete. Track IDs are relinked
-        $history = $this->user->getRecentTracks()->items;
+        $history = $this->user->getRecentTracks(true)->items;
 
         // Playlist MAY be relinked to playable tracks
         $relinked = [];
