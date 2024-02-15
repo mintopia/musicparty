@@ -226,7 +226,7 @@ class User extends Authenticatable
     public function getRecentTracks(bool $force = false): ?object
     {
         if (!$force && $this->recentTracks !== null) {
-            return $this->recentTracks();
+            return $this->recentTracks;
         }
 
         Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
