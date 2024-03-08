@@ -42,7 +42,7 @@ I use the following docker-compose for running this in production:
 version: '3'
 services:
   nginx:
-    image: ghcr.io/mintopia/musicparty2-nginx:develop
+    image: ghcr.io/mintopia/musicparty-nginx:develop
     env_file: .env.nginx
     restart: unless-stopped
     depends_on:
@@ -54,7 +54,7 @@ services:
       - ./public:/var/www/storage/public
 
   php-fpm:
-    image: ghcr.io/mintopia/musicparty2-php-fpm:develop
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -76,7 +76,7 @@ services:
       - ./database:/var/lib/mysql
 
   worker:
-    image: ghcr.io/mintopia/musicparty2-fpm:develop
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
     restart: unless-stopped
     deploy:
       replicas: 2
@@ -92,7 +92,7 @@ services:
 
 
   scheduler:
-    image: ghcr.io/mintopia/musicparty2-fpm:develop
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -105,7 +105,7 @@ services:
     command: 'artisan schedule:work'
 
   artisan:
-    image: ghcr.io/mintopia/musicparty2-php-fpm:develop
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
     profiles:
       - artisan
     env_file: .env
