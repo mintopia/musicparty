@@ -95,6 +95,9 @@ class Party extends Model
     public function updateState(): Party
     {
         Log::info("{$this}: Updating state");
+        if ($this->playlist_id === null) {
+            $this->updatePlaylist();
+        }
         $cutoff = Carbon::now()->subSeconds(5);
         if ($this->last_updated_at > $cutoff) {
             Log::debug("{$this}: Already updated state recently");
