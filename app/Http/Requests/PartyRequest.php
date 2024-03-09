@@ -21,12 +21,19 @@ class PartyRequest extends FormRequest
      */
     public function rules(): array
     {
+        if ($this->party !== null) {
+            // We have a party, use the party owner's playlist
+            $playlists = $this->party->user->getPlaylists();
+        } else {
+            // We don't have a party, use our playlists
+            $playlists = $this->user()->getPlaylists();
+        }
         return [
             'name' => 'required|string|max:50',
             'backup_playlist_id' => [
                 'required',
                 'string',
-                'in:other,' . collect($this->party->user->getPlaylists())->pluck('id')->implode(','),
+                'in:other,' . collect($playlists)->pluck('id')->implode(','),
 
             ],
             'custom_backup_playlist_id' => 'required_if:backup_playlist_id,other|string|nullable',

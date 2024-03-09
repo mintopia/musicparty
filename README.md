@@ -36,103 +36,17 @@ You should now be able to login. The first user will be given the admin role.
 
 ## Production Deployment
 
-I use the following docker-compose for running this in production:
+In the `example` directory there is a docker compose file and some .env example files. These are for the setup I use. Just rename the .env files and edit them accordingly. You can get a [random Laravel application key here](https://generate-random.org/laravel-key-generator). I'm running with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress and the docker-compose supplied is built to use that.
 
-```yaml
-version: '3'
-services:
-  nginx:
-    image: ghcr.io/mintopia/musicparty-nginx:develop
-    env_file: .env.nginx
-    restart: unless-stopped
-    depends_on:
-      - php-fpm
-    networks:
-      - frontend
-      - default
-    volumes:
-      - ./public:/var/www/storage/public
+You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
 
-  php-fpm:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - database
-    volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-
-  redis:
-    image: redis:6.2.6
-    restart: unless-stopped
-
-  database:
-    image: mariadb:10.5-focal
-    env_file: .env.mariadb
-    restart: unless-stopped
-    volumes:
-      - ./database:/var/lib/mysql
-
-  worker:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
-    restart: unless-stopped
-    deploy:
-      replicas: 2
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php']
-    command: 'artisan queue:work'
-
-
-  scheduler:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
-    restart: unless-stopped
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php']
-    command: 'artisan schedule:work'
-
-  artisan:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
-    profiles:
-      - artisan
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php', 'artisan']
-
-networks:
-  frontend:
-    external: true
-```
-
-I'm running with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress. To bring up the site, run the following:
-
+To bring up the site, run the following:
 
 ```bash
-# Create your docker compose file
-# Create your .env file from the project's .env.example and edit as required.
 docker compose up -d redis database
-docker compose run --rm artisan key:generate
 docker compose run --rm artisan migrate
 docker compose run --rm artisan db:seed
-docker compose run --rm artisan control:setup-discord
+docker compose run --rm artisan setup:discord
 docker compose up -d
 ```
 
