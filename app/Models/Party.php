@@ -358,7 +358,11 @@ class Party extends Model
                     return ['uri' => $entry->id];
                 }, $toRemove),
             ];
-            $idsToRemove = array_merge($idsToRemove, array_keys($additionalIdsToRemove));
+            foreach ($additionalIdsToRemove as $id => $name) {
+                $idsToRemove['tracks'][] = [
+                    'uri' => $id,
+                ];
+            }
             Log::debug("{$this}: Spotify API -> deletePlaylistTracks({$this->playlist_id}, [])");
             $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
 
