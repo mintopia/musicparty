@@ -207,7 +207,9 @@ class User extends Authenticatable
             return $this->status;
         }
         Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
-        $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo();
+        $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo([
+            'market' => $this->market,
+        ]);
         $this->status_updated_at = Carbon::now();
         $this->save();
         return $this->status;
@@ -244,7 +246,9 @@ class User extends Authenticatable
         }
 
         Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
-        $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id);
+        $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id, [
+            'market' => $this->market,
+        ]);
         return $this->playlistCache[$id];
     }
 }
