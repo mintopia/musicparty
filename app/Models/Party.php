@@ -337,7 +337,7 @@ class Party extends Model
                     $toRemove[] = $plItem;
                     // If track is relinked, we need to remove the original ID, not the relinked ID
                     if ($originalPlId !== $plItem->id) {
-                        $additionalIdsToremove[$originalPlId] = $plItem->name;
+                        $additionalIdsToRemove[$originalPlId] = $plItem->name;
                     }
                     continue 2;
                 }
