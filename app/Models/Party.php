@@ -326,6 +326,7 @@ class Party extends Model
 
         $toRemove = [];
         $previous = [];
+        $additionalIdsToRemove = [];
 
         foreach ($relinked as $originalPlId => $plItem) {
             $plItem->played_at = now()->subMilliseconds($plItem->duration_ms);
@@ -336,7 +337,7 @@ class Party extends Model
                     $toRemove[] = $plItem;
                     // If track is relinked, we need to remove the original ID, not the relinked ID
                     if ($originalPlId !== $plItem->id) {
-                        $toRemove[] = $originalPlId;
+                        $additionalIdsToremove[$originalPlId] = $plItem->name;
                     }
                     continue 2;
                 }
@@ -357,17 +358,21 @@ class Party extends Model
                     return ['uri' => $entry->id];
                 }, $toRemove),
             ];
+            $idsToRemove = array_merge($idsToRemove, array_keys($additionalIdsToRemove));
             Log::debug("{$this}: Spotify API -> deletePlaylistTracks({$this->playlist_id}, [])");
             $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
 
             foreach ($toRemove as $track) {
-                Log::info("{$this} Removing [{$track->id}] {$track->name}");
+                Log::info("{$this} Removed [{$track->id}] {$track->name}");
                 $song = Song::fromSpotify($track);
                 $playedSong = new PlayedSong;
                 $playedSong->party()->associate($this);
                 $playedSong->song()->associate($song);
                 $playedSong->played_at = new Carbon($track->played_at);
                 $playedSong->save();
+            }
+            foreach ($additionalIdsToRemove as $id => $name) {
+                Log::info("{$this} Removed relinked track [{$id}] {$name}");
             }
 
             $playlist = $this->getPlaylist(true);
