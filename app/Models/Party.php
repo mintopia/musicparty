@@ -327,13 +327,17 @@ class Party extends Model
         $toRemove = [];
         $previous = [];
 
-        foreach ($relinked as $plItem) {
+        foreach ($relinked as $originalPlId => $plItem) {
             $plItem->played_at = now()->subMilliseconds($plItem->duration_ms);
             foreach ($history as $hItem) {
                 if ($hItem->track->id === $plItem->id) {
                     // Playlist entry is in history, remove it and we're done
                     $plItem->played_at = $hItem->played_at;
                     $toRemove[] = $plItem;
+                    // If track is relinked, we need to remove the original ID, not the relinked ID
+                    if ($originalPlId !== $plItem->id) {
+                        $toRemove[] = $originalPlId;
+                    }
                     continue 2;
                 }
             }
