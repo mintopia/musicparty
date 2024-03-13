@@ -33,6 +33,6 @@ window.Echo = new Echo({
      wsHost: window.pusherConfig.host,
      wsPort: window.pusherConfig.port,
      wssPort: window.pusherConfig.port,
-     forceTLS: window.pusherConfig.scheme,
+     forceTLS: window.pusherConfig.scheme === 'https',
      enabledTransports: ['ws', 'wss'],
 });
