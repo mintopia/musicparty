@@ -19,6 +19,21 @@ class SpotifyProvider extends AbstractSocialProvider
             'client_id' => $this->provider->getSetting('client_id'),
             'client_secret' => $this->provider->getSetting('client_secret'),
             'redirect' => $this->redirectUrl,
+        ])->scopes([
+            'user-read-playback-state',
+            'user-modify-playback-state',
+            'user-read-currently-playing',
+            'playlist-read-private',
+            'playlist-read-collaborative',
+            'playlist-modify-private',
+            'playlist-modify-public',
+            'user-read-playback-position',
+            'user-top-read',
+            'user-read-recently-played',
+            'user-library-modify',
+            'user-library-read',
+            'user-read-email',
+            'user-read-private',
         ]);
     }
 
