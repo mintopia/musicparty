@@ -1,7 +1,7 @@
 <template>
     <div class="player p-0 vh-100 w-100 bg-black text-white">
         <div class="blur-bg p-3 vh-100 w-100" v-bind:style="getBackgroundImageStyle()">
-            <h1 class="d-flex mb-7">
+            <h1 class="d-flex mb-5">
                 <div class="col">
                     <template v-if="state !== null">{{ state.name }}</template>
                 </div>
@@ -102,11 +102,11 @@
     }
 
     img.albumart {
-        max-width: 24em;
+        max-width: 20em;
     }
 
     img.albumart-small {
-        max-width: 14em;
+        max-width: 13em;
     }
 
     .progress {
