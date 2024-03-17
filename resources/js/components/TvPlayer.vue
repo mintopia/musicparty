@@ -63,10 +63,10 @@
                                     <i class="icon-lg ti ti-vinyl fs-1"></i>
                                     {{ state.next.album.name }}
                                 </div>
-                                <div class="pb-3 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
+                                <div class="pb-3 overflow-hidden">
                                     <i class="icon-lg ti ti-music-question fs-1"></i>
-                                    <template v-if="state.current.user !== null">
-                                        Requested by {{ state.current.user }}
+                                    <template v-if="state.next.user !== null">
+                                        Requested by {{ state.next.user }}
                                     </template>
                                     <template v-else>
                                         Fallback Track
