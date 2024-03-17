@@ -1,10 +1,10 @@
 <?php
 
-namespace App\Http\Requests;
+namespace App\Http\Requests\Api\V1;
 
 use Illuminate\Foundation\Http\FormRequest;
 
-class PartyMemberSearchRequest extends FormRequest
+class SongRatingRequest extends FormRequest
 {
     /**
      * Determine if the user is authorized to make this request.
@@ -22,11 +22,7 @@ class PartyMemberSearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nickname' => 'sometimes|nullable|string|max:100',
-            'role' => 'sometimes|nullable|string|exists:party_member_roles,code',
-            'order' => 'sometimes|nullable|string|in:id,created_at,nickname,role,votes,score',
-            'order_direction' => 'sometimes|nullable|string|in:asc,desc',
-            'per_page' => 'sometimes|nullable|int|between:1,100',
+            'rating' => 'required|integer',
         ];
     }
 }

@@ -84,6 +84,11 @@ class Party extends Model
         }
     }
 
+    public function current()
+    {
+        return $this->history()->orderBy('played_at', 'DESC')->first();
+    }
+
     public function next()
     {
         return $this->upcoming()
@@ -125,12 +130,14 @@ class Party extends Model
     public function getState(): object
     {
         $next = $this->next();
+        $current = $this->history()->orderBy('played_at', 'desc')->first();
         return (object)[
             'code' => $this->code,
             'name' => $this->name,
             'backup_playlist_id' => $this->backup_playlist_id,
             'status' => $this->getStatus(),
             'now' => $this->song?->toApi(),
+            'current' => $current?->toApi(),
             'next' => $next?->toApi(),
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
@@ -175,7 +182,7 @@ class Party extends Model
             $data->active = $status->context->uri === "spotify:playlist:{$this->playlist_id}";
         }
 
-        if ($this->song && $status->item->id == $this->song->spotify_id) {
+        if ($this->song && $status->item && $status->item->id == $this->song->spotify_id) {
             $data->active = true;
             $data->progress = $status->progress_ms;
             $data->length = $this->song->length;
@@ -297,87 +304,48 @@ class Party extends Model
         return $this->isPlaylistBroken($oldPlaylistUri);
     }
 
+    protected function getRelinkedTrackId(string $playedId): ?string
+    {
+        $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
+        return Cache::remember($key, 86400, function() use ($playedId) {
+            Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
+            $data = $this->user->getSpotifyApi()->getTrack($playedId, [
+                'market'
+            ]);
+            return $data->id;
+        });
+    }
 
     protected function updateHistory(): object
     {
         Log::debug("{$this} Updating history");
         $playlist = $this->getPlaylist(true);
 
-        // Our history, not always complete. Track IDs are relinked
-        $history = $this->user->getRecentTracks(true)->items;
+        $current = $this->current();
+        $next = $this->next();
 
-        // Playlist MAY be relinked to playable tracks
-        $relinked = [];
-        foreach ($playlist->tracks->items as $plItem) {
-            $key = "party.{$this->id}.relinked.{$plItem->track->id}";
-            $relinked[$plItem->track->id] = Cache::remember($key, 86400, function() use ($plItem) {
-
-                Log::debug("{$this}: Spotify API -> getTrack({$plItem->track->id})");
-                return $this->user->getSpotifyApi()->getTrack($plItem->track->id, [
-                    'market' => $this->user->market,
-                ]);
-            });
-        }
-
-        // If playlist entry is in history, remove it from playlist
-        // if not currently playing, do nothing
-        // If current playing is not in playlist, do nothing
-        // If current playing is first in playlist - good
+        $allowedIds = array_unique(array_filter([
+            $current->song->spotify_id ?? null,
+            $current->relinked_from ?? null,
+            $next->song->spotify_id ?? null,
+            $next->relinked_from ?? null,
+        ]));
 
         $toRemove = [];
-        $previous = [];
-        $additionalIdsToRemove = [];
-
-        foreach ($relinked as $originalPlId => $plItem) {
-            $plItem->played_at = now()->subMilliseconds($plItem->duration_ms);
-            foreach ($history as $hItem) {
-                if ($hItem->track->id === $plItem->id) {
-                    // Playlist entry is in history, remove it and we're done
-                    $plItem->played_at = $hItem->played_at;
-                    $toRemove[] = $plItem;
-                    // If track is relinked, we need to remove the original ID, not the relinked ID
-                    if ($originalPlId !== $plItem->id) {
-                        $additionalIdsToRemove[$originalPlId] = $plItem->name;
-                    }
-                    continue 2;
-                }
-            }
-
-            $previous[] = $plItem;
-
-            // If current playing is in playlist and not first, remove previous items
-            if (count($previous) > 1 && $this->song && $this->song->spotify_id == $plItem->id) {
-                Log::debug("{$this} Found playlist item in history that isn't first item - removing prior");
-                $toRemove = array_merge($toRemove, array_slice($previous, 0, -1));
+        foreach ($playlist->tracks->items as $playlistItem) {
+            if (!in_array($playlistItem->track->id, $allowedIds)) {
+                $toRemove[] = $playlistItem->track->id;
             }
         }
 
         if ($toRemove) {
             $idsToRemove = [
-                'tracks' => array_map(function ($entry) {
-                    return ['uri' => $entry->id];
+                'tracks' => array_map(function ($id) {
+                    return ['uri' => $id];
                 }, $toRemove),
             ];
-            foreach ($additionalIdsToRemove as $id => $name) {
-                $idsToRemove['tracks'][] = [
-                    'uri' => $id,
-                ];
-            }
             Log::debug("{$this}: Spotify API -> deletePlaylistTracks({$this->playlist_id}, [])");
             $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
-
-            foreach ($toRemove as $track) {
-                Log::info("{$this} Removed [{$track->id}] {$track->name}");
-                $song = Song::fromSpotify($track);
-                $playedSong = new PlayedSong;
-                $playedSong->party()->associate($this);
-                $playedSong->song()->associate($song);
-                $playedSong->played_at = new Carbon($track->played_at);
-                $playedSong->save();
-            }
-            foreach ($additionalIdsToRemove as $id => $name) {
-                Log::info("{$this} Removed relinked track [{$id}] {$name}");
-            }
 
             $playlist = $this->getPlaylist(true);
         }
@@ -553,18 +521,26 @@ class Party extends Model
             return true;
         } elseif ($current) {
             $song = Song::fromSpotify($current->item);
-            $shouldSave = false;
             if ($current->device && $current->device->id !== $this->recent_device_id) {
                 $this->recent_device_id = $current->device->id;
-                $shouldSave = true;
             }
             if ($song->id != $this->song_id) {
                 Log::info("{$this}: Updating current song to {$song}");
                 $this->song()->associate($song);
                 $this->song_started_at = Carbon::now()->subMillis($current->progress_ms);
-                $shouldSave = true;
+
+                $playedSong = new PlayedSong();
+                $playedSong->song()->associate($song);
+                $playedSong->party()->associate($this);
+                $playedSong->played_at = $this->song_started_at;
+                $relinkedId = $this->getRelinkedTrackId($song->spotify_id);
+                if ($relinkedId) {
+                    $playedSong->relinked_from = $relinkedId;
+                }
+                $playedSong->findRequestedSong();
+                $playedSong->save();
             }
-            if ($shouldSave) {
+            if ($this->isDirty()) {
                 $this->save();
                 return true;
             }

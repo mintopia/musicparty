@@ -15,9 +15,18 @@
                                         <i class="icon ti ti-users"></i>
                                         {{ combineArtists(state.now.artists) }}
                                     </div>
-                                    <div class="pb-3 overflow-hidden">
+                                    <div class="pb-2 overflow-hidden">
                                         <i class="icon ti ti-vinyl"></i>
                                         {{ state.now.album.name }}
+                                    </div>
+                                    <div class="pb-3 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
+                                        <i class="icon ti ti-music-question"></i>
+                                        <template v-if="state.current.user !== null">
+                                            Requested by {{ state.current.user }}
+                                        </template>
+                                        <template v-else>
+                                            Fallback Track
+                                        </template>
                                     </div>
                                     <div class="progress">
                                         <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>

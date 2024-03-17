@@ -11,6 +11,7 @@ use App\Models\Party;
 use App\Models\Seat;
 use App\Models\SeatingPlan;
 use App\Models\Setting;
+use App\Models\SongRating;
 use App\Models\Theme;
 use App\Models\Ticket;
 use App\Models\TicketProvider;
@@ -26,6 +27,7 @@ use App\Observers\PartyObserver;
 use App\Observers\SeatingPlanObserver;
 use App\Observers\SeatObserver;
 use App\Observers\SettingObserver;
+use App\Observers\SongRatingObserver;
 use App\Observers\ThemeObserver;
 use App\Observers\TicketObserver;
 use App\Observers\TicketProviderObserver;
@@ -53,6 +55,7 @@ class EventServiceProvider extends ServiceProvider
         Party::class => PartyObserver::class,
         Vote::class => VoteObserver::class,
         UpcomingSong::class => UpcomingSongObserver::class,
+        SongRating::class => SongRatingObserver::class,
     ];
     /**
      * The event to listener mappings for the application.

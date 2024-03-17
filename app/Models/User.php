@@ -70,6 +70,11 @@ class User extends Authenticatable
         return $this->hasMany(Vote::class);
     }
 
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(SongRating::class);
+    }
+
     public function hasRole(string|Role $role): bool
     {
         if ($role instanceof Role) {

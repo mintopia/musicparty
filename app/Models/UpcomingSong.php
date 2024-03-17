@@ -39,6 +39,11 @@ class UpcomingSong extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function played(): HasOne
+    {
+        return $this->hasOne(PlayedSong::class);
+    }
+
     public function toApi(): array
     {
         $data = $this->song->toApi();

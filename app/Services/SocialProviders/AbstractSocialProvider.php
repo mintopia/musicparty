@@ -131,7 +131,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             if ($remoteUser->getEmail()) {
                 $existingAccount = LinkedAccount::whereEmail($remoteUser->getEmail())->first();
                 if ($existingAccount) {
-                    if ($localUser && $existingAccount->user_id != $localUser) {
+                    if ($localUser && $existingAccount->user_id != $localUser->id) {
                         throw new SocialProviderException('Account is already associated with another user');
                     } else {
                         $localUser = $existingAccount->user;
