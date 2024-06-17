@@ -64,7 +64,7 @@ services:
     command: 'artisan schedule:work'
 
 
-  websockets:
+  reverb:
     image: ghcr.io/mintopia/musicparty-php-fpm:develop
     restart: unless-stopped
     env_file: .env
@@ -75,7 +75,7 @@ services:
       - ./logs:/var/www/storage/logs
       - ./public:/var/www/storage/public
     entrypoint: ['php']
-    command: 'artisan websockets:serve'
+    command: 'artisan reverb:start --host=0.0.0.0'
 
 
   artisan:

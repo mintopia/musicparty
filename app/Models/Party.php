@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\Party\UpdatedEvent;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -619,5 +620,10 @@ class Party extends Model
         return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
                 return $query->whereIn('code', ['owner']);
             })->count() > 0;
+    }
+
+    public function pushUpdate(): void
+    {
+        UpdatedEvent::dispatch($this);
     }
 }

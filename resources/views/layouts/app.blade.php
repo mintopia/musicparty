@@ -7,11 +7,10 @@
 
     <script>
         window.pusherConfig = {
-            appKey: '{{ env('VITE_PUSHER_APP_KEY') }}',
-            host: '{{ env('VITE_PUSHER_HOST') }}',
-            port: {{ env('VITE_PUSHER_PORT') }},
-            scheme: '{{ env('VITE_PUSHER_SCHEME') }}',
-            cluster: '{{ env('VITE_PUSHER_APP_CLUSTER') }}',
+            appKey: '{{ env('VITE_REVERB_APP_KEY') }}',
+            host: '{{ env('VITE_REVERB_HOST') }}',
+            port: {{ env('VITE_REVERB_PORT') }},
+            scheme: '{{ env('VITE_REVERB_SCHEME') }}',
         };
     </script>
 

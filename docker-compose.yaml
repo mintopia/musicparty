@@ -11,7 +11,7 @@ services:
     depends_on:
       - php-fpm
 
-  websockets:
+  reverb:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile.php-fpm
@@ -21,10 +21,8 @@ services:
     depends_on:
       - redis
       - db
-    ports:
-      - 6001:6001
     entrypoint: [ "php" ]
-    command: "artisan websockets:serve"
+    command: "artisan reverb:start --host=0.0.0.0 --debug"
 
   php-fpm:
     build:

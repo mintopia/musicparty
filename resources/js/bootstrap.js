@@ -27,12 +27,19 @@ import Pusher from 'pusher-js';
 window.Pusher = Pusher;
 
 window.Echo = new Echo({
-     broadcaster: 'pusher',
+     broadcaster: 'reverb',
      key: window.pusherConfig.appKey,
-     cluster: window.pusherConfig.cluster,
      wsHost: window.pusherConfig.host,
      wsPort: window.pusherConfig.port,
      wssPort: window.pusherConfig.port,
      forceTLS: window.pusherConfig.scheme === 'https',
      enabledTransports: ['ws', 'wss'],
 });
+
+/**
+ * Echo exposes an expressive API for subscribing to channels and listening
+ * for events that are broadcast by Laravel. Echo and event broadcasting
+ * allow your team to quickly build robust real-time web applications.
+ */
+
+import './echo';
