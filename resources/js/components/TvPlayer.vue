@@ -50,7 +50,7 @@
                         </div>
                         <h2 v-if="state.next !== null" class="mt-4">Next</h2>
                         <div v-if="state.next !== null" class="row text-muted">
-                            <div class="col-auto bg-black">
+                            <div class="col-auto">
                                 <img class="albumart-small" v-bind:src="state.next.album.image_url" />
                             </div>
                             <div class="col fs-1 pt-4">
