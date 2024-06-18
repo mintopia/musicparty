@@ -30,6 +30,7 @@
         <div id="app">
             <tv-player
                 code="{{ $party->code }}"
+                partyUrl="{{ route('parties.show', $party->code) }}"
                 initialstate='@json($party->getState())'
             >
             </tv-player>

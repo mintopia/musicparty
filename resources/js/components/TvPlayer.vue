@@ -83,6 +83,9 @@
                     </template>
                 </div>
             </div>
+            <div class="qr">
+                <img v-bind:src="qrCodeUrl" />
+            </div>
         </div>
     </div>
 </template>
@@ -90,6 +93,12 @@
     .player {
         overflow: hidden;
         padding: 1em;
+    }
+
+    .qr {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
     }
 
     .blur-bg {
@@ -126,6 +135,7 @@
     export default {
         props: [
             'code',
+            'partyurl',
             'initialstate',
         ],
         data() {
@@ -136,6 +146,7 @@
                 progress: '',
                 startedAt: null,
                 intervalId: null,
+                qrCodeUrl: null,
             }
         },
 
@@ -202,6 +213,7 @@
         mounted() {
             this.updateState(JSON.parse(this.initialstate));
             let channel = `party.${this.code}`;
+            this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${this.partyurl}`;
             window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload) => {
                 this.updateState(payload);
             });
