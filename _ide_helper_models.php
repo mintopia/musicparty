@@ -115,6 +115,7 @@ namespace App\Models{
  * @property int $explicit
  * @property int $allow_requests
  * @property int $process_requests
+ * @property int $show_qrcode
  * @property int $downvotes
  * @property int|null $max_song_length
  * @property int|null $no_repeat_interval

@@ -44,6 +44,7 @@ class PartyRequest extends FormRequest
             'queue' => 'sometimes|boolean',
             'force' => 'sometimes|boolean',
             'poll' => 'sometimes|boolean',
+            'show_qrcode' => 'sometimes|boolean',
             'device_id' => [
                 'sometimes',
                 'nullable',

@@ -28,6 +28,7 @@ class Party extends Model
         'downvotes' => true,
         'poll' => true,
         'active' => true,
+        'show_qrcode' => false,
     ];
 
     protected $casts = [
@@ -140,6 +141,7 @@ class Party extends Model
             'now' => $this->song?->toApi(),
             'current' => $current?->toApi(),
             'next' => $next?->toApi(),
+            'show_qrcode' => $this->show_qrcode,
             'created_at' => $this->created_at->toIso8601String(),
             'updated_at' => $this->updated_at->toIso8601String(),
         ];

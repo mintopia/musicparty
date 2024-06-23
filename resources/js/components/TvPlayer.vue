@@ -83,7 +83,7 @@
                     </template>
                 </div>
             </div>
-            <div class="qr">
+            <div class="qr" v-if="state && state.show_qrcode">
                 <img v-bind:src="qrCodeUrl" />
             </div>
         </div>

@@ -61,6 +61,12 @@
             Allow songs to be downvoted
         </label>
 
+        <label class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" name="show_qrcode" value="1"
+                   @if(old('show_qrcode', $party->show_qrcode)) checked @endif>
+            Show QR Code on TV view
+        </label>
+
         <h2 class="mt-4">Restrictions</h2>
 
         <label class="form-check form-switch">
