@@ -18,7 +18,7 @@
                                     <template v-else>Fallback Track</template>
                                 </div>
                             </div>
-                            <div class="col-auto text-secondary">{{ formatMs(song.length) }}</div>
+                            <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
                             <div class="col-auto text-center">
                                 <div class="row">
                                     <template v-if="can_downvote == 1">
@@ -81,7 +81,6 @@
     </div>
 </template>
 <style>
-
     .list-move,
     .list-enter-active,
     .list-leave-active {
@@ -93,8 +92,13 @@
         opacity: 0;
         transform: translateX(30px);
     }
+
     .list-leave-active {
         position: absolute;
+    }
+
+    .song-length {
+        padding-right: 1rem;
     }
 </style>
 <script>
