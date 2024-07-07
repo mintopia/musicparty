@@ -2,235 +2,80 @@
 
 ## Introduction
 
-A collaborative party music jukebox using Spotify.
+Version 2 of Music Party - the amount of changes and new features meant a major refactor was in-order.
 
-## Planned Features
+### Social Provider Support
 
-This is still a VERY early alpha, with about 6 days dev work on it. It is barely functional and doesn't have any features like deleting upcoming tracks.
+ - Discord
+ - Steam (No authentication, just account linking)
+ - Twitch
+ - Laravel Passport
 
-The following features are planned:
+These are using Laravel Socialite, so any provider supported by Socialite can be integrated.
 
- - TV Mode
- - A UI that actually looks good and is usable - Getting there!
- - Extra description/messaging
- - Much better descriptions
- - User banning/limiting
- - Allow/Deny lists for tracks, albums, etc.
- - Export playback history to another playlist
- - Discord role/presence verification
- - Automatic Playlist Reinitialisation
- - Autoplay Mode - forces playback on the specified device
- - Spotify Controls
+## Setup
 
-## Installation
+You will need to create a Discord application and have the Client ID and Client Secret available.
 
-An example deployment in production would be something like this for a `.env` file.
-
+```bash
+cp .env.example .env
+docker compose up -d redis db
+docker compose run --rm composer install
+docker compose run --rm artisan key:generate
+docker compose run --rm artisan migrate
+docker compose run --rm artisan db:seed
+docker compose run --rm artisan control:setup-discord
+docker compose run --rm npm install
+docker compose run --rm npm run build
+docker compose up -d
 ```
 
-FQDN=musicparty.example.com
-PROTOCOL=http://
-PORT=80
+Add the redirect URLs from the `control:setup-discord` step to your Discord OAuth2 configuration.
 
+You should now be able to login. The first user will be given the admin role.
 
-APP_URL=${PROTOCOL}${FQDN}
-#App key should be any valid, either use php to generate this or https://generate-random.org/laravel-key-generator
-APP_KEY=
+## Production Deployment
 
+In the `example` directory there is a docker compose file and some .env example files. These are for the setup I use. Just rename the .env files and edit them accordingly. You can get a [random Laravel application key here](https://generate-random.org/laravel-key-generator). I'm running with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress and the docker-compose supplied is built to use that.
 
-DB_DATABASE=musicparty
-DB_USERNAME=musicparty
-#Add you own dbpassword here for security
-DB_PASSWORD=
+You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
 
-#
-PUSHER_APP_KEY=musicparty
-#Generate a new secret here using UUID4 (https://generate-random.org/uuid-generator)
-PUSHER_APP_SECRET=
-#
-MIX_PUSHER_CLIENT_HOSTNAME=${FQDN}
-MIX_PUSHER_CLIENT_PORT=${PORT}
+To bring up the site, run the following:
 
-#Create two new apps from spotify.
-#You will need to set the redirect uri to ${PROTOCOL}${FQDN}/auth/spotify/search/redirect when you create them
-SPOTIFY_CLIENT_ID=
-SPOTIFY_CLIENT_SECRET=
-
-SPOTIFY_SEARCH_CLIENT_ID=
-SPOTIFY_SEARCH_CLIENT_SECRET=
-SPOTIFY_SEARCH_REDIRECT_URI=${APP_URL}/auth/spotify/search/redirect
-#UI required for this, available in debug output, will fall back to SPOTIFY_CLIENT_ID if not set
-SPOTIFY_SEARCH_REFRESH_TOKEN=
-
-#Create a new discord app at https://discord.com/developers/applications
-#Set the redirect uri in the OAuth2 settings to ${PROTOCOL}${FQDN}/auth/discord/redirect
-DISCORD_CLIENT_ID=
-#OAuth2 Secret from the OAuth2 settings in Discord
-DISCORD_CLIENT_SECRET=
-
+```bash
+docker compose up -d redis database
+docker compose run --rm artisan migrate
+docker compose run --rm artisan db:seed
+docker compose run --rm artisan setup:discord
+docker compose up -d
 ```
 
-The defaults for other env settings are based on a docker setup similar to the one below and for running in production.
+You should now be able to visit the site and login. From here you can use the admin menu to configure the site.
 
-You would then a docker-compose something like this:
+## Contributing
 
-```yaml
-version: '3'
-services:
-    nginx:
-        image: ghcr.io/mintopia/musicparty-nginx:latest
-        ports:
-            - ${PORT}:80
-        restart: unless-stopped
-        depends_on:
-            - php-fpm
+It's an open source project and I'm happy to accept pull requests. I am terrible at UI and UX, which is why this is entirely using server-side rendering. If someone wants to use Vue/Laravel Livewire - please go ahead!
 
-    php-fpm:
-        image: ghcr.io/mintopia/musicparty-php-fpm:latest
-        env_file: .env
-        restart: unless-stopped
-        depends_on:
-            - db
-            - redis
+## Roadmap
 
-    scheduler:
-        image: ghcr.io/mintopia/musicparty-php-fpm:latest
-        entrypoint: [ "php" ]
-        command: "artisan schedule:work"
-        user: "1000"
-        env_file: .env
-        restart: unless-stopped
-        depends_on:
-            - db
-            - redis
+The following features are on the roadmap:
 
-    worker:
-        image: ghcr.io/mintopia/musicparty-php-fpm:latest
-        entrypoint: [ "php" ]
-        command: "artisan queue:work"
-        user: "1000"
-        env_file: .env
-        restart: unless-stopped
-        deploy:
-            replicas: 2
-        depends_on:
-            - db
-            - redis
-
-    websockets:
-        image: ghcr.io/mintopia/musicparty-php-fpm:latest
-        ports:
-            - 6001:6001
-        entrypoint: [ "php" ]
-        command: "artisan websockets:serve"
-        user: "1000"
-        env_file: .env
-        restart: unless-stopped
-        depends_on:
-            - db
-            - redis
-
-    artisan:
-        image: ghcr.io/mintopia/musicparty-php-fpm:latest
-        entrypoint: [ "php", "artisan" ]
-        user: "1000"
-        env_file: .env
-        depends_on:
-            - db
-            - redis
-        profiles:
-            - artisan
-
-    redis:
-        image: redis:6.2.6
-        restart: unless-stopped
-
-    db:
-        image: mariadb:10.5-focal
-        restart: unless-stopped
-        environment:
-            MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-            MYSQL_DATABASE: "${DB_DATABASE}"
-            MYSQL_USER: "${DB_USERNAME}"
-            MYSQL_PASSWORD: "${DB_PASSWORD}"
-        volumes:
-            - dbdata:/var/lib/mysql
-
-volumes:
-    dbdata:
-        driver: local
-```
-
-Run the stack with `docker-compose up -d` and the DB migrations using `docker-compose run --rm artisan migrate`.
-
-### Performance
-
-By default the production containers run using nginx and php-fpm with a very conservative number of workers. You can control the number with the following environment variables in `.env` or directly on the `php-fpm` container:
-
-```dotenv
-FPM_PM_MAX_CHILDREN=40
-FPM_PM_START_SERVERS=10
-FPM_PM_MIN_SPARE_SERVERS=10
-FPM_PM_MAX_SPARE_SERVERS=30
-```
-
-These are used in the FPM configuration file, you can find more on configuring it in the php-fpm documentation.
-
-### Performance Monitoring
-
-You can monitor the nginx and php-fpm status using `/nginx-status` and `/fpm-status` HTTP endpoints. There is also an FPM ping endpoint at `/fpm-ping`.
-
-By default these are only allowed to be used by localhost and they shouldn't be exposed to the internet. You can control the IP range allowed to access them using the `STATUS_ALLOW` environment variable on the nginx container. It supports anything available for an `allow` command in nginx config.
-
-If you want to change these paths, set the environment variables `NGINX_STATUS_PATH`, `FPM_STATUS_PATH` and `FPM_PING_PATH` on both nginx and php-fpm.
-
-For example, if you wanted to use an unpredicatable string in the URL and allow access to all IPs:
-
-```dotenv
-STATUS_ALLOW=0.0.0.0/0
-
-FPM_STATUS_PATH=/410a821c-ac93-4b07-8652-7924937ce920/fpm-status
-FPM_PING_PATH=/410a821c-ac93-4b07-8652-7924937ce920/fpm-ping
-NGINX_STATUS_PATH=/410a821c-ac93-4b07-8652-7924937ce920/nginx-status
-```
-
-## Usage
-
-When it's running, it will create a managed Spotify playlist called something like `Spotify Party - ABCD`. Start playing this playlist and it'll handle the rest.
-
-## Known Issues
-
-After a while, Spotify stops updating the Playlist on clients - the playlist is updated, but the clients don't get told the changes. When this happens, the only way to resolve it is to create a new playlist. You can do this using `docker-compose run --rm artisan party:fixplaylist <code>`.
-
-## Development
-
-I'm terrible at UI/UX, if anyone would like to contribute to make this look good and knows Vue/Blade/Laravel, please dive in and help. Collaboration is on the UK LAN Techs discord.
-
-There is a docker-compose and compose files for running a dev environment with the source code bind mounted. You can bring up the stack by doing the following:
-
-1. Copy `.env.example` to `.env`
-2. Edit `.env` as appropriate
-3. Run `docker-compose up -d`
-4. Run `docker-compose run --rm artisan migrate` to run DB migrations
-
-By default the stack will now be running on `http://localhost:port`.
-
-A full set of typical PHP development tools are defined in docker-compose and can be run using the `docker-compose run --rm <tool>` syntax, eg. `artisan`, `composer`, `phpunit`.
+ - Better UI/UX. I'm currently using [tabler.io](https://tabler.io) and mostly server-side rendering, with some Vue components.
+ - Unit Tests. This was very rapidly developed, I'm sorry!
+ - PHPCS and PHPStan. Should be aiming for PSR-12 and level 8 PHPStan.
 
 ## Thanks
 
 This would not exist without the support of the following:
 
 - UK LAN Techs
-- Jason 'Mohero' Rivers
-- Chris 'Cheez' Stretton
-- Development Team Serenity at Fasthosts for the PHP build environment images
+- Moogle
 
 ## License
 
 The MIT License (MIT)
 
-Copyright (c) 2022 Jessica Smith
+Copyright (c) 2024 Jessica Smith
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal

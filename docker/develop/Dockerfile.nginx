@@ -1,4 +1,0 @@
-FROM ghcr.io/mintopia/php-docker-nginx:latest
-LABEL maintainer="jess@mintopia.net"
-
-COPY docker/default.conf /etc/nginx/templates/conf.d/default.conf.template

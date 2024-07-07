@@ -4,40 +4,98 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * App\Models\PlayedSong
- *
- * @property int $id
- * @property int $party_id
- * @property int $song_id
- * @property string $played_at
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs query()
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs wherePartyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs wherePlayedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs whereSongId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|PlayedSongs whereUpdatedAt($value)
- * @mixin \Eloquent
- * @property-read \App\Models\Party $party
- * @property-read \App\Models\Song $song
+ * @mixin IdeHelperPlayedSong
  */
 class PlayedSong extends Model
 {
     use HasFactory;
 
-    public function song()
+    protected $casts = [
+        'played_at' => 'datetime',
+    ];
+
+    public function party(): BelongsTo
+    {
+        return $this->belongsTo(Party::class);
+    }
+
+    public function song(): BelongsTo
     {
         return $this->belongsTo(Song::class);
     }
 
-    public function party()
+    public function upcoming(): BelongsTo
     {
-        return $this->belongsTo(Party::class);
+        return $this->belongsTo(UpcomingSong::class, 'upcoming_song_id');
+    }
+
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(SongRating::class);
+    }
+
+    public function findRequestedSong(): ?UpcomingSong
+    {
+        if ($this->upcoming_song_id && $this->upcoming) {
+            return $this->upcoming;
+        }
+
+        // Attempt to find most recent song matching this one
+        $ids = [$this->song->spotify_id];
+        if ($this->relinked_from) {
+            $ids[] = $this->relinked_from;
+        }
+        $upcoming = UpcomingSong::whereHas('song', function($query) use ($ids) {
+            $query->whereIn('spotify_id', $ids);
+        })->doesntHave('played')->orderBy('queued_at', 'DESC')->first();
+        if ($upcoming) {
+            $this->upcoming()->associate($upcoming);
+        }
+        return $upcoming;
+    }
+
+    public function like(User $user): SongRating
+    {
+        return $this->addRating($user, 1);
+    }
+
+    public function dislike(User $user): SongRating
+    {
+        return $this->addRating($user, -1);
+    }
+
+    protected function addRating(User $user, int $value): SongRating
+    {
+        $rating = $this->ratings()->whereUserId($user->id)->first();
+        if (!$rating) {
+            $rating = new SongRating();
+            $rating->song()->associate($this);
+            $rating->user()->associate($user);
+        }
+        $rating->value = $value;
+        $rating->save();
+        return $rating;
+    }
+
+    public function updateRating(): void
+    {
+        $this->rating = $this->ratings()->sum('value');
+        if ($this->isDirty()) {
+            $this->save();
+        }
+    }
+
+    public function toApi(): array
+    {
+        $data = $this->song->toApi();
+        $data['id'] = $this->id;
+        $data['rating'] = $this->rating;
+        $data['played_at'] = $this->played_at ? $this->played_at->toIso8601String() : null;
+        $data['user'] = $this->upcoming->user->nickname ?? null;
+        return $data;
     }
 }

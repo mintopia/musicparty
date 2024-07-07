@@ -2,34 +2,24 @@
 
 namespace App\Models;
 
+use App\Models\Traits\ToString;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 /**
- * App\Models\Artist
- *
- * @property int $id
- * @property string $spotify_id
- * @property string $name
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|Artist newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Artist newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|Artist query()
- * @method static \Illuminate\Database\Eloquent\Builder|Artist whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Artist whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Artist whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Artist whereSpotifyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Artist whereUpdatedAt($value)
- * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Song[] $songs
- * @property-read int|null $songs_count
+ * @mixin IdeHelperArtist
  */
 class Artist extends Model
 {
-    use HasFactory;
+    use HasFactory, ToString;
 
-    public function songs()
+    public function toStringName(): string
+    {
+        return $this->name;
+    }
+
+    public function songs(): BelongsToMany
     {
         return $this->belongsToMany(Song::class)->withTimestamps();
     }

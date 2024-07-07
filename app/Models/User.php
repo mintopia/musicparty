@@ -2,199 +2,258 @@
 
 namespace App\Models;
 
-use App\Services\SpotifyAPIRequest;
+use App\Models\Traits\ToString;
+use App\Services\DiscordApi;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-
+use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
-use Laravel\Socialite\Two\User as SocialiteUser;
-use SpotifyWebAPI\SpotifyWebAPI;
+use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
+use SpotifyWebAPI\SpotifyWebAPI;
 
 /**
- * App\Models\User
- *
- * @property int $id
- * @property string $nickname
- * @property string $discord_name
- * @property string $email
- * @property string|null $avatar
- * @property string $discord_id
- * @property mixed $discord_access_token
- * @property mixed $discord_refresh_token
- * @property \Illuminate\Support\Carbon $discord_token_expires_at
- * @property string|null $spotify_id
- * @property mixed|null $spotify_access_token
- * @property mixed|null $spotify_refresh_token
- * @property \Illuminate\Support\Carbon|null $spotify_token_expires_at
- * @property int $can_create_party
- * @property int $admin
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Notifications\DatabaseNotificationCollection|\Illuminate\Notifications\DatabaseNotification[] $notifications
- * @property-read int|null $notifications_count
- * @method static \Database\Factories\UserFactory factory(...$parameters)
- * @method static \Illuminate\Database\Eloquent\Builder|User newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|User query()
- * @method static \Illuminate\Database\Eloquent\Builder|User whereAdmin($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereAvatar($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereCanCreateParty($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDiscordAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDiscordId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDiscordName($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDiscordRefreshToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereDiscordTokenExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereEmail($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereNickname($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereSpotifyAccessToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereSpotifyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereSpotifyRefreshToken($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereSpotifyTokenExpiresAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
- * @mixin \Eloquent
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Party[] $parties
- * @property-read int|null $parties_count
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Vote[] $votes
- * @property-read int|null $votes_count
- * @property string|null $status
- * @property string|null $status_updated_at
- * @method static \Illuminate\Database\Eloquent\Builder|User whereStatus($value)
- * @method static \Illuminate\Database\Eloquent\Builder|User whereStatusUpdatedAt($value)
- * @property-read \App\Models\Party|null $party
- * @property-read \Illuminate\Database\Eloquent\Collection|\Laravel\Sanctum\PersonalAccessToken[] $tokens
- * @property-read int|null $tokens_count
+ * @mixin IdeHelperUser
  */
 class User extends Authenticatable
 {
-    use HasFactory, Notifiable, HasApiTokens;
-
-    protected ?SpotifyWebAPI $api = null;
-    protected ?Session $session = null;
-
-    public string $market = 'GB';
-
-    protected $hidden = [
-        'discord_refresh_token',
-        'discord_access_token',
-        'spotify_refresh_token',
-        'spotify_access_token',
-    ];
+    use HasApiTokens, HasFactory, Notifiable, ToString;
 
     protected $casts = [
-        'discord_token_expires_at' => 'datetime',
-        'discord_refresh_token' => 'encrypted',
-        'discord_access_token' => 'encrypted',
-        'spotify_token_expires_at' => 'datetime',
-        'spotify_refresh_token' => 'encrypted',
-        'spotify_access_token' => 'encrypted',
-        'status' => 'object',
+        'terms_agreed_at' => 'datetime',
+        'last_login' => 'datetime',
         'status_updated_at' => 'datetime',
+        'status' => 'object',
     ];
 
-    public static function fromDiscord(SocialiteUser $discordUser): User
+    protected ?string $email = null;
+    protected ?SpotifyWebAPI $api = null;
+    protected ?Session $session = null;
+    protected ?array $playlists = null;
+    protected ?array $devices = null;
+    protected ?object $recentTracks = null;
+    protected array $playlistCache = [];
+    protected $hasUpdatedStatus = false;
+
+    /**
+     * @return HasMany<LinkedAccount>
+     */
+    public function accounts(): HasMany
     {
-        $user = User::where('discord_id', $discordUser->id)->first();
-        if (!$user) {
-            $user = new User;
-            $user->discord_id = $discordUser->id;
-            if (User::all()->count() == 0) {
-                $user->admin = true;
-                $user->can_create_party = true;
-            }
-        }
-        $user->discord_name = $discordUser->nickname;
-        $user->nickname = $discordUser->name;
-        $user->email = $discordUser->email;
-        $user->avatar = $discordUser->avatar;
-        $user->discord_access_token = $discordUser->token;
-        $user->discord_refresh_token = $discordUser->refreshToken;
-        $user->discord_token_expires_at = Carbon::now()->addSeconds($discordUser->expiresIn);
-        $user->save();
-        return $user;
+        return $this->hasMany(LinkedAccount::class);
     }
 
-    public function updateFromSpotify(SocialiteUser $spotifyUser): User
+    /**
+     * @return HasMany<Party>
+     */
+    public function parties(): HasMany
     {
-        $this->spotify_id = $spotifyUser->id;
-        $this->spotify_access_token = $spotifyUser->token;
-        $this->spotify_refresh_token = $spotifyUser->refreshToken;
-        $this->spotify_token_expires_at = Carbon::now()->addSeconds($spotifyUser->expiresIn);
-        $this->save();
-        return $this;
+        return $this->hasMany(Party::class);
     }
 
-    public function votes()
+    public function partyMembers(): HasMany
+    {
+        return $this->hasMany(PartyMember::class);
+    }
+
+    public function votes(): HasMany
     {
         return $this->hasMany(Vote::class);
     }
 
-    public function party()
+    public function ratings(): HasMany
     {
-        return $this->hasOne(Party::class);
+        return $this->hasMany(SongRating::class);
     }
 
-    public function getSpotifyApi()
+    public function hasRole(string|Role $role): bool
     {
-        $cutoff = Carbon::now()->addMinutes(5);
-        if ($this->api) {
-            if ($this->spotify_token_expires_at < $cutoff) {
-                Log::debug("[User:{$this->id}] Refreshing expiring access token");
-                $this->session->refreshAccessToken($this->spotify_refresh_token);
-                $this->spotify_access_token = $this->session->getAccessToken();
-                $this->spotify_token_expires_at = new Carbon($this->session->getTokenExpiration());
-                $this->save();
+        if ($role instanceof Role) {
+            $role = $role->code;
+        }
+        return (bool)$this->roles()->whereCode($role)->count();
+    }
+
+    public function getEmail(): ?string
+    {
+        if ($this->email !== null) {
+            return $this->email;
+        }
+        $linked = $this->accounts()->whereNotNull('email')->first();
+        if ($linked) {
+            $this->email = $linked->email;
+            return $this->email;
+        }
+        return null;
+    }
+
+    public function roles(): BelongsToMany
+    {
+        return $this->belongsToMany(Role::class);
+    }
+
+    public function avatarUrl(): string
+    {
+        foreach ($this->accounts as $acc) {
+            if ($acc->avatar_url) {
+                return $acc->avatar_url;
             }
-            return $this->api;
         }
-
-        $this->session = new Session(
-            config('services.spotify.client_id'),
-            config('services.spotify.client_secret'),
-        );
-
-        if ($this->spotify_token_expires_at < $cutoff) {
-            Log::debug("[User:{$this->id}] Refreshing expiring access token");
-            $this->session->refreshAccessToken($this->spotify_refresh_token);
-            $this->spotify_access_token = $this->session->getAccessToken();
-            $this->spotify_token_expires_at = new Carbon($this->session->getTokenExpiration());
-            $this->save();
+        if ($email = $this->getEmail()) {
+            $toHash = $email;
         } else {
-            $this->session->setAccessToken($this->spotify_access_token);
+            $toHash = $this->nickname;
+        }
+        $hash = hash('sha256', $toHash);
+        return "https://gravatar.com/avatar/{$hash}?d=retro";
+    }
+
+    protected function toStringName(): string
+    {
+        return $this->nickname;
+    }
+
+    public function hasSpotifyLinks(): bool
+    {
+        $count = $this->accounts()->whereHas('provider', function ($query) {
+            $query->whereIn('code', ['spotify', 'spotifysearch']);
+        })->count();
+        return $count === 2;
+    }
+
+    public function getSpotifyApi(): ?SpotifyWebAPI
+    {
+        /**
+         * @var LinkedAccount $account
+         */
+        $account = $this->accounts()->whereHas('provider', function ($query) {
+            $query->whereCode('spotify');
+        })->first();
+        if (!$account) {
+            return null;
         }
 
-        Log::debug("[User:{$this->id}] Creating new API connection");
+        if ($this->session === null) {
+            $clientId = $account->provider->getSetting('client_id');
+            $clientSecret = $account->provider->getSetting('client_secret');
+            $this->session = new Session($clientId, $clientSecret);
+            $this->session->setAccessToken($account->access_token);
+        }
 
-        $request = new SpotifyAPIRequest();
-        $this->api = new SpotifyWebAPI([], $this->session, $request);
+        if (!$this->api) {
+            // Create new API
+            Log::debug("{$this}: Creating new API connection");
+            $request = new Request();
+            $this->api = new SpotifyWebAPI([], $this->session, $request);
+        }
+
+
+        if ($account->access_token_expires_at < now()->addMinutes(5)) {
+            Log::debug("{$this}: Refreshing expiring access token");
+            $this->session->refreshAccessToken($account->refresh_token);
+            $account->access_token = $this->session->getAccessToken();
+            $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
+            $account->save();
+        }
+
         return $this->api;
+    }
+
+    public function getDevices(): array
+    {
+        if ($this->devices !== null) {
+            return $this->devices;
+        }
+        $api = $this->getSpotifyApi();
+        if (!$api) {
+            return [];
+        }
+
+        $this->devices = Cache::remember("users.{$this->id}.devices", 300, function() use ($api) {
+            Log::debug("{$this}: Spotify API -> getMyDevices()");
+            return $api->getMyDevices()->devices;
+        });
+        return $this->devices;
     }
 
     public function getPlaylists(): array
     {
+        if ($this->playlists !== null) {
+            return $this->playlists;
+        }
+        $api = $this->getSpotifyApi();
+        if (!$api) {
+            return [];
+        }
+
+        $this->playlists = [];
         $offset = 0;
-        $playlists = [];
         do {
-            $response = $this->getSpotifyApi()->getMyPlaylists([
-                'limit' => 50,
-                'offset' => $offset,
-            ]);
-            $playlists = array_merge($playlists, $response->items);
+            Log::debug("{$this}: Spotify API -> getMyPlaylists({$offset})");
+            $result = $api->getMyPlaylists(['limit' => 50, 'offset' => $offset]);
+            $this->playlists = array_merge($this->playlists, $result->items);
             $offset += 50;
-        } while ($response->next !== null);
-        return $playlists;
+        } while ($result->next);
+        return $this->playlists;
     }
 
-    public function getSpotifyStatus()
+    public function getSpotifyStatus(bool $forced = false): ?object
     {
-        $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo();
+        if ($this->hasUpdatedStatus && !$forced) {
+            return $this->status;
+        }
+        Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
+        $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo([
+            'market' => $this->market,
+        ]);
         $this->status_updated_at = Carbon::now();
         $this->save();
         return $this->status;
+    }
+
+    public function getPartyMember(Party $party): ?PartyMember
+    {
+        foreach($this->partyMembers as $member) {
+            if ($member->party_id === $party->id) {
+                return $member;
+            }
+        }
+        return null;
+    }
+
+    public function getRecentTracks(bool $force = false): ?object
+    {
+        if (!$force && $this->recentTracks !== null) {
+            return $this->recentTracks;
+        }
+
+        Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
+        $this->recentTracks = $this->getSpotifyApi()->getMyRecentTracks([
+            'limit' => 20,
+            'market' => $this->market,
+        ]);
+        return $this->recentTracks;
+    }
+
+    public function getPlaylist(string $id, bool $force = false): ?object
+    {
+        if (!$force && isset($this->playlistCache[$id])) {
+            return $this->playlistCache[$id];
+        }
+
+        Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
+        $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id, [
+            'market' => $this->market,
+        ]);
+        return $this->playlistCache[$id];
     }
 }

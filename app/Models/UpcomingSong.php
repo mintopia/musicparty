@@ -4,32 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 /**
- * App\Models\UpcomingSong
- *
- * @property int $id
- * @property int $party_id
- * @property int $song_id
- * @property int $votes
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \App\Models\Song $song
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong query()
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong wherePartyId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereSongId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereVotes($value)
- * @mixin \Eloquent
- * @property-read \App\Models\Party $party
- * @property-read \Illuminate\Database\Eloquent\Collection|\App\Models\Vote[] $user_votes
- * @property-read int|null $user_votes_count
- * @property string|null $queued_at
- * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereQueuedAt($value)
+ * @mixin IdeHelperUpcomingSong
  */
 class UpcomingSong extends Model
 {
@@ -39,59 +19,71 @@ class UpcomingSong extends Model
         'queued_at' => 'datetime',
     ];
 
-    public function song()
-    {
-        return $this->belongsTo(Song::class);
-    }
-
-    public function party()
+    public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
     }
 
-    public function user_votes()
+    public function song(): BelongsTo
+    {
+        return $this->belongsTo(Song::class);
+    }
+
+    public function votes(): HasMany
     {
         return $this->hasMany(Vote::class);
     }
 
-    public function updateVotes(): UpcomingSong
+    public function user(): BelongsTo
     {
-        $votes = $this->user_votes()->count();
-        if ($votes != $this->votes) {
-            $this->votes = $votes;
-        }
-        $this->save();
-        return $this;
+        return $this->belongsTo(User::class);
     }
 
-    public function hasVoted(User $user)
+    public function played(): HasOne
     {
-        foreach ($this->user_votes as $vote) {
-            if ($vote->user_id == $user->id) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public function vote(User $user): ?Vote
-    {
-        if ($this->hasVoted($user)) {
-            return null;
-        }
-
-        $vote = new Vote;
-        $vote->upcoming_song()->associate($this);
-        $vote->user()->associate($user);
-        $vote->save();
-        return $vote;
+        return $this->hasOne(PlayedSong::class);
     }
 
     public function toApi(): array
     {
         $data = $this->song->toApi();
-        $data['votes'] = $this->votes;
-        $data['queued_at'] = $this->queued_at != null ? $this->queued_at->toIso8601String() : null;
+        $data['score'] = $this->score;
+        $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
+        $data['user'] = $this->user->nickname ?? null;
         return $data;
+    }
+
+    public function upvote(User $user): ?Vote
+    {
+        return $this->addVote($user, 1);
+    }
+
+    public function downvote(User $user): ?Vote
+    {
+        if (!$this->party->downvotes) {
+            return null;
+        }
+        return $this->addVote($user, -1);
+    }
+
+    protected function addVote(User $user, int $value): Vote
+    {
+        $vote = $this->votes()->whereUserId($user->id)->first();
+        if (!$vote) {
+            $vote = new Vote();
+            $vote->upcomingSong()->associate($this);
+            $vote->user()->associate($user);
+        }
+        $vote->value = $value;
+        $vote->save();
+        return $vote;
+    }
+
+    public function updateScore(): void
+    {
+        $this->score = $this->votes()->sum('value');
+        if ($this->isDirty()) {
+            $this->save();
+        }
     }
 }

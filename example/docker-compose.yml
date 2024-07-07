@@ -1,0 +1,96 @@
+version: '3'
+services:
+  nginx:
+    image: ghcr.io/mintopia/musicparty-nginx:develop
+    env_file: .env.nginx
+    restart: unless-stopped
+    depends_on:
+      - php-fpm
+    networks:
+      - frontend
+      - default
+    volumes:
+      - ./public:/var/www/storage/public
+
+  php-fpm:
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    env_file: .env
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - database
+    volumes:
+      - ./logs:/var/www/storage/logs
+      - ./public:/var/www/storage/public
+
+  redis:
+    image: redis:6.2.6
+    restart: unless-stopped
+
+  database:
+    image: mariadb:10.5-focal
+    env_file: .env.mariadb
+    restart: unless-stopped
+    volumes:
+      - ./database:/var/lib/mysql
+
+  worker:
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    restart: unless-stopped
+    deploy:
+      replicas: 2
+    env_file: .env
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ./logs:/var/www/storage/logs
+      - ./public:/var/www/storage/public
+    entrypoint: ['php']
+    command: 'artisan queue:work --queue=partyupdates,default'
+
+
+  scheduler:
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ./logs:/var/www/storage/logs
+      - ./public:/var/www/storage/public
+    entrypoint: ['php']
+    command: 'artisan schedule:work'
+
+
+  reverb:
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    restart: unless-stopped
+    env_file: .env
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ./logs:/var/www/storage/logs
+      - ./public:/var/www/storage/public
+    entrypoint: ['php']
+    command: 'artisan reverb:start --host=0.0.0.0'
+
+
+  artisan:
+    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    profiles:
+      - artisan
+    env_file: .env
+    depends_on:
+      - database
+      - redis
+    volumes:
+      - ./logs:/var/www/storage/logs
+      - ./public:/var/www/storage/public
+    entrypoint: ['php', 'artisan']
+
+networks:
+  frontend:
+    external: true

@@ -2,72 +2,108 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PaginationRequest;
+use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
-use App\Models\Song;
 use App\Models\UpcomingSong;
-use App\Models\Vote;
-use App\Services\SpotifySearchService;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use SpotifyWebAPI\SpotifyWebAPIException;
 
 class UpcomingSongController extends Controller
 {
-    protected function search(Request $request, Party $party)
+    public function index(UpcomingSongSearchRequest $request, Party $party)
     {
-        if ($request->input('query')) {
-            $searchService = new SpotifySearchService($party, $request->user());
-            $results = $searchService->search(
-                $request->input('query'),
-                $request->input('page', 1),
-                $request->input('perPage', 20)
-            );
-        } else {
-            $results = new LengthAwarePaginator([], 0, $request->input('page', 1), $request->input('perPage', 20));
+        $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
+        $params = [
+            'order' => 'created_at',
+            'order_direction' => 'desc',
+        ];
+        $perPage = $request->input('per_page', 20);
+        if ($perPage !== 20) {
+            $params['per_page'] = $perPage;
         }
-        return view ('upcomingsongs.search', [
+
+        if ($request->input('name')) {
+            $params['name'] = $request->input('name');
+            $query = $query->whereHas('song', function($query) use ($params) {
+                $query->where('name', 'LIKE', "%{$params['name']}%");
+            });
+        }
+
+        if ($request->input('album')) {
+            $params['album'] = $request->input('album');
+            $query = $query->whereHas('song.album', function($query) use ($params) {
+                $query->where('name', 'LIKE', "%{$params['album']}%");
+            });
+        }
+
+        if ($request->input('artist')) {
+            $params['artist'] = $request->input('artist');
+            $query = $query->whereHas('song.artists', function($query) use ($params) {
+                $query->where('name', 'LIKE', "%{$params['artist']}%");
+            });
+        }
+
+        if ($request->input('type')) {
+            $params['type'] = $request->input('type');
+            if ($request->input('type') === 'queued') {
+                $query = $query->whereNull('queued_at');
+            } else {
+                $query = $query->whereNotNull('queued_at');
+            }
+        }
+
+        // Sorting
+        if ($request->input('order')) {
+            $params['order'] = $request->input('order');
+        }
+        if ($request->input('order_direction')) {
+            $params['order_direction'] = $request->input('order_direction');
+        }
+
+        switch ($params['order']) {
+            case 'id':
+            case 'created_at':
+            case 'queued_at':
+            case 'score':
+                $query = $query->orderBy($params['order'], $params['order_direction']);
+                break;
+            case 'votes':
+                $query = $query->orderBy('votes_count', $params['order_direction']);
+                break;
+        }
+
+        $songs = $query->paginate($perPage)->appends($params);
+        return view('upcomingsongs.index', [
             'party' => $party,
-            'tracks' => $results,
-            'query' => $request->input('query', ''),
+            'canManage' => true,
+            'songs' => $songs,
+            'types' => [(object)[
+                'code' => 'queued',
+                'name' => 'Queued',
+            ], (object)[
+                'code' => 'spotify',
+                'name' => 'Sent to Spotify',
+            ]],
+            'filters' => (object)$params,
+            'params' => $params,
         ]);
     }
 
-    protected function vote(Request $request, Party $party, string $id)
+    public function show(PaginationRequest $request, Party $party, UpcomingSong $song)
     {
-        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($id) {
-            $query->where('spotify_id', $id);
-        })->first();
-
-        if (!$upcoming) {
-            try {
-                $song = $party->user->getSpotifyApi()->getTrack($id, [
-                    'market' => $party->user->market,
-                ]);
-            } catch (SpotifyWebAPIException $e) {
-                abort(404);
-            }
-            $song = Song::fromSpotify($song);
-            $upcoming = new UpcomingSong;
-            $upcoming->party()->associate($party);
-            $upcoming->song()->associate($song);
-            $upcoming->save();
+        $params = [];
+        $perPage = $request->input('per_page', 20);
+        if ($perPage !== 20) {
+            $params['per_page'] = $perPage;
         }
-
-        if ($upcoming->hasVoted($request->user())) {
-            return response()->redirectToRoute('parties.show', $party->code)->with('errorMessage', 'You have already voted for this song');
-        }
-
-        $vote = new Vote;
-        $vote->upcoming_song()->associate($upcoming);
-        $vote->user()->associate($request->user());
-        $vote->save();
-
-        return redirect()->back()->with('successMessage', 'Your vote has been counted');
-    }
-
-    protected function delete(Party $party, UpcomingSong $upcomingsong)
-    {
-        $upcomingsong->delete();
-        return redirect()->back();
+        $votes = $song->votes()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+        $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
+        return view('upcomingsongs.show', [
+            'party' => $party,
+            'canManage' => true,
+            'song' => $song,
+            'votes' => $votes,
+            'other' => $other,
+        ]);
     }
 }

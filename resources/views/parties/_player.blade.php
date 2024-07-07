@@ -1,6 +1,7 @@
 <player
-    name="{{ $party->name }}"
     code="{{ $party->code }}"
-    canmanage="{{ $party->isAdmin(Auth::user()) ? true : false }}"
-    initialstate='@json($party->getState(Auth::user()))'>
+    initialstate='@json($party->getState())'
+    can_manage="{{ $canManage }}"
+    can_downvote="{{ $party->downvotes }}"
+>
 </player>

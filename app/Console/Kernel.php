@@ -9,24 +9,22 @@ class Kernel extends ConsoleKernel
 {
     /**
      * Define the application's command schedule.
-     *
-     * @param  \Illuminate\Console\Scheduling\Schedule  $schedule
-     * @return void
      */
-    protected function schedule(Schedule $schedule)
+    protected function schedule(Schedule $schedule): void
     {
+        $schedule->command('sanctum:prune-expired --hours=24')->daily();
+        $schedule->command('telescope:prune')->daily();
         $schedule->command('party:fallback')->everyMinute();
-        $schedule->command('party:fixplaylists')->everySixHours();
+        $schedule->command('party:force')->everyMinute();
+        $schedule->command('party:check')->everyFifteenMinutes();
     }
 
     /**
      * Register the commands for the application.
-     *
-     * @return void
      */
-    protected function commands()
+    protected function commands(): void
     {
-        $this->load(__DIR__.'/Commands');
+        $this->load(__DIR__ . '/Commands');
 
         require base_path('routes/console.php');
     }

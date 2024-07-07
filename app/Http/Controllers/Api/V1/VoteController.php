@@ -3,28 +3,30 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Api\V1\VoteRequest;
+use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
 use App\Models\UpcomingSong;
-use Illuminate\Http\Request;
 
 class VoteController extends Controller
 {
-
-    public function store(Request $request, Party $party, UpcomingSong $upcoming)
+    public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong)
     {
-        if ($upcoming->party->id != $party->id) {
-            abort(404);
-        }
-        if ($upcoming->queued_at) {
-            abort(404);
-        }
-
-        $vote = $upcoming->vote($request->user());
-        if ($vote) {
-            return response()->noContent();
+        if ($request->input('vote') < 0) {
+            $vote = $upcomingsong->downvote($request->user());
+        } elseif($request->input('vote') > 0) {
+            $vote = $upcomingsong->upvote($request->user());
         } else {
-            abort(419, 'Unable to vote for this track');
+            $vote = $request->user()->votes()->whereUpcomingSongId($upcomingsong->id)->first();
+            if ($vote) {
+                $vote->delete();
+                $vote = null;
+            }
         }
+        $resource = new UpcomingSongResource($upcomingsong);
+        $resource->augment((object)[
+            'vote' => $vote,
+        ]);
+        return $resource;
     }
-
 }

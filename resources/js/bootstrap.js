@@ -1,9 +1,8 @@
-window._ = require('lodash');
-// window.$ = window.jQuery = require('jquery');
+import loadash from 'lodash'
+window._ = loadash
 
-try {
-    require('bootstrap');
-} catch (e) {}
+import * as Popper from '@popperjs/core'
+window.Popper = Popper
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -11,7 +10,8 @@ try {
  * CSRF token as a header based on the value of the "XSRF" token cookie.
  */
 
-window.axios = require('axios');
+import axios from 'axios';
+window.axios = axios;
 
 window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
@@ -23,13 +23,16 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
 
 import Echo from 'laravel-echo';
 
-window.Pusher = require('pusher-js');
+import Pusher from 'pusher-js';
+window.Pusher = Pusher;
+
 window.Echo = new Echo({
-    broadcaster: 'pusher',
-    key: window.echoConfig.key,
-    cluster: window.echoConfig.cluster,
-    wsHost: window.echoConfig.wsHost,
-    wsPort: window.echoConfig.wsPort,
-    forceTLS: false,
-    disableStats: true
+     broadcaster: 'reverb',
+     key: window.pusherConfig.appKey,
+     wsHost: window.pusherConfig.host,
+     wsPort: window.pusherConfig.port,
+     wssHost: window.pusherConfig.host,
+     wssPort: window.pusherConfig.port,
+     forceTLS: window.pusherConfig.scheme === 'https',
+     enabledTransports: ['ws', 'wss'],
 });

@@ -1,33 +1,26 @@
-@extends('layouts.application', [
-    'title' => [
-        'Parties',
-        'Add'
-    ]
-]
-)
+@extends('layouts.app', [
+    'activenav' => 'party.create',
+])
+
+@section('breadcrumbs')
+    <li class="breadcrumb-item"><a href="{{ route('home') }}">Home</a></li>
+    <li class="breadcrumb-item active"><a href="{{ route('parties.create') }}">Create Party</a></li>
+@endsection
 
 @section('content')
-    <div class="page-header">
-        <h1>
-            Parties
-        </h1>
+    <div class="page-header mt-0">
+        <h1>Create Party</h1>
     </div>
 
-    <div class="row">
-        <div class="col-lg-12">
-            <form class="card" action="{{ route('parties.store') }}" method="post">
-                {{ csrf_field() }}
-                <div class="card-header">
-                    <h3 class="card-title">Add Party</h3>
+    <div class="col-md-6 offset-md-3">
+        <form action="{{ route('parties.store') }}" method="post" class="card">
+            @include('parties._form')
+            <div class="card-footer text-end">
+                <div class="d-flex">
+                    <a href="{{ route('home') }}" class="btn btn-link">Cancel</a>
+                    <button type="submit" class="btn btn-primary ms-auto">Save</button>
                 </div>
-                @include('parties._form')
-                <div class="card-footer text-right">
-                    <div class="d-flex">
-                        <a class="btn btn-link" href="{{ route('home') }}">Cancel</a>
-                        <button class="btn btn-primary ml-auto" type="submit">Save</button>
-                    </div>
-                </div>
-            </form>
-        </div>
+            </div>
+        </form>
     </div>
 @endsection

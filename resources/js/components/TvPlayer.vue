@@ -1,101 +1,141 @@
 <template>
-    <div>
-        <div class="row blur-bg p-2 pt-0 vh-100 justify-content-md-center" v-bind:style="getBackgroundImageStyle((state !== null && state.now) ? state.now.album.image_url : null)">
-            <div class="d-flex title flex-fill text-white p-0 pb-3">
-                <div class="flex-grow-1">
-                    <a v-bind:href="partyUri()" class="link-light">{{ name }}</a>
+    <div class="player p-0 vh-100 w-100 bg-black text-white">
+        <div class="blur-bg p-3 vh-100 w-100" v-bind:style="getBackgroundImageStyle()">
+            <h1 class="d-flex mb-5">
+                <div class="col">
+                    <template v-if="state !== null">{{ state.name }}</template>
                 </div>
-                <div class="text-end">
+                <div class="col-auto text-end">
                     {{ code }}
                 </div>
-            </div>
-            <template v-if="state !== null">
-                <template v-if="state.now !== null">
-                    <div class="d-flex col-10 py-5">
-                        <div class="p-2">
-                            <img v-bind:src="state.now.album.image_url" v-bind:title="state.now.album.name" class="img-fluid player-album float-start me-3 shadow-lg" />
-                        </div>
-                        <div class="flex-grow-1">
-                            <div class="row">
-                                <h2>{{ state.now.name }}</h2>
+            </h1>
+            <div class="container-xl-fluid d-flex">
+                <div class="col-xl-8 offset-xl-2 mt-auto">
+                    <template v-if="state && state.now !== null">
+                        <div class="row">
+                            <div class="col-auto">
+                                <img class="albumart" v-bind:src="state.now.album.image_url" />
                             </div>
-                            <div class="row p-2">
-                                <p class="p-0 ps-2 mt-4 lh-base">
-                                    <i class="bi bi-person-circle"></i>
+                            <div class="col fs-1 pt-4">
+                                <div class="fs-0 pb-3 overflow-hidden"><strong>{{ state.now.name }}</strong></div>
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-users fs-1"></i>
                                     {{ combineArtists(state.now.artists) }}
-                                </p>
-                                <p class="p-0 ps-2 mb-2 lh-base">
-                                    <i class="bi bi-vinyl"></i>
-                                    {{ state.now.album.name }}
-                                </p>
-                            </div>
-                            <div class="progress mt-5" style="height: 5px;">
-                                <div class="progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`" v-bind:aria-valuenow="progress" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                            <div class="d-flex">
-                                <div class="flex-grow-1">
-                                    {{ currentTime }}
                                 </div>
-                                <div class="text-end">
-                                    {{  endTime }}
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-vinyl fs-1"></i>
+                                    {{ state.now.album.name }}
+                                </div>
+                                <div class="pb-3 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
+                                    <i class="icon-lg ti ti-music-question fs-1"></i>
+                                    <template v-if="state.current.user !== null">
+                                        Requested by {{ state.current.user }}
+                                    </template>
+                                    <template v-else>
+                                        Fallback Track
+                                    </template>
+                                </div>
+                                <div class="progress">
+                                    <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>
+                                </div>
+                                <div class="d-flex">
+                                    <div class="col">
+                                        {{ currentTime }}
+                                    </div>
+                                    <div class="col text-end">
+                                        {{  endTime }}
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                </template>
-                <template v-else>
-                    Nothing Playing
-                </template>
-            </template>
-            <template v-else>
-                Loading
-            </template>
+                        <h2 v-if="state.next !== null" class="mt-4">Next</h2>
+                        <div v-if="state.next !== null" class="row text-muted">
+                            <div class="col-auto">
+                                <img class="albumart-small" v-bind:src="state.next.album.image_url" />
+                            </div>
+                            <div class="col fs-1 pt-4">
+                                <div class="fs-0 pb-3 overflow-hidden"><strong>{{ state.next.name }}</strong></div>
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-users fs-1"></i>
+                                    {{ combineArtists(state.next.artists) }}
+                                </div>
+                                <div class="pb-2 overflow-hidden">
+                                    <i class="icon-lg ti ti-vinyl fs-1"></i>
+                                    {{ state.next.album.name }}
+                                </div>
+                                <div class="pb-3 overflow-hidden">
+                                    <i class="icon-lg ti ti-music-question fs-1"></i>
+                                    <template v-if="state.next.user !== null">
+                                        Requested by {{ state.next.user }}
+                                    </template>
+                                    <template v-else>
+                                        Fallback Track
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                    <template v-else>
+                        <div class="empty text-muted fs-0">
+                            <i class="icon icon-lg ti ti-music-off"></i>
+                            There is nothing playing
+                        </div>
+                    </template>
+                </div>
+            </div>
+            <div class="qr" v-if="state && state.show_qrcode">
+                <img v-bind:src="qrCodeUrl" />
+            </div>
         </div>
     </div>
 </template>
 <style>
-.title {
-    font-weight: bold;
-    font-size: 2em;
-}
+    .player {
+        overflow: hidden;
+        padding: 1em;
+    }
 
-a {
-    text-decoration: none;
-}
+    .qr {
+        position: absolute;
+        bottom: 20px;
+        left: 20px;
+    }
 
-.blur-bg {
-    backdrop-filter: blur(2px);
-    background-repeat: no-repeat;
-    background-size: 100%;
-    background-position: center center;
-    background-blend-mode: darken;
-    background-color: rgba(0, 0, 0, 0.9);
-}
+    .blur-bg {
+        backdrop-filter: blur(2px);
+        background-repeat: no-repeat;
+        background-size: 100%;
+        background-position: center center;
+        background-blend-mode: darken;
+        background-color: rgba(0, 0, 0, 0.9);
+    }
 
-.player-album {
-    height: 20em;
-    width: auto;
-}
+    img.albumart {
+        max-width: 20em;
+    }
 
-.player, .player-next {
-    color: #fff;
-}
+    img.albumart-small {
+        max-width: 13em;
+    }
 
-h2 {
-    font-size: 3em;
-}
+    .progress {
+        height: 5px;
+        margin-bottom: 5px;
+    }
 
-p {
-    font-size: 1.4em;
-    line-height: 2em !important;
-}
+    .smooth-progress-bar {
+        transition: width 1s linear;
+    }
+
+    .fs-0 {
+        font-size: 2rem !important;
+    }
 </style>
 <script>
     export default {
         props: [
-            'name',
             'code',
-            'canmanage',
+            'partyurl',
             'initialstate',
         ],
         data() {
@@ -106,19 +146,14 @@ p {
                 progress: '',
                 startedAt: null,
                 intervalId: null,
+                qrCodeUrl: null,
             }
         },
 
         methods: {
-            partyUri() {
-                return `/parties/${this.code}`;
-            },
-
-            isPlaying() {
-                if (this.state === null || this.state.status === null || this.state.status.is_playing === false) {
-                    return false;
-                }
-                return true;
+            updateState(state) {
+                this.state = state;
+                this.updateProgressBar();
             },
 
             formatMs(ms) {
@@ -127,16 +162,23 @@ p {
                 return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
             },
 
-            getBackgroundImageStyle(url) {
-                if (url === null) {
+            isPlaying() {
+                if (this.state === null || this.state.status === null || this.state.status.isPlaying === false) {
+                    return false;
+                }
+                return true;
+            },
+
+            getBackgroundImageStyle() {
+                if (this.state === null || this.state.now === null) {
                     return '';
                 }
-                return `background-image: url('${url}');`;
+                return `background-image: url('${this.state.now.album.image_url}');`;
             },
 
             updateProgressBar() {
                 if (this.isPlaying()) {
-                    this.startedAt = new Date(this.state.status.updated_at).getTime() - this.state.status.progress;
+                    this.startedAt = new Date(this.state.status.updatedAt).getTime() - this.state.status.progress;
                     this.endTime = this.formatMs(this.state.status.length);
                     this.moveProgressBar();
                     if (this.intervalId === null) {
@@ -166,17 +208,13 @@ p {
             combineArtists(artists) {
                 return artists.map(artist => artist.name).join(', ');
             },
-
-            updateState(state) {
-                this.state = state;
-                this.updateProgressBar();
-            },
         },
 
         mounted() {
             this.updateState(JSON.parse(this.initialstate));
             let channel = `party.${this.code}`;
-            Echo.private(channel).listen('Party\\UpdatedEvent', (payload) => {
+            this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${this.partyurl}`;
+            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload) => {
                 this.updateState(payload);
             });
         },

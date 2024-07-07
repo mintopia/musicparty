@@ -3,70 +3,44 @@
 namespace App\Observers;
 
 use App\Events\Party\UpdatedEvent;
-use App\Events\Party\UpdatedEventOwner;
 use App\Models\Party;
+use Illuminate\Support\Str;
 
 class PartyObserver
 {
-    public function creating(Party $party)
+    public function creating(Party $party): void
     {
-        $party->setCode();
-        $party->createPlaylist();
+        if (!$party->code) {
+            $party->code = Str::upper(Str::password(4, numbers: false, symbols: false));
+        }
     }
-
     /**
      * Handle the Party "created" event.
-     *
-     * @param  \App\Models\Party  $party
-     * @return void
      */
-    public function created(Party $party)
+    public function created(Party $party): void
     {
-        // Publish Update
+        $party->updateState();
+    }
+
+    public function saved(Party $party): void
+    {
+        if ($party->isDirty('backup_playlist_id')) {
+            $party->getBackupPlaylistTracks(true);
+        }
+        $party->updatePlaylist();
+    }
+
+    public function saving(Party $party): void
+    {
+        $party->updateDeviceName();
     }
 
     /**
      * Handle the Party "updated" event.
-     *
-     * @param  \App\Models\Party  $party
-     * @return void
      */
-    public function updated(Party $party)
+    public function updated(Party $party): void
     {
         UpdatedEvent::dispatch($party);
-        UpdatedEventOwner::dispatch($party);
     }
 
-    /**
-     * Handle the Party "deleted" event.
-     *
-     * @param  \App\Models\Party  $party
-     * @return void
-     */
-    public function deleted(Party $party)
-    {
-        // Publish Update
-    }
-
-    /**
-     * Handle the Party "restored" event.
-     *
-     * @param  \App\Models\Party  $party
-     * @return void
-     */
-    public function restored(Party $party)
-    {
-        //
-    }
-
-    /**
-     * Handle the Party "force deleted" event.
-     *
-     * @param  \App\Models\Party  $party
-     * @return void
-     */
-    public function forceDeleted(Party $party)
-    {
-        //
-    }
 }

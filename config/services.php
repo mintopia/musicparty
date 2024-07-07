@@ -31,38 +31,8 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
-    'spotify' => [
-        'client_id' => env('SPOTIFY_CLIENT_ID'),
-        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
-        'redirect' => env('SPOTIFY_REDIRECT_URI'),
-        'scopes' => [
-            'user-read-playback-state',
-            'user-modify-playback-state',
-            'user-read-currently-playing',
-            'streaming',
-            'user-read-recently-played',
-            'playlist-modify-private',
-            'playlist-read-collaborative',
-            'playlist-read-private',
-            'playlist-modify-public',
-        ],
+    'tickettailor' => [
+        'endpoint' => env('TICKETTAILOR_ENDPOINT', 'https://api.tickettailor.com'),
+        'verifytls' => env('TICKETTAILOR_VERIFYTLS', true),
     ],
-
-    'spotify_search' => [
-        'client_id' => env('SPOTIFY_SEARCH_CLIENT_ID'),
-        'client_secret' => env('SPOTIFY_SEARCH_CLIENT_SECRET'),
-        'refresh_token' => env('SPOTIFY_SEARCH_REFRESH_TOKEN'),
-        'redirect' => env('SPOTIFY_SEARCH_REDIRECT_URI'),
-    ],
-
-    'discord' => [
-        'client_id' => env('DISCORD_CLIENT_ID'),
-        'client_secret' => env('DISCORD_CLIENT_SECRET'),
-        'redirect' => env('DISCORD_REDIRECT_URI'),
-
-        // optional
-        'allow_gif_avatars' => (bool)env('DISCORD_AVATAR_GIF', false),
-        'avatar_default_extension' => env('DISCORD_EXTENSION_DEFAULT', 'png'), // only pick from jpg, png, webp
-    ],
-
 ];

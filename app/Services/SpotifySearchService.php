@@ -2,13 +2,13 @@
 namespace App\Services;
 
 use App\Models\Party;
-use App\Services\SpotifyAPIRequest;
+use App\Models\PartyMember;
 use Carbon\Carbon;
 use App\Models\User;
 use App\Models\Vote;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 
@@ -17,9 +17,8 @@ class SpotifySearchService
     protected ?Session $session = null;
     protected ?SpotifyWebAPI $api = null;
 
-    public function __construct(protected Party $party, protected User $user)
+    public function __construct(protected Party $party, protected PartyMember $member)
     {
-
     }
 
     protected function getApi()
@@ -28,32 +27,36 @@ class SpotifySearchService
             return $this->api;
         }
 
-        if (!config('services.spotify_search.client_id') || !config('services.spotify_search.client_secret') || !config('services.spotify_search.refresh_token')) {
-            Log::warning("[Party:{$this->party->id}] Using Music Party application, not specific search application!");
-            return $this->party->user->getSpotifyApi();
+        $account = $this->party->user->accounts()->whereHas('provider', function($query) {
+            $query->whereCode('spotifysearch');
+        })->first();
+        if (!$account) {
+            Log::warning("{$this->party->user}: No Spotify Search account, using control account");
+            $this->api = $this->party->user->getSpotifyApi();
+            return $this->api;
         }
 
-        $this->session = new Session(
-            config('services.spotify_search.client_id'),
-            config('services.spotify_search.client_secret'),
-        );
-        $refreshToken = config('services.spotify_search.refresh_token');
-        $accessToken = Cache::get('spotify.search.access_token');
-
-        $cutoff = Carbon::now()->addMinutes(5);
-        if (!$accessToken || $accessToken->expiresAt < $cutoff) {
-            Log::debug("Refreshing expiring search access token");
-            $this->session->refreshAccessToken($refreshToken);
-            $accessToken = (object) [
-                'token' => $this->session->getAccessToken(),
-                'expiresAt' => new Carbon($this->session->getTokenExpiration()),
-            ];
-            Cache::add('spotify.search.access_token', $accessToken);
+        if ($this->session === null) {
+            $clientId = $account->provider->getSetting('client_id');
+            $clientSecret = $account->provider->getSetting('client_secret');
+            $this->session = new Session($clientId, $clientSecret);
+            $this->session->setAccessToken($account->access_token);
         }
-        $this->session->setAccessToken($accessToken->token);
 
-        $request = new SpotifyAPIRequest();
+        // Create new API
+        Log::debug("{$this->party->user}: Creating new Search API connection");
+        $request = new Request();
         $this->api = new SpotifyWebAPI([], $this->session, $request);
+
+
+        if ($account->access_token_expires_at < now()->addMinutes(5)) {
+            Log::debug("{$this->party->user}: Refreshing expiring Search API access token");
+            $this->session->refreshAccessToken($account->refresh_token);
+            $account->access_token = $this->session->getAccessToken();
+            $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
+            $account->save();
+        }
+
         return $this->api;
     }
 
@@ -66,7 +69,7 @@ class SpotifySearchService
         ];
 
         $api = $this->getApi();
-        $result = $api->search($query, 'track,artist,album', $options);
+        $result = $api->search($query, 'track', $options);
 
         $tracks = $this->augmentResults($result->tracks);
 
@@ -80,35 +83,52 @@ class SpotifySearchService
         }, $results->items);
 
         $augmented = [];
+
+        // Augmentation by upcoming
         if ($ids) {
-            $upcomingSongs = $this->party->upcoming()->with('song')->whereNull('queued_at')->whereHas('song', function ($query) use ($ids) {
+            $upcomingSongs = $this->party->upcoming()->with(['song', 'user'])->whereNull('queued_at')->whereHas('song', function ($query) use ($ids) {
                 $query->whereIn('spotify_id', $ids);
             })->get();
 
-            $voted = [];
+            $votes = [];
             $upcomingIds = $upcomingSongs->pluck('id');
             if ($upcomingIds) {
-                $voted = Vote::whereUserId($this->user->id)->whereIn('upcoming_song_id', $upcomingIds)->pluck('upcoming_song_id')->toArray();
+                $allVotes = Vote::whereUserId($this->member->user->id)->whereIn('upcoming_song_id', $upcomingIds)->get();
+                foreach ($allVotes as $vote) {
+                    $votes[$vote->upcoming_song_id] = $vote;
+                }
             }
 
             foreach ($upcomingSongs as $ucSong) {
                 $augmented[$ucSong->song->spotify_id] = (object) [
-                    'votes' => $ucSong->votes,
-                    'hasVoted' => in_array($ucSong->id, $voted),
+                    'score' => $ucSong->score,
+                    'vote' => $votes[$ucSong->id]->value ?? null,
+                    'upcoming_id' => $ucSong->id,
+                    'user' => $ucSong->user->nickname ?? null,
                 ];
             }
         }
 
+        $service = new RequestCheckService($this->party, $this->member);
+        $checkResponses = $service->checkCollection(collect($results->items));
+
         foreach ($results->items as $item) {
             if (array_key_exists($item->id, $augmented)) {
                 $item->upcoming = true;
-                $item->votes = $augmented[$item->id]->votes;
-                $item->hasVoted = $augmented[$item->id]->hasVoted;
+                $item->upcoming_id = $augmented[$item->id]->upcoming_id;
+                $item->score = $augmented[$item->id]->score;
+                $item->vote = $augmented[$item->id]->vote;
+                $item->user = $augmented[$item->id]->user;
             } else {
                 $item->upcoming = false;
-                $item->votes = 0;
-                $item->hasVoted = false;
+                $item->upcoming_id = null;
+                $item->score = 0;
+                $item->vote = null;
+                $item->user = null;
             }
+
+            $item->allowed = $checkResponses[$item->id]->allowed ?? true;
+            $item->reason = $checkResponses[$item->id]->reason ?? null;
         }
 
         return $results;
