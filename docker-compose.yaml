@@ -157,6 +157,17 @@ services:
       - redis
       - db
 
+  shell:
+    profiles: [ "shell" ]
+    image: mintopia/php-build-environment:8.2-xdebug
+    entrypoint: [ "/bin/bash" ]
+    user: "1000"
+    volumes:
+      - ./:/app/
+    depends_on:
+      - redis
+      - db
+
 volumes:
   dbdata:
     driver: local

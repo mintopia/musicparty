@@ -79,6 +79,18 @@
             </template>
         </VueEternalLoading>
     </div>
+    <div v-if="message" class="position-fixed z-3 p-2 top-50 start-50 translate-middle fade show">
+        <div class="alert alert-important alert-danger" role="alert">
+            <div class="d-flex">
+                <div>
+                    <i class="icon ti ti-exclamation-circle "></i>
+                </div>
+                <div class="px-2">
+                    {{ message }}
+                </div>
+            </div>
+        </div>
+    </div>
 </template>
 <style>
     .list-move,
@@ -119,6 +131,7 @@
                 page: 1,
                 code: null,
                 upcoming: [],
+                message: '',
             }
         },
 
@@ -130,7 +143,13 @@
                     this.addOrUpdateItem(response.data.data);
                     this.sortUpcoming();
                 }).catch((error) => {
-                    // Do Nothing
+                    if (error.response?.status !== 400) {
+                        return;
+                    }
+                    this.message = error.response.data.message
+                    setTimeout(() => {
+                        this.message = '';
+                    }, 5000);
                 });
             },
 

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Exceptions\VoteException;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -68,6 +69,14 @@ class UpcomingSong extends Model
 
     protected function addVote(User $user, int $value): Vote
     {
+        $member = $this->party->getMember($user);
+        if ($member && $member->role->code === 'banned') {
+            throw new VoteException('You are banned from voting for songs');
+        }
+        // Check downvotes
+        if ($value < 0) {
+            $this->party->checkDownvotesForUser($user);
+        }
         $vote = $this->votes()->whereUserId($user->id)->first();
         if (!$vote) {
             $vote = new Vote();

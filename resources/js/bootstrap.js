@@ -36,3 +36,32 @@ window.Echo = new Echo({
      forceTLS: window.pusherConfig.scheme === 'https',
      enabledTransports: ['ws', 'wss'],
 });
+
+window.showToast = function(message, css = 'bg-primary text-white') {
+
+    const div = document.createElement('div');
+    div.innerHTML = `
+         <div class="toast-container position-absolute p-3 top-0 start-50 translate-middle-x">
+            <div className="toast align-items-center border-0 ${css}" role="alert" aria-live="assertive" aria-atomic="true">
+                <div className="d-flex">
+                    <div className="toast-body" id="toast-message">
+                        ${message}
+                    </div>
+                    <button type="button" className="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    `;
+    const element = div.firstElementChild;
+    console.log(element);
+
+    element.addEventListener('hidden.bs.toast', function () {
+        element.remove();
+        div.remove();
+    });
+
+    // Append the toast and show it
+    document.querySelector('body').appendChild(element);
+    const toast = new bootstrap.Toast(element);
+    toast.show();
+}

@@ -141,6 +141,11 @@ class PartyController extends Controller
         $party->show_qrcode = (bool)$request->input('show_qrcode');
         $party->device_name = null;
         $party->device_id = $request->input('device_id');
+        if ($request->input('downvotes_per_hour')) {
+            $party->downvotes_per_hour = $request->input('downvotes_per_hour');
+        } else {
+            $party->downvotes_per_hour = null;
+        }
         if ($request->has('max_song_length') && $request->input('max_song_length') > 0) {
             $party->max_song_length = $request->input('max_song_length');
         }

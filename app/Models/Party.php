@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Events\Party\UpdatedEvent;
+use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -627,5 +628,21 @@ class Party extends Model
     public function pushUpdate(): void
     {
         UpdatedEvent::dispatch($this);
+    }
+
+    public function checkDownvotesForUser(User $user): void
+    {
+        if ($this->downvotes_per_hour === null) {
+            return;
+        }
+        $downvotes = Vote::whereUserId($user->id)
+            ->where('value', '<', 0)
+            ->where('created_at', '>=', now()->subHour())
+            ->whereHas('upcomingSong', function ($query) {
+                $query->wherePartyId($this->id);
+            })->count();
+        if ($downvotes >= $this->downvotes_per_hour) {
+            throw new VoteException('You have downvoted too many songs');
+        }
     }
 }

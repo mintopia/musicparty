@@ -13,7 +13,7 @@
 
 namespace App\Models{
 /**
- * App\Models\Album
+ * 
  *
  * @property int $id
  * @property string $name
@@ -34,12 +34,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Album whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperAlbum {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Artist
+ * 
  *
  * @property int $id
  * @property string $name
@@ -58,12 +59,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Artist whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperArtist {}
 }
 
 namespace App\Models{
 /**
- * App\Models\LinkedAccount
+ * 
  *
  * @property int $id
  * @property int $user_id
@@ -96,12 +98,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|LinkedAccount whereUserId($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperLinkedAccount {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Party
+ * 
  *
  * @property int $id
  * @property string $code
@@ -110,12 +113,12 @@ namespace App\Models{
  * @property int|null $song_id
  * @property \Illuminate\Support\Carbon|null $song_started_at
  * @property int $active
+ * @property int $poll
+ * @property int $show_qrcode
  * @property int $queue
  * @property int $force
  * @property int $explicit
  * @property int $allow_requests
- * @property int $process_requests
- * @property int $show_qrcode
  * @property int $downvotes
  * @property int|null $max_song_length
  * @property int|null $no_repeat_interval
@@ -156,21 +159,23 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereNoRepeatInterval($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party wherePlaylistId($value)
- * @method static \Illuminate\Database\Eloquent\Builder|Party whereProcessRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party wherePoll($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereQueue($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereRecentDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|Party whereShowQrcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereSongStartedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder|Party whereUserId($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperParty {}
 }
 
 namespace App\Models{
 /**
- * App\Models\PartyMember
+ * 
  *
  * @property int $id
  * @property int $user_id
@@ -196,12 +201,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMember whereUserId($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperPartyMember {}
 }
 
 namespace App\Models{
 /**
- * App\Models\PartyMemberRole
+ * 
  *
  * @property int $id
  * @property string $code
@@ -220,23 +226,30 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PartyMemberRole whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperPartyMemberRole {}
 }
 
 namespace App\Models{
 /**
- * App\Models\PlayedSong
+ * 
  *
  * @property int $id
  * @property int $song_id
  * @property int $party_id
- * @property string $played_at
+ * @property \Illuminate\Support\Carbon $played_at
  * @property int $likes
  * @property int $dislikes
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property int|null $upcoming_song_id
+ * @property int $rating
+ * @property string|null $relinked_from
  * @property-read \App\Models\Party $party
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SongRating> $ratings
+ * @property-read int|null $ratings_count
  * @property-read \App\Models\Song $song
+ * @property-read \App\Models\UpcomingSong|null $upcoming
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong query()
@@ -246,16 +259,20 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereLikes($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong wherePlayedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereRating($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereRelinkedFrom($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereUpcomingSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder|PlayedSong whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperPlayedSong {}
 }
 
 namespace App\Models{
 /**
- * App\Models\ProviderSetting
+ * 
  *
  * @property int $id
  * @property string $provider_type
@@ -290,12 +307,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|ProviderSetting whereValue($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperProviderSetting {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Role
+ * 
  *
  * @property int $id
  * @property string $code
@@ -314,12 +332,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Role whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperRole {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Setting
+ * 
  *
  * @property int $id
  * @property string $code
@@ -351,12 +370,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Setting whereValue($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperSetting {}
 }
 
 namespace App\Models{
 /**
- * App\Models\SocialProvider
+ * 
  *
  * @property int $id
  * @property string $name
@@ -387,12 +407,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|SocialProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperSocialProvider {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Song
+ * 
  *
  * @property int $id
  * @property string $spotify_id
@@ -422,12 +443,40 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Song whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperSong {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Theme
+ * 
+ *
+ * @property int $id
+ * @property int $played_song_id
+ * @property int $user_id
+ * @property int $value
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\PlayedSong $song
+ * @property-read \App\Models\User $user
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating query()
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating wherePlayedSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder|SongRating whereValue($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperSongRating {}
+}
+
+namespace App\Models{
+/**
+ * 
  *
  * @property int $id
  * @property string $name
@@ -456,12 +505,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Theme whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperTheme {}
 }
 
 namespace App\Models{
 /**
- * App\Models\UpcomingSong
+ * 
  *
  * @property int $id
  * @property int $party_id
@@ -474,6 +524,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $user_id
  * @property-read \App\Models\Party $party
+ * @property-read \App\Models\PlayedSong|null $played
  * @property-read \App\Models\Song $song
  * @property-read \App\Models\User|null $user
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Vote> $votes
@@ -493,12 +544,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|UpcomingSong whereUserId($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperUpcomingSong {}
 }
 
 namespace App\Models{
 /**
- * App\Models\User
+ * 
  *
  * @property int $id
  * @property string $nickname
@@ -520,6 +572,8 @@ namespace App\Models{
  * @property-read int|null $parties_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $partyMembers
  * @property-read int|null $party_members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\SongRating> $ratings
+ * @property-read int|null $ratings_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\Role> $roles
  * @property-read int|null $roles_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \Laravel\Sanctum\PersonalAccessToken> $tokens
@@ -544,12 +598,13 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperUser {}
 }
 
 namespace App\Models{
 /**
- * App\Models\Vote
+ * 
  *
  * @property int $id
  * @property int $upcoming_song_id
@@ -570,6 +625,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder|Vote whereValue($value)
  * @mixin \Eloquent
  */
+	#[\AllowDynamicProperties]
 	class IdeHelperVote {}
 }
 

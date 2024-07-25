@@ -76,7 +76,7 @@
         </label>
 
         <div class="mb-3 row">
-            <div class="col-md-6">
+            <div class="mb-3 col-md-6">
                 <label class="form-label">Maximum Song Length</label>
                 <div class="input-group">
                     <input type="text" name="max_song_length" class="form-control @error('max_song_length') is-invalid @enderror"
@@ -88,7 +88,7 @@
                 <p class="invalid-feedback">{{ $message }}</p>
                 @enderror
             </div>
-            <div class="col-md-6">
+            <div class="mb-3 col-md-6">
                 <label class="form-label">Song Cooldown</label>
                 <div class="input-group">
                     <input type="text" name="no_repeat_interval" class="form-control @error('no_repeat_interval') is-invalid @enderror"
@@ -97,6 +97,19 @@
                 </div>
                 <small class="form-hint">The amount of time after a song is queued before it can be requested again</small>
                 @error('max_song_length')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            </div>
+
+            <div class="mb-3 col-md-6">
+                <label class="form-label">Max Downvotes</label>
+                <div class="input-group">
+                    <input type="text" name="downvotes_per_hour" class="form-control @error('downvotes_per_hour') is-invalid @enderror"
+                           value="{{ old('downvotes_per_hour', $party->downvotes_per_hour ?? '') }}">
+                    <span class="input-group-text">per hour</span>
+                </div>
+                <small class="form-hint">The maximum number of times a user can downvote in a 1 hour period</small>
+                @error('downvotes_per_hour')
                 <p class="invalid-feedback">{{ $message }}</p>
                 @enderror
             </div>
