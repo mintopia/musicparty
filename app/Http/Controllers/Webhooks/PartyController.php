@@ -25,4 +25,11 @@ class PartyController extends Controller
         }
         return response()->noContent();
     }
+
+    public function simple(Party $party)
+    {
+        Log::debug("{$party}: Received simple webhook event");
+        PartyUpdate::dispatch($party)->onQueue('partyupdates')->afterResponse();
+        return response()->noContent();
+    }
 }
