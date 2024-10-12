@@ -106,6 +106,9 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
+        if ($this->party->min_song_length && ($spotifyData->duration_ms / 1000) < $this->party->min_song_length) {
+            return new RequestCheckResponse(false, 'Song is too short');
+        }
         if ($this->party->max_song_length && ($spotifyData->duration_ms / 1000) > $this->party->max_song_length) {
             return new RequestCheckResponse(false, 'Song is too long');
         }

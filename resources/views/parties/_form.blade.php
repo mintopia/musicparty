@@ -77,6 +77,18 @@
 
         <div class="mb-3 row">
             <div class="mb-3 col-md-6">
+                <label class="form-label">Minimum Song Length</label>
+                <div class="input-group">
+                    <input type="text" name="min_song_length" class="form-control @error('min_song_length') is-invalid @enderror"
+                           value="{{ old('min_song_length', $party->min_song_length ?? '') }}">
+                    <span class="input-group-text">seconds</span>
+                </div>
+                <small class="form-hint">The minimum length a requested song can be</small>
+                @error('min_song_length')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            </div>
+            <div class="mb-3 col-md-6">
                 <label class="form-label">Maximum Song Length</label>
                 <div class="input-group">
                     <input type="text" name="max_song_length" class="form-control @error('max_song_length') is-invalid @enderror"
