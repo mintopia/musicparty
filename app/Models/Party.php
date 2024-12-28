@@ -572,6 +572,9 @@ class Party extends Model
             ->toArray();
 
         $tracks = array_filter($tracks, function ($track) use ($existingIds) {
+            if ($track->track === null) {
+                return false;
+            }
             return !in_array($track->track->id, $existingIds);
         });
 
