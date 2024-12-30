@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
@@ -366,13 +367,44 @@ class Party extends Model
             return;
         }
 
-        $songsToAdd = $this->upcoming()
-            ->whereNull('queued_at')
-            ->orderBy('score', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->orderBy('id', 'ASC')
-            ->limit($toAdd)
-            ->get();
+        /*
+         * Notes by Cwis
+         * Remove the limit - fetch everything
+         * Get sum of score for everything
+         * Get random number up to total sum of score
+         * Iterate through songs
+         * For each song, decrease random number
+         * when it drops below zero, take current song
+         *
+         */
+
+        if ($this->weighted) {
+            $songsToAdd = new Collection();
+            $allSongs = $this->upcoming()
+                ->whereNull('queued_at')
+                ->where('score', '>', 0)->inRandomOrder()->get();
+
+            for ($i = 0; $i < $toAdd; $i++) {
+                $sum = $allSongs->sum('score');
+                $random = mt_rand(0, $sum);
+                foreach ($allSongs as $index => $song) {
+                    $random -= $song->score;
+                    if ($random <= 0) {
+                        $allSongs->forget($index);
+                        $songsToAdd->push($song);
+                        break;
+                    }
+                }
+            }
+        } else {
+            $songsToAdd = $this->upcoming()
+                ->whereNull('queued_at')
+                ->orderBy('score', 'DESC')
+                ->orderBy('created_at', 'ASC')
+                ->orderBy('id', 'ASC')
+                ->limit($toAdd)
+                ->get();
+        }
 
         if ($songsToAdd->isEmpty()) {
             Log::debug("{$this}: Found no songs in the upcoming songs list to backfill");

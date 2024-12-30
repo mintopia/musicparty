@@ -60,6 +60,11 @@
                    @if(old('downvotes', $party->downvotes)) checked @endif>
             Allow songs to be downvoted
         </label>
+        <label class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" name="weighted" value="1"
+                   @if(old('weighted', $party->weighted)) checked @endif>
+            Treat the queue as a weighted pool of songs
+        </label>
 
         <label class="form-check form-switch">
             <input type="checkbox" class="form-check-input" name="show_qrcode" value="1"
