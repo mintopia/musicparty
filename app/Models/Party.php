@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
 
@@ -752,23 +753,28 @@ class Party extends Model
         $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
         $scores = $solved->getData();
 
-        $membersIndexed = [];
-        $members = $this->members()->with('user')->get();
-        foreach ($members as $member) {
-            $membersIndexed[$member->user->id] = $member;
-        }
 
-        foreach ($scores as $index => $score) {
-            $userId = $userMap[$index] ?? null;
-            if ($userId === null) {
-                continue;
+        DB::transaction(function() use ($userMap, $scores) {
+            $this->members()->update([
+                'trustscore' => 0,
+            ]);
+            $membersIndexed = [];
+            $members = $this->members()->with('user')->get();
+            foreach ($members as $member) {
+                $membersIndexed[$member->user->id] = $member;
             }
-            if (!isset($membersIndexed[$userId])) {
-                continue;
+            foreach ($scores as $index => $score) {
+                $userId = $userMap[$index] ?? null;
+                if ($userId === null) {
+                    continue;
+                }
+                if (!isset($membersIndexed[$userId])) {
+                    continue;
+                }
+                $membersIndexed[$userId]->trustscore = $score;
+                $membersIndexed[$userId]->save();
             }
-            $membersIndexed[$userId]->trustscore = $score;
-            $membersIndexed[$userId]->save();
-        }
+        });
         Log::debug("Finished calculating trust scores");
     }
 }
