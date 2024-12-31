@@ -404,7 +404,7 @@ class Party extends Model
                     }
                 }
             }
-            $remaining = $toAdd = $songsToAdd->count();
+            $remaining = $toAdd - $songsToAdd->count();
 
             if ($remaining > 0) {
                 // Didn't add enough songs, try and find *any* using old method
