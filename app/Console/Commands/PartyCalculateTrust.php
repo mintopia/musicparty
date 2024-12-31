@@ -34,7 +34,7 @@ class PartyCalculateTrust extends Command
             $this->error("Unable to find a party with code {$code}");
             return self::FAILURE;
         }
-        $cutoff = new CarbonImmutable('2024-05-01 00:00:00');
+        $cutoff = CarbonImmutable::now()->subDays(7);
         $party->calculateTrustScores($cutoff);
 
         $io = new SymfonyStyle($this->input, $this->output);
