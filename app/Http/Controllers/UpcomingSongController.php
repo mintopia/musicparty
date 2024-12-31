@@ -98,12 +98,14 @@ class UpcomingSongController extends Controller
         }
         $votes = $song->votes()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
         $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
+        $ratings = $song->played->ratings()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
         return view('upcomingsongs.show', [
             'party' => $party,
             'canManage' => true,
             'song' => $song,
             'votes' => $votes,
             'other' => $other,
+            'ratings' => $ratings,
         ]);
     }
 }

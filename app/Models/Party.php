@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
+use App\Services\PlayedSongAugmentService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -87,6 +88,9 @@ class Party extends Model
             case 'upcomingsong':
             case 'song':
                 return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
+
+            case 'playedsong':
+                return $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first();
 
             case 'user':
                 return $this->members()->whereId($value)->with(['user', 'role'])->first();
@@ -722,8 +726,7 @@ class Party extends Model
         }
 
         $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
-
-        $userIds = $votes->pluck('user_id');
+        $userIds = $this->members()->pluck('user_id');
         $userIds->push(0);
         $fill = [];
         foreach ($userIds as $id) {

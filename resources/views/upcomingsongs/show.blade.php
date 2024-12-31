@@ -188,4 +188,52 @@
             @endif
         </div>
     </div>
+    <div class="row mt-4">
+                <div class="col-md-6">
+                    <h2>Ratings</h2>
+                    @if($ratings->count() > 0)
+                        <div class="card">
+                            <div class="table-responsive">
+                                <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                                    <thead>
+                                    <tr>
+                                        <th>User</th>
+                                        <th class="text-center">Rating</th>
+                                        <th>Time</th>
+                                    </tr>
+                                    </thead>
+                                    <tbody>
+                                    @foreach($ratings as $rating)
+                                        <tr>
+                                            <td>
+                                                <a href="{{ route('parties.users.show', [$party->code, $rating->user->getPartyMember($party)]) }}">{{ $rating->user->nickname }}</a>
+                                            </td>
+                                            <td class="text-center">
+                                                @if ($rating->value > 0)
+                                                    <i class="icon ti ti-thumb-up-filled text-success"></i>
+                                                @else
+                                                    <i class="icon ti ti-thumb-down-filled text-danger"></i>
+                                                @endif
+                                            </td>
+                                            <td>
+                                        <span title="{{ $rating->created_at->format('Y-m-d H:i:s') }}">
+                                            {{ $rating->created_at->diffForHumans() }}
+                                        </span>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                            @include('partials._pagination', [
+                                'page' => $ratings
+                            ])
+                        </div>
+                    @else
+                        <div class="empty">
+                            <p>There have been no ratings</p>
+                        </div>
+                    @endif
+                </div>
+            </div>
 @endsection

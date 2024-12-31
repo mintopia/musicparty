@@ -68,9 +68,13 @@ class PlayedSong extends Model
         return $this->addRating($user, -1);
     }
 
-    protected function addRating(User $user, int $value): SongRating
+    protected function addRating(User $user, int $value): ?SongRating
     {
         $rating = $this->ratings()->whereUserId($user->id)->first();
+        if ($rating && $rating->value !== $value) {
+            $rating->delete();
+            return null;
+        }
         if (!$rating) {
             $rating = new SongRating();
             $rating->song()->associate($this);
@@ -93,7 +97,7 @@ class PlayedSong extends Model
     {
         $data = $this->song->toApi();
         $data['id'] = $this->id;
-        $data['rating'] = $this->rating;
+        $data['rating'] = (int)$this->rating;
         $data['played_at'] = $this->played_at ? $this->played_at->toIso8601String() : null;
         $data['user'] = $this->upcoming->user->nickname ?? null;
         return $data;

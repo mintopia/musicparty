@@ -26,7 +26,7 @@
                                     <i class="icon-lg ti ti-vinyl fs-1"></i>
                                     {{ state.now.album.name }}
                                 </div>
-                                <div class="pb-3 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
+                                <div class="pb-2 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
                                     <i class="icon-lg ti ti-music-question fs-1"></i>
                                     <template v-if="state.current.user !== null">
                                         Requested by {{ state.current.user }}
@@ -34,6 +34,10 @@
                                     <template v-else>
                                         Fallback Track
                                     </template>
+                                </div>
+                                <div class="pb-3 overflow-hidden">
+                                    <i class="icon-lg fs-1 ti ti-heart"></i>
+                                    {{ state.current.rating }}
                                 </div>
                                 <div class="progress">
                                     <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>
@@ -111,7 +115,7 @@
     }
 
     img.albumart {
-        max-width: 20em;
+        max-width: 22em;
     }
 
     img.albumart-small {
