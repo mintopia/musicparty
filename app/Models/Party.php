@@ -718,14 +718,6 @@ class Party extends Model
         }
 
         $voteMap = [];
-        $query = Vote::whereHas('upcomingSong', function ($query) {
-            $query->wherePartyId($this->id);
-        })->where('value', '>', 0);
-        if ($after !== null) {
-            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
-        }
-
-        $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
         $userIds = $this->members()->pluck('user_id');
         $userIds->push(0);
         $fill = [];
@@ -735,10 +727,35 @@ class Party extends Model
         foreach ($userIds as $id) {
             $voteMap[$id] = $fill;
         }
+
+        // Votes
+        $query = Vote::whereHas('upcomingSong', function ($query) {
+            $query->wherePartyId($this->id);
+        })->where('value', '>', 0);
+        if ($after !== null) {
+            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
+        }
+        $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
         foreach ($votes as $vote) {
             $songUserId = $vote->upcomingSong->user->id ?? 0;
             $voteMap[$vote->user->id][$songUserId] += $vote->value;
         }
+
+        // Ratings
+        $query = SongRating::whereHas('song', function ($query) {
+            $query->wherePartyId($this->id);
+        })->where('value', '>', 0);
+        if ($after !== null) {
+            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
+        }
+        $ratings = $query->with(['user', 'song', 'song.upcomingSong', 'song.upcomingSong.user']);
+        foreach ($ratings as $rating) {
+            if ($rating->song->upcomingSong) {
+                $songUserId = $rating->song->upcomingSong->user->id ?? 0;
+                $voteMap[$rating->user->id][$songUserId] += $ratings->value;
+            }
+        }
+
         $userMap = array_keys($voteMap);
         $voteMap = array_values($voteMap);
         foreach ($voteMap as $i => $row) {
