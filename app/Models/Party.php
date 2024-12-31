@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use NumPHP\LinAlg\LinAlg;
 
 /**
  * @mixin IdeHelperParty
@@ -56,6 +57,11 @@ class Party extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    public function trustedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'trusted_user_id');
     }
 
     public function upcoming(): HasMany
@@ -396,6 +402,23 @@ class Party extends Model
                     }
                 }
             }
+            $remaining = $toAdd = $songsToAdd->count();
+
+            if ($remaining > 0) {
+                // Didn't add enough songs, try and find *any* using old method
+                $ids = $songsToAdd->pluck('id');
+                $toAdd = $this->upcoming()
+                    ->whereNull('queued_at')
+                    ->whereNotIn('id', $ids)
+                    ->orderBy('score', 'DESC')
+                    ->orderBy('created_at', 'ASC')
+                    ->orderBy('id', 'ASC')
+                    ->limit($remaining)
+                    ->get();
+                foreach ($toAdd as $song) {
+                    $songsToAdd->push($song);
+                }
+            }
         } else {
             $songsToAdd = $this->upcoming()
                 ->whereNull('queued_at')
@@ -679,5 +702,67 @@ class Party extends Model
         if ($downvotes >= $this->downvotes_per_hour) {
             throw new VoteException('You have downvoted too many songs');
         }
+    }
+
+    public function calculateTrustScores(): void
+    {
+        if ($this->trustedUser === null) {
+            Log::debug("No trusted user, unable to calculate trust score");
+            return;
+        }
+
+        $voteMap = [];
+        $votes = Vote::whereHas('upcomingSong', function ($query) {
+            $query->wherePartyId($this->id);
+        })->where('value', '>', 0)->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
+
+        $userIds = $votes->pluck('user_id');
+        $userIds->push(0);
+        $fill = [];
+        foreach ($userIds as $id) {
+            $fill[$id] = 0;
+        }
+        foreach ($userIds as $id) {
+            $voteMap[$id] = $fill;
+        }
+        foreach ($votes as $vote) {
+            $songUserId = $vote->upcomingSong->user->id ?? 0;
+            $voteMap[$vote->user->id][$songUserId] += $vote->value;
+        }
+        $userMap = array_keys($voteMap);
+        $voteMap = array_values($voteMap);
+        foreach ($voteMap as $i => $row) {
+            $voteMap[$i] = array_values($row);
+            $voteMap[$i][$i] = -1;
+            if ($userMap[$i] === $this->trustedUser->id) {
+                $voteMap[$i][$i] = 1;
+            }
+        }
+
+        $trustedUserMatrix = array_fill(0, count($voteMap), 0);
+        $trustedUserIndex = array_search($this->trustedUser->id, $userMap);
+        $trustedUserMatrix[$trustedUserIndex] = 1;
+
+        $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
+        $scores = $solved->getData();
+
+        $membersIndexed = [];
+        $members = $this->members()->with('user')->get();
+        foreach ($members as $member) {
+            $membersIndexed[$member->user->id] = $member;
+        }
+
+        foreach ($scores as $index => $score) {
+            $userId = $userMap[$index] ?? null;
+            if ($userId === null) {
+                continue;
+            }
+            if (!isset($membersIndexed[$userId])) {
+                continue;
+            }
+            $membersIndexed[$userId]->trustscore = $score;
+            $membersIndexed[$userId]->save();
+        }
+        Log::debug("Finished calculating trust scores");
     }
 }

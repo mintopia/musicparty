@@ -15,6 +15,7 @@
         "laravel/socialite": "^5.11",
         "laravel/telescope": "^5.0",
         "laravel/tinker": "^2.8",
+        "numphp/numphp": "^1.2",
         "pusher/pusher-php-server": "^7.2",
         "ramsey/uuid": "^4.7",
         "socialiteproviders/discord": "^4.2",
