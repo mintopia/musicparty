@@ -3,7 +3,9 @@
 namespace App\Console\Commands;
 
 use App\Models\Party;
+use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
+use Symfony\Component\Console\Style\SymfonyStyle;
 
 class PartyCalculateTrust extends Command
 {
@@ -32,7 +34,19 @@ class PartyCalculateTrust extends Command
             $this->error("Unable to find a party with code {$code}");
             return self::FAILURE;
         }
-        $party->calculateTrustScores();
+        $cutoff = CarbonImmutable::now()->subDays(7);
+        $party->calculateTrustScores($cutoff);
+
+        $io = new SymfonyStyle($this->input, $this->output);
+
+        $scores = [];
+        foreach ($party->members()->with('user')->orderBy('trustscore', 'DESC')->get() as $member) {
+            $scores[] = [
+                $member->user->nickname,
+                $member->trustscore,
+            ];
+        }
+        $io->table(['Nickname', 'Score'], $scores);
         return self::SUCCESS;
     }
 }

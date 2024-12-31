@@ -6,6 +6,7 @@ use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -704,7 +705,7 @@ class Party extends Model
         }
     }
 
-    public function calculateTrustScores(): void
+    public function calculateTrustScores(?CarbonImmutable $after = null): void
     {
         if ($this->trustedUser === null) {
             Log::debug("No trusted user, unable to calculate trust score");
@@ -712,9 +713,14 @@ class Party extends Model
         }
 
         $voteMap = [];
-        $votes = Vote::whereHas('upcomingSong', function ($query) {
+        $query = Vote::whereHas('upcomingSong', function ($query) {
             $query->wherePartyId($this->id);
-        })->where('value', '>', 0)->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
+        })->where('value', '>', 0);
+        if ($after !== null) {
+            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
+        }
+
+        $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
 
         $userIds = $votes->pluck('user_id');
         $userIds->push(0);
