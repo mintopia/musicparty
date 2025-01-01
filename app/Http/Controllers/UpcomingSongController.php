@@ -7,6 +7,8 @@ use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 
 class UpcomingSongController extends Controller
 {
@@ -98,7 +100,11 @@ class UpcomingSongController extends Controller
         }
         $votes = $song->votes()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
         $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
-        $ratings = $song->played->ratings()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+        if ($song->played) {
+            $ratings = $song->played->ratings()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+        } else {
+            $ratings = new LengthAwarePaginator([], 0, $perPage);
+        }
         return view('upcomingsongs.show', [
             'party' => $party,
             'canManage' => true,
