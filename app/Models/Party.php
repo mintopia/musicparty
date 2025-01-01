@@ -748,11 +748,11 @@ class Party extends Model
         if ($after !== null) {
             $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
         }
-        $ratings = $query->with(['user', 'song', 'song.upcomingSong', 'song.upcomingSong.user']);
+        $ratings = $query->with(['user', 'song', 'song.upcoming', 'song.upcoming.user'])->get();
         foreach ($ratings as $rating) {
-            if ($rating->song->upcomingSong) {
-                $songUserId = $rating->song->upcomingSong->user->id ?? 0;
-                $voteMap[$rating->user->id][$songUserId] += $ratings->value;
+            if ($rating->song->upcoming) {
+                $songUserId = $rating->song->upcoming->user->id ?? 0;
+                $voteMap[$rating->user->id][$songUserId] += $rating->value;
             }
         }
 
