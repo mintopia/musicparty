@@ -738,7 +738,7 @@ class Party extends Model
         $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
         foreach ($votes as $vote) {
             $songUserId = $vote->upcomingSong->user->id ?? 0;
-            $voteMap[$vote->user->id][$songUserId] += $vote->value;
+            $voteMap[$songUserId][$vote->user->id] += $vote->value;
         }
 
         // Ratings
@@ -752,7 +752,7 @@ class Party extends Model
         foreach ($ratings as $rating) {
             if ($rating->song->upcoming) {
                 $songUserId = $rating->song->upcoming->user->id ?? 0;
-                $voteMap[$rating->user->id][$songUserId] += $rating->value;
+                $voteMap[$songUserId][$rating->user->id] += $rating->value;
             }
         }
 
