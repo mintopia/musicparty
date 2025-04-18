@@ -13,7 +13,17 @@ Version 2 of Music Party - the amount of changes and new features meant a major 
 
 These are using Laravel Socialite, so any provider supported by Socialite can be integrated.
 
-## Setup
+## Technology
+
+This project is written in PHP 8.4 using the Laravel 12 framework. It was migrated from Laravel 10 and 11 so has some
+legacy project structure - but this is the intended upgrade path.
+
+Horizon and Telescope are installed and enabled, with access limited to the admin role. The application itself is
+served using Laravel Octane and FrankenPHP.
+
+Websocket communications are handled using Laravel Reverb.
+
+## Development Setup
 
 You will need to create a Discord application and have the Client ID and Client Secret available.
 
@@ -36,7 +46,15 @@ You should now be able to login. The first user will be given the admin role.
 
 ## Production Deployment
 
-In the `example` directory there is a docker compose file and some .env example files. These are for the setup I use. Just rename the .env files and edit them accordingly. You can get a [random Laravel application key here](https://generate-random.org/laravel-key-generator). I'm running with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress and the docker-compose supplied is built to use that.
+In the `example` directory there is a docker compose file and some .env example files. These are for the setup I use.
+Just rename the .env files and edit them accordingly. You can get a [random Laravel application key here](https://generate-random.org/laravel-key-generator).
+
+You need to expose the `musicparty` and `reverb` containers to the public. They are both configured to listen on port 80
+in the docker compose, so you probably want something like Traefik or Caddy in-front as a reverse proxy.
+
+I'm running this with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress. You will
+need to add a network section for the `reverb` and `musicparty` services to add them to the `frontend` network if you
+want to do this.
 
 You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
 
@@ -52,9 +70,14 @@ docker compose up -d
 
 You should now be able to visit the site and login. From here you can use the admin menu to configure the site.
 
+## Music Party Notifier
+
+There is a commented out service in the example docker compose for a Music Party Notify service. This uses a Python 
+
 ## Contributing
 
-It's an open source project and I'm happy to accept pull requests. I am terrible at UI and UX, which is why this is entirely using server-side rendering. If someone wants to use Vue/Laravel Livewire - please go ahead!
+It's an open source project and I'm happy to accept pull requests. I am terrible at UI and UX, which is why this is
+entirely using server-side rendering. If someone wants to use Vue/Laravel Livewire - please go ahead!
 
 ## Roadmap
 
