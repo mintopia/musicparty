@@ -16,6 +16,7 @@ services:
     depends_on:
       - redis
       - db
+      - collector
 
   reverb:
     build:
@@ -27,6 +28,7 @@ services:
     depends_on:
       - redis
       - db
+      - collector
     entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug", "--port=80" ]
     healthcheck:
       disable: true
@@ -43,6 +45,7 @@ services:
     depends_on:
       - db
       - redis
+      - collector
     healthcheck:
       disable: true
 
@@ -58,6 +61,7 @@ services:
     depends_on:
       - db
       - redis
+      - collector
     healthcheck:
       disable: true
 
@@ -157,6 +161,11 @@ services:
       - db
     healthcheck:
       disable: true
+
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
 
 volumes:
   dbdata:

@@ -8,7 +8,8 @@ RUN apk add --update nodejs npm && \
     bcmath \
     xdebug \
     pdo \
-    pdo_mysql
+    pdo_mysql && \
+    echo 'memory_limit = 256M' > /usr/local/etc/php/conf.d/memory_limit.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/
 

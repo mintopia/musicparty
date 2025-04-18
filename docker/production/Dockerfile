@@ -47,4 +47,5 @@ RUN install-php-extensions \
     bcmath \
     pdo \
     pdo_mysql && \
-    mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"
+    mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
+    echo 'memory_limit = 256M' > /usr/local/etc/php/conf.d/memory_limit.ini

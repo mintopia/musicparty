@@ -70,6 +70,28 @@ docker compose up -d
 
 You should now be able to visit the site and login. From here you can use the admin menu to configure the site.
 
+## Observability
+
+Music Party supports basic observability functionality in using an OpenTelemetry collector. It can support traces, logs
+and metrics. If enabled, it will create traces for all HTTP requests. To enable it, add the following to your `.env`:
+
+```dotenv
+OPENTELEMETRY_ENABLED=true
+```
+
+For logging output, a logger is defined and can be used. I suggest you use this with your usual logger, eg. `daily`.
+You can specify this logging with the following environment variables:
+
+```dotenv
+LOG_CHANNEL=stack
+LOG_STACK=opentelemetry,daily
+```
+
+By default it is configured to send to an OpenTelemetry container running with the name `collector`. An example config
+is supplied with placeholders for sending data to [Honeycomb](https://www.honeycomb.io/).
+
+The plan will be to add further spans within individual requests and have spans for the jobs and queued actions.
+
 ## Music Party Notifier
 
 There is a commented out service in the example docker compose for a Music Party Notify service. This uses a Python
