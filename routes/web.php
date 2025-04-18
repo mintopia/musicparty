@@ -36,6 +36,7 @@ use Illuminate\Support\Facades\Route;
 
 
 // Always available
+Route::get('proxy', [HomeController::class, 'proxy'])->name('proxy');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
