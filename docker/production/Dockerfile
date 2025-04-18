@@ -5,6 +5,7 @@ WORKDIR /app/
 ENV HOME=/tmp
 RUN mkdir -p /app && \
     install-php-extensions \
+        pcntl \
         redis
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 COPY . /app/
