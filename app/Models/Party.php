@@ -673,7 +673,17 @@ class Party extends Model
                 'offset' => $offset,
                 'market' => $this->user->market,
             ]);
-            $tracks = array_merge($tracks, $response->items);
+            foreach ($response->items as $track) {
+                if (property_exists($track->track, 'is_playable') && !$track->track->is_playable) {
+                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is not playable");
+                    continue;
+                }
+                if ($track->track->is_local) {
+                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is local");
+                    continue;
+                }
+                $tracks[] = $track;
+            }
             $offset += 50;
         } while ($response->next !== null);
 
