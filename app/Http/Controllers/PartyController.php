@@ -6,13 +6,11 @@ use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use SpotifyWebAPI\SpotifyWebAPI;
 
 class PartyController extends Controller
 {
@@ -28,7 +26,7 @@ class PartyController extends Controller
             return response()->redirectToRoute('user.spotify');
         }
 
-        $party = new Party;
+        $party = new Party();
         return view('parties.create', [
             'party' => $party,
             'playlists' => $request->user()->getPlaylists(),
@@ -57,7 +55,7 @@ class PartyController extends Controller
             ->get();
 
         $augmentData = $augmentService->augmentCollection($upcomingSongs, $request->user());
-        $upcoming = $upcomingSongs->map(function(UpcomingSong $song) use ($request, $augmentData) {
+        $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData) {
             $resource = new UpcomingSongResource($song);
             $resource->augment($augmentData[$song->id] ?? null);
             return $resource->toArray($request);

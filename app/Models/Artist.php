@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
  */
 class Artist extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     public function toStringName(): string
     {
@@ -30,7 +31,7 @@ class Artist extends Model
         if ($artist) {
             return $artist;
         }
-        $artist = new Artist;
+        $artist = new Artist();
         $artist->spotify_id = $spotifyArtist->id;
         $artist->name = $spotifyArtist->name;
         $artist->save();

@@ -6,9 +6,7 @@ use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
 use App\Models\UpcomingSong;
-use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Collection;
 
 class UpcomingSongController extends Controller
 {
@@ -26,21 +24,21 @@ class UpcomingSongController extends Controller
 
         if ($request->input('name')) {
             $params['name'] = $request->input('name');
-            $query = $query->whereHas('song', function($query) use ($params) {
+            $query = $query->whereHas('song', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['name']}%");
             });
         }
 
         if ($request->input('album')) {
             $params['album'] = $request->input('album');
-            $query = $query->whereHas('song.album', function($query) use ($params) {
+            $query = $query->whereHas('song.album', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['album']}%");
             });
         }
 
         if ($request->input('artist')) {
             $params['artist'] = $request->input('artist');
-            $query = $query->whereHas('song.artists', function($query) use ($params) {
+            $query = $query->whereHas('song.artists', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['artist']}%");
             });
         }

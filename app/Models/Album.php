@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Album extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     public function toStringName(): string
     {
@@ -30,7 +31,7 @@ class Album extends Model
         if ($album) {
             return $album;
         }
-        $album = new Album;
+        $album = new Album();
         $album->spotify_id = $spotifyAlbum->id;
         $album->name = $spotifyAlbum->name;
         $album->image_url = $spotifyAlbum->images[0]->url;

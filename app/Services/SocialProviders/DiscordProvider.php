@@ -2,8 +2,6 @@
 
 namespace App\Services\SocialProviders;
 
-use App\Models\LinkedAccount;
-use Illuminate\Http\RedirectResponse;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Discord\Provider;
 

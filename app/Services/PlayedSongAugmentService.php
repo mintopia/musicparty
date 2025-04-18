@@ -1,8 +1,8 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\PlayedSong;
-use App\Models\UpcomingSong;
 use App\Models\User;
 use Illuminate\Support\Collection;
 

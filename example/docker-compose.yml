@@ -65,7 +65,6 @@ services:
     healthcheck:
       disable: true
 
-
   artisan:
     image: ghcr.io/mintopia/musicparty:develop
     profiles:
@@ -77,7 +76,7 @@ services:
     volumes:
       - ./logs:/app/storage/logs
       - ./public:/app/storage/public
-    entrypoint: ['php', 'artisan']
+    entrypoint: [ "php", "artisan" ]
     healthcheck:
       disable: true
 

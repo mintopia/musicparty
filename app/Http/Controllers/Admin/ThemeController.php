@@ -15,7 +15,7 @@ class ThemeController extends Controller
         if ($default) {
             $theme = clone $default;
         } else {
-            $theme = new Theme;
+            $theme = new Theme();
         }
         $theme->name = null;
         $theme->readonly = false;
@@ -27,7 +27,7 @@ class ThemeController extends Controller
 
     public function store(ThemeUpdateRequest $request)
     {
-        $theme = new Theme;
+        $theme = new Theme();
         $this->updateObject($theme, $request);
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
     }
@@ -80,6 +80,5 @@ class ThemeController extends Controller
             }
         }
         $theme->save();
-
     }
 }

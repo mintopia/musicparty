@@ -1,11 +1,11 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Party;
 use App\Models\PartyMember;
-use Carbon\Carbon;
-use App\Models\User;
 use App\Models\Vote;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\Request;
@@ -27,7 +27,7 @@ class SpotifySearchService
             return $this->api;
         }
 
-        $account = $this->party->user->accounts()->whereHas('provider', function($query) {
+        $account = $this->party->user->accounts()->whereHas('provider', function ($query) {
             $query->whereCode('spotifysearch');
         })->first();
         if (!$account) {

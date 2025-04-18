@@ -93,55 +93,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpunit" ]
-    volumes:
-      - ./:/app
-    healthcheck:
-      disable: true
-
-  lint:
-    profiles: [ "lint" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/parallel-lint" ]
-    command: [ "--exclude", "vendor", "." ]
-    volumes:
-      - ./:/app
-    healthcheck:
-      disable: true
-
-  phpcs:
-    profiles: [ "phpcs" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcs" ]
-    command: [ "-pn", "--standard=PSR12", "app/", "tests/" ]
-    volumes:
-      - ./:/app
-    healthcheck:
-      disable: true
-
-  phpcs-fixer:
-    profiles: [ "phpcs-fixer" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcbf" ]
-    command: [ "-pn", "--standard=PSR12", "app/", "tests/" ]
-    volumes:
-      - ./:/app
-    healthcheck:
-      disable: true
-
-  phpstan:
-    profiles: [ "phpstan" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpstan" ]
-    command: [ "analyse" ]
+    entrypoint: [ "php", "vendor/bin/phpunit" ]
     volumes:
       - ./:/app
     healthcheck:
@@ -161,12 +113,34 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/app/artisan" ]
+    entrypoint: [ "php", "/app/artisan" ]
     volumes:
       - ./:/app/
     depends_on:
       - redis
       - db
+    healthcheck:
+      disable: true
+
+  phpcs:
+    profiles: [ "phpcs" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "vendor/bin/phpcs" ]
+    volumes:
+      - ./:/app/
+    healthcheck:
+      disable: true
+
+  phpcbf:
+    profiles: [ "phpcbf" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "vendor/bin/phpcbf" ]
+    volumes:
+      - ./:/app/
     healthcheck:
       disable: true
 

@@ -34,7 +34,7 @@ class SocialProviderController extends Controller
         if ($provider->supports_auth) {
             $provider->auth_enabled = (bool)$request->input('auth_enabled');
         }
-        if($provider->can_be_renamed){
+        if ($provider->can_be_renamed) {
             $provider->name = $request->input('name');
         }
         $provider->save();

@@ -24,16 +24,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Blade::directive('setting', function(string $expression, $default = null) {
+        Blade::directive('setting', function (string $expression, $default = null) {
             return "<?php echo App\Models\Setting::fetch($expression, $default); ?>";
         });
 
-        view()->composer(['layouts.app', 'layouts.login', 'parties.tv'],function($view) {
+        view()->composer(['layouts.app', 'layouts.login', 'parties.tv'], function ($view) {
                 $currentTheme = Theme::whereActive(true)->first();
                 $darkMode = false;
-                if ($currentTheme) {
-                    $darkMode = $currentTheme->dark_mode;
-                }
+            if ($currentTheme) {
+                $darkMode = $currentTheme->dark_mode;
+            }
                 $view->with('currentTheme', $currentTheme);
                 $view->with('darkMode', $darkMode);
         });

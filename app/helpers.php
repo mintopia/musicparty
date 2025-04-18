@@ -1,4 +1,5 @@
 <?php
+
 if (!defined('format_ms')) {
     function format_ms($input): string
     {

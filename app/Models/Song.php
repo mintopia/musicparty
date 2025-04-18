@@ -14,7 +14,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Song extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     public function toStringName(): string
     {
@@ -53,7 +54,7 @@ class Song extends Model
             return $song;
         }
         $album = Album::fromSpotify($track->album);
-        $song = new Song;
+        $song = new Song();
         $song->spotify_id = $track->id;
         $song->name = $track->name;
         $song->length = $track->duration_ms;

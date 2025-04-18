@@ -25,14 +25,14 @@ class PartyMemberController extends Controller
 
         if ($request->input('nickname')) {
             $params['nickname'] = $request->input('nickname');
-            $query = $query->whereHas('user', function($query) use ($params) {
+            $query = $query->whereHas('user', function ($query) use ($params) {
                 $query->where('nickname', 'LIKE', "%{$params['nickname']}%");
             });
         }
 
         if ($request->input('role')) {
             $params['role'] = $request->input('role');
-            $query = $query->whereHas('role', function($query) use ($params) {
+            $query = $query->whereHas('role', function ($query) use ($params) {
                 $query->whereCode($params['role']);
             });
         }
@@ -86,7 +86,7 @@ class PartyMemberController extends Controller
 
         if ($request->input('name')) {
             $params['name'] = $request->input('name');
-            $query = $query->whereHas('upcomingSong.song', function($query) use ($params) {
+            $query = $query->whereHas('upcomingSong.song', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['name']}%");
             });
         }

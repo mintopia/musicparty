@@ -5,7 +5,6 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
-use App\Services\PlayedSongAugmentService;
 use Carbon\Carbon;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -23,7 +22,8 @@ use NumPHP\LinAlg\LinAlg;
  */
 class Party extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     const MINIMUM_UPCOMING = 5;
     const PLAYLIST_LENGTH = 2;
@@ -300,7 +300,7 @@ class Party extends Model
 
         $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
 
-        if ($forcePlayback ) {
+        if ($forcePlayback) {
             Log::debug("{$this}: Spotify API -> play({$this->playlist_id}, [...])");
             $api->play($this->recent_device_id, [
                 'context_uri' => "spotify:playlist:{$this->playlist_id}",
@@ -326,7 +326,7 @@ class Party extends Model
     protected function getRelinkedTrackId(string $playedId): ?string
     {
         $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
-        return Cache::remember($key, 86400, function() use ($playedId) {
+        return Cache::remember($key, 86400, function () use ($playedId) {
             Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
             $data = $this->user->getSpotifyApi()->getTrack($playedId, [
                 'market'
@@ -626,9 +626,10 @@ class Party extends Model
         $tracks = $this->getBackupPlaylistTracks();
 
         $existingIds = $this->upcoming()
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('queued_at')
-                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));})
+                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));
+            })
             ->with('song')
             ->get()
             ->pluck('song.spotify_id')
@@ -648,7 +649,7 @@ class Party extends Model
             $track = $tracks[$i];
             $song = Song::fromSpotify($track->track);
             Log::info("{$this}: Adding {$song} from backup playlist");
-            $upcoming = new UpcomingSong;
+            $upcoming = new UpcomingSong();
             $upcoming->party()->associate($this);
             $upcoming->song()->associate($song);
             $upcoming->save();
@@ -666,7 +667,6 @@ class Party extends Model
         $tracks = [];
         $offset = 0;
         do {
-
             Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
             $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
                 'limit' => 50,
@@ -698,7 +698,7 @@ class Party extends Model
         }
         return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
                 return $query->whereIn('code', ['owner']);
-            })->count() > 0;
+        })->count() > 0;
     }
 
     public function pushUpdate(): void
@@ -786,7 +786,7 @@ class Party extends Model
         $scores = $solved->getData();
 
 
-        DB::transaction(function() use ($userMap, $scores) {
+        DB::transaction(function () use ($userMap, $scores) {
             $this->members()->update([
                 'trustscore' => 0,
             ]);

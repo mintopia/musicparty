@@ -1,10 +1,11 @@
 <?php
+
 namespace App\Http\Controllers\Webhooks;
 
+use App\Http\Controllers\Controller;
 use App\Http\Requests\Webhooks\PartyLibrespotRequest;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
-use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Log;
 
 class PartyController extends Controller
@@ -18,8 +19,8 @@ class PartyController extends Controller
             case 'stopped':
                 Log::debug("{$party}: Received librespot webhook event: {$request->input('event')}");
                 PartyUpdate::dispatch($party)->afterResponse();
-                break;
 
+                break;
             default:
                 break;
         }

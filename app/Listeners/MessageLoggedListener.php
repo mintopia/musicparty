@@ -2,9 +2,7 @@
 
 namespace App\Listeners;
 
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Log\Events\MessageLogged;
-use Illuminate\Queue\InteractsWithQueue;
 use Symfony\Component\Console\Output\ConsoleOutput;
 
 class MessageLoggedListener

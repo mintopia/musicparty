@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class LinkedAccount extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     protected $hidden = [
         'access_token',
@@ -50,6 +51,6 @@ class LinkedAccount extends Model
         // If it is for auth, they must have at least one other auth
         return $this->user->accounts()->whereHas('provider', function ($query) {
                 $query->where('auth_enabled', true);
-            })->count() > 1;
+        })->count() > 1;
     }
 }

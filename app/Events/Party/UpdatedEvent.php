@@ -5,15 +5,15 @@ namespace App\Events\Party;
 use App\Models\Party;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
-use Illuminate\Broadcasting\PresenceChannel;
-use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
 
 class UpdatedEvent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+    use SerializesModels;
 
     /**
      * Create a new event instance.
@@ -22,7 +22,7 @@ class UpdatedEvent implements ShouldBroadcast
     {
     }
 
-    public function broadcastWith():array
+    public function broadcastWith(): array
     {
         $state = $this->party->getState();
         return (array)$state;

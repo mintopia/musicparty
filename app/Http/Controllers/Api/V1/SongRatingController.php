@@ -19,7 +19,7 @@ class SongRatingController extends Controller
         $rating = null;
         if ($request->input('rating') < 0) {
             $rating = $playedsong->dislike($request->user());
-        } elseif($request->input('rating') > 0) {
+        } elseif ($request->input('rating') > 0) {
             $rating = $playedsong->like($request->user());
         }
         $resource = new PlayedSongResource($playedsong);

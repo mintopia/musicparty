@@ -49,7 +49,7 @@ class PlayedSong extends Model
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
-        $upcoming = UpcomingSong::whereHas('song', function($query) use ($ids) {
+        $upcoming = UpcomingSong::whereHas('song', function ($query) use ($ids) {
             $query->whereIn('spotify_id', $ids);
         })->doesntHave('played')->orderBy('queued_at', 'DESC')->first();
         if ($upcoming) {

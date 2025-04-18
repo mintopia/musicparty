@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Resources\V1\Collections;
 
 use Illuminate\Http\Request;

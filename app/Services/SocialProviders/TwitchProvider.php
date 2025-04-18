@@ -2,7 +2,6 @@
 
 namespace App\Services\SocialProviders;
 
-use App\Models\LinkedAccount;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Twitch\Provider;
 
