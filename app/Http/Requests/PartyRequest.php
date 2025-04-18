@@ -51,6 +51,7 @@ class PartyRequest extends FormRequest
                 'nullable',
                 'string',
             ],
+            'min_song_length' => 'sometimes|integer|min:1|nullable',
             'max_song_length' => 'sometimes|integer|min:1|nullable',
             'no_repeat_interval' => 'sometimes|integer|min:1|nullable'
         ];
