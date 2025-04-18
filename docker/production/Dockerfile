@@ -3,7 +3,9 @@ FROM dunglas/frankenphp:1.5.0-php8.4.5-alpine AS composer
 
 WORKDIR /app/
 ENV HOME=/tmp
-RUN mkdir -p /app
+RUN mkdir -p /app && \
+    install-php-extensions \
+        redis
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 COPY . /app/
 COPY docker/production/production.env /app/.env
