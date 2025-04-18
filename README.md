@@ -72,7 +72,24 @@ You should now be able to visit the site and login. From here you can use the ad
 
 ## Music Party Notifier
 
-There is a commented out service in the example docker compose for a Music Party Notify service. This uses a Python 
+There is a commented out service in the example docker compose for a Music Party Notify service. This uses a Python
+Spotify websocket library to connect to Spotify as if it was a web player and listen for events and then act upon them.
+In this case, it calls a websocket on Music Party to trigger updates.
+
+The configuration is done using environment variables. It needs to proxy some of the comms through Music Party as
+there's an issue with Python's requests module talking to the Spotify Auth Service.
+
+You will need to generate a user key for the webhook, you can do this in the artisan tinker shell by doing:
+
+```php
+$user = App\Models\User::find(<id>);
+$token = $user->createToken('Webhook');
+```
+
+Copy the plain text token here and use it as the `MUSICPARTY_AUTHTOKEN` environment variable.
+
+This service may be against Spotify's TOS as it uses undocumented endpoints that explicitly warn against being used, so
+use carefully and YMMV.
 
 ## Contributing
 
