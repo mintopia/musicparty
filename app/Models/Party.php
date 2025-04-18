@@ -119,10 +119,12 @@ class Party extends Model
         if ($this->playlist_id === null) {
             $this->updatePlaylist();
         }
-        $cutoff = Carbon::now()->subSeconds(5);
-        if ($this->last_updated_at > $cutoff) {
-            Log::debug("{$this}: Already updated state recently");
-            return $this;
+        if ($this->poll) {
+            $cutoff = Carbon::now()->subSeconds(5);
+            if ($this->last_updated_at > $cutoff) {
+                Log::debug("{$this}: Already updated state recently");
+                return $this;
+            }
         }
 
         if (!$this->active) {

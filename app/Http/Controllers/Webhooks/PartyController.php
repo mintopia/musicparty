@@ -17,7 +17,7 @@ class PartyController extends Controller
             case 'paused':
             case 'stopped':
                 Log::debug("{$party}: Received librespot webhook event: {$request->input('event')}");
-                PartyUpdate::dispatch($party)->onQueue('partyupdates')->afterResponse();
+                PartyUpdate::dispatch($party)->afterResponse();
                 break;
 
             default:
@@ -29,7 +29,7 @@ class PartyController extends Controller
     public function simple(Party $party)
     {
         Log::debug("{$party}: Received simple webhook event");
-        PartyUpdate::dispatch($party)->onQueue('partyupdates')->afterResponse();
+        PartyUpdate::dispatch($party)->afterResponse();
         return response()->noContent();
     }
 }

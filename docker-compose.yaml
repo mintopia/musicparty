@@ -32,12 +32,12 @@ services:
     healthcheck:
       disable: true
 
-  worker:
+  horizon:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
-    entrypoint: [ "php", "artisan", "queue:work" ]
+    entrypoint: [ "php", "artisan", "horizon" ]
     env_file: .env
     deploy:
       replicas: 1

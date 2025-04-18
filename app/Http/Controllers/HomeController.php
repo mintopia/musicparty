@@ -39,6 +39,6 @@ class HomeController extends Controller
         curl_close($curl);
 
         $responseData = json_decode($response);
-        return $responseData->accessToken;
+        return response($responseData->accessToken)->header('Content-Type', 'text/plain');
     }
 }
