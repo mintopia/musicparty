@@ -659,7 +659,7 @@ class Party extends Model
     {
         $cacheKey = "party.{$this->id}.backupplaylist";
         $tracks = Cache::get($cacheKey);
-        if ($tracks !== null) {
+        if ($tracks !== null && !$force) {
             return $tracks;
         }
 
