@@ -58,12 +58,12 @@ class PlayedSong extends Model
         return $upcoming;
     }
 
-    public function like(User $user): SongRating
+    public function like(User $user): ?SongRating
     {
         return $this->addRating($user, 1);
     }
 
-    public function dislike(User $user): SongRating
+    public function dislike(User $user): ?SongRating
     {
         return $this->addRating($user, -1);
     }
