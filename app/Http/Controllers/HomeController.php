@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Setting;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class HomeController extends Controller
 {
@@ -39,6 +40,7 @@ class HomeController extends Controller
         curl_close($curl);
 
         $responseData = json_decode($response);
+        Log::info($response);
         return response($responseData->accessToken)->header('Content-Type', 'text/plain');
     }
 }

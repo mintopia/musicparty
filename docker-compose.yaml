@@ -13,6 +13,9 @@ services:
       - PHP_IDE_CONFIG=serverName=musicparty
       - XDEBUG_MODE=debug
       - XDEBUG_SESSION=start
+      - CADDY_SERVER_FRANKENPHP_OPTIONS=
+      - APP_INDEX_FILE=index.php
+      - OPENTELEMETRY_ENABLED=true
     depends_on:
       - redis
       - db

@@ -674,6 +674,9 @@ class Party extends Model
                 'market' => $this->user->market,
             ]);
             foreach ($response->items as $track) {
+                if ($track->track === null) {
+                    continue;
+                }
                 if (property_exists($track->track, 'is_playable') && !$track->track->is_playable) {
                     Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is not playable");
                     continue;
