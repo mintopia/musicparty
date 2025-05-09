@@ -45,11 +45,13 @@ class PartyRequest extends FormRequest
             'force' => 'sometimes|boolean',
             'poll' => 'sometimes|boolean',
             'show_qrcode' => 'sometimes|boolean',
+            'downvotes_per_hour' => 'sometimes|integer|min:1|nullable',
             'device_id' => [
                 'sometimes',
                 'nullable',
                 'string',
             ],
+            'min_song_length' => 'sometimes|integer|min:1|nullable',
             'max_song_length' => 'sometimes|integer|min:1|nullable',
             'no_repeat_interval' => 'sometimes|integer|min:1|nullable'
         ];

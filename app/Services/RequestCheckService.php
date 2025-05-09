@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Services;
 
 use App\Models\Party;
@@ -11,14 +12,13 @@ class RequestCheckService
 {
     public function __construct(protected Party $party, protected PartyMember $member)
     {
-
     }
 
     public function checkCollection(Collection $input): Collection
     {
         $output = [];
         $bulkResponse = $this->bulkCheck($input);
-        foreach($input as $spotifyData) {
+        foreach ($input as $spotifyData) {
             $response = $this->singleCheck($spotifyData);
             if ($response) {
                 $output[$spotifyData->id] = $response;
@@ -106,6 +106,9 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
+        if ($this->party->min_song_length && ($spotifyData->duration_ms / 1000) < $this->party->min_song_length) {
+            return new RequestCheckResponse(false, 'Song is too short');
+        }
         if ($this->party->max_song_length && ($spotifyData->duration_ms / 1000) > $this->party->max_song_length) {
             return new RequestCheckResponse(false, 'Song is too long');
         }

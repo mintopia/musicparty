@@ -5,15 +5,11 @@ namespace App\Models;
 use App\Models\Traits\ToString;
 use App\Services\DiscordApi;
 use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
-use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
@@ -26,7 +22,10 @@ use SpotifyWebAPI\SpotifyWebAPI;
  */
 class User extends Authenticatable
 {
-    use HasApiTokens, HasFactory, Notifiable, ToString;
+    use HasApiTokens;
+    use HasFactory;
+    use Notifiable;
+    use ToString;
 
     protected $casts = [
         'terms_agreed_at' => 'datetime',
@@ -178,7 +177,7 @@ class User extends Authenticatable
             return [];
         }
 
-        $this->devices = Cache::remember("users.{$this->id}.devices", 300, function() use ($api) {
+        $this->devices = Cache::remember("users.{$this->id}.devices", 300, function () use ($api) {
             Log::debug("{$this}: Spotify API -> getMyDevices()");
             return $api->getMyDevices()->devices;
         });
@@ -222,7 +221,7 @@ class User extends Authenticatable
 
     public function getPartyMember(Party $party): ?PartyMember
     {
-        foreach($this->partyMembers as $member) {
+        foreach ($this->partyMembers as $member) {
             if ($member->party_id === $party->id) {
                 return $member;
             }

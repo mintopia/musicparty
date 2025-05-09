@@ -4,7 +4,6 @@ namespace App\Console\Commands;
 
 use App\Models\Party;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Log;
 
 class PartyCheck extends Command
 {
@@ -37,7 +36,7 @@ class PartyCheck extends Command
             return $this->processParty($party);
         }
 
-        $parties = Party::whereActive(true)->chunk(50, function($chunk) {
+        $parties = Party::whereActive(true)->chunk(50, function ($chunk) {
             foreach ($chunk as $party) {
                 $this->processParty($party);
             }

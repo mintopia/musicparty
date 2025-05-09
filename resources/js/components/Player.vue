@@ -36,14 +36,21 @@
                                             {{ currentTime }}
                                         </div>
                                         <div class="w-50 text-center">
+                                            <!--
                                             <i @click="control('previous')" v-if="can_manage" class="icon ti ti-player-skip-back-filled cursor-pointer me-2"></i>
                                             <i @click="control('pause')" v-if="state.status.isPlaying && can_manage" class="icon ti ti-player-pause-filled cursor-pointer me-2"></i>
                                             <i @click="control('play')" v-if="!state.status.isPlaying && can_manage" class="icon ti ti-player-play-filled cursor-pointer me-2"></i>
                                             <i @click="control('next')" v-if="can_manage" class="icon ti ti-player-skip-forward-filled cursor-pointer"></i>
+                                            -->
                                         </div>
                                         <div class="w-25 text-end">
                                             {{  endTime }}
                                         </div>
+                                    </div>
+                                    <div class="mt-3 text-center">
+                                        <i class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4" @click="rate(-1)"></i>
+                                        <span class="d-inline-block mx-2">{{ state.current.rating }}</span>
+                                        <i class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4" @click="rate(1)"></i>
                                     </div>
                                 </div>
                             </div>
@@ -130,6 +137,12 @@
                     action: action,
                 }).then((response) => {
                     this.updateState(response.data.data.status);
+                });
+            },
+
+            rate(value) {
+                axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state.current.id}/rate`, {
+                    rating: value
                 });
             },
 

@@ -49,7 +49,7 @@ class PlayedSong extends Model
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
-        $upcoming = UpcomingSong::whereHas('song', function($query) use ($ids) {
+        $upcoming = UpcomingSong::whereHas('song', function ($query) use ($ids) {
             $query->whereIn('spotify_id', $ids);
         })->doesntHave('played')->orderBy('queued_at', 'DESC')->first();
         if ($upcoming) {
@@ -58,19 +58,23 @@ class PlayedSong extends Model
         return $upcoming;
     }
 
-    public function like(User $user): SongRating
+    public function like(User $user): ?SongRating
     {
         return $this->addRating($user, 1);
     }
 
-    public function dislike(User $user): SongRating
+    public function dislike(User $user): ?SongRating
     {
         return $this->addRating($user, -1);
     }
 
-    protected function addRating(User $user, int $value): SongRating
+    protected function addRating(User $user, int $value): ?SongRating
     {
         $rating = $this->ratings()->whereUserId($user->id)->first();
+        if ($rating && $rating->value !== $value) {
+            $rating->delete();
+            return null;
+        }
         if (!$rating) {
             $rating = new SongRating();
             $rating->song()->associate($this);
@@ -93,7 +97,7 @@ class PlayedSong extends Model
     {
         $data = $this->song->toApi();
         $data['id'] = $this->id;
-        $data['rating'] = $this->rating;
+        $data['rating'] = (int)$this->rating;
         $data['played_at'] = $this->played_at ? $this->played_at->toIso8601String() : null;
         $data['user'] = $this->upcoming->user->nickname ?? null;
         return $data;

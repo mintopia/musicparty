@@ -6,7 +6,7 @@ use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
 use App\Models\UpcomingSong;
-use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UpcomingSongController extends Controller
 {
@@ -24,21 +24,21 @@ class UpcomingSongController extends Controller
 
         if ($request->input('name')) {
             $params['name'] = $request->input('name');
-            $query = $query->whereHas('song', function($query) use ($params) {
+            $query = $query->whereHas('song', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['name']}%");
             });
         }
 
         if ($request->input('album')) {
             $params['album'] = $request->input('album');
-            $query = $query->whereHas('song.album', function($query) use ($params) {
+            $query = $query->whereHas('song.album', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['album']}%");
             });
         }
 
         if ($request->input('artist')) {
             $params['artist'] = $request->input('artist');
-            $query = $query->whereHas('song.artists', function($query) use ($params) {
+            $query = $query->whereHas('song.artists', function ($query) use ($params) {
                 $query->where('name', 'LIKE', "%{$params['artist']}%");
             });
         }
@@ -98,12 +98,18 @@ class UpcomingSongController extends Controller
         }
         $votes = $song->votes()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
         $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
+        if ($song->played) {
+            $ratings = $song->played->ratings()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+        } else {
+            $ratings = new LengthAwarePaginator([], 0, $perPage);
+        }
         return view('upcomingsongs.show', [
             'party' => $party,
             'canManage' => true,
             'song' => $song,
             'votes' => $votes,
             'other' => $other,
+            'ratings' => $ratings,
         ]);
     }
 }

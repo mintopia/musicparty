@@ -71,7 +71,7 @@ class EventServiceProvider extends ServiceProvider
             SteamExtendSocialite::class . '@handle',
             TwitchExtendSocialite::class . '@handle',
             LaravelPassportExtendSocialite::class . '@handle',
-            SpotifyExtendSocialite::class.'@handle',
+            SpotifyExtendSocialite::class . '@handle',
         ],
         MessageLogged::class => [
             MessageLoggedListener::class,

@@ -38,7 +38,7 @@ class PartyForce extends Command
             return $this->processParty($party);
         }
 
-        $query->chunk(50, function($chunk) {
+        $query->chunk(50, function ($chunk) {
             foreach ($chunk as $party) {
                 $this->processParty($party);
             }

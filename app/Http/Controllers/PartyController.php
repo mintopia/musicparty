@@ -6,13 +6,11 @@ use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
-use SpotifyWebAPI\SpotifyWebAPI;
 
 class PartyController extends Controller
 {
@@ -28,7 +26,7 @@ class PartyController extends Controller
             return response()->redirectToRoute('user.spotify');
         }
 
-        $party = new Party;
+        $party = new Party();
         return view('parties.create', [
             'party' => $party,
             'playlists' => $request->user()->getPlaylists(),
@@ -48,7 +46,7 @@ class PartyController extends Controller
     {
         $member = $party->getMember($request->user());
         $upcomingSongs = $party->upcoming()
-            ->with(['user', 'song'])
+            ->with(['user', 'song', 'song.album', 'song.artists'])
             ->whereNull('queued_at')
             ->orderBy('score', 'DESC')
             ->orderBy('created_at', 'ASC')
@@ -57,7 +55,7 @@ class PartyController extends Controller
             ->get();
 
         $augmentData = $augmentService->augmentCollection($upcomingSongs, $request->user());
-        $upcoming = $upcomingSongs->map(function(UpcomingSong $song) use ($request, $augmentData) {
+        $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData) {
             $resource = new UpcomingSongResource($song);
             $resource->augment($augmentData[$song->id] ?? null);
             return $resource->toArray($request);
@@ -141,6 +139,15 @@ class PartyController extends Controller
         $party->show_qrcode = (bool)$request->input('show_qrcode');
         $party->device_name = null;
         $party->device_id = $request->input('device_id');
+        $party->weighted = (bool)$request->input('weighted');
+        if ($request->input('downvotes_per_hour')) {
+            $party->downvotes_per_hour = $request->input('downvotes_per_hour');
+        } else {
+            $party->downvotes_per_hour = null;
+        }
+        if ($request->has('min_song_length') && $request->input('min_song_length') > 0) {
+            $party->min_song_length = $request->input('min_song_length');
+        }
         if ($request->has('max_song_length') && $request->input('max_song_length') > 0) {
             $party->max_song_length = $request->input('max_song_length');
         }

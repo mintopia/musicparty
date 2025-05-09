@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Theme;
 use Illuminate\Support\Str;
+
 use function App\makePermalink;
 
 class ThemeObserver

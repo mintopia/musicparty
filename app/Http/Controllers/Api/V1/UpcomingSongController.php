@@ -52,7 +52,7 @@ class UpcomingSongController extends Controller
 
     public function store(UpcomingSongAugmentService $augmentService, UpcomingSongRequest $request, Party $party)
     {
-        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function($query) use ($request) {
+        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
             $query->whereSpotifyId($request->input('spotify_id'));
         })->first();
         if (!$upcoming) {

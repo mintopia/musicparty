@@ -3,21 +3,27 @@
 namespace App\Models;
 
 use App\Events\Party\UpdatedEvent;
+use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
+use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use NumPHP\LinAlg\LinAlg;
 
 /**
  * @mixin IdeHelperParty
  */
 class Party extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     const MINIMUM_UPCOMING = 5;
     const PLAYLIST_LENGTH = 2;
@@ -56,6 +62,11 @@ class Party extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function trustedUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'trusted_user_id');
+    }
+
     public function upcoming(): HasMany
     {
         return $this->hasMany(UpcomingSong::class);
@@ -77,6 +88,9 @@ class Party extends Model
             case 'upcomingsong':
             case 'song':
                 return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
+
+            case 'playedsong':
+                return $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first();
 
             case 'user':
                 return $this->members()->whereId($value)->with(['user', 'role'])->first();
@@ -105,10 +119,12 @@ class Party extends Model
         if ($this->playlist_id === null) {
             $this->updatePlaylist();
         }
-        $cutoff = Carbon::now()->subSeconds(5);
-        if ($this->last_updated_at > $cutoff) {
-            Log::debug("{$this}: Already updated state recently");
-            return $this;
+        if ($this->poll) {
+            $cutoff = Carbon::now()->subSeconds(5);
+            if ($this->last_updated_at > $cutoff) {
+                Log::debug("{$this}: Already updated state recently");
+                return $this;
+            }
         }
 
         if (!$this->active) {
@@ -284,7 +300,7 @@ class Party extends Model
 
         $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
 
-        if ($forcePlayback ) {
+        if ($forcePlayback) {
             Log::debug("{$this}: Spotify API -> play({$this->playlist_id}, [...])");
             $api->play($this->recent_device_id, [
                 'context_uri' => "spotify:playlist:{$this->playlist_id}",
@@ -310,7 +326,7 @@ class Party extends Model
     protected function getRelinkedTrackId(string $playedId): ?string
     {
         $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
-        return Cache::remember($key, 86400, function() use ($playedId) {
+        return Cache::remember($key, 86400, function () use ($playedId) {
             Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
             $data = $this->user->getSpotifyApi()->getTrack($playedId, [
                 'market'
@@ -365,13 +381,61 @@ class Party extends Model
             return;
         }
 
-        $songsToAdd = $this->upcoming()
-            ->whereNull('queued_at')
-            ->orderBy('score', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->orderBy('id', 'ASC')
-            ->limit($toAdd)
-            ->get();
+        /*
+         * Notes by Cwis
+         * Remove the limit - fetch everything
+         * Get sum of score for everything
+         * Get random number up to total sum of score
+         * Iterate through songs
+         * For each song, decrease random number
+         * when it drops below zero, take current song
+         *
+         */
+
+        if ($this->weighted) {
+            $songsToAdd = new Collection();
+            $allSongs = $this->upcoming()
+                ->whereNull('queued_at')
+                ->where('score', '>', 0)->inRandomOrder()->get();
+
+            for ($i = 0; $i < $toAdd; $i++) {
+                $sum = $allSongs->sum('score');
+                $random = mt_rand(0, $sum);
+                foreach ($allSongs as $index => $song) {
+                    $random -= $song->score;
+                    if ($random <= 0) {
+                        $allSongs->forget($index);
+                        $songsToAdd->push($song);
+                        break;
+                    }
+                }
+            }
+            $remaining = $toAdd - $songsToAdd->count();
+
+            if ($remaining > 0) {
+                // Didn't add enough songs, try and find *any* using old method
+                $ids = $songsToAdd->pluck('id');
+                $toAdd = $this->upcoming()
+                    ->whereNull('queued_at')
+                    ->whereNotIn('id', $ids)
+                    ->orderBy('score', 'DESC')
+                    ->orderBy('created_at', 'ASC')
+                    ->orderBy('id', 'ASC')
+                    ->limit($remaining)
+                    ->get();
+                foreach ($toAdd as $song) {
+                    $songsToAdd->push($song);
+                }
+            }
+        } else {
+            $songsToAdd = $this->upcoming()
+                ->whereNull('queued_at')
+                ->orderBy('score', 'DESC')
+                ->orderBy('created_at', 'ASC')
+                ->orderBy('id', 'ASC')
+                ->limit($toAdd)
+                ->get();
+        }
 
         if ($songsToAdd->isEmpty()) {
             Log::debug("{$this}: Found no songs in the upcoming songs list to backfill");
@@ -562,15 +626,19 @@ class Party extends Model
         $tracks = $this->getBackupPlaylistTracks();
 
         $existingIds = $this->upcoming()
-            ->where(function($query) {
+            ->where(function ($query) {
                 $query->whereNull('queued_at')
-                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));})
+                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));
+            })
             ->with('song')
             ->get()
             ->pluck('song.spotify_id')
             ->toArray();
 
         $tracks = array_filter($tracks, function ($track) use ($existingIds) {
+            if ($track->track === null) {
+                return false;
+            }
             return !in_array($track->track->id, $existingIds);
         });
 
@@ -581,7 +649,7 @@ class Party extends Model
             $track = $tracks[$i];
             $song = Song::fromSpotify($track->track);
             Log::info("{$this}: Adding {$song} from backup playlist");
-            $upcoming = new UpcomingSong;
+            $upcoming = new UpcomingSong();
             $upcoming->party()->associate($this);
             $upcoming->song()->associate($song);
             $upcoming->save();
@@ -592,21 +660,33 @@ class Party extends Model
     {
         $cacheKey = "party.{$this->id}.backupplaylist";
         $tracks = Cache::get($cacheKey);
-        if ($tracks !== null) {
+        if ($tracks !== null && !$force) {
             return $tracks;
         }
 
         $tracks = [];
         $offset = 0;
         do {
-
             Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
             $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
                 'limit' => 50,
                 'offset' => $offset,
                 'market' => $this->user->market,
             ]);
-            $tracks = array_merge($tracks, $response->items);
+            foreach ($response->items as $track) {
+                if ($track->track === null) {
+                    continue;
+                }
+                if (property_exists($track->track, 'is_playable') && !$track->track->is_playable) {
+                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is not playable");
+                    continue;
+                }
+                if ($track->track->is_local) {
+                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is local");
+                    continue;
+                }
+                $tracks[] = $track;
+            }
             $offset += 50;
         } while ($response->next !== null);
 
@@ -621,11 +701,115 @@ class Party extends Model
         }
         return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
                 return $query->whereIn('code', ['owner']);
-            })->count() > 0;
+        })->count() > 0;
     }
 
     public function pushUpdate(): void
     {
         UpdatedEvent::dispatch($this);
+    }
+
+    public function checkDownvotesForUser(User $user): void
+    {
+        if ($this->downvotes_per_hour === null) {
+            return;
+        }
+        $downvotes = Vote::whereUserId($user->id)
+            ->where('value', '<', 0)
+            ->where('created_at', '>=', now()->subHour())
+            ->whereHas('upcomingSong', function ($query) {
+                $query->wherePartyId($this->id);
+            })->count();
+        if ($downvotes >= $this->downvotes_per_hour) {
+            throw new VoteException('You have downvoted too many songs');
+        }
+    }
+
+    public function calculateTrustScores(?CarbonImmutable $after = null): void
+    {
+        if ($this->trustedUser === null) {
+            Log::debug("No trusted user, unable to calculate trust score");
+            return;
+        }
+
+        $voteMap = [];
+        $userIds = $this->members()->pluck('user_id');
+        $userIds->push(0);
+        $fill = [];
+        foreach ($userIds as $id) {
+            $fill[$id] = 0;
+        }
+        foreach ($userIds as $id) {
+            $voteMap[$id] = $fill;
+        }
+
+        // Votes
+        $query = Vote::whereHas('upcomingSong', function ($query) {
+            $query->wherePartyId($this->id);
+        })->where('value', '>', 0);
+        if ($after !== null) {
+            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
+        }
+        $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
+        foreach ($votes as $vote) {
+            $songUserId = $vote->upcomingSong->user->id ?? 0;
+            $voteMap[$songUserId][$vote->user->id] += $vote->value;
+        }
+
+        // Ratings
+        $query = SongRating::whereHas('song', function ($query) {
+            $query->wherePartyId($this->id);
+        })->where('value', '>', 0);
+        if ($after !== null) {
+            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
+        }
+        $ratings = $query->with(['user', 'song', 'song.upcoming', 'song.upcoming.user'])->get();
+        foreach ($ratings as $rating) {
+            if ($rating->song->upcoming) {
+                $songUserId = $rating->song->upcoming->user->id ?? 0;
+                $voteMap[$songUserId][$rating->user->id] += $rating->value;
+            }
+        }
+
+        $userMap = array_keys($voteMap);
+        $voteMap = array_values($voteMap);
+        foreach ($voteMap as $i => $row) {
+            $voteMap[$i] = array_values($row);
+            $voteMap[$i][$i] = -1;
+            if ($userMap[$i] === $this->trustedUser->id) {
+                $voteMap[$i][$i] = 1;
+            }
+        }
+
+        $trustedUserMatrix = array_fill(0, count($voteMap), 0);
+        $trustedUserIndex = array_search($this->trustedUser->id, $userMap);
+        $trustedUserMatrix[$trustedUserIndex] = 1;
+
+        $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
+        $scores = $solved->getData();
+
+
+        DB::transaction(function () use ($userMap, $scores) {
+            $this->members()->update([
+                'trustscore' => 0,
+            ]);
+            $membersIndexed = [];
+            $members = $this->members()->with('user')->get();
+            foreach ($members as $member) {
+                $membersIndexed[$member->user->id] = $member;
+            }
+            foreach ($scores as $index => $score) {
+                $userId = $userMap[$index] ?? null;
+                if ($userId === null) {
+                    continue;
+                }
+                if (!isset($membersIndexed[$userId])) {
+                    continue;
+                }
+                $membersIndexed[$userId]->trustscore = $score;
+                $membersIndexed[$userId]->save();
+            }
+        });
+        Log::debug("Finished calculating trust scores");
     }
 }

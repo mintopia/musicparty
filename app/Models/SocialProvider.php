@@ -14,7 +14,8 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
  */
 class SocialProvider extends Model
 {
-    use HasFactory, ToString;
+    use HasFactory;
+    use ToString;
 
     protected array $_settings = [];
 

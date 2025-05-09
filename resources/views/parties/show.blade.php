@@ -19,7 +19,7 @@
         </next>
         <div class="d-flex flex-fill align-text-bottom mb-1">
             <div class="flex-grow-1">
-                <h3 class="mt-2">Queued</h3>
+                <h3 class="mt-2">{{ $party->weighted ? 'Upcoming Songs' : 'Queue' }}</h3>
             </div>
             <div class="text-end">
                 <form action="{{ route('parties.search', $party->code) }}" method="get">
@@ -39,6 +39,12 @@
                 </form>
             </div>
         </div>
+
+        @if($party->weighted)
+        <div class="d-flex flex-fill align-text-bottom mt-2 mb-1">
+            <p>Tracks with more upvotes are more likely to be played.</p>
+        </div>
+        @endif
 
         <upcoming
             party="{{ $party->code }}"

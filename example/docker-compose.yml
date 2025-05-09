@@ -1,27 +1,15 @@
 version: '3'
 services:
-  nginx:
-    image: ghcr.io/mintopia/musicparty-nginx:develop
-    env_file: .env.nginx
-    restart: unless-stopped
-    depends_on:
-      - php-fpm
-    networks:
-      - frontend
-      - default
-    volumes:
-      - ./public:/var/www/storage/public
-
-  php-fpm:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+  musicparty:
+    image: ghcr.io/mintopia/musicparty:develop
     env_file: .env
     restart: unless-stopped
     depends_on:
       - redis
       - database
     volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
+      - ./logs:/app/storage/logs
+      - ./public:/app/storage/public
 
   redis:
     image: redis:6.2.6
@@ -34,52 +22,51 @@ services:
     volumes:
       - ./database:/var/lib/mysql
 
-  worker:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+  horizon:
+    image: ghcr.io/mintopia/musicparty:develop
     restart: unless-stopped
-    deploy:
-      replicas: 2
     env_file: .env
     depends_on:
       - database
       - redis
     volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php']
-    command: 'artisan queue:work --queue=partyupdates,default'
+      - ./logs:/app/storage/logs
+      - ./public:/app/storage/public
+    entrypoint: [ "php", "artisan", "horizon" ]
+    healthcheck:
+        disable: true
 
 
   scheduler:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    image: ghcr.io/mintopia/musicparty:develop
     restart: unless-stopped
     env_file: .env
     depends_on:
       - database
       - redis
     volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php']
-    command: 'artisan schedule:work'
-
+      - ./logs:/app/storage/logs
+      - ./public:/app/storage/public
+    entrypoint: [ "php", "artisan", "schedule:work"]
+    healthcheck:
+        disable: true
 
   reverb:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    image: ghcr.io/mintopia/musicparty:develop
     restart: unless-stopped
     env_file: .env
     depends_on:
       - database
       - redis
     volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php']
-    command: 'artisan reverb:start --host=0.0.0.0'
-
+      - ./logs:/app/storage/logs
+      - ./public:/app/storage/public
+    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug", "--port=80" ]
+    healthcheck:
+      disable: true
 
   artisan:
-    image: ghcr.io/mintopia/musicparty-php-fpm:develop
+    image: ghcr.io/mintopia/musicparty:develop
     profiles:
       - artisan
     env_file: .env
@@ -87,10 +74,18 @@ services:
       - database
       - redis
     volumes:
-      - ./logs:/var/www/storage/logs
-      - ./public:/var/www/storage/public
-    entrypoint: ['php', 'artisan']
+      - ./logs:/app/storage/logs
+      - ./public:/app/storage/public
+    entrypoint: [ "php", "artisan" ]
+    healthcheck:
+      disable: true
 
-networks:
-  frontend:
-    external: true
+#  notify:
+#    image: mintopia/musicparty-notify:latest
+#    restart: unless-stopped
+#    volumes:
+#      - ./cookies.json:/usr/src/app/cookies.json
+#    environment:
+#      - MUSICPARTY_ENDPOINT=http://musicparty/webhooks/parties/TEST/simple
+#      - MUSICPARTY_PROXY_URL=http://musicparty/proxy
+#      - MUSICPARTY_AUTHTOKEN=3|R2B64VpucCwJ4qGvf9DReIX7iBOU2J1GJ9msC39Zf7053c32

@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Http\Resources\V1\Collections;
 
 use App\Http\Resources\V1\UpcomingSongResource;
@@ -18,7 +19,7 @@ class UpcomingSongResourceCollection extends ResourceCollection
     public function toArray(Request $request): array
     {
         return [
-            'data' => $this->map(function(UpcomingSong $item) {
+            'data' => $this->map(function (UpcomingSong $item) {
                 $resource = new UpcomingSongResource($item);
                 $resource->augment($this->augmentedData[$item->id] ?? null);
                 return $resource;

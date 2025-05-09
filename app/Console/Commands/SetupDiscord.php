@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\SocialProvider;
 use App\Services\SocialProviders\DiscordProvider;
 use Illuminate\Console\Command;
+
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\table;

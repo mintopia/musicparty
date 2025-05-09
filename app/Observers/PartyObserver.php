@@ -42,5 +42,4 @@ class PartyObserver
     {
         UpdatedEvent::dispatch($party);
     }
-
 }

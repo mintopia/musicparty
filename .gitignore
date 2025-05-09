@@ -18,3 +18,8 @@ yarn-error.log
 /.idea
 /.vscode
 /docker-compose.override.yml
+
+**/caddy
+frankenphp
+frankenphp-worker.php
+/otel-collector-config.yml

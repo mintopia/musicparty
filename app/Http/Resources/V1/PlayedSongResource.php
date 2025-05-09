@@ -24,7 +24,7 @@ class PlayedSongResource extends JsonResource
         $data['id'] = $this->id;
         $data['created_at'] = $this->created_at->toIso8601String();
         $data['updated_at'] = $this->updated_at->toIso8601String();
-        $data['rating'] = $this->augmentedData->rating->value ?? null;
+        $data['rated'] = $this->augmentedData->rating->value ?? null;
         $data['user'] = $this->user->nickname ?? null;
         return $data;
     }

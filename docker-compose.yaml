@@ -1,72 +1,72 @@
-version: "3"
 name: musicparty
 
 services:
-  nginx:
-    image: ghcr.io/mintopia/php-docker-nginx:latest
-    restart: unless-stopped
-    volumes:
-      - ./:/var/www
-      - ./docker/default.conf:/etc/nginx/templates/conf.d/default.conf.template
-    depends_on:
-      - php-fpm
-
-  reverb:
+  musicparty:
     build:
       context: .
-      dockerfile: docker/develop/Dockerfile.php-fpm
+      dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
     volumes:
-      - ./:/var/www
-    depends_on:
-      - redis
-      - db
-    entrypoint: [ "php" ]
-    command: "artisan reverb:start --host=0.0.0.0 --debug"
-
-  php-fpm:
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile.php-fpm
-    restart: unless-stopped
+      - ./:/app
     environment:
       - XDEBUG_CONFIG=client_host=host.docker.internal
       - PHP_IDE_CONFIG=serverName=musicparty
       - XDEBUG_MODE=debug
       - XDEBUG_SESSION=start
-    volumes:
-      - ./:/var/www
+      - CADDY_SERVER_FRANKENPHP_OPTIONS=
+      - APP_INDEX_FILE=index.php
+      - OPENTELEMETRY_ENABLED=true
     depends_on:
       - redis
       - db
+      - collector
 
-  worker:
-    image: 1and1internet/php-build-environment:8.2-xdebug
+  reverb:
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
-    entrypoint: [ "php" ]
-    command: "artisan queue:work"
-    user: "1000"
+    volumes:
+      - ./:/app
+    depends_on:
+      - redis
+      - db
+      - collector
+    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug", "--port=80" ]
+    healthcheck:
+      disable: true
+
+  horizon:
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    restart: unless-stopped
+    entrypoint: [ "php", "artisan", "horizon" ]
     env_file: .env
-    deploy:
-      replicas: 1
     volumes:
       - ./:/app
     depends_on:
       - db
       - redis
+      - collector
+    healthcheck:
+      disable: true
 
   scheduler:
-    image: 1and1internet/php-build-environment:8.2-xdebug
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
-    entrypoint: [ "php" ]
-    command: "artisan schedule:run"
-    user: "1000"
+    entrypoint: [ "php", "artisan", "schedule:work" ]
     env_file: .env
     volumes:
       - ./:/app
     depends_on:
       - db
       - redis
+      - collector
+    healthcheck:
+      disable: true
 
   db:
     image: mariadb:10.5-focal
@@ -85,77 +85,90 @@ services:
 
   composer:
     profiles: [ "composer" ]
-    image: 1and1internet/php-build-environment:8.2-xdebug
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
     entrypoint: [ "composer" ]
     command: [ "--version" ]
-    user: "1000"
     volumes:
       - ./:/app
+    healthcheck:
+      disable: true
 
   test:
     profiles: [ "test" ]
-    image: 1and1internet/php-build-environment:8.2-xdebug
-    entrypoint: [ "vendor/bin/phpunit" ]
-    user: "1000"
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "php", "vendor/bin/phpunit" ]
     volumes:
       - ./:/app
-
-  lint:
-    profiles: [ "lint" ]
-    image: 1and1internet/php-build-environment:8.2-xdebug
-    entrypoint: [ "vendor/bin/parallel-lint" ]
-    command: [ "--exclude", "vendor", "." ]
-    user: "1000"
-    volumes:
-      - ./:/app
-
-  phpcs:
-    profiles: [ "phpcs" ]
-    image: 1and1internet/php-build-environment:8.2-xdebug
-    entrypoint: [ "vendor/bin/phpcs" ]
-    command: [ "-pn", "--standard=PSR12", "app/", "tests/" ]
-    user: "1000"
-    volumes:
-      - ./:/app
-
-  phpcs-fixer:
-    profiles: [ "phpcs-fixer" ]
-    image: 1and1internet/php-build-environment:8.2-xdebug
-    entrypoint: [ "vendor/bin/phpcbf" ]
-    command: [ "-pn", "--standard=PSR12", "app/", "tests/" ]
-    user: "1000"
-    volumes:
-      - ./:/app
-
-  phpstan:
-    profiles: [ "phpstan" ]
-    image: 1and1internet/php-build-environment:8.2
-    entrypoint: [ "vendor/bin/phpstan" ]
-    command: [ "analyse" ]
-    user: "1000"
-    volumes:
-      - ./:/app
+    healthcheck:
+      disable: true
 
   npm:
     profiles: [ "npm" ]
-    image: node:20
+    image: node:23
     entrypoint: [ "npm" ]
     command: [ "" ]
-    user: "1000"
     working_dir: /app
     volumes:
       - ./:/app
 
   artisan:
     profiles: [ "artisan" ]
-    image: mintopia/php-build-environment:8.2-xdebug
-    entrypoint: [ "/app/artisan" ]
-    user: "1000"
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "php", "/app/artisan" ]
     volumes:
       - ./:/app/
     depends_on:
       - redis
       - db
+    healthcheck:
+      disable: true
+
+  phpcs:
+    profiles: [ "phpcs" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "vendor/bin/phpcs" ]
+    volumes:
+      - ./:/app/
+    healthcheck:
+      disable: true
+
+  phpcbf:
+    profiles: [ "phpcbf" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "vendor/bin/phpcbf" ]
+    volumes:
+      - ./:/app/
+    healthcheck:
+      disable: true
+
+  shell:
+    profiles: [ "shell" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "/bin/sh" ]
+    volumes:
+      - ./:/app/
+    depends_on:
+      - redis
+      - db
+    healthcheck:
+      disable: true
+
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./otel-collector-config.yml:/etc/otelcol-contrib/config.yaml
 
 volumes:
   dbdata:
