@@ -13,4 +13,11 @@ return [
         'version' => env('OPENTELEMETRY_SERVICE_VERSION', '1.0.0'),
     ],
     'environment' => env('OPENTELEMETRY_ENVIRONMENT', config('app.env')),
+    'traces' => [
+        'disabledroutes' => [
+        ],
+        'disabledpaths' => [
+            '/' . env('PROMETHEUS_PATH', 'prometheus'),
+        ]
+    ],
 ];
