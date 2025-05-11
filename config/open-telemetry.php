@@ -15,7 +15,9 @@ return [
     'environment' => env('OPENTELEMETRY_ENVIRONMENT', config('app.env')),
     'traces' => [
         'disabledroutes' => [
-            'prometheus.default',
         ],
+        'disabledpaths' => [
+            '/' . env('PROMETHEUS_PATH', 'prometheus'),
+        ]
     ],
 ];
