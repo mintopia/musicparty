@@ -17,7 +17,7 @@ return [
         'disabledroutes' => [
         ],
         'disabledpaths' => [
-            '/' . env('PROMETHEUS_PATH', 'prometheus'),
+            env('PROMETHEUS_PATH', '/prometheus'),
         ]
     ],
 ];
