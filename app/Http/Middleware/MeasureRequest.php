@@ -26,6 +26,12 @@ class MeasureRequest
         if ($name === null) {
             $name = $request->getRequestUri();
         }
+
+        $blacklist = config('open-telemetry.traces.disabledroutes', []);
+        if (in_array($name, $blacklist)) {
+            return $next($request);
+        }
+
         $trace = $request->header('traceparent');
         $state = $request->header('tracestate');
         $span = OpenTelemetry::startSpan(name: "{$request->getMethod()} {$name}", parentTrace: $trace, parentState: $state);
