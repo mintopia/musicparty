@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
-use App\Services\DiscordApi;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -127,6 +126,15 @@ class User extends Authenticatable
             $query->whereIn('code', ['spotify', 'spotifysearch']);
         })->count();
         return $count === 2;
+    }
+
+    public function getSpotifyAccessToken(): ?string
+    {
+        $this->getSpotifyApi();
+        if ($this->session !== null) {
+            return $this->session->getAccessToken();
+        }
+        return null;
     }
 
     public function getSpotifyApi(): ?SpotifyWebAPI

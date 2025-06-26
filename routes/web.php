@@ -32,7 +32,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\VoteController;
 use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
-use App\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Support\Facades\Route;
 
 
@@ -58,6 +57,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
         Route::resource('parties', PartyController::class)->except(['destroy']);
         Route::middleware('can:update,party')->group(function() {
+            Route::get('parties/{party}/player', [PartyController::class, 'player'])->name('parties.player');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
 

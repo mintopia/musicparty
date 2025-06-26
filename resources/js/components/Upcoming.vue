@@ -114,9 +114,9 @@
     }
 </style>
 <script>
-    import { VueEternalLoading } from '@ts-pro/vue-eternal-loading';
+import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 
-    export default {
+export default {
         components: {
             VueEternalLoading,
         },

@@ -34,6 +34,8 @@ class SpotifyProvider extends AbstractSocialProvider
             'user-library-read',
             'user-read-email',
             'user-read-private',
+            'streaming',
+            'app-remote-control',
         ]);
     }
 

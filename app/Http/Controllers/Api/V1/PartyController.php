@@ -23,7 +23,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
         match ($request->input('action')) {
-            'play' => $party->play(),
+            'play' => $party->play($request->deviceId ?? null),
             'pause' => $party->pause(),
             'next' => $party->nextTrack(),
             'previous' => $party->previousTrack(),
