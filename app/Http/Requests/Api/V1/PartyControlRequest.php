@@ -23,6 +23,7 @@ class PartyControlRequest extends FormRequest
     {
         return [
             'action' => 'required|string|in:play,pause,next,previous',
+            'deviceId' => 'sometimes|string',
         ];
     }
 }

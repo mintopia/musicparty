@@ -7,6 +7,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
@@ -25,6 +26,11 @@ class PartyUpdate implements ShouldQueue
         $this->onQueue('partyupdates');
     }
 
+    public function middleware(): array
+    {
+        return [new WithoutOverlapping($this->party->id)];
+    }
+
     /**
      * Execute the job.
      */
@@ -41,6 +47,9 @@ class PartyUpdate implements ShouldQueue
             Log::debug("{$this->party}: No further processing");
             return;
         }
+
+        Log::debug("{$this->party}: Updating from PartyUpdate job");
+        $this->party->updateState();
 
         $delay = $this->party->getNextUpdateDelay();
         if ($delay === null) {

@@ -210,10 +210,13 @@ class Party extends Model
         return $data;
     }
 
-    public function play(): void
+    public function play(string $playbackDevice = null): void
     {
+        if ($playbackDevice === null) {
+            $playbackDevice = $this->recent_device_id;
+        }
         Log::debug("{$this}: Spotify API -> play()");
-        $this->user->getSpotifyApi()->play($this->recent_device_id, ['foo' => 'bar']);
+        $this->user->getSpotifyApi()->play($playbackDevice, ['foo' => 'bar']);
     }
 
     public function pause(): void

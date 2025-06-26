@@ -1,6 +1,5 @@
 <?php
 
-use App\Services\OpenTelemetry\Logger;
 use Monolog\Handler\NullHandler;
 use Monolog\Handler\StreamHandler;
 use Monolog\Handler\SyslogUdpHandler;
@@ -117,11 +116,6 @@ return [
             'driver' => 'errorlog',
             'level' => env('LOG_LEVEL', 'debug'),
             'replace_placeholders' => true,
-        ],
-        'opentelemetry' => [
-            'driver' => 'custom',
-            'via' => Logger::class,
-            'level' => env('LOG_LEVEL', 'debug'),
         ],
 
         'null' => [
