@@ -30,13 +30,23 @@
             fetch('/api/v1/ping');
         }, 60000);
 
+        document.addEventListener("DOMContentLoaded", function() {
+            let channel = 'spotifytoken.{{ $party->user->id }}';
+            window.Echo.channel(channel).listen('User\\SpotifyAccessTokenUpdatedEvent', (payload) => {
+                console.log(payload);
+                window.accessToken = payload.accessToken;
+            });
+        });
+
+        window.accessToken = '{{ $party->user->getSpotifyAccessToken() }}';
+        window.currentTrack = null;
+
         // Spotify Player
         window.onSpotifyWebPlaybackSDKReady = () => {
-            const token = '{{ $party->user->getSpotifyAccessToken() }}';
             const player = new Spotify.Player({
                 name: 'Music Party {{ $party->code }}',
                 getOAuthToken: cb => {
-                    cb(token);
+                    cb(window.accessToken);
                 },
                 volume: 0.5
             });
@@ -66,19 +76,21 @@
             });
 
             player.addListener('player_state_changed', ({
-                                                            position,
-                                                            duration,
-                                                            track_window: {current_track}
-                                                        }) => {
-                console.log('Currently Playing', current_track);
-                console.log('Position in Song', position);
-                console.log('Duration of Song', duration);
-                fetch('/webhooks/parties/{{ $party->code }}/simple', {
-                    method: 'POST',
-                    headers: {
-                        'x-csrf-token': '{{ csrf_token() }}',
-                    }
-                });
+                    position,
+                    duration,
+                    track_window: {current_track}
+                }) => {
+                if (window.currentTrack != current_track.id) {
+                    window.currentTrack = current_track.id;
+                    console.log('Track changed, updating party');
+                    console.log(current_track, position, duration);
+                    fetch('/webhooks/parties/{{ $party->code }}/simple', {
+                        method: 'POST',
+                        headers: {
+                            'x-csrf-token': '{{ csrf_token() }}',
+                        }
+                    });
+                }
             });
 
 

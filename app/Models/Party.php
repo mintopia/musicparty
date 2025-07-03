@@ -210,7 +210,7 @@ class Party extends Model
         return $data;
     }
 
-    public function play(string $playbackDevice = null): void
+    public function play(?string $playbackDevice): void
     {
         if ($playbackDevice === null) {
             $playbackDevice = $this->recent_device_id;
