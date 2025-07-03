@@ -6,7 +6,8 @@ ENV HOME=/tmp
 RUN mkdir -p /app && \
     install-php-extensions \
         pcntl \
-        redis
+        redis \
+        opentelemetry-php/ext-opentelemetry@main
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
 COPY . /app/
 COPY docker/production/production.env /app/.env
@@ -15,7 +16,8 @@ RUN composer install \
         --no-dev \
         --no-progress \
         --optimize-autoloader \
-        --prefer-dist
+        --prefer-dist \
+        --ignore-platform-reqs
 
 # Use the node23 image to do an npm install
 FROM node:23 AS npm
@@ -49,6 +51,6 @@ RUN install-php-extensions \
     pdo_mysql \
     grpc \
     protobuf \
-    opentelemetry && \
+    opentelemetry-php/ext-opentelemetry@main && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
     echo 'memory_limit = 256M' > /usr/local/etc/php/conf.d/memory_limit.ini
