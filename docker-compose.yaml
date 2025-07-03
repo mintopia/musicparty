@@ -159,7 +159,6 @@ services:
       - db
     healthcheck:
       disable: true
-
 volumes:
   dbdata:
     driver: local
