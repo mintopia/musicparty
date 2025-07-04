@@ -28,7 +28,9 @@ class PartyUpdate implements ShouldQueue
 
     public function middleware(): array
     {
-        return [(new WithoutOverlapping($this->party->id))->dontRelease()];
+        return [
+            (new WithoutOverlapping($this->party->id))->dontRelease()->expireAfter(4),
+        ];
     }
 
     /**
