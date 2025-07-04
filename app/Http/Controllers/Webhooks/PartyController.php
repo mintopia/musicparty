@@ -30,12 +30,17 @@ class PartyController extends Controller
     public function simple(Party $party)
     {
         Log::debug("{$party}: Received simple webhook event");
-        if (config('musicparty.dispatch_webhook_after_request')) {
-            Log::debug("{$party}: Dispatching PartyUpdate after request");
-            PartyUpdate::dispatch($party)->afterResponse();
+        if (config('musicparty.webhook_should_queue')) {
+            if (config('musicparty.webhook_dispatch_after_request')) {
+                Log::debug("{$party}: Dispatching PartyUpdate after request");
+                PartyUpdate::dispatch($party)->afterResponse();
+            } else {
+                Log::debug("{$party}: Dispatching PartyUpdate");
+                PartyUpdate::dispatch($party);
+            }
         } else {
-            Log::debug("{$party}: Dispatching PartyUpdate");
-            PartyUpdate::dispatch($party);
+            Log::debug("{$party}: Updating party directly from webhook");
+            $party->updateState();
         }
         return response()->noContent();
     }
