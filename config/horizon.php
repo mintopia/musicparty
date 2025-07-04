@@ -119,7 +119,7 @@ return [
     */
 
     'silenced' => [
-        // App\Jobs\ExampleJob::class,
+        \Laravel\Telescope\Jobs\ProcessPendingUpdates::class,
     ],
 
     /*
