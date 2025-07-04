@@ -23,6 +23,8 @@ served using Laravel Octane and FrankenPHP.
 
 Websocket communications are handled using Laravel Reverb.
 
+OpenTelemetry using the extension and auto-instrumentation are planned to be added soon.
+
 ## Development Setup
 
 You will need to create a Discord application and have the Client ID and Client Secret available.
