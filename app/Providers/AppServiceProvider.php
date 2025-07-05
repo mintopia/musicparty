@@ -41,8 +41,8 @@ class AppServiceProvider extends ServiceProvider
 
         Pulse::user(fn ($user) => [
             'name' => $user->nickname,
-            'extra' => $user->getEmail(),
-            'avatar' => $user->avatarUrl(),
+            'extra' => $user->getEmail() ?? '',
+            'avatar' => $user->avatarUrl() ?? '',
         ]);
     }
 }
