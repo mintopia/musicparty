@@ -141,7 +141,6 @@ class PartyController extends Controller
         $party->active = (bool)$request->input('active');
         $party->explicit = (bool)$request->input('explicit');
         $party->downvotes = (bool)$request->input('downvotes');
-        $party->queue = (bool)$request->input('queue');
         $party->force = (bool)$request->input('force');
         $party->poll = (bool)$request->input('poll');
         $party->show_qrcode = (bool)$request->input('show_qrcode');

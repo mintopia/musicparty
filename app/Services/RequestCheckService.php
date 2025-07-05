@@ -10,6 +10,8 @@ use SpotifyWebAPI\SpotifyWebAPIException;
 
 class RequestCheckService
 {
+    const CONTEXT_PLAYLIST_TRACK = '62mFjcWGkt2OY9LT9EvxS2';
+
     public function __construct(protected Party $party, protected PartyMember $member)
     {
     }
@@ -98,6 +100,9 @@ class RequestCheckService
 
     protected function singleCheck(object $spotifyData): ?RequestCheckResponse
     {
+        if ($spotifyData->id === self::CONTEXT_PLAYLIST_TRACK) {
+            return new RequestCheckResponse(false, 'This song is not available');
+        }
         if (!$this->party->allow_requests) {
             return new RequestCheckResponse(false, 'Party is not accepting requests');
         }

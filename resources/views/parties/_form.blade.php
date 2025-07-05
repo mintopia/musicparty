@@ -144,11 +144,6 @@
             Poll the Spotify API for updates
         </label>
         <label class="form-check form-switch">
-            <input type="checkbox" class="form-check-input" name="queue" value="1"
-                   @if(old('queue', $party->queue)) checked @endif>
-            Add upcoming song to the Spotify queue as well as the playlist
-        </label>
-        <label class="form-check form-switch">
             <input type="checkbox" class="form-check-input" name="force" value="1"
                    @if(old('force', $party->force)) checked @endif>
             Force playback on the selected device

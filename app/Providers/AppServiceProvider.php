@@ -7,6 +7,7 @@ use App\Services\PlayedSongAugmentService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Pulse\Facades\Pulse;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -37,5 +38,11 @@ class AppServiceProvider extends ServiceProvider
                 $view->with('currentTheme', $currentTheme);
                 $view->with('darkMode', $darkMode);
         });
+
+        Pulse::user(fn ($user) => [
+            'name' => $user->nickname,
+            'extra' => $user->getEmail(),
+            'avatar' => $user->avatarUrl(),
+        ]);
     }
 }

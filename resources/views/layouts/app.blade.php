@@ -125,6 +125,10 @@
                                 <a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a>
                                 <a class="dropdown-item" href="{{ route('admin.users.index') }}">Users</a>
                                 <a class="dropdown-item" href="{{ route('admin.settings.index') }}">Settings</a>
+                                <a class="dropdown-item" href="{{ route('pulse') }}">Pulse</a>
+                                <a class="dropdown-item" href="{{ route('horizon.index') }}">Horizon</a>
+                                <a class="dropdown-item" href="{{ route('telescope') }}">Telescope</a>
+
                             </div>
                         </li>
                     @endcan
