@@ -23,8 +23,6 @@ served using Laravel Octane and FrankenPHP.
 
 Websocket communications are handled using Laravel Reverb.
 
-OpenTelemetry using the extension and auto-instrumentation are planned to be added soon.
-
 ## Development Setup
 
 You will need to create a Discord application and have the Client ID and Client Secret available.
@@ -117,8 +115,64 @@ you are still having issues, there's some config options in `.env` that you can 
 
 ## Observability
 
-Observability using OpenTelemetry is a WIP, I need to change how the docker images are built to have some intermediate
-images with the right PHP extensions as it takes forever to build grpc and protobuf.
+The docker images from the project have the Open Telemetry PHP extension and the project includes the appropriate Open
+Telemetry libraries from Packagist. You can use Protobuf or GRPC transport if needed. You should just be able to
+configure it using ENV variables and run a collector container. eg.
+
+```dotenv
+OTEL_PHP_AUTOLOAD_ENABLED=true
+OTEL_SERVICE_NAME=musicparty
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
+```
+
+The docker container already sets `OTEL_PHP_EXCLUDED_URLS` to remove common URLs that are used a lot and add no value
+to monitoring. The default value is:
+
+```dotenv
+OTEL_PHP_EXCLUDED_URLS="pulse,telescope/.*,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*"
+```
+
+For the container:
+
+```yaml
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./collector.yml:/etc/otelcol-contrib/config.yaml
+```
+
+And finally the config in `collector.yml`, adapt this as you need.
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  debug:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+```
 
 ## Contributing
 
