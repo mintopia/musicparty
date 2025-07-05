@@ -58,6 +58,19 @@ I'm running this with an external docker network called `frontend` with Caddy ru
 need to add a network section for the `reverb` and `musicparty` services to add them to the `frontend` network if you
 want to do this.
 
+The Caddyfile config I'm using for this is:
+
+```
+musicparty.example.com {
+  @websockets {
+    header Connection *Upgrade*
+    header Upgrade    websocket
+  }
+  reverse_proxy @websockets musicparty-reverb-1
+  reverse_proxy musicparty-musicparty-1
+}
+```
+
 You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
 
 To bring up the site, run the following:
@@ -78,9 +91,16 @@ The best way to play the party is to use the Web Player in the menu. This uses t
 as a player device and then start playing music in that browser tab. It will then update the party when the track
 changes. This means that you can disable polling if you're using the Web Player.
 
-Music Party attempts to keep a Spotify playlist up-to-date, and it's possible to use it by just playing the playlist but
-this can cause some issues and isn't that reliable. The party option to add tracks to the queue will also add the tracks
-immediately into the Spotify playback queue.
+The Spotify API is very bad and unreliable. The queue API is particularly bad. Spotify also insists on wanting to be
+playing things within a context (album, artist, playlist), although it's not required. This means that Music party can
+cause the desktop client to be very 'weird'.
+
+If you're not using the Web Player, you will need to enable polling in the party. You should also start the playback by
+selecting a single song from the search in Spotify, or create a playlist with a single track and play that. I've made
+[a playlist for that purpose](https://open.spotify.com/playlist/64KYRp7xWZFH9iRSgJrSAh?si=24d0a503092c4e1b).
+
+Because of various oddities, when you start playing Music Party, it may take a few tracks to sort itself out. Stick with
+it, it'll eventually catch up.
 
 ## Troubleshooting
 

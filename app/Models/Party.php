@@ -27,14 +27,12 @@ class Party extends Model
 
     const MINIMUM_UPCOMING = 5;
     const QUEUE_LENGTH = 1;
-    // Spotify needs Playlist Context, let's use this playlist!
-    const PLAYLIST_CONTEXT = 'spotify:playlist:64KYRp7xWZFH9iRSgJrSAh';
 
     protected $attributes = [
         'allow_requests' => true,
         'explicit' => true,
         'downvotes' => true,
-        'poll' => true,
+        'poll' => false,
         'active' => true,
         'show_qrcode' => false,
     ];
@@ -220,7 +218,6 @@ class Party extends Model
             $trackUri = "spotify:track:{$current->item->id}";
         }
         $this->user->getSpotifyApi()->play($playbackDevice, [
-            'context' => self::PLAYLIST_CONTEXT,
             'uris' => [$trackUri],
         ]);
     }
@@ -268,10 +265,6 @@ class Party extends Model
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
         $state = $this->user->getSpotifyStatus();
-        if (isset($state->context) && $state->context->uri !== self::PLAYLIST_CONTEXT) {
-            // Not playing our context
-            Log::notice("{$this}: We aren't playing in the context of the Music Party playlist");
-        }
         $queue = $this->user->getSpotifyApi()->getMyQueue();
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
@@ -279,8 +272,7 @@ class Party extends Model
          * minimum of 10. If the queue doesn't actually have anything, it will fill it up with multiple copies of
          * whatever is in the current context. This is utterly stupid.
          *
-         * We are using a special playlist for Music Party that contains one track that hopefully no-one will ever
-         * request. What this means is that we can count the number of unique items in the playlist. If we only have 1
+         * What this does mean, is that we can count the number of unique items in the queue. If we only have 1
          * unique item, then our queue is empty!
          *
          * So we take unique count, subtract 1 and then use that to determine how may tracks to add to the queue.
@@ -454,7 +446,6 @@ class Party extends Model
                 Log::info("{$this}: Forcing playback on {$device->name}");
                 Log::debug("{$this}: Spotify API -> play()");
                 $this->user->getSpotifyApi()->play($this->device_id, [
-                    'context' => self::PLAYLIST_CONTEXT,
                     'uris' => [$trackUri],
                 ]);
                 return $this->user->getSpotifyStatus();
