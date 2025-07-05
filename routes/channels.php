@@ -12,6 +12,7 @@
 */
 
 use App\Models\Party;
+use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('party.{party}', function ($user, Party $party) {
@@ -19,5 +20,9 @@ Broadcast::channel('party.{party}', function ($user, Party $party) {
 });
 
 Broadcast::channel('party.{party}.owner', function($user, Party $party) {
-    return false;
+    return $party->canBeManagedBy($user);
+});
+
+Broadcast::channel('spotifytoken.{userId}', function($user, int $userId) {
+    return $user->id === $userId;
 });

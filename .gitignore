@@ -23,3 +23,4 @@ yarn-error.log
 frankenphp
 frankenphp-worker.php
 /otel-collector-config.yml
+/openobserve

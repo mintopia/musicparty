@@ -23,6 +23,8 @@ served using Laravel Octane and FrankenPHP.
 
 Websocket communications are handled using Laravel Reverb.
 
+OpenTelemetry using the extension and auto-instrumentation are planned to be added soon.
+
 ## Development Setup
 
 You will need to create a Discord application and have the Client ID and Client Secret available.
@@ -70,27 +72,33 @@ docker compose up -d
 
 You should now be able to visit the site and login. From here you can use the admin menu to configure the site.
 
+## Usage Tips
+
+The best way to play the party is to use the Web Player in the menu. This uses the Web Playback SDK to register itself
+as a player device and then start playing music in that browser tab. It will then update the party when the track
+changes. This means that you can disable polling if you're using the Web Player.
+
+Music Party attempts to keep a Spotify playlist up-to-date, and it's possible to use it by just playing the playlist but
+this can cause some issues and isn't that reliable. The party option to add tracks to the queue will also add the tracks
+immediately into the Spotify playback queue.
+
+## Troubleshooting
+
+Everything should be logged to the normal Laravel logger, so you should be able to diagnose things based on the logs. If
+you are still having issues, there's some config options in `.env` that you can try.
+
+- `MUSICPARTY_ALLOW_OVERLAPPING_UPDATES=false` - Normally we don't allow party updates to run simultaneously, but this
+  may cause issues with some deployments. Setting this to false turns off this behaviour.
+- `MUSICPARTY_WEBHOOK_DISPATCH_AFTER_REQUEST=false` - When using the Web Player, it will trigger a Party Update after
+  request finishes. Set this to false to trigger the update asynchronously immediately before the request has finished.
+- `MUSICPARTY_WEBHOOK_SHOULD_QUEUE=false` - When we trigger a Party update from the webhook, it's processed
+  asynchronously a a job. If this is causing problems, setting this to false will cause it to do the entire party
+  update synchronously in the request.
+
 ## Observability
 
-Music Party supports basic observability functionality in using an OpenTelemetry collector. It can support traces, logs
-and metrics. If enabled, it will create traces for all HTTP requests. To enable it, add the following to your `.env`:
-
-```dotenv
-OPENTELEMETRY_ENABLED=true
-```
-
-For logging output, a logger is defined and can be used. I suggest you use this with your usual logger, eg. `daily`.
-You can specify this logging with the following environment variables:
-
-```dotenv
-LOG_CHANNEL=stack
-LOG_STACK=opentelemetry,daily
-```
-
-By default it is configured to send to an OpenTelemetry container running with the name `collector`. An example config
-is supplied with placeholders for sending data to [Honeycomb](https://www.honeycomb.io/).
-
-The plan will be to add further spans within individual requests and have spans for the jobs and queued actions.
+Observability using OpenTelemetry is a WIP, I need to change how the docker images are built to have some intermediate
+images with the right PHP extensions as it takes forever to build grpc and protobuf.
 
 ## Contributing
 
@@ -104,6 +112,7 @@ The following features are on the roadmap:
  - Better UI/UX. I'm currently using [tabler.io](https://tabler.io) and mostly server-side rendering, with some Vue components.
  - Unit Tests. This was very rapidly developed, I'm sorry!
  - PHPCS and PHPStan. Should be aiming for PSR-12 and level 8 PHPStan.
+ - Update the existing webplayer to have full Spotify playback controls
 
 ## Thanks
 

@@ -15,7 +15,8 @@ RUN composer install \
         --no-dev \
         --no-progress \
         --optimize-autoloader \
-        --prefer-dist
+        --prefer-dist \
+        --ignore-platform-reqs
 
 # Use the node23 image to do an npm install
 FROM node:23 AS npm
