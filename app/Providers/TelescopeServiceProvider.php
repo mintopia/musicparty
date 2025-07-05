@@ -35,7 +35,10 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
                    $entry->hasMonitoredTag();
         });
 
-        Telescope::avatar(function (string $id, string $email) {
+        Telescope::avatar(function (?string $id, ?string $email) {
+            if ($id === null || $email === null) {
+                return null;
+            }
             return User::find($id)->avatarUrl();
         });
     }
