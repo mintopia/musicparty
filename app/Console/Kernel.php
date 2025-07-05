@@ -16,7 +16,6 @@ class Kernel extends ConsoleKernel
         $schedule->command('telescope:prune')->daily()->onOneServer();
         $schedule->command('party:fallback')->everyMinute()->onOneServer();
         $schedule->command('party:force')->everyMinute()->onOneServer();
-        $schedule->command('party:check')->everyFifteenMinutes()->onOneServer();
         $schedule->command('party:refreshaccesstokens')->everyMinute()->onOneServer();
     }
 

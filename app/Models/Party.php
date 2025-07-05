@@ -26,7 +26,9 @@ class Party extends Model
     use ToString;
 
     const MINIMUM_UPCOMING = 5;
-    const PLAYLIST_LENGTH = 2;
+    const QUEUE_LENGTH = 1;
+    // Spotify needs Playlist Context, let's use this playlist!
+    const PLAYLIST_CONTEXT = 'spotify:playlist:64KYRp7xWZFH9iRSgJrSAh';
 
     protected $attributes = [
         'allow_requests' => true,
@@ -116,9 +118,6 @@ class Party extends Model
     public function updateState(): Party
     {
         Log::info("{$this}: Updating state");
-        if ($this->playlist_id === null) {
-            $this->updatePlaylist();
-        }
         if ($this->poll) {
             $cutoff = Carbon::now()->subSeconds(5);
             if ($this->last_updated_at > $cutoff) {
@@ -131,13 +130,11 @@ class Party extends Model
             Log::debug("{$this}: Party is not active");
             // Still update current song, in case they're using it manually and still want it reflected on screen
             $this->updateCurrentSong();
-            $this->updateHistory();
             return $this;
         }
 
         $this->updateCurrentSong();
-        $playlist = $this->updateHistory();
-        $this->syncPlaylist($playlist);
+        $this->addTracksToQueue();
         $this->backfillUpcomingSongs();
         $this->last_updated_at = Carbon::now();
         $this->save();
@@ -196,11 +193,6 @@ class Party extends Model
             'updatedAt' => $this->user->status_updated_at->toIso8601String(),
         ];
 
-        // Active if our current context is the playlist
-        if ($status->context->uri ?? null) {
-            $data->active = $status->context->uri === "spotify:playlist:{$this->playlist_id}";
-        }
-
         if ($this->song && $status->item && $status->item->id == $this->song->spotify_id) {
             $data->active = true;
             $data->progress = $status->progress_ms;
@@ -215,8 +207,22 @@ class Party extends Model
         if ($playbackDevice === null) {
             $playbackDevice = $this->recent_device_id;
         }
+        if ($playbackDevice === null) {
+            $playbackDevice = '';
+        }
         Log::debug("{$this}: Spotify API -> play()");
-        $this->user->getSpotifyApi()->play($playbackDevice, ['foo' => 'bar']);
+        $trackUri = '';
+        if ($this->song) {
+            $trackUri = "spotify:track:{$this->song->spotify_id}";
+        }
+        $current = $this->user->getSpotifyStatus();
+        if (is_object($current) && property_exists($current, 'item') && $current->item->id !== null && $current->item->type === 'track') {
+            $trackUri = "spotify:track:{$current->item->id}";
+        }
+        $this->user->getSpotifyApi()->play($playbackDevice, [
+            'context' => self::PLAYLIST_CONTEXT,
+            'uris' => [$trackUri],
+        ]);
     }
 
     public function pause(): void
@@ -246,86 +252,6 @@ class Party extends Model
         return $this->user->getPlaylist($this->playlist_id, $force);
     }
 
-    public function isPlaylistBroken(?string $playlistUri = null): bool
-    {
-        // If we aren't active, we can't be broken
-        if (!$this->active) {
-            return false;
-        }
-
-        $this->user->getSpotifyStatus();
-
-        // If we're playing something, we can't be broken
-        if ($this->user->status && $this->user->status->is_playing) {
-            return false;
-        }
-
-        if ($playlistUri === null) {
-            $playlistUri = "spotify:playlist:{$this->playlist_id}";
-        }
-
-        // We might be broken, check our track history
-        $recentTracks = $this->user->getRecentTracks();
-        if (!$recentTracks->items) {
-            return false;
-        }
-
-        // Not playing in the context of our playlist
-        if ($recentTracks->items[0]->context->uri !== $playlistUri) {
-            return false;
-        }
-
-        return true;
-    }
-
-    public function fixPlaylist(bool $force = false)
-    {
-        if (!$force && !$this->isPlaylistBroken()) {
-            return;
-        }
-
-        $playlist = $this->getPlaylist();
-        $trackIds = collect($playlist->tracks->items)->pluck('track.id');
-
-        $this->user->getSpotifyStatus();
-        $api = $this->user->getSpotifyApi();
-
-        Log::debug("{$this}: Spotify API -> unfollowPlaylist({$this->playlist_id})");
-        $api->unfollowPlaylist($this->playlist_id);
-        $oldPlaylistUri = "spotify:playlist:{$this->playlist_id}";
-        $this->playlist_id = null;
-        $this->updatePlaylist();
-        $this->save();
-
-        Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->playlist_id}, [...])");
-        $api->addPlaylistTracks($this->playlist_id, $trackIds->toArray());
-        $trackToPlay = $this->song->spotify_id ?? $this->next()->song->spotify_id;
-
-        $forcePlayback = $force || $this->shouldForcePlayback($oldPlaylistUri);
-
-        if ($forcePlayback) {
-            Log::debug("{$this}: Spotify API -> play({$this->playlist_id}, [...])");
-            $api->play($this->recent_device_id, [
-                'context_uri' => "spotify:playlist:{$this->playlist_id}",
-                'offset' => [
-                    'uri' => "spotify:track:{$trackToPlay}",
-                ],
-            ]);
-        }
-    }
-
-    protected function shouldForcePlayback(?string $oldPlaylistUri): bool
-    {
-        // First scenario - we are playing inside our current playlist, we want to restart playback
-        $currentPlaylistUri = $this->user->status->context->uri ?? null;
-        if ($currentPlaylistUri && $currentPlaylistUri === $oldPlaylistUri) {
-            return true;
-        }
-
-        // Second scenario - the last thing we played was current playlist and we have stopped
-        return $this->isPlaylistBroken($oldPlaylistUri);
-    }
-
     protected function getRelinkedTrackId(string $playedId): ?string
     {
         $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
@@ -338,51 +264,36 @@ class Party extends Model
         });
     }
 
-    protected function updateHistory(): object
+    protected function addTracksToQueue(): void
     {
-        Log::debug("{$this} Updating history");
-        $playlist = $this->getPlaylist(true);
-
-        $current = $this->current();
-        $next = $this->next();
-
-        $allowedIds = array_unique(array_filter([
-            $current->song->spotify_id ?? null,
-            $current->relinked_from ?? null,
-            $next->song->spotify_id ?? null,
-            $next->relinked_from ?? null,
-        ]));
-
-        $toRemove = [];
-        foreach ($playlist->tracks->items as $playlistItem) {
-            if (!in_array($playlistItem->track->id, $allowedIds)) {
-                $toRemove[] = $playlistItem->track->id;
-            }
+        Log::debug("{$this}: Checking if we need to add tracks to queue");
+        $state = $this->user->getSpotifyStatus();
+        if (isset($state->context) && $state->context->uri !== self::PLAYLIST_CONTEXT) {
+            // Not playing our context
+            Log::notice("{$this}: We aren't playing in the context of the Music Party playlist");
         }
+        $queue = $this->user->getSpotifyApi()->getMyQueue();
+        $count = count($queue->queue);
+        $ids = collect($queue->queue)->pluck('id')->unique();
+        /* So let's talk about the Spotify queue. The Queue endpoint will return up to a maximum of 20 items, and a
+         * minimum of 10. If the queue doesn't actually have anything, it will fill it up with multiple copies of
+         * whatever is in the current context. This is utterly stupid.
+         *
+         * We are using a special playlist for Music Party that contains one track that hopefully no-one will ever
+         * request. What this means is that we can count the number of unique items in the playlist. If we only have 1
+         * unique item, then our queue is empty!
+         *
+         * So we take unique count, subtract 1 and then use that to determine how may tracks to add to the queue.
+         */
 
-        if ($toRemove) {
-            $idsToRemove = [
-                'tracks' => array_map(function ($id) {
-                    return ['uri' => $id];
-                }, $toRemove),
-            ];
-            Log::debug("{$this}: Spotify API -> deletePlaylistTracks({$this->playlist_id}, [])");
-            $this->user->getSpotifyApi()->deletePlaylistTracks($this->playlist_id, $idsToRemove);
-
-            $playlist = $this->getPlaylist(true);
-        }
-
-        return $playlist;
-    }
-
-    protected function syncPlaylist(object $playlist)
-    {
-        Log::debug("{$this}: Updating playlist");
-        $toAdd = self::PLAYLIST_LENGTH - $playlist->tracks->total;
+        Log::debug("{$this}: Queue contains {$count} items, unique: {$ids->count()}");
+        $toAdd = self::QUEUE_LENGTH - ($ids->count() - 1);
         if ($toAdd < 1) {
             Log::debug("{$this}: No tracks to add");
             return;
         }
+
+        Log::debug("{$this}: Adding {$toAdd} tracks to the queue");
 
         /*
          * Notes by Cwis
@@ -444,20 +355,10 @@ class Party extends Model
             Log::debug("{$this}: Found no songs in the upcoming songs list to backfill");
             return;
         }
-
-        $trackIds = [];
         foreach ($songsToAdd as $song) {
-            $trackIds[] = $song->song->spotify_id;
-        }
-        Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->playlist_id}, [])");
-        $this->user->getSpotifyApi()->addPlaylistTracks($this->playlist_id, $trackIds);
-        foreach ($songsToAdd as $song) {
-            if ($this->queue) {
-                Log::info("{$this}: Adding {$song->song} to queue");
-                Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
-                $this->user->getSpotifyApi()->queue($song->song->spotify_id);
-            }
-            Log::info("{$this}: Added {$song->song} to party playlist");
+            Log::info("{$this}: Adding {$song->song} to queue");
+            Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
+            $this->user->getSpotifyApi()->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
         }
@@ -482,29 +383,6 @@ class Party extends Model
         }
 
         $this->device_name = 'Unknown';
-    }
-
-    public function updatePlaylist(): void
-    {
-        $api = $this->user->getSpotifyApi();
-        if (!$this->playlist_id) {
-            Log::debug("{$this}: Spotify API -> createPlaylist()");
-            $playlist = $api->createPlaylist($api->me()->id, [
-                'name' => "Music Party - {$this->code}",
-                'description' => 'Automatically controlled Music Party playlist',
-                'public' => true,
-            ]);
-            $this->playlist_id = $playlist->id;
-            $this->save();
-        } else {
-            $playlist = $api->getPlaylist($this->playlist_id);
-            if ($playlist->name !== "Music Party - {$this->code}") {
-                Log::debug("{$this}: Spotify API -> updatePlaylist()");
-                $api->updatePlaylist($this->playlist_id, [
-                    'name' => "Music Party - {$this->code}",
-                ]);
-            }
-        }
     }
 
     public function getMember(User $user): PartyMember
@@ -564,12 +442,20 @@ class Party extends Model
         }
 
         $devices = $this->user->getDevices();
+        $trackUri = '';
+        if ($this->song) {
+            $trackUri = "spotify:track:{$this->song->spotify_id}";
+        }
+        if (is_object($current) && property_exists($current, 'item') && $current->item->id !== null && $current->item->type === 'track') {
+            $trackUri = "spotify:track:{$current->item->id}";
+        }
         foreach ($devices as $device) {
             if ($device->id == $this->device_id) {
                 Log::info("{$this}: Forcing playback on {$device->name}");
                 Log::debug("{$this}: Spotify API -> play()");
                 $this->user->getSpotifyApi()->play($this->device_id, [
-                    'context_uri' => "spotify:playlist:{$this->playlist_id}",
+                    'context' => self::PLAYLIST_CONTEXT,
+                    'uris' => [$trackUri],
                 ]);
                 return $this->user->getSpotifyStatus();
             }
