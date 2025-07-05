@@ -23,8 +23,6 @@ served using Laravel Octane and FrankenPHP.
 
 Websocket communications are handled using Laravel Reverb.
 
-OpenTelemetry using the extension and auto-instrumentation are planned to be added soon.
-
 ## Development Setup
 
 You will need to create a Discord application and have the Client ID and Client Secret available.
@@ -58,6 +56,19 @@ I'm running this with an external docker network called `frontend` with Caddy ru
 need to add a network section for the `reverb` and `musicparty` services to add them to the `frontend` network if you
 want to do this.
 
+The Caddyfile config I'm using for this is:
+
+```
+musicparty.example.com {
+  @websockets {
+    header Connection *Upgrade*
+    header Upgrade    websocket
+  }
+  reverse_proxy @websockets musicparty-reverb-1
+  reverse_proxy musicparty-musicparty-1
+}
+```
+
 You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
 
 To bring up the site, run the following:
@@ -78,9 +89,16 @@ The best way to play the party is to use the Web Player in the menu. This uses t
 as a player device and then start playing music in that browser tab. It will then update the party when the track
 changes. This means that you can disable polling if you're using the Web Player.
 
-Music Party attempts to keep a Spotify playlist up-to-date, and it's possible to use it by just playing the playlist but
-this can cause some issues and isn't that reliable. The party option to add tracks to the queue will also add the tracks
-immediately into the Spotify playback queue.
+The Spotify API is very bad and unreliable. The queue API is particularly bad. Spotify also insists on wanting to be
+playing things within a context (album, artist, playlist), although it's not required. This means that Music party can
+cause the desktop client to be very 'weird'.
+
+If you're not using the Web Player, you will need to enable polling in the party. You should also start the playback by
+selecting a single song from the search in Spotify, or create a playlist with a single track and play that. I've made
+[a playlist for that purpose](https://open.spotify.com/playlist/64KYRp7xWZFH9iRSgJrSAh?si=24d0a503092c4e1b).
+
+Because of various oddities, when you start playing Music Party, it may take a few tracks to sort itself out. Stick with
+it, it'll eventually catch up.
 
 ## Troubleshooting
 
@@ -97,8 +115,64 @@ you are still having issues, there's some config options in `.env` that you can 
 
 ## Observability
 
-Observability using OpenTelemetry is a WIP, I need to change how the docker images are built to have some intermediate
-images with the right PHP extensions as it takes forever to build grpc and protobuf.
+The docker images from the project have the Open Telemetry PHP extension and the project includes the appropriate Open
+Telemetry libraries from Packagist. You can use Protobuf or GRPC transport if needed. You should just be able to
+configure it using ENV variables and run a collector container. eg.
+
+```dotenv
+OTEL_PHP_AUTOLOAD_ENABLED=true
+OTEL_SERVICE_NAME=musicparty
+OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
+```
+
+The docker container already sets `OTEL_PHP_EXCLUDED_URLS` to remove common URLs that are used a lot and add no value
+to monitoring. The default value is:
+
+```dotenv
+OTEL_PHP_EXCLUDED_URLS="pulse,telescope/.*,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*"
+```
+
+For the container:
+
+```yaml
+  collector:
+    image: otel/opentelemetry-collector-contrib
+    volumes:
+      - ./collector.yml:/etc/otelcol-contrib/config.yaml
+```
+
+And finally the config in `collector.yml`, adapt this as you need.
+
+```yaml
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch:
+
+exporters:
+  debug:
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    metrics:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+    logs:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [debug]
+```
 
 ## Contributing
 

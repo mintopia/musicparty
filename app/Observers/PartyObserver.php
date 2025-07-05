@@ -27,7 +27,6 @@ class PartyObserver
         if ($party->isDirty('backup_playlist_id')) {
             $party->getBackupPlaylistTracks(true);
         }
-        $party->updatePlaylist();
     }
 
     public function saving(Party $party): void
