@@ -161,6 +161,11 @@ class PartyController extends Controller
         if ($request->has('no_repeat_interval') && $request->input('no_repeat_interval') > 0) {
             $party->no_repeat_interval = $request->input('no_repeat_interval');
         }
+        if ($request->has('history_playlist_id') && $request->input('history_playlist_id') !== 'none') {
+            $party->history_playlist_id = $request->input('history_playlist_id');
+        } else {
+            $party->history_playlist_id = null;
+        }
         $party->save();
     }
 }
