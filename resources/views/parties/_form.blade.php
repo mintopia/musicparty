@@ -167,6 +167,24 @@
             @enderror
         </div>
     </div>
+    <div class="mb-3">
+        <label class="form-label">History Playlist</label>
+        <div>
+            <select id="history_playlist_id" name="history_playlist_id" class="form-control @error('history_playlist_id') is-invalid @enderror">
+                <option value="none">None</option>
+                @foreach($playlists as $playlist)
+                    <option
+                        value="{{ $playlist->id }}"
+                        @if(old('history_playlist_id', $party->history_playlist_id) == $playlist->id) selected @endif
+                    >{{ $playlist->name }}</option>
+                @endforeach
+            </select>
+            <small class="form-hint">If you set a history playlist, anything added to the queue will be added to this playlist.</small>
+            @error('backup_playlist_id')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
 </div>
 
 

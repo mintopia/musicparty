@@ -3,7 +3,7 @@ FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10
 RUN apk add --update nodejs npm && \
     npm install -g chokidar && \
     install-php-extensions xdebug && \
-    echo 'memory_limit = 256M' > /usr/local/etc/php/conf.d/memory_limit.ini
+    echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
 
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/
 

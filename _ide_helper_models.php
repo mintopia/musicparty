@@ -117,9 +117,9 @@ namespace App\Models{
  * @property int $show_qrcode
  * @property int|null $downvotes_per_hour
  * @property int $weighted
+ * @property string|null $history_playlist_id
  * @property int $trustscore
  * @property int|null $trusted_user_id
- * @property int $queue
  * @property int $force
  * @property int $explicit
  * @property int $allow_requests
@@ -130,7 +130,6 @@ namespace App\Models{
  * @property string|null $device_id
  * @property string|null $recent_device_id
  * @property string|null $device_name
- * @property string|null $playlist_id
  * @property string|null $backup_playlist_id
  * @property string|null $backup_playlist_name
  * @property \Illuminate\Support\Carbon|null $last_updated_at
@@ -160,15 +159,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereDownvotesPerHour($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereExplicit($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereForce($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereHistoryPlaylistId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereLastUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMinSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereName($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereNoRepeatInterval($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Party wherePlaylistId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party wherePoll($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereQueue($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereRecentDeviceId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereShowQrcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereSongId($value)

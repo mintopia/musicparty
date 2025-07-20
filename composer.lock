@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "1a6b9ec75467fc9d71809ff0a97389cf",
+    "content-hash": "760e079a3c471c49618d120e8dc84181",
     "packages": [
         {
             "name": "brick/math",
@@ -1659,16 +1659,16 @@
         },
         {
             "name": "laravel/framework",
-            "version": "v12.19.3",
+            "version": "v12.20.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/framework.git",
-                "reference": "4e6ec689ef704bb4bd282f29d9dd658dfb4fb262"
+                "reference": "1b9a00f8caf5503c92aa436279172beae1a484ff"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/framework/zipball/4e6ec689ef704bb4bd282f29d9dd658dfb4fb262",
-                "reference": "4e6ec689ef704bb4bd282f29d9dd658dfb4fb262",
+                "url": "https://api.github.com/repos/laravel/framework/zipball/1b9a00f8caf5503c92aa436279172beae1a484ff",
+                "reference": "1b9a00f8caf5503c92aa436279172beae1a484ff",
                 "shasum": ""
             },
             "require": {
@@ -1870,7 +1870,7 @@
                 "issues": "https://github.com/laravel/framework/issues",
                 "source": "https://github.com/laravel/framework"
             },
-            "time": "2025-06-18T12:56:23+00:00"
+            "time": "2025-07-08T15:02:21+00:00"
         },
         {
             "name": "laravel/horizon",
@@ -1954,16 +1954,16 @@
         },
         {
             "name": "laravel/octane",
-            "version": "v2.10.0",
+            "version": "v2.11.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/octane.git",
-                "reference": "62bf04dcb471e7d91c8aeda9b4e7376a75000ee5"
+                "reference": "00e4d40047a24c267c9d3d0abfb47a6e27a7dc7f"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/octane/zipball/62bf04dcb471e7d91c8aeda9b4e7376a75000ee5",
-                "reference": "62bf04dcb471e7d91c8aeda9b4e7376a75000ee5",
+                "url": "https://api.github.com/repos/laravel/octane/zipball/00e4d40047a24c267c9d3d0abfb47a6e27a7dc7f",
+                "reference": "00e4d40047a24c267c9d3d0abfb47a6e27a7dc7f",
                 "shasum": ""
             },
             "require": {
@@ -2040,20 +2040,20 @@
                 "issues": "https://github.com/laravel/octane/issues",
                 "source": "https://github.com/laravel/octane"
             },
-            "time": "2025-06-16T13:44:31+00:00"
+            "time": "2025-06-28T17:28:13+00:00"
         },
         {
             "name": "laravel/prompts",
-            "version": "v0.3.5",
+            "version": "v0.3.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/prompts.git",
-                "reference": "57b8f7efe40333cdb925700891c7d7465325d3b1"
+                "reference": "86a8b692e8661d0fb308cec64f3d176821323077"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/prompts/zipball/57b8f7efe40333cdb925700891c7d7465325d3b1",
-                "reference": "57b8f7efe40333cdb925700891c7d7465325d3b1",
+                "url": "https://api.github.com/repos/laravel/prompts/zipball/86a8b692e8661d0fb308cec64f3d176821323077",
+                "reference": "86a8b692e8661d0fb308cec64f3d176821323077",
                 "shasum": ""
             },
             "require": {
@@ -2097,9 +2097,9 @@
             "description": "Add beautiful and user-friendly forms to your command-line applications.",
             "support": {
                 "issues": "https://github.com/laravel/prompts/issues",
-                "source": "https://github.com/laravel/prompts/tree/v0.3.5"
+                "source": "https://github.com/laravel/prompts/tree/v0.3.6"
             },
-            "time": "2025-02-11T13:34:40+00:00"
+            "time": "2025-07-07T14:17:42+00:00"
         },
         {
             "name": "laravel/pulse",
@@ -2272,16 +2272,16 @@
         },
         {
             "name": "laravel/sanctum",
-            "version": "v4.1.1",
+            "version": "v4.1.2",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/sanctum.git",
-                "reference": "a360a6a1fd2400ead4eb9b6a9c1bb272939194f5"
+                "reference": "e4c09e69aecd5a383e0c1b85a6bb501c997d7491"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/sanctum/zipball/a360a6a1fd2400ead4eb9b6a9c1bb272939194f5",
-                "reference": "a360a6a1fd2400ead4eb9b6a9c1bb272939194f5",
+                "url": "https://api.github.com/repos/laravel/sanctum/zipball/e4c09e69aecd5a383e0c1b85a6bb501c997d7491",
+                "reference": "e4c09e69aecd5a383e0c1b85a6bb501c997d7491",
                 "shasum": ""
             },
             "require": {
@@ -2332,7 +2332,7 @@
                 "issues": "https://github.com/laravel/sanctum/issues",
                 "source": "https://github.com/laravel/sanctum"
             },
-            "time": "2025-04-23T13:03:38+00:00"
+            "time": "2025-07-01T15:49:32+00:00"
         },
         {
             "name": "laravel/serializable-closure",
@@ -2469,16 +2469,16 @@
         },
         {
             "name": "laravel/telescope",
-            "version": "v5.9.1",
+            "version": "v5.10.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/telescope.git",
-                "reference": "403d4ad1ecfe126139f5cf29cabd6b1c816c46a2"
+                "reference": "fc0a8662682c0375b534033873debb780c003486"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/telescope/zipball/403d4ad1ecfe126139f5cf29cabd6b1c816c46a2",
-                "reference": "403d4ad1ecfe126139f5cf29cabd6b1c816c46a2",
+                "url": "https://api.github.com/repos/laravel/telescope/zipball/fc0a8662682c0375b534033873debb780c003486",
+                "reference": "fc0a8662682c0375b534033873debb780c003486",
                 "shasum": ""
             },
             "require": {
@@ -2532,9 +2532,9 @@
             ],
             "support": {
                 "issues": "https://github.com/laravel/telescope/issues",
-                "source": "https://github.com/laravel/telescope/tree/v5.9.1"
+                "source": "https://github.com/laravel/telescope/tree/v5.10.0"
             },
-            "time": "2025-06-10T21:42:27+00:00"
+            "time": "2025-07-07T14:47:19+00:00"
         },
         {
             "name": "laravel/tinker",
@@ -4252,6 +4252,71 @@
                 "source": "https://github.com/open-telemetry/opentelemetry-php"
             },
             "time": "2025-01-15T23:07:07+00:00"
+        },
+        {
+            "name": "open-telemetry/opentelemetry-auto-laravel",
+            "version": "1.2.2",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/opentelemetry-php/contrib-auto-laravel.git",
+                "reference": "be321c5ffc6a4db5879d77d20cb0562bb8a869a1"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/opentelemetry-php/contrib-auto-laravel/zipball/be321c5ffc6a4db5879d77d20cb0562bb8a869a1",
+                "reference": "be321c5ffc6a4db5879d77d20cb0562bb8a869a1",
+                "shasum": ""
+            },
+            "require": {
+                "ext-json": "*",
+                "ext-opentelemetry": "*",
+                "laravel/framework": "^6.0 || ^7.0 || ^8.0 || ^9.0 || ^10.0 || ^11.0 || ^12.0",
+                "open-telemetry/api": "^1.0",
+                "open-telemetry/sem-conv": "^1.32",
+                "php": "^8.1"
+            },
+            "require-dev": {
+                "friendsofphp/php-cs-fixer": "^3.50",
+                "guzzlehttp/guzzle": "*",
+                "nunomaduro/collision": "*",
+                "open-telemetry/sdk": "^1.0",
+                "orchestra/testbench": ">=7.41.3",
+                "phan/phan": "^5.0",
+                "php-http/mock-client": "*",
+                "phpstan/phpstan": "^1.1",
+                "phpstan/phpstan-phpunit": "^1.0",
+                "phpunit/phpunit": "^9.5",
+                "psalm/plugin-phpunit": "^0.19.2",
+                "spatie/laravel-ignition": "*",
+                "vimeo/psalm": "6.4.0"
+            },
+            "type": "library",
+            "autoload": {
+                "files": [
+                    "_register.php"
+                ],
+                "psr-4": {
+                    "OpenTelemetry\\Contrib\\Instrumentation\\Laravel\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "Apache-2.0"
+            ],
+            "description": "OpenTelemetry auto-instrumentation for Laravel",
+            "homepage": "https://opentelemetry.io/docs/php",
+            "keywords": [
+                "instrumentation",
+                "laravel",
+                "open-telemetry",
+                "opentelemetry",
+                "otel",
+                "tracing"
+            ],
+            "support": {
+                "source": "https://github.com/opentelemetry-php/contrib-auto-laravel/tree/1.2.2"
+            },
+            "time": "2025-06-17T23:42:05+00:00"
         },
         {
             "name": "open-telemetry/sdk",
@@ -10567,16 +10632,16 @@
         },
         {
             "name": "laravel/pint",
-            "version": "v1.23.0",
+            "version": "v1.24.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/laravel/pint.git",
-                "reference": "9ab851dba4faa51a3c3223dd3d07044129021024"
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/laravel/pint/zipball/9ab851dba4faa51a3c3223dd3d07044129021024",
-                "reference": "9ab851dba4faa51a3c3223dd3d07044129021024",
+                "url": "https://api.github.com/repos/laravel/pint/zipball/0345f3b05f136801af8c339f9d16ef29e6b4df8a",
+                "reference": "0345f3b05f136801af8c339f9d16ef29e6b4df8a",
                 "shasum": ""
             },
             "require": {
@@ -10587,7 +10652,7 @@
                 "php": "^8.2.0"
             },
             "require-dev": {
-                "friendsofphp/php-cs-fixer": "^3.76.0",
+                "friendsofphp/php-cs-fixer": "^3.82.2",
                 "illuminate/view": "^11.45.1",
                 "larastan/larastan": "^3.5.0",
                 "laravel-zero/framework": "^11.45.0",
@@ -10632,7 +10697,7 @@
                 "issues": "https://github.com/laravel/pint/issues",
                 "source": "https://github.com/laravel/pint"
             },
-            "time": "2025-07-03T10:37:47+00:00"
+            "time": "2025-07-10T18:09:32+00:00"
         },
         {
             "name": "laravel/sail",
@@ -10782,16 +10847,16 @@
         },
         {
             "name": "myclabs/deep-copy",
-            "version": "1.13.2",
+            "version": "1.13.3",
             "source": {
                 "type": "git",
                 "url": "https://github.com/myclabs/DeepCopy.git",
-                "reference": "d25e62e636b0a9b01e3bdebb7823b474876dd829"
+                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/d25e62e636b0a9b01e3bdebb7823b474876dd829",
-                "reference": "d25e62e636b0a9b01e3bdebb7823b474876dd829",
+                "url": "https://api.github.com/repos/myclabs/DeepCopy/zipball/faed855a7b5f4d4637717c2b3863e277116beb36",
+                "reference": "faed855a7b5f4d4637717c2b3863e277116beb36",
                 "shasum": ""
             },
             "require": {
@@ -10830,7 +10895,7 @@
             ],
             "support": {
                 "issues": "https://github.com/myclabs/DeepCopy/issues",
-                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.2"
+                "source": "https://github.com/myclabs/DeepCopy/tree/1.13.3"
             },
             "funding": [
                 {
@@ -10838,7 +10903,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2025-07-04T14:07:32+00:00"
+            "time": "2025-07-05T12:25:42+00:00"
         },
         {
             "name": "nunomaduro/collision",
@@ -11628,16 +11693,16 @@
         },
         {
             "name": "phpstan/phpdoc-parser",
-            "version": "2.1.0",
+            "version": "2.2.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/phpstan/phpdoc-parser.git",
-                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68"
+                "reference": "b9e61a61e39e02dd90944e9115241c7f7e76bfd8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
-                "reference": "9b30d6fd026b2c132b3985ce6b23bec09ab3aa68",
+                "url": "https://api.github.com/repos/phpstan/phpdoc-parser/zipball/b9e61a61e39e02dd90944e9115241c7f7e76bfd8",
+                "reference": "b9e61a61e39e02dd90944e9115241c7f7e76bfd8",
                 "shasum": ""
             },
             "require": {
@@ -11669,9 +11734,9 @@
             "description": "PHPDoc parser with support for nullable, intersection and generic types",
             "support": {
                 "issues": "https://github.com/phpstan/phpdoc-parser/issues",
-                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.1.0"
+                "source": "https://github.com/phpstan/phpdoc-parser/tree/2.2.0"
             },
-            "time": "2025-02-19T13:28:12+00:00"
+            "time": "2025-07-13T07:04:09+00:00"
         },
         {
             "name": "phpunit/php-code-coverage",
