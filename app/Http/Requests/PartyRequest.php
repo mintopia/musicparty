@@ -34,7 +34,6 @@ class PartyRequest extends FormRequest
                 'required',
                 'string',
                 'in:other,' . collect($playlists)->pluck('id')->implode(','),
-
             ],
             'custom_backup_playlist_id' => 'required_if:backup_playlist_id,other|string|nullable',
             'allow_requests' => 'sometimes|boolean',
@@ -53,7 +52,13 @@ class PartyRequest extends FormRequest
             ],
             'min_song_length' => 'sometimes|integer|min:1|nullable',
             'max_song_length' => 'sometimes|integer|min:1|nullable',
-            'no_repeat_interval' => 'sometimes|integer|min:1|nullable'
+            'no_repeat_interval' => 'sometimes|integer|min:1|nullable',
+            'history_playlist_id' => [
+                'sometimes',
+                'string',
+                'in:other,' . collect($playlists)->pluck('id')->push('none')->implode(','),
+                'nullable',
+            ],
         ];
     }
 }

@@ -217,6 +217,20 @@ class Party extends Model
         if (is_object($current) && property_exists($current, 'item') && $current->item->id !== null && $current->item->type === 'track') {
             $trackUri = "spotify:track:{$current->item->id}";
         }
+        if ($trackUri === '') {
+            $song = $this->history()->orderBy('played_at', 'desc')->first();
+            if ($song) {
+                $trackUri = "spotify:track:{$song->song->spotify_id}";
+            }
+        }
+        if ($trackUri === '') {
+            // We are stuck, let's add something to the queue and use it
+            $this->addTracksToQueue();
+            $song = $this->upcoming()->orderBy('queued_at', 'desc')->first();
+            if ($song) {
+                $trackUri = "spotify:track:{$song->song->spotify_id}";
+            }
+        }
         $this->user->getSpotifyApi()->play($playbackDevice, [
             'uris' => [$trackUri],
         ]);
@@ -353,6 +367,11 @@ class Party extends Model
             $this->user->getSpotifyApi()->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
+            if ($this->history_playlist_id !== null) {
+                Log::info("{$this}: Adding {$song->song} to history playlist");
+                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
+                $this->user->getSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+            }
         }
     }
 
