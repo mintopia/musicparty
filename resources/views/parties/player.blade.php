@@ -90,6 +90,15 @@
                             'x-csrf-token': '{{ csrf_token() }}',
                         }
                     });
+                    setTimeout(function() {
+                        console.log('Sending second update after 2s delay');
+                        fetch('/webhooks/parties/{{ $party->code }}/simple', {
+                            method: 'POST',
+                            headers: {
+                                'x-csrf-token': '{{ csrf_token() }}',
+                            }
+                        });
+                    }), 2000);
                 }
             });
 
