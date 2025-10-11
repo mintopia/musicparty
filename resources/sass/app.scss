@@ -55,6 +55,15 @@ body {
     background-color: rgba(88, 101, 242, var(--tblr-bg-opacity)) !important;
 }
 
+.bg-spotify, .bg-spotifysearch {
+    --tblr-bg-opacity: 1;
+    background-color: rgba(30, 215, 96, var(--tblr-bg-opacity)) !important;
+}
+
+.ti-brand-spotifysearch:before {
+    content:""
+}
+
 .text-discord-fg {
     color: var(--tblr-light) !important;
 }
