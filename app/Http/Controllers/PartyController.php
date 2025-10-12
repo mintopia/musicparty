@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
+use App\Jobs\PartyPlayYouTubeVideo;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
@@ -80,6 +82,42 @@ class PartyController extends Controller
     public function tv(Party $party)
     {
         return view('parties.tv', [
+            'party' => $party,
+        ]);
+    }
+
+    public function youtube(Request $request, Party $party)
+    {
+        return view('parties.youtube', [
+            'party' => $party,
+            'canManage' => $party->canBeManagedBy($request->user()),
+        ]);
+    }
+
+    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party)
+    {
+        $videoId = null;
+        $url = parse_url($request->input('video'));
+        if ($url['host'] === 'youtu.be') {
+            // https://youtu.be/Lp__P8VBR5o?si=teYIzjNQoHuD7SEU
+            $videoId = substr($url['path'] ?? '', 1);
+        } else {
+            $query = [];
+            parse_str($url['query'] ?? '', $query);
+            $videoId = $query['v'] ?? null;
+        }
+        if ($videoId === null || !$videoId) {
+            return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
+                ->with('failureMessage', 'Unable to identify video');
+        }
+        PartyPlayYouTubeVideo::dispatch($party, $videoId)->afterResponse();
+        return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
+            ->with('successMessage', 'Video requested');
+    }
+
+    public function ytplayer(Party $party)
+    {
+        return view('parties.ytplayer', [
             'party' => $party,
         ]);
     }
