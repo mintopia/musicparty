@@ -39,6 +39,9 @@ use Illuminate\Support\Facades\Route;
 Route::post('proxy', [HomeController::class, 'proxy'])->name('proxy');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
+Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');
+Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
+Route::get('parties/{party}/youtube/player', [PartyController::class, 'ytplayer'])->name('parties.ytplayer');
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
