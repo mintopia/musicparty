@@ -7,6 +7,8 @@ use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
+use App\Models\Mod;
+use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
@@ -154,6 +156,7 @@ class PartyController extends Controller
     {
         return view('parties.edit', [
             'party' => $party,
+            'mods' => Mod::all(),
             'canManage' => true,
             'playlists' => $party->user->getPlaylists(),
             'devices' => $party->user->getDevices(),
@@ -205,5 +208,14 @@ class PartyController extends Controller
             $party->history_playlist_id = null;
         }
         $party->save();
+
+        $modSettings = ModSetting::wherePrivate(false)->with('mod')->get();
+        foreach ($modSettings as $modSetting) {
+            $currentValue = $party->getModSetting($modSetting->mod, $modSetting->code);
+            $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
+            if ($value !== $currentValue) {
+                $party->setModSetting($modSetting->mod, $modSetting->code, $value);
+            }
+        }
     }
 }

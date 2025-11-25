@@ -9,6 +9,7 @@ on:
     branches:
       - master
       - develop
+      - feature/youtube
     tags: [ 'v*.*.*' ]
   workflow_dispatch:
 

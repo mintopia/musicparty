@@ -1,4 +1,3 @@
-version: '3'
 services:
   musicparty:
     image: ghcr.io/mintopia/musicparty:develop
@@ -79,13 +78,3 @@ services:
     entrypoint: [ "php", "artisan" ]
     healthcheck:
       disable: true
-
-#  notify:
-#    image: mintopia/musicparty-notify:latest
-#    restart: unless-stopped
-#    volumes:
-#      - ./cookies.json:/usr/src/app/cookies.json
-#    environment:
-#      - MUSICPARTY_ENDPOINT=http://musicparty/webhooks/parties/TEST/simple
-#      - MUSICPARTY_PROXY_URL=http://musicparty/proxy
-#      - MUSICPARTY_AUTHTOKEN=3|R2B64VpucCwJ4qGvf9DReIX7iBOU2J1GJ9msC39Zf7053c32

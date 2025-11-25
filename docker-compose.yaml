@@ -102,6 +102,17 @@ services:
     healthcheck:
       disable: true
 
+  vite:
+    profiles: [ "vite" ]
+    image: node:23
+    entrypoint: [ "npm" ]
+    command: [ "run", "dev" ]
+    working_dir: /app
+    volumes:
+      - ./:/app
+    ports:
+      - 5173:5173
+
   npm:
     profiles: [ "npm" ]
     image: node:23
