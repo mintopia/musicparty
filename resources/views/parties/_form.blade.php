@@ -185,6 +185,45 @@
             @enderror
         </div>
     </div>
+
+    @foreach ($mods as $mod)
+        <h2 class="mt-4">{{ $mod->name }}</h2>
+
+        @if ($mod->description)
+            <p>
+                {{ $mod->description }}
+            </p>
+        @endif
+        @foreach ($mod->settings()->wherePrivate(false)->get() as $setting)
+            <div class="mb-3">
+                @if ($setting->type === \App\Enums\SettingType::stBoolean)
+                    <label class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" name="mods_{{ $mod->code }}_{{ $setting->code }}" value="1"
+                               @if(old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code))) checked @endif>
+                        {{ $setting->name }}
+                    </label>
+                    @if ($setting->description)
+                        <small class="form-hint">{{ $setting->description }}</small>
+                    @endif
+                    @error("mods_{$mod->code}_{$setting->code}")
+                    <p class="invalid-feedback">{{ $message }}</p>
+                    @enderror
+                @else
+                    <label class="form-label required">{{ $setting->name }}</label>
+                    <div>
+                        <input type="text" name="mods_{{ $mod->code }}_{{ $setting->code }}" class="form-control @error("mods_{$mod->code}_{$setting->code}") is-invalid @enderror"
+                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code) ?? '') }}">
+                        @if ($setting->description)
+                            <small class="form-hint">{{ $setting->description }}</small>
+                        @endif
+                        @error("mods_{$mod->code}_{$setting->code}")
+                        <p class="invalid-feedback">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    @endforeach
 </div>
 
 

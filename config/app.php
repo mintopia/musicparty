@@ -161,6 +161,7 @@ return [
         /*
          * Package Service Providers...
          */
+        \App\Mods\Whamageddon\WhammageddonServiceProvider::class,
 
         /*
          * Application Service Providers...

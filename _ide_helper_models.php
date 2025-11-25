@@ -109,6 +109,77 @@ namespace App\Models{
  * @property int $id
  * @property string $code
  * @property string $name
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ModSetting> $settings
+ * @property-read int|null $settings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperMod {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $mod_id
+ * @property string $name
+ * @property string $code
+ * @property string|null $description
+ * @property \App\Enums\SettingType $type
+ * @property int $encrypted
+ * @property int $private
+ * @property string|null $validation
+ * @property string|null $default
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property mixed $value
+ * @property-read \App\Models\Mod $mod
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $partysettings
+ * @property-read int|null $partysettings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting ordered(string $direction = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDefault($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereEncrypted($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereModId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting wherePrivate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereValidation($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperModSetting {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $code
+ * @property string $name
  * @property int $user_id
  * @property int|null $song_id
  * @property \Illuminate\Support\Carbon|null $song_started_at
@@ -239,6 +310,53 @@ namespace App\Models{
  */
 	#[\AllowDynamicProperties]
 	class IdeHelperPartyMemberRole {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $party_id
+ * @property int $mod_setting_id
+ * @property mixed|null $value
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read mixed $get_type
+ * @property-read \App\Models\Party $party
+ * @property-read \App\Models\ModSetting $setting
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereModSettingId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereValue($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperPartyModSetting {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperPartyModSettingEvent {}
 }
 
 namespace App\Models{
@@ -528,6 +646,9 @@ namespace App\Models{
  * @property int $party_id
  * @property int $song_id
  * @property int $score
+ * @property int $score_adjustment
+ * @property string|null $fallback_override
+ * @property string|null $css_classes
  * @property int $upvotes
  * @property int $downvotes
  * @property \Illuminate\Support\Carbon|null $queued_at
@@ -544,11 +665,14 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCssClasses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereDownvotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereFallbackOverride($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereQueuedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereScoreAdjustment($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereUpvotes($value)

@@ -8,7 +8,7 @@
             <div class="card mb-3">
                 <div class="list-group card-list-group">
                     <div class="list-group-item">
-                        <div class="row g-2 align-items-center">
+                        <div v-bind:class="'row g-2 align-items-center ' + state.next.css_classes">
                             <div class="col-auto">
                                 <img v-bind:src="state.next.album.image_url" class="rounded" v-bind:title="state.next.album.name" width="60" height="60">
                             </div>
@@ -19,7 +19,7 @@
                                 </div>
                                 <div class="text-muted">
                                     <template v-if="state.next.user">Requested by {{ state.next.user }}</template>
-                                    <template v-else>Fallback Track</template>
+                                    <template v-else>{{ state.next.fallback_name }}</template>
                                 </div>
                             </div>
                             <div class="col-auto text-secondary text-center">
@@ -37,6 +37,26 @@
     </div>
 </template>
 <style>
+.whamageddon {
+    padding-top: 20px;
+}
+
+.whamageddon::before {
+    content: 'Whamageddon!';
+    white-space:nowrap;
+    position: absolute;
+    padding: 5px 100px;
+    width: 100%;
+    color: white;
+    text-align: center;
+    text-transform: uppercase;
+    font-size: 10px;
+    font-weight: bold;
+    box-sizing: border-box;
+    top: 0;
+    left: 0;
+    background-color: #990000;
+}
 </style>
 <script>
     export default {
