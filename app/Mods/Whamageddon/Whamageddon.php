@@ -107,6 +107,9 @@ class Whamageddon
         $upcoming->user_id = null;
         $upcoming->fallback_override = $this->party->getModSettingValue(self::CODE, 'fallback_name');
         $upcoming->css_classes = $this->party->getModSettingValue(self::CODE, 'css_classes');
+        if ($upcoming->score_adjustment === 0) {
+            $upcoming->score_adjustment = 1;
+        }
         $upcoming->save();
         if (!$upcoming->save()) {
             Log::warning("{$this->party} Whamageddon: Unable to save upcoming song");
