@@ -90,7 +90,6 @@ class Whamageddon
         }
         $upcoming = $this->party->upcoming()
             ->whereNull('queued_at')
-            ->whereNull('user_id')
             ->whereHas('song', function ($query) use ($trackId) {
                 $query->where('spotify_id', $trackId);
             })->first();
@@ -105,6 +104,7 @@ class Whamageddon
             $upcoming->song()->associate($song);
             $upcoming->party()->associate($this->party);
         }
+        $upcoming->user_id = null;
         $upcoming->fallback_override = $this->party->getModSettingValue(self::CODE, 'fallback_name');
         $upcoming->css_classes = $this->party->getModSettingValue(self::CODE, 'css_classes');
         $upcoming->save();
