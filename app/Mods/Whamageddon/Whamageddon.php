@@ -41,6 +41,21 @@ class Whamageddon
         } else {
             Log::info("{$this->party} Whamageddon: Upcoming song found, adding upvote");
             $this->addUpvote($upcoming);
+            $this->delayPlayback($upcoming);
+        }
+    }
+
+    protected function delayPlayback(UpcomingSong $upcoming): void
+    {
+        $hour = CarbonImmutable::now()->hour;
+        if ($hour >= 23) {
+            $upcoming->not_before = CarbonImmutable::now()->startOfDay()->addDay()->hour(10);
+            Log::info("{$this->party} Whamageddon: Delaying Playback until 10AM tomorrow");
+            $upcoming->save();
+        } elseif ($upcoming->not_before && $hour >= 10) {
+            $upcoming->not_before = null;
+            $upcoming->save();
+            Log::info("{$this->party} Whamageddon: After 10AM, allowing playback");
         }
     }
 

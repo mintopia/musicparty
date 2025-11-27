@@ -142,11 +142,10 @@ namespace App\Models{
  * @property int $encrypted
  * @property int $private
  * @property string|null $validation
- * @property string|null $default
+ * @property mixed|null $default
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property mixed $value
  * @property-read \App\Models\Mod $mod
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $partysettings
  * @property-read int|null $partysettings_count
@@ -210,6 +209,8 @@ namespace App\Models{
  * @property-read int|null $history_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $members
  * @property-read int|null $members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $modsettings
+ * @property-read int|null $modsettings_count
  * @property-read \App\Models\Song|null $song
  * @property-read \App\Models\User|null $trustedUser
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UpcomingSong> $upcoming
@@ -338,25 +339,6 @@ namespace App\Models{
  */
 	#[\AllowDynamicProperties]
 	class IdeHelperPartyModSetting {}
-}
-
-namespace App\Models{
-/**
- * 
- *
- * @property int $id
- * @property \Illuminate\Support\Carbon|null $created_at
- * @property \Illuminate\Support\Carbon|null $updated_at
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSettingEvent whereUpdatedAt($value)
- * @mixin \Eloquent
- */
-	#[\AllowDynamicProperties]
-	class IdeHelperPartyModSettingEvent {}
 }
 
 namespace App\Models{
@@ -645,6 +627,7 @@ namespace App\Models{
  * @property int $id
  * @property int $party_id
  * @property int $song_id
+ * @property string|null $not_before
  * @property int $score
  * @property int $score_adjustment
  * @property string|null $fallback_override
@@ -669,6 +652,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereDownvotes($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereFallbackOverride($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereNotBefore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereQueuedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereScore($value)

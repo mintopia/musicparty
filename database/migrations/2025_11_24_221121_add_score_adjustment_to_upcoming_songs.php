@@ -24,7 +24,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('upcoming_songs', function (Blueprint $table) {
-            $table->dropColumns([
+            $table->dropColumn([
                 'score_adjustment', 'fallback_override', 'css_classes',
             ]);
         });

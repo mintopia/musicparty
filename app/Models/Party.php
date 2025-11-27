@@ -389,6 +389,10 @@ class Party extends Model
             $songsToAdd = new Collection();
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
+                ->where(function ($query) {
+                    $query->whereNull('not_before');
+                    $query->orWhere('not_before', '<=', 'NOW()');
+                })
                 ->where('score', '>', 0)->inRandomOrder()->get();
 
             for ($i = 0; $i < $toAdd; $i++) {
@@ -411,6 +415,10 @@ class Party extends Model
                 $toAdd = $this->upcoming()
                     ->whereNull('queued_at')
                     ->whereNotIn('id', $ids)
+                    ->where(function ($query) {
+                        $query->whereNull('not_before');
+                        $query->orWhere('not_before', '<=', 'NOW()');
+                    })
                     ->orderBy('score', 'DESC')
                     ->orderBy('created_at', 'ASC')
                     ->orderBy('id', 'ASC')

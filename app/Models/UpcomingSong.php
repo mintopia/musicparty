@@ -18,6 +18,7 @@ class UpcomingSong extends Model
 
     protected $casts = [
         'queued_at' => 'datetime',
+        'not_before', 'datetime',
     ];
 
     public function party(): BelongsTo
