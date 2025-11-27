@@ -25,7 +25,7 @@ class Whamageddon
             Log::info("{$this->party} Whamageddon: Party is not active");
             return;
         }
-        if (!$this->party->getModSetting(self::CODE, 'enabled')) {
+        if (!$this->party->getModSettingValue(self::CODE, 'enabled')) {
             Log::info("{$this->party} Whamageddon: Whamageddon is not enabled");
             return;
         }
