@@ -89,6 +89,11 @@ class Party extends Model
         return $this->belongsTo(Song::class);
     }
 
+    public function moderations(): HasMany
+    {
+        return $this->hasMany(PartyModeration::class);
+    }
+
     public function resolveChildRouteBinding($childType, $value, $field)
     {
         switch ($childType) {

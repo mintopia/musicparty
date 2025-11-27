@@ -209,6 +209,8 @@ namespace App\Models{
  * @property-read int|null $history_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $members
  * @property-read int|null $members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModeration> $moderations
+ * @property-read int|null $moderations_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $modsettings
  * @property-read int|null $modsettings_count
  * @property-read \App\Models\Song|null $song
@@ -339,6 +341,21 @@ namespace App\Models{
  */
 	#[\AllowDynamicProperties]
 	class IdeHelperPartyModSetting {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property \App\Enums\PartyModerationType $type
+ * @property-read \App\Models\Party|null $party
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration query()
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperPartyModeration {}
 }
 
 namespace App\Models{
@@ -638,6 +655,7 @@ namespace App\Models{
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $user_id
+ * @property mixed $0
  * @property-read \App\Models\Party $party
  * @property-read \App\Models\PlayedSong|null $played
  * @property-read \App\Models\Song $song
