@@ -19,6 +19,7 @@ return new class extends Migration
             $table->string('value');
             $table->string('notes')->nullable()->default(null);
             $table->boolean('enabled')->default(true);
+            $table->boolean('regex')->default(false);
             $table->timestamps();
         });
     }

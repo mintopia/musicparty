@@ -34,8 +34,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Album whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperAlbum {}
+	class Album extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -59,8 +58,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Artist whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperArtist {}
+	class Artist extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -98,8 +96,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|LinkedAccount whereUserId($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperLinkedAccount {}
+	class LinkedAccount extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -125,8 +122,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperMod {}
+	class Mod extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -138,7 +134,7 @@ namespace App\Models{
  * @property string $name
  * @property string $code
  * @property string|null $description
- * @property \App\Enums\SettingType $type
+ * @property SettingType $type
  * @property int $encrypted
  * @property int $private
  * @property string|null $validation
@@ -149,27 +145,26 @@ namespace App\Models{
  * @property-read \App\Models\Mod $mod
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $partysettings
  * @property-read int|null $partysettings_count
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting ordered(string $direction = 'asc')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDefault($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereEncrypted($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereModId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting wherePrivate($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereValidation($value)
+ * @method static Builder<static>|ModSetting newModelQuery()
+ * @method static Builder<static>|ModSetting newQuery()
+ * @method static Builder<static>|ModSetting ordered(string $direction = 'asc')
+ * @method static Builder<static>|ModSetting query()
+ * @method static Builder<static>|ModSetting whereCode($value)
+ * @method static Builder<static>|ModSetting whereCreatedAt($value)
+ * @method static Builder<static>|ModSetting whereDefault($value)
+ * @method static Builder<static>|ModSetting whereDescription($value)
+ * @method static Builder<static>|ModSetting whereEncrypted($value)
+ * @method static Builder<static>|ModSetting whereId($value)
+ * @method static Builder<static>|ModSetting whereModId($value)
+ * @method static Builder<static>|ModSetting whereName($value)
+ * @method static Builder<static>|ModSetting whereOrder($value)
+ * @method static Builder<static>|ModSetting wherePrivate($value)
+ * @method static Builder<static>|ModSetting whereType($value)
+ * @method static Builder<static>|ModSetting whereUpdatedAt($value)
+ * @method static Builder<static>|ModSetting whereValidation($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperModSetting {}
+	class ModSetting extends \Eloquent implements \Spatie\EloquentSortable\Sortable {}
 }
 
 namespace App\Models{
@@ -252,8 +247,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereWeighted($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperParty {}
+	class Party extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -286,8 +280,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereUserId($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPartyMember {}
+	class PartyMember extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -311,8 +304,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMemberRole whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPartyMemberRole {}
+	class PartyMemberRole extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -339,23 +331,38 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPartyModSetting {}
+	class PartyModSetting extends \Eloquent {}
 }
 
 namespace App\Models{
 /**
  * 
  *
- * @property \App\Enums\PartyModerationType $type
- * @property-read \App\Models\Party|null $party
+ * @property int $id
+ * @property int $party_id
+ * @property PartyModerationType $type
+ * @property string $value
+ * @property string|null $notes
+ * @property int $enabled
+ * @property int $regex
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Party $party
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereRegex($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPartyModeration {}
+	class PartyModeration extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -394,8 +401,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperPlayedSong {}
+	class PlayedSong extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -408,35 +414,34 @@ namespace App\Models{
  * @property string $name
  * @property string $code
  * @property string|null $description
- * @property \App\Enums\SettingType $type
+ * @property SettingType $type
  * @property int $encrypted
  * @property string|null $validation
  * @property mixed|null $value
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Model|\Eloquent $provider
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting newModelQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting newQuery()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting ordered(string $direction = 'asc')
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereCode($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereDescription($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereEncrypted($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereName($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereOrder($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereProviderId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereProviderType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereType($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereUpdatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereValidation($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|ProviderSetting whereValue($value)
+ * @property-read Model|\Eloquent $provider
+ * @method static Builder<static>|ProviderSetting newModelQuery()
+ * @method static Builder<static>|ProviderSetting newQuery()
+ * @method static Builder<static>|ProviderSetting ordered(string $direction = 'asc')
+ * @method static Builder<static>|ProviderSetting query()
+ * @method static Builder<static>|ProviderSetting whereCode($value)
+ * @method static Builder<static>|ProviderSetting whereCreatedAt($value)
+ * @method static Builder<static>|ProviderSetting whereDescription($value)
+ * @method static Builder<static>|ProviderSetting whereEncrypted($value)
+ * @method static Builder<static>|ProviderSetting whereId($value)
+ * @method static Builder<static>|ProviderSetting whereName($value)
+ * @method static Builder<static>|ProviderSetting whereOrder($value)
+ * @method static Builder<static>|ProviderSetting whereProviderId($value)
+ * @method static Builder<static>|ProviderSetting whereProviderType($value)
+ * @method static Builder<static>|ProviderSetting whereType($value)
+ * @method static Builder<static>|ProviderSetting whereUpdatedAt($value)
+ * @method static Builder<static>|ProviderSetting whereValidation($value)
+ * @method static Builder<static>|ProviderSetting whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperProviderSetting {}
+	class ProviderSetting extends \Eloquent implements \Spatie\EloquentSortable\Sortable {}
 }
 
 namespace App\Models{
@@ -460,8 +465,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Role whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperRole {}
+	class Role extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -476,7 +480,7 @@ namespace App\Models{
  * @property int $hidden
  * @property mixed|null $value
  * @property string|null $validation
- * @property \App\Enums\SettingType $type
+ * @property SettingType $type
  * @property int $order
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
@@ -498,8 +502,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperSetting {}
+	class Setting extends \Eloquent implements \Spatie\EloquentSortable\Sortable {}
 }
 
 namespace App\Models{
@@ -535,8 +538,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SocialProvider whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperSocialProvider {}
+	class SocialProvider extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -571,8 +573,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Song whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperSong {}
+	class Song extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -598,8 +599,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SongRating whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperSongRating {}
+	class SongRating extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -633,8 +633,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperTheme {}
+	class Theme extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -681,8 +680,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereUserId($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperUpcomingSong {}
+	class UpcomingSong extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -735,8 +733,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperUser {}
+	class User extends \Eloquent {}
 }
 
 namespace App\Models{
@@ -762,7 +759,6 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Vote whereValue($value)
  * @mixin \Eloquent
  */
-	#[\AllowDynamicProperties]
-	class IdeHelperVote {}
+	class Vote extends \Eloquent {}
 }
 

@@ -7,9 +7,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Log;
 
-/**
- * @mixin IdeHelperPartyModeration
- */
 class PartyModeration extends Model
 {
     protected $casts = [
@@ -23,7 +20,7 @@ class PartyModeration extends Model
 
     public function match(object $spotifyTrack): bool
     {
-        $methodName = 'check' . substr($this->type, 2);
+        $methodName = 'check' . substr($this->type->name, 2);
         if (method_exists($this, $methodName)) {
             $result = $this->{$methodName}($spotifyTrack);
             if ($result === true) {
@@ -118,21 +115,22 @@ class PartyModeration extends Model
 
     protected function regexTest(mixed $toCheck, $caseInsensitive = true): bool
     {
-        $result = @preg_match($this->value, $toCheck);
-        if ($result !== false) {
-            return $result > 0;
-        }
-
-        if ($caseInsensitive) {
-            $toCheck = strtolower((string)$toCheck);
+        if ($this->regex) {
+            $result = @preg_match($this->value, $toCheck);
+            if ($result !== false) {
+                return $result > 0;
+            }
         }
 
         // Treat it like a wildcard string match
-        $filter = '/^' . str_replace('*', '.*', $this->value) . '$/' . $caseInsensitive ? 'i' : '';
+        $filter = '/^' . str_replace('*', '(.*)', $this->value) . '$/';
+        if ($caseInsensitive) {
+            $filter .= 'i';
+        }
         $result = @preg_match($filter, $toCheck);
         if ($result !== false) {
             return $result > 0;
         }
-        return false;
+        return $toCheck == $this->value;
     }
 }
