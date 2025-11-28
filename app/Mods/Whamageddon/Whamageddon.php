@@ -39,8 +39,19 @@ class Whamageddon
             Log::info("{$this->party} Whamageddon: No upcoming song found, adding to party");
             $this->addToParty();
         } else {
-            Log::info("{$this->party} Whamageddon: Upcoming song found, adding upvote");
-            $this->addUpvote($upcoming);
+            Log::info("{$this->party} Whamageddon: Upcoming song found");
+            if ($upcoming->queued_at !== null) {
+                $cutoff = $upcoming->queued_at->addHours(2);
+                if (CarbonImmutable::now() >= $cutoff) {
+                    Log::info("{$this->party} Whamageddon: Song was last played 2 hours ago - time for another round!");
+                    $this->addToParty();
+                } else {
+                    Log::info("{$this->party} Whamageddon: Upcoming song has already been played, waiting until {$cutoff->toIso8601String()}");
+                }
+            } else {
+                Log::info("{$this->party} Whamageddon: Adding an upvote");
+                $this->addUpvote($upcoming);
+            }
             $this->delayPlayback($upcoming);
         }
     }
@@ -78,7 +89,7 @@ class Whamageddon
             Log::info("{$this->party} Whamageddon: Upcoming song found, removing from party");
             $upcoming->delete();
         }
-        //$this->party->deleteModSetting(self::CODE, 'upcoming_song_id');
+        $this->party->deleteModSetting(self::CODE, 'upcoming_song_id');
     }
 
     protected function addToParty(): void
