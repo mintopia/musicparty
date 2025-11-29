@@ -52,7 +52,7 @@
                                    @if(old('role', $member->role->code) === 'vip') checked="" @endif>
                             <span class="form-check-label">VIP</span>
                             <p class="form-hint">
-                                An VIP user. They can bypass some of the request restrictions.
+                                A VIP user. They can bypass some of the request restrictions.
                             </p>
                         </label>
                         <label class="form-check">
