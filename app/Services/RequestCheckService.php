@@ -146,7 +146,11 @@ class RequestCheckService
         }
 
         if ($this->party->canBeManagedBy($this->member->user)) {
-            //return false;
+            return false;
+        }
+
+        if ($this->member->role->code === 'vip') {
+            return false;
         }
 
         $count = $this->party->upcoming()

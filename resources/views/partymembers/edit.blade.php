@@ -48,6 +48,14 @@
                             </p>
                         </label>
                         <label class="form-check">
+                            <input class="form-check-input" type="radio" name="role" value="vip"
+                                   @if(old('role', $member->role->code) === 'vip') checked="" @endif>
+                            <span class="form-check-label">VIP</span>
+                            <p class="form-hint">
+                                An VIP user. They can bypass some of the request restrictions.
+                            </p>
+                        </label>
+                        <label class="form-check">
                             <input class="form-check-input" type="radio" name="role" value="user"
                                    @if(old('role', $member->role->code) === 'user') checked="" @endif>
                             <span class="form-check-label">User</span>
