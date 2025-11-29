@@ -83,6 +83,7 @@
                                     <a class="dropdown-item" href="{{ route('parties.tv', $member->party->code) }}">TV Mode</a>
                                     <a class="dropdown-item" href="{{ route('parties.youtube', $member->party->code) }}">YouTube Player</a>
                                     <a class="dropdown-item" href="{{ route('parties.player', $member->party->code) }}">Web Player</a>
+                                    <a class="dropdown-item" href="{{ route('parties.moderation.index', $member->party->code) }}">Moderation</a>
                                     <a class="dropdown-item" href="{{ route('parties.edit', $member->party->code) }}">Settings</a>
                                 @endif
                             </div>

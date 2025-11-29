@@ -24,6 +24,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
+use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PlayedSongController;
 use App\Http\Controllers\SeatingPlanController;
 use App\Http\Controllers\TicketController;
@@ -63,7 +64,10 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('parties/{party}/player', [PartyController::class, 'player'])->name('parties.player');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
-
+            Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
+            Route::get('parties/{party}/moderation/{moderation}/delete', [PartyModerationController::class, 'delete'])
+                ->scopeBindings()
+                ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
 

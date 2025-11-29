@@ -120,6 +120,12 @@ class RequestCheckService
         if (!$this->party->explicit && $spotifyData->explicit) {
             return new RequestCheckResponse(false, 'Explicit songs are not allowed');
         }
+        foreach ($this->party->moderations as $mod) {
+            $result = $mod->match($spotifyData);
+            if ($result === true) {
+                return new RequestCheckResponse(false, $mod->getMessage());
+            }
+        }
 
         return null;
     }

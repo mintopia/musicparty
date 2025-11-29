@@ -33,6 +33,7 @@ class PartyController extends Controller
         $party = new Party();
         return view('parties.create', [
             'party' => $party,
+            'mods' => Mod::all(),
             'playlists' => $request->user()->getPlaylists(),
             'devices' => $request->user()->getDevices(),
         ]);
