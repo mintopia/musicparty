@@ -188,6 +188,7 @@ namespace App\Models{
  * @property int|null $downvotes_per_hour
  * @property int $weighted
  * @property string|null $history_playlist_id
+ * @property int|null $max_requests
  * @property int $trustscore
  * @property int|null $trusted_user_id
  * @property int $force
@@ -236,6 +237,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereHistoryPlaylistId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereLastUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMinSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereName($value)

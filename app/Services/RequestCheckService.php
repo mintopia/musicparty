@@ -11,9 +11,11 @@ use SpotifyWebAPI\SpotifyWebAPIException;
 class RequestCheckService
 {
     const CONTEXT_PLAYLIST_TRACK = '62mFjcWGkt2OY9LT9EvxS2';
+    public bool $userHasTooManyRequests = false;
 
     public function __construct(protected Party $party, protected PartyMember $member)
     {
+        $this->userHasTooManyRequests = $this->userHasTooManyRequests();
     }
 
     public function checkCollection(Collection $input): Collection
@@ -107,6 +109,10 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'Party is not accepting requests');
         }
 
+        if ($this->userHasTooManyRequests) {
+            return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
+        }
+
         if ($this->member->role->code === 'banned') {
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
@@ -128,5 +134,22 @@ class RequestCheckService
         }
 
         return null;
+    }
+
+    protected function userHasTooManyRequests(): bool
+    {
+        if ($this->party->max_requests === null) {
+            return false;
+        }
+
+        if ($this->party->canBeManagedBy($this->member->user)) {
+            //return false;
+        }
+
+        $count = $this->party->upcoming()
+            ->whereNull('queued_at')
+            ->whereUserId($this->member->user_id)
+            ->count();
+        return $count >= $this->party->max_requests;
     }
 }

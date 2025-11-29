@@ -53,6 +53,7 @@ class PartyRequest extends FormRequest
             'min_song_length' => 'sometimes|integer|min:1|nullable',
             'max_song_length' => 'sometimes|integer|min:1|nullable',
             'no_repeat_interval' => 'sometimes|integer|min:1|nullable',
+            'max_requests' => 'sometimes|integer|min:1|nullable',
             'history_playlist_id' => [
                 'sometimes',
                 'string',

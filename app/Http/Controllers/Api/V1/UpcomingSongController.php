@@ -82,7 +82,7 @@ class UpcomingSongController extends Controller
                             $checkResponse->reason,
                         ],
                     ],
-                ]);
+                ])->setStatusCode(400);
             }
 
             $song = Song::fromSpotify($spotifySong);

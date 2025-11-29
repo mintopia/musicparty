@@ -194,6 +194,11 @@ class PartyController extends Controller
         } else {
             $party->downvotes_per_hour = null;
         }
+        if ($request->input('max_requests')) {
+            $party->max_requests = $request->input('max_requests');
+        } else {
+            $party->max_requests = null;
+        }
         if ($request->has('min_song_length') && $request->input('min_song_length') > 0) {
             $party->min_song_length = $request->input('min_song_length');
         }

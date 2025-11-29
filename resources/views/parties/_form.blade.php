@@ -130,6 +130,18 @@
                 <p class="invalid-feedback">{{ $message }}</p>
                 @enderror
             </div>
+
+            <div class="mb-3 col-md-6">
+                <label class="form-label">Max Requests</label>
+                <div class="input-group">
+                    <input type="text" name="max_requests" class="form-control @error('max_requests') is-invalid @enderror"
+                           value="{{ old('max_requests', $party->max_requests ?? '') }}">
+                </div>
+                <small class="form-hint">The maximum number of requests that a user can have in the queue</small>
+                @error('downvotes_per_hour')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <h2 class="mt-4">Advanced Options</h2>
