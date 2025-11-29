@@ -97,6 +97,9 @@ class RequestCheckService
             }
         }
 
+        // Now we check similar songs
+        $output = array_merge($output, $this->checkSimilarSongs($input));
+
         return collect($output);
     }
 
@@ -151,5 +154,45 @@ class RequestCheckService
             ->whereUserId($this->member->user_id)
             ->count();
         return $count >= $this->party->max_requests;
+    }
+
+    protected function checkSimilarSongs(Collection $input): array
+    {
+        $names = [];
+        $artists = [];
+
+        $compositeIndex = [];
+        foreach ($input as $track) {
+            $compositeKey = "{$track->name}:";
+            foreach ($track->artists ?? [] as $artist) {
+                $compositeKey .= ":{$artist->name}";
+            }
+            if (!array_key_exists($compositeKey, $compositeIndex)) {
+                $compositeIndex[$compositeKey] = [];
+            }
+            $compositeIndex[$compositeKey][] = $track;
+            $names[] = $track->name;
+            $artists = array_merge($artists, collect($track->artists)->pluck('name')->toArray());
+        }
+        $output = [];
+
+        $existing = $this->party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($names, $artists) {
+            $query->whereIn('name', array_keys($names));
+            $query->whereHas('artists', function ($query) use ($artists) {
+                $query->whereIn('name', $artists);
+            });
+        })->with(['song', 'song.artists'])->get();
+        foreach ($existing as $upcoming) {
+            $compositeKey = "{$upcoming->song->name}:";
+            foreach ($upcoming->song->artists as $artist) {
+                $compositeKey .= ":{$artist->name}";
+            }
+            $tracks = $compositeIndex[$compositeKey] ?? [];
+            foreach ($tracks as $track) {
+                $output[$track->id] = new RequestCheckResponse(false, 'A similar song is already in the queue');
+            }
+        }
+
+        return $output;
     }
 }
