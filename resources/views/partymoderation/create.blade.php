@@ -75,13 +75,6 @@
                         </div>
                     </div>
                 @endforeach
-
-                <div class="datagrid mt-3">
-                    <div class="datagrid-item">
-                        <div class="datagrid-title">ISRC Code</div>
-                        <div class="datagrid-content">{{ $spotifyData->external_ids->isrc ?? 'None' }}</div>
-                    </div>
-                </div>
             </div>
         @endif
     </div>

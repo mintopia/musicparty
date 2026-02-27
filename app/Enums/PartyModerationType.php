@@ -12,7 +12,6 @@ enum PartyModerationType
     case mtArtistId;
     case mtAlbum;
     case mtAlbumId;
-    case mtISRC;
 
     public static function getHumanReadableTypes(): Collection
     {
@@ -23,7 +22,6 @@ enum PartyModerationType
             self::mtArtistId->name => 'Artist ID',
             self::mtAlbum->name => 'Album Name',
             self::mtAlbumId->name => 'Album ID',
-            self::mtISRC->name => 'ISRC Code',
         ]);
     }
 
