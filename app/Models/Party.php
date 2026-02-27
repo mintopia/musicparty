@@ -455,8 +455,8 @@ class Party extends Model
             $song->save();
             if ($this->history_playlist_id !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->getSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                Log::debug("{$this}: Spotify API -> addPlaylistItems({$this->history_playlist_id}, [{$song->song->spotify_id}])");
+                $this->user->getSpotifyApi()->addPlaylistItems($this->history_playlist_id, [$song->song->spotify_id]);
             }
         }
     }
@@ -652,8 +652,8 @@ class Party extends Model
         $tracks = [];
         $offset = 0;
         do {
-            Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
-            $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
+            Log::debug("{$this}: Spotify API -> getPlaylistItems({$this->backup_playlist_id}, {$offset})");
+            $response = $this->user->getSpotifyApi()->getPlaylistItems($this->backup_playlist_id, [
                 'limit' => 50,
                 'offset' => $offset,
                 'market' => $this->user->market,

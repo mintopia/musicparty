@@ -92,14 +92,6 @@ class PartyModeration extends Model
         return $this->regexTest($spotifyTrack->album->id, false);
     }
 
-    protected function checkISRC(object $spotifyTrack): bool
-    {
-        if ($spotifyTrack?->external_ids?->isrc === null) {
-            return false;
-        }
-        return $this->regexTest($spotifyTrack->external_ids->isrc);
-    }
-
     public function getMessage(): string
     {
         switch ($this->type) {

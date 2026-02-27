@@ -60,8 +60,11 @@ class SpotifySearchService
         return $this->api;
     }
 
-    public function search(string $query, int $page = 1, int $perPage = 20): LengthAwarePaginator
+    public function search(string $query, int $page = 1, int $perPage = 10): LengthAwarePaginator
     {
+        if ($perPage > 10) {
+            $perPage = 10;
+        }
         $options = [
             'market' => $this->party->user->market,
             'limit' => $perPage,
