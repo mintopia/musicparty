@@ -12,10 +12,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        $moderations = PartyModeration::whereType('mtISRC')->get();
-        foreach ($moderations as $moderation) {
-            Log::info("{$moderation} - Deleted as ISRC is no-longer supported");
-        }
+        DB::delete("DELETE FROM party_moderations WHERE type = 'mtISRC'");
     }
 
     /**
