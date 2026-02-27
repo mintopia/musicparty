@@ -9,7 +9,7 @@ on:
     branches:
       - master
       - develop
-      - feature/youtube
+      - feature/spotify-api-changes
     tags: [ 'v*.*.*' ]
   workflow_dispatch:
 
@@ -49,6 +49,7 @@ jobs:
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
           tags: |
+            type=raw,value=spotify-api-changes,enable=${{ github.ref == format('refs/heads/{0}', 'spotify-api-changes') }}
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
             type=raw,value=develop,enable=${{ github.ref == format('refs/heads/{0}', 'develop') }}
             type=semver,pattern={{version}}
