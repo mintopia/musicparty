@@ -2,10 +2,12 @@ import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const get = vi.fn();
+const put = vi.fn();
+const del = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: {get: (...args) => get(...args)},
+    router: {get: (...args) => get(...args), put: (...args) => put(...args), delete: (...args) => del(...args)},
 }));
 
 import PlayedHistory from '../Components/PlayedHistory.vue';
@@ -29,6 +31,8 @@ const mountHistory = (props = {}) => mount(PlayedHistory, {props: {partyCode: 'A
 
 beforeEach(() => {
     get.mockClear();
+    put.mockReset();
+    del.mockReset();
 });
 
 describe('PlayedHistory', () => {
@@ -47,13 +51,30 @@ describe('PlayedHistory', () => {
         expect(w.get('[data-testid=history-score]').text()).toBe('2');
     });
 
-    it('renders no rating controls in the table', () => {
+    it('rates any play through the shared rating routes', async () => {
         const w = mountHistory();
 
-        expect(w.find('button[data-testid=rate-like]').exists()).toBe(false);
-        expect(w.find('button[data-testid=rate-dislike]').exists()).toBe(false);
-        expect(w.find('[data-testid=history-likes]').exists()).toBe(false);
-        expect(w.find('[data-testid=history-dislikes]').exists()).toBe(false);
+        await w.get('[data-testid=rate-like]').trigger('click');
+        expect(put).toHaveBeenCalledWith('/parties/ABCD/plays/7/rating', {value: 'up'}, expect.any(Object));
+        await w.get('[data-testid=rate-dislike]').trigger('click');
+        expect(put).toHaveBeenLastCalledWith('/parties/ABCD/plays/7/rating', {value: 'down'}, expect.any(Object));
+    });
+
+    it('retracts when the pressed rating is clicked again and highlights it', async () => {
+        const w = mountHistory({history: {data: [play({my_rating: 1})], meta: {from: 1, to: 1, total: 1, links: []}}});
+
+        expect(w.get('[data-testid=rate-like]').attributes('aria-pressed')).toBe('true');
+        expect(w.get('[data-testid=rate-dislike]').attributes('aria-pressed')).toBe('false');
+        await w.get('[data-testid=rate-like]').trigger('click');
+        expect(del).toHaveBeenCalledWith('/parties/ABCD/plays/7/rating', expect.any(Object));
+    });
+
+    it('disables the rating buttons when read only', async () => {
+        const w = mountHistory({readOnly: true});
+
+        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeDefined();
+        await w.get('[data-testid=rate-dislike]').trigger('click');
+        expect(put).not.toHaveBeenCalled();
     });
 
     it('renders the mockup columns and the entries footer', () => {

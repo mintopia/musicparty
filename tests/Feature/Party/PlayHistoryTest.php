@@ -2,6 +2,7 @@
 
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
+use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Play;
@@ -322,12 +323,12 @@ it('lists and rates plays created by the fake player playback', function () {
     TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2', 'created_at' => now()->subMinute()]);
     app(PlaybackCoordinator::class)->startIfIdle($party);
     $player->advance();
-    $play = Play::query()->where('party_id', $party->id)->sole();
+    $play = Play::query()->where('party_id', $party->id)->where('title', 'First')->sole();
 
     $this->putJson(ratingUrl($play, $party->code), ['value' => 'up'])->assertOk();
 
     $this->getJson("/api/v1/parties/{$party->code}/history")->assertOk()
-        ->assertJsonCount(1, 'data')
+        ->assertJsonCount(2, 'data')
         ->assertJsonPath('data.0.track.title', 'First')
         ->assertJsonPath('data.0.likes', 1)
         ->assertJsonPath('data.0.my_rating', 1);
@@ -425,20 +426,57 @@ it('still lists the history of an ended party', function () {
     $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(1, 'data');
 });
 
-it('exposes the latest play for the now playing banner rating', function () {
-    playIn($this->party, ['title' => 'Old', 'played_at' => now()->subHour()]);
-    $latest = playIn($this->party, ['title' => 'Latest', 'played_at' => now()->subMinute()]);
-    Rating::factory()->for($latest)->for($this->member, 'member')->create(['value' => 1]);
+it('exposes the play of the currently playing request for the banner rating', function () {
+    $finished = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Played, 'title' => 'Done']);
+    playIn($this->party, ['track_request_id' => $finished->id, 'title' => 'Done', 'played_at' => now()->subMinute()]);
+    $current = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Playing, 'title' => 'Current']);
+    $currentPlay = playIn($this->party, ['track_request_id' => $current->id, 'title' => 'Current', 'played_at' => now()->subSeconds(30)]);
+    Rating::factory()->for($currentPlay)->for($this->member, 'member')->create(['value' => 1]);
 
     $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('ratablePlay.id', $latest->id)
+            ->where('ratablePlay.id', $currentPlay->id)
+            ->where('ratablePlay.track.title', 'Current')
             ->where('ratablePlay.likes', 1)
             ->where('ratablePlay.my_rating', 1));
 });
 
-it('has no ratable play before anything was played', function () {
+it('has no ratable play when nothing is playing', function () {
+    $finished = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Played]);
+    playIn($this->party, ['track_request_id' => $finished->id]);
+
     $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD')
         ->assertInertia(fn (Assert $page): Assert => $page->where('ratablePlay', null));
+});
+
+it('rates the now playing play and any history play through the web route', function () {
+    $current = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Playing]);
+    $currentPlay = playIn($this->party, ['track_request_id' => $current->id]);
+    $older = playIn($this->party, ['played_at' => now()->subHour()]);
+
+    $this->actingAs($this->user)->put("/parties/ABCD/plays/{$currentPlay->id}/rating", ['value' => 'up'])->assertRedirect();
+    $this->actingAs($this->user)->put("/parties/ABCD/plays/{$older->id}/rating", ['value' => 'down'])->assertRedirect();
+
+    expect(Rating::query()->where('play_id', $currentPlay->id)->sole()->value)->toBe(1)
+        ->and(Rating::query()->where('play_id', $older->id)->sole()->value)->toBe(-1);
+});
+
+it('creates the play when a request starts playing and not again when it finishes', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1', 'title' => 'First', 'created_at' => now()->subMinutes(2)]);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2', 'title' => 'Second', 'created_at' => now()->subMinute()]);
+
+    app(PlaybackCoordinator::class)->startIfIdle($party);
+
+    $first = Play::query()->where('party_id', $party->id)->sole();
+    expect($first->title)->toBe('First')
+        ->and($first->request->status)->toBe(RequestStatus::Playing)
+        ->and($first->played_at->equalTo($first->request->started_at))->toBeTrue();
+
+    $player->advance();
+
+    expect(Play::query()->where('party_id', $party->id)->orderBy('id')->pluck('title')->all())->toBe(['First', 'Second'])
+        ->and(Play::query()->where('track_request_id', $first->track_request_id)->count())->toBe(1);
 });

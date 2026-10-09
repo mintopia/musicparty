@@ -192,7 +192,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>
-                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" />
+                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
             </template>
         </section>
     </div>

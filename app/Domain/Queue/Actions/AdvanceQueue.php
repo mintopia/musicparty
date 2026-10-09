@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 readonly class AdvanceQueue
 {
     /**
-     * Applies a Player track change, or with a null track the Player stopping: Playing becomes Played (and is recorded as a Play), Up Next becomes Playing.
+     * Applies a Player track change, or with a null track the Player stopping: Playing becomes Played, Up Next becomes Playing and is recorded as a Play.
      */
     public function __invoke(Party $party, ?string $providerTrackId): QueueAdvance
     {
@@ -41,6 +41,7 @@ readonly class AdvanceQueue
             }
 
             $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now()])->save();
+            $this->recordPlay($upNext);
 
             return new QueueAdvance($upNext);
         });
@@ -49,21 +50,26 @@ readonly class AdvanceQueue
     private function finish(TrackRequest $request): void
     {
         $request->forceFill(['status' => RequestStatus::Played])->save();
+    }
 
-        Play::query()->create([
-            'party_id' => $request->party_id,
-            'track_request_id' => $request->id,
-            'party_member_id' => $request->party_member_id,
-            'provider_track_id' => $request->provider_track_id,
-            'title' => $request->title,
-            'artists' => $request->artists,
-            'album' => $request->album,
-            'artwork_url' => $request->artwork_url,
-            'duration_ms' => $request->duration_ms,
-            'explicit' => $request->explicit,
-            'selection_mode' => $request->selection_mode,
-            'selection_score' => $request->selection_score,
-            'played_at' => now(),
-        ]);
+    private function recordPlay(TrackRequest $request): void
+    {
+        Play::query()->firstOrCreate(
+            ['track_request_id' => $request->id],
+            [
+                'party_id' => $request->party_id,
+                'party_member_id' => $request->party_member_id,
+                'provider_track_id' => $request->provider_track_id,
+                'title' => $request->title,
+                'artists' => $request->artists,
+                'album' => $request->album,
+                'artwork_url' => $request->artwork_url,
+                'duration_ms' => $request->duration_ms,
+                'explicit' => $request->explicit,
+                'selection_mode' => $request->selection_mode,
+                'selection_score' => $request->selection_score,
+                'played_at' => $request->started_at,
+            ],
+        );
     }
 }

@@ -20,6 +20,7 @@ use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
@@ -263,6 +264,7 @@ class PartyController extends Controller
     {
         $play = Play::query()
             ->where('party_id', $party->id)
+            ->whereHas('request', fn ($query) => $query->where('status', RequestStatus::Playing))
             ->withHistoryRelations()
             ->withRatingSummary($member)
             ->orderByDesc('played_at')

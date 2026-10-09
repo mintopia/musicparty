@@ -4,12 +4,20 @@ import {computed, reactive, ref} from 'vue';
 import Icon from './Icon.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatPlayedAt} from '../lib/format';
+import {useRatePlay} from '../lib/rating';
 
 const props = defineProps({
     history: {type: Object, default: null},
     filters: {type: Object, default: () => ({})},
     partyCode: {type: String, default: ''},
+    readOnly: {type: Boolean, default: false},
 });
+
+const {error: ratingError, rate} = useRatePlay(() => props.partyCode, () => props.readOnly);
+const rateClass = (active, activeColor) => [
+    'flex h-8 w-8 items-center justify-center rounded hover:bg-border/40 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+    active ? activeColor : 'text-muted',
+];
 
 const typeOptions = [
     {value: 'sent', label: 'Sent to Spotify'},
@@ -102,6 +110,7 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
         </section>
 
         <section class="min-w-0 rounded border border-border bg-surface" aria-label="Played songs">
+            <p v-if="ratingError" role="alert" data-testid="history-rating-error" class="px-5 pt-4 text-sm text-danger">{{ ratingError }}</p>
             <p v-if="rows.length === 0" data-testid="history-empty" class="px-5 py-6 text-sm text-muted">
                 {{ filtersActive ? 'No songs match this search.' : 'Nothing has been played yet.' }}
             </p>
@@ -130,6 +139,26 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                                 <div class="min-w-0 flex-1">
                                     <div class="truncate font-medium text-primary" data-testid="history-title">{{ play.track.title }}</div>
                                     <div class="truncate text-muted">{{ play.track.artists.join(', ') }}</div>
+                                </div>
+                                <div data-testid="history-rating" class="flex shrink-0 items-center gap-1">
+                                    <button
+                                        type="button"
+                                        data-testid="rate-dislike"
+                                        :aria-label="`Dislike ${play.track.title}`"
+                                        :aria-pressed="play.my_rating === -1"
+                                        :disabled="readOnly"
+                                        :class="rateClass(play.my_rating === -1, 'text-danger')"
+                                        @click="rate(play, 'down')"
+                                    ><Icon name="thumbDown" class="h-4 w-4" /></button>
+                                    <button
+                                        type="button"
+                                        data-testid="rate-like"
+                                        :aria-label="`Like ${play.track.title}`"
+                                        :aria-pressed="play.my_rating === 1"
+                                        :disabled="readOnly"
+                                        :class="rateClass(play.my_rating === 1, 'text-accent')"
+                                        @click="rate(play, 'up')"
+                                    ><Icon name="thumbUp" class="h-4 w-4" /></button>
                                 </div>
                             </div>
                         </td>

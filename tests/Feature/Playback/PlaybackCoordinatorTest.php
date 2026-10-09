@@ -68,7 +68,7 @@ it('keeps exactly one Up Next enqueued ahead of the current track and reselects 
 
     expect(requestStatuses($party))->toBe(['r1' => 'played', 'r2' => 'playing', 'r3' => 'up_next'])
         ->and(enqueuedTrackIds($player))->toBe(['r1', 'r2', 'r3'])
-        ->and(Play::query()->pluck('provider_track_id')->all())->toBe(['r1']);
+        ->and(Play::query()->pluck('provider_track_id')->all())->toBe(['r1', 'r2']);
 });
 
 it('selects and sends the next track about 15 seconds before the end in just-in-time mode, exactly once', function () {
@@ -174,12 +174,13 @@ it('creates a fallback request when selection is due with an empty queue', funct
         ->and(TrackRequest::query()->where('status', RequestStatus::Queued)->count())->toBe(4);
 });
 
-it('records a Play with track info, requester, time, mode and score when a request finishes', function () {
+it('records a Play with track info, requester, time, mode and score when a request starts playing', function () {
     $party = livePlaybackParty();
     $player = useFakePlayer($party);
     $request = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1', 'title' => 'Song']);
     RequestVote::factory()->count(2)->create(['track_request_id' => $request->id]);
     app(PlaybackCoordinator::class)->startIfIdle($party);
+    $startedAt = now();
 
     CarbonImmutable::setTestNow(now()->addMinutes(3));
     $player->advance();
@@ -192,7 +193,7 @@ it('records a Play with track info, requester, time, mode and score when a reque
         ->and($play->provider_track_id)->toBe('r1')
         ->and($play->selection_mode)->toBe('deterministic')
         ->and($play->selection_score)->toBe(2)
-        ->and($play->played_at->equalTo(now()))->toBeTrue()
+        ->and($play->played_at->equalTo($startedAt))->toBeTrue()
         ->and($player->state()->status)->toBe(PlaybackStatus::Stopped);
 });
 
@@ -203,7 +204,8 @@ it('records a Play without a requester for fallback requests', function () {
 
     $player->advance();
 
-    expect(Play::query()->sole()->party_member_id)->toBeNull();
+    expect(Play::query()->where('party_id', $party->id)->whereNotNull('party_member_id')->exists())->toBeFalse()
+        ->and(Play::query()->where('party_id', $party->id)->exists())->toBeTrue();
 });
 
 it('stops the player and locks nothing when nothing is eligible and the provider autoplays', function (FeedMode $mode) {

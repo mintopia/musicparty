@@ -1,8 +1,7 @@
 <script setup>
-import {ref} from 'vue';
-import {router} from '@inertiajs/vue3';
 import Icon from './Icon.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
+import {useRatePlay} from '../lib/rating';
 
 const props = defineProps({
     nowPlaying: {type: Object, default: null},
@@ -11,36 +10,8 @@ const props = defineProps({
     readOnly: {type: Boolean, default: false},
 });
 
-const pending = ref(false);
-const error = ref(null);
-
-const rate = (direction) => {
-    if (props.readOnly || pending.value || !props.ratablePlay) {
-        return;
-    }
-    const value = direction === 'up' ? 1 : -1;
-    const url = `/parties/${props.partyCode}/plays/${props.ratablePlay.id}/rating`;
-    const options = {
-        preserveScroll: true,
-        preserveState: true,
-        onStart: () => {
-            pending.value = true;
-            error.value = null;
-        },
-        onError: (e) => {
-            error.value = e.rating ?? e.value ?? 'Could not record your rating.';
-        },
-        onFinish: () => {
-            pending.value = false;
-        },
-    };
-
-    if (props.ratablePlay.my_rating === value) {
-        router.delete(url, options);
-    } else {
-        router.put(url, {value: direction}, options);
-    }
-};
+const {error, rate: ratePlay} = useRatePlay(() => props.partyCode, () => props.readOnly);
+const rate = (direction) => ratePlay(props.ratablePlay, direction);
 
 const thumbClass = (active, activeColor) => [
     'flex h-8 w-8 items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
