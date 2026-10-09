@@ -59,8 +59,8 @@ Each checkbox is roughly one PR, done in its own worktree off `feature/v3-rewrit
 
 ## 6. Guest UI & TV screen
 
-- [ ] 6.1 Capture v2 reference screenshots (home and join, Party page, search, Queue, now playing, TV screen, at mobile and desktop widths, light and dark) into `docs/design/`. Verify that the files are committed and indexed in `docs/design/README.md`.
-- [ ] 6.2 App layout, navigation, login and join pages in Vue with Inertia props. Verify by comparing side by side with `docs/design/` screenshots (the pages must match) and with Inertia feature tests for props.
+- [x] 6.1 Capture v2 reference screenshots (login, home, Party page with Queue and now playing, search, played history, TV screen, at mobile and desktop widths, light and dark) into `docs/design/v2-reference/`, indexed in its `README.md`.
+- [ ] 6.2 App layout, navigation, login and join pages in Vue with Inertia props. Verify by comparing side by side with `docs/design/v2-reference/` screenshots (the pages must match) and with Inertia feature tests for props.
 - [ ] 6.3 Party page with now playing, Up Next (shown as locked) and the Queue with voting, live through Echo. Verify against the screenshots and with Vitest component tests using a mocked Echo.
 - [ ] 6.4 Search and request flow, including rejection and Pending notifications on the per-member channel. Verify against the screenshots and with Vitest and feature tests.
 - [ ] 6.5 TV screen (anonymous, read-only, public channel only) with the QR code. Verify against the screenshots and with a test that it loads without authentication and subscribes to no private channels.
