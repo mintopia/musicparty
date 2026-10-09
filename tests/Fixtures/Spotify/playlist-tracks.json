@@ -1,0 +1,10 @@
+{
+    "items": [
+        {"is_local": false, "track": {"id": "track-1", "type": "track", "name": "Alpha Song", "duration_ms": 180000, "explicit": false, "artists": [{"id": "artist-1", "name": "Test Artist"}], "album": {"id": "album-1", "name": "Test Album", "images": []}, "external_ids": {"isrc": "ISRC0000001"}}},
+        {"is_local": false, "track": null},
+        {"is_local": true, "track": {"id": null, "type": "track", "name": "Local File", "artists": [], "album": {}}},
+        {"is_local": false, "track": {"id": "ep-1", "type": "episode", "name": "A Podcast", "artists": [], "album": {}}},
+        {"is_local": false, "track": {"id": "track-2", "type": "track", "name": "Beta Song", "duration_ms": 200000, "explicit": true, "artists": [{"id": "artist-1", "name": "Test Artist"}], "album": {"id": "album-1", "name": "Test Album", "images": []}}}
+    ],
+    "next": null
+}

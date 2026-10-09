@@ -29,6 +29,7 @@ interface MusicProvider
     /**
      * @return list<PlaylistData>
      *
+     * @throws ProviderUnavailableException
      * @throws ProviderTemporaryFailure
      */
     public function playlists(string $hostAccountId): array;
@@ -36,9 +37,10 @@ interface MusicProvider
     /**
      * @return list<TrackData>
      *
+     * @throws ProviderUnavailableException
      * @throws ProviderTemporaryFailure
      */
-    public function playlistTracks(string $playlistId): array;
+    public function playlistTracks(string $playlistId, string $hostAccountId): array;
 
     public function supports(Capability $capability): bool;
 
@@ -46,7 +48,8 @@ interface MusicProvider
      * @param  list<string>  $providerTrackIds
      *
      * @throws UnsupportedCapability
+     * @throws ProviderUnavailableException
      * @throws ProviderTemporaryFailure
      */
-    public function appendToPlaylist(string $playlistId, array $providerTrackIds): void;
+    public function appendToPlaylist(string $playlistId, array $providerTrackIds, string $hostAccountId): void;
 }

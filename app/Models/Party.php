@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Music\Actions\AppendPlayToHistory;
+use App\Domain\Music\Contracts\MusicProvider;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
@@ -378,8 +380,7 @@ class Party extends Model
             $song->save();
             if ($this->history_playlist_id !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->getSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                app(AppendPlayToHistory::class)($this, $song->song->spotify_id, app(MusicProvider::class));
             }
         }
     }

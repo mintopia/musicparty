@@ -2,7 +2,11 @@
 
 namespace Tests\Fixtures\Spotify;
 
+use App\Models\LinkedAccount;
+use Database\Factories\LinkedAccountFactory;
 use Illuminate\Http\Client\Request;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use stdClass;
 
@@ -54,6 +58,43 @@ final class SpotifyFake
                 return $found === [] ? Http::response(self::fixture('error-not-found'), 404) : Http::response($found[0]);
             },
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $routes
+     */
+    public static function hostApi(array $routes = []): void
+    {
+        Http::preventStrayRequests();
+        Http::fake($routes + [
+            'accounts.spotify.com/*' => Http::response(self::fixture('token-refresh')),
+            'api.spotify.com/v1/me/playlists*' => Http::sequence()
+                ->push(self::fixture('playlists-page-1'))
+                ->push(self::fixture('playlists-page-2')),
+            'api.spotify.com/v1/playlists/*/tracks*' => Http::response(self::fixture('playlist-tracks')),
+        ]);
+    }
+
+    public static function useInMemoryDatabase(): void
+    {
+        config([
+            'database.default' => 'sqlite',
+            'database.connections.sqlite.database' => ':memory:',
+            'database.connections.sqlite.foreign_key_constraints' => false,
+        ]);
+        DB::purge('sqlite');
+        Artisan::call('migrate', [
+            '--force' => true,
+            '--path' => [
+                'database/migrations/2023_12_05_220820_create_linked_accounts_table.php',
+                'database/migrations/2026_10_09_100000_add_needs_relink_to_linked_accounts.php',
+            ],
+        ]);
+    }
+
+    public static function account(): LinkedAccountFactory
+    {
+        return LinkedAccount::factory()->state(['user_id' => 1]);
     }
 
     private static function consume(stdClass $control): mixed

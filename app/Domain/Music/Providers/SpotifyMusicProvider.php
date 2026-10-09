@@ -2,15 +2,18 @@
 
 namespace App\Domain\Music\Providers;
 
+use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
+use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Music\Exceptions\UnsupportedCapability;
+use App\Models\LinkedAccount;
+use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -31,7 +34,13 @@ class SpotifyMusicProvider implements MusicProvider
 
     private const int TOKEN_SAFETY_MARGIN_SECONDS = 60;
 
+    private const int APPEND_CHUNK_SIZE = 100;
+
+    private const int MAX_PAGES = 200;
+
     private const int DEFAULT_RETRY_AFTER_SECONDS = 30;
+
+    public function __construct(private readonly HostAccountTokens $hostTokens) {}
 
     public function id(): string
     {
@@ -83,22 +92,114 @@ class SpotifyMusicProvider implements MusicProvider
 
     public function playlists(string $hostAccountId): array
     {
-        throw UnsupportedCapability::for(self::ID, Capability::PlaylistWrite);
+        $token = $this->hostToken($hostAccountId);
+        $playlists = [];
+
+        foreach ($this->pages('/me/playlists', ['limit' => 50], $token) as $item) {
+            $tracks = $item['tracks'] ?? $item['items'] ?? [];
+            $playlists[] = new PlaylistData(
+                (string) $item['id'],
+                (string) ($item['name'] ?? ''),
+                is_array($tracks) ? (int) ($tracks['total'] ?? 0) : 0,
+            );
+        }
+
+        return $playlists;
     }
 
-    public function playlistTracks(string $playlistId): array
+    public function playlistTracks(string $playlistId, string $hostAccountId): array
     {
-        throw UnsupportedCapability::for(self::ID, Capability::PlaylistWrite);
+        $token = $this->hostToken($hostAccountId);
+        $tracks = [];
+
+        foreach ($this->pages('/playlists/'.rawurlencode($playlistId).'/tracks', array_filter([
+            'limit' => 100,
+            'market' => $this->market(),
+        ], fn (mixed $value): bool => $value !== null), $token) as $entry) {
+            $track = $entry['track'] ?? $entry['item'] ?? null;
+
+            if (! is_array($track) || ($entry['is_local'] ?? false) || ($track['is_local'] ?? false) || ($track['type'] ?? 'track') !== 'track' || ! isset($track['id'])) {
+                continue;
+            }
+
+            $tracks[] = $this->toTrackData($track);
+        }
+
+        return $tracks;
     }
 
     public function supports(Capability $capability): bool
     {
-        return false;
+        return match ($capability) {
+            Capability::PlaylistWrite => true,
+        };
     }
 
-    public function appendToPlaylist(string $playlistId, array $providerTrackIds): void
+    public function appendToPlaylist(string $playlistId, array $providerTrackIds, string $hostAccountId): void
     {
-        throw UnsupportedCapability::for(self::ID, Capability::PlaylistWrite);
+        $token = $this->hostToken($hostAccountId);
+        $uris = array_map(fn (string $id): string => "spotify:track:{$id}", $providerTrackIds);
+
+        foreach (array_chunk($uris, self::APPEND_CHUNK_SIZE) as $chunk) {
+            $response = $this->userRequest(
+                fn (PendingRequest $request): Response => $request->asJson()->post(self::API_URL.'/playlists/'.rawurlencode($playlistId).'/tracks', ['uris' => $chunk]),
+                $token,
+            );
+
+            $this->guard($response);
+        }
+    }
+
+    private function hostToken(string $hostAccountId): string
+    {
+        $account = ctype_digit($hostAccountId) ? LinkedAccount::query()->find((int) $hostAccountId) : null;
+
+        if ($account === null) {
+            throw ProviderUnavailableException::forProvider(self::ID);
+        }
+
+        $this->assertConfigured();
+
+        return $this->hostTokens->accessToken($account);
+    }
+
+    /**
+     * @param  array<string, mixed>  $query
+     * @return list<array<string, mixed>>
+     */
+    private function pages(string $path, array $query, string $token): array
+    {
+        $items = [];
+        $url = self::API_URL.$path;
+
+        for ($page = 0; $url !== null && $page < self::MAX_PAGES; $page++) {
+            $response = $this->userRequest(
+                fn (PendingRequest $request): Response => $request->get($url, $page === 0 ? $query : []),
+                $token,
+            );
+
+            $this->guard($response);
+
+            $items = [...$items, ...array_values(array_filter($response->json('items') ?? [], is_array(...)))];
+            $next = $response->json('next');
+            $url = is_string($next) && $next !== '' ? $next : null;
+        }
+
+        return $items;
+    }
+
+    /**
+     * @param  Closure(PendingRequest): Response  $send
+     */
+    private function userRequest(Closure $send, string $token): Response
+    {
+        $this->assertNotBackingOff();
+
+        try {
+            return $send(Http::withToken($token)->acceptJson());
+        } catch (ConnectionException) {
+            throw new ProviderTemporaryFailure('Spotify could not be reached.');
+        }
     }
 
     /**

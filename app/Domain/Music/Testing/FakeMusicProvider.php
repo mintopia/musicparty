@@ -106,7 +106,7 @@ class FakeMusicProvider implements MusicProvider
         return $this->playlists;
     }
 
-    public function playlistTracks(string $playlistId): array
+    public function playlistTracks(string $playlistId, string $hostAccountId): array
     {
         $this->throwInjectedFailure();
 
@@ -118,7 +118,7 @@ class FakeMusicProvider implements MusicProvider
         return in_array($capability, $this->capabilities, true);
     }
 
-    public function appendToPlaylist(string $playlistId, array $providerTrackIds): void
+    public function appendToPlaylist(string $playlistId, array $providerTrackIds, string $hostAccountId): void
     {
         if (! $this->supports(Capability::PlaylistWrite)) {
             throw UnsupportedCapability::for($this->id, Capability::PlaylistWrite);
