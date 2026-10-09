@@ -22,8 +22,8 @@ class PartyMemberRoleSeeder extends Seeder
 
         foreach ($roles as $code => $name) {
             $role = PartyMemberRole::whereCode($code)->first();
-            if (!$role) {
-                $role = new PartyMemberRole();
+            if (! $role) {
+                $role = new PartyMemberRole;
                 $role->code = $code;
             }
             $role->name = $name;

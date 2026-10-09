@@ -23,28 +23,31 @@ class PartyModeration extends Model
 
     public function match(object $spotifyTrack): bool
     {
-        $methodName = 'check' . substr($this->type->name, 2);
+        $methodName = 'check'.substr($this->type->name, 2);
         if (method_exists($this, $methodName)) {
             $result = $this->{$methodName}($spotifyTrack);
             if ($result === true) {
                 Log::info("[PartyModeration:{$this->id}] has matched {$spotifyTrack->id}");
             }
+
             return $result;
         }
+
         return false;
     }
 
     protected function checkName(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'name')) {
+        if (! property_exists($spotifyTrack, 'name')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->name);
     }
 
     protected function checkArtist(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'artists') || !is_iterable($spotifyTrack->artists)) {
+        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
         }
         foreach ($spotifyTrack->artists as $artist) {
@@ -52,12 +55,13 @@ class PartyModeration extends Model
                 return true;
             }
         }
+
         return false;
     }
 
     protected function checkArtistId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'artists') || !is_iterable($spotifyTrack->artists)) {
+        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
         }
         foreach ($spotifyTrack->artists as $artist) {
@@ -65,30 +69,34 @@ class PartyModeration extends Model
                 return true;
             }
         }
+
         return false;
     }
 
     protected function checkId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'id')) {
+        if (! property_exists($spotifyTrack, 'id')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->id, false);
     }
 
     protected function checkAlbum(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'album') || !is_object($spotifyTrack->album) || !property_exists($spotifyTrack->album, 'name')) {
+        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'name')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->album->name);
     }
 
     protected function checkAlbumId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'album') || !is_object($spotifyTrack->album) || !property_exists($spotifyTrack->album, 'id')) {
+        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'id')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->album->id, false);
     }
 
@@ -97,23 +105,17 @@ class PartyModeration extends Model
         if ($spotifyTrack?->external_ids?->isrc === null) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->external_ids->isrc);
     }
 
     public function getMessage(): string
     {
-        switch ($this->type) {
-            case PartyModerationType::mtAlbum:
-            case PartyModerationType::mtAlbumId:
-                return 'Album is not allowed';
-
-            case PartyModerationType::mtArtist:
-            case PartyModerationType::mtArtistId:
-                return 'Artist is not allowed';
-
-            default:
-                return 'Track is not allowed';
-        }
+        return match ($this->type) {
+            PartyModerationType::mtAlbum, PartyModerationType::mtAlbumId => 'Album is not allowed',
+            PartyModerationType::mtArtist, PartyModerationType::mtArtistId => 'Artist is not allowed',
+            default => 'Track is not allowed',
+        };
     }
 
     protected function regexTest(mixed $toCheck, $caseInsensitive = true): bool
@@ -126,7 +128,7 @@ class PartyModeration extends Model
         }
 
         // Treat it like a wildcard string match
-        $filter = '/^' . str_replace('*', '(.*)', $this->value) . '$/';
+        $filter = '/^'.str_replace('*', '(.*)', $this->value).'$/';
         if ($caseInsensitive) {
             $filter .= 'i';
         }
@@ -134,6 +136,7 @@ class PartyModeration extends Model
         if ($result !== false) {
             return $result > 0;
         }
+
         return $toCheck == $this->value;
     }
 }

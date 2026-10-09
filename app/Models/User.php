@@ -35,12 +35,19 @@ class User extends Authenticatable
     ];
 
     protected ?string $email = null;
+
     protected ?SpotifyWebAPI $api = null;
+
     protected ?Session $session = null;
+
     protected ?array $playlists = null;
+
     protected ?array $devices = null;
+
     protected ?object $recentTracks = null;
+
     protected array $playlistCache = [];
+
     protected $hasUpdatedStatus = false;
 
     /**
@@ -79,7 +86,8 @@ class User extends Authenticatable
         if ($role instanceof Role) {
             $role = $role->code;
         }
-        return (bool)$this->roles()->whereCode($role)->count();
+
+        return (bool) $this->roles()->whereCode($role)->count();
     }
 
     public function getEmail(): ?string
@@ -90,8 +98,10 @@ class User extends Authenticatable
         $linked = $this->accounts()->whereNotNull('email')->first();
         if ($linked) {
             $this->email = $linked->email;
+
             return $this->email;
         }
+
         return null;
     }
 
@@ -113,6 +123,7 @@ class User extends Authenticatable
             $toHash = $this->nickname;
         }
         $hash = hash('sha256', $toHash);
+
         return "https://gravatar.com/avatar/{$hash}?d=retro";
     }
 
@@ -126,6 +137,7 @@ class User extends Authenticatable
         $count = $this->accounts()->whereHas('provider', function ($query) {
             $query->whereIn('code', ['spotify', 'spotifysearch']);
         })->count();
+
         return $count === 2;
     }
 
@@ -135,6 +147,7 @@ class User extends Authenticatable
         if ($this->session !== null) {
             return $this->session->getAccessToken();
         }
+
         return null;
     }
 
@@ -146,7 +159,7 @@ class User extends Authenticatable
         $account = $this->accounts()->whereHas('provider', function ($query) {
             $query->whereCode('spotify');
         })->first();
-        if (!$account) {
+        if (! $account) {
             return null;
         }
 
@@ -157,13 +170,12 @@ class User extends Authenticatable
             $this->session->setAccessToken($account->access_token);
         }
 
-        if (!$this->api) {
+        if (! $this->api) {
             // Create new API
             Log::debug("{$this}: Creating new API connection");
-            $request = new Request();
+            $request = new Request;
             $this->api = new SpotifyWebAPI([], $this->session, $request);
         }
-
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this}: Refreshing expiring access token");
@@ -171,7 +183,7 @@ class User extends Authenticatable
             $account->access_token = $this->session->getAccessToken();
             $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
             $account->save();
-            SpotifyAccessTokenUpdatedEvent::dispatch($this, $account->access_token);
+            SpotifyAccessTokenUpdatedEvent::dispatch($this->id);
         }
 
         return $this->api;
@@ -183,14 +195,16 @@ class User extends Authenticatable
             return $this->devices;
         }
         $api = $this->getSpotifyApi();
-        if (!$api) {
+        if (! $api) {
             return [];
         }
 
         $this->devices = Cache::remember("users.{$this->id}.devices", 300, function () use ($api) {
             Log::debug("{$this}: Spotify API -> getMyDevices()");
+
             return $api->getMyDevices()->devices;
         });
+
         return $this->devices;
     }
 
@@ -200,7 +214,7 @@ class User extends Authenticatable
             return $this->playlists;
         }
         $api = $this->getSpotifyApi();
-        if (!$api) {
+        if (! $api) {
             return [];
         }
 
@@ -212,12 +226,13 @@ class User extends Authenticatable
             $this->playlists = array_merge($this->playlists, $result->items);
             $offset += 50;
         } while ($result->next);
+
         return $this->playlists;
     }
 
     public function getSpotifyStatus(bool $forced = false): ?object
     {
-        if ($this->hasUpdatedStatus && !$forced) {
+        if ($this->hasUpdatedStatus && ! $forced) {
             return $this->status;
         }
         Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
@@ -226,6 +241,7 @@ class User extends Authenticatable
         ]);
         $this->status_updated_at = Carbon::now();
         $this->save();
+
         return $this->status;
     }
 
@@ -236,12 +252,13 @@ class User extends Authenticatable
                 return $member;
             }
         }
+
         return null;
     }
 
     public function getRecentTracks(bool $force = false): ?object
     {
-        if (!$force && $this->recentTracks !== null) {
+        if (! $force && $this->recentTracks !== null) {
             return $this->recentTracks;
         }
 
@@ -250,12 +267,13 @@ class User extends Authenticatable
             'limit' => 20,
             'market' => $this->market,
         ]);
+
         return $this->recentTracks;
     }
 
     public function getPlaylist(string $id, bool $force = false): ?object
     {
-        if (!$force && isset($this->playlistCache[$id])) {
+        if (! $force && isset($this->playlistCache[$id])) {
             return $this->playlistCache[$id];
         }
 
@@ -263,6 +281,7 @@ class User extends Authenticatable
         $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id, [
             'market' => $this->market,
         ]);
+
         return $this->playlistCache[$id];
     }
 }

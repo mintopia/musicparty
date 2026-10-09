@@ -78,6 +78,17 @@
         ],
         "post-create-project-cmd": [
             "@php artisan key:generate --ansi"
+        ],
+        "test": "pest --parallel",
+        "test:coverage": "pest --parallel --coverage",
+        "analyse": "phpstan analyse --memory-limit=1G --no-progress",
+        "lint": "pint --test",
+        "rector": "rector process --dry-run --no-progress-bar",
+        "ci": [
+            "@lint",
+            "@analyse",
+            "@rector",
+            "@test:coverage"
         ]
     },
     "extra": {

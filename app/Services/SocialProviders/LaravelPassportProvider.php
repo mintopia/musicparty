@@ -10,9 +10,13 @@ use SocialiteProviders\Manager\Config;
 class LaravelPassportProvider extends AbstractSocialProvider
 {
     protected string $name = 'Laravel Passport';
+
     protected string $code = 'laravelpassport';
+
     protected string $socialiteProviderCode = 'laravelpassport';
+
     protected bool $supportsAuth = true;
+
     protected bool $canBeRenamed = true;
 
     public function __construct(?SocialProvider $provider = null, ?string $redirectUrl = null)
@@ -29,8 +33,9 @@ class LaravelPassportProvider extends AbstractSocialProvider
             $this->provider->getSetting('client_id'),
             $this->provider->getSetting('client_secret'),
             $this->redirectUrl,
-            ['host' =>  $this->provider->getSetting('host')]
+            ['host' => $this->provider->getSetting('host')]
         );
+
         return Socialite::buildProvider(Provider::class, $config->get())
             ->setConfig($config)->with(['prompt' => 'none']);
     }
@@ -40,7 +45,7 @@ class LaravelPassportProvider extends AbstractSocialProvider
         return array_merge(
             parent::configMapping(),
             [
-                'host' => (object)[
+                'host' => (object) [
                     'name' => 'Passport Host',
                     'validation' => 'required|string',
                 ],

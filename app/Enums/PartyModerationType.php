@@ -30,6 +30,7 @@ enum PartyModerationType
     public function getHumanReadableName(): string
     {
         $lookup = self::getHumanReadableTypes();
+
         return $lookup[$this->name] ?? 'Unknown';
     }
 }

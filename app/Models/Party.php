@@ -90,20 +90,12 @@ class Party extends Model
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        switch ($childType) {
-            case 'upcomingsong':
-            case 'song':
-                return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
-
-            case 'playedsong':
-                return $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first();
-
-            case 'user':
-                return $this->members()->whereId($value)->with(['user', 'role'])->first();
-
-            default:
-                return parent::resolveChildRouteBinding($childType, $value, $field);
-        }
+        return match ($childType) {
+            'upcomingsong', 'song' => $this->upcoming()->whereId($value)->with(['song', 'user'])->first(),
+            'playedsong' => $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first(),
+            'user' => $this->members()->whereId($value)->with(['user', 'role'])->first(),
+            default => parent::resolveChildRouteBinding($childType, $value, $field),
+        };
     }
 
     public function current()
@@ -212,12 +204,8 @@ class Party extends Model
 
     public function play(?string $playbackDevice): void
     {
-        if ($playbackDevice === null) {
-            $playbackDevice = $this->recent_device_id;
-        }
-        if ($playbackDevice === null) {
-            $playbackDevice = '';
-        }
+        $playbackDevice ??= $this->recent_device_id;
+        $playbackDevice ??= '';
         Log::debug("{$this}: Spotify API -> play()");
         $trackUri = '';
         if ($this->song) {
@@ -289,7 +277,7 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
-        $state = $this->user->getSpotifyStatus();
+        $this->user->getSpotifyStatus();
         $queue = $this->user->getSpotifyApi()->getMyQueue();
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
@@ -632,14 +620,12 @@ class Party extends Model
             return true;
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
-            return $query->whereIn('code', ['owner']);
-        })->count() > 0;
+        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
     }
 
     public function pushUpdate(): void
     {
-        UpdatedEvent::dispatch($this);
+        UpdatedEvent::dispatch($this->code);
     }
 
     public function checkDownvotesForUser(User $user): void

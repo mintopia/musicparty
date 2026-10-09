@@ -13,13 +13,13 @@ class MetricsCollector
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
         $promUrl = config('prometheus.urls.default');
-        if (!str_starts_with($promUrl, '/')) {
+        if (! str_starts_with($promUrl, '/')) {
             $promUrl = "/{$promUrl}";
         }
         if ($request->getRequestUri() === $promUrl) {
@@ -33,6 +33,7 @@ class MetricsCollector
             // Purposely do nothing other than logging
             Log::warning("Unable to store metrics: {$ex->getMessage()}");
         }
+
         return $response;
     }
 
@@ -40,6 +41,6 @@ class MetricsCollector
     {
         Redis::incr("metrics.http.method.{$method}", 1);
         Redis::incr("metrics.http.status.{$statusCode}", 1);
-        Redis::incr("metrics.http.requests", 1);
+        Redis::incr('metrics.http.requests', 1);
     }
 }

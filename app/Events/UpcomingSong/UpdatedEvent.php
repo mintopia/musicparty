@@ -7,36 +7,36 @@ use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class UpdatedEvent implements ShouldBroadcast
 {
     use Dispatchable;
     use InteractsWithSockets;
-    use SerializesModels;
+
+    public function __construct(protected string $partyCode, protected int $id) {}
 
     /**
-     * Create a new event instance.
+     * @return array<string, mixed>
      */
-    public function __construct(protected UpcomingSong $song)
+    public function broadcastWith(): array
     {
-        //
-    }
-
-    public function broadcastWith()
-    {
-        $data = $this->song->toApi();
-        $data['id'] = $this->song->id;
-        $data['created_at'] = $this->song->created_at->toIso8601String();
-        $data['updated_at'] = $this->song->updated_at->toIso8601String();
+        $song = UpcomingSong::query()->findOrFail($this->id);
+        $data = $song->toApi();
+        $data['id'] = $song->id;
+        $data['created_at'] = $song->created_at->toIso8601String();
+        $data['updated_at'] = $song->updated_at->toIso8601String();
         $data['vote'] = null;
+
         return $data;
     }
 
+    /**
+     * @return array<int, PrivateChannel>
+     */
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel("party.{$this->song->party->code}"),
+            new PrivateChannel("party.{$this->partyCode}"),
         ];
     }
 }

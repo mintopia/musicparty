@@ -47,6 +47,7 @@ class UpcomingSongController extends Controller
         $resource = new UpcomingSongResource($upcomingsong);
         $data = $augmentService->augment($upcomingsong, $request->user());
         $resource->augment($data);
+
         return $resource;
     }
 
@@ -55,26 +56,26 @@ class UpcomingSongController extends Controller
         $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
             $query->whereSpotifyId($request->input('spotify_id'));
         })->first();
-        if (!$upcoming) {
+        if (! $upcoming) {
             $spotifySong = $party->user->getSpotifyApi()->getTrack($request->input('spotify_id'));
-            if (!$spotifySong) {
+            if (! $spotifySong) {
                 return response()->json([
                     'message' => 'Unable to find the song in Spotify.',
                     'errors' => [
                         'spotify_id' => [
-                            'Unable to find the song in Spotify.'
-                        ]
-                    ]
+                            'Unable to find the song in Spotify.',
+                        ],
+                    ],
                 ], 422);
             }
 
             $member = $party->members()->whereUserId($request->user()->id)->first();
-            if (!$member) {
+            if (! $member) {
                 abort(403);
             }
             $checkService = new RequestCheckService($party, $member);
             $checkResponse = $checkService->checkSong($spotifySong);
-            if (!$checkResponse->allowed) {
+            if (! $checkResponse->allowed) {
                 return response()->json([
                     'message' => $checkResponse->reason,
                     'errors' => [
@@ -86,15 +87,15 @@ class UpcomingSongController extends Controller
             }
 
             $song = Song::fromSpotify($spotifySong);
-            $upcoming = new UpcomingSong();
+            $upcoming = new UpcomingSong;
             $upcoming->party()->associate($party);
             $upcoming->user()->associate($request->user());
             $upcoming->song()->associate($song);
             $upcoming->save();
         }
         $vote = $upcoming->votes()->whereUserId($request->user()->id)->first();
-        if (!$vote) {
-            $vote = new Vote();
+        if (! $vote) {
+            $vote = new Vote;
             $vote->user()->associate($request->user());
             $vote->upcomingSong()->associate($upcoming);
         }
@@ -104,6 +105,7 @@ class UpcomingSongController extends Controller
         $resource = new UpcomingSongResource($upcoming);
         $data = $augmentService->augment($upcoming, $request->user());
         $resource->augment($data);
+
         return $resource;
     }
 
@@ -113,6 +115,7 @@ class UpcomingSongController extends Controller
             abort(400, 'Unable to delete an upcoming song that has been queued');
         }
         $upcomingsong->delete();
+
         return response()->noContent();
     }
 }

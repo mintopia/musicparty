@@ -23,9 +23,10 @@ class SongRatingController extends Controller
             $rating = $playedsong->like($request->user());
         }
         $resource = new PlayedSongResource($playedsong);
-        $resource->augment((object)[
+        $resource->augment((object) [
             'rating' => $rating,
         ]);
+
         return $resource;
     }
 }

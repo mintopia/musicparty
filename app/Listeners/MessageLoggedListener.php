@@ -21,7 +21,7 @@ class MessageLoggedListener
     public function handle(MessageLogged $event): void
     {
         if (app()->runningInConsole()) {
-            $output = new ConsoleOutput();
+            $output = new ConsoleOutput;
             $output->writeln("[{$event->level}] {$event->message}");
         }
     }

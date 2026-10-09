@@ -14,16 +14,17 @@ class PlayedSongAugmentService
         $ratings = $user->ratings()->whereIn('played_song_id', $ids)->get();
         $augmentedData = [];
         foreach ($ratings as $rating) {
-            $augmentedData[$rating->upcoming_song_id] = (object)[
+            $augmentedData[$rating->upcoming_song_id] = (object) [
                 'rated' => $rating,
             ];
         }
+
         return collect($augmentedData);
     }
 
     public function augment(PlayedSong $song, User $user): object
     {
-        return (object)[
+        return (object) [
             'rated' => $song->ratings()->whereUserId($user->id)->first(),
         ];
     }
