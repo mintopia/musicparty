@@ -1,0 +1,22 @@
+{
+    "id": "track-4",
+    "name": "Region Locked",
+    "type": "track",
+    "duration_ms": 210000,
+    "explicit": false,
+    "artists": [
+        {
+            "id": "artist-1",
+            "name": "Test Artist",
+            "type": "artist"
+        }
+    ],
+    "album": {
+        "id": "album-1",
+        "name": "Test Album",
+        "type": "album",
+        "images": []
+    },
+    "external_ids": {},
+    "is_playable": false
+}

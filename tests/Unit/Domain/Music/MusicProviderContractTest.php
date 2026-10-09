@@ -8,10 +8,36 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Exceptions\UnsupportedCapability;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Tests\Fixtures\Spotify\SpotifyFake;
 
 dataset('providers', [
-    'fake' => [fn (): array => [FakeMusicProvider::withDefaultCatalogue(), fn (MusicProvider $p) => $p->failNextWith(new ProviderUnavailableException('no credential'))]],
+    'fake' => [fn (): array => [
+        FakeMusicProvider::withDefaultCatalogue(),
+        fn (MusicProvider $p) => $p->failNextWith(new ProviderUnavailableException('no credential')),
+        fn (MusicProvider $p) => $p->failNextWith(new ProviderTemporaryFailure),
+        fn (MusicProvider $p, int $seconds) => $p->rateLimitNext($seconds),
+    ]],
+    'spotify' => [function (): array {
+        config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'US']]);
+        Cache::flush();
+        $control = new stdClass;
+        SpotifyFake::catalogue($control);
+
+        return [
+            new SpotifyMusicProvider,
+            fn () => config(['services.spotify.client_id' => null]),
+            fn () => $control->next = Http::response('', 503),
+            fn (MusicProvider $p, int $seconds) => $control->next = Http::response('', 429, ['Retry-After' => (string) $seconds]),
+        ];
+    }],
+]);
+
+dataset('playlist providers', [
+    'fake' => [fn (): array => [FakeMusicProvider::withDefaultCatalogue()]],
 ]);
 
 it('pages search results within bounds', function (array $fixture) {
@@ -78,7 +104,7 @@ it('lists playlists and their tracks', function (array $fixture) {
         ->and($tracks)->toHaveCount($playlists[0]->trackCount)
         ->and($tracks[0])->toBeInstanceOf(TrackData::class)
         ->and($provider->playlistTracks('unknown'))->toBe([]);
-})->with('providers');
+})->with('playlist providers');
 
 it('declares playlist write support and appends', function (array $fixture) {
     [$provider] = $fixture;
@@ -88,7 +114,7 @@ it('declares playlist write support and appends', function (array $fixture) {
     $provider->appendToPlaylist('playlist-1', ['track-2']);
 
     expect($provider->playlistTracks('playlist-1'))->toHaveCount(3);
-})->with('providers');
+})->with('playlist providers');
 
 it('refuses to append when playlist write is unsupported', function () {
     $provider = new FakeMusicProvider(capabilities: []);
@@ -99,16 +125,16 @@ it('refuses to append when playlist write is unsupported', function () {
 })->throws(UnsupportedCapability::class, 'playlist-write is unsupported by Music Provider');
 
 it('surfaces a temporary failure once then recovers', function (array $fixture) {
-    [$provider] = $fixture;
-    $provider->failNextWith(new ProviderTemporaryFailure);
+    [$provider, , $failTemporarily] = $fixture;
+    $failTemporarily($provider);
 
     expect(fn () => $provider->search('song', 10, 0))->toThrow(ProviderTemporaryFailure::class)
         ->and($provider->search('song', 10, 0)->total)->toBe(2);
 })->with('providers');
 
 it('surfaces rate limiting with the advised back-off', function (array $fixture) {
-    [$provider] = $fixture;
-    $provider->rateLimitNext(30);
+    [$provider, , , $rateLimit] = $fixture;
+    $rateLimit($provider, 30);
 
     try {
         $provider->getTrack('track-1');
