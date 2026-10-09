@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MeasureRequest;
@@ -103,5 +104,6 @@ class Kernel extends HttpKernel
         'verified' => EnsureEmailIsVerified::class,
         'abilities' => CheckAbilities::class,
         'ability' => CheckForAnyAbility::class,
+        'integration.ability' => EnsureIntegrationAbility::class,
     ];
 }

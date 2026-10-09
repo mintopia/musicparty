@@ -26,7 +26,7 @@ class UserController extends Controller
 
     public function login_redirect(SocialProvider $socialprovider): RedirectResponse|SymfonyRedirectResponse
     {
-        if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
+        if (! $socialprovider->offersLogin()) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
         }
 
@@ -38,7 +38,7 @@ class UserController extends Controller
         if (Auth::hasUser()) {
             return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
         }
-        if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
+        if (! $socialprovider->offersLogin()) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
         }
         try {
@@ -64,6 +64,11 @@ class UserController extends Controller
 
     public function login(): Response
     {
-        return Inertia::render('Login');
+        return Inertia::render('Login', [
+            'providers' => SocialProvider::query()->orderBy('name')->get()
+                ->filter(fn (SocialProvider $provider): bool => $provider->offersLogin())
+                ->map(fn (SocialProvider $provider): array => ['code' => $provider->code, 'name' => $provider->name])
+                ->values()->all(),
+        ]);
     }
 }

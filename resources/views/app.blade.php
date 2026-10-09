@@ -3,7 +3,14 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>{{ config('app.name') }}</title>
+    @php
+        $site = app(\App\Domain\Admin\SiteSettings::class);
+    @endphp
+    <title>{{ $site->name() }}</title>
+    @if ($site->fileUrl('favicon'))
+        <link rel="icon" href="{{ $site->fileUrl('favicon') }}">
+    @endif
+    <script>window.siteName = @json($site->name());</script>
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $pusherConfig = [

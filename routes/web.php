@@ -1,7 +1,10 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\IntegrationTokenController as AdminIntegrationTokenController;
 use App\Http\Controllers\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Admin\ProviderController as AdminProviderController;
+use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
@@ -28,6 +31,13 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::delete('users/{user}/suspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
     Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');
     Route::delete('users/{user}/roles/{role}', [AdminUserController::class, 'revokeRole'])->name('users.roles.revoke');
+    Route::get('tokens', [AdminIntegrationTokenController::class, 'index'])->name('tokens.index');
+    Route::post('tokens', [AdminIntegrationTokenController::class, 'store'])->name('tokens.store');
+    Route::delete('tokens/{token}', [AdminIntegrationTokenController::class, 'destroy'])->name('tokens.destroy');
+    Route::get('providers', [AdminProviderController::class, 'index'])->name('providers.index');
+    Route::put('providers/{provider}', [AdminProviderController::class, 'update'])->name('providers.update');
+    Route::get('settings', [AdminSettingsController::class, 'show'])->name('settings.show');
+    Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
     Route::get('parties', [AdminPartyController::class, 'index'])->name('parties.index');
     Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
     Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');
