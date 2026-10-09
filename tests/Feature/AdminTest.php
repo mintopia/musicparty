@@ -386,3 +386,16 @@ it('gives no host powers to a non-admin or a demoted admin', function (): void {
 
     expect($admin->fresh()->isActingAsHostIn($party))->toBeFalse();
 });
+
+it('grants management of a party only while acting as host', function (): void {
+    $admin = makeAdmin();
+    $party = makeParty();
+
+    expect($party->canBeManagedBy($admin))->toBeFalse();
+
+    app(EnterActAsHost::class)->handle($admin, $party);
+    expect($party->canBeManagedBy($admin))->toBeTrue();
+
+    app(LeaveActAsHost::class)->handle($admin, $party);
+    expect($party->canBeManagedBy($admin))->toBeFalse();
+});

@@ -624,7 +624,7 @@ class Party extends Model
 
     public function canBeManagedBy(User $user): bool
     {
-        if ($user->id === $this->owner_id) {
+        if ($user->id === $this->owner_id || $user->isActingAsHostIn($this)) {
             return true;
         }
 

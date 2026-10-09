@@ -18,10 +18,12 @@ class EnterActAsHost
             throw new AuthorizationException;
         }
 
-        $session = AdminHostSession::query()->firstOrCreate(['user_id' => $admin->id, 'party_id' => $party->id]);
+        $admin->getConnection()->transaction(function () use ($admin, $party): void {
+            $session = AdminHostSession::query()->firstOrCreate(['user_id' => $admin->id, 'party_id' => $party->id]);
 
-        if ($session->wasRecentlyCreated) {
-            $this->log->handle($party, $admin, 'act_as_host.entered', true);
-        }
+            if ($session->wasRecentlyCreated) {
+                $this->log->handle($party, $admin, 'act_as_host.entered', true);
+            }
+        });
     }
 }
