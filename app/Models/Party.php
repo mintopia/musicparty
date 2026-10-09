@@ -68,6 +68,14 @@ class Party extends Model
         return $this->belongsTo(User::class, 'trusted_user_id');
     }
 
+    /**
+     * @return HasMany<AdminHostSession, $this>
+     */
+    public function adminHostSessions(): HasMany
+    {
+        return $this->hasMany(AdminHostSession::class);
+    }
+
     public function upcoming(): HasMany
     {
         return $this->hasMany(UpcomingSong::class);

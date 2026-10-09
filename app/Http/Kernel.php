@@ -4,6 +4,7 @@ namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MeasureRequest;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
@@ -65,12 +66,14 @@ class Kernel extends HttpKernel
             VerifyCsrfToken::class,
             SubstituteBindings::class,
             HandleInertiaRequests::class,
+            EnsureUserIsNotSuspended::class,
         ],
 
         'api' => [
             EnsureFrontendRequestsAreStateful::class,
             ThrottleRequests::class.':api',
             SubstituteBindings::class,
+            EnsureUserIsNotSuspended::class,
         ],
         'webhooks' => [
             MeasureRequest::class,

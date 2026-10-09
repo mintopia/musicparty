@@ -1,5 +1,8 @@
 <?php
 
+use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\UserController;
@@ -16,4 +19,16 @@ Route::middleware('guest')->group(function () {
     Route::get('login', [UserController::class, 'login'])->name('login');
     Route::get('login/{socialprovider:code}', [UserController::class, 'login_redirect'])->name('login.redirect');
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
+});
+
+Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::get('/', [DashboardController::class, 'index'])->name('index');
+    Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::post('users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
+    Route::delete('users/{user}/suspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
+    Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');
+    Route::delete('users/{user}/roles/{role}', [AdminUserController::class, 'revokeRole'])->name('users.roles.revoke');
+    Route::get('parties', [AdminPartyController::class, 'index'])->name('parties.index');
+    Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
+    Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');
 });
