@@ -4,6 +4,8 @@ namespace App\Domain\Party\Actions;
 
 use App\Domain\Party\FallbackPlaylistCheck;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\PartyState;
+use App\Domain\Playback\PlaybackCoordinator;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -12,7 +14,7 @@ readonly class UpdatePartySettings
 {
     private const array GATE_SETTINGS = ['fallback_playlist_id', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval'];
 
-    public function __construct(private RecordPartyLogEntry $record, private FallbackPlaylistGate $gate) {}
+    public function __construct(private RecordPartyLogEntry $record, private FallbackPlaylistGate $gate, private PlaybackCoordinator $playback) {}
 
     /**
      * @param  array<string, mixed>  $settings
@@ -40,6 +42,10 @@ readonly class UpdatePartySettings
 
             if (! $affectsGate) {
                 return ['party' => $party, 'warning' => null];
+            }
+
+            if ($party->state === PartyState::Live) {
+                DB::afterCommit(fn () => $this->playback->startIfIdle($party));
             }
 
             $check = $this->gate->check($party);
