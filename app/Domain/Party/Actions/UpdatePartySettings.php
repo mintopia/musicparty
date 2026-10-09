@@ -8,6 +8,7 @@ use App\Domain\Party\PartyState;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Models\Party;
 use App\Models\User;
+use BackedEnum;
 use Illuminate\Support\Facades\DB;
 
 readonly class UpdatePartySettings
@@ -27,6 +28,7 @@ readonly class UpdatePartySettings
 
             foreach ($settings as $key => $value) {
                 $old = $party->getAttribute($key);
+                $old = $old instanceof BackedEnum ? $old->value : $old;
 
                 if ($old === $value) {
                     continue;

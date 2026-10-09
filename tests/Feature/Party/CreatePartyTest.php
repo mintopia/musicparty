@@ -58,6 +58,7 @@ it('creates a party through the API', function (string $role) {
         'no_repeat_interval' => null,
         'downvotes' => true,
         'downvotes_per_hour' => null,
+        'selection_mode' => 'deterministic',
         'role' => 'host',
     ]]);
     expect($party->code)->toMatch('/^[A-Z]{4}$/')

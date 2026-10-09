@@ -144,7 +144,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('successMessage', 'Settings saved');

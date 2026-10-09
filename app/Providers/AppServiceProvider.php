@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Domain\Playback\PartyPlayers;
+use App\Domain\Queue\Randomizer;
+use App\Domain\Queue\SystemRandomizer;
 use App\Services\PlayedSongAugmentService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\ServiceProvider;
@@ -18,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->singleton(PartyPlayers::class);
+        $this->app->bind(Randomizer::class, SystemRandomizer::class);
     }
 
     /**
