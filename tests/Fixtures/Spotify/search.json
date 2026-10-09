@@ -1,0 +1,80 @@
+{
+    "tracks": {
+        "href": "https://api.spotify.com/v1/search",
+        "limit": 2,
+        "offset": 0,
+        "total": 2,
+        "items": [
+            {
+                "id": "track-1",
+                "name": "Alpha Song",
+                "type": "track",
+                "duration_ms": 180000,
+                "explicit": false,
+                "artists": [
+                    {
+                        "id": "artist-1",
+                        "name": "Test Artist",
+                        "type": "artist"
+                    }
+                ],
+                "album": {
+                    "id": "album-1",
+                    "name": "Test Album",
+                    "type": "album",
+                    "images": [
+                        {
+                            "url": "https://i.scdn.co/image/one-640",
+                            "height": 640,
+                            "width": 640
+                        },
+                        {
+                            "url": "https://i.scdn.co/image/one-300",
+                            "height": 300,
+                            "width": 300
+                        }
+                    ]
+                },
+                "external_ids": {
+                    "isrc": "ISRC0000001"
+                },
+                "is_playable": true
+            },
+            {
+                "id": "track-2",
+                "name": "Beta Song",
+                "type": "track",
+                "duration_ms": 200000,
+                "explicit": true,
+                "artists": [
+                    {
+                        "id": "artist-1",
+                        "name": "Test Artist",
+                        "type": "artist"
+                    }
+                ],
+                "album": {
+                    "id": "album-1",
+                    "name": "Test Album",
+                    "type": "album",
+                    "images": [
+                        {
+                            "url": "https://i.scdn.co/image/two-640",
+                            "height": 640,
+                            "width": 640
+                        },
+                        {
+                            "url": "https://i.scdn.co/image/two-300",
+                            "height": 300,
+                            "width": 300
+                        }
+                    ]
+                },
+                "external_ids": {
+                    "isrc": "ISRC0000002"
+                },
+                "is_playable": true
+            }
+        ]
+    }
+}
