@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -26,6 +27,14 @@ class UserFactory extends Factory
     public function firstLogin(): static
     {
         return $this->state(fn (): array => ['first_login' => true, 'terms_agreed_at' => null]);
+    }
+
+    public function withRole(string $code): static
+    {
+        return $this->afterCreating(function (User $user) use ($code): void {
+            $role = Role::query()->where('code', $code)->first() ?? Role::query()->forceCreate(['code' => $code, 'name' => $code]);
+            $user->roles()->attach($role);
+        });
     }
 
     public function suspended(): static

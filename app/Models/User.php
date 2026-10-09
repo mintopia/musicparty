@@ -68,6 +68,14 @@ class User extends Authenticatable
         return $this->hasMany(Party::class);
     }
 
+    /**
+     * @return BelongsToMany<Party, $this>
+     */
+    public function memberParties(): BelongsToMany
+    {
+        return $this->belongsToMany(Party::class, 'party_members')->withPivot('role')->withTimestamps();
+    }
+
     public function partyMembers(): HasMany
     {
         return $this->hasMany(PartyMember::class);

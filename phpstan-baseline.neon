@@ -499,12 +499,6 @@ parameters:
 			path: app/Models/LinkedAccount.php
 
 		-
-			message: '#^Access to an undefined property App\\Models\\Party\:\:\$owner_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Party\:\:\$playlist_id\.$#'
 			identifier: property.notFound
 			count: 1
@@ -673,12 +667,6 @@ parameters:
 			path: app/Models/Party.php
 
 		-
-			message: '#^Method App\\Models\\Party\:\:getMember\(\) should return App\\Models\\PartyMember but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/Party.php
-
-		-
 			message: '#^Method App\\Models\\Party\:\:getNextUpdateDelay\(\) should return int\|null but returns float\|int\.$#'
 			identifier: return.type
 			count: 1
@@ -787,12 +775,6 @@ parameters:
 			path: app/Models/PartyMember.php
 
 		-
-			message: '#^Method App\\Models\\PartyMember\:\:role\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMember.php
-
-		-
 			message: '#^Method App\\Models\\PartyMember\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
@@ -803,24 +785,6 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: app/Models/PartyMember.php
-
-		-
-			message: '#^Class App\\Models\\PartyMemberRole uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMemberRole.php
-
-		-
-			message: '#^Method App\\Models\\PartyMemberRole\:\:member\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMemberRole.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPartyMemberRole\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/PartyMemberRole.php
 
 		-
 			message: '#^Access to an undefined property object\:\:\$external_ids\.$#'
@@ -1654,12 +1618,6 @@ parameters:
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:match\(\)\.$#'
 			identifier: method.notFound
 			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
 			path: app/Services/RequestCheckService.php
 
 		-

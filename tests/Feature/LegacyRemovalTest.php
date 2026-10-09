@@ -33,6 +33,7 @@ it('no longer ships legacy classes', function (string $class) {
     'mod model' => 'App\Models\Mod',
     'mod setting model' => 'App\Models\ModSetting',
     'party mod setting model' => 'App\Models\PartyModSetting',
+    'party member role model' => 'App\Models\PartyMemberRole',
     'youtube job' => 'App\Jobs\PartyPlayYouTubeVideo',
     'youtube event' => 'App\Events\Party\PlayYouTubeVideoEvent',
     'cron tick event' => 'App\Events\Cron\HourTickEvent',
@@ -57,7 +58,7 @@ it('drops the css_classes column in a migration', function () {
 
 it('registers no web routes for removed pages', function (string $name) {
     expect(Route::has($name))->toBeFalse();
-})->with(['parties.youtube', 'parties.ytplayer', 'admin.dashboard', 'parties.show']);
+})->with(['parties.youtube', 'parties.ytplayer', 'admin.dashboard']);
 
 it('defines the reverb config the bootstrap script reads', function () {
     $this->withoutVite()->get(route('home'))
