@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  Laravel 13 / PHP 8.4 on FrankenPHP + Octane, MariaDB, Redis, Horizon, Reverb, Inertia + Vue 3 + Tailwind v4.
+  Use the terms in GLOSSARY.md exactly; respect the decisions in docs/adr/.
+  Prefer first-party Laravel packages; deviations need an ADR.
+  Every HTTP endpoint must be in the OpenAPI spec and every broadcast in the AsyncAPI spec (CI-enforced).
+
+# Project context (optional)
+# Add only constraints that should guide OpenSpec artifacts and workflows.
+# Include constraints an agent cannot infer by reading the code.
+# Keep general project documentation and discoverable codebase facts out.
+# Example:
+#   context: |
+#     Designs and tasks must cover Windows, macOS, and Linux
+#     Write all artifacts in Spanish
+
+# Per-artifact rules (optional)
+# Add custom rules for specific artifacts.
+# Example:
+#   rules:
+#     proposal:
+#       - Keep proposals under 500 words
+#       - Always state what is out of scope
+#     tasks:
+#       - Break tasks into chunks of max 2 hours
+
+# Per-operation guidance (optional)
+# Add advisory guidance for how apply and archive work should be conducted.
+# This is separate from artifact rules above.
+# Example:
+#   operations:
+#     apply:
+#       guidance:
+#         - Keep test summaries concise
+#     archive:
+#       guidance:
+#         - Summarize the archive outcome before finishing
