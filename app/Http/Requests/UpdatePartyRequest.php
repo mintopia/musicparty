@@ -26,6 +26,8 @@ class UpdatePartyRequest extends FormRequest
             'min_song_length' => 'sometimes|nullable|integer|min:0|max:86400',
             'max_song_length' => 'sometimes|nullable|integer|min:1|max:86400',
             'no_repeat_interval' => 'sometimes|nullable|integer|min:0',
+            'downvotes' => 'sometimes|boolean',
+            'downvotes_per_hour' => 'sometimes|nullable|integer|min:0|max:1000',
         ];
     }
 
@@ -59,6 +61,10 @@ class UpdatePartyRequest extends FormRequest
             'max_song_length.integer' => 'The maximum song length must be a whole number of seconds.',
             'no_repeat_interval.integer' => 'The no-repeat interval must be a whole number of seconds.',
             'explicit.boolean' => 'The explicit setting must be true or false.',
+            'downvotes.boolean' => 'Downvotes must be either on or off.',
+            'downvotes_per_hour.integer' => 'The downvote limit must be a whole number.',
+            'downvotes_per_hour.min' => 'The downvote limit cannot be negative.',
+            'downvotes_per_hour.max' => 'The downvote limit may not be more than :max per hour.',
         ];
     }
 }

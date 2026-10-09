@@ -51,6 +51,8 @@ class Party extends Model
         'state' => PartyState::class,
         'allow_requests' => 'boolean',
         'explicit' => 'boolean',
+        'downvotes' => 'boolean',
+        'downvotes_per_hour' => 'integer',
     ];
 
     public function toStringName(): string

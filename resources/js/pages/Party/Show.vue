@@ -1,6 +1,6 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
@@ -16,6 +16,18 @@ const props = defineProps({
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
+});
+
+const channelName = `party.${props.party.code}`;
+
+onMounted(() => {
+    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
+        router.reload({only: ['queue', 'nowPlaying'], preserveScroll: true});
+    });
+});
+
+onBeforeUnmount(() => {
+    window.Echo?.leave(channelName);
 });
 
 const canViewLog = computed(
@@ -159,7 +171,7 @@ const placeholders = {
             </dl>
             <template v-else-if="section === 'queue'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
-                <QueueList :queue="queue" />
+                <QueueList :queue="queue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>

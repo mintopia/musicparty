@@ -34,6 +34,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
+        Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');
+        Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->name('parties.requests.vote.destroy');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();

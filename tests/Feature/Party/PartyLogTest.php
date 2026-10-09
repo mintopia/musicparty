@@ -163,3 +163,30 @@ it('is append-only', function () {
 
     expect($entry->fresh()->action)->toBe('party.created');
 });
+
+it('lets the host change the downvote settings through the API and logs them', function () {
+    [$party, $host] = partyWithMember('host');
+    Sanctum::actingAs($host);
+
+    $this->patchJson('/api/v1/parties/ABCD', ['downvotes' => false, 'downvotes_per_hour' => 3])
+        ->assertOk()
+        ->assertJsonPath('data.downvotes', false)
+        ->assertJsonPath('data.downvotes_per_hour', 3);
+
+    $party->refresh();
+    expect($party->downvotes)->toBeFalse()->and($party->downvotes_per_hour)->toBe(3)
+        ->and(PartyLogEntry::query()->where('action', 'party.settings_changed')->count())->toBe(2);
+
+    $this->patchJson('/api/v1/parties/ABCD', ['downvotes_per_hour' => null])->assertOk()->assertJsonPath('data.downvotes_per_hour', null);
+});
+
+it('rejects invalid downvote settings', function (array $payload) {
+    [, $host] = partyWithMember('host');
+    Sanctum::actingAs($host);
+
+    $this->patchJson('/api/v1/parties/ABCD', $payload)->assertUnprocessable();
+})->with([
+    'negative cap' => [['downvotes_per_hour' => -1]],
+    'non-integer cap' => [['downvotes_per_hour' => 'lots']],
+    'non-boolean toggle' => [['downvotes' => 'maybe']],
+]);
