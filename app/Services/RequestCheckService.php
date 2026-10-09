@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Domain\Party\PartyRole;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
@@ -115,7 +116,7 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
         }
 
-        if ($this->member->role->code === 'banned') {
+        if ($this->member->banned) {
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
@@ -148,7 +149,7 @@ class RequestCheckService
             return false;
         }
 
-        if ($this->member->role->code === 'vip') {
+        if ($this->member->role === PartyRole::Vip) {
             return false;
         }
 

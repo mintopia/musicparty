@@ -2,8 +2,10 @@
 
 namespace App\Exceptions;
 
+use App\Domain\Playback\Exceptions\IncompatibleProviderException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
 class Handler extends ExceptionHandler
@@ -29,5 +31,9 @@ class Handler extends ExceptionHandler
                 Log::critical('Spotify Rate Limit Hit');
             }
         });
+
+        $this->map(fn (IncompatibleProviderException $e): ValidationException => ValidationException::withMessages([
+            'player_kind' => [$e->getMessage()],
+        ]));
     }
 }
