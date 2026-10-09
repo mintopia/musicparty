@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Theming\ColourScheme;
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
@@ -32,6 +33,7 @@ class User extends Authenticatable
         'last_login' => 'datetime',
         'status_updated_at' => 'datetime',
         'status' => 'object',
+        'colour_scheme' => ColourScheme::class,
     ];
 
     protected ?string $email = null;
