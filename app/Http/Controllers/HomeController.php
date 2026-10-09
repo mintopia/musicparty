@@ -4,15 +4,17 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function home()
+    public function home(): Response
     {
-        return view('app');
+        return Inertia::render('Home');
     }
 
-    public function proxy(Request $request)
+    public function proxy(Request $request): \Illuminate\Http\Response
     {
         $cookiesArr = [];
         foreach ($request->input('cookies') as $name => $value) {
@@ -35,8 +37,9 @@ class HomeController extends Controller
         $response = curl_exec($curl);
         curl_close($curl);
 
-        $responseData = json_decode($response);
-        Log::info($response);
+        $body = is_string($response) ? $response : '';
+        $responseData = json_decode($body);
+        Log::info($body);
 
         return response($responseData->accessToken)->header('Content-Type', 'text/plain');
     }

@@ -6,12 +6,15 @@
         "build": "vite build"
     },
     "devDependencies": {
+        "@inertiajs/vue3": "^3.9.0",
+        "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.9",
         "axios": "^1.20.0",
         "laravel-echo": "^2.6.1",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.29",
         "pusher-js": "^8.6.0",
+        "tailwindcss": "^4.3.3",
         "vite": "^8.3.4",
         "vue": "^3.5.43"
     }

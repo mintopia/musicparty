@@ -150,13 +150,7 @@ class FakeMusicProvider implements MusicProvider
             return true;
         }
 
-        foreach ($track->artists as $artist) {
-            if (str_contains(mb_strtolower($artist->name), $needle)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($track->artists, fn ($artist) => str_contains(mb_strtolower($artist->name), $needle));
     }
 
     private function throwInjectedFailure(): void
