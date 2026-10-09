@@ -89,6 +89,21 @@ describe('useColourScheme', () => {
         expect(useColourScheme().scheme.value).toBe('system');
     });
 
+    it('keeps an anonymous visitor\'s saved choice when the server shares no scheme and the OS theme changes', () => {
+        const media = fakeMatchMedia(false);
+        window.matchMedia = () => media;
+        localStorage.setItem('colourScheme', 'dark');
+        page.props = {colourScheme: null, auth: {user: null}};
+
+        const scope = effectScope();
+        const {scheme} = scope.run(() => useColourScheme());
+        media.emit(true);
+        media.emit(false);
+
+        expect(scheme.value).toBe('dark');
+        expect(localStorage.getItem('colourScheme')).toBe('dark');
+    });
+
     it('reacts to OS changes only while system', () => {
         const media = fakeMatchMedia(false);
         window.matchMedia = () => media;

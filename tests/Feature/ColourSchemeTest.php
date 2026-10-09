@@ -64,9 +64,9 @@ it('requires authentication', function (): void {
     $this->put(route('colour-scheme.update'), ['colour_scheme' => 'dark'])->assertRedirect(route('login'));
 });
 
-it('shares the scheme with the shell, defaulting anonymous visitors to system', function (): void {
+it('shares the scheme with the shell, leaving it unset for anonymous visitors', function (): void {
     $this->withoutVite()->get(route('home'))
-        ->assertInertia(fn (Assert $page): Assert => $page->where('colourScheme', 'system'));
+        ->assertInertia(fn (Assert $page): Assert => $page->where('colourScheme', null));
 
     $user = User::factory()->create(['colour_scheme' => ColourScheme::Dark]);
 
