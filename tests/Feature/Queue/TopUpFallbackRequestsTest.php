@@ -4,11 +4,15 @@ use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
+use App\Models\PartyLogEntry;
 use App\Models\Play;
 use App\Models\TrackRequest;
+use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -99,4 +103,63 @@ it('shuffles the playlist rather than always taking the head', function () {
     app(TopUpFallbackRequests::class)($party);
 
     expect(queuedTrackIds($party))->not->toBe(['p1', 'p2', 'p3', 'p4', 'p5']);
+});
+
+function fallbackLog(Party $party): array
+{
+    return PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'like', 'fallback.%')->orderBy('id')->pluck('action')->all();
+}
+
+it('warns once when eligible tracks run low', function () {
+    $party = livePlaybackParty(array_map(playbackTrack(...), range(1, 7)));
+
+    app(TopUpFallbackRequests::class)($party);
+    TrackRequest::query()->where('party_id', $party->id)->where('status', RequestStatus::Queued)->limit(1)->delete();
+    app(TopUpFallbackRequests::class)($party);
+
+    expect(fallbackLog($party))->toBe(['fallback.running_low']);
+});
+
+it('re-allows recent plays when only the no-repeat window excludes tracks', function () {
+    $party = livePlaybackParty(array_map(playbackTrack(...), range(1, 3)), ['no_repeat_interval' => 3600]);
+    foreach (range(1, 3) as $n) {
+        Play::factory()->for($party)->create(['provider_track_id' => "p{$n}", 'played_at' => now()->subMinutes(5)]);
+    }
+
+    expect(app(TopUpFallbackRequests::class)($party))->toBe(3)
+        ->and(fallbackLog($party))->toBe(['fallback.recent_plays_reallowed']);
+});
+
+it('does not re-allow tracks excluded by the rules', function () {
+    $party = livePlaybackParty([playbackTrack(1, explicit: true)], ['explicit' => false, 'no_repeat_interval' => 3600]);
+    Play::factory()->for($party)->create(['provider_track_id' => 'p1', 'played_at' => now()->subMinutes(5)]);
+
+    expect(app(TopUpFallbackRequests::class)($party))->toBe(0)
+        ->and(fallbackLog($party))->toBe(['fallback.exhausted']);
+});
+
+it('records exhaustion once, then recovery when tracks return', function () {
+    $party = livePlaybackParty([]);
+
+    app(TopUpFallbackRequests::class)($party);
+    app(TopUpFallbackRequests::class)($party);
+
+    app()->instance(FakeMusicProvider::class, new FakeMusicProvider(playlistTracks: ['pl' => array_map(playbackTrack(...), range(1, 12))]));
+    app(TopUpFallbackRequests::class)($party);
+
+    expect(fallbackLog($party))->toBe(['fallback.exhausted', 'fallback.healthy']);
+});
+
+it('resumes playback when the Host changes the playlist of an exhausted live party', function () {
+    $party = livePlaybackParty([]);
+    $player = useFakePlayer($party);
+    $host = User::factory()->create();
+
+    app(PlaybackCoordinator::class)->startIfIdle($party);
+    expect(enqueuedTrackIds($player))->toBe([]);
+
+    app()->instance(FakeMusicProvider::class, new FakeMusicProvider(playlistTracks: ['pl2' => array_map(playbackTrack(...), range(1, 25))]));
+    app(UpdatePartySettings::class)($host, $party, ['fallback_playlist_id' => 'pl2']);
+
+    expect(enqueuedTrackIds($player))->not->toBeEmpty();
 });
