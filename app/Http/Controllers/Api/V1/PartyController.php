@@ -4,14 +4,19 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\JoinParty;
+use App\Domain\Party\Actions\ListPartyLog;
+use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyControlRequest;
 use App\Http\Requests\StorePartyRequest;
+use App\Http\Requests\UpdatePartyRequest;
+use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PartyResource;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyController extends Controller
 {
@@ -48,6 +53,24 @@ class PartyController extends Controller
     public function show(Party $party)
     {
         return new PartyResource($party);
+    }
+
+    public function update(UpdatePartyRequest $request, UpdatePartySettings $updateSettings, Party $party): PartyResource
+    {
+        $user = $request->user();
+        assert($user instanceof User);
+
+        /** @var array{name?: string} $settings */
+        $settings = $request->safe()->only(['name']);
+
+        return new PartyResource($updateSettings($user, $party, $settings));
+    }
+
+    public function log(ListPartyLog $listLog, Party $party): AnonymousResourceCollection
+    {
+        $this->authorize('viewLog', $party);
+
+        return PartyLogEntryResource::collection($listLog($party));
     }
 
     public function control(PartyControlRequest $request, Party $party)

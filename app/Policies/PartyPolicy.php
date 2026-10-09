@@ -2,6 +2,7 @@
 
 namespace App\Policies;
 
+use App\Domain\Party\PartyRole;
 use App\Models\Party;
 use App\Models\User;
 
@@ -37,6 +38,14 @@ class PartyPolicy
     public function update(User $user, Party $party): bool
     {
         return $party->canBeManagedBy($user);
+    }
+
+    public function viewLog(User $user, Party $party): bool
+    {
+        $member = $party->memberFor($user);
+
+        return $member !== null && ! $member->banned
+            && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
     }
 
     /**

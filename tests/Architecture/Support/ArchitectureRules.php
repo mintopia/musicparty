@@ -7,6 +7,7 @@ use App\Models\Album;
 use App\Models\Artist;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\PartyModeration;
 use App\Models\PlayedSong;
@@ -103,6 +104,7 @@ class ArchitectureRules
                     Party::class,
                     PartyMember::class,
                     PartyModeration::class,
+                    PartyLogEntry::class,
                     UpcomingSong::class,
                     Vote::class,
                     Role::class,

@@ -1,5 +1,5 @@
 <script setup>
-import {Head} from '@inertiajs/vue3';
+import {Head, Link} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 
@@ -10,6 +10,10 @@ const props = defineProps({
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
 });
+
+const canViewLog = computed(
+    () => !props.membership.banned && ['host', 'moderator'].includes(props.membership.role),
+);
 
 const copied = ref(false);
 const copyCode = async () => {
@@ -88,6 +92,12 @@ const placeholders = {
                 <dd>{{ party.playerKind }}</dd>
                 <dt class="text-muted">Role</dt>
                 <dd class="capitalize" data-testid="party-role">Your role: {{ membership.role }}</dd>
+                <template v-if="canViewLog">
+                    <dt class="text-muted">Log</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/log`" class="hover:text-primary" data-testid="party-log-link">Party Log</Link>
+                    </dd>
+                </template>
             </dl>
             <p v-else class="text-sm text-muted">{{ placeholders[section] }}</p>
         </section>
