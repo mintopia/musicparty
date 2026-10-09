@@ -18,6 +18,7 @@ readonly class CreateParty
         private PairingCatalogue $catalogue,
         private PairPlayer $pairPlayer,
         private GeneratePartyCode $generateCode,
+        private RecordPartyLogEntry $record,
     ) {}
 
     /**
@@ -41,6 +42,12 @@ readonly class CreateParty
                 'party_id' => $party->id,
                 'user_id' => $host->id,
                 'role' => PartyRole::Host,
+            ]);
+
+            ($this->record)($party, 'party.created', $host, details: [
+                'name' => $name,
+                'music_provider' => $musicProvider,
+                'player_kind' => $playerKind,
             ]);
 
             return $party->fresh() ?? $party;
