@@ -67,8 +67,8 @@ class UpdatePartyRequest extends FormRequest
             'downvotes.boolean' => 'Downvotes must be either on or off.',
             'downvotes_per_hour.integer' => 'The downvote limit must be a whole number.',
             'downvotes_per_hour.min' => 'The downvote limit cannot be negative.',
-            'selection_mode.enum' => 'The selection mode must be deterministic or weighted.',
             'downvotes_per_hour.max' => 'The downvote limit may not be more than :max per hour.',
+            'selection_mode.enum' => 'The selection mode must be deterministic or weighted.',
         ];
     }
 }

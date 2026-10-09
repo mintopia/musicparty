@@ -37,18 +37,17 @@ readonly class SelectUpNext
                 return null;
             }
 
-            $eligible = TrackRequest::query()
+            $ranked = TrackRequest::query()
                 ->where('party_id', $locked->id)
                 ->where('status', RequestStatus::Queued)
                 ->where(fn ($query) => $query->whereNull('not_before')->orWhere('not_before', '<=', now()))
                 ->withSum('votes as score', 'value')
                 ->orderByRaw('COALESCE(score, 0) desc')
                 ->orderBy('created_at')
-                ->orderBy('id')
-                ->get();
+                ->orderBy('id');
 
             $mode = $locked->selection_mode;
-            $candidate = $mode === SelectionMode::Weighted ? $this->roulette($eligible) : $eligible->first();
+            $candidate = $mode === SelectionMode::Weighted ? $this->roulette($ranked->get()) : $ranked->first();
 
             if ($candidate === null) {
                 return null;
