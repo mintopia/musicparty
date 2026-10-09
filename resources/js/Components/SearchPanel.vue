@@ -86,26 +86,26 @@ const hasResults = computed(() => Array.isArray(props.results));
                 class="min-h-11 min-w-0 flex-1 rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
                 @input="onInput"
             />
-            <button type="submit" class="min-h-11 rounded bg-primary px-5 text-sm font-medium text-white">Search</button>
+            <button type="submit" class="min-h-11 rounded bg-primary px-5 text-sm font-medium text-white hover:opacity-90">Search</button>
         </form>
 
         <p v-if="searchError" role="alert" data-testid="search-error" class="text-sm text-danger">{{ searchError }}</p>
         <p v-else-if="!hasResults" class="text-sm text-muted">Search for a track to add it to the queue.</p>
         <p v-else-if="results.length === 0" data-testid="search-empty" class="text-sm text-muted">No tracks found.</p>
         <template v-else>
-            <h2 class="text-lg font-semibold">Results</h2>
-            <ul data-testid="search-results" class="divide-y divide-border overflow-hidden rounded border border-border">
-                <li v-for="track in results" :key="track.provider_track_id" data-testid="search-result" class="px-3 py-3 md:px-5">
-                    <div class="flex items-center gap-3">
+            <h2 class="text-base font-bold md:text-lg">Results</h2>
+            <ul data-testid="search-results" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
+                <li v-for="track in results" :key="track.provider_track_id" data-testid="search-result" class="px-3 py-3 md:px-5 md:py-4">
+                    <div class="flex items-center gap-3 md:gap-4">
                         <TrackThumb :src="track.artwork_url" />
                         <div class="min-w-0 flex-1">
-                            <div class="truncate text-sm font-medium">{{ track.title }}</div>
+                            <div class="truncate text-sm text-primary">{{ track.title }}</div>
                             <div class="truncate text-sm text-muted">{{ track.artists.join(', ') }}</div>
                             <div v-if="track.queued" data-testid="requested-by" class="truncate text-sm text-muted">Requested by {{ track.requested_by }}</div>
                             <div v-else class="truncate text-xs text-muted">{{ track.album }}</div>
                         </div>
-                        <span class="hidden text-sm text-muted sm:inline">{{ formatDuration(track.duration_ms) }}</span>
-                        <span v-if="track.queued" data-testid="result-score" class="min-w-8 text-center text-base font-semibold">{{ track.score }}</span>
+                        <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(track.duration_ms) }}</span>
+                        <span v-if="track.queued" data-testid="result-score" class="min-w-8 text-center text-sm tabular-nums">{{ track.score }}</span>
                         <button
                             type="button"
                             data-testid="request-button"
