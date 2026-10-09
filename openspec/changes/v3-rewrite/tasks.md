@@ -60,10 +60,9 @@ Each checkbox is roughly one PR, done in its own worktree off `feature/v3-rewrit
 ## 6. Guest UI & TV screen
 
 - [x] 6.1 Capture v2 reference screenshots (login, home, Party page with Queue and now playing, search, played history, TV screen, at mobile and desktop widths, light and dark) into `docs/design/v2-reference/`, indexed in its `README.md`.
-- [ ] 6.1a v3 mobile mockups: static mobile pages built with the real token sheet, covering login, the Party page (mini now-playing bar expanding to a full view, Up Next, Queue), search as a full-screen sheet, history, and Host and Moderator actions in an overflow menu. Use a bottom tab bar (Queue, Search, History, Party) instead of the sidebar, with thumb-sized vote targets. Light and dark, screenshotted into `docs/design/v3-mobile/` with a README. Verify by the user signing off on them.
-- [ ] 6.2 App layout, navigation, login and join pages in Vue with Inertia props. Verify by comparing desktop with the `docs/design/v2-reference/` screenshots and mobile with the `docs/design/v3-mobile/` mockups (the pages must match), and with Inertia feature tests for props.
-- [ ] 6.3 Party page with now playing, Up Next (shown as locked) and the Queue with voting, live through Echo. Verify against the desktop screenshots and the mobile mockups, and with Vitest component tests using a mocked Echo.
-- [ ] 6.4 Search and request flow, including rejection and Pending notifications on the per-member channel. Verify against the desktop screenshots and the mobile mockups and with Vitest and feature tests.
+- [ ] 6.2 App layout, navigation, login and join pages in Vue with Inertia props. Verify by comparing desktop with the `docs/design/v2-reference/` screenshots (the pages must match), and checking mobile against the mobile-first layout requirement in the theming spec, and with Inertia feature tests for props.
+- [ ] 6.3 Party page with now playing, Up Next (shown as locked) and the Queue with voting, live through Echo. Verify against the desktop screenshots and the mobile-first layout requirement, and with Vitest component tests using a mocked Echo.
+- [ ] 6.4 Search and request flow, including rejection and Pending notifications on the per-member channel. Verify against the desktop screenshots and the mobile-first layout requirement and with Vitest and feature tests.
 - [ ] 6.5 TV screen (anonymous, read-only, public channel only) with the QR code, targeting landscape screens of 1024px and wider. Verify against the desktop screenshots and with a test that it loads without authentication and subscribes to no private channels.
 - [ ] 6.6 Host and Moderator pages: settings, Pending approvals, Bans and the Party Log viewer. Verify with feature tests for permissions and Vitest tests for the components.
 
