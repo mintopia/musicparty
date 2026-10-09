@@ -1,7 +1,10 @@
 <?php
 
 use App\Domain\Queue\Actions\SelectUpNext;
+use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\RequestStatus;
+use App\Domain\Queue\SelectionMode;
+use App\Domain\Queue\Testing\SeededRandomizer;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
@@ -119,4 +122,103 @@ it('writes a selection entry to the party log', function () {
 
     expect(PartyLogEntry::query()->where('action', 'queue.selected')->first()->details)
         ->toMatchArray(['request_id' => $request->id, 'mode' => 'deterministic', 'score' => 2]);
+});
+
+function weightedParty(int $seed = 1): Party
+{
+    app()->instance(Randomizer::class, new SeededRandomizer($seed));
+
+    return Party::factory()->live()->create(['selection_mode' => SelectionMode::Weighted]);
+}
+
+function pickRepeatedly(Party $party, int $rounds): array
+{
+    $counts = [];
+
+    foreach (range(1, $rounds) as $ignored) {
+        $selected = app(SelectUpNext::class)($party);
+        $counts[$selected->id] = ($counts[$selected->id] ?? 0) + 1;
+        $selected->update(['status' => RequestStatus::Queued, 'up_next_at' => null]);
+    }
+
+    return $counts;
+}
+
+it('defaults parties to deterministic selection', function () {
+    expect($this->party->fresh()->selection_mode)->toBe(SelectionMode::Deterministic);
+});
+
+it('picks in proportion to positive score in weighted mode', function () {
+    $party = weightedParty();
+    $nine = queuedWithScore($party, 9);
+    $one = queuedWithScore($party, 1);
+
+    $counts = pickRepeatedly($party, 1000);
+
+    expect($counts[$nine->id] + $counts[$one->id])->toBe(1000)
+        ->and($counts[$nine->id])->toBeBetween(860, 940)
+        ->and($counts[$one->id])->toBeBetween(60, 140);
+});
+
+it('repeats the same picks for the same seed and differs for another', function () {
+    $sequence = function (int $seed): array {
+        $party = weightedParty($seed);
+        $requests = [queuedWithScore($party, 3), queuedWithScore($party, 3), queuedWithScore($party, 3)];
+
+        return collect(range(1, 12))->map(function () use ($party, $requests): int {
+            $selected = app(SelectUpNext::class)($party);
+            $selected->update(['status' => RequestStatus::Queued, 'up_next_at' => null]);
+
+            return array_search($selected->id, array_column($requests, 'id'), true);
+        })->all();
+    };
+
+    expect($sequence(7))->toBe($sequence(7))->and($sequence(7))->not->toBe($sequence(8));
+});
+
+it('never picks zero or negative requests while a positive one exists', function () {
+    $party = weightedParty();
+    $positive = queuedWithScore($party, 1);
+    queuedWithScore($party, 0);
+    queuedWithScore($party, -4);
+
+    expect(pickRepeatedly($party, 50))->toBe([$positive->id => 50]);
+});
+
+it('falls back to deterministic ordering when no score is positive', function () {
+    $party = weightedParty();
+    queuedWithScore($party, -3);
+    $zero = queuedWithScore($party, 0);
+
+    $selected = app(SelectUpNext::class)($party);
+
+    expect($selected->is($zero))->toBeTrue()
+        ->and($zero->fresh()->selection_mode)->toBe('weighted')
+        ->and($zero->fresh()->selection_score)->toBe(0);
+});
+
+it('skips requests that are not yet eligible in weighted mode', function () {
+    $party = weightedParty();
+    queuedWithScore($party, 50, ['not_before' => now()->addMinutes(10)]);
+    $eligible = queuedWithScore($party, 1, ['not_before' => now()->subMinute()]);
+
+    expect(pickRepeatedly($party, 20))->toBe([$eligible->id => 20]);
+});
+
+it('selects nothing in weighted mode when the queue is empty or nothing is eligible', function () {
+    $party = weightedParty();
+    expect(app(SelectUpNext::class)($party))->toBeNull();
+
+    queuedWithScore($party, 5, ['not_before' => now()->addHour()]);
+    expect(app(SelectUpNext::class)($party))->toBeNull();
+});
+
+it('logs the weighted mode and score of the chosen request', function () {
+    $party = weightedParty();
+    $request = queuedWithScore($party, 4);
+
+    app(SelectUpNext::class)($party);
+
+    $entry = PartyLogEntry::query()->where('action', 'queue.selected')->sole();
+    expect($entry->details)->toMatchArray(['request_id' => $request->id, 'mode' => 'weighted', 'score' => 4]);
 });
