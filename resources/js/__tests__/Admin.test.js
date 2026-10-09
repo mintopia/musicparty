@@ -8,12 +8,14 @@ const router = vi.hoisted(() => ({get: vi.fn(), post: vi.fn(), delete: vi.fn()})
 vi.mock('@inertiajs/vue3', () => ({
     usePage: () => page,
     router,
+    useForm: (data) => ({...data, post: vi.fn(), reset: vi.fn()}),
     Head: {render: () => null},
     Link: {props: ['href'], render() { return h('a', {href: this.href}, this.$slots.default?.()); }},
 }));
 
 import Dashboard from '../pages/Admin/Dashboard.vue';
 import UsersIndex from '../pages/Admin/Users/Index.vue';
+import TokensIndex from '../pages/Admin/Tokens/Index.vue';
 import PartiesIndex from '../pages/Admin/Parties/Index.vue';
 import SidebarNav from '../Components/SidebarNav.vue';
 
@@ -167,5 +169,29 @@ describe('Admin Parties', () => {
         const wrapper = mount(PartiesIndex, {props: {parties}});
         expect(wrapper.find('[data-testid="party-5"] button').attributes('aria-label')).toBe('Enter Act-as-Host for LAN One');
         expect(wrapper.find('[data-testid="party-6"] button').attributes('aria-label')).toBe('Leave Act-as-Host for LAN Two');
+    });
+});
+
+describe('Admin Tokens index', () => {
+    const tokens = {data: [
+        {id: 1, name: 'Exporter', abilities: ['export'], last_used_at: null, revoked: false},
+        {id: 2, name: 'Old', abilities: ['read'], last_used_at: null, revoked: true},
+    ]};
+
+    it('lists tokens, revokes active ones only and shows the issued value once', async () => {
+        const wrapper = mount(TokensIndex, {props: {tokens, abilities: ['read', 'export'], issued: {name: 'New', value: 'mpi_secret'}}});
+
+        expect(wrapper.get('[data-testid="issued-token"]').text()).toContain('mpi_secret');
+        expect(wrapper.get('[data-testid="token-1"]').text()).toContain('Never');
+        expect(wrapper.find('[data-testid="token-2"] [data-action="revoke"]').exists()).toBe(false);
+
+        await wrapper.get('[data-testid="token-1"] [data-action="revoke"]').trigger('click');
+        expect(router.delete).toHaveBeenCalledWith('/admin/tokens/1', expect.anything());
+    });
+
+    it('hides the issued banner when there is no new token', () => {
+        const wrapper = mount(TokensIndex, {props: {tokens: {data: []}, abilities: ['read']}});
+        expect(wrapper.find('[data-testid="issued-token"]').exists()).toBe(false);
+        expect(wrapper.text()).toContain('No integration tokens.');
     });
 });

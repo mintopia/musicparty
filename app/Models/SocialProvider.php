@@ -4,12 +4,15 @@ namespace App\Models;
 
 use App\Models\Traits\ToString;
 use App\Services\Contracts\SocialProviderContract;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 /**
+ * @property-read Collection<int, ProviderSetting> $settings
+ *
  * @mixin IdeHelperSocialProvider
  */
 class SocialProvider extends Model
@@ -42,6 +45,18 @@ class SocialProvider extends Model
     public function configMapping(): array
     {
         return $this->getProvider()->configMapping();
+    }
+
+    public function isConfigured(): bool
+    {
+        $settings = $this->settings;
+
+        return $settings->isNotEmpty() && $settings->every(fn (ProviderSetting $setting): bool => filled($setting->value));
+    }
+
+    public function offersLogin(): bool
+    {
+        return $this->enabled && $this->auth_enabled && $this->supports_auth && $this->isConfigured();
     }
 
     protected function toStringName(): string
