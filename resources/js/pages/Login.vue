@@ -2,6 +2,7 @@
 import {Head} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import Icon from '../Components/Icon.vue';
+import coverUrl from '../../img/cover.jpg';
 
 defineOptions({layout: (h, page) => page});
 
@@ -72,9 +73,11 @@ const year = new Date().getFullYear();
                 <p>All rights reserved.</p>
             </footer>
         </section>
-        <div
+        <img
+            :src="coverUrl"
+            alt=""
             aria-hidden="true"
-            class="hidden flex-1 bg-hero bg-[radial-gradient(ellipse_at_30%_20%,rgba(6,111,209,0.35),transparent_60%),radial-gradient(ellipse_at_80%_90%,rgba(145,70,255,0.3),transparent_55%)] md:block"
+            class="hidden h-screen flex-1 object-cover md:block"
         />
     </div>
 </template>

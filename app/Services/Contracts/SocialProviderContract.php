@@ -29,9 +29,6 @@ interface SocialProviderContract
      */
     public function redirect(): RedirectResponse;
 
-    /**
-     * The configured Socialite driver for this provider.
-     */
     public function driver(): Provider;
 
     /**
