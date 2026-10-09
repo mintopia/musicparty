@@ -50,6 +50,7 @@ class Party extends Model
         'song_started_at' => 'datetime',
         'state' => PartyState::class,
         'allow_requests' => 'boolean',
+        'explicit' => 'boolean',
     ];
 
     public function toStringName(): string

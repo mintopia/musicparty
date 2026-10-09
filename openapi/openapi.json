@@ -204,10 +204,35 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "explicit": {
+                                        "type": "boolean"
+                                    },
+                                    "fallback_playlist_id": {
+                                        "maxLength": 255,
+                                        "nullable": true,
+                                        "type": "string"
+                                    },
+                                    "max_song_length": {
+                                        "maximum": 86400,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer"
+                                    },
+                                    "min_song_length": {
+                                        "maximum": 86400,
+                                        "minimum": 0,
+                                        "nullable": true,
+                                        "type": "integer"
+                                    },
                                     "name": {
                                         "maxLength": 64,
                                         "minLength": 2,
                                         "type": "string"
+                                    },
+                                    "no_repeat_interval": {
+                                        "minimum": 0,
+                                        "nullable": true,
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -266,10 +291,35 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "explicit": {
+                                        "type": "boolean"
+                                    },
+                                    "fallback_playlist_id": {
+                                        "maxLength": 255,
+                                        "nullable": true,
+                                        "type": "string"
+                                    },
+                                    "max_song_length": {
+                                        "maximum": 86400,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer"
+                                    },
+                                    "min_song_length": {
+                                        "maximum": 86400,
+                                        "minimum": 0,
+                                        "nullable": true,
+                                        "type": "integer"
+                                    },
                                     "name": {
                                         "maxLength": 64,
                                         "minLength": 2,
                                         "type": "string"
+                                    },
+                                    "no_repeat_interval": {
+                                        "minimum": 0,
+                                        "nullable": true,
+                                        "type": "integer"
                                     }
                                 },
                                 "type": "object"
@@ -386,6 +436,50 @@
                 "summary": "api.v1.parties.control"
             }
         },
+        "/api/v1/parties/{party}/end": {
+            "post": {
+                "operationId": "postApiV1PartiesPartyEnd",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.end"
+            }
+        },
         "/api/v1/parties/{party}/join": {
             "post": {
                 "operationId": "postApiV1PartiesPartyJoin",
@@ -430,6 +524,50 @@
                 "summary": "api.v1.parties.join"
             }
         },
+        "/api/v1/parties/{party}/live": {
+            "post": {
+                "operationId": "postApiV1PartiesPartyLive",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.live"
+            }
+        },
         "/api/v1/parties/{party}/log": {
             "get": {
                 "operationId": "getApiV1PartiesPartyLog",
@@ -467,6 +605,50 @@
                     }
                 ],
                 "summary": "api.v1.parties.log"
+            }
+        },
+        "/api/v1/parties/{party}/pause": {
+            "post": {
+                "operationId": "postApiV1PartiesPartyPause",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.pause"
             }
         },
         "/api/v1/parties/{party}/playedsongs/{playedsong}/rate": {
@@ -579,6 +761,50 @@
                     }
                 ],
                 "summary": "api.v1.parties.queue"
+            }
+        },
+        "/api/v1/parties/{party}/reopen": {
+            "post": {
+                "operationId": "postApiV1PartiesPartyReopen",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/PartyResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.reopen"
             }
         },
         "/api/v1/parties/{party}/requests": {

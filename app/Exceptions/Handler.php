@@ -2,6 +2,8 @@
 
 namespace App\Exceptions;
 
+use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
+use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
@@ -34,6 +36,14 @@ class Handler extends ExceptionHandler
 
         $this->map(fn (IncompatibleProviderException $e): ValidationException => ValidationException::withMessages([
             'player_kind' => [$e->getMessage()],
+        ]));
+
+        $this->map(fn (FallbackPlaylistInsufficient $e): ValidationException => ValidationException::withMessages([
+            'fallback_playlist_id' => [$e->getMessage()],
+        ]));
+
+        $this->map(fn (InvalidPartyTransition $e): ValidationException => ValidationException::withMessages([
+            'state' => [$e->getMessage()],
         ]));
     }
 }

@@ -27,6 +27,11 @@ Route::middleware('auth')->group(function () {
     Route::post('parties/{party}/requests', [PartyController::class, 'storeRequest'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.requests.store');
+    foreach (['live', 'pause', 'end', 'reopen'] as $transition) {
+        Route::post("parties/{party}/{$transition}", [PartyController::class, $transition])
+            ->where('party', '[A-Za-z]{4}')
+            ->name("parties.{$transition}");
+    }
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')
