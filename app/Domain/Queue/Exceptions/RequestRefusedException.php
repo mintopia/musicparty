@@ -28,6 +28,16 @@ class RequestRefusedException extends RuntimeException
         return new self('You have been banned from requesting tracks in this party.', self::BANNED);
     }
 
+    public static function notAMemberToRate(): self
+    {
+        return new self('Join the party to rate tracks.', self::NOT_A_MEMBER);
+    }
+
+    public static function bannedFromRating(): self
+    {
+        return new self('You have been banned from rating tracks in this party.', self::BANNED);
+    }
+
     public static function partyNotLive(): self
     {
         return new self('This party is not live, so requests are closed.', self::PARTY_NOT_LIVE);

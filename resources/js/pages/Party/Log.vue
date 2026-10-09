@@ -24,6 +24,12 @@ const describe = (entry) => {
             }
             return label;
         }
+        case 'member.role_changed':
+            return `Changed ${entry.subject ?? 'a member'} from ${entry.details?.old ?? '?'} to ${entry.details?.new ?? '?'}`;
+        case 'member.banned':
+            return `Banned ${entry.subject ?? 'a member'}`;
+        case 'member.unbanned':
+            return `Unbanned ${entry.subject ?? 'a member'}`;
         default:
             return entry.action;
     }

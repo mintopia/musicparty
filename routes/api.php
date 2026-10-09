@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PartyController;
+use App\Http\Controllers\Api\V1\PartyMemberController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
@@ -32,6 +33,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/reopen', [PartyController::class, 'reopen'])->name('parties.reopen');
         Route::post('parties/{party}/join', [PartyController::class, 'join'])->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
+        Route::get('parties/{party}/members', [PartyMemberController::class, 'index'])->name('parties.members.index');
+        Route::put('parties/{party}/members/{member}/role', [PartyMemberController::class, 'role'])->whereNumber('member')->name('parties.members.role');
+        Route::put('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'ban'])->whereNumber('member')->name('parties.members.ban');
+        Route::delete('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'unban'])->whereNumber('member')->name('parties.members.unban');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');

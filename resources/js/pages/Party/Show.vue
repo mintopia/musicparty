@@ -162,6 +162,12 @@ const placeholders = {
                 <dd>{{ party.playerKind }}</dd>
                 <dt class="text-muted">Role</dt>
                 <dd class="capitalize" data-testid="party-role">Your role: {{ membership.role }}</dd>
+                <template v-if="!membership.banned">
+                    <dt class="text-muted">Members</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/members`" class="hover:text-primary" data-testid="party-members-link">Party Members</Link>
+                    </dd>
+                </template>
                 <template v-if="canViewLog">
                     <dt class="text-muted">Log</dt>
                     <dd>

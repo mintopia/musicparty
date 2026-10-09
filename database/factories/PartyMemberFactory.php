@@ -35,6 +35,11 @@ class PartyMemberFactory extends Factory
         return $this->state(fn (): array => ['role' => PartyRole::Moderator]);
     }
 
+    public function vip(): static
+    {
+        return $this->state(fn (): array => ['role' => PartyRole::Vip]);
+    }
+
     public function banned(): static
     {
         return $this->state(fn (): array => ['banned' => true]);

@@ -45,6 +45,23 @@
                     "description": "User id"
                 }
             }
+        },
+        "partyMembers": {
+            "address": "presence-party.{code}.members",
+            "description": "Presence channel (Echo name party.{code}.members). Joinable only by non-banned Members of the Party; unknown codes, non-Members, banned Members and unauthenticated callers are refused identically. Member payload carries only nickname and avatar.",
+            "messages": {
+                "Presence.MemberAdded": {
+                    "$ref": "#/components/messages/Presence.MemberAdded"
+                },
+                "Presence.MemberRemoved": {
+                    "$ref": "#/components/messages/Presence.MemberRemoved"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
         }
     },
     "components": {
@@ -107,6 +124,82 @@
                 },
                 "title": "User.SpotifyAccessTokenUpdatedEvent",
                 "x-event-class": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent"
+            },
+            "Presence.MemberAdded": {
+                "contentType": "application/json",
+                "name": "pusher:member_added",
+                "title": "Presence.MemberAdded",
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "id",
+                        "info"
+                    ],
+                    "properties": {
+                        "id": {
+                            "description": "Auth identifier supplied by the presence protocol",
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        },
+                        "info": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "nickname",
+                                "avatar"
+                            ],
+                            "properties": {
+                                "nickname": {
+                                    "type": "string"
+                                },
+                                "avatar": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Presence.MemberRemoved": {
+                "contentType": "application/json",
+                "name": "pusher:member_removed",
+                "title": "Presence.MemberRemoved",
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "id",
+                        "info"
+                    ],
+                    "properties": {
+                        "id": {
+                            "description": "Auth identifier supplied by the presence protocol",
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        },
+                        "info": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "nickname",
+                                "avatar"
+                            ],
+                            "properties": {
+                                "nickname": {
+                                    "type": "string"
+                                },
+                                "avatar": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     },
@@ -152,6 +245,20 @@
             "messages": [
                 {
                     "$ref": "#/channels/spotifyToken/messages/User.SpotifyAccessTokenUpdatedEvent"
+                }
+            ]
+        },
+        "subscribePartyMembers": {
+            "action": "receive",
+            "channel": {
+                "$ref": "#/channels/partyMembers"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMembers/messages/Presence.MemberAdded"
+                },
+                {
+                    "$ref": "#/channels/partyMembers/messages/Presence.MemberRemoved"
                 }
             ]
         }

@@ -53,6 +53,25 @@ class PartyPolicy
             && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
     }
 
+    public function viewMembers(User $user, Party $party): bool
+    {
+        $member = $party->memberFor($user);
+
+        return $member !== null && ! $member->banned;
+    }
+
+    public function manageRoles(User $user, Party $party): bool
+    {
+        $member = $party->memberFor($user);
+
+        return $member !== null && ! $member->banned && $member->role === PartyRole::Host;
+    }
+
+    public function moderate(User $user, Party $party): bool
+    {
+        return $this->viewLog($user, $party);
+    }
+
     /**
      * Determine whether the user can delete the model.
      */

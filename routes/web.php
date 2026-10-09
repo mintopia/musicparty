@@ -21,6 +21,21 @@ Route::middleware('auth')->group(function () {
     Route::get('parties/{party}/log', [PartyController::class, 'log'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.log');
+    Route::get('parties/{party}/members', [PartyController::class, 'members'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.members');
+    Route::put('parties/{party}/members/{member}/role', [PartyController::class, 'changeMemberRole'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('member')
+        ->name('parties.members.role');
+    Route::put('parties/{party}/members/{member}/ban', [PartyController::class, 'banMember'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('member')
+        ->name('parties.members.ban');
+    Route::delete('parties/{party}/members/{member}/ban', [PartyController::class, 'unbanMember'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('member')
+        ->name('parties.members.unban');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');

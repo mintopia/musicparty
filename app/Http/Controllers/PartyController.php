@@ -2,13 +2,17 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Party\Actions\BanMember;
+use App\Domain\Party\Actions\ChangeMemberRole;
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\GoLiveParty;
 use App\Domain\Party\Actions\JoinParty;
 use App\Domain\Party\Actions\ListPartyLog;
+use App\Domain\Party\Actions\ListPartyMembers;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
+use App\Domain\Party\Actions\UnbanMember;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
@@ -18,15 +22,18 @@ use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
+use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
+use App\Http\Resources\V1\PartyMemberResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -170,6 +177,61 @@ class PartyController extends Controller
             'party' => ['code' => $party->code, 'name' => $party->name],
             'entries' => PartyLogEntryResource::collection($listLog($party)),
         ]);
+    }
+
+    public function members(Request $request, ListPartyMembers $listMembers, Party $party): Response
+    {
+        $this->authorize('viewMembers', $party);
+        $user = $this->currentUser($request);
+
+        $members = PartyMemberResource::collection($listMembers($party, $user->can('moderate', $party)))
+            ->resolve($request);
+
+        return Inertia::render('Party/Members', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'members' => array_map(fn (array $member): array => [
+                'id' => $member['id'],
+                'nickname' => $member['nickname'],
+                'avatar' => $member['avatar'],
+                'role' => $member['role'],
+                'banned' => $member['banned'],
+                'isYou' => $member['is_you'],
+            ], $members),
+            'abilities' => [
+                'canChangeRoles' => $user->can('manageRoles', $party),
+                'canBan' => $user->can('moderate', $party),
+            ],
+        ]);
+    }
+
+    public function changeMemberRole(ChangeMemberRoleRequest $request, ChangeMemberRole $changeRole, Party $party, PartyMember $member): RedirectResponse
+    {
+        $this->authorize('manageRoles', $party);
+        abort_unless($member->party_id === $party->id, 404);
+
+        $changed = $changeRole($this->currentUser($request), $party, $member, $request->role());
+
+        return back()->with('successMessage', "{$changed->holder()->nickname} is now {$changed->role->value}");
+    }
+
+    public function banMember(Request $request, BanMember $banMember, Party $party, PartyMember $member): RedirectResponse
+    {
+        $this->authorize('moderate', $party);
+        abort_unless($member->party_id === $party->id, 404);
+
+        $banned = $banMember($this->currentUser($request), $party, $member);
+
+        return back()->with('successMessage', "{$banned->holder()->nickname} was banned");
+    }
+
+    public function unbanMember(Request $request, UnbanMember $unbanMember, Party $party, PartyMember $member): RedirectResponse
+    {
+        $this->authorize('moderate', $party);
+        abort_unless($member->party_id === $party->id, 404);
+
+        $unbanned = $unbanMember($this->currentUser($request), $party, $member);
+
+        return back()->with('successMessage', "{$unbanned->holder()->nickname} was unbanned");
     }
 
     public function storeRequest(RequestTrackRequest $request, RequestTrack $requestTrack, Party $party): RedirectResponse
