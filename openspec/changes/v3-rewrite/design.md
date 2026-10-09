@@ -24,7 +24,7 @@ See proposal.md (Why) for the motivation. The constraints that shape the approac
 
 - A plugin marketplace or runtime loading of third-party code.
 - Multiple Players per Party, or switching Player mid-Track.
-- A redesign of the desktop guest look and feel. Desktop guest pages match the v2 screenshots. Mobile is the exception: it is redesigned mobile-first from approved mockups, because v2's mobile layout is not fit for purpose.
+- A redesign of the desktop guest look and feel. Desktop guest pages match the v2 screenshots. Mobile is the exception: v2's mobile layout is not fit for purpose, so mobile is redesigned mobile-first in the same visual style (bottom tab bar, mini now-playing bar, full-screen search) and refined after build.
 - Horizontal scaling beyond the stated target. It is enabled by configuration but not tuned or load-tested past the target.
 
 ## Decisions
@@ -153,7 +153,7 @@ A load-test task checks the target with simulated Pusher clients.
 - **Hand-written AsyncAPI can drift.** → The CI reflection test in D10 catches drift, and payload schemas are checked against real Broadcast Resource output.
 - **Reverb client events** have to be enabled for Player channels, which opens them to abuse. → Client events are accepted only on `private-player.*`, with size and rate limits enforced in the listener. They are ignored on every other channel.
 - **The Fallback rule of 20 Tracks** may block small test parties. → The 20-Track rule applies as specified. Factories and the FakeMusicProvider supply eligible playlists for tests.
-- **Matching v2 visuals with Tailwind instead of Tabler** risks drift from the look and feel. → The desktop reference screenshots in `docs/design/v2-reference/`, the approved mobile mockups in `docs/design/v3-mobile/`, and a visual review step on each guest-page task.
+- **Matching v2 visuals with Tailwind instead of Tabler** risks drift from the look and feel. → The desktop reference screenshots in `docs/design/v2-reference/`, the mobile layout brief in the theming spec, and a visual review step on each guest-page task.
 
 ## Migration Plan
 

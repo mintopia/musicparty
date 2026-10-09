@@ -104,11 +104,11 @@ At viewports 768px wide and wider, the v3 guest pages SHALL match the layout and
 - **THEN** its layout, colours, typography and spacing match the corresponding desktop reference screenshot in docs/design/v2-reference/
 
 ### Requirement: Mobile-first guest layout
-Below 768px, the guest pages SHALL use a new mobile-first layout that matches the approved mockups in docs/design/v3-mobile/. It SHALL share the desktop visual language (tokens, typography, card style, vote controls). The v2 mobile layout is not a reference.
+Below 768px, the guest pages SHALL use a new mobile-first layout, built in the same visual language as the desktop UI (tokens, typography, card style, vote controls). The v2 mobile layout is not a reference. The layout SHALL use a bottom tab bar (Queue, Search, History, Party) instead of the sidebar. It SHALL have a sticky mini now-playing bar that expands to a full now-playing view, compact Queue rows, search as a full-screen sheet, and Host and Moderator actions behind an overflow menu.
 
-#### Scenario: Mobile matches approved mockup
+#### Scenario: Mobile-first layout
 - **WHEN** a guest page is viewed on a phone-sized viewport
-- **THEN** its layout matches the corresponding approved mockup in docs/design/v3-mobile/, with no horizontal scrolling
+- **THEN** it uses the bottom tab bar and mini now-playing bar, in the desktop visual language, with no horizontal scrolling
 
 #### Scenario: Thumb-reachable primary actions
 - **WHEN** a Member votes or requests on a phone
