@@ -21,7 +21,7 @@ class ListQueue
             ->with('requester.user')
             ->withSum('votes as score', 'value')
             ->withSum(['votes as my_vote' => fn ($query) => $query->where('party_member_id', $viewer?->id)], 'value')
-            ->orderByDesc('score')
+            ->orderByRaw('COALESCE(score, 0) desc')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();

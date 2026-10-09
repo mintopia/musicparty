@@ -25,6 +25,8 @@ class SearchHitResource extends JsonResource
             'duration_ms' => $this->track->durationMs,
             'explicit' => $this->track->explicit,
             'queued' => $this->queued,
+            'requested_by' => $this->requestedBy,
+            'score' => $this->score,
         ];
     }
 }

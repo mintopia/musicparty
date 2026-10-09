@@ -14,6 +14,7 @@ const props = defineProps({
     queue: {type: Array, default: () => []},
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
+    search_error: {type: String, default: null},
 });
 
 const copied = ref(false);
@@ -98,7 +99,7 @@ const placeholders = {
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-lg font-semibold">Search</h2>
-                <SearchPanel :party="party" :results="results" :search-query="search_query" :read-only="readOnly" />
+                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
             </template>
             <p v-else class="text-sm text-muted">{{ placeholders[section] }}</p>
         </section>

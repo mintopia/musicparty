@@ -9,5 +9,7 @@ final readonly class SearchHit
     public function __construct(
         public TrackData $track,
         public bool $queued,
+        public ?string $requestedBy = null,
+        public int $score = 0,
     ) {}
 }

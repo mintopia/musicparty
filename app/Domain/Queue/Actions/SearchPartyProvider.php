@@ -10,6 +10,7 @@ use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\TrackRequest;
+use App\Models\User;
 
 class SearchPartyProvider
 {
@@ -33,14 +34,28 @@ class SearchPartyProvider
             throw RequestRefusedException::providerUnavailable();
         }
 
-        $queued = array_flip(TrackRequest::query()
+        $queued = TrackRequest::query()
             ->where('party_id', $party->id)
             ->where('status', RequestStatus::Queued)
-            ->pluck('provider_track_id')
-            ->all());
+            ->with('requester.user')
+            ->withSum('votes as score', 'value')
+            ->oldest('id')
+            ->get()
+            ->unique('provider_track_id')
+            ->keyBy('provider_track_id');
 
         return array_map(
-            fn ($track): SearchHit => new SearchHit($track, isset($queued[$track->providerTrackId])),
+            function ($track) use ($queued): SearchHit {
+                $request = $queued->get($track->providerTrackId);
+                $requester = $request?->requester?->user;
+
+                return new SearchHit(
+                    $track,
+                    $request !== null,
+                    $requester instanceof User ? $requester->nickname : null,
+                    (int) $request?->score,
+                );
+            },
             $page->items,
         );
     }

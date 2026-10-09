@@ -32,20 +32,24 @@ class RequestTrack
             throw RequestRefusedException::partyNotLive();
         }
 
+        if (! $party->allow_requests) {
+            throw RequestRefusedException::requestsDisabled();
+        }
+
         $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
         $outcome = DB::transaction(function () use ($member, $party, $track): RequestOutcome {
+            Party::query()->whereKey($party->id)->lockForUpdate()->first();
+
             $existing = TrackRequest::query()
                 ->where('party_id', $party->id)
-                ->where('status', RequestStatus::Queued)
+                ->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued])
                 ->where('provider_track_id', $track->providerTrackId)
                 ->oldest('id')
                 ->first();
 
             if ($existing !== null) {
-                $this->castUpvote($existing, $member);
-
-                return new RequestOutcome($existing, false);
+                return new RequestOutcome($existing, false, $this->castUpvote($existing, $member));
             }
 
             $request = TrackRequest::query()->create([
@@ -62,7 +66,7 @@ class RequestTrack
             ]);
             $this->castUpvote($request, $member);
 
-            return new RequestOutcome($request, true);
+            return new RequestOutcome($request, true, true);
         });
 
         QueueUpdatedEvent::dispatch($party->code);
@@ -85,15 +89,18 @@ class RequestTrack
         return $track;
     }
 
-    private function castUpvote(TrackRequest $request, PartyMember $member): void
+    /**
+     * Returns true only when this call recorded a new vote; a duplicate or a lost insert race returns false.
+     */
+    private function castUpvote(TrackRequest $request, PartyMember $member): bool
     {
         try {
-            RequestVote::query()->firstOrCreate(
+            return RequestVote::query()->firstOrCreate(
                 ['track_request_id' => $request->id, 'party_member_id' => $member->id],
                 ['value' => 1],
-            );
+            )->wasRecentlyCreated;
         } catch (UniqueConstraintViolationException) {
-            return;
+            return false;
         }
     }
 }

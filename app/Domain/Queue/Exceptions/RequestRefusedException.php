@@ -12,6 +12,8 @@ class RequestRefusedException extends RuntimeException
 
     public const PARTY_NOT_LIVE = 422;
 
+    public const REQUESTS_DISABLED = 422;
+
     public const UNKNOWN_TRACK = 422;
 
     public const PROVIDER_UNAVAILABLE = 503;
@@ -29,6 +31,18 @@ class RequestRefusedException extends RuntimeException
     public static function partyNotLive(): self
     {
         return new self('This party is not live, so requests are closed.', self::PARTY_NOT_LIVE);
+    }
+
+    public static function requestsDisabled(): self
+    {
+        return new self('Requests are disabled for this party.', self::REQUESTS_DISABLED);
+    }
+
+    public function status(): int
+    {
+        $code = $this->getCode();
+
+        return $code >= 400 && $code <= 599 ? $code : 500;
     }
 
     public static function unknownTrack(): self

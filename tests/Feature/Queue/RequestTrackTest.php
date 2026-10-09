@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\QueueUpdatedEvent;
 use App\Models\Party;
@@ -214,4 +216,87 @@ it('matches web and API queue output', function () {
 
     $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD')
         ->assertInertia(fn (Assert $page): Assert => $page->where('queue', $api));
+});
+
+it('tells the web member whether a duplicate request added a vote', function () {
+    $other = PartyMember::factory()->for($this->party)->create();
+    $post = fn (User $user) => $this->actingAs($user)->from('/parties/ABCD')
+        ->post(route('parties.requests.store', ['party' => 'ABCD']), ['provider_track_id' => 'track-1']);
+
+    $post($this->user)->assertSessionHas('success', 'Track requested');
+    $post($other->user)->assertSessionHas('success', 'Already in the queue, your vote was added');
+    $post($other->user)->assertSessionHas('success', 'Already in the queue and you have already voted for it');
+
+    expect(RequestVote::query()->count())->toBe(2);
+});
+
+it('reports vote_added in API meta only for a new vote', function () {
+    apiRequest($this->user)->assertCreated()->assertJsonPath('meta.vote_added', true);
+    apiRequest($this->user)->assertOk()->assertJsonPath('meta.duplicate', true)->assertJsonPath('meta.vote_added', false);
+    $other = PartyMember::factory()->for($this->party)->create();
+    apiRequest($other->user)->assertOk()->assertJsonPath('meta.vote_added', true);
+});
+
+it('treats a pending request as a duplicate', function () {
+    $pending = TrackRequest::factory()->for($this->party)->for($this->member, 'requester')->create(['provider_track_id' => 'track-1', 'status' => RequestStatus::Pending]);
+
+    apiRequest($this->user)->assertOk()->assertJsonPath('data.id', $pending->id);
+
+    expect(TrackRequest::query()->count())->toBe(1);
+});
+
+it('refuses requests when the party disables them', function () {
+    $this->party->forceFill(['allow_requests' => false])->save();
+
+    apiRequest($this->user)->assertUnprocessable()->assertJsonPath('message', 'Requests are disabled for this party.');
+});
+
+it('maps invalid exception codes to a safe status', function () {
+    expect(new RequestRefusedException('x', 7)->status())->toBe(500)
+        ->and(RequestRefusedException::banned()->status())->toBe(403);
+});
+
+it('lists only queued requests and sorts zero above negative scores', function () {
+    $other = PartyMember::factory()->for($this->party)->create();
+    $zero = TrackRequest::factory()->for($this->party)->for($this->member, 'requester')->create(['created_at' => now()]);
+    $negative = TrackRequest::factory()->for($this->party)->for($this->member, 'requester')->create(['created_at' => now()->subMinute()]);
+    RequestVote::factory()->down()->for($negative, 'request')->for($other, 'member')->create();
+    foreach ([RequestStatus::Pending, RequestStatus::UpNext, RequestStatus::Playing, RequestStatus::Played, RequestStatus::Rejected, RequestStatus::Removed] as $status) {
+        TrackRequest::factory()->for($this->party)->for($this->member, 'requester')->create(['status' => $status]);
+    }
+
+    $queue = app(ListQueue::class)($this->party, $this->member);
+
+    expect($queue->pluck('id')->all())->toBe([$zero->id, $negative->id])
+        ->and($queue->pluck('score')->map(fn ($s) => (int) $s)->all())->toBe([0, -1]);
+});
+
+it('shows a search error on the party page when the provider fails', function () {
+    app(FakeMusicProvider::class)->rateLimitNext(5);
+
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD?q=song')
+        ->assertInertia(fn (Assert $page): Assert => $page->where('results', [])->has('search_error'));
+});
+
+it('returns 503 from API search when the provider fails', function () {
+    app(FakeMusicProvider::class)->rateLimitNext(5);
+    Sanctum::actingAs($this->user);
+
+    $this->getJson('/api/v1/parties/ABCD/search?q=song')->assertStatus(503);
+});
+
+it('lets a banned member search but not request', function () {
+    $banned = PartyMember::factory()->for($this->party)->banned()->create();
+    Sanctum::actingAs($banned->user);
+
+    $this->getJson('/api/v1/parties/ABCD/search?q=song')->assertOk();
+    $this->postJson('/api/v1/parties/ABCD/requests', ['provider_track_id' => 'track-1'])->assertForbidden();
+});
+
+it('includes requester and score on queued search hits', function () {
+    apiRequest($this->user)->assertCreated();
+
+    $this->getJson('/api/v1/parties/ABCD/search?q=alpha')->assertOk()
+        ->assertJsonPath('data.0.requested_by', $this->user->nickname)
+        ->assertJsonPath('data.0.score', 1);
 });

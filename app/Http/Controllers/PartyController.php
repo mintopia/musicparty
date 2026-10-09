@@ -117,7 +117,11 @@ class PartyController extends Controller
             return back()->withErrors(['request' => $exception->getMessage()]);
         }
 
-        $message = $outcome->created ? 'Track requested' : 'Already in the queue, your vote was added';
+        $message = match (true) {
+            $outcome->created => 'Track requested',
+            $outcome->voteAdded => 'Already in the queue, your vote was added',
+            default => 'Already in the queue and you have already voted for it',
+        };
 
         return back()->with('success', $message)->with('successMessage', $message);
     }

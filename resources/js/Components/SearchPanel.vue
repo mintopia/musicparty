@@ -9,6 +9,7 @@ const props = defineProps({
     party: {type: Object, required: true},
     results: {type: Array, default: null},
     searchQuery: {type: String, default: ''},
+    searchError: {type: String, default: null},
     readOnly: {type: Boolean, default: false},
 });
 
@@ -22,7 +23,7 @@ const runSearch = () => {
     router.get(
         `/parties/${props.party.code}/search`,
         query.value.trim() === '' ? {} : {q: query.value.trim()},
-        {preserveState: true, preserveScroll: true, replace: true, only: ['results', 'search_query']},
+        {preserveState: true, preserveScroll: true, replace: true, only: ['results', 'search_query', 'search_error']},
     );
 };
 
@@ -64,9 +65,9 @@ const request = (track) => {
 
 const label = (track) => {
     if (requested.value[track.provider_track_id]) {
-        return track.queued ? 'Upvoted' : 'Requested';
+        return track.queued ? 'Upvoted' : 'Added';
     }
-    return track.queued ? 'Queued' : 'Request';
+    return track.queued ? 'Queued' : 'Add';
 };
 
 const hasResults = computed(() => Array.isArray(props.results));
@@ -88,7 +89,8 @@ const hasResults = computed(() => Array.isArray(props.results));
             <button type="submit" class="min-h-11 rounded bg-primary px-5 text-sm font-medium text-white">Search</button>
         </form>
 
-        <p v-if="!hasResults" class="text-sm text-muted">Search for a track to add it to the queue.</p>
+        <p v-if="searchError" role="alert" data-testid="search-error" class="text-sm text-danger">{{ searchError }}</p>
+        <p v-else-if="!hasResults" class="text-sm text-muted">Search for a track to add it to the queue.</p>
         <p v-else-if="results.length === 0" data-testid="search-empty" class="text-sm text-muted">No tracks found.</p>
         <template v-else>
             <h2 class="text-lg font-semibold">Results</h2>
@@ -99,9 +101,11 @@ const hasResults = computed(() => Array.isArray(props.results));
                         <div class="min-w-0 flex-1">
                             <div class="truncate text-sm font-medium">{{ track.title }}</div>
                             <div class="truncate text-sm text-muted">{{ track.artists.join(', ') }}</div>
-                            <div class="truncate text-xs text-muted">{{ track.album }}</div>
+                            <div v-if="track.queued" data-testid="requested-by" class="truncate text-sm text-muted">Requested by {{ track.requested_by }}</div>
+                            <div v-else class="truncate text-xs text-muted">{{ track.album }}</div>
                         </div>
                         <span class="hidden text-sm text-muted sm:inline">{{ formatDuration(track.duration_ms) }}</span>
+                        <span v-if="track.queued" data-testid="result-score" class="min-w-8 text-center text-base font-semibold">{{ track.score }}</span>
                         <button
                             type="button"
                             data-testid="request-button"
@@ -110,7 +114,7 @@ const hasResults = computed(() => Array.isArray(props.results));
                             :class="track.queued || requested[track.provider_track_id] ? 'border border-border text-text' : 'bg-primary text-white'"
                             @click="request(track)"
                         >
-                            <Icon :name="track.queued || requested[track.provider_track_id] ? 'queue' : 'plus'" />
+                            <Icon :name="track.queued || requested[track.provider_track_id] ? 'queue' : 'musicPlus'" />
                             <span>{{ label(track) }}</span>
                         </button>
                     </div>

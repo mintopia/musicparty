@@ -45,7 +45,7 @@ class PartyRequestController extends Controller
             ->loadSum(['votes as my_vote' => fn ($query) => $query->where('party_member_id', $member->id)], 'value');
 
         return new QueueEntryResource($outcome->request)
-            ->additional(['meta' => ['duplicate' => ! $outcome->created]])
+            ->additional(['meta' => ['duplicate' => ! $outcome->created, 'vote_added' => $outcome->voteAdded]])
             ->response()
             ->setStatusCode($outcome->created ? 201 : 200);
     }
@@ -69,6 +69,6 @@ class PartyRequestController extends Controller
 
     private function refusal(RequestRefusedException $exception): JsonResponse
     {
-        return response()->json(['message' => $exception->getMessage()], $exception->getCode());
+        return response()->json(['message' => $exception->getMessage()], $exception->status());
     }
 }
