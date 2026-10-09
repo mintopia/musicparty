@@ -9,7 +9,6 @@ const props = defineProps({
     history: {type: Object, default: null},
     filters: {type: Object, default: () => ({})},
     partyCode: {type: String, default: ''},
-    readOnly: {type: Boolean, default: false},
 });
 
 const typeOptions = [
@@ -50,42 +49,6 @@ const search = () => {
     );
     router.get(`/parties/${props.partyCode}/history`, params, {preserveState: true, preserveScroll: true, replace: true});
 };
-
-const pending = ref(null);
-const errors = ref({});
-
-const rate = (play, direction) => {
-    if (props.readOnly || pending.value === play.id) {
-        return;
-    }
-    const value = direction === 'up' ? 1 : -1;
-    const url = `/parties/${props.partyCode}/plays/${play.id}/rating`;
-    const options = {
-        preserveScroll: true,
-        preserveState: true,
-        onStart: () => {
-            pending.value = play.id;
-            errors.value = {...errors.value, [play.id]: null};
-        },
-        onError: (e) => {
-            errors.value = {...errors.value, [play.id]: e.rating ?? e.value ?? 'Could not record your rating.'};
-        },
-        onFinish: () => {
-            pending.value = null;
-        },
-    };
-
-    if (play.my_rating === value) {
-        router.delete(url, options);
-    } else {
-        router.put(url, {value: direction}, options);
-    }
-};
-
-const buttonClass = (active, activeColor) => [
-    'flex h-11 min-w-11 items-center justify-center gap-1 rounded px-2 text-sm tabular-nums hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent md:h-7 md:min-w-0 md:px-1.5 md:text-xs',
-    active ? activeColor : 'text-muted',
-];
 
 const inputClass = 'h-10 w-full rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted/70 focus:border-primary focus:outline-none dark:bg-background';
 const labelClass = 'mb-1.5 block text-sm font-medium';
@@ -167,33 +130,6 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                                 <div class="min-w-0 flex-1">
                                     <div class="truncate font-medium text-primary" data-testid="history-title">{{ play.track.title }}</div>
                                     <div class="truncate text-muted">{{ play.track.artists.join(', ') }}</div>
-                                    <p v-if="errors[play.id]" role="alert" data-testid="rating-error" class="mt-1 text-sm text-danger">{{ errors[play.id] }}</p>
-                                </div>
-                                <div class="flex basis-full items-center gap-1 pl-[3.25rem] md:basis-auto md:pl-0">
-                                    <button
-                                        type="button"
-                                        data-testid="rate-like"
-                                        :aria-label="`Like ${play.track.title}`"
-                                        :aria-pressed="play.my_rating === 1"
-                                        :disabled="readOnly"
-                                        :class="buttonClass(play.my_rating === 1, 'text-accent')"
-                                        @click="rate(play, 'up')"
-                                    >
-                                        <Icon name="thumbUp" class="h-4 w-4" />
-                                        <span data-testid="history-likes">{{ play.likes }}</span>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        data-testid="rate-dislike"
-                                        :aria-label="`Dislike ${play.track.title}`"
-                                        :aria-pressed="play.my_rating === -1"
-                                        :disabled="readOnly"
-                                        :class="buttonClass(play.my_rating === -1, 'text-danger')"
-                                        @click="rate(play, 'down')"
-                                    >
-                                        <Icon name="thumbDown" class="h-4 w-4" />
-                                        <span data-testid="history-dislikes">{{ play.dislikes }}</span>
-                                    </button>
                                 </div>
                             </div>
                         </td>

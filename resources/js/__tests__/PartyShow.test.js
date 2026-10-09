@@ -98,6 +98,24 @@ describe('Party page now playing and Up Next', () => {
     });
 });
 
+describe('Party page songs section', () => {
+    const play = {id: 7, track: {title: 'T', artists: ['A'], album: null, artwork_url: null, duration_ms: 1, explicit: false}, likes: 2, dislikes: 0, my_rating: 0};
+
+    it('titles the history section Songs and keeps the banner with rating', () => {
+        const w = mount(Show, {props: baseProps({section: 'history', history: {data: [], meta: {}}, ratablePlay: play})});
+
+        expect(w.findAll('h2').map((h) => h.text())).toContain('Songs');
+        expect(w.find('[data-testid=now-playing]').exists()).toBe(true);
+        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('locks rating once the party has ended', () => {
+        const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'F', state: 'ended', downvotes: true}, readOnly: true, ratablePlay: play})});
+
+        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeDefined();
+    });
+});
+
 describe('MiniNowPlaying', () => {
     it('uses the real now playing data', () => {
         const w = mount(MiniNowPlaying, {props: {nowPlaying: entry()}});

@@ -34,7 +34,7 @@ function ratingUrl(Play $play, string $code = 'ABCD'): string
     return "/api/v1/parties/{$code}/plays/{$play->id}/rating";
 }
 
-it('lists plays newest first with counts and my rating', function () {
+it('lists plays oldest first with counts and my rating', function () {
     $older = playIn($this->party, ['title' => 'Older', 'played_at' => now()->subHour()]);
     $newer = playIn($this->party, ['title' => 'Newer', 'played_at' => now()->subMinute()]);
     $others = PartyMember::factory()->for($this->party)->count(3)->create();
@@ -46,14 +46,24 @@ it('lists plays newest first with counts and my rating', function () {
 
     $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
         ->assertJsonCount(2, 'data')
-        ->assertJsonPath('data.0.id', $newer->id)
-        ->assertJsonPath('data.0.track.title', 'Newer')
-        ->assertJsonPath('data.0.likes', 2)
-        ->assertJsonPath('data.0.dislikes', 2)
-        ->assertJsonPath('data.0.my_rating', -1)
-        ->assertJsonPath('data.1.id', $older->id)
-        ->assertJsonPath('data.1.likes', 0)
-        ->assertJsonPath('data.1.my_rating', 0);
+        ->assertJsonPath('data.0.id', $older->id)
+        ->assertJsonPath('data.0.likes', 0)
+        ->assertJsonPath('data.0.my_rating', 0)
+        ->assertJsonPath('data.1.id', $newer->id)
+        ->assertJsonPath('data.1.track.title', 'Newer')
+        ->assertJsonPath('data.1.likes', 2)
+        ->assertJsonPath('data.1.dislikes', 2)
+        ->assertJsonPath('data.1.my_rating', -1);
+});
+
+it('breaks ties on played time by id ascending', function () {
+    $at = now()->subMinute();
+    $first = playIn($this->party, ['played_at' => $at]);
+    $second = playIn($this->party, ['played_at' => $at]);
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
+        ->assertJsonPath('data.0.id', $first->id)
+        ->assertJsonPath('data.1.id', $second->id);
 });
 
 it('names the requester and leaves fallback plays anonymous', function () {
@@ -63,8 +73,8 @@ it('names the requester and leaves fallback plays anonymous', function () {
     playIn($this->party, ['played_at' => now()->subHour()]);
 
     $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
-        ->assertJsonPath('data.0.requested_by.name', 'Alex')
-        ->assertJsonPath('data.1.requested_by.name', null);
+        ->assertJsonPath('data.0.requested_by.name', null)
+        ->assertJsonPath('data.1.requested_by.name', 'Alex');
 });
 
 it('returns an empty history', function () {
@@ -104,14 +114,14 @@ it('reports votes, score and requested time from the originating request', funct
     $fallback = playIn($this->party, ['played_at' => now()->subHour()]);
 
     $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
-        ->assertJsonPath('data.0.id', $played->id)
-        ->assertJsonPath('data.0.votes', 3)
-        ->assertJsonPath('data.0.score', 1)
-        ->assertJsonPath('data.0.requested_at', $request->created_at->toIso8601String())
-        ->assertJsonPath('data.1.id', $fallback->id)
-        ->assertJsonPath('data.1.votes', 0)
-        ->assertJsonPath('data.1.score', 0)
-        ->assertJsonPath('data.1.requested_at', $fallback->played_at->toIso8601String());
+        ->assertJsonPath('data.1.id', $played->id)
+        ->assertJsonPath('data.1.votes', 3)
+        ->assertJsonPath('data.1.score', 1)
+        ->assertJsonPath('data.1.requested_at', $request->created_at->toIso8601String())
+        ->assertJsonPath('data.0.id', $fallback->id)
+        ->assertJsonPath('data.0.votes', 0)
+        ->assertJsonPath('data.0.score', 0)
+        ->assertJsonPath('data.0.requested_at', $fallback->played_at->toIso8601String());
 });
 
 it('loads the history without per-row queries', function () {
@@ -146,7 +156,7 @@ it('filters the history by name, artist, album and type', function () {
         ->and($ids('album=static'))->toBe([$a->id])
         ->and($ids('type=requested'))->toBe([$a->id])
         ->and($ids('type=fallback'))->toBe([$b->id])
-        ->and($ids('type=sent'))->toBe([$b->id, $a->id])
+        ->and($ids('type=sent'))->toBe([$a->id, $b->id])
         ->and($ids('name=glass&artist=velvet&album=echo&type=fallback'))->toBe([$b->id])
         ->and($ids('name=glass&artist=lowlands'))->toBe([])
         ->and($ids('name=nothing-matches'))->toBe([]);
@@ -378,4 +388,57 @@ it('validates the web rating value', function () {
     $play = playIn($this->party);
 
     $this->actingAs($this->user)->put("/parties/ABCD/plays/{$play->id}/rating", ['value' => 'x'])->assertSessionHasErrors('value');
+});
+
+it('refuses rating and retracting through the api once the party has ended', function () {
+    $play = playIn($this->party);
+    Rating::factory()->for($play)->for($this->member, 'member')->create(['value' => 1]);
+    $this->party->forceFill(['state' => 'ended'])->save();
+
+    $this->putJson(ratingUrl($play), ['value' => 'down'])->assertUnprocessable()
+        ->assertJsonPath('message', 'This party has ended, so ratings are closed.');
+    $this->deleteJson(ratingUrl($play))->assertUnprocessable();
+
+    expect(Rating::query()->sole()->value)->toBe(1);
+});
+
+it('refuses rating and retracting through the web once the party has ended', function () {
+    $play = playIn($this->party);
+    Rating::factory()->for($play)->for($this->member, 'member')->create(['value' => 1]);
+    $this->party->forceFill(['state' => 'ended'])->save();
+
+    $this->actingAs($this->user)->from('/parties/ABCD/history')
+        ->put("/parties/ABCD/plays/{$play->id}/rating", ['value' => 'down'])
+        ->assertRedirect('/parties/ABCD/history')
+        ->assertSessionHasErrors(['rating' => 'This party has ended, so ratings are closed.']);
+    $this->actingAs($this->user)->from('/parties/ABCD/history')
+        ->delete("/parties/ABCD/plays/{$play->id}/rating")
+        ->assertSessionHasErrors('rating');
+
+    expect(Rating::query()->sole()->value)->toBe(1);
+});
+
+it('still lists the history of an ended party', function () {
+    playIn($this->party);
+    $this->party->forceFill(['state' => 'ended'])->save();
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(1, 'data');
+});
+
+it('exposes the latest play for the now playing banner rating', function () {
+    playIn($this->party, ['title' => 'Old', 'played_at' => now()->subHour()]);
+    $latest = playIn($this->party, ['title' => 'Latest', 'played_at' => now()->subMinute()]);
+    Rating::factory()->for($latest)->for($this->member, 'member')->create(['value' => 1]);
+
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('ratablePlay.id', $latest->id)
+            ->where('ratablePlay.likes', 1)
+            ->where('ratablePlay.my_rating', 1));
+});
+
+it('has no ratable play before anything was played', function () {
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD')
+        ->assertInertia(fn (Assert $page): Assert => $page->where('ratablePlay', null));
 });

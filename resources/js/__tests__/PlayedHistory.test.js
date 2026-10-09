@@ -1,13 +1,11 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
-const put = vi.fn();
 const get = vi.fn();
-const del = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: {get: (...args) => get(...args), put: (...args) => put(...args), delete: (...args) => del(...args)},
+    router: {get: (...args) => get(...args)},
 }));
 
 import PlayedHistory from '../Components/PlayedHistory.vue';
@@ -31,8 +29,6 @@ const mountHistory = (props = {}) => mount(PlayedHistory, {props: {partyCode: 'A
 
 beforeEach(() => {
     get.mockClear();
-    put.mockClear();
-    del.mockClear();
 });
 
 describe('PlayedHistory', () => {
@@ -49,29 +45,15 @@ describe('PlayedHistory', () => {
         expect(w.text()).toContain('Rewind the Night');
         expect(w.get('[data-testid=history-votes]').text()).toBe('4');
         expect(w.get('[data-testid=history-score]').text()).toBe('2');
-        expect(w.get('[data-testid=history-likes]').text()).toBe('3');
-        expect(w.get('[data-testid=history-dislikes]').text()).toBe('1');
     });
 
-    it('likes, switches and retracts through the rating route', async () => {
+    it('renders no rating controls in the table', () => {
         const w = mountHistory();
-        await w.get('[data-testid=rate-like]').trigger('click');
-        expect(put).toHaveBeenCalledWith('/parties/ABCD/plays/7/rating', {value: 'up'}, expect.any(Object));
 
-        const liked = mountHistory({history: {data: [play({my_rating: 1})], meta: {}}});
-        await liked.get('[data-testid=rate-dislike]').trigger('click');
-        expect(put).toHaveBeenLastCalledWith('/parties/ABCD/plays/7/rating', {value: 'down'}, expect.any(Object));
-
-        await liked.get('[data-testid=rate-like]').trigger('click');
-        expect(del).toHaveBeenCalledWith('/parties/ABCD/plays/7/rating', expect.any(Object));
-    });
-
-    it('disables rating when read-only', async () => {
-        const w = mountHistory({readOnly: true});
-
-        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeDefined();
-        await w.get('[data-testid=rate-like]').trigger('click');
-        expect(put).not.toHaveBeenCalled();
+        expect(w.find('button[data-testid=rate-like]').exists()).toBe(false);
+        expect(w.find('button[data-testid=rate-dislike]').exists()).toBe(false);
+        expect(w.find('[data-testid=history-likes]').exists()).toBe(false);
+        expect(w.find('[data-testid=history-dislikes]').exists()).toBe(false);
     });
 
     it('renders the mockup columns and the entries footer', () => {
@@ -137,15 +119,6 @@ describe('PlayedHistory', () => {
         await w.get('[data-testid=history-filters-toggle]').trigger('click');
         expect(w.get('[data-testid=history-filters]').classes()).toContain('block');
         expect(w.get('[data-testid=history-filters-toggle]').attributes('aria-expanded')).toBe('true');
-    });
-
-    it('shows a rating error from the server', async () => {
-        put.mockImplementation((url, data, options) => options.onError({rating: 'You are banned.'}));
-        const w = mountHistory();
-        await w.get('[data-testid=rate-like]').trigger('click');
-
-        expect(w.get('[data-testid=rating-error]').text()).toBe('You are banned.');
-        put.mockReset();
     });
 });
 

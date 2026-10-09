@@ -1,8 +1,51 @@
 <script setup>
+import {ref} from 'vue';
+import {router} from '@inertiajs/vue3';
 import Icon from './Icon.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 
-defineProps({nowPlaying: {type: Object, default: null}});
+const props = defineProps({
+    nowPlaying: {type: Object, default: null},
+    ratablePlay: {type: Object, default: null},
+    partyCode: {type: String, default: ''},
+    readOnly: {type: Boolean, default: false},
+});
+
+const pending = ref(false);
+const error = ref(null);
+
+const rate = (direction) => {
+    if (props.readOnly || pending.value || !props.ratablePlay) {
+        return;
+    }
+    const value = direction === 'up' ? 1 : -1;
+    const url = `/parties/${props.partyCode}/plays/${props.ratablePlay.id}/rating`;
+    const options = {
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            pending.value = true;
+            error.value = null;
+        },
+        onError: (e) => {
+            error.value = e.rating ?? e.value ?? 'Could not record your rating.';
+        },
+        onFinish: () => {
+            pending.value = false;
+        },
+    };
+
+    if (props.ratablePlay.my_rating === value) {
+        router.delete(url, options);
+    } else {
+        router.put(url, {value: direction}, options);
+    }
+};
+
+const thumbClass = (active, activeColor) => [
+    'flex h-8 w-8 items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+    active ? activeColor : 'text-white',
+];
 </script>
 
 <template>
@@ -21,6 +64,28 @@ defineProps({nowPlaying: {type: Object, default: null}});
                 <div v-if="nowPlaying.track.album" class="flex items-center gap-2 text-sm"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                 <div class="flex items-center gap-2 text-sm"><Icon name="musicPlus" /><span data-testid="now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                 <div class="mt-2 flex justify-end text-sm tabular-nums">{{ formatDuration(nowPlaying.track.duration_ms) }}</div>
+                <div v-if="ratablePlay" data-testid="now-playing-rating" class="flex items-center justify-center gap-2">
+                    <button
+                        type="button"
+                        data-testid="rate-dislike"
+                        :aria-label="`Dislike ${ratablePlay.track.title}`"
+                        :aria-pressed="ratablePlay.my_rating === -1"
+                        :disabled="readOnly"
+                        :class="thumbClass(ratablePlay.my_rating === -1, 'text-danger')"
+                        @click="rate('down')"
+                    ><Icon name="thumbDown" class="h-5 w-5" /></button>
+                    <span data-testid="rating-count" class="min-w-4 text-center text-sm tabular-nums">{{ ratablePlay.likes }}</span>
+                    <button
+                        type="button"
+                        data-testid="rate-like"
+                        :aria-label="`Like ${ratablePlay.track.title}`"
+                        :aria-pressed="ratablePlay.my_rating === 1"
+                        :disabled="readOnly"
+                        :class="thumbClass(ratablePlay.my_rating === 1, 'text-accent')"
+                        @click="rate('up')"
+                    ><Icon name="thumbUp" class="h-5 w-5" /></button>
+                </div>
+                <p v-if="error" role="alert" data-testid="rating-error" class="text-center text-sm text-danger">{{ error }}</p>
             </div>
         </div>
         <p v-else data-testid="now-playing-empty" class="mx-auto max-w-3xl px-0 py-8 text-sm text-white/70">Nothing is playing right now.</p>

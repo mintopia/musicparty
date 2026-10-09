@@ -33,6 +33,7 @@ use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\Play;
 use App\Models\TrackRequest;
 use App\Models\User;
@@ -120,6 +121,7 @@ class PartyController extends Controller
             'canManage' => $party->canBeManagedBy($this->currentUser($request)),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => $playback['now_playing'],
+            'ratablePlay' => $this->ratablePlay($request, $party, $member),
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
@@ -252,6 +254,22 @@ class PartyController extends Controller
         }
 
         return back();
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function ratablePlay(Request $request, Party $party, PartyMember $member): ?array
+    {
+        $play = Play::query()
+            ->where('party_id', $party->id)
+            ->withHistoryRelations()
+            ->withRatingSummary($member)
+            ->orderByDesc('played_at')
+            ->orderByDesc('id')
+            ->first();
+
+        return $play === null ? null : new PlayResource($play)->resolve($request);
     }
 
     private function currentUser(Request $request): User

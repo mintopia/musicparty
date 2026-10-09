@@ -2,8 +2,10 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Party\PartyState;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
+use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Play;
 use App\Models\Rating;
@@ -17,6 +19,12 @@ class RatePlay
     public function __invoke(PartyMember $member, Play $play, ?VoteDirection $direction): Play
     {
         DB::transaction(function () use ($member, $play, $direction): void {
+            $party = Party::query()->whereKey($play->party_id)->lockForUpdate()->firstOrFail();
+
+            if ($party->state === PartyState::Ended) {
+                throw RequestRefusedException::partyEnded();
+            }
+
             $locked = PartyMember::query()->whereKey($member->id)->lockForUpdate()->first();
 
             if ($locked === null || $locked->banned) {

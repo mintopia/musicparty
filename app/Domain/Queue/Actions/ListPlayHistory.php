@@ -24,8 +24,8 @@ class ListPlayHistory
             ->tap(fn (Builder $query) => $this->filter($query, $filters))
             ->withHistoryRelations()
             ->withRatingSummary($viewer)
-            ->orderByDesc('played_at')
-            ->orderByDesc('id')
+            ->orderBy('played_at')
+            ->orderBy('id')
             ->paginate($perPage)
             ->withQueryString();
     }

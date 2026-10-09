@@ -15,6 +15,7 @@ const props = defineProps({
     canManage: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    ratablePlay: {type: Object, default: null},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     history: {type: Object, default: null},
@@ -81,12 +82,18 @@ const readOnlyMessage = computed(() =>
     props.membership.banned ? 'You have been banned from this party.' : 'This party has ended.',
 );
 
-const ratingLocked = computed(() => props.membership.banned);
+const ratingLocked = computed(() => props.membership.banned || props.party.state === 'ended');
 </script>
 
 <template>
     <Head :title="party.name" />
-    <NowPlayingBanner v-if="section === 'queue'" :now-playing="nowPlaying" />
+    <NowPlayingBanner
+        v-if="section === 'queue' || section === 'history'"
+        :now-playing="nowPlaying"
+        :ratable-play="ratablePlay"
+        :party-code="party.code"
+        :read-only="ratingLocked"
+    />
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
@@ -184,8 +191,8 @@ const ratingLocked = computed(() => props.membership.banned);
                 <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'history'">
-                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">History</h2>
-                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
+                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>
+                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" />
             </template>
         </section>
     </div>
