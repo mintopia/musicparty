@@ -1,14 +1,14 @@
 <?php
 
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\QueueUpdatedEvent;
+use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -38,13 +38,13 @@ function downvoteCount(PartyMember $member): int
 }
 
 it('casts an upvote and raises the score by one', function () {
-    Event::fake([QueueUpdatedEvent::class]);
+    Queue::fake();
 
     castVote($this->track, 'up')->assertOk()
         ->assertJsonPath('data.score', 1)
         ->assertJsonPath('data.my_vote', 1);
 
-    Event::assertDispatched(QueueUpdatedEvent::class, fn ($event) => $event->broadcastWith() === ['code' => 'ABCD']);
+    Queue::assertPushed(BroadcastPartyQueue::class, fn ($job) => $job->partyCode === 'ABCD');
 });
 
 it('moves the score by two when changing up to down and keeps a single vote', function () {
@@ -59,32 +59,32 @@ it('moves the score by two when changing up to down and keeps a single vote', fu
 
 it('treats a repeated identical vote as a no-op without broadcasting', function () {
     castVote($this->track, 'up');
-    Event::fake([QueueUpdatedEvent::class]);
+    Queue::fake();
 
     castVote($this->track, 'up')->assertOk()->assertJsonPath('data.score', 1);
 
-    Event::assertNotDispatched(QueueUpdatedEvent::class);
+    Queue::assertNothingPushed();
     expect(RequestVote::query()->count())->toBe(1);
 });
 
 it('retracts a vote and broadcasts', function () {
     castVote($this->track, 'up');
-    Event::fake([QueueUpdatedEvent::class]);
+    Queue::fake();
 
     $this->deleteJson(voteUrl($this->track))->assertOk()
         ->assertJsonPath('data.score', 0)
         ->assertJsonPath('data.my_vote', 0);
 
-    Event::assertDispatched(QueueUpdatedEvent::class);
+    Queue::assertPushed(BroadcastPartyQueue::class);
     expect(RequestVote::query()->count())->toBe(0);
 });
 
 it('treats retracting when no vote exists as a no-op', function () {
-    Event::fake([QueueUpdatedEvent::class]);
+    Queue::fake();
 
     $this->deleteJson(voteUrl($this->track))->assertOk()->assertJsonPath('data.score', 0);
 
-    Event::assertNotDispatched(QueueUpdatedEvent::class);
+    Queue::assertNothingPushed();
 });
 
 it('sums votes from several members', function () {

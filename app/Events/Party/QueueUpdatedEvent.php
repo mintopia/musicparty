@@ -12,14 +12,17 @@ class QueueUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
-    public function __construct(protected string $partyCode) {}
+    /**
+     * @param  array<string, mixed>  $snapshot
+     */
+    public function __construct(protected string $partyCode, protected array $snapshot) {}
 
     /**
-     * @return array<string, string>
+     * @return array<string, mixed>
      */
     public function broadcastWith(): array
     {
-        return ['code' => $this->partyCode];
+        return $this->snapshot;
     }
 
     /**

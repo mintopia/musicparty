@@ -53,20 +53,303 @@
                 "contentType": "application/json",
                 "name": "App\\Events\\Party\\QueueUpdatedEvent",
                 "payload": {
+                    "type": "object",
                     "additionalProperties": false,
-                    "properties": {
-                        "code": {
-                            "description": "Party code whose queue changed; clients refetch the queue",
-                            "type": "string"
-                        }
-                    },
                     "required": [
-                        "code"
+                        "version",
+                        "sequence",
+                        "code",
+                        "now_playing",
+                        "up_next",
+                        "queue"
                     ],
-                    "type": "object"
+                    "properties": {
+                        "version": {
+                            "type": "integer",
+                            "description": "Payload schema version"
+                        },
+                        "sequence": {
+                            "type": "integer",
+                            "description": "Monotonic per-party sequence; ignore snapshots older than the last seen"
+                        },
+                        "code": {
+                            "type": "string",
+                            "description": "Party code"
+                        },
+                        "now_playing": {
+                            "oneOf": [
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "track",
+                                        "status",
+                                        "score",
+                                        "requested_by"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "track": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "title",
+                                                "artists",
+                                                "album",
+                                                "artwork_url",
+                                                "duration_ms",
+                                                "explicit"
+                                            ],
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "artists": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "album": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "artwork_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "duration_ms": {
+                                                    "type": "integer"
+                                                },
+                                                "explicit": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "queued",
+                                                "up_next",
+                                                "playing"
+                                            ]
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        },
+                                        "requested_by": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Requester nickname"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "up_next": {
+                            "oneOf": [
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "track",
+                                        "status",
+                                        "score",
+                                        "requested_by"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "track": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "title",
+                                                "artists",
+                                                "album",
+                                                "artwork_url",
+                                                "duration_ms",
+                                                "explicit"
+                                            ],
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "artists": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "album": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "artwork_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "duration_ms": {
+                                                    "type": "integer"
+                                                },
+                                                "explicit": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "queued",
+                                                "up_next",
+                                                "playing"
+                                            ]
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        },
+                                        "requested_by": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Requester nickname"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "queue": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "id",
+                                    "track",
+                                    "status",
+                                    "score",
+                                    "requested_by"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "track": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "title",
+                                            "artists",
+                                            "album",
+                                            "artwork_url",
+                                            "duration_ms",
+                                            "explicit"
+                                        ],
+                                        "properties": {
+                                            "title": {
+                                                "type": "string"
+                                            },
+                                            "artists": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "album": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "artwork_url": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "duration_ms": {
+                                                "type": "integer"
+                                            },
+                                            "explicit": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "queued",
+                                            "up_next",
+                                            "playing"
+                                        ]
+                                    },
+                                    "score": {
+                                        "type": "integer"
+                                    },
+                                    "requested_by": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "name"
+                                        ],
+                                        "properties": {
+                                            "name": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "description": "Requester nickname"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 },
                 "title": "Party.QueueUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent"
+                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
+                "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
             },
             "Party.UpdatedEvent": {
                 "contentType": "application/json",
