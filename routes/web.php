@@ -50,6 +50,21 @@ Route::middleware('auth')->group(function () {
             ->where('party', '[A-Za-z]{4}')
             ->name("parties.{$transition}");
     }
+    Route::get('parties/{party}/requests/pending', [PartyController::class, 'pendingRequests'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.requests.pending');
+    Route::post('parties/{party}/requests/{trackRequest}/approve', [PartyController::class, 'approveRequest'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('trackRequest')
+        ->name('parties.requests.approve');
+    Route::post('parties/{party}/requests/{trackRequest}/reject', [PartyController::class, 'rejectRequest'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('trackRequest')
+        ->name('parties.requests.reject');
+    Route::delete('parties/{party}/requests/{trackRequest}', [PartyController::class, 'destroyRequest'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('trackRequest')
+        ->name('parties.requests.destroy');
     Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'storeVote'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('trackRequest')

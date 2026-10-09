@@ -11,6 +11,7 @@
 |
 */
 
+use App\Domain\Party\PartyRole;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
@@ -36,4 +37,11 @@ Broadcast::channel('party.{code}.member.{memberId}', function (User $user, strin
     $member = Party::findByCode($code)?->memberFor($user);
 
     return $member !== null && ! $member->banned && $member->id === (int) $memberId;
+});
+
+Broadcast::channel('party.{code}.moderators', function (User $user, string $code): bool {
+    $member = Party::findByCode($code)?->memberFor($user);
+
+    return $member !== null && ! $member->banned
+        && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
 });

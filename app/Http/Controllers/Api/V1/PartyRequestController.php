@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Actions\RejectRequest;
+use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
@@ -12,6 +16,7 @@ use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SearchTracksRequest;
 use App\Http\Requests\CastVoteRequest;
+use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
@@ -64,6 +69,30 @@ class PartyRequestController extends Controller
         }
     }
 
+    public function pending(Request $request, ListPendingRequests $listPending, Party $party): AnonymousResourceCollection|JsonResponse
+    {
+        try {
+            return QueueEntryResource::collection($listPending($this->currentUser($request), $party));
+        } catch (RequestRefusedException $exception) {
+            return $this->refusal($exception);
+        }
+    }
+
+    public function approve(Request $request, ApproveRequest $approve, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
+    {
+        return $this->moderate($party, $trackRequest, fn (): TrackRequest => $approve($this->currentUser($request), $party, $trackRequest));
+    }
+
+    public function reject(RejectRequestRequest $request, RejectRequest $reject, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
+    {
+        return $this->moderate($party, $trackRequest, fn (): TrackRequest => $reject($this->currentUser($request), $party, $trackRequest, $request->reason()));
+    }
+
+    public function destroy(Request $request, RemoveRequest $remove, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
+    {
+        return $this->moderate($party, $trackRequest, fn (): TrackRequest => $remove($this->currentUser($request), $party, $trackRequest));
+    }
+
     public function vote(CastVoteRequest $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
     {
         return $this->applyVote($request, $vote, $party, $trackRequest, $request->direction());
@@ -83,6 +112,28 @@ class PartyRequestController extends Controller
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }
+    }
+
+    /**
+     * @param  callable(): TrackRequest  $decision
+     */
+    private function moderate(Party $party, TrackRequest $trackRequest, callable $decision): QueueEntryResource|JsonResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        try {
+            return new QueueEntryResource($decision());
+        } catch (RequestRefusedException $exception) {
+            return $this->refusal($exception);
+        }
+    }
+
+    private function currentUser(Request $request): User
+    {
+        $user = $request->user();
+        assert($user instanceof User);
+
+        return $user;
     }
 
     private function member(Request $request, Party $party): PartyMember

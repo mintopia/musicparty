@@ -64,7 +64,7 @@ class PartyController extends Controller
         $user = $request->user();
         assert($user instanceof User);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour']);
         $result = $updateSettings($user, $party, $settings);
 
         $response = new PartyResource($result['party']);

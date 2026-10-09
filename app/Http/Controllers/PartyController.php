@@ -16,7 +16,11 @@ use App\Domain\Party\Actions\UnbanMember;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Actions\RejectRequest;
+use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
@@ -25,6 +29,7 @@ use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
@@ -136,6 +141,7 @@ class PartyController extends Controller
                 'min_song_length' => $party->min_song_length,
                 'max_song_length' => $party->max_song_length,
                 'explicit' => (bool) $party->explicit,
+                'hold_requests' => (bool) $party->hold_requests,
                 'no_repeat_interval' => $party->no_repeat_interval,
             ],
         ]);
@@ -145,7 +151,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('successMessage', 'Settings saved');
@@ -272,6 +278,58 @@ class PartyController extends Controller
         };
 
         return back()->with('success', $message)->with('successMessage', $message);
+    }
+
+    public function pendingRequests(Request $request, ListPendingRequests $listPending, Party $party): Response
+    {
+        try {
+            $pending = $listPending($this->currentUser($request), $party);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Pending', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'canModerate' => $this->currentUser($request)->can('moderate', $party),
+            'requests' => QueueEntryResource::collection($pending)->resolve($request),
+        ]);
+    }
+
+    public function approveRequest(Request $request, ApproveRequest $approve, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        return $this->decideRequest(fn () => $approve($this->currentUser($request), $party, $trackRequest), 'Request approved');
+    }
+
+    public function rejectRequest(RejectRequestRequest $request, RejectRequest $reject, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        return $this->decideRequest(fn () => $reject($this->currentUser($request), $party, $trackRequest, $request->reason()), 'Request rejected');
+    }
+
+    public function destroyRequest(Request $request, RemoveRequest $remove, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        return $this->decideRequest(fn () => $remove($this->currentUser($request), $party, $trackRequest), 'Request removed');
+    }
+
+    /**
+     * @param  callable(): TrackRequest  $decision
+     */
+    private function decideRequest(callable $decision, string $message): RedirectResponse
+    {
+        try {
+            $decision();
+        } catch (RequestRefusedException $exception) {
+            abort_if($exception->status() === RequestRefusedException::NOT_ALLOWED, 403, $exception->getMessage());
+
+            return back()->withErrors(['request' => $exception->getMessage()]);
+        }
+
+        return back()->with('successMessage', $message);
     }
 
     public function storeVote(CastVoteRequest $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse

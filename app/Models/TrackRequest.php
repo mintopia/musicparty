@@ -17,6 +17,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $score
  * @property int|null $my_vote
  * @property Carbon $updated_at
+ * @property Carbon|null $decided_at
+ * @property string|null $rejection_reason
  */
 #[Unguarded]
 class TrackRequest extends Model
@@ -31,6 +33,7 @@ class TrackRequest extends Model
             'artists' => 'array',
             'explicit' => 'boolean',
             'duration_ms' => 'integer',
+            'decided_at' => 'datetime',
         ];
     }
 

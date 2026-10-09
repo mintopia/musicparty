@@ -11,7 +11,9 @@ use App\Domain\Party\PartyState;
 use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
+use App\Events\Party\PendingRequestAddedEvent;
 use App\Events\Party\QueueUpdatedEvent;
+use App\Events\Party\RequestDecidedEvent;
 use App\Events\Party\RequestRejectedEvent;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -51,9 +53,25 @@ class RequestTrack
             throw $refusal;
         }
 
-        QueueUpdatedEvent::dispatch($party->code);
+        $this->announce($party, $member, $outcome);
 
         return $outcome;
+    }
+
+    private function announce(Party $party, PartyMember $member, RequestOutcome $outcome): void
+    {
+        $request = $outcome->request;
+
+        if ($request->status !== RequestStatus::Pending) {
+            QueueUpdatedEvent::dispatch($party->code);
+
+            return;
+        }
+
+        if ($outcome->created) {
+            PendingRequestAddedEvent::dispatch($party->code, $request->id, $request->title, $request->artists, $member->id);
+            RequestDecidedEvent::dispatch($party->code, $member->id, $request->id, RequestStatus::Pending->value, null);
+        }
     }
 
     /**
@@ -85,11 +103,16 @@ class RequestTrack
             'isrc' => $track->isrc,
             'duration_ms' => $track->durationMs,
             'explicit' => $track->explicit,
-            'status' => RequestStatus::Queued,
+            'status' => $this->holds($party, $member) ? RequestStatus::Pending : RequestStatus::Queued,
         ]);
         $this->castUpvote($request, $member);
 
         return new RequestOutcome($request, true, true);
+    }
+
+    private function holds(Party $party, PartyMember $member): bool
+    {
+        return $party->hold_requests && ! in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
     }
 
     /**
