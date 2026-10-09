@@ -2,6 +2,8 @@
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
+import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
+import UpNextCard from '../../Components/UpNextCard.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
 
@@ -12,6 +14,7 @@ const props = defineProps({
     canManage: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
@@ -22,7 +25,7 @@ const channelName = `party.${props.party.code}`;
 
 onMounted(() => {
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying'], preserveScroll: true});
+        router.reload({only: ['queue', 'nowPlaying', 'upNext'], preserveScroll: true});
     });
 });
 
@@ -82,6 +85,7 @@ const placeholders = {
 
 <template>
     <Head :title="party.name" />
+    <NowPlayingBanner v-if="section === 'queue'" :now-playing="nowPlaying" />
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
@@ -170,6 +174,7 @@ const placeholders = {
                 </template>
             </dl>
             <template v-else-if="section === 'queue'">
+                <UpNextCard :up-next="upNext" class="mb-6" />
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
                 <QueueList :queue="queue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>

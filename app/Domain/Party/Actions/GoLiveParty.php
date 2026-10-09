@@ -6,6 +6,7 @@ use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\PartyState;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -20,7 +21,7 @@ readonly class GoLiveParty
      */
     public function __invoke(User $actor, Party $party): Party
     {
-        return DB::transaction(function () use ($actor, $party): Party {
+        $live = DB::transaction(function () use ($actor, $party): Party {
             $party = Party::query()->lockForUpdate()->findOrFail($party->id);
             $old = $party->state;
 
@@ -40,5 +41,9 @@ readonly class GoLiveParty
 
             return $party;
         });
+
+        StartPlayback::dispatch($live->code);
+
+        return $live;
     }
 }

@@ -11,8 +11,8 @@ defineProps({nowPlaying: {type: Object, default: null}});
     >
         <div class="min-w-0 flex-1">
             <template v-if="nowPlaying">
-                <div class="truncate text-sm font-medium">{{ nowPlaying.title }}</div>
-                <div class="truncate text-xs text-muted">{{ nowPlaying.artist }}</div>
+                <div class="truncate text-sm font-medium">{{ nowPlaying.track.title }}</div>
+                <div class="truncate text-xs text-muted">{{ nowPlaying.track.artists.join(', ') }}</div>
             </template>
             <div v-else class="text-sm text-muted">Nothing playing</div>
         </div>

@@ -1,8 +1,12 @@
 <?php
 
 use App\Domain\Party\PartyRole;
+use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
+use App\Domain\Queue\RequestStatus;
+use App\Http\Resources\V1\QueueEntryResource;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -29,7 +33,8 @@ it('renders the party page with exact props', function () {
             ->where('membership', ['role' => 'moderator', 'banned' => false])
             ->where('section', 'queue')
             ->where('readOnly', false)
-            ->where('nowPlaying', null));
+            ->where('nowPlaying', null)
+            ->where('upNext', null));
 });
 
 it('serves each section', function (string $section) {
@@ -83,4 +88,35 @@ it('shares joined parties with the shell', function () {
 
     $this->withoutVite()->actingAs($user->fresh())->get(route('home'))
         ->assertInertia(fn (Assert $page): Assert => $page->where('parties', [['code' => 'ABCD', 'name' => 'Friday LAN']]));
+});
+
+it('passes now playing and up next, rendering requester-less fallback requests', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+    PartyMember::factory()->for($party)->for($user)->create();
+    TrackRequest::factory()->for($party)->fallback()->status(RequestStatus::Playing)->create(['title' => 'Now']);
+    TrackRequest::factory()->for($party)->status(RequestStatus::UpNext)->create(['title' => 'Next']);
+    TrackRequest::factory()->for($party)->fallback()->create(['title' => 'Later']);
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('nowPlaying.track.title', 'Now')
+            ->where('nowPlaying.status', 'playing')
+            ->where('nowPlaying.requested_by', ['name' => null])
+            ->where('upNext.track.title', 'Next')
+            ->where('upNext.requested_by.name', fn ($name): bool => $name !== null)
+            ->has('queue', 1)
+            ->where('queue.0.requested_by', ['name' => null]));
+});
+
+it('serialises requester-less requests in the snapshot and the queue resource', function () {
+    $party = Party::factory()->live()->create();
+    $request = TrackRequest::factory()->for($party)->fallback()->create();
+
+    $snapshot = app(PartyQueueSnapshot::class)->build($party);
+    $resource = new QueueEntryResource($request)->resolve();
+
+    expect($snapshot['queue'][0]['requested_by'])->toBe(['name' => null])
+        ->and($resource['requested_by'])->toBe(['name' => null]);
 });

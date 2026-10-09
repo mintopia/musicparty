@@ -6,16 +6,20 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\PartyState;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Bus::fake([StartPlayback::class]));
 
 /**
  * @param  array<string, mixed>  $overrides

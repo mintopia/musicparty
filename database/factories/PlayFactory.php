@@ -2,16 +2,14 @@
 
 namespace Database\Factories;
 
-use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
+use App\Models\Play;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends Factory<TrackRequest>
+ * @extends Factory<Play>
  */
-class TrackRequestFactory extends Factory
+class PlayFactory extends Factory
 {
     /**
      * @return array<string, mixed>
@@ -20,7 +18,8 @@ class TrackRequestFactory extends Factory
     {
         return [
             'party_id' => Party::factory(),
-            'party_member_id' => PartyMember::factory(),
+            'track_request_id' => null,
+            'party_member_id' => null,
             'provider_track_id' => 'track-'.fake()->unique()->numberBetween(100, 99999),
             'title' => fake()->words(3, true),
             'artists' => [fake()->name()],
@@ -28,17 +27,9 @@ class TrackRequestFactory extends Factory
             'artwork_url' => null,
             'duration_ms' => fake()->numberBetween(120000, 300000),
             'explicit' => false,
-            'status' => RequestStatus::Queued,
+            'selection_mode' => 'deterministic',
+            'selection_score' => 0,
+            'played_at' => now(),
         ];
-    }
-
-    public function fallback(): static
-    {
-        return $this->state(fn (): array => ['party_member_id' => null]);
-    }
-
-    public function status(RequestStatus $status): static
-    {
-        return $this->state(fn (): array => ['status' => $status]);
     }
 }
