@@ -74,7 +74,7 @@ class UpcomingSong extends Model
     protected function addVote(User $user, int $value): Vote
     {
         $member = $this->party->getMember($user);
-        if ($member && $member->role->code === 'banned') {
+        if ($member && $member->banned) {
             throw new VoteException('You are banned from voting for songs');
         }
         // Check downvotes

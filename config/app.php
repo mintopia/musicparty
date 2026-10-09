@@ -41,6 +41,10 @@ return [
 
     'version' => env('APP_VERSION', '2.0.0'),
 
+    'terms_url' => env('APP_TERMS_URL'),
+
+    'privacy_url' => env('APP_PRIVACY_URL'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Debug Mode

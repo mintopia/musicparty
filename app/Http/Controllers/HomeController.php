@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
@@ -9,9 +10,11 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function home(): Response
+    public function home(Request $request): Response
     {
-        return Inertia::render('Home');
+        return Inertia::render('Home', [
+            'canCreateParty' => $request->user()?->can('create', Party::class) ?? false,
+        ]);
     }
 
     public function proxy(Request $request): \Illuminate\Http\Response

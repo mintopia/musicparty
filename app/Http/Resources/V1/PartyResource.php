@@ -12,16 +12,26 @@ use Illuminate\Http\Resources\Json\JsonResource;
 class PartyResource extends JsonResource
 {
     /**
-     * Transform the resource into an array.
-     *
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
     {
+        $user = $request->user('sanctum');
+
         return [
             'code' => $this->code,
             'name' => $this->name,
-            'status' => $this->getState(),
+            'state' => $this->state->value,
+            'music_provider' => $this->music_provider,
+            'player_kind' => $this->player_kind,
+            'fallback_playlist_id' => $this->fallback_playlist_id,
+            'explicit' => (bool) $this->explicit,
+            'min_song_length' => $this->min_song_length,
+            'max_song_length' => $this->max_song_length,
+            'no_repeat_interval' => $this->no_repeat_interval,
+            'downvotes' => (bool) $this->downvotes,
+            'downvotes_per_hour' => $this->downvotes_per_hour,
+            'role' => $user === null ? null : $this->memberFor($user)?->role->value,
         ];
     }
 }

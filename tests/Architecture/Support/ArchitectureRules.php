@@ -7,8 +7,8 @@ use App\Models\Album;
 use App\Models\Artist;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
-use App\Models\PartyMemberRole;
 use App\Models\PartyModeration;
 use App\Models\PlayedSong;
 use App\Models\ProviderSetting;
@@ -75,6 +75,7 @@ class ArchitectureRules
         return [
             'identity' => [
                 'members' => [
+                    'App\\Domain\\Identity\\',
                     'App\\Services\\SocialProviders\\',
                     UserObserver::class,
                     SettingObserver::class,
@@ -90,6 +91,7 @@ class ArchitectureRules
             ],
             'party' => [
                 'members' => [
+                    'App\\Domain\\Party\\',
                     PartyObserver::class,
                     ThemeObserver::class,
                     UpcomingSongObserver::class,
@@ -101,8 +103,8 @@ class ArchitectureRules
                 'models' => [
                     Party::class,
                     PartyMember::class,
-                    PartyMemberRole::class,
                     PartyModeration::class,
+                    PartyLogEntry::class,
                     UpcomingSong::class,
                     Vote::class,
                     Role::class,
