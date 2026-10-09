@@ -4,7 +4,6 @@ namespace App\Services\SocialProviders;
 
 use App\Enums\SettingType;
 use App\Exceptions\SocialProviderException;
-use App\Models\EmailAddress;
 use App\Models\LinkedAccount;
 use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
@@ -18,10 +17,13 @@ use Laravel\Socialite\Facades\Socialite;
 abstract class AbstractSocialProvider implements SocialProviderContract
 {
     protected string $name;
+
     protected string $code;
+
     protected string $socialiteProviderCode;
 
     protected bool $supportsAuth = false;
+
     protected bool $canBeRenamed = false;
 
     public function __construct(protected ?SocialProvider $provider = null, protected ?string $redirectUrl = null)
@@ -45,11 +47,11 @@ abstract class AbstractSocialProvider implements SocialProviderContract
     public function configMapping(): array
     {
         return [
-            'client_id' => (object)[
+            'client_id' => (object) [
                 'name' => 'Client ID',
                 'validation' => 'required|string',
             ],
-            'client_secret' => (object)[
+            'client_secret' => (object) [
                 'name' => 'Client Secret',
                 'validation' => 'required|string',
                 'encrypted' => true,
@@ -60,8 +62,8 @@ abstract class AbstractSocialProvider implements SocialProviderContract
     public function install(): SocialProvider
     {
         $this->provider = SocialProvider::whereCode($this->code)->first();
-        if (!$this->provider) {
-            $provider = new SocialProvider();
+        if (! $this->provider) {
+            $provider = new SocialProvider;
             $this->provider = $provider;
             $provider->name = $this->name;
             $provider->code = $this->code;
@@ -78,6 +80,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
 
             $provider->save();
         }
+
         return $this->provider;
     }
 
@@ -85,8 +88,8 @@ abstract class AbstractSocialProvider implements SocialProviderContract
     {
         foreach ($this->configMapping() as $code => $config) {
             $setting = $this->provider->settings()->whereCode($code)->first();
-            if (!$setting) {
-                $setting = new ProviderSetting();
+            if (! $setting) {
+                $setting = new ProviderSetting;
                 $setting->provider()->associate($this->provider);
                 $setting->code = $code;
                 // Only set value initially
@@ -141,17 +144,17 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             if ($localUser === null) {
                 if ($account) {
                     $localUser = $account->user;
-                } elseif (!$this->provider->auth_enabled) {
+                } elseif (! $this->provider->auth_enabled) {
                     throw new SocialProviderException('Unable to login with this account');
                 } else {
-                    $localUser = new User();
+                    $localUser = new User;
                     $localUser->nickname = $remoteUser->getNickname();
                     $localUser->save();
                 }
             }
 
             if ($account === null) {
-                $account = new LinkedAccount();
+                $account = new LinkedAccount;
                 $account->provider()->associate($this->provider);
                 $account->user()->associate($localUser);
                 $account->external_id = $remoteUser->getId();
@@ -166,6 +169,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         if ($localUser === null) {
             $localUser = $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->first()->user;
         }
+
         return $localUser;
     }
 

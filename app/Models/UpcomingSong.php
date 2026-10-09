@@ -53,7 +53,7 @@ class UpcomingSong extends Model
         $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
         $data['user'] = $this->user->nickname ?? null;
         $data['fallback_name'] = $this->fallback_override ?? 'Fallback Track';
-        $data['css_classes'] = $this->css_classes ?? '';
+
         return $data;
     }
 
@@ -64,9 +64,10 @@ class UpcomingSong extends Model
 
     public function downvote(User $user): ?Vote
     {
-        if (!$this->party->downvotes) {
+        if (! $this->party->downvotes) {
             return null;
         }
+
         return $this->addVote($user, -1);
     }
 
@@ -81,13 +82,14 @@ class UpcomingSong extends Model
             $this->party->checkDownvotesForUser($user);
         }
         $vote = $this->votes()->whereUserId($user->id)->first();
-        if (!$vote) {
-            $vote = new Vote();
+        if (! $vote) {
+            $vote = new Vote;
             $vote->upcomingSong()->associate($this);
             $vote->user()->associate($user);
         }
         $vote->value = $value;
         $vote->save();
+
         return $vote;
     }
 
