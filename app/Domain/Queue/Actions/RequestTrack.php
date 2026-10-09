@@ -8,6 +8,7 @@ use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Blocklist;
 use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
@@ -25,7 +26,7 @@ use Illuminate\Support\Facades\DB;
 
 class RequestTrack
 {
-    public function __construct(private readonly PairingCatalogue $catalogue) {}
+    public function __construct(private readonly PairingCatalogue $catalogue, private readonly Blocklist $blocklist) {}
 
     public function __invoke(Party $party, PartyMember $member, string $providerTrackId): RequestOutcome
     {
@@ -158,6 +159,10 @@ class RequestTrack
 
         if (! $party->explicit && $track->explicit) {
             throw RequestRefusedException::explicitNotAllowed();
+        }
+
+        if ($this->blocklist->firstMatch($party, $track) !== null) {
+            throw RequestRefusedException::blocklisted();
         }
 
         if ($party->no_repeat_interval) {

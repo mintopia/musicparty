@@ -30,6 +30,17 @@ const describe = (entry) => {
             return `Banned ${entry.subject ?? 'a member'}`;
         case 'member.unbanned':
             return `Unbanned ${entry.subject ?? 'a member'}`;
+        case 'blocklist.entry_added':
+            return `Added blocklist entry ${entry.subject ?? ''}`.trim();
+        case 'blocklist.entry_updated': {
+            const label = `Updated blocklist entry ${entry.subject ?? ''}`.trim();
+            if (entry.details && ('old' in entry.details || 'new' in entry.details)) {
+                return `${label}: ${formatValue(entry.details.old ?? '')} -> ${formatValue(entry.details.new ?? '')}`;
+            }
+            return label;
+        }
+        case 'blocklist.entry_removed':
+            return `Removed blocklist entry ${entry.subject ?? ''}`.trim();
         default:
             return entry.action;
     }

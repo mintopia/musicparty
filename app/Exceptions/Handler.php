@@ -2,6 +2,7 @@
 
 namespace App\Exceptions;
 
+use App\Domain\Party\Exceptions\BlocklistActionRefused;
 use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
@@ -52,5 +53,9 @@ class Handler extends ExceptionHandler
         $this->map(fn (MembershipActionRefused $e): Throwable => $e->status() === MembershipActionRefused::FORBIDDEN
             ? new AccessDeniedHttpException($e->getMessage(), $e)
             : ValidationException::withMessages(['member' => [$e->getMessage()]]));
+
+        $this->map(fn (BlocklistActionRefused $e): Throwable => $e->status() === BlocklistActionRefused::FORBIDDEN
+            ? new AccessDeniedHttpException($e->getMessage(), $e)
+            : ValidationException::withMessages(['value' => [$e->getMessage()]]));
     }
 }
