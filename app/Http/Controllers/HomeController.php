@@ -2,45 +2,45 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Setting;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function home()
+    public function home(): Response
     {
-        if (Setting::fetch('defaultparty')) {
-            return response()->redirectToRoute('parties.show', Setting::fetch('defaultparty'));
-        }
-        return view('home.home');
+        return Inertia::render('Home');
     }
 
-    public function proxy(Request $request)
+    public function proxy(Request $request): \Illuminate\Http\Response
     {
         $cookiesArr = [];
         foreach ($request->input('cookies') as $name => $value) {
-            $cookiesArr[] = "{$name}=" . urlencode($value);
+            $cookiesArr[] = "{$name}=".urlencode($value);
         }
         $cookies = implode('; ', $cookiesArr);
 
         $curl = curl_init();
         $timestamp = time();
-        curl_setopt_array($curl, array(
+        curl_setopt_array($curl, [
             CURLOPT_URL => "https://open.spotify.com/get_access_token?reason=transport&productType=web-player&totpVer=5&ts={$timestamp}000&totp={$request->input('code')}",
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_FOLLOWLOCATION => true,
             CURLOPT_CUSTOMREQUEST => 'GET',
-            CURLOPT_HTTPHEADER => array(
-                "Cookie: {$cookies}"
-            ),
-        ));
+            CURLOPT_HTTPHEADER => [
+                "Cookie: {$cookies}",
+            ],
+        ]);
 
         $response = curl_exec($curl);
         curl_close($curl);
 
-        $responseData = json_decode($response);
-        Log::info($response);
+        $body = is_string($response) ? $response : '';
+        $responseData = json_decode($body);
+        Log::info($body);
+
         return response($responseData->accessToken)->header('Content-Type', 'text/plain');
     }
 }

@@ -26,6 +26,7 @@ class Party extends Model
     use ToString;
 
     const MINIMUM_UPCOMING = 5;
+
     const QUEUE_LENGTH = 1;
 
     protected $attributes = [
@@ -42,8 +43,6 @@ class Party extends Model
         'song_started_at' => 'datetime',
     ];
 
-    protected ?Collection $_modSettings = null;
-
     public function toStringName(): string
     {
         return $this->code;
@@ -57,11 +56,6 @@ class Party extends Model
     public function members(): HasMany
     {
         return $this->hasMany(PartyMember::class);
-    }
-
-    public function modsettings(): HasMany
-    {
-        return $this->hasMany(PartyModSetting::class);
     }
 
     public function user(): BelongsTo
@@ -96,20 +90,12 @@ class Party extends Model
 
     public function resolveChildRouteBinding($childType, $value, $field)
     {
-        switch ($childType) {
-            case 'upcomingsong':
-            case 'song':
-                return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
-
-            case 'playedsong':
-                return $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first();
-
-            case 'user':
-                return $this->members()->whereId($value)->with(['user', 'role'])->first();
-
-            default:
-                return parent::resolveChildRouteBinding($childType, $value, $field);
-        }
+        return match ($childType) {
+            'upcomingsong', 'song' => $this->upcoming()->whereId($value)->with(['song', 'user'])->first(),
+            'playedsong' => $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first(),
+            'user' => $this->members()->whereId($value)->with(['user', 'role'])->first(),
+            default => parent::resolveChildRouteBinding($childType, $value, $field),
+        };
     }
 
     public function current()
@@ -132,14 +118,16 @@ class Party extends Model
             $cutoff = Carbon::now()->subSeconds(5);
             if ($this->last_updated_at > $cutoff) {
                 Log::debug("{$this}: Already updated state recently");
+
                 return $this;
             }
         }
 
-        if (!$this->active) {
+        if (! $this->active) {
             Log::debug("{$this}: Party is not active");
             // Still update current song, in case they're using it manually and still want it reflected on screen
             $this->updateCurrentSong();
+
             return $this;
         }
 
@@ -149,72 +137,7 @@ class Party extends Model
         $this->last_updated_at = Carbon::now();
         $this->save();
         Log::info("{$this}: Finished updating state");
-        return $this;
-    }
 
-    protected function loadModSettings(): void
-    {
-        if ($this->_modSettings !== null) {
-            return;
-        }
-
-        $this->_modSettings = new Collection();
-        foreach ($this->modsettings()->with(['setting', 'setting.mod'])->get() as $setting) {
-            $key = "{$setting->setting->mod->code}:{$setting->setting->code}";
-            $this->_modSettings->put($key, $setting);
-        }
-        foreach (ModSetting::orderBy('mod_id', 'ASC')->orderBy('order', 'ASC')->get() as $modSetting) {
-            $key = "{$modSetting->mod->code}:{$modSetting->code}";
-            if (!$this->_modSettings->has($key)) {
-                $setting = new PartyModSetting();
-                $setting->setting()->associate($modSetting);
-                $setting->party()->associate($this);
-                $setting->value = $modSetting->default;
-                $this->_modSettings->put($key, $setting);
-            }
-        }
-    }
-
-    public function getModSettingValue(mixed $mod, string $code, mixed $default = null): mixed
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting !== null) {
-            return $setting->value;
-        }
-        return $default;
-    }
-    public function getModSetting(mixed $mod, string $code): ?PartyModSetting
-    {
-        $this->loadModSettings();
-        if ($this->_modSettings === null) {
-            return null;
-        }
-        if ($mod instanceof Mod) {
-            $mod = $mod->code;
-        }
-        $key = "{$mod}:{$code}";
-        return $this->_modSettings->get($key);
-    }
-
-    public function setModSetting(mixed $mod, string $code, mixed $value): self
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting !== null) {
-            $setting->value = $value;
-            $setting->save();
-            $this->load('modsettings');
-        }
-        return $this;
-    }
-
-    public function deleteModSetting(mixed $mod, string $code): self
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting === null) {
-            return $this;
-        }
-        $setting->delete();
-        $this->load('modsettings');
         return $this;
     }
 
@@ -222,7 +145,8 @@ class Party extends Model
     {
         $next = $this->next();
         $current = $this->history()->orderBy('played_at', 'desc')->first();
-        return (object)[
+
+        return (object) [
             'code' => $this->code,
             'name' => $this->name,
             'backup_playlist_id' => $this->backup_playlist_id,
@@ -240,8 +164,8 @@ class Party extends Model
     {
         $status = $this->user->status;
 
-        if (!$status) {
-            return (object)[
+        if (! $status) {
+            return (object) [
                 'device' => null,
                 'repeat' => null,
                 'shuffle' => null,
@@ -253,8 +177,8 @@ class Party extends Model
             ];
         }
 
-        $data = (object)[
-            'device' => (object)[
+        $data = (object) [
+            'device' => (object) [
                 'id' => $status->device->id,
                 'name' => $status->device->name,
                 'type' => $status->device->type,
@@ -280,12 +204,8 @@ class Party extends Model
 
     public function play(?string $playbackDevice): void
     {
-        if ($playbackDevice === null) {
-            $playbackDevice = $this->recent_device_id;
-        }
-        if ($playbackDevice === null) {
-            $playbackDevice = '';
-        }
+        $playbackDevice ??= $this->recent_device_id;
+        $playbackDevice ??= '';
         Log::debug("{$this}: Spotify API -> play()");
         $trackUri = '';
         if ($this->song) {
@@ -335,7 +255,6 @@ class Party extends Model
         ]);
     }
 
-
     protected function getPlaylist(bool $force = false): object
     {
         return $this->user->getPlaylist($this->playlist_id, $force);
@@ -344,11 +263,13 @@ class Party extends Model
     protected function getRelinkedTrackId(string $playedId): ?string
     {
         $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
+
         return Cache::remember($key, 86400, function () use ($playedId) {
             Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
             $data = $this->user->getSpotifyApi()->getTrack($playedId, [
-                'market'
+                'market',
             ]);
+
             return $data->id;
         });
     }
@@ -356,7 +277,7 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
-        $state = $this->user->getSpotifyStatus();
+        $this->user->getSpotifyStatus();
         $queue = $this->user->getSpotifyApi()->getMyQueue();
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
@@ -374,6 +295,7 @@ class Party extends Model
         $toAdd = self::QUEUE_LENGTH - ($ids->count() - 1);
         if ($toAdd < 1) {
             Log::debug("{$this}: No tracks to add");
+
             return;
         }
 
@@ -391,7 +313,7 @@ class Party extends Model
          */
 
         if ($this->weighted) {
-            $songsToAdd = new Collection();
+            $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
                 ->where(function ($query) {
@@ -445,6 +367,7 @@ class Party extends Model
 
         if ($songsToAdd->isEmpty()) {
             Log::debug("{$this}: Found no songs in the upcoming songs list to backfill");
+
             return;
         }
         foreach ($songsToAdd as $song) {
@@ -463,11 +386,11 @@ class Party extends Model
 
     public function updateDeviceName(): void
     {
-        if (!$this->device_id) {
+        if (! $this->device_id) {
             return;
         }
 
-        if (!$this->isDirty('device_id')) {
+        if (! $this->isDirty('device_id')) {
             return;
         }
 
@@ -475,6 +398,7 @@ class Party extends Model
         foreach ($devices as $device) {
             if ($device->id == $this->device_id) {
                 $this->device_name = $device->name;
+
                 return;
             }
         }
@@ -488,7 +412,7 @@ class Party extends Model
         if ($member) {
             return $member;
         }
-        $member = new PartyMember();
+        $member = new PartyMember;
         $member->party()->associate($this);
         $member->user()->associate($user);
 
@@ -499,20 +423,21 @@ class Party extends Model
         $role = PartyMemberRole::whereCode($roleCode)->first();
         $member->role()->associate($role);
         $member->save();
+
         return $member;
     }
 
     public function getNextUpdateDelay(): ?int
     {
-        if (!$this->poll) {
+        if (! $this->poll) {
             return null;
         }
 
-        if (!$this->song) {
+        if (! $this->song) {
             return 60;
         }
 
-        if (!$this->user->status || !$this->user->status->is_playing) {
+        if (! $this->user->status || ! $this->user->status->is_playing) {
             return 60;
         }
 
@@ -520,12 +445,13 @@ class Party extends Model
         if ($remaining > 60) {
             return 60;
         }
+
         return max(5, floor($remaining / 2));
     }
 
     protected function forcePlayback(?object $current): ?object
     {
-        if (!$this->force || !$this->device_id) {
+        if (! $this->force || ! $this->device_id) {
             return $current;
         }
 
@@ -553,9 +479,11 @@ class Party extends Model
                 $this->user->getSpotifyApi()->play($this->device_id, [
                     'uris' => [$trackUri],
                 ]);
+
                 return $this->user->getSpotifyStatus();
             }
         }
+
         return $current;
     }
 
@@ -565,11 +493,12 @@ class Party extends Model
         $current = $this->user->getSpotifyStatus();
         $current = $this->forcePlayback($current);
 
-        if ($this->song_id && (!$current || !property_exists($current, 'item') || !$current->item)) {
+        if ($this->song_id && (! $current || ! property_exists($current, 'item') || ! $current->item)) {
             Log::info("{$this}: Not playing anything");
             $this->song_id = null;
             $this->song_started_at = null;
             $this->save();
+
             return true;
         } elseif ($current) {
             $song = Song::fromSpotify($current->item);
@@ -581,7 +510,7 @@ class Party extends Model
                 $this->song()->associate($song);
                 $this->song_started_at = Carbon::now()->subMillis($current->progress_ms);
 
-                $playedSong = new PlayedSong();
+                $playedSong = new PlayedSong;
                 $playedSong->song()->associate($song);
                 $playedSong->party()->associate($this);
                 $playedSong->played_at = $this->song_started_at;
@@ -594,9 +523,11 @@ class Party extends Model
             }
             if ($this->isDirty()) {
                 $this->save();
+
                 return true;
             }
         }
+
         return false;
     }
 
@@ -624,7 +555,8 @@ class Party extends Model
             if ($track->track === null) {
                 return false;
             }
-            return !in_array($track->track->id, $existingIds);
+
+            return ! in_array($track->track->id, $existingIds);
         });
 
         $toAdd = min($toAdd, count($tracks));
@@ -634,7 +566,7 @@ class Party extends Model
             $track = $tracks[$i];
             $song = Song::fromSpotify($track->track);
             Log::info("{$this}: Adding {$song} from backup playlist");
-            $upcoming = new UpcomingSong();
+            $upcoming = new UpcomingSong;
             $upcoming->party()->associate($this);
             $upcoming->song()->associate($song);
             $upcoming->save();
@@ -645,7 +577,7 @@ class Party extends Model
     {
         $cacheKey = "party.{$this->id}.backupplaylist";
         $tracks = Cache::get($cacheKey);
-        if ($tracks !== null && !$force) {
+        if ($tracks !== null && ! $force) {
             return $tracks;
         }
 
@@ -662,12 +594,14 @@ class Party extends Model
                 if ($track->track === null) {
                     continue;
                 }
-                if (property_exists($track->track, 'is_playable') && !$track->track->is_playable) {
+                if (property_exists($track->track, 'is_playable') && ! $track->track->is_playable) {
                     Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is not playable");
+
                     continue;
                 }
                 if ($track->track->is_local) {
                     Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is local");
+
                     continue;
                 }
                 $tracks[] = $track;
@@ -676,6 +610,7 @@ class Party extends Model
         } while ($response->next !== null);
 
         Cache::put($cacheKey, $tracks, 3600);
+
         return $tracks;
     }
 
@@ -684,14 +619,13 @@ class Party extends Model
         if ($user->id === $this->owner_id) {
             return true;
         }
-        return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
-                return $query->whereIn('code', ['owner']);
-        })->count() > 0;
+
+        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
     }
 
     public function pushUpdate(): void
     {
-        UpdatedEvent::dispatch($this);
+        UpdatedEvent::dispatch($this->code);
     }
 
     public function checkDownvotesForUser(User $user): void
@@ -713,7 +647,8 @@ class Party extends Model
     public function calculateTrustScores(?CarbonImmutable $after = null): void
     {
         if ($this->trustedUser === null) {
-            Log::debug("No trusted user, unable to calculate trust score");
+            Log::debug('No trusted user, unable to calculate trust score');
+
             return;
         }
 
@@ -773,7 +708,6 @@ class Party extends Model
         $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
         $scores = $solved->getData();
 
-
         DB::transaction(function () use ($userMap, $scores) {
             $this->members()->update([
                 'trustscore' => 0,
@@ -788,13 +722,13 @@ class Party extends Model
                 if ($userId === null) {
                     continue;
                 }
-                if (!isset($membersIndexed[$userId])) {
+                if (! isset($membersIndexed[$userId])) {
                     continue;
                 }
                 $membersIndexed[$userId]->trustscore = $score;
                 $membersIndexed[$userId]->save();
             }
         });
-        Log::debug("Finished calculating trust scores");
+        Log::debug('Finished calculating trust scores');
     }
 }

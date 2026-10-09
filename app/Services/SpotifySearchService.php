@@ -15,11 +15,10 @@ use SpotifyWebAPI\SpotifyWebAPI;
 class SpotifySearchService
 {
     protected ?Session $session = null;
+
     protected ?SpotifyWebAPI $api = null;
 
-    public function __construct(protected Party $party, protected PartyMember $member)
-    {
-    }
+    public function __construct(protected Party $party, protected PartyMember $member) {}
 
     protected function getApi()
     {
@@ -30,9 +29,10 @@ class SpotifySearchService
         $account = $this->party->user->accounts()->whereHas('provider', function ($query) {
             $query->whereCode('spotifysearch');
         })->first();
-        if (!$account) {
+        if (! $account) {
             Log::warning("{$this->party->user}: No Spotify Search account, using control account");
             $this->api = $this->party->user->getSpotifyApi();
+
             return $this->api;
         }
 
@@ -45,9 +45,8 @@ class SpotifySearchService
 
         // Create new API
         Log::debug("{$this->party->user}: Creating new Search API connection");
-        $request = new Request();
+        $request = new Request;
         $this->api = new SpotifyWebAPI([], $this->session, $request);
-
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this->party->user}: Refreshing expiring Search API access token");
@@ -78,9 +77,7 @@ class SpotifySearchService
 
     protected function augmentResults(object $results): object
     {
-        $ids = array_map(function ($track) {
-            return $track->id;
-        }, $results->items);
+        $ids = array_map(fn ($track) => $track->id, $results->items);
 
         $augmented = [];
 

@@ -10,20 +10,20 @@ class UpcomingSongObserver
 {
     public function created(UpcomingSong $upcomingSong)
     {
-        UpdatedEvent::dispatch($upcomingSong);
+        UpdatedEvent::dispatch($upcomingSong->party->code, $upcomingSong->id);
     }
 
     public function updated(UpcomingSong $upcomingSong)
     {
         if ($upcomingSong->queued_at) {
-            RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
+            RemovedEvent::dispatch($upcomingSong->party->code, $upcomingSong->id);
         } else {
-            UpdatedEvent::dispatch($upcomingSong);
+            UpdatedEvent::dispatch($upcomingSong->party->code, $upcomingSong->id);
         }
     }
 
     public function deleted(UpcomingSong $upcomingSong)
     {
-        RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
+        RemovedEvent::dispatch($upcomingSong->party->code, $upcomingSong->id);
     }
 }

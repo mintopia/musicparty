@@ -667,7 +667,6 @@ namespace App\Models{
  * @property int $score
  * @property int $score_adjustment
  * @property string|null $fallback_override
- * @property string|null $css_classes
  * @property int $upvotes
  * @property int $downvotes
  * @property \Illuminate\Support\Carbon|null $queued_at

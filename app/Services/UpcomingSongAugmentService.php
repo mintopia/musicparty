@@ -14,16 +14,17 @@ class UpcomingSongAugmentService
         $votes = $user->votes()->whereIn('upcoming_song_id', $ids)->get();
         $augmentedData = [];
         foreach ($votes as $vote) {
-            $augmentedData[$vote->upcoming_song_id] = (object)[
+            $augmentedData[$vote->upcoming_song_id] = (object) [
                 'vote' => $vote,
             ];
         }
+
         return collect($augmentedData);
     }
 
     public function augment(UpcomingSong $song, User $user): object
     {
-        return (object)[
+        return (object) [
             'vote' => $song->votes()->whereUserId($user->id)->first(),
         ];
     }

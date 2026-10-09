@@ -30,8 +30,9 @@ class PartyUpdate implements ShouldQueue
     {
         $middleware = [];
         if (config('musicparty.allow_overlapping_updates')) {
-            $middleware[] = (new WithoutOverlapping($this->party->id))->dontRelease()->expireAfter(4);
+            $middleware[] = new WithoutOverlapping($this->party->id)->dontRelease()->expireAfter(4);
         }
+
         return $middleware;
     }
 
@@ -40,15 +41,17 @@ class PartyUpdate implements ShouldQueue
      */
     public function handle(): void
     {
-        if (!$this->party->poll) {
+        if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
             $this->party->updateState();
+
             return;
         }
 
         $cutoff = now()->subSeconds(5);
         if ($this->party->last_updated_at > $cutoff) {
             Log::debug("{$this->party}: No further processing");
+
             return;
         }
 

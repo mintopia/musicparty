@@ -10,10 +10,11 @@ class PartyObserver
 {
     public function creating(Party $party): void
     {
-        if (!$party->code) {
+        if (! $party->code) {
             $party->code = Str::upper(Str::password(4, numbers: false, symbols: false));
         }
     }
+
     /**
      * Handle the Party "created" event.
      */
@@ -39,6 +40,6 @@ class PartyObserver
      */
     public function updated(Party $party): void
     {
-        UpdatedEvent::dispatch($party);
+        UpdatedEvent::dispatch($party->code);
     }
 }

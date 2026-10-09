@@ -20,8 +20,8 @@ class RolesSeeder extends Seeder
 
         foreach ($roles as $code => $name) {
             $role = Role::whereCode($code)->first();
-            if (!$role) {
-                $role = new Role();
+            if (! $role) {
+                $role = new Role;
                 $role->code = $code;
             }
             $role->name = $name;

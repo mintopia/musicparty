@@ -31,10 +31,11 @@ class Artist extends Model
         if ($artist) {
             return $artist;
         }
-        $artist = new Artist();
+        $artist = new Artist;
         $artist->spotify_id = $spotifyArtist->id;
         $artist->name = $spotifyArtist->name;
         $artist->save();
+
         return $artist;
     }
 

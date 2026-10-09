@@ -28,11 +28,13 @@ class PartyPushUpdate extends Command
     {
         $code = $this->input->getArgument('party');
         $party = Party::whereCode($code)->first();
-        if (!$party) {
+        if (! $party) {
             $this->error("Unable to find a party with code {$code}");
+
             return self::FAILURE;
         }
         $party->pushUpdate();
+
         return self::SUCCESS;
     }
 }

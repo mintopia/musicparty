@@ -37,6 +37,7 @@ class PartyFallback extends Command
             Log::info("{$party}: Overdue an update, triggering fallback");
             PartyUpdate::dispatch($party);
         }
+
         return self::SUCCESS;
     }
 }

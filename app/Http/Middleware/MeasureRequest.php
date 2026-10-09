@@ -14,18 +14,16 @@ class MeasureRequest
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!config('open-telemetry.enabled')) {
+        if (! config('open-telemetry.enabled')) {
             return $next($request);
         }
 
         $name = Route::currentRouteName();
-        if ($name === null) {
-            $name = $request->getRequestUri();
-        }
+        $name ??= $request->getRequestUri();
 
         $trace = $request->header('traceparent');
         $state = $request->header('tracestate');
@@ -44,6 +42,7 @@ class MeasureRequest
         $response->headers->set('X-TraceId', $span->span->getContext()->getTraceId());
         $span->span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());
         $span->end();
+
         return $response;
     }
 }

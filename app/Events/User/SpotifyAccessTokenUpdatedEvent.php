@@ -2,41 +2,35 @@
 
 namespace App\Events\User;
 
-use App\Models\User;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class SpotifyAccessTokenUpdatedEvent implements ShouldBroadcast
 {
-    use Dispatchable, InteractsWithSockets, SerializesModels;
+    use Dispatchable;
+    use InteractsWithSockets;
+
+    public function __construct(protected int $userId) {}
 
     /**
-     * Create a new event instance.
+     * @return array<string, int>
      */
-    public function __construct(protected User $user, protected string $accessToken)
-    {
-        //
-    }
-
     public function broadcastWith(): array
     {
         return [
-            'accessToken' => $this->accessToken,
+            'user_id' => $this->userId,
         ];
     }
 
     /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, PrivateChannel>
      */
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
         return [
-            new Channel("spotifytoken.{$this->user->id}"),
+            new PrivateChannel("spotifytoken.{$this->userId}"),
         ];
     }
 }

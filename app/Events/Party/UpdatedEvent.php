@@ -7,37 +7,31 @@ use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class UpdatedEvent implements ShouldBroadcast
 {
     use Dispatchable;
     use InteractsWithSockets;
-    use SerializesModels;
+
+    public function __construct(protected string $partyCode) {}
 
     /**
-     * Create a new event instance.
+     * @return array<string, mixed>
      */
-    public function __construct(protected Party $party)
-    {
-    }
-
     public function broadcastWith(): array
     {
-        $state = $this->party->getState();
-        return (array)$state;
+        $party = Party::query()->where('code', $this->partyCode)->firstOrFail();
+
+        return (array) $party->getState();
     }
 
     /**
-     * Get the channels the event should broadcast on.
-     *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, Channel>
      */
-
-    public function broadcastOn()
+    public function broadcastOn(): array
     {
         return [
-            new Channel("party.{$this->party->code}"),
+            new Channel("party.{$this->partyCode}"),
         ];
     }
 }
