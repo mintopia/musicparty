@@ -5,12 +5,14 @@ use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Jobs\BroadcastPartyQueue;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
@@ -18,6 +20,7 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Bus::fake([StartPlayback::class]);
     app()->instance(FakeMusicProvider::class, FakeMusicProvider::withDefaultCatalogue());
     $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
     $this->user = User::factory()->create();

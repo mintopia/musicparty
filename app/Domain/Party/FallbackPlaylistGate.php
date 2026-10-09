@@ -31,18 +31,22 @@ readonly class FallbackPlaylistGate
         return new FallbackPlaylistCheck($playable, self::REQUIRED_PLAYABLE_TRACKS);
     }
 
-    /**
-     * @param  array<string, true>  $recentlyPlayed
-     */
-    private function isPlayable(Party $party, TrackData $track, array $recentlyPlayed): bool
+    public function passesRules(Party $party, TrackData $track): bool
     {
         $seconds = $track->durationMs / 1000;
 
         return $track->playableInMarket
             && ($party->explicit || ! $track->explicit)
             && ($party->min_song_length === null || $seconds >= $party->min_song_length)
-            && ($party->max_song_length === null || $seconds <= $party->max_song_length)
-            && ! isset($recentlyPlayed[$track->providerTrackId]);
+            && ($party->max_song_length === null || $seconds <= $party->max_song_length);
+    }
+
+    /**
+     * @param  array<string, true>  $recentlyPlayed
+     */
+    private function isPlayable(Party $party, TrackData $track, array $recentlyPlayed): bool
+    {
+        return $this->passesRules($party, $track) && ! isset($recentlyPlayed[$track->providerTrackId]);
     }
 
     /**

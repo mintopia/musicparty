@@ -3,7 +3,7 @@ import {router} from '@inertiajs/vue3';
 import {ref} from 'vue';
 import Icon from './Icon.vue';
 import TrackThumb from './TrackThumb.vue';
-import {formatDuration} from '../lib/format';
+import {formatDuration, requesterLabel} from '../lib/format';
 
 const props = defineProps({
     queue: {type: Array, default: () => []},
@@ -60,7 +60,7 @@ const buttonClass = (active, activeColor) => [
                 <div class="min-w-0 flex-1">
                     <div class="truncate text-sm">{{ item.track.title }}</div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
-                    <div class="truncate text-xs text-muted">Requested by {{ item.requested_by.name }}</div>
+                    <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
                 </div>
                 <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(item.track.duration_ms) }}</span>
                 <div class="flex items-center">

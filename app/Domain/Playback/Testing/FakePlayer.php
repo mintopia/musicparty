@@ -20,6 +20,9 @@ class FakePlayer implements Player
 
     private bool $connected = true;
 
+    /** @var list<TrackReference> */
+    private array $queue = [];
+
     /** @var list<PlayerCommand> */
     private array $commands = [];
 
@@ -142,6 +145,43 @@ class FakePlayer implements Player
     public function enqueue(string $providerId, string $providerTrackId): void
     {
         $this->record('enqueue', $providerTrackId);
+        $this->queue[] = new TrackReference($providerId, $providerTrackId);
+
+        if ($this->state->currentTrack === null) {
+            $this->advance();
+        }
+    }
+
+    /**
+     * @return list<TrackReference>
+     */
+    public function queued(): array
+    {
+        return $this->queue;
+    }
+
+    /**
+     * Simulates the current Track ending: the next enqueued Track starts, otherwise playback stops.
+     */
+    public function advance(): void
+    {
+        $next = array_shift($this->queue);
+
+        if ($next === null) {
+            $this->emitState(PlaybackState::stopped());
+
+            return;
+        }
+
+        $this->emitTrackChanged($next->providerId, $next->providerTrackId);
+    }
+
+    /**
+     * Simulates the Provider autoplaying a Track that the Party never enqueued.
+     */
+    public function autoplay(string $providerId, string $providerTrackId): void
+    {
+        $this->emitTrackChanged($providerId, $providerTrackId);
     }
 
     public function play(): void
@@ -159,6 +199,10 @@ class FakePlayer implements Player
     public function skip(): void
     {
         $this->control(Control::Skip);
+
+        if ($this->queue !== []) {
+            $this->advance();
+        }
     }
 
     public function seek(int $positionMs): void

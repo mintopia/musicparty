@@ -2,48 +2,40 @@
 
 namespace App\Models;
 
-use App\Domain\Queue\RequestStatus;
 use Carbon\CarbonImmutable;
-use Database\Factories\TrackRequestFactory;
+use Database\Factories\PlayFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
- * @property RequestStatus $status
- * @property list<string> $artists
- * @property int|null $score
- * @property int|null $my_vote
+ * @property int $id
+ * @property int $party_id
+ * @property int|null $track_request_id
  * @property int|null $party_member_id
  * @property string $provider_track_id
+ * @property string $title
+ * @property list<string> $artists
  * @property int $duration_ms
- * @property CarbonImmutable|null $not_before
- * @property CarbonImmutable|null $up_next_at
- * @property CarbonImmutable|null $enqueued_at
- * @property CarbonImmutable|null $started_at
  * @property string|null $selection_mode
  * @property int|null $selection_score
+ * @property CarbonImmutable $played_at
  */
 #[Unguarded]
-class TrackRequest extends Model
+class Play extends Model
 {
-    /** @use HasFactory<TrackRequestFactory> */
+    /** @use HasFactory<PlayFactory> */
     use HasFactory;
 
     protected function casts(): array
     {
         return [
-            'status' => RequestStatus::class,
             'artists' => 'array',
             'explicit' => 'boolean',
             'duration_ms' => 'integer',
-            'not_before' => 'immutable_datetime',
-            'up_next_at' => 'immutable_datetime',
-            'enqueued_at' => 'immutable_datetime',
-            'started_at' => 'immutable_datetime',
             'selection_score' => 'integer',
+            'played_at' => 'immutable_datetime',
         ];
     }
 
@@ -64,10 +56,10 @@ class TrackRequest extends Model
     }
 
     /**
-     * @return HasMany<RequestVote, $this>
+     * @return BelongsTo<TrackRequest, $this>
      */
-    public function votes(): HasMany
+    public function request(): BelongsTo
     {
-        return $this->hasMany(RequestVote::class);
+        return $this->belongsTo(TrackRequest::class, 'track_request_id');
     }
 }

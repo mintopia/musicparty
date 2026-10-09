@@ -11,6 +11,7 @@ use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Jobs\BroadcastPartyQueue;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
@@ -70,6 +71,10 @@ class RequestTrack
         });
 
         BroadcastPartyQueue::dispatch($party->code);
+
+        if ($outcome->created) {
+            StartPlayback::dispatch($party->code);
+        }
 
         return $outcome;
     }

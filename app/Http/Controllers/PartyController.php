@@ -16,6 +16,7 @@ use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
+use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\CastVoteRequest;
@@ -75,11 +76,13 @@ class PartyController extends Controller
         Request $request,
         JoinParty $joinParty,
         ListQueue $listQueue,
+        PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
         Party $party,
         string $section = 'queue',
     ): Response {
         $member = $joinParty($this->currentUser($request), $party);
+        $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
         $results = null;
         $searchError = null;
@@ -109,7 +112,8 @@ class PartyController extends Controller
             'section' => $section,
             'canManage' => $party->canBeManagedBy($this->currentUser($request)),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
-            'nowPlaying' => null,
+            'nowPlaying' => $playback['now_playing'],
+            'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'search_query' => $query,
             'results' => $results,
