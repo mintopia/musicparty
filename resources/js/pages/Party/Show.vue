@@ -168,6 +168,12 @@ const placeholders = {
                         <Link :href="`/parties/${party.code}/members`" class="hover:text-primary" data-testid="party-members-link">Party Members</Link>
                     </dd>
                 </template>
+                <template v-if="canManage && !membership.banned">
+                    <dt class="text-muted">Settings</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/settings`" class="hover:text-primary" data-testid="party-settings-link">Party Settings</Link>
+                    </dd>
+                </template>
                 <template v-if="canViewLog">
                     <dt class="text-muted">Log</dt>
                     <dd>

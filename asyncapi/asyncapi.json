@@ -62,6 +62,23 @@
                     "description": "Party code"
                 }
             }
+        },
+        "partyMember": {
+            "address": "private-party.{code}.member.{memberId}",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices.",
+            "messages": {
+                "Party.RequestRejectedEvent": {
+                    "$ref": "#/components/messages/Party.RequestRejectedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                },
+                "memberId": {
+                    "description": "Party Member id"
+                }
+            }
         }
     },
     "components": {
@@ -200,6 +217,30 @@
                         }
                     }
                 }
+            },
+            "Party.RequestRejectedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\RequestRejectedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "provider_track_id": {
+                            "description": "Track the Member tried to request",
+                            "type": "string"
+                        },
+                        "reason": {
+                            "description": "Specific Request rule that refused the Request",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "provider_track_id",
+                        "reason"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.RequestRejectedEvent",
+                "x-event-class": "App\\Events\\Party\\RequestRejectedEvent"
             }
         }
     },
@@ -259,6 +300,17 @@
                 },
                 {
                     "$ref": "#/channels/partyMembers/messages/Presence.MemberRemoved"
+                }
+            ]
+        },
+        "publishPartyMemberRequestRejected": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.RequestRejectedEvent"
                 }
             ]
         }

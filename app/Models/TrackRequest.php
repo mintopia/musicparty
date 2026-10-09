@@ -9,12 +9,14 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
 /**
  * @property RequestStatus $status
  * @property list<string> $artists
  * @property int|null $score
  * @property int|null $my_vote
+ * @property Carbon $updated_at
  */
 #[Unguarded]
 class TrackRequest extends Model

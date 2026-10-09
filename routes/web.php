@@ -36,6 +36,9 @@ Route::middleware('auth')->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('member')
         ->name('parties.members.unban');
+    Route::get('parties/{party}/settings', [PartyController::class, 'settings'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.settings');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');

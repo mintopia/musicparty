@@ -124,11 +124,28 @@ class PartyController extends Controller
         ]);
     }
 
+    public function settings(Party $party): Response
+    {
+        $this->authorize('update', $party);
+
+        return Inertia::render('Party/Settings', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'settings' => [
+                'allow_requests' => (bool) $party->allow_requests,
+                'max_requests' => $party->max_requests,
+                'min_song_length' => $party->min_song_length,
+                'max_song_length' => $party->max_song_length,
+                'explicit' => (bool) $party->explicit,
+                'no_repeat_interval' => $party->no_repeat_interval,
+            ],
+        ]);
+    }
+
     public function update(UpdatePartyRequest $request, UpdatePartySettings $updateSettings, Party $party): RedirectResponse
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'downvotes', 'downvotes_per_hour']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('successMessage', 'Settings saved');
