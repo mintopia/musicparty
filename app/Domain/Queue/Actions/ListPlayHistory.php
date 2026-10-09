@@ -22,10 +22,7 @@ class ListPlayHistory
         return Play::query()
             ->where('party_id', $party->id)
             ->tap(fn (Builder $query) => $this->filter($query, $filters))
-            ->with([
-                'requester.user',
-                'request' => fn ($request) => $request->withCount('votes')->withSum('votes as score', 'value'),
-            ])
+            ->withHistoryRelations()
             ->withRatingSummary($viewer)
             ->orderByDesc('played_at')
             ->orderByDesc('id')

@@ -207,6 +207,22 @@ it('rejects invalid filters on the party page', function () {
         ->assertSessionHasErrors('type');
 });
 
+it('keeps votes, score and requested time on the rating response', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHours(2)]);
+    $voters = PartyMember::factory()->for($this->party)->count(2)->create();
+    RequestVote::factory()->for($request, 'request')->for($voters[0], 'member')->create(['value' => 1]);
+    RequestVote::factory()->down()->for($request, 'request')->for($voters[1], 'member')->create();
+    $play = playIn($this->party, ['track_request_id' => $request->id, 'played_at' => now()->subMinute()]);
+
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertOk()
+        ->assertJsonPath('data.votes', 2)
+        ->assertJsonPath('data.score', 0)
+        ->assertJsonPath('data.requested_at', $request->created_at->toIso8601String());
+    $this->deleteJson(ratingUrl($play))->assertOk()
+        ->assertJsonPath('data.votes', 2)
+        ->assertJsonPath('data.requested_at', $request->created_at->toIso8601String());
+});
+
 it('likes a play and reports the counts', function () {
     $play = playIn($this->party);
 

@@ -81,6 +81,18 @@ class Play extends Model
      * @param  Builder<Play>  $query
      */
     #[Scope]
+    protected function withHistoryRelations(Builder $query): void
+    {
+        $query->with([
+            'requester.user',
+            'request' => fn ($request) => $request->withCount('votes')->withSum('votes as score', 'value'),
+        ]);
+    }
+
+    /**
+     * @param  Builder<Play>  $query
+     */
+    #[Scope]
     protected function withRatingSummary(Builder $query, ?PartyMember $viewer = null): void
     {
         $query

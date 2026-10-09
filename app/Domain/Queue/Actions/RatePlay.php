@@ -42,7 +42,7 @@ class RatePlay
 
         return Play::query()
             ->whereKey($play->id)
-            ->with('requester.user')
+            ->withHistoryRelations()
             ->withRatingSummary($member)
             ->firstOrFail();
     }
