@@ -1,9 +1,8 @@
 <?php
 
-use App\Domain\Music\Capability;
+use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Music\Exceptions\UnsupportedCapability;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -15,7 +14,7 @@ beforeEach(function () {
     config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
     Cache::flush();
     Http::preventStrayRequests();
-    $this->provider = new SpotifyMusicProvider;
+    $this->provider = new SpotifyMusicProvider(new HostAccountTokens);
 });
 
 function fakeSpotify(array $api): void
@@ -28,18 +27,9 @@ function tokenRequests(): int
     return Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'accounts.spotify.com'))->count();
 }
 
-it('identifies itself and declares no capabilities', function () {
-    expect($this->provider->id())->toBe('spotify')
-        ->and($this->provider->supports(Capability::PlaylistWrite))->toBeFalse();
+it('identifies itself', function () {
+    expect($this->provider->id())->toBe('spotify');
 });
-
-it('throws for unsupported playlist operations', function (Closure $call) {
-    $call($this->provider);
-})->with([
-    'playlists' => [fn ($p) => $p->playlists('host')],
-    'playlistTracks' => [fn ($p) => $p->playlistTracks('pl')],
-    'append' => [fn ($p) => $p->appendToPlaylist('pl', ['t'])],
-])->throws(UnsupportedCapability::class);
 
 it('searches and maps tracks with market and basic auth token request', function () {
     fakeSpotify(['api.spotify.com/v1/search*' => Http::response(SpotifyFake::fixture('search'))]);

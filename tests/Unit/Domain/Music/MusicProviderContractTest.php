@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -28,7 +29,7 @@ dataset('providers', [
         SpotifyFake::catalogue($control);
 
         return [
-            new SpotifyMusicProvider,
+            new SpotifyMusicProvider(new HostAccountTokens),
             fn () => config(['services.spotify.client_id' => null]),
             fn () => $control->next = Http::response('', 503),
             fn (MusicProvider $p, int $seconds) => $control->next = Http::response('', 429, ['Retry-After' => (string) $seconds]),
@@ -98,12 +99,12 @@ it('lists playlists and their tracks', function (array $fixture) {
     [$provider] = $fixture;
 
     $playlists = $provider->playlists('host-account-1');
-    $tracks = $provider->playlistTracks($playlists[0]->id);
+    $tracks = $provider->playlistTracks($playlists[0]->id, 'host-account-1');
 
     expect($playlists)->not->toBeEmpty()
         ->and($tracks)->toHaveCount($playlists[0]->trackCount)
         ->and($tracks[0])->toBeInstanceOf(TrackData::class)
-        ->and($provider->playlistTracks('unknown'))->toBe([]);
+        ->and($provider->playlistTracks('unknown', 'host-account-1'))->toBe([]);
 })->with('playlist providers');
 
 it('declares playlist write support and appends', function (array $fixture) {
@@ -111,9 +112,9 @@ it('declares playlist write support and appends', function (array $fixture) {
 
     expect($provider->supports(Capability::PlaylistWrite))->toBeTrue();
 
-    $provider->appendToPlaylist('playlist-1', ['track-2']);
+    $provider->appendToPlaylist('playlist-1', ['track-2'], 'host-account-1');
 
-    expect($provider->playlistTracks('playlist-1'))->toHaveCount(3);
+    expect($provider->playlistTracks('playlist-1', 'host-account-1'))->toHaveCount(3);
 })->with('playlist providers');
 
 it('refuses to append when playlist write is unsupported', function () {
@@ -121,7 +122,7 @@ it('refuses to append when playlist write is unsupported', function () {
 
     expect($provider->supports(Capability::PlaylistWrite))->toBeFalse();
 
-    $provider->appendToPlaylist('playlist-1', ['track-1']);
+    $provider->appendToPlaylist('playlist-1', ['track-1'], 'host-account-1');
 })->throws(UnsupportedCapability::class, 'playlist-write is unsupported by Music Provider');
 
 it('surfaces a temporary failure once then recovers', function (array $fixture) {

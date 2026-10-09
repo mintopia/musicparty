@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\PartyController;
+use App\Http\Controllers\Api\V1\PartyPlaylistController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
 use App\Http\Controllers\Api\V1\UpcomingSongController;
@@ -24,6 +25,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::apiResource('parties', PartyController::class)->only(['update']);
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
+        Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
+        Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
         Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();
         Route::apiResource('parties.playedsongs.rate', SongRatingController::class)->only(['store'])->scoped();
