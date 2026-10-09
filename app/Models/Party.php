@@ -22,6 +22,7 @@ use NumPHP\LinAlg\LinAlg;
 
 /**
  * @property PartyState $state
+ * @property string $music_provider
  *
  * @mixin IdeHelperParty
  */

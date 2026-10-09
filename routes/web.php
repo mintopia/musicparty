@@ -18,6 +18,9 @@ Route::middleware('auth')->group(function () {
     Route::get('parties/create', [PartyController::class, 'create'])->name('parties.create');
     Route::post('parties', [PartyController::class, 'store'])->name('parties.store');
     Route::post('parties/join', [PartyController::class, 'join'])->name('parties.join');
+    Route::post('parties/{party}/requests', [PartyController::class, 'storeRequest'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.requests.store');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')

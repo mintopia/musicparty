@@ -2,6 +2,8 @@
 import {Head} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
+import QueueList from '../../Components/QueueList.vue';
+import SearchPanel from '../../Components/SearchPanel.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -9,6 +11,9 @@ const props = defineProps({
     section: {type: String, default: 'queue'},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    queue: {type: Array, default: () => []},
+    search_query: {type: String, default: ''},
+    results: {type: Array, default: null},
 });
 
 const copied = ref(false);
@@ -38,8 +43,6 @@ const readOnlyMessage = computed(() =>
 );
 
 const placeholders = {
-    queue: 'The queue is empty.',
-    search: 'Search is coming soon.',
     history: 'Nothing has been played yet.',
 };
 </script>
@@ -89,6 +92,14 @@ const placeholders = {
                 <dt class="text-muted">Role</dt>
                 <dd class="capitalize" data-testid="party-role">Your role: {{ membership.role }}</dd>
             </dl>
+            <template v-else-if="section === 'queue'">
+                <h2 class="mb-3 text-lg font-semibold">Queue</h2>
+                <QueueList :queue="queue" />
+            </template>
+            <template v-else-if="section === 'search'">
+                <h2 class="mb-3 text-lg font-semibold">Search</h2>
+                <SearchPanel :party="party" :results="results" :search-query="search_query" :read-only="readOnly" />
+            </template>
             <p v-else class="text-sm text-muted">{{ placeholders[section] }}</p>
         </section>
     </div>
