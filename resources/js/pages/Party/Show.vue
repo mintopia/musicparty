@@ -6,6 +6,7 @@ import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
+import PlaybackControls from '../../Components/PlaybackControls.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -147,6 +148,8 @@ const placeholders = {
             </div>
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
+
+        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" />
 
         <div
             v-if="readOnly"

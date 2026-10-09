@@ -37,6 +37,10 @@ Route::middleware('auth')->group(function () {
             ->where('party', '[A-Za-z]{4}')
             ->name("parties.{$transition}");
     }
+    Route::post('parties/{party}/playback/{control}', [PartyController::class, 'control'])
+        ->where('party', '[A-Za-z]{4}')
+        ->where('control', 'play|pause|skip|seek|volume')
+        ->name('parties.playback');
     Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'storeVote'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('trackRequest')

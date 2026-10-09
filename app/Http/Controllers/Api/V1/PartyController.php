@@ -10,8 +10,11 @@ use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Playback\Actions\ControlPlayback;
+use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyControlRequest;
+use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
@@ -118,6 +121,17 @@ class PartyController extends Controller
         $this->authorize('viewLog', $party);
 
         return PartyLogEntryResource::collection($listLog($party));
+    }
+
+    public function playback(ControlPlaybackRequest $request, ControlPlayback $controlPlayback, Party $party): JsonResponse
+    {
+        try {
+            $controlPlayback($party, $request->control(), $request->value());
+        } catch (PlaybackControlRefusedException $exception) {
+            return response()->json(['message' => $exception->getMessage()], $exception->status());
+        }
+
+        return response()->json(['data' => ['control' => $request->control()->value, 'value' => $request->value()]]);
     }
 
     public function control(PartyControlRequest $request, Party $party)
