@@ -14,6 +14,7 @@ const props = defineProps({
     canManage: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    myRating: {type: Number, default: 0},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     search_query: {type: String, default: ''},
@@ -25,7 +26,7 @@ const channelName = `party.${props.party.code}`;
 
 onMounted(() => {
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying', 'upNext'], preserveScroll: true});
+        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
     });
 });
 
@@ -85,7 +86,7 @@ const placeholders = {
 
 <template>
     <Head :title="party.name" />
-    <NowPlayingBanner v-if="section === 'queue'" :now-playing="nowPlaying" />
+    <NowPlayingBanner v-if="section === 'queue'" :now-playing="nowPlaying" :party-code="party.code" :my-rating="myRating" :read-only="readOnly" />
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">

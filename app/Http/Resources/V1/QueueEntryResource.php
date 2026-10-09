@@ -33,6 +33,11 @@ class QueueEntryResource extends JsonResource
             'score' => (int) $this->score,
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'my_vote' => (int) $this->my_vote,
+            ...($this->likes === null ? [] : [
+                'likes' => (int) $this->likes,
+                'dislikes' => (int) $this->dislikes,
+                'my_rating' => (int) $this->my_rating,
+            ]),
         ];
     }
 }

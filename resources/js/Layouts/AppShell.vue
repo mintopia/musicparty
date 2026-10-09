@@ -26,7 +26,12 @@ const party = computed(() => usePage().props.party ?? null);
             </main>
             <div :class="party ? 'hidden md:block' : ''"><AppFooter /></div>
             <template v-if="party">
-                <MiniNowPlaying :now-playing="usePage().props.nowPlaying ?? null" />
+                <MiniNowPlaying
+                    :now-playing="usePage().props.nowPlaying ?? null"
+                    :party-code="usePage().props.party?.code ?? ''"
+                    :my-rating="usePage().props.myRating ?? 0"
+                    :read-only="usePage().props.readOnly ?? false"
+                />
                 <MobileTabBar :code="party.code" />
             </template>
         </div>

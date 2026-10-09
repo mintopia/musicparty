@@ -1,8 +1,14 @@
 <script setup>
 import Icon from './Icon.vue';
+import RatingButtons from './RatingButtons.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 
-defineProps({nowPlaying: {type: Object, default: null}});
+defineProps({
+    nowPlaying: {type: Object, default: null},
+    partyCode: {type: String, default: ''},
+    myRating: {type: Number, default: 0},
+    readOnly: {type: Boolean, default: false},
+});
 </script>
 
 <template>
@@ -21,6 +27,7 @@ defineProps({nowPlaying: {type: Object, default: null}});
                 <div v-if="nowPlaying.track.album" class="flex items-center gap-2 text-sm"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                 <div class="flex items-center gap-2 text-sm"><Icon name="musicPlus" /><span data-testid="now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                 <div class="mt-2 flex justify-end text-sm tabular-nums">{{ formatDuration(nowPlaying.track.duration_ms) }}</div>
+                <RatingButtons v-if="!readOnly" :now-playing="nowPlaying" :party-code="partyCode" :my-rating="myRating" />
             </div>
         </div>
         <p v-else data-testid="now-playing-empty" class="mx-auto max-w-3xl px-0 py-8 text-sm text-white/70">Nothing is playing right now.</p>

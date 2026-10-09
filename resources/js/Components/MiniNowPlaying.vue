@@ -1,7 +1,13 @@
 <script setup>
 import Icon from './Icon.vue';
+import RatingButtons from './RatingButtons.vue';
 
-defineProps({nowPlaying: {type: Object, default: null}});
+defineProps({
+    nowPlaying: {type: Object, default: null},
+    partyCode: {type: String, default: ''},
+    myRating: {type: Number, default: 0},
+    readOnly: {type: Boolean, default: false},
+});
 </script>
 
 <template>
@@ -16,6 +22,7 @@ defineProps({nowPlaying: {type: Object, default: null}});
             </template>
             <div v-else class="text-sm text-muted">Nothing playing</div>
         </div>
+        <RatingButtons v-if="nowPlaying && !readOnly" class="text-text" :now-playing="nowPlaying" :party-code="partyCode" :my-rating="myRating" />
         <button
             type="button"
             disabled
