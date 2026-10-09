@@ -75,6 +75,7 @@ class ArchitectureRules
         return [
             'identity' => [
                 'members' => [
+                    'App\\Domain\\Identity\\',
                     'App\\Services\\SocialProviders\\',
                     UserObserver::class,
                     SettingObserver::class,
