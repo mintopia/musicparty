@@ -34,6 +34,7 @@ class User extends Authenticatable
         'status_updated_at' => 'datetime',
         'status' => 'object',
         'colour_scheme' => ColourScheme::class,
+        'suspended' => 'boolean',
     ];
 
     protected ?string $email = null;
@@ -90,6 +91,12 @@ class User extends Authenticatable
         }
 
         return (bool) $this->roles()->whereCode($role)->count();
+    }
+
+    public function isActingAsHostIn(Party $party): bool
+    {
+        return $this->hasRole('admin')
+            && AdminHostSession::query()->where('user_id', $this->id)->where('party_id', $party->id)->exists();
     }
 
     public function getEmail(): ?string

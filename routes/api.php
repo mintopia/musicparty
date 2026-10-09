@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Api\V1\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\ColourSchemeController;
 use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PingController;
@@ -29,5 +31,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
         Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();
         Route::apiResource('parties.playedsongs.rate', SongRatingController::class)->only(['store'])->scoped();
+    });
+    Route::middleware(['auth:sanctum', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+        Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::post('users/{user}/suspension', [AdminUserController::class, 'suspend'])->name('users.suspend');
+        Route::delete('users/{user}/suspension', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
+        Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');
+        Route::delete('users/{user}/roles/{role}', [AdminUserController::class, 'revokeRole'])->name('users.roles.revoke');
+        Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
+        Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');
     });
 });

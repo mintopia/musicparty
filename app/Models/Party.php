@@ -68,6 +68,14 @@ class Party extends Model
         return $this->belongsTo(User::class, 'trusted_user_id');
     }
 
+    /**
+     * @return HasMany<AdminHostSession, $this>
+     */
+    public function adminHostSessions(): HasMany
+    {
+        return $this->hasMany(AdminHostSession::class);
+    }
+
     public function upcoming(): HasMany
     {
         return $this->hasMany(UpcomingSong::class);
@@ -616,7 +624,7 @@ class Party extends Model
 
     public function canBeManagedBy(User $user): bool
     {
-        if ($user->id === $this->owner_id) {
+        if ($user->id === $this->owner_id || $user->isActingAsHostIn($this)) {
             return true;
         }
 

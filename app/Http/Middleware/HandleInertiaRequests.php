@@ -24,6 +24,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $request->user()->nickname,
                     'avatarUrl' => $request->user()->avatarUrl(),
                     'email' => $request->user()->getEmail(),
+                    'is_admin' => $request->user()->hasRole('admin'),
                 ] : null,
             ],
             'parties' => fn (): array => $request->user()

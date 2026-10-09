@@ -39,11 +39,13 @@ it('shares the authenticated user with the shell', function (): void {
     $user->forceFill(['id' => 7, 'nickname' => 'Alex', 'colour_scheme' => ColourScheme::System]);
     $user->setRelation('parties', collect([(object) ['code' => 'FRI123', 'name' => 'Friday Night LAN']]));
     $user->shouldReceive('getEmail')->andReturn(null);
+    $user->shouldReceive('hasRole')->with('admin')->andReturn(false);
     $user->shouldReceive('avatarUrl')->andReturn('https://example.com/alex.png');
 
     $this->withoutVite()->actingAs($user)->get(route('home'))
         ->assertInertia(fn (Assert $page): AssertableInertia => $page
             ->where('auth.user.id', 7)
+            ->where('auth.user.is_admin', false)
             ->where('auth.user.name', 'Alex')
             ->where('auth.user.avatarUrl', 'https://example.com/alex.png')
             ->where('parties', [['code' => 'FRI123', 'name' => 'Friday Night LAN']])
