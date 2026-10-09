@@ -67,7 +67,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $this->provider = $provider;
             $provider->name = $this->name;
             $provider->code = $this->code;
-            $provider->provider_class = get_called_class();
+            $provider->provider_class = static::class;
             $provider->supports_auth = $this->supportsAuth;
             $provider->enabled = false;
             $provider->auth_enabled = false;
@@ -118,9 +118,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
 
     public function user(?User $localUser = null)
     {
-        if ($localUser === null) {
-            $localUser = Auth::user();
-        }
+        $localUser ??= Auth::user();
         $remoteUser = $this->getSocialiteProvider()->user();
 
         DB::transaction(function () use ($localUser, $remoteUser) {
@@ -166,9 +164,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $localUser->save();
         });
 
-        if ($localUser === null) {
-            $localUser = $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->first()->user;
-        }
+        $localUser ??= $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->first()->user;
 
         return $localUser;
     }

@@ -11,13 +11,14 @@ class RedirectOnFirstLoginMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param Closure(Request): (Response) $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         if ($request->user()->first_login) {
             return response()->redirectToRoute('login.signup');
         }
+
         return $next($request);
     }
 }

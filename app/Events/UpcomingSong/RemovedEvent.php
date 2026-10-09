@@ -2,32 +2,30 @@
 
 namespace App\Events\UpcomingSong;
 
-use App\Models\Party;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
-use Illuminate\Queue\SerializesModels;
 
 class RemovedEvent implements ShouldBroadcast
 {
     use Dispatchable;
     use InteractsWithSockets;
-    use SerializesModels;
 
-    public function __construct(protected Party $party, protected int $id)
-    {
-    }
+    public function __construct(protected string $partyCode, protected int $id) {}
 
-    public function broadcastWith()
+    /**
+     * @return array<string, int>
+     */
+    public function broadcastWith(): array
     {
         return [
             'id' => $this->id,
         ];
     }
 
-    public function broadcastOn()
+    public function broadcastOn(): PrivateChannel
     {
-        return new PrivateChannel("party.{$this->party->code}");
+        return new PrivateChannel("party.{$this->partyCode}");
     }
 }

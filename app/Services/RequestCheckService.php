@@ -11,6 +11,7 @@ use SpotifyWebAPI\SpotifyWebAPIException;
 class RequestCheckService
 {
     const CONTEXT_PLAYLIST_TRACK = '62mFjcWGkt2OY9LT9EvxS2';
+
     public bool $userHasTooManyRequests = false;
 
     public function __construct(protected Party $party, protected PartyMember $member)
@@ -92,9 +93,7 @@ class RequestCheckService
         $next = $this->party->next();
         if ($next && array_key_exists($next->song_id, $indexedSongs)) {
             $index = $indexedSongs[$next->song_id]->spotify_id;
-            if (!isset($output[$index])) {
-                $output[$index] = new RequestCheckResponse(false, 'This song will be played next');
-            }
+            $output[$index] ??= new RequestCheckResponse(false, 'This song will be played next');
         }
 
         // Now we check similar songs
@@ -108,7 +107,7 @@ class RequestCheckService
         if ($spotifyData->id === self::CONTEXT_PLAYLIST_TRACK) {
             return new RequestCheckResponse(false, 'This song is not available');
         }
-        if (!$this->party->allow_requests) {
+        if (! $this->party->allow_requests) {
             return new RequestCheckResponse(false, 'Party is not accepting requests');
         }
 
@@ -126,7 +125,7 @@ class RequestCheckService
         if ($this->party->max_song_length && ($spotifyData->duration_ms / 1000) > $this->party->max_song_length) {
             return new RequestCheckResponse(false, 'Song is too long');
         }
-        if (!$this->party->explicit && $spotifyData->explicit) {
+        if (! $this->party->explicit && $spotifyData->explicit) {
             return new RequestCheckResponse(false, 'Explicit songs are not allowed');
         }
         foreach ($this->party->moderations as $mod) {
@@ -157,6 +156,7 @@ class RequestCheckService
             ->whereNull('queued_at')
             ->whereUserId($this->member->user_id)
             ->count();
+
         return $count >= $this->party->max_requests;
     }
 
@@ -171,7 +171,7 @@ class RequestCheckService
             foreach ($track->artists ?? [] as $artist) {
                 $compositeKey .= ":{$artist->name}";
             }
-            if (!array_key_exists($compositeKey, $compositeIndex)) {
+            if (! array_key_exists($compositeKey, $compositeIndex)) {
                 $compositeIndex[$compositeKey] = [];
             }
             $compositeIndex[$compositeKey][] = $track;

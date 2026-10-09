@@ -39,11 +39,10 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
             if ($id === null || $email === null) {
                 return null;
             }
+
             return User::find($id)->avatarUrl();
         });
     }
-
-
 
     /**
      * Prevent sensitive request details from being logged by Telescope.
@@ -70,8 +69,6 @@ class TelescopeServiceProvider extends TelescopeApplicationServiceProvider
      */
     protected function gate(): void
     {
-        Gate::define('viewTelescope', function ($user) {
-            return $user->hasRole('admin');
-        });
+        Gate::define('viewTelescope', fn ($user) => $user->hasRole('admin'));
     }
 }

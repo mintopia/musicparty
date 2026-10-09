@@ -30,8 +30,9 @@ class PartyCalculateTrust extends Command
     {
         $code = $this->input->getArgument('party');
         $party = Party::whereCode($code)->first();
-        if (!$party) {
+        if (! $party) {
             $this->error("Unable to find a party with code {$code}");
+
             return self::FAILURE;
         }
         $cutoff = CarbonImmutable::now()->subDays(7);
@@ -47,6 +48,7 @@ class PartyCalculateTrust extends Command
             ];
         }
         $io->table(['Nickname', 'Score'], $scores);
+
         return self::SUCCESS;
     }
 }

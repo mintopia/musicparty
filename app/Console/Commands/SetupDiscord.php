@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\SocialProvider;
 use App\Services\SocialProviders\DiscordProvider;
 use Illuminate\Console\Command;
+
 use function Laravel\Prompts\confirm;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\table;
@@ -32,8 +33,8 @@ class SetupDiscord extends Command
     public function handle()
     {
         $provider = SocialProvider::whereCode('discord')->first();
-        if (!$provider) {
-            $prov = new DiscordProvider();
+        if (! $provider) {
+            $prov = new DiscordProvider;
             $provider = $prov->install();
         }
 
@@ -46,7 +47,7 @@ class SetupDiscord extends Command
             default: $clientId->value ?? ''
         );
 
-        if (!$secret->value || confirm('Do you want to change the Client Secret?', false)) {
+        if (! $secret->value || confirm('Do you want to change the Client Secret?', false)) {
             $secret->value = password(
                 label: 'Discord Client Secret'
             );

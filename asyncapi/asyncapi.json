@@ -1,0 +1,134 @@
+{
+    "asyncapi": "3.0.0",
+    "channels": {
+        "party": {
+            "address": "party.{code}",
+            "messages": {
+                "Party.UpdatedEvent": {
+                    "$ref": "#/components/messages/Party.UpdatedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
+        },
+        "privateParty": {
+            "address": "private-party.{code}",
+            "messages": {
+                "UpcomingSong.RemovedEvent": {
+                    "$ref": "#/components/messages/UpcomingSong.RemovedEvent"
+                },
+                "UpcomingSong.UpdatedEvent": {
+                    "$ref": "#/components/messages/UpcomingSong.UpdatedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
+        },
+        "spotifyToken": {
+            "address": "spotifytoken.{userId}",
+            "messages": {
+                "User.SpotifyAccessTokenUpdatedEvent": {
+                    "$ref": "#/components/messages/User.SpotifyAccessTokenUpdatedEvent"
+                }
+            },
+            "parameters": {
+                "userId": {
+                    "description": "User id"
+                }
+            }
+        }
+    },
+    "components": {
+        "messages": {
+            "Party.UpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\UpdatedEvent",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "Party.UpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\UpdatedEvent"
+            },
+            "UpcomingSong.RemovedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\UpcomingSong\\RemovedEvent",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "UpcomingSong.RemovedEvent",
+                "x-event-class": "App\\Events\\UpcomingSong\\RemovedEvent"
+            },
+            "UpcomingSong.UpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\UpcomingSong\\UpdatedEvent",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "UpcomingSong.UpdatedEvent",
+                "x-event-class": "App\\Events\\UpcomingSong\\UpdatedEvent"
+            },
+            "User.SpotifyAccessTokenUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "User.SpotifyAccessTokenUpdatedEvent",
+                "x-event-class": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent"
+            }
+        }
+    },
+    "info": {
+        "description": "Reverb broadcast events. Message names are the event class names.",
+        "title": "Music Party Realtime API",
+        "version": "1.0.0"
+    },
+    "operations": {
+        "publishPartyUpdated": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/party"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/party/messages/Party.UpdatedEvent"
+                }
+            ]
+        },
+        "publishPrivatePartyUpcomingSong": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/privateParty"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/privateParty/messages/UpcomingSong.RemovedEvent"
+                },
+                {
+                    "$ref": "#/channels/privateParty/messages/UpcomingSong.UpdatedEvent"
+                }
+            ]
+        },
+        "publishSpotifyToken": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/spotifyToken"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/spotifyToken/messages/User.SpotifyAccessTokenUpdatedEvent"
+                }
+            ]
+        }
+    }
+}
