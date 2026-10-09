@@ -289,54 +289,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/VoteController.php
 
 		-
-			message: '#^Method App\\Http\\Controllers\\HomeController\:\:home\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/HomeController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\HomeController\:\:proxy\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/HomeController.php
-
-		-
-			message: '#^Parameter \#1 \$json of function json_decode expects string, bool\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/HomeController.php
-
-		-
-			message: '#^Parameter \#1 \$message of static method Illuminate\\Log\\Logger\:\:info\(\) expects array\|Illuminate\\Contracts\\Support\\Arrayable\|Illuminate\\Contracts\\Support\\Jsonable\|Illuminate\\Support\\Stringable\|string, bool\|string given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/HomeController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\UserController\:\:login\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\UserController\:\:login_redirect\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\UserController\:\:login_return\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\UserController\:\:logout\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/UserController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Webhooks\\PartyController\:\:librespot\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1583,7 +1535,6 @@ parameters:
 			identifier: method.nonObject
 			count: 2
 			path: app/Observers/SongRatingObserver.php
-
 
 		-
 			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
