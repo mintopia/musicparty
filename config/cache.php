@@ -106,6 +106,21 @@ return [
     |
     */
 
-    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_') . '_cache_'),
+    'prefix' => env('CACHE_PREFIX', Str::slug(env('APP_NAME', 'laravel'), '_').'_cache_'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Serializable Classes
+    |--------------------------------------------------------------------------
+    |
+    | Controls which classes may be unserialized from the cache (false disables
+    | all objects). Spotify API results are stdClass, so it is allowed here.
+    | Add further classes explicitly if they are intentionally cached.
+    |
+    */
+
+    'serializable_classes' => [
+        stdClass::class,
+    ],
 
 ];
