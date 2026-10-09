@@ -17,8 +17,9 @@ trait ToString
         $id = $this->id ?? '#';
         $name = '';
         if (method_exists($this, 'toStringName')) {
-            $name = ' ' . $this->toStringName();
+            $name = ' '.$this->toStringName();
         }
+
         return "[{$className}:{$id}]{$name}";
     }
 }

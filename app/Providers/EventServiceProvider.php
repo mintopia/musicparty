@@ -3,35 +3,17 @@
 namespace App\Providers;
 
 use App\Listeners\MessageLoggedListener;
-use App\Models\Clan;
-use App\Models\ClanMembership;
-use App\Models\EmailAddress;
-use App\Models\Event;
 use App\Models\Party;
-use App\Models\Seat;
-use App\Models\SeatingPlan;
 use App\Models\Setting;
 use App\Models\SongRating;
 use App\Models\Theme;
-use App\Models\Ticket;
-use App\Models\TicketProvider;
-use App\Models\TicketType;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
-use App\Observers\ClanMembershipObserver;
-use App\Observers\ClanObserver;
-use App\Observers\EmailAddressObserver;
-use App\Observers\EventObserver;
 use App\Observers\PartyObserver;
-use App\Observers\SeatingPlanObserver;
-use App\Observers\SeatObserver;
 use App\Observers\SettingObserver;
 use App\Observers\SongRatingObserver;
 use App\Observers\ThemeObserver;
-use App\Observers\TicketObserver;
-use App\Observers\TicketProviderObserver;
-use App\Observers\TicketTypeObserver;
 use App\Observers\UpcomingSongObserver;
 use App\Observers\UserObserver;
 use App\Observers\VoteObserver;
@@ -57,6 +39,7 @@ class EventServiceProvider extends ServiceProvider
         UpcomingSong::class => UpcomingSongObserver::class,
         SongRating::class => SongRatingObserver::class,
     ];
+
     /**
      * The event to listener mappings for the application.
      *
@@ -67,11 +50,11 @@ class EventServiceProvider extends ServiceProvider
             SendEmailVerificationNotification::class,
         ],
         SocialiteWasCalled::class => [
-            DiscordExtendSocialite::class . '@handle',
-            SteamExtendSocialite::class . '@handle',
-            TwitchExtendSocialite::class . '@handle',
-            LaravelPassportExtendSocialite::class . '@handle',
-            SpotifyExtendSocialite::class . '@handle',
+            DiscordExtendSocialite::class.'@handle',
+            SteamExtendSocialite::class.'@handle',
+            TwitchExtendSocialite::class.'@handle',
+            LaravelPassportExtendSocialite::class.'@handle',
+            SpotifyExtendSocialite::class.'@handle',
         ],
         MessageLogged::class => [
             MessageLoggedListener::class,

@@ -1,27 +1,18 @@
-import '@tabler/core/dist/js/tabler.min.js';
 import './bootstrap';
-import '../sass/app.scss';
-import '../sass/tabler-icons.scss';
-import {createApp} from 'vue'
-import Player from './components/Player.vue'
-import Next from './components/Next.vue'
-import Upcoming from './components/Upcoming.vue'
-import SearchResult from './components/SearchResult.vue'
-import TvPlayer from './components/TvPlayer.vue'
-import YouTubePlayer from './components/YouTubePlayer.vue'
+import '../css/app.css';
+import {createApp, h} from 'vue';
+import {createInertiaApp} from '@inertiajs/vue3';
+import AppShell from './Layouts/AppShell.vue';
 
-import.meta.glob([
-    '../img/**',
-    '../fonts/**',
-]);
-
-const app = createApp()
-
-app.component('player', Player)
-app.component('next', Next)
-app.component('upcoming', Upcoming)
-app.component('search-result', SearchResult)
-app.component('tv-player', TvPlayer)
-app.component('youtube-player', YouTubePlayer)
-
-app.mount('#app')
+createInertiaApp({
+    title: (title) => (title ? `${title} - Music Party` : 'Music Party'),
+    resolve: (name) => {
+        const pages = import.meta.glob('./pages/**/*.vue', {eager: true});
+        const page = pages[`./pages/${name}.vue`];
+        page.default.layout ??= AppShell;
+        return page;
+    },
+    setup({el, App, props, plugin}) {
+        createApp({render: () => h(App, props)}).use(plugin).mount(el);
+    },
+});

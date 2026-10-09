@@ -13,7 +13,7 @@ class SettingValue implements CastsAttributes
     /**
      * Cast the given value.
      *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
@@ -26,21 +26,22 @@ class SettingValue implements CastsAttributes
                 if ($unserialized !== false) {
                     $value = $unserialized;
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Do nothing, assume it's OK!
             }
         }
         switch ($model->type) {
             case SettingType::stBoolean:
-                return (bool)$value;
+                return (bool) $value;
             case SettingType::stInteger:
-                return (int)$value;
+                return (int) $value;
             case SettingType::stFloat:
-                return (float)$value;
+                return (float) $value;
             case SettingType::stDateTime:
-                if ($value !== null && !$value instanceof CarbonImmutable) {
+                if ($value !== null && ! $value instanceof CarbonImmutable) {
                     $value = CarbonImmutable::parse($value);
                 }
+
                 return $value;
             default:
                 return $value;
@@ -50,7 +51,7 @@ class SettingValue implements CastsAttributes
     /**
      * Prepare the given value for storage.
      *
-     * @param array<string, mixed> $attributes
+     * @param  array<string, mixed>  $attributes
      */
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
@@ -58,6 +59,7 @@ class SettingValue implements CastsAttributes
         if ($model->encrypted && $value !== null) {
             $value = Crypt::encrypt($value);
         }
+
         return $value;
     }
 }

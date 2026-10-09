@@ -8,8 +8,11 @@ use SocialiteProviders\Discord\Provider;
 class DiscordProvider extends AbstractSocialProvider
 {
     protected string $name = 'Discord';
+
     protected string $code = 'discord';
+
     protected string $socialiteProviderCode = 'discord';
+
     protected bool $supportsAuth = true;
 
     protected function getSocialiteProvider()

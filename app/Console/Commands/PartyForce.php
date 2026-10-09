@@ -19,7 +19,7 @@ class PartyForce extends Command
      *
      * @var string
      */
-    protected $description = "Check any non-polling forced playback parties and start them if possible";
+    protected $description = 'Check any non-polling forced playback parties and start them if possible';
 
     /**
      * Execute the console command.
@@ -31,10 +31,12 @@ class PartyForce extends Command
         $code = $this->argument('code');
         if ($code !== null) {
             $party = $query->whereCode($code)->first();
-            if (!$party) {
+            if (! $party) {
                 $this->error("Unable to find suitable party with code {$code}");
+
                 return self::FAILURE;
             }
+
             return $this->processParty($party);
         }
 
@@ -53,11 +55,12 @@ class PartyForce extends Command
         $devices = $party->user->getDevices();
         foreach ($devices as $device) {
             if ($device->id == $party->device_id) {
-                $this->output->writeln("Device is online, starting party");
+                $this->output->writeln('Device is online, starting party');
                 $party->updateState();
             }
         }
         $this->output->writeln("{$party}: Done");
+
         return self::SUCCESS;
     }
 }

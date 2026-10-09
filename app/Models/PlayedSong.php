@@ -55,6 +55,7 @@ class PlayedSong extends Model
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);
         }
+
         return $upcoming;
     }
 
@@ -73,15 +74,17 @@ class PlayedSong extends Model
         $rating = $this->ratings()->whereUserId($user->id)->first();
         if ($rating && $rating->value !== $value) {
             $rating->delete();
+
             return null;
         }
-        if (!$rating) {
-            $rating = new SongRating();
+        if (! $rating) {
+            $rating = new SongRating;
             $rating->song()->associate($this);
             $rating->user()->associate($user);
         }
         $rating->value = $value;
         $rating->save();
+
         return $rating;
     }
 
@@ -97,9 +100,10 @@ class PlayedSong extends Model
     {
         $data = $this->song->toApi();
         $data['id'] = $this->id;
-        $data['rating'] = (int)$this->rating;
+        $data['rating'] = (int) $this->rating;
         $data['played_at'] = $this->played_at ? $this->played_at->toIso8601String() : null;
         $data['user'] = $this->upcoming->user->nickname ?? null;
+
         return $data;
     }
 }
