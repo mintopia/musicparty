@@ -9,6 +9,8 @@ use Exception;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
@@ -58,8 +60,8 @@ class UserController extends Controller
         return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
     }
 
-    public function login()
+    public function login(): Response
     {
-        return view('app');
+        return Inertia::render('Login');
     }
 }

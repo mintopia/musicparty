@@ -1,0 +1,37 @@
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+    --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+
+    --color-primary: #066fd1;
+    --color-accent: #2fb344;
+    --color-danger: #d63939;
+    --color-background: #f6f8fb;
+    --color-surface: #ffffff;
+    --color-text: #182433;
+    --color-muted: #667382;
+    --color-border: #e6e7e9;
+    --color-sidebar: #182433;
+    --color-sidebar-text: #dce1e7;
+    --color-sidebar-active: #ffffff;
+    --color-topbar: #ffffff;
+    --color-hero: #0b0f14;
+    --color-hero-text: #ffffff;
+}
+
+.dark {
+    --color-primary: #066fd1;
+    --color-accent: #2fb344;
+    --color-danger: #d63939;
+    --color-background: #151f2c;
+    --color-surface: #182433;
+    --color-text: #dce1e7;
+    --color-muted: #9ba6b4;
+    --color-border: #243049;
+    --color-sidebar: #182433;
+    --color-sidebar-text: #dce1e7;
+    --color-sidebar-active: #ffffff;
+    --color-topbar: #182433;
+    --color-hero: #0b0f14;
+    --color-hero-text: #ffffff;
+}
