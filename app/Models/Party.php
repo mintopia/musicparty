@@ -22,6 +22,7 @@ use NumPHP\LinAlg\LinAlg;
 
 /**
  * @property PartyState $state
+ * @property string $music_provider
  *
  * @mixin IdeHelperParty
  */
@@ -48,6 +49,7 @@ class Party extends Model
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
         'state' => PartyState::class,
+        'allow_requests' => 'boolean',
     ];
 
     public function toStringName(): string

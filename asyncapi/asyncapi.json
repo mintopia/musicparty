@@ -4,6 +4,9 @@
         "party": {
             "address": "party.{code}",
             "messages": {
+                "Party.QueueUpdatedEvent": {
+                    "$ref": "#/components/messages/Party.QueueUpdatedEvent"
+                },
                 "Party.UpdatedEvent": {
                     "$ref": "#/components/messages/Party.UpdatedEvent"
                 }
@@ -46,6 +49,25 @@
     },
     "components": {
         "messages": {
+            "Party.QueueUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\QueueUpdatedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "code": {
+                            "description": "Party code whose queue changed; clients refetch the queue",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "code"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.QueueUpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent"
+            },
             "Party.UpdatedEvent": {
                 "contentType": "application/json",
                 "name": "App\\Events\\Party\\UpdatedEvent",
@@ -102,6 +124,9 @@
             "messages": [
                 {
                     "$ref": "#/channels/party/messages/Party.UpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
                 }
             ]
         },

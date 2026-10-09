@@ -2,6 +2,8 @@
 import {Head, Link} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
+import QueueList from '../../Components/QueueList.vue';
+import SearchPanel from '../../Components/SearchPanel.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -9,6 +11,10 @@ const props = defineProps({
     section: {type: String, default: 'queue'},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    queue: {type: Array, default: () => []},
+    search_query: {type: String, default: ''},
+    results: {type: Array, default: null},
+    search_error: {type: String, default: null},
 });
 
 const canViewLog = computed(
@@ -42,15 +48,13 @@ const readOnlyMessage = computed(() =>
 );
 
 const placeholders = {
-    queue: 'The queue is empty.',
-    search: 'Search is coming soon.',
     history: 'Nothing has been played yet.',
 };
 </script>
 
 <template>
     <Head :title="party.name" />
-    <div class="flex flex-col gap-4 px-4 pb-4 pt-6">
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
                 <h1 class="text-xl font-semibold">{{ party.name }}</h1>
@@ -82,7 +86,7 @@ const placeholders = {
             {{ readOnlyMessage }}
         </div>
 
-        <section class="rounded border border-border bg-surface px-5 py-5">
+        <section :class="section === 'queue' || section === 'search' ? '' : 'rounded border border-border bg-surface px-5 py-5'">
             <dl v-if="section === 'party'" class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                 <dt class="text-muted">Code</dt>
                 <dd>{{ party.code }}</dd>
@@ -99,6 +103,14 @@ const placeholders = {
                     </dd>
                 </template>
             </dl>
+            <template v-else-if="section === 'queue'">
+                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
+                <QueueList :queue="queue" />
+            </template>
+            <template v-else-if="section === 'search'">
+                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
+                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
+            </template>
             <p v-else class="text-sm text-muted">{{ placeholders[section] }}</p>
         </section>
     </div>

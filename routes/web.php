@@ -24,6 +24,9 @@ Route::middleware('auth')->group(function () {
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');
+    Route::post('parties/{party}/requests', [PartyController::class, 'storeRequest'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.requests.store');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')

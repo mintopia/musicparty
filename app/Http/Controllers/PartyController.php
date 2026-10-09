@@ -8,10 +8,17 @@ use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Actions\RequestTrack;
+use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
+use App\Http\Resources\V1\QueueEntryResource;
+use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -56,9 +63,27 @@ class PartyController extends Controller
         return redirect()->route('parties.show', ['party' => $party->code]);
     }
 
-    public function show(Request $request, JoinParty $joinParty, Party $party, string $section = 'queue'): Response
-    {
+    public function show(
+        Request $request,
+        JoinParty $joinParty,
+        ListQueue $listQueue,
+        SearchPartyProvider $search,
+        Party $party,
+        string $section = 'queue',
+    ): Response {
         $member = $joinParty($this->currentUser($request), $party);
+        $query = trim($request->string('q')->toString());
+        $results = null;
+        $searchError = null;
+
+        if ($query !== '') {
+            try {
+                $results = SearchHitResource::collection($search($party, $query))->resolve($request);
+            } catch (RequestRefusedException $exception) {
+                $results = [];
+                $searchError = $exception->getMessage();
+            }
+        }
 
         return Inertia::render('Party/Show', [
             'party' => [
@@ -75,6 +100,10 @@ class PartyController extends Controller
             'section' => $section,
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => null,
+            'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
+            'search_query' => $query,
+            'results' => $results,
+            'search_error' => $searchError,
         ]);
     }
 
@@ -97,6 +126,29 @@ class PartyController extends Controller
             'party' => ['code' => $party->code, 'name' => $party->name],
             'entries' => PartyLogEntryResource::collection($listLog($party)),
         ]);
+    }
+
+    public function storeRequest(RequestTrackRequest $request, RequestTrack $requestTrack, Party $party): RedirectResponse
+    {
+        $member = $party->memberFor($this->currentUser($request));
+
+        try {
+            $outcome = $requestTrack(
+                $party,
+                $member ?? throw RequestRefusedException::notAMember(),
+                $request->string('provider_track_id')->toString(),
+            );
+        } catch (RequestRefusedException $exception) {
+            return back()->withErrors(['request' => $exception->getMessage()]);
+        }
+
+        $message = match (true) {
+            $outcome->created => 'Track requested',
+            $outcome->voteAdded => 'Already in the queue, your vote was added',
+            default => 'Already in the queue and you have already voted for it',
+        };
+
+        return back()->with('success', $message)->with('successMessage', $message);
     }
 
     private function currentUser(Request $request): User
