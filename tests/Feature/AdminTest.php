@@ -65,6 +65,9 @@ $webRoutes = [
     'revoke' => ['delete', '/admin/users/{user}/roles/admin'],
     'enter' => ['post', '/admin/parties/{party}/act-as-host'],
     'leave' => ['delete', '/admin/parties/{party}/act-as-host'],
+    'theme' => ['get', '/admin/theme'],
+    'theme save' => ['put', '/admin/theme'],
+    'theme reset' => ['delete', '/admin/theme'],
 ];
 
 $apiRoutes = [
@@ -75,6 +78,9 @@ $apiRoutes = [
     'revoke' => ['deleteJson', '/api/v1/admin/users/{user}/roles/admin'],
     'enter' => ['postJson', '/api/v1/admin/parties/{party}/act-as-host'],
     'leave' => ['deleteJson', '/api/v1/admin/parties/{party}/act-as-host'],
+    'theme' => ['getJson', '/api/v1/admin/theme'],
+    'theme save' => ['putJson', '/api/v1/admin/theme'],
+    'theme reset' => ['deleteJson', '/api/v1/admin/theme'],
 ];
 
 it('refuses non-admins including create-party users on every admin web route', function (string $method, string $uri): void {

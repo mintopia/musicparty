@@ -22,6 +22,7 @@
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <style>{!! app(\App\Domain\Theming\Actions\RenderThemeCss::class)->handle() !!}</style>
     @inertiaHead
 </head>
 <body>

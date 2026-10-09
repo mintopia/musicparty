@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Admin\ThemeController as AdminThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
@@ -31,4 +32,7 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::get('parties', [AdminPartyController::class, 'index'])->name('parties.index');
     Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
     Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');
+    Route::get('theme', [AdminThemeController::class, 'show'])->name('theme.show');
+    Route::put('theme', [AdminThemeController::class, 'update'])->name('theme.update');
+    Route::delete('theme', [AdminThemeController::class, 'destroy'])->name('theme.destroy');
 });

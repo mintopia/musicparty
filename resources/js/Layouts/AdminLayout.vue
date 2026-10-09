@@ -10,6 +10,7 @@ const items = [
     {label: 'Dashboard', href: '/admin'},
     {label: 'Users', href: '/admin/users'},
     {label: 'Parties', href: '/admin/parties'},
+    {label: 'Theme', href: '/admin/theme'},
 ];
 
 const isActive = (href) => (href === '/admin' ? path.value === href : path.value.startsWith(href));
