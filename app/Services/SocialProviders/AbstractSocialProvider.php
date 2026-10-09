@@ -12,6 +12,7 @@ use App\Services\Contracts\SocialProviderContract;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Facades\Socialite;
 
 abstract class AbstractSocialProvider implements SocialProviderContract
@@ -36,12 +37,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         if ($this->redirectUrl !== null) {
             return;
         }
-        if (Auth::guest() && $this->provider && $this->provider->auth_enabled) {
-            // Probably login
-            $this->redirectUrl = route('login.return', $this->code);
-        } else {
-            $this->redirectUrl = route('linkedaccounts.store', $this->code);
-        }
+        $this->redirectUrl = route('login.return', $this->code);
     }
 
     public function configMapping(): array
@@ -92,6 +88,8 @@ abstract class AbstractSocialProvider implements SocialProviderContract
                 $setting = new ProviderSetting;
                 $setting->provider()->associate($this->provider);
                 $setting->code = $code;
+                $setting->encrypted = $config->encrypted ?? false;
+                $setting->type = $config->type ?? SettingType::stString;
                 // Only set value initially
                 $setting->value = $config->value ?? null;
             }
@@ -104,6 +102,11 @@ abstract class AbstractSocialProvider implements SocialProviderContract
                 $setting->save();
             }
         }
+    }
+
+    public function driver(): Provider
+    {
+        return $this->getSocialiteProvider();
     }
 
     public function redirect(): RedirectResponse
