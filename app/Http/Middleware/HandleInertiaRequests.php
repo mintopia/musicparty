@@ -17,6 +17,7 @@ class HandleInertiaRequests extends Middleware
         return [
             ...parent::share($request),
             'appName' => config('app.name'),
+            'colourScheme' => $request->user()?->colour_scheme->value ?? 'system',
             'auth' => [
                 'user' => $request->user() ? [
                     'id' => $request->user()->id,

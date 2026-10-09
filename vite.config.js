@@ -12,4 +12,8 @@ export default defineConfig({
         tailwindcss(),
         vue(),
     ],
+    test: {
+        environment: 'jsdom',
+        include: ['resources/js/**/*.test.js'],
+    },
 });

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\ColourSchemeController;
 use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
@@ -22,6 +23,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('ping', [PingController::class, 'index'])->name('ping');
     Route::apiResource('parties', PartyController::class)->only(['show']);
     Route::middleware('auth:sanctum')->group(function () {
+        Route::put('me/colour-scheme', [ColourSchemeController::class, 'update'])->name('me.colour-scheme');
         Route::apiResource('parties', PartyController::class)->only(['update']);
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();

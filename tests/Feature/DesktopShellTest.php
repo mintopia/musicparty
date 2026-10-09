@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Theming\ColourScheme;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -35,7 +36,7 @@ it('renders the login page as an Inertia page for guests', function (): void {
 
 it('shares the authenticated user with the shell', function (): void {
     $user = Mockery::mock(User::class)->makePartial();
-    $user->forceFill(['id' => 7, 'nickname' => 'Alex']);
+    $user->forceFill(['id' => 7, 'nickname' => 'Alex', 'colour_scheme' => ColourScheme::System]);
     $user->setRelation('parties', collect([(object) ['code' => 'FRI123', 'name' => 'Friday Night LAN']]));
     $user->shouldReceive('getEmail')->andReturn(null);
     $user->shouldReceive('avatarUrl')->andReturn('https://example.com/alex.png');

@@ -3,19 +3,23 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "test": "vitest run"
     },
     "devDependencies": {
         "@inertiajs/vue3": "^3.9.0",
         "@tailwindcss/vite": "^4.3.3",
         "@vitejs/plugin-vue": "^6.0.9",
+        "@vue/test-utils": "^2.4.6",
         "axios": "^1.20.0",
         "laravel-echo": "^2.6.1",
+        "jsdom": "^26.0.0",
         "laravel-vite-plugin": "^3.2.0",
         "postcss": "^8.5.29",
         "pusher-js": "^8.6.0",
         "tailwindcss": "^4.3.3",
         "vite": "^8.3.4",
+        "vitest": "^5.0.3",
         "vue": "^3.5.43"
     }
 }
