@@ -9,6 +9,10 @@
                 "additionalProperties": true,
                 "type": "object"
             },
+            "InstanceThemeResource": {
+                "additionalProperties": true,
+                "type": "object"
+            },
             "PartyResource": {
                 "additionalProperties": true,
                 "type": "object"
@@ -140,6 +144,139 @@
                     }
                 ],
                 "summary": "api.v1.admin.parties.act-as-host.enter"
+            }
+        },
+        "/api/v1/admin/theme": {
+            "delete": {
+                "operationId": "deleteApiV1AdminTheme",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InstanceThemeResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.admin.theme.destroy"
+            },
+            "get": {
+                "operationId": "getApiV1AdminTheme",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InstanceThemeResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.admin.theme.show"
+            },
+            "put": {
+                "operationId": "putApiV1AdminTheme",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "dark": {
+                                        "items": {},
+                                        "type": "array"
+                                    },
+                                    "font": {
+                                        "type": "string"
+                                    },
+                                    "light": {
+                                        "items": {},
+                                        "type": "array"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    },
+                    "required": false
+                },
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/InstanceThemeResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden."
+                    },
+                    "422": {
+                        "description": "Validation failed."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.admin.theme.update"
             }
         },
         "/api/v1/admin/users": {

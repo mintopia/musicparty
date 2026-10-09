@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Api\V1\Admin\ThemeController as AdminThemeController;
 use App\Http\Controllers\Api\V1\Admin\UserController as AdminUserController;
 use App\Http\Controllers\Api\V1\ColourSchemeController;
 use App\Http\Controllers\Api\V1\PartyController;
@@ -40,5 +41,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('users/{user}/roles/{role}', [AdminUserController::class, 'revokeRole'])->name('users.roles.revoke');
         Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
         Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');
+        Route::get('theme', [AdminThemeController::class, 'show'])->name('theme.show');
+        Route::put('theme', [AdminThemeController::class, 'update'])->name('theme.update');
+        Route::delete('theme', [AdminThemeController::class, 'destroy'])->name('theme.destroy');
     });
 });
