@@ -96,16 +96,27 @@ The system SHALL warn the editor when a chosen colour combination fails WCAG AA 
 - **WHEN** all checked pairs meet WCAG AA
 - **THEN** no warning is shown
 
-### Requirement: Look-and-feel parity with v2
-The v3 guest pages SHALL match the look and feel of the v2 guest pages, using the reference screenshots in docs/design/v2-reference/ as the standard. This covers at least the party page with now playing and the Queue, search, the join flow and login.
+### Requirement: Desktop look-and-feel parity with v2
+At viewports 768px wide and wider, the v3 guest pages SHALL match the layout and look and feel of the v2 guest pages, using the desktop reference screenshots in docs/design/v2-reference/ as the standard. This covers at least the party page with now playing and the Queue, search, the join flow and login.
 
-#### Scenario: Default theme matches reference
-- **WHEN** a guest page is rendered with the default Instance Theme
-- **THEN** its layout, colours, typography and spacing match the corresponding reference screenshot in docs/design/v2-reference/
+#### Scenario: Default theme matches desktop reference
+- **WHEN** a guest page is rendered at desktop width with the default Instance Theme
+- **THEN** its layout, colours, typography and spacing match the corresponding desktop reference screenshot in docs/design/v2-reference/
 
-#### Scenario: Responsive on phones
+### Requirement: Mobile-first guest layout
+Below 768px, the guest pages SHALL use a new mobile-first layout that matches the approved mockups in docs/design/v3-mobile/. It SHALL share the desktop visual language (tokens, typography, card style, vote controls). The v2 mobile layout is not a reference.
+
+#### Scenario: Mobile matches approved mockup
 - **WHEN** a guest page is viewed on a phone-sized viewport
-- **THEN** it remains fully usable without horizontal scrolling
+- **THEN** its layout matches the corresponding approved mockup in docs/design/v3-mobile/, with no horizontal scrolling
+
+#### Scenario: Thumb-reachable primary actions
+- **WHEN** a Member votes or requests on a phone
+- **THEN** the controls are touch targets of at least 44×44 CSS pixels and are reachable without opening a side menu
+
+#### Scenario: TV screen not optimised for phones
+- **WHEN** the TV screen is opened on a phone
+- **THEN** it remains usable, although its layout targets landscape screens of 1024px and wider
 
 ### Requirement: Themed guest pages and TV screen
 Guest pages and the TV screen SHALL render with the effective theme (Instance Theme overlaid by the Party Theme, in the viewer's Colour Scheme). The TV screen SHALL be anonymous and read-only, and SHALL reflect Party Theme changes without a manual reload.
