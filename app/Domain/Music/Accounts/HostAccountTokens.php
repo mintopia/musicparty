@@ -43,6 +43,18 @@ class HostAccountTokens
         }
     }
 
+    /**
+     * @throws HostAccountNeedsRelink
+     * @throws ProviderUnavailableException
+     * @throws ProviderTemporaryFailure
+     */
+    public function refreshAfterRejection(LinkedAccount $account): string
+    {
+        $account->forceFill(['access_token_expires_at' => now()->subSecond()])->save();
+
+        return $this->accessToken($account);
+    }
+
     private function refreshLocked(LinkedAccount $account): string
     {
         $account->refresh();

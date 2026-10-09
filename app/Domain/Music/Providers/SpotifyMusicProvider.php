@@ -92,10 +92,9 @@ class SpotifyMusicProvider implements MusicProvider
 
     public function playlists(string $hostAccountId): array
     {
-        $token = $this->hostToken($hostAccountId);
         $playlists = [];
 
-        foreach ($this->pages('/me/playlists', ['limit' => 50], $token) as $item) {
+        foreach ($this->pages('/me/playlists', ['limit' => 50], $hostAccountId) as $item) {
             $tracks = $item['tracks'] ?? $item['items'] ?? [];
             $playlists[] = new PlaylistData(
                 (string) $item['id'],
@@ -109,13 +108,12 @@ class SpotifyMusicProvider implements MusicProvider
 
     public function playlistTracks(string $playlistId, string $hostAccountId): array
     {
-        $token = $this->hostToken($hostAccountId);
         $tracks = [];
 
         foreach ($this->pages('/playlists/'.rawurlencode($playlistId).'/tracks', array_filter([
             'limit' => 100,
             'market' => $this->market(),
-        ], fn (mixed $value): bool => $value !== null), $token) as $entry) {
+        ], fn (mixed $value): bool => $value !== null), $hostAccountId) as $entry) {
             $track = $entry['track'] ?? $entry['item'] ?? null;
 
             if (! is_array($track) || ($entry['is_local'] ?? false) || ($track['is_local'] ?? false) || ($track['type'] ?? 'track') !== 'track' || ! isset($track['id'])) {
@@ -137,20 +135,19 @@ class SpotifyMusicProvider implements MusicProvider
 
     public function appendToPlaylist(string $playlistId, array $providerTrackIds, string $hostAccountId): void
     {
-        $token = $this->hostToken($hostAccountId);
         $uris = array_map(fn (string $id): string => "spotify:track:{$id}", $providerTrackIds);
 
         foreach (array_chunk($uris, self::APPEND_CHUNK_SIZE) as $chunk) {
             $response = $this->userRequest(
                 fn (PendingRequest $request): Response => $request->asJson()->post(self::API_URL.'/playlists/'.rawurlencode($playlistId).'/tracks', ['uris' => $chunk]),
-                $token,
+                $hostAccountId,
             );
 
             $this->guard($response);
         }
     }
 
-    private function hostToken(string $hostAccountId): string
+    private function hostAccount(string $hostAccountId): LinkedAccount
     {
         $account = ctype_digit($hostAccountId) ? LinkedAccount::query()->find((int) $hostAccountId) : null;
 
@@ -160,14 +157,14 @@ class SpotifyMusicProvider implements MusicProvider
 
         $this->assertConfigured();
 
-        return $this->hostTokens->accessToken($account);
+        return $account;
     }
 
     /**
      * @param  array<string, mixed>  $query
      * @return list<array<string, mixed>>
      */
-    private function pages(string $path, array $query, string $token): array
+    private function pages(string $path, array $query, string $hostAccountId): array
     {
         $items = [];
         $url = self::API_URL.$path;
@@ -175,7 +172,7 @@ class SpotifyMusicProvider implements MusicProvider
         for ($page = 0; $url !== null && $page < self::MAX_PAGES; $page++) {
             $response = $this->userRequest(
                 fn (PendingRequest $request): Response => $request->get($url, $page === 0 ? $query : []),
-                $token,
+                $hostAccountId,
             );
 
             $this->guard($response);
@@ -191,12 +188,19 @@ class SpotifyMusicProvider implements MusicProvider
     /**
      * @param  Closure(PendingRequest): Response  $send
      */
-    private function userRequest(Closure $send, string $token): Response
+    private function userRequest(Closure $send, string $hostAccountId): Response
     {
+        $account = $this->hostAccount($hostAccountId);
         $this->assertNotBackingOff();
 
         try {
-            return $send(Http::withToken($token)->acceptJson());
+            $response = $send(Http::withToken($this->hostTokens->accessToken($account))->acceptJson());
+
+            if ($response->status() === 401) {
+                $response = $send(Http::withToken($this->hostTokens->refreshAfterRejection($account))->acceptJson());
+            }
+
+            return $response;
         } catch (ConnectionException) {
             throw new ProviderTemporaryFailure('Spotify could not be reached.');
         }

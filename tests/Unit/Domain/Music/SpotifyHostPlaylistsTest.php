@@ -98,3 +98,14 @@ it('rejects unknown or malformed host account ids', function (string $id) {
     expect(fn () => $this->provider->playlists($id))->toThrow(ProviderUnavailableException::class);
     Http::assertNothingSent();
 })->with(['9999', 'abc', '']);
+
+it('refreshes the host token and retries once when Spotify rejects it', function () {
+    SpotifyFake::hostApi(['api.spotify.com/v1/playlists/*/tracks*' => Http::sequence()
+        ->push('', 401)
+        ->push(['snapshot_id' => 'abc'], 201)]);
+
+    $this->provider->appendToPlaylist('pl-1', ['t1'], $this->host);
+
+    Http::assertSentCount(3);
+    Http::assertSent(fn (Request $r): bool => str_contains($r->url(), 'accounts.spotify.com'));
+});
