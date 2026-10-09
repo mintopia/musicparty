@@ -43,6 +43,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
+        Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|seek|volume')->name('parties.playback');
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
         Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();

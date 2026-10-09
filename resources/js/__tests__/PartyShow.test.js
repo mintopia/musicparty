@@ -4,11 +4,12 @@ import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 const reload = vi.fn();
 const put = vi.fn();
 const destroy = vi.fn();
+const post = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: {reload: (...args) => reload(...args), post: vi.fn(), put: (...args) => put(...args), delete: (...args) => destroy(...args)},
+    router: {reload: (...args) => reload(...args), post: (...args) => post(...args), put: (...args) => put(...args), delete: (...args) => destroy(...args)},
     usePage: () => ({props: {errors: {}}}),
 }));
 
@@ -51,6 +52,7 @@ beforeEach(() => {
     reload.mockClear();
     put.mockClear();
     destroy.mockClear();
+    post.mockClear();
 });
 
 afterEach(() => {
@@ -158,5 +160,34 @@ describe('rating', () => {
         expect(mount(MiniNowPlaying, {props: {nowPlaying: rated(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(Show, {props: baseProps({readOnly: true})}).find('[data-testid="rating"]').exists()).toBe(false);
+    });
+});
+
+describe('playback controls', () => {
+    it('shows the controls only to a manager and posts each control', async () => {
+        expect(mount(Show, {props: baseProps()}).find('[data-testid="playback-controls"]').exists()).toBe(false);
+
+        const w = mount(Show, {props: baseProps({canManage: true})});
+        await w.find('[data-testid="playback-play"]').trigger('click');
+        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/play', {}, expect.any(Object));
+        await w.find('[data-testid="playback-pause"]').trigger('click');
+        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/pause', {}, expect.any(Object));
+        await w.find('[data-testid="playback-skip"]').trigger('click');
+        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/skip', {}, expect.any(Object));
+
+        await w.find('[data-testid="playback-seek-input"]').setValue('12');
+        await w.find('[data-testid="playback-seek"]').trigger('click');
+        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/seek', {position_ms: 12000}, expect.any(Object));
+
+        await w.find('[data-testid="playback-volume-input"]').setValue('80');
+        await w.find('[data-testid="playback-volume-input"]').trigger('change');
+        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/volume', {level: 80}, expect.any(Object));
+    });
+
+    it('shows a refusal returned by the server', async () => {
+        post.mockImplementationOnce((_url, _data, options) => options.onError({playback: 'The Player is disconnected, so playback cannot be controlled.'}));
+        const w = mount(Show, {props: baseProps({canManage: true})});
+        await w.find('[data-testid="playback-play"]').trigger('click');
+        expect(w.find('[data-testid="playback-error"]').text()).toContain('disconnected');
     });
 });

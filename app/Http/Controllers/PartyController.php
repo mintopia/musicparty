@@ -12,6 +12,8 @@ use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Actions\ControlPlayback;
+use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Actions\RateNowPlaying;
@@ -24,6 +26,7 @@ use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\CastVoteRequest;
+use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
 use App\Http\Requests\RateNowPlayingRequest;
 use App\Http\Requests\ListPlayHistoryRequest;
@@ -256,6 +259,17 @@ class PartyController extends Controller
             $vote($party, $party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $trackRequest, $direction);
         } catch (RequestRefusedException $exception) {
             return back()->withErrors(['vote' => $exception->getMessage()]);
+        }
+
+        return back();
+    }
+
+    public function control(ControlPlaybackRequest $request, ControlPlayback $controlPlayback, Party $party): RedirectResponse
+    {
+        try {
+            $controlPlayback($party, $request->control(), $request->value());
+        } catch (PlaybackControlRefusedException $exception) {
+            return back()->withErrors(['playback' => $exception->getMessage()]);
         }
 
         return back();
