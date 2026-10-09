@@ -21,6 +21,7 @@ const props = (over = {}) => ({
     nowPlaying: entry(),
     upNext: entry({id: 2, track: {title: 'Lights Out', artists: ['Allstars'], album: null, artwork_url: null, duration_ms: 193000, explicit: false}}),
     sequence: 5,
+    startedAt: null,
     ...over,
 });
 
@@ -51,6 +52,28 @@ describe('TV screen', () => {
         expect(w.get('[data-testid=tv-now-playing-requester]').text()).toBe('Requested by Alex');
         expect(w.get('[data-testid=tv-up-next-title]').text()).toBe('Lights Out');
         expect(w.get('[data-testid=qr-code] svg').exists()).toBe(true);
+    });
+
+    it('shows score, total time, progress and a backdrop', () => {
+        vi.useFakeTimers();
+        vi.setSystemTime(new Date('2026-01-01T00:02:42Z'));
+        const w = mount(Tv, {props: props({
+            startedAt: '2026-01-01T00:00:00Z',
+            nowPlaying: entry({score: 3, track: {title: 'T', artists: ['A'], album: null, artwork_url: 'http://x/a.jpg', duration_ms: 241000, explicit: false}}),
+        })});
+        expect(w.get('[data-testid=tv-now-playing-score]').text()).toBe('3');
+        expect(w.get('[data-testid=tv-elapsed]').text()).toBe('2:42');
+        expect(w.get('[data-testid=tv-now-playing-duration]').text()).toBe('4:01');
+        expect(w.get('[data-testid=tv-progress-fill]').attributes('style')).toContain('width: 67');
+        expect(w.get('[data-testid=tv-backdrop]').attributes('style')).toContain('http://x/a.jpg');
+        w.unmount();
+        vi.useRealTimers();
+    });
+
+    it('shows no progress without a start time', () => {
+        const w = mount(Tv, {props: props()});
+        expect(w.get('[data-testid=tv-elapsed]').text()).toBe('0:00');
+        expect(w.get('[data-testid=tv-progress-fill]').attributes('style')).toContain('width: 0%');
     });
 
     it('shows empty states', () => {

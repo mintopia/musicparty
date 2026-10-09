@@ -12,7 +12,7 @@ Route::get('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
 
-Route::get('tv/{party}', [PartyTvController::class, 'show'])
+Route::get('parties/{party}/tv', [PartyTvController::class, 'show'])
     ->where('party', '[A-Za-z]{4}')
     ->name('parties.tv');
 

@@ -1,6 +1,6 @@
 <script setup>
 import {Head} from '@inertiajs/vue3';
-import {onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 import QrCode from '../../Components/QrCode.vue';
 import TrackThumb from '../../Components/TrackThumb.vue';
@@ -13,38 +13,67 @@ const props = defineProps({
     nowPlaying: {type: Object, default: null},
     upNext: {type: Object, default: null},
     sequence: {type: Number, default: 0},
+    startedAt: {type: String, default: null},
 });
 
 const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
+const startedAtMs = ref(props.startedAt ? Date.parse(props.startedAt) : null);
+const now = ref(Date.now());
 let lastSequence = props.sequence;
+let ticker = null;
+
+const durationMs = computed(() => nowPlaying.value?.track.duration_ms ?? 0);
+const elapsedMs = computed(() => {
+    if (startedAtMs.value === null || durationMs.value <= 0) {
+        return 0;
+    }
+    return Math.min(Math.max(now.value - startedAtMs.value, 0), durationMs.value);
+});
+const progressPercent = computed(() => (durationMs.value > 0 ? (elapsedMs.value / durationMs.value) * 100 : 0));
+const backdropUrl = computed(() => nowPlaying.value?.track.artwork_url ?? upNext.value?.track.artwork_url ?? null);
 const channelName = `party.${props.party.code}`;
 
 onMounted(() => {
+    ticker = setInterval(() => {
+        now.value = Date.now();
+    }, 1000);
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', (payload) => {
         if (payload.sequence <= lastSequence) {
             return;
         }
         lastSequence = payload.sequence;
+        if (payload.now_playing?.id !== nowPlaying.value?.id) {
+            startedAtMs.value = payload.now_playing ? Date.now() : null;
+        }
         nowPlaying.value = payload.now_playing;
         upNext.value = payload.up_next;
     });
 });
 
 onBeforeUnmount(() => {
+    clearInterval(ticker);
     window.Echo?.leave(channelName);
 });
 </script>
 
 <template>
     <Head :title="`${party.name} TV`" />
-    <main class="relative min-h-screen bg-black text-white" data-testid="tv-screen">
-        <header class="flex items-start justify-between px-4 pt-4 text-2xl font-semibold">
+    <main class="relative min-h-screen overflow-hidden bg-black text-white" data-testid="tv-screen">
+        <div
+            v-if="backdropUrl"
+            data-testid="tv-backdrop"
+            aria-hidden="true"
+            class="absolute inset-0 scale-125 bg-cover bg-center opacity-25 blur-3xl"
+            :style="{backgroundImage: `url(${backdropUrl})`}"
+        ></div>
+        <div v-else data-testid="tv-backdrop" aria-hidden="true" class="absolute inset-0 bg-gradient-to-br from-white/5 to-black"></div>
+        <header class="relative flex items-start justify-between px-4 pt-4 text-2xl font-semibold">
             <span data-testid="tv-party-name">{{ party.name }}</span>
             <span data-testid="tv-party-code" class="tracking-wider">{{ party.code }}</span>
         </header>
 
-        <div class="mx-auto flex w-full max-w-[940px] flex-col gap-10 pt-10">
+        <div class="relative mx-auto flex w-full max-w-[940px] flex-col gap-10 pt-10">
             <section data-testid="tv-now-playing" aria-label="Now playing">
                 <div v-if="nowPlaying" class="flex items-start gap-4">
                     <img
@@ -59,7 +88,16 @@ onBeforeUnmount(() => {
                         <div class="flex items-center gap-2"><Icon name="user" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
                         <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span data-testid="tv-now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
-                        <div class="mt-auto flex justify-end tabular-nums" data-testid="tv-now-playing-duration">{{ formatDuration(nowPlaying.track.duration_ms) }}</div>
+                        <div class="flex items-center gap-2"><Icon name="heart" /><span data-testid="tv-now-playing-score">{{ nowPlaying.score }}</span></div>
+                        <div class="mt-auto">
+                            <div class="h-1 w-full bg-white/80" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" data-testid="tv-progress">
+                                <div class="h-full bg-blue-600" :style="{width: `${progressPercent}%`}" data-testid="tv-progress-fill"></div>
+                            </div>
+                            <div class="mt-1 flex justify-between tabular-nums">
+                                <span data-testid="tv-elapsed">{{ formatDuration(elapsedMs) }}</span>
+                                <span data-testid="tv-now-playing-duration">{{ formatDuration(durationMs) }}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <p v-else data-testid="tv-now-playing-empty" class="text-2xl text-white/70">Nothing is playing right now.</p>
@@ -80,6 +118,6 @@ onBeforeUnmount(() => {
             </section>
         </div>
 
-        <QrCode class="absolute bottom-5 left-5" :value="party.joinUrl" :size="100" />
+        <QrCode class="absolute z-10 bottom-5 left-5" :value="party.joinUrl" :size="100" />
     </main>
 </template>
