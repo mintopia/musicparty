@@ -29,6 +29,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'terms_agreed_at' => 'datetime',
+        'first_login' => 'boolean',
+        'suspended' => 'boolean',
         'last_login' => 'datetime',
         'status_updated_at' => 'datetime',
         'status' => 'object',

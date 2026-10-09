@@ -1,6 +1,10 @@
 {
     "components": {
         "schemas": {
+            "MeResource": {
+                "additionalProperties": true,
+                "type": "object"
+            },
             "PartyResource": {
                 "additionalProperties": true,
                 "type": "object"
@@ -42,6 +46,40 @@
     },
     "openapi": "3.0.3",
     "paths": {
+        "/api/v1/me": {
+            "get": {
+                "operationId": "getApiV1Me",
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/MeResource"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.me"
+            }
+        },
         "/api/v1/parties/{party}": {
             "get": {
                 "operationId": "getApiV1PartiesParty",

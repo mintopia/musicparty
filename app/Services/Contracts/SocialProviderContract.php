@@ -5,6 +5,7 @@ namespace App\Services\Contracts;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
+use Laravel\Socialite\Contracts\Provider;
 
 interface SocialProviderContract
 {
@@ -27,6 +28,11 @@ interface SocialProviderContract
      * Return a redirect to the Social Provider's login page.
      */
     public function redirect(): RedirectResponse;
+
+    /**
+     * The configured Socialite driver for this provider.
+     */
+    public function driver(): Provider;
 
     /**
      * Process the authentication result and return a local user if appropriate.
