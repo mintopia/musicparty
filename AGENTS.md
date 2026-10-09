@@ -109,6 +109,20 @@ This server runs the **front door** surface: three tools reach every jCodeMunch 
 
 **Announce your model once per session** so the server can size its answers: `announce_model { "model": "<your-model-id>" }`.
 
+## Agent skills
+
+### Issue tracker
+
+GitHub Issues via `gh`; every ticket set hangs off an `epic` parent with native sub-issues and `blocked_by` edges. See `docs/agents/issue-tracker.md`.
+
+### Triage labels
+
+Default five triage labels plus `epic` and work-type labels (`coding`, `research`, `testing`, `documentation`). See `docs/agents/triage-labels.md`.
+
+### Domain docs
+
+Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents/domain.md`.
+
 ===
 
 <laravel-boost-guidelines>
