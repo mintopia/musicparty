@@ -15,7 +15,7 @@ import AppFooter from '../Components/AppFooter.vue';
         </aside>
 
         <div class="flex min-h-screen flex-col md:pl-60">
-            <TopBar />
+            <TopBar :title="$page.component" />
             <main class="flex-1">
                 <slot />
             </main>

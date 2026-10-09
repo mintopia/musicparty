@@ -6,15 +6,17 @@ use App\Exceptions\SocialProviderException;
 use App\Models\SocialProvider;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpFoundation\RedirectResponse as SymfonyRedirectResponse;
 
 class UserController extends Controller
 {
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->regenerate(true);
@@ -22,7 +24,7 @@ class UserController extends Controller
         return response()->redirectToRoute('home')->with('successMessage', 'You have been logged out');
     }
 
-    public function login_redirect(SocialProvider $socialprovider)
+    public function login_redirect(SocialProvider $socialprovider): RedirectResponse|SymfonyRedirectResponse
     {
         if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
@@ -31,7 +33,7 @@ class UserController extends Controller
         return $socialprovider->redirect();
     }
 
-    public function login_return(SocialProvider $socialprovider)
+    public function login_return(SocialProvider $socialprovider): RedirectResponse
     {
         if (Auth::hasUser()) {
             return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');

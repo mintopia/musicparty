@@ -43,8 +43,15 @@ class HandleInertiaRequests extends Middleware
                     'id' => $request->user()->id,
                     'name' => $request->user()->nickname,
                     'avatarUrl' => $request->user()->avatarUrl(),
+                    'email' => $request->user()->getEmail(),
                 ] : null,
             ],
+            'parties' => fn (): array => $request->user()
+                ? $request->user()->parties->map(fn ($party): array => [
+                    'code' => $party->code,
+                    'name' => $party->name,
+                ])->values()->all()
+                : [],
         ];
     }
 }
