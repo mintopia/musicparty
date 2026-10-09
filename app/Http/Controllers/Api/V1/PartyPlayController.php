@@ -7,6 +7,7 @@ use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Resources\V1\PlayResource;
 use App\Models\Party;
@@ -19,10 +20,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyPlayController extends Controller
 {
-    public function history(Request $request, ListPlayHistory $listHistory, Party $party): AnonymousResourceCollection|JsonResponse
+    public function history(ListPlayHistoryRequest $request, ListPlayHistory $listHistory, Party $party): AnonymousResourceCollection|JsonResponse
     {
         try {
-            return PlayResource::collection($listHistory($party, $this->member($request, $party)));
+            return PlayResource::collection($listHistory($party, $this->member($request, $party), $request->filters()));
         } catch (RequestRefusedException $exception) {
             return response()->json(['message' => $exception->getMessage()], $exception->status());
         }

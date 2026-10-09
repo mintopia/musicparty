@@ -6,9 +6,11 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Play;
 use App\Models\Rating;
+use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
@@ -90,6 +92,119 @@ it('refuses the history to non-members and anonymous visitors', function () {
 
     $this->app['auth']->forgetGuards();
     $this->withHeader('Authorization', '')->getJson('/api/v1/parties/ABCD/history')->assertUnauthorized();
+});
+
+it('reports votes, score and requested time from the originating request', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHours(2)]);
+    $voters = PartyMember::factory()->for($this->party)->count(3)->create();
+    RequestVote::factory()->for($request, 'request')->for($voters[0], 'member')->create(['value' => 1]);
+    RequestVote::factory()->for($request, 'request')->for($voters[1], 'member')->create(['value' => 1]);
+    RequestVote::factory()->down()->for($request, 'request')->for($voters[2], 'member')->create();
+    $played = playIn($this->party, ['track_request_id' => $request->id, 'played_at' => now()->subMinute()]);
+    $fallback = playIn($this->party, ['played_at' => now()->subHour()]);
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
+        ->assertJsonPath('data.0.id', $played->id)
+        ->assertJsonPath('data.0.votes', 3)
+        ->assertJsonPath('data.0.score', 1)
+        ->assertJsonPath('data.0.requested_at', $request->created_at->toIso8601String())
+        ->assertJsonPath('data.1.id', $fallback->id)
+        ->assertJsonPath('data.1.votes', 0)
+        ->assertJsonPath('data.1.score', 0)
+        ->assertJsonPath('data.1.requested_at', $fallback->played_at->toIso8601String());
+});
+
+it('loads the history without per-row queries', function () {
+    foreach (range(1, 6) as $i) {
+        $request = TrackRequest::factory()->for($this->party)->create();
+        playIn($this->party, ['track_request_id' => $request->id, 'party_member_id' => $this->member->id]);
+    }
+
+    DB::enableQueryLog();
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(6, 'data');
+    $withSix = count(DB::getQueryLog());
+    DB::flushQueryLog();
+    foreach (range(1, 6) as $i) {
+        $request = TrackRequest::factory()->for($this->party)->create();
+        playIn($this->party, ['track_request_id' => $request->id, 'party_member_id' => $this->member->id]);
+    }
+    DB::flushQueryLog();
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(12, 'data');
+
+    expect(count(DB::getQueryLog()))->toBe($withSix);
+});
+
+it('filters the history by name, artist, album and type', function () {
+    $request = TrackRequest::factory()->for($this->party)->create();
+    $a = playIn($this->party, ['title' => 'Rewind the Night', 'artists' => ['The Lowlands'], 'album' => 'Static Years', 'track_request_id' => $request->id, 'played_at' => now()->subMinutes(3)]);
+    $b = playIn($this->party, ['title' => 'Glass Cathedral', 'artists' => ['Velvet Echo', 'Guest'], 'album' => 'Echoes', 'played_at' => now()->subMinutes(2)]);
+
+    $ids = fn (string $query): array => collect($this->getJson("/api/v1/parties/ABCD/history?{$query}")->assertOk()->json('data'))->pluck('id')->all();
+
+    expect($ids('name=rewind'))->toBe([$a->id])
+        ->and($ids('artist=guest'))->toBe([$b->id])
+        ->and($ids('album=static'))->toBe([$a->id])
+        ->and($ids('type=requested'))->toBe([$a->id])
+        ->and($ids('type=fallback'))->toBe([$b->id])
+        ->and($ids('type=sent'))->toBe([$b->id, $a->id])
+        ->and($ids('name=glass&artist=velvet&album=echo&type=fallback'))->toBe([$b->id])
+        ->and($ids('name=glass&artist=lowlands'))->toBe([])
+        ->and($ids('name=nothing-matches'))->toBe([]);
+});
+
+it('treats like wildcards in filters literally', function () {
+    playIn($this->party, ['title' => '100% Pure']);
+    playIn($this->party, ['title' => 'Plain']);
+
+    $this->getJson('/api/v1/parties/ABCD/history?name=%25')->assertOk()->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/parties/ABCD/history?name=_lain')->assertOk()->assertJsonCount(0, 'data');
+});
+
+it('keeps filters in the pagination links and totals', function () {
+    Play::factory()->for($this->party)->count(30)->create(['title' => 'Same']);
+    Play::factory()->for($this->party)->count(3)->create(['title' => 'Other']);
+
+    $this->getJson('/api/v1/parties/ABCD/history?name=Same')->assertOk()
+        ->assertJsonPath('meta.total', 30)
+        ->assertJsonPath('meta.from', 1)
+        ->assertJsonPath('meta.to', 25)
+        ->assertJsonCount(25, 'data');
+    expect($this->getJson('/api/v1/parties/ABCD/history?name=Same')->json('links.next'))->toContain('name=Same');
+});
+
+it('rejects invalid history filters', function (array $query, string $field) {
+    $this->getJson('/api/v1/parties/ABCD/history?'.http_build_query($query))->assertUnprocessable()->assertJsonValidationErrors($field);
+})->with([
+    'unknown type' => [['type' => 'bogus'], 'type'],
+    'array name' => [['name' => ['x']], 'name'],
+    'long artist' => [['artist' => str_repeat('a', 101)], 'artist'],
+    'bad page' => [['page' => 0], 'page'],
+]);
+
+it('keeps filters off other parties', function () {
+    playIn(Party::factory()->create(), ['title' => 'Rewind elsewhere']);
+
+    $this->getJson('/api/v1/parties/ABCD/history?name=Rewind')->assertOk()->assertJsonCount(0, 'data');
+});
+
+it('applies the filters on the party page and echoes them', function () {
+    playIn($this->party, ['title' => 'Rewind the Night']);
+    playIn($this->party, ['title' => 'Glass Cathedral']);
+
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD/history?name=glass&type=fallback')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->has('history.data', 1)
+            ->where('history.data.0.track.title', 'Glass Cathedral')
+            ->where('history.meta.total', 1)
+            ->where('filters', ['name' => 'glass', 'artist' => '', 'album' => '', 'type' => 'fallback']));
+});
+
+it('rejects invalid filters on the party page', function () {
+    $this->actingAs($this->user)->from('/parties/ABCD/history')
+        ->get('/parties/ABCD/history?type=bogus')
+        ->assertRedirect('/parties/ABCD/history')
+        ->assertSessionHasErrors('type');
 });
 
 it('likes a play and reports the counts', function () {

@@ -23,6 +23,7 @@ use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
@@ -78,7 +79,7 @@ class PartyController extends Controller
     }
 
     public function show(
-        Request $request,
+        ListPlayHistoryRequest $request,
         JoinParty $joinParty,
         ListQueue $listQueue,
         ListPlayHistory $listHistory,
@@ -121,7 +122,8 @@ class PartyController extends Controller
             'nowPlaying' => $playback['now_playing'],
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
-            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member)) : null,
+            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
+            'filters' => $request->filters(),
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,

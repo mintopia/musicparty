@@ -18,6 +18,7 @@ const props = defineProps({
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     history: {type: Object, default: null},
+    filters: {type: Object, default: () => ({})},
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
@@ -184,7 +185,7 @@ const ratingLocked = computed(() => props.membership.banned);
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">History</h2>
-                <PlayedHistory :history="history" :party-code="party.code" :read-only="ratingLocked" />
+                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
             </template>
         </section>
     </div>

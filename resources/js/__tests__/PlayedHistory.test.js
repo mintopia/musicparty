@@ -2,11 +2,12 @@ import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 
 const put = vi.fn();
+const get = vi.fn();
 const del = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: {put: (...args) => put(...args), delete: (...args) => del(...args)},
+    router: {get: (...args) => get(...args), put: (...args) => put(...args), delete: (...args) => del(...args)},
 }));
 
 import PlayedHistory from '../Components/PlayedHistory.vue';
@@ -16,6 +17,9 @@ const play = (over = {}) => ({
     id: 7,
     track: {title: 'Rewind the Night', artists: ['The Lowlands'], album: null, artwork_url: null, duration_ms: 200000, explicit: false},
     requested_by: {name: 'Alex'},
+    votes: 4,
+    score: 2,
+    requested_at: '2026-10-09T11:00:00+00:00',
     likes: 3,
     dislikes: 1,
     my_rating: 0,
@@ -23,16 +27,17 @@ const play = (over = {}) => ({
     ...over,
 });
 
-const mountHistory = (props = {}) => mount(PlayedHistory, {props: {partyCode: 'ABCD', history: {data: [play()], links: {prev: null, next: null}}, ...props}});
+const mountHistory = (props = {}) => mount(PlayedHistory, {props: {partyCode: 'ABCD', history: {data: [play()], meta: {from: 1, to: 1, total: 1, links: []}}, ...props}});
 
 beforeEach(() => {
+    get.mockClear();
     put.mockClear();
     del.mockClear();
 });
 
 describe('PlayedHistory', () => {
     it('shows an empty state', () => {
-        const w = mountHistory({history: {data: [], links: {}}});
+        const w = mountHistory({history: {data: [], meta: {from: null, to: null, total: 0, links: []}}});
 
         expect(w.find('[data-testid=history-empty]').exists()).toBe(true);
         expect(w.find('[data-testid=history-list]').exists()).toBe(false);
@@ -42,7 +47,8 @@ describe('PlayedHistory', () => {
         const w = mountHistory();
 
         expect(w.text()).toContain('Rewind the Night');
-        expect(w.text()).toContain('Requested by Alex');
+        expect(w.get('[data-testid=history-votes]').text()).toBe('4');
+        expect(w.get('[data-testid=history-score]').text()).toBe('2');
         expect(w.get('[data-testid=history-likes]').text()).toBe('3');
         expect(w.get('[data-testid=history-dislikes]').text()).toBe('1');
     });
@@ -52,7 +58,7 @@ describe('PlayedHistory', () => {
         await w.get('[data-testid=rate-like]').trigger('click');
         expect(put).toHaveBeenCalledWith('/parties/ABCD/plays/7/rating', {value: 'up'}, expect.any(Object));
 
-        const liked = mountHistory({history: {data: [play({my_rating: 1})], links: {}}});
+        const liked = mountHistory({history: {data: [play({my_rating: 1})], meta: {}}});
         await liked.get('[data-testid=rate-dislike]').trigger('click');
         expect(put).toHaveBeenLastCalledWith('/parties/ABCD/plays/7/rating', {value: 'down'}, expect.any(Object));
 
@@ -68,11 +74,78 @@ describe('PlayedHistory', () => {
         expect(put).not.toHaveBeenCalled();
     });
 
-    it('links to the previous and next pages', () => {
-        const w = mountHistory({history: {data: [play()], links: {prev: '/parties/ABCD/history?page=1', next: '/parties/ABCD/history?page=3'}}});
+    it('renders the mockup columns and the entries footer', () => {
+        const w = mountHistory({history: {data: [play()], meta: {from: 26, to: 26, total: 26, links: []}}});
 
-        expect(w.get('[data-testid=history-prev]').attributes('href')).toBe('/parties/ABCD/history?page=1');
-        expect(w.get('[data-testid=history-next]').attributes('href')).toBe('/parties/ABCD/history?page=3');
+        expect(w.findAll('th').map((th) => th.text())).toEqual(['Song', 'Votes', 'Score', 'Requested', 'Sent to Spotify']);
+        expect(w.get('[data-testid=history-entries]').text()).toBe('Showing 26 to 26 of 26 entries');
+        expect(w.find('[data-testid=history-pager]').exists()).toBe(false);
+    });
+
+    it('stacks cells with labels for the mobile card layout', () => {
+        const w = mountHistory();
+
+        expect(w.findAll('[data-testid=history-item] td').map((td) => td.attributes('data-label'))).toEqual(['Song', 'Votes', 'Score', 'Requested', 'Sent to Spotify']);
+    });
+
+    it('builds pagination from the paginator links', () => {
+        const links = [
+            {url: null, label: '&laquo; Previous', active: false},
+            {url: '/parties/ABCD/history?page=1', label: '1', active: true},
+            {url: '/parties/ABCD/history?page=2', label: '2', active: false},
+            {url: '/parties/ABCD/history?page=2', label: 'Next &raquo;', active: false},
+        ];
+        const w = mountHistory({history: {data: [play()], meta: {from: 1, to: 25, total: 30, links}}});
+
+        expect(w.find('[data-testid=history-prev]').exists()).toBe(false);
+        expect(w.find('[data-testid=history-prev-disabled]').exists()).toBe(true);
+        expect(w.get('[data-testid=history-next]').attributes('href')).toBe('/parties/ABCD/history?page=2');
+        expect(w.findAll('[data-testid=history-page]').map((a) => a.text())).toEqual(['1', '2']);
+        expect(w.get('[aria-current=page]').text()).toBe('1');
+    });
+
+    it('submits only the filled filters to the history route', async () => {
+        const w = mountHistory();
+        await w.get('[data-testid=filter-name]').setValue('rewind');
+        await w.get('[data-testid=filter-album]').setValue('  ');
+        await w.get('[data-testid=filter-type]').setValue('requested');
+        await w.get('[data-testid=history-filters]').trigger('submit');
+
+        expect(get).toHaveBeenCalledWith('/parties/ABCD/history', {name: 'rewind', type: 'requested'}, expect.objectContaining({preserveState: true}));
+    });
+
+    it('omits the default type and starts from the active filters', async () => {
+        const w = mountHistory({filters: {name: 'glass', artist: '', album: '', type: 'sent'}});
+
+        expect(w.get('[data-testid=filter-name]').element.value).toBe('glass');
+        await w.get('[data-testid=history-filters]').trigger('submit');
+        expect(get).toHaveBeenCalledWith('/parties/ABCD/history', {name: 'glass'}, expect.any(Object));
+    });
+
+    it('explains an empty filtered result and keeps the filters visible', () => {
+        const w = mountHistory({filters: {name: 'zzz', artist: '', album: '', type: 'sent'}, history: {data: [], meta: {from: null, to: null, total: 0, links: []}}});
+
+        expect(w.get('[data-testid=history-empty]').text()).toBe('No songs match this search.');
+        expect(w.get('[data-testid=history-entries]').text()).toBe('Showing 0 to 0 of 0 entries');
+        expect(w.find('[data-testid=history-filters]').classes()).toContain('block');
+    });
+
+    it('collapses the filters on mobile until toggled', async () => {
+        const w = mountHistory();
+
+        expect(w.get('[data-testid=history-filters]').classes()).toContain('hidden');
+        await w.get('[data-testid=history-filters-toggle]').trigger('click');
+        expect(w.get('[data-testid=history-filters]').classes()).toContain('block');
+        expect(w.get('[data-testid=history-filters-toggle]').attributes('aria-expanded')).toBe('true');
+    });
+
+    it('shows a rating error from the server', async () => {
+        put.mockImplementation((url, data, options) => options.onError({rating: 'You are banned.'}));
+        const w = mountHistory();
+        await w.get('[data-testid=rate-like]').trigger('click');
+
+        expect(w.get('[data-testid=rating-error]').text()).toBe('You are banned.');
+        put.mockReset();
     });
 });
 
