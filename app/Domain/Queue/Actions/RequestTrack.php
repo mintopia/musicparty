@@ -10,7 +10,7 @@ use App\Domain\Party\PartyState;
 use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\QueueUpdatedEvent;
+use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
@@ -69,7 +69,7 @@ class RequestTrack
             return new RequestOutcome($request, true, true);
         });
 
-        QueueUpdatedEvent::dispatch($party->code);
+        BroadcastPartyQueue::dispatch($party->code);
 
         return $outcome;
     }
