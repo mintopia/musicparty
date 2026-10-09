@@ -153,3 +153,13 @@ it('validates the settings name', function (string $name) {
 
     $this->patchJson('/api/v1/parties/ABCD', ['name' => $name])->assertUnprocessable();
 })->with(['too short' => 'a', 'too long' => str_repeat('x', 65)]);
+
+it('is append-only', function () {
+    $entry = PartyLogEntry::factory()->create(['action' => 'party.created']);
+
+    $entry->action = 'tampered';
+    $entry->save();
+    $entry->delete();
+
+    expect($entry->fresh()->action)->toBe('party.created');
+});

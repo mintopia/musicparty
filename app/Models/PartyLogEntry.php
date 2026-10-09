@@ -26,6 +26,12 @@ class PartyLogEntry extends Model
 
     public const UPDATED_AT = null;
 
+    protected static function booted(): void
+    {
+        static::updating(fn (): bool => false);
+        static::deleting(fn (): bool => false);
+    }
+
     protected function casts(): array
     {
         return [
