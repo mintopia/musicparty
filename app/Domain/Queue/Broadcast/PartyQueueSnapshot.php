@@ -22,6 +22,10 @@ class PartyQueueSnapshot
             ->whereIn('status', [RequestStatus::Playing, RequestStatus::UpNext, RequestStatus::Queued])
             ->with('requester.user')
             ->withSum('votes as score', 'value')
+            ->withCount([
+                'ratings as likes' => fn ($query) => $query->where('value', '>', 0),
+                'ratings as dislikes' => fn ($query) => $query->where('value', '<', 0),
+            ])
             ->orderByRaw('COALESCE(score, 0) desc')
             ->orderBy('created_at')
             ->orderBy('id')
@@ -70,6 +74,8 @@ class PartyQueueSnapshot
             ],
             'status' => $request->status->value,
             'score' => (int) $request->score,
+            'likes' => (int) $request->likes,
+            'dislikes' => (int) $request->dislikes,
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
         ];
     }

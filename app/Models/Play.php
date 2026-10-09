@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * @property int $id
@@ -61,5 +62,13 @@ class Play extends Model
     public function request(): BelongsTo
     {
         return $this->belongsTo(TrackRequest::class, 'track_request_id');
+    }
+
+    /**
+     * @return HasMany<PlayRating, $this>
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(PlayRating::class, 'track_request_id', 'track_request_id');
     }
 }

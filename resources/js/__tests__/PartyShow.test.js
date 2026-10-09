@@ -2,11 +2,13 @@ import {mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const reload = vi.fn();
+const put = vi.fn();
+const destroy = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: {reload: (...args) => reload(...args), post: vi.fn(), put: vi.fn(), delete: vi.fn()},
+    router: {reload: (...args) => reload(...args), post: vi.fn(), put: (...args) => put(...args), delete: (...args) => destroy(...args)},
     usePage: () => ({props: {errors: {}}}),
 }));
 
@@ -47,6 +49,8 @@ beforeEach(() => {
     };
     window.Echo = echo;
     reload.mockClear();
+    put.mockClear();
+    destroy.mockClear();
 });
 
 afterEach(() => {
@@ -92,7 +96,7 @@ describe('Party page now playing and Up Next', () => {
         const w = mount(Show, {props: baseProps()});
         expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
         listeners['Party.QueueUpdatedEvent']();
-        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext'], preserveScroll: true});
+        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
         w.unmount();
         expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
     });
@@ -107,5 +111,34 @@ describe('MiniNowPlaying', () => {
 
     it('shows an empty state', () => {
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).text()).toContain('Nothing playing');
+    });
+});
+
+describe('rating', () => {
+    const rated = () => entry({likes: 3, dislikes: 1});
+
+    it.each([
+        ['MiniNowPlaying', MiniNowPlaying],
+        ['Show', Show],
+    ])('likes, switches and retracts on %s', async (_name, component) => {
+        const props = component === Show ? baseProps({nowPlaying: rated(), myRating: 0}) : {nowPlaying: rated(), partyCode: 'FRI123', myRating: 0};
+        const w = mount(component, {props});
+        expect(w.find('[data-testid="rating-count"]').text()).toBe('2');
+
+        await w.find('[data-testid="rating-like"]').trigger('click');
+        expect(put).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', {value: 'up'}, expect.any(Object));
+
+        await w.setProps({myRating: 1});
+        await w.find('[data-testid="rating-like"]').trigger('click');
+        expect(destroy).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', expect.any(Object));
+
+        await w.find('[data-testid="rating-dislike"]').trigger('click');
+        expect(put).toHaveBeenLastCalledWith('/parties/FRI123/requests/1/rating', {value: 'down'}, expect.any(Object));
+    });
+
+    it('hides the buttons when read only or nothing is playing', () => {
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: rated(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(Show, {props: baseProps({readOnly: true})}).find('[data-testid="rating"]').exists()).toBe(false);
     });
 });

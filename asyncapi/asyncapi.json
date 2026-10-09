@@ -89,6 +89,8 @@
                                         "track",
                                         "status",
                                         "score",
+                                        "likes",
+                                        "dislikes",
                                         "requested_by"
                                     ],
                                     "properties": {
@@ -145,6 +147,12 @@
                                             ]
                                         },
                                         "score": {
+                                            "type": "integer"
+                                        },
+                                        "likes": {
+                                            "type": "integer"
+                                        },
+                                        "dislikes": {
                                             "type": "integer"
                                         },
                                         "requested_by": {
@@ -180,6 +188,8 @@
                                         "track",
                                         "status",
                                         "score",
+                                        "likes",
+                                        "dislikes",
                                         "requested_by"
                                     ],
                                     "properties": {
@@ -238,6 +248,12 @@
                                         "score": {
                                             "type": "integer"
                                         },
+                                        "likes": {
+                                            "type": "integer"
+                                        },
+                                        "dislikes": {
+                                            "type": "integer"
+                                        },
                                         "requested_by": {
                                             "type": "object",
                                             "additionalProperties": false,
@@ -268,6 +284,8 @@
                                     "track",
                                     "status",
                                     "score",
+                                    "likes",
+                                    "dislikes",
                                     "requested_by"
                                 ],
                                 "properties": {
@@ -324,6 +342,12 @@
                                         ]
                                     },
                                     "score": {
+                                        "type": "integer"
+                                    },
+                                    "likes": {
+                                        "type": "integer"
+                                    },
+                                    "dislikes": {
                                         "type": "integer"
                                     },
                                     "requested_by": {

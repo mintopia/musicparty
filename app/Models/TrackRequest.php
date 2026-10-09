@@ -16,6 +16,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property list<string> $artists
  * @property int|null $score
  * @property int|null $my_vote
+ * @property int|null $likes
+ * @property int|null $dislikes
+ * @property int|null $my_rating
  * @property int|null $party_member_id
  * @property string $provider_track_id
  * @property int $duration_ms
@@ -69,5 +72,13 @@ class TrackRequest extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(RequestVote::class);
+    }
+
+    /**
+     * @return HasMany<PlayRating, $this>
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(PlayRating::class);
     }
 }
