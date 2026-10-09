@@ -5,6 +5,8 @@ Captured from the v2 app (`musicparty-v2`) running locally on a throwaway copy w
 stubbed, and the now-playing status was seeded. Chrome headless, 1440x900 (desktop) and 390x844 (mobile),
 `-light` (active Default theme, `dark_mode` off) and `-dark` (same theme with `dark_mode` on, so `<body data-bs-theme="dark">`). Every dark image was checked to differ from its light pair. Full-page captures except the TV screen (viewport only).
 
+**Desktop shots are the v3 reference; mobile shots are not.** v2's mobile layout is not fit for purpose. v3 mobile is redesigned mobile-first against the approved mockups in `docs/design/v3-mobile/`. The mobile shots are kept only as a record of what to move away from.
+
 File pattern: `<page>-<desktop|mobile>-<light|dark>.png`
 
 | Page | Shows |

@@ -7,7 +7,7 @@ Music Party v2 fuses the music catalogue and playback control into one 800-line 
 ## What Changes
 
 - **BREAKING** Fresh v3 build with no v2 data migration. Existing parties, users and tokens are not carried over.
-- **BREAKING** UI rebuilt with Inertia, Vue 3 and Tailwind v4. Blade views, Tabler/Bootstrap and Livewire are removed, along with the v2 leftovers (nonexistent controllers and observers, seat_* theme fields). Guest pages keep v2's look and feel, matched against reference screenshots in `docs/design/`.
+- **BREAKING** UI rebuilt with Inertia, Vue 3 and Tailwind v4. Blade views, Tabler/Bootstrap and Livewire are removed, along with the v2 leftovers (nonexistent controllers and observers, seat_* theme fields). On desktop, guest pages keep v2's layout and look and feel, matched against the reference screenshots in `docs/design/v2-reference/`. Mobile gets a new mobile-first layout matched against approved mockups in `docs/design/v3-mobile/`.
 - Party lifecycle with **Live**, **Paused** and **Ended** states. Going Live requires a Fallback Playlist with at least 20 eligible Tracks, and the Provider's autoplay never takes over silently.
 - Membership by 4-letter party code. Party roles are Host, Moderator, VIP and Guest, and a Ban is a status. Instance admins get an "act as Host" mode recorded in the Party Log.
 - Request lifecycle Pending → Queued → Up Next → Playing → Played (exits: Rejected, Removed), keeping every v2 request rule. Optional Pending approval per Party. Votes, Score, Ratings, and Fallback and History Playlists.
