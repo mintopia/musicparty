@@ -23,6 +23,10 @@ class RequestRefusedException extends RuntimeException
 
     public const CONFLICT = 409;
 
+    public const NOT_PENDING = 409;
+
+    public const NOT_ALLOWED = 403;
+
     public static function notAMember(): self
     {
         return new self('Join the party to request tracks.', self::NOT_A_MEMBER);
@@ -81,6 +85,21 @@ class RequestRefusedException extends RuntimeException
     public static function alreadyUpNext(): self
     {
         return new self('That track is already Up Next.', self::CONFLICT);
+    }
+
+    public static function notAllowed(): self
+    {
+        return new self('You are not allowed to do that in this party.', self::NOT_ALLOWED);
+    }
+
+    public static function notPending(): self
+    {
+        return new self('That request is no longer waiting for approval.', self::NOT_PENDING);
+    }
+
+    public static function notRemovable(): self
+    {
+        return new self('That request can no longer be removed here.', self::CONFLICT);
     }
 
     public function status(): int

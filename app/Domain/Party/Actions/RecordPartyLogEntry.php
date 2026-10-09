@@ -2,6 +2,7 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Events\Party\PartyLogEntryAddedEvent;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\User;
@@ -19,7 +20,7 @@ readonly class RecordPartyLogEntry
         ?array $details = null,
         ?string $systemActor = null,
     ): PartyLogEntry {
-        return PartyLogEntry::query()->forceCreate([
+        $entry = PartyLogEntry::query()->forceCreate([
             'party_id' => $party->id,
             'user_id' => $actor?->id,
             'system_actor' => $actor === null ? $systemActor : null,
@@ -27,5 +28,9 @@ readonly class RecordPartyLogEntry
             'subject' => $subject,
             'details' => $details,
         ]);
+
+        PartyLogEntryAddedEvent::dispatch($party->code, $entry->id, $action, $subject);
+
+        return $entry;
     }
 }

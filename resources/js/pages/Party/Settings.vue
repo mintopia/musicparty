@@ -17,6 +17,7 @@ const form = useForm({
     min_song_length: props.settings.min_song_length,
     max_song_length: props.settings.max_song_length,
     explicit: props.settings.explicit,
+    hold_requests: props.settings.hold_requests,
     no_repeat_interval: props.settings.no_repeat_interval,
 });
 
@@ -81,6 +82,11 @@ const numberFields = [
             <label class="flex min-h-11 items-center gap-3 text-sm">
                 <input v-model="form.explicit" type="checkbox" data-testid="setting-explicit">
                 <span>Allow explicit tracks</span>
+            </label>
+
+            <label class="flex min-h-11 items-center gap-3 text-sm">
+                <input v-model="form.hold_requests" type="checkbox" data-testid="setting-hold_requests">
+                <span>Hold new requests for approval</span>
             </label>
 
             <div>

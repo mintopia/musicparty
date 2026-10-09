@@ -65,10 +65,13 @@
         },
         "partyMember": {
             "address": "private-party.{code}.member.{memberId}",
-            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices.",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices and Request decision notices (pending, approved, rejected, removed).",
             "messages": {
                 "Party.RequestRejectedEvent": {
                     "$ref": "#/components/messages/Party.RequestRejectedEvent"
+                },
+                "Party.RequestDecidedEvent": {
+                    "$ref": "#/components/messages/Party.RequestDecidedEvent"
                 }
             },
             "parameters": {
@@ -77,6 +80,26 @@
                 },
                 "memberId": {
                     "description": "Party Member id"
+                }
+            }
+        },
+        "partyModerators": {
+            "address": "private-party.{code}.moderators",
+            "description": "Private Moderator channel (Echo name party.{code}.moderators). Authorisable only by non-banned Host and Moderators, re-evaluated on every subscription; unknown codes, Guests, VIPs, banned Members and unauthenticated callers are refused. Carries Pending Requests and Party Log entries.",
+            "messages": {
+                "Party.PartyLogEntryAddedEvent": {
+                    "$ref": "#/components/messages/Party.PartyLogEntryAddedEvent"
+                },
+                "Party.PendingRequestAddedEvent": {
+                    "$ref": "#/components/messages/Party.PendingRequestAddedEvent"
+                },
+                "Party.PendingRequestResolvedEvent": {
+                    "$ref": "#/components/messages/Party.PendingRequestResolvedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
                 }
             }
         }
@@ -241,6 +264,131 @@
                 },
                 "title": "Party.RequestRejectedEvent",
                 "x-event-class": "App\\Events\\Party\\RequestRejectedEvent"
+            },
+            "Party.PendingRequestAddedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PendingRequestAddedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the held Request",
+                            "type": "integer"
+                        },
+                        "title": {
+                            "description": "Track title",
+                            "type": "string"
+                        },
+                        "artists": {
+                            "description": "Track artists",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "requested_by_member_id": {
+                            "description": "Party Member who requested the Track",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "title",
+                        "artists",
+                        "requested_by_member_id"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PendingRequestAddedEvent",
+                "x-event-class": "App\\Events\\Party\\PendingRequestAddedEvent"
+            },
+            "Party.PendingRequestResolvedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PendingRequestResolvedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request that left Pending",
+                            "type": "integer"
+                        },
+                        "status": {
+                            "description": "Resulting status: queued, rejected or removed",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "status"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PendingRequestResolvedEvent",
+                "x-event-class": "App\\Events\\Party\\PendingRequestResolvedEvent"
+            },
+            "Party.PartyLogEntryAddedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PartyLogEntryAddedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "id": {
+                            "description": "Party Log entry id",
+                            "type": "integer"
+                        },
+                        "action": {
+                            "description": "Party Log action key",
+                            "type": "string"
+                        },
+                        "subject": {
+                            "description": "Log entry subject, when it has one",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "action",
+                        "subject"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PartyLogEntryAddedEvent",
+                "x-event-class": "App\\Events\\Party\\PartyLogEntryAddedEvent"
+            },
+            "Party.RequestDecidedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\RequestDecidedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request",
+                            "type": "integer"
+                        },
+                        "status": {
+                            "description": "Current status: pending, queued, rejected or removed",
+                            "type": "string"
+                        },
+                        "reason": {
+                            "description": "Moderator's optional rejection reason",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "status",
+                        "reason"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.RequestDecidedEvent",
+                "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
             }
         }
     },
@@ -311,6 +459,34 @@
             "messages": [
                 {
                     "$ref": "#/channels/partyMember/messages/Party.RequestRejectedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberRequestDecided": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.RequestDecidedEvent"
+                }
+            ]
+        },
+        "publishPartyModerators": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyModerators"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PartyLogEntryAddedEvent"
+                },
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PendingRequestAddedEvent"
+                },
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PendingRequestResolvedEvent"
                 }
             ]
         }

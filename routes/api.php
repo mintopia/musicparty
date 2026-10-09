@@ -39,6 +39,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'unban'])->whereNumber('member')->name('parties.members.unban');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
+        Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');
+        Route::post('parties/{party}/requests/{trackRequest}/approve', [PartyRequestController::class, 'approve'])->whereNumber('trackRequest')->name('parties.requests.approve');
+        Route::post('parties/{party}/requests/{trackRequest}/reject', [PartyRequestController::class, 'reject'])->whereNumber('trackRequest')->name('parties.requests.reject');
+        Route::delete('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'destroy'])->whereNumber('trackRequest')->name('parties.requests.destroy');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');
         Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->name('parties.requests.vote.destroy');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');

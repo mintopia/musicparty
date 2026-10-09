@@ -52,6 +52,7 @@ class Party extends Model
         'allow_requests' => 'boolean',
         'explicit' => 'boolean',
         'downvotes' => 'boolean',
+        'hold_requests' => 'boolean',
         'downvotes_per_hour' => 'integer',
         'max_requests' => 'integer',
         'min_song_length' => 'integer',

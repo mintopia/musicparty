@@ -29,6 +29,7 @@ class PartyResource extends JsonResource
             'min_song_length' => $this->min_song_length,
             'max_song_length' => $this->max_song_length,
             'no_repeat_interval' => $this->no_repeat_interval,
+            'hold_requests' => (bool) $this->hold_requests,
             'downvotes' => (bool) $this->downvotes,
             'downvotes_per_hour' => $this->downvotes_per_hour,
             'role' => $user === null ? null : $this->memberFor($user)?->role->value,
