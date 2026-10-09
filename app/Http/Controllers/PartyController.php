@@ -12,7 +12,9 @@ use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
@@ -21,13 +23,16 @@ use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
+use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
+use App\Models\Play;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -76,6 +81,7 @@ class PartyController extends Controller
         Request $request,
         JoinParty $joinParty,
         ListQueue $listQueue,
+        ListPlayHistory $listHistory,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
         Party $party,
@@ -115,6 +121,7 @@ class PartyController extends Controller
             'nowPlaying' => $playback['now_playing'],
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
+            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member)) : null,
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,
@@ -207,6 +214,29 @@ class PartyController extends Controller
     public function destroyVote(Request $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse
     {
         return $this->applyVote($request, $vote, $party, $trackRequest, null);
+    }
+
+    public function storeRating(RatePlayRequest $request, RatePlay $ratePlay, Party $party, Play $play): RedirectResponse
+    {
+        return $this->applyRating($request, $ratePlay, $party, $play, $request->direction());
+    }
+
+    public function destroyRating(Request $request, RatePlay $ratePlay, Party $party, Play $play): RedirectResponse
+    {
+        return $this->applyRating($request, $ratePlay, $party, $play, null);
+    }
+
+    private function applyRating(Request $request, RatePlay $ratePlay, Party $party, Play $play, ?VoteDirection $direction): RedirectResponse
+    {
+        abort_unless($play->party_id === $party->id, 404);
+
+        try {
+            $ratePlay($party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $play, $direction);
+        } catch (RequestRefusedException $exception) {
+            return back()->withErrors(['rating' => $exception->getMessage()]);
+        }
+
+        return back();
     }
 
     private function applyVote(Request $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): RedirectResponse

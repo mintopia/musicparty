@@ -1,0 +1,250 @@
+<?php
+
+use App\Domain\Playback\FeedMode;
+use App\Domain\Playback\PlaybackCoordinator;
+use App\Models\Party;
+use App\Models\PartyMember;
+use App\Models\Play;
+use App\Models\Rating;
+use App\Models\TrackRequest;
+use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Inertia\Testing\AssertableInertia as Assert;
+use Laravel\Sanctum\Sanctum;
+
+uses(RefreshDatabase::class);
+
+beforeEach(function () {
+    $this->travelTo(now()->startOfHour()->addMinutes(30));
+    $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
+    $this->user = User::factory()->create();
+    $this->member = PartyMember::factory()->for($this->party)->for($this->user)->create();
+    Sanctum::actingAs($this->user);
+});
+
+function playIn(Party $party, array $attributes = []): Play
+{
+    return Play::factory()->for($party)->create($attributes);
+}
+
+function ratingUrl(Play $play, string $code = 'ABCD'): string
+{
+    return "/api/v1/parties/{$code}/plays/{$play->id}/rating";
+}
+
+it('lists plays newest first with counts and my rating', function () {
+    $older = playIn($this->party, ['title' => 'Older', 'played_at' => now()->subHour()]);
+    $newer = playIn($this->party, ['title' => 'Newer', 'played_at' => now()->subMinute()]);
+    $others = PartyMember::factory()->for($this->party)->count(3)->create();
+    Rating::factory()->for($newer)->for($others[0], 'member')->create(['value' => 1]);
+    Rating::factory()->for($newer)->for($others[1], 'member')->create(['value' => 1]);
+    Rating::factory()->for($newer)->for($others[2], 'member')->create(['value' => -1]);
+    Rating::factory()->for($newer)->for($this->member, 'member')->create(['value' => -1]);
+    playIn(Party::factory()->create(), ['title' => 'Elsewhere']);
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonPath('data.0.id', $newer->id)
+        ->assertJsonPath('data.0.track.title', 'Newer')
+        ->assertJsonPath('data.0.likes', 2)
+        ->assertJsonPath('data.0.dislikes', 2)
+        ->assertJsonPath('data.0.my_rating', -1)
+        ->assertJsonPath('data.1.id', $older->id)
+        ->assertJsonPath('data.1.likes', 0)
+        ->assertJsonPath('data.1.my_rating', 0);
+});
+
+it('names the requester and leaves fallback plays anonymous', function () {
+    $requester = PartyMember::factory()->for($this->party)->for(User::factory()->create(['nickname' => 'Alex']))->create();
+    $request = TrackRequest::factory()->for($this->party)->create();
+    playIn($this->party, ['party_member_id' => $requester->id, 'track_request_id' => $request->id, 'played_at' => now()->subMinute()]);
+    playIn($this->party, ['played_at' => now()->subHour()]);
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()
+        ->assertJsonPath('data.0.requested_by.name', 'Alex')
+        ->assertJsonPath('data.1.requested_by.name', null);
+});
+
+it('returns an empty history', function () {
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(0, 'data');
+});
+
+it('paginates the history', function () {
+    Play::factory()->for($this->party)->count(30)->create();
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(25, 'data');
+    $this->getJson('/api/v1/parties/ABCD/history?page=2')->assertOk()->assertJsonCount(5, 'data');
+});
+
+it('lets a banned member view the history read-only', function () {
+    $this->member->forceFill(['banned' => true])->save();
+    playIn($this->party);
+
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(1, 'data');
+});
+
+it('refuses the history to non-members and anonymous visitors', function () {
+    $stranger = User::factory()->create();
+    Sanctum::actingAs($stranger);
+    $this->getJson('/api/v1/parties/ABCD/history')->assertForbidden();
+
+    $this->app['auth']->forgetGuards();
+    $this->withHeader('Authorization', '')->getJson('/api/v1/parties/ABCD/history')->assertUnauthorized();
+});
+
+it('likes a play and reports the counts', function () {
+    $play = playIn($this->party);
+
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertOk()
+        ->assertJsonPath('data.likes', 1)
+        ->assertJsonPath('data.dislikes', 0)
+        ->assertJsonPath('data.my_rating', 1);
+
+    expect(Rating::query()->where('play_id', $play->id)->where('party_member_id', $this->member->id)->value('value'))->toBe(1);
+});
+
+it('keeps a single rating when changing from like to dislike', function () {
+    $play = playIn($this->party);
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertOk();
+
+    $this->putJson(ratingUrl($play), ['value' => 'down'])->assertOk()
+        ->assertJsonPath('data.likes', 0)
+        ->assertJsonPath('data.dislikes', 1)
+        ->assertJsonPath('data.my_rating', -1);
+
+    expect(Rating::query()->where('party_member_id', $this->member->id)->count())->toBe(1);
+});
+
+it('treats a repeated identical rating as a no-op', function () {
+    $play = playIn($this->party);
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertOk();
+
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertOk()->assertJsonPath('data.likes', 1);
+
+    expect(Rating::query()->count())->toBe(1);
+});
+
+it('retracts a rating and is idempotent when none exists', function () {
+    $play = playIn($this->party);
+    $this->putJson(ratingUrl($play), ['value' => 'down'])->assertOk();
+
+    $this->deleteJson(ratingUrl($play))->assertOk()
+        ->assertJsonPath('data.dislikes', 0)
+        ->assertJsonPath('data.my_rating', 0);
+    $this->deleteJson(ratingUrl($play))->assertOk()->assertJsonPath('data.my_rating', 0);
+
+    expect(Rating::query()->count())->toBe(0);
+});
+
+it('refuses a banned member rating and does not store anything', function () {
+    $play = playIn($this->party);
+    $this->member->forceFill(['banned' => true])->save();
+
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertForbidden();
+    $this->deleteJson(ratingUrl($play))->assertForbidden();
+
+    expect(Rating::query()->count())->toBe(0);
+});
+
+it('refuses a non-member rating', function () {
+    $play = playIn($this->party);
+    Sanctum::actingAs(User::factory()->create());
+
+    $this->putJson(ratingUrl($play), ['value' => 'up'])->assertForbidden();
+});
+
+it('requires authentication to rate', function () {
+    $play = playIn($this->party);
+
+    $this->app['auth']->forgetGuards();
+    $this->withHeader('Authorization', '')->putJson(ratingUrl($play), ['value' => 'up'])->assertUnauthorized();
+});
+
+it('returns not found for a play from another party', function () {
+    $foreign = playIn(Party::factory()->create(['code' => 'WXYZ']));
+
+    $this->putJson(ratingUrl($foreign), ['value' => 'up'])->assertNotFound();
+    $this->deleteJson(ratingUrl($foreign))->assertNotFound();
+});
+
+it('rejects an invalid rating value', function (mixed $value) {
+    $play = playIn($this->party);
+
+    $this->putJson(ratingUrl($play), ['value' => $value])->assertUnprocessable()->assertJsonValidationErrors('value');
+})->with(['missing' => [null], 'unknown' => ['sideways'], 'number' => [5]]);
+
+it('lists and rates plays created by the fake player playback', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    $member = PartyMember::factory()->for($party)->for($this->user)->create();
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1', 'title' => 'First', 'created_at' => now()->subMinutes(2)]);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2', 'created_at' => now()->subMinute()]);
+    app(PlaybackCoordinator::class)->startIfIdle($party);
+    $player->advance();
+    $play = Play::query()->where('party_id', $party->id)->sole();
+
+    $this->putJson(ratingUrl($play, $party->code), ['value' => 'up'])->assertOk();
+
+    $this->getJson("/api/v1/parties/{$party->code}/history")->assertOk()
+        ->assertJsonCount(1, 'data')
+        ->assertJsonPath('data.0.track.title', 'First')
+        ->assertJsonPath('data.0.likes', 1)
+        ->assertJsonPath('data.0.my_rating', 1);
+    expect(Rating::query()->where('party_member_id', $member->id)->count())->toBe(1);
+});
+
+it('renders history props on the party page', function () {
+    $play = playIn($this->party, ['title' => 'Song']);
+    Rating::factory()->for($play)->for($this->member, 'member')->create(['value' => 1]);
+
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD/history')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->component('Party/Show')
+            ->where('section', 'history')
+            ->has('history.data', 1)
+            ->where('history.data.0.track.title', 'Song')
+            ->where('history.data.0.likes', 1)
+            ->where('history.data.0.my_rating', 1)
+            ->has('history.links'));
+});
+
+it('renders an empty history on the party page', function () {
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD/history')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page->has('history.data', 0));
+});
+
+it('rates and retracts through the web routes', function () {
+    $play = playIn($this->party);
+
+    $this->actingAs($this->user)->put("/parties/ABCD/plays/{$play->id}/rating", ['value' => 'down'])->assertRedirect();
+    expect(Rating::query()->sole()->value)->toBe(-1);
+
+    $this->actingAs($this->user)->delete("/parties/ABCD/plays/{$play->id}/rating")->assertRedirect();
+    expect(Rating::query()->count())->toBe(0);
+});
+
+it('surfaces web rating refusals as errors', function () {
+    $play = playIn($this->party);
+    $this->member->forceFill(['banned' => true])->save();
+
+    $this->actingAs($this->user)->from('/parties/ABCD/history')
+        ->put("/parties/ABCD/plays/{$play->id}/rating", ['value' => 'up'])
+        ->assertRedirect('/parties/ABCD/history')
+        ->assertSessionHasErrors('rating');
+
+    expect(Rating::query()->count())->toBe(0);
+});
+
+it('returns not found for a foreign play through the web routes', function () {
+    $foreign = playIn(Party::factory()->create());
+
+    $this->actingAs($this->user)->put("/parties/ABCD/plays/{$foreign->id}/rating", ['value' => 'up'])->assertNotFound();
+});
+
+it('validates the web rating value', function () {
+    $play = playIn($this->party);
+
+    $this->actingAs($this->user)->put("/parties/ABCD/plays/{$play->id}/rating", ['value' => 'x'])->assertSessionHasErrors('value');
+});

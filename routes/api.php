@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PartyController;
+use App\Http\Controllers\Api\V1\PartyPlayController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
@@ -36,6 +37,9 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');
         Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->name('parties.requests.vote.destroy');
+        Route::get('parties/{party}/history', [PartyPlayController::class, 'history'])->name('parties.history');
+        Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
+        Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
