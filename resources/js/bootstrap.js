@@ -1,13 +1,7 @@
-import loadash from 'lodash'
-import * as Popper from '@popperjs/core'
 import axios from 'axios';
 import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
-
-window._ = loadash
-
-window.Popper = Popper
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests

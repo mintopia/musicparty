@@ -1,27 +1,4 @@
-import '@tabler/core/dist/js/tabler.min.js';
 import './bootstrap';
-import '../sass/app.scss';
-import '../sass/tabler-icons.scss';
-import {createApp} from 'vue'
-import Player from './components/Player.vue'
-import Next from './components/Next.vue'
-import Upcoming from './components/Upcoming.vue'
-import SearchResult from './components/SearchResult.vue'
-import TvPlayer from './components/TvPlayer.vue'
-import YouTubePlayer from './components/YouTubePlayer.vue'
+import {createApp} from 'vue';
 
-import.meta.glob([
-    '../img/**',
-    '../fonts/**',
-]);
-
-const app = createApp()
-
-app.component('player', Player)
-app.component('next', Next)
-app.component('upcoming', Upcoming)
-app.component('search-result', SearchResult)
-app.component('tv-player', TvPlayer)
-app.component('youtube-player', YouTubePlayer)
-
-app.mount('#app')
+createApp({}).mount('#app');
