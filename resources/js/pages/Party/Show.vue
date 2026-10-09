@@ -10,6 +10,7 @@ const props = defineProps({
     membership: {type: Object, required: true},
     section: {type: String, default: 'queue'},
     canManage: {type: Boolean, default: false},
+    canManageBlocklist: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
     queue: {type: Array, default: () => []},
@@ -172,6 +173,12 @@ const placeholders = {
                     <dt class="text-muted">Settings</dt>
                     <dd>
                         <Link :href="`/parties/${party.code}/settings`" class="hover:text-primary" data-testid="party-settings-link">Party Settings</Link>
+                    </dd>
+                </template>
+                <template v-if="canManageBlocklist && !membership.banned">
+                    <dt class="text-muted">Blocklist</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/blocklist`" class="hover:text-primary" data-testid="party-blocklist-link">Party Blocklist</Link>
                     </dd>
                 </template>
                 <template v-if="canViewLog">

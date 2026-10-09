@@ -95,6 +95,14 @@ class Party extends Model
         return $this->hasMany(PartyMember::class);
     }
 
+    /**
+     * @return HasMany<BlocklistEntry, $this>
+     */
+    public function blocklistEntries(): HasMany
+    {
+        return $this->hasMany(BlocklistEntry::class);
+    }
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

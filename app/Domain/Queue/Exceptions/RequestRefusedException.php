@@ -77,6 +77,11 @@ class RequestRefusedException extends RuntimeException
         return new self('Explicit tracks are not allowed in this party.', self::RULE_VIOLATION);
     }
 
+    public static function blocklisted(): self
+    {
+        return new self('That track is blocked in this party.', self::RULE_VIOLATION);
+    }
+
     public static function playedRecently(CarbonInterface $playedAt): self
     {
         return new self('That track was last played '.$playedAt->diffForHumans().' and cannot be requested again yet.', self::CONFLICT);

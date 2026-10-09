@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\V1\MeController;
+use App\Http\Controllers\Api\V1\PartyBlocklistController;
 use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PartyMemberController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
@@ -37,6 +38,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('parties/{party}/members/{member}/role', [PartyMemberController::class, 'role'])->whereNumber('member')->name('parties.members.role');
         Route::put('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'ban'])->whereNumber('member')->name('parties.members.ban');
         Route::delete('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'unban'])->whereNumber('member')->name('parties.members.unban');
+        Route::get('parties/{party}/blocklist', [PartyBlocklistController::class, 'index'])->name('parties.blocklist.index');
+        Route::post('parties/{party}/blocklist', [PartyBlocklistController::class, 'store'])->name('parties.blocklist.store');
+        Route::put('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'update'])->whereNumber('entry')->name('parties.blocklist.update');
+        Route::delete('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'destroy'])->whereNumber('entry')->name('parties.blocklist.destroy');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');

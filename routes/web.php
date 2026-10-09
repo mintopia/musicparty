@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\PartyBlocklistController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\UserController;
@@ -39,6 +40,20 @@ Route::middleware('auth')->group(function () {
     Route::get('parties/{party}/settings', [PartyController::class, 'settings'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.settings');
+    Route::get('parties/{party}/blocklist', [PartyBlocklistController::class, 'index'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.blocklist');
+    Route::post('parties/{party}/blocklist', [PartyBlocklistController::class, 'store'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.blocklist.store');
+    Route::put('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('entry')
+        ->name('parties.blocklist.update');
+    Route::delete('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'destroy'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('entry')
+        ->name('parties.blocklist.destroy');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');

@@ -120,6 +120,7 @@ class PartyController extends Controller
             ],
             'section' => $section,
             'canManage' => $party->canBeManagedBy($this->currentUser($request)),
+            'canManageBlocklist' => $this->currentUser($request)->can('moderate', $party),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => null,
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
