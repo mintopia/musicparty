@@ -50,6 +50,8 @@ class Party extends Model
         'song_started_at' => 'datetime',
         'state' => PartyState::class,
         'allow_requests' => 'boolean',
+        'downvotes' => 'boolean',
+        'downvotes_per_hour' => 'integer',
     ];
 
     public function toStringName(): string

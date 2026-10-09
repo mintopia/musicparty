@@ -24,6 +24,8 @@ class PartyResource extends JsonResource
             'state' => $this->state->value,
             'music_provider' => $this->music_provider,
             'player_kind' => $this->player_kind,
+            'downvotes' => (bool) $this->downvotes,
+            'downvotes_per_hour' => $this->downvotes_per_hour,
             'role' => $user === null ? null : $this->memberFor($user)?->role->value,
         ];
     }

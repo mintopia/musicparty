@@ -11,7 +11,7 @@ readonly class UpdatePartySettings
     public function __construct(private RecordPartyLogEntry $record) {}
 
     /**
-     * @param  array{name?: string}  $settings
+     * @param  array{name?: string, downvotes?: bool, downvotes_per_hour?: int|null}  $settings
      */
     public function __invoke(User $actor, Party $party, array $settings): Party
     {

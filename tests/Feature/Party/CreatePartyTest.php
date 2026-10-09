@@ -51,6 +51,8 @@ it('creates a party through the API', function (string $role) {
         'state' => 'paused',
         'music_provider' => 'fake',
         'player_kind' => 'fake',
+        'downvotes' => true,
+        'downvotes_per_hour' => null,
         'role' => 'host',
     ]]);
     expect($party->code)->toMatch('/^[A-Z]{4}$/')

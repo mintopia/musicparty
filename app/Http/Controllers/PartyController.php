@@ -11,7 +11,10 @@ use App\Domain\Party\PartyState;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\VoteDirection;
+use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\JoinPartyRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
@@ -20,6 +23,7 @@ use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
+use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -92,6 +96,7 @@ class PartyController extends Controller
                 'state' => $party->state->value,
                 'musicProvider' => $party->music_provider,
                 'playerKind' => $party->player_kind,
+                'downvotes' => (bool) $party->downvotes,
             ],
             'membership' => [
                 'role' => $member->role->value,
@@ -111,8 +116,8 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        /** @var array{name?: string} $settings */
-        $settings = $request->safe()->only(['name']);
+        /** @var array{name?: string, downvotes?: bool, downvotes_per_hour?: int|null} $settings */
+        $settings = $request->safe()->only(['name', 'downvotes', 'downvotes_per_hour']);
         $updateSettings($this->currentUser($request), $party, $settings);
 
         return back()->with('successMessage', 'Settings saved');
@@ -149,6 +154,29 @@ class PartyController extends Controller
         };
 
         return back()->with('success', $message)->with('successMessage', $message);
+    }
+
+    public function storeVote(CastVoteRequest $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        return $this->applyVote($request, $vote, $party, $trackRequest, $request->direction());
+    }
+
+    public function destroyVote(Request $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        return $this->applyVote($request, $vote, $party, $trackRequest, null);
+    }
+
+    private function applyVote(Request $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): RedirectResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        try {
+            $vote($party, $party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $trackRequest, $direction);
+        } catch (RequestRefusedException $exception) {
+            return back()->withErrors(['vote' => $exception->getMessage()]);
+        }
+
+        return back();
     }
 
     private function currentUser(Request $request): User

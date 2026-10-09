@@ -60,8 +60,8 @@ class PartyController extends Controller
         $user = $request->user();
         assert($user instanceof User);
 
-        /** @var array{name?: string} $settings */
-        $settings = $request->safe()->only(['name']);
+        /** @var array{name?: string, downvotes?: bool, downvotes_per_hour?: int|null} $settings */
+        $settings = $request->safe()->only(['name', 'downvotes', 'downvotes_per_hour']);
 
         return new PartyResource($updateSettings($user, $party, $settings));
     }
