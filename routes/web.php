@@ -24,6 +24,11 @@ Route::middleware('auth')->group(function () {
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');
+    foreach (['live', 'pause', 'end', 'reopen'] as $transition) {
+        Route::post("parties/{party}/{$transition}", [PartyController::class, $transition])
+            ->where('party', '[A-Za-z]{4}')
+            ->name("parties.{$transition}");
+    }
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')

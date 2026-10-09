@@ -1,5 +1,5 @@
 <script setup>
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 
@@ -7,6 +7,7 @@ const props = defineProps({
     party: {type: Object, required: true},
     membership: {type: Object, required: true},
     section: {type: String, default: 'queue'},
+    canManage: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
 });
@@ -14,6 +15,21 @@ const props = defineProps({
 const canViewLog = computed(
     () => !props.membership.banned && ['host', 'moderator'].includes(props.membership.role),
 );
+
+const page = usePage();
+const transitionError = computed(() => page.props.errors?.fallback_playlist_id ?? page.props.errors?.state ?? null);
+const transitioning = ref(false);
+const transition = (action) => {
+    router.post(`/parties/${props.party.code}/${action}`, {}, {
+        preserveScroll: true,
+        onStart: () => {
+            transitioning.value = true;
+        },
+        onFinish: () => {
+            transitioning.value = false;
+        },
+    });
+};
 
 const copied = ref(false);
 const copyCode = async () => {
@@ -72,6 +88,44 @@ const placeholders = {
                 </button>
             </div>
         </header>
+
+        <div v-if="canManage" class="flex flex-col gap-2" data-testid="lifecycle-controls">
+            <div class="flex flex-wrap gap-2">
+                <button
+                    v-if="party.state === 'paused'"
+                    type="button"
+                    data-testid="go-live"
+                    :disabled="transitioning"
+                    class="min-h-11 rounded bg-accent px-4 text-sm font-medium text-white disabled:opacity-50"
+                    @click="transition('live')"
+                >Go Live</button>
+                <button
+                    v-if="party.state === 'live'"
+                    type="button"
+                    data-testid="pause-party"
+                    :disabled="transitioning"
+                    class="min-h-11 rounded border border-border px-4 text-sm disabled:opacity-50"
+                    @click="transition('pause')"
+                >Pause</button>
+                <button
+                    v-if="party.state !== 'ended'"
+                    type="button"
+                    data-testid="end-party"
+                    :disabled="transitioning"
+                    class="min-h-11 rounded border border-danger px-4 text-sm text-danger disabled:opacity-50"
+                    @click="transition('end')"
+                >End</button>
+                <button
+                    v-if="party.state === 'ended'"
+                    type="button"
+                    data-testid="reopen-party"
+                    :disabled="transitioning"
+                    class="min-h-11 rounded border border-border px-4 text-sm disabled:opacity-50"
+                    @click="transition('reopen')"
+                >Reopen</button>
+            </div>
+            <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
+        </div>
 
         <div
             v-if="readOnly"

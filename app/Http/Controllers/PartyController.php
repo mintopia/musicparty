@@ -3,8 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Party\Actions\CreateParty;
+use App\Domain\Party\Actions\EndParty;
+use App\Domain\Party\Actions\GoLiveParty;
 use App\Domain\Party\Actions\JoinParty;
 use App\Domain\Party\Actions\ListPartyLog;
+use App\Domain\Party\Actions\PauseParty;
+use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
@@ -73,6 +77,7 @@ class PartyController extends Controller
                 'banned' => $member->banned,
             ],
             'section' => $section,
+            'canManage' => $party->canBeManagedBy($this->currentUser($request)),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => null,
         ]);
@@ -82,11 +87,45 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        /** @var array{name?: string} $settings */
-        $settings = $request->safe()->only(['name']);
-        $updateSettings($this->currentUser($request), $party, $settings);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval']);
+        $result = $updateSettings($this->currentUser($request), $party, $settings);
 
-        return back()->with('successMessage', 'Settings saved');
+        $redirect = back()->with('successMessage', 'Settings saved');
+        $warning = $result['warning'];
+
+        return $warning === null ? $redirect : $redirect->with('warningMessage', $warning->message());
+    }
+
+    public function live(Request $request, GoLiveParty $goLive, Party $party): RedirectResponse
+    {
+        $this->authorize('transition', $party);
+        $goLive($this->currentUser($request), $party);
+
+        return back()->with('successMessage', 'Party is live');
+    }
+
+    public function pause(Request $request, PauseParty $pauseParty, Party $party): RedirectResponse
+    {
+        $this->authorize('transition', $party);
+        $pauseParty($this->currentUser($request), $party);
+
+        return back()->with('successMessage', 'Party paused');
+    }
+
+    public function end(Request $request, EndParty $endParty, Party $party): RedirectResponse
+    {
+        $this->authorize('transition', $party);
+        $endParty($this->currentUser($request), $party);
+
+        return back()->with('successMessage', 'Party ended');
+    }
+
+    public function reopen(Request $request, ReopenParty $reopenParty, Party $party): RedirectResponse
+    {
+        $this->authorize('transition', $party);
+        $reopenParty($this->currentUser($request), $party);
+
+        return back()->with('successMessage', 'Party reopened');
     }
 
     public function log(Request $request, ListPartyLog $listLog, Party $party): Response

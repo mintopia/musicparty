@@ -40,6 +40,11 @@ class PartyPolicy
         return $party->canBeManagedBy($user);
     }
 
+    public function transition(User $user, Party $party): bool
+    {
+        return $party->canBeManagedBy($user);
+    }
+
     public function viewLog(User $user, Party $party): bool
     {
         $member = $party->memberFor($user);

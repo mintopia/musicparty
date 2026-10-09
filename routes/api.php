@@ -25,6 +25,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
         Route::apiResource('parties', PartyController::class)->only(['store', 'update']);
+        Route::post('parties/{party}/live', [PartyController::class, 'live'])->name('parties.live');
+        Route::post('parties/{party}/pause', [PartyController::class, 'pause'])->name('parties.pause');
+        Route::post('parties/{party}/end', [PartyController::class, 'end'])->name('parties.end');
+        Route::post('parties/{party}/reopen', [PartyController::class, 'reopen'])->name('parties.reopen');
         Route::post('parties/{party}/join', [PartyController::class, 'join'])->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
