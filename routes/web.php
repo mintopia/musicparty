@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PartyTvController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
@@ -10,6 +11,10 @@ Route::post('proxy', [HomeController::class, 'proxy'])->name('proxy');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
+
+Route::get('parties/{party}/tv', [PartyTvController::class, 'show'])
+    ->where('party', '[A-Za-z]{4}')
+    ->name('parties.tv');
 
 Route::middleware('auth')->group(function () {
     Route::get('signup', [SignupController::class, 'show'])->name('login.signup');
