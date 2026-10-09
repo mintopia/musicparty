@@ -1,0 +1,3 @@
+# Separate Music Provider from Player; one Provider per Party
+
+v2 fused "where tracks come from" (Spotify catalogue/search) with "how we know and control what's playing" (polling the host's Spotify account) inside the Party model. v3 splits these into two abstractions: a **Music Provider** (catalogue, search, metadata) and a **Player** (observe and control playback, e.g. Spotify Web API polling or a Soloist connection). Each Player kind declares which Providers it is compatible with, and a Party pairs exactly one Provider with one compatible Player. Mixed-provider queues are explicitly out of scope: they would need cross-provider track matching and a Player able to play from several services.
