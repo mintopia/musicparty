@@ -31,3 +31,9 @@ Broadcast::channel('party.{code}.members', function (User $user, string $code): 
 
     return ['nickname' => $user->nickname, 'avatar' => $user->avatarUrl()];
 });
+
+Broadcast::channel('party.{code}.member.{memberId}', function (User $user, string $code, string $memberId): bool {
+    $member = Party::findByCode($code)?->memberFor($user);
+
+    return $member !== null && ! $member->banned && $member->id === (int) $memberId;
+});

@@ -208,6 +208,9 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "allow_requests": {
+                                        "type": "boolean"
+                                    },
                                     "downvotes": {
                                         "type": "boolean"
                                     },
@@ -224,6 +227,12 @@
                                         "maxLength": 255,
                                         "nullable": true,
                                         "type": "string"
+                                    },
+                                    "max_requests": {
+                                        "maximum": 1000,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer"
                                     },
                                     "max_song_length": {
                                         "maximum": 86400,
@@ -304,6 +313,9 @@
                         "application/json": {
                             "schema": {
                                 "properties": {
+                                    "allow_requests": {
+                                        "type": "boolean"
+                                    },
                                     "downvotes": {
                                         "type": "boolean"
                                     },
@@ -320,6 +332,12 @@
                                         "maxLength": 255,
                                         "nullable": true,
                                         "type": "string"
+                                    },
+                                    "max_requests": {
+                                        "maximum": 1000,
+                                        "minimum": 1,
+                                        "nullable": true,
+                                        "type": "integer"
                                     },
                                     "max_song_length": {
                                         "maximum": 86400,

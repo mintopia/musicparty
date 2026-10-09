@@ -6,15 +6,18 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\PairingCatalogue;
+use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\QueueUpdatedEvent;
+use App\Events\Party\RequestRejectedEvent;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
@@ -32,46 +35,123 @@ class RequestTrack
             throw RequestRefusedException::partyNotLive();
         }
 
-        if (! $party->allow_requests) {
-            throw RequestRefusedException::requestsDisabled();
-        }
-
-        $track = $this->fetchTrack($party->music_provider, $providerTrackId);
-
-        $outcome = DB::transaction(function () use ($member, $party, $track): RequestOutcome {
-            Party::query()->whereKey($party->id)->lockForUpdate()->first();
-
-            $existing = TrackRequest::query()
-                ->where('party_id', $party->id)
-                ->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued])
-                ->where('provider_track_id', $track->providerTrackId)
-                ->oldest('id')
-                ->first();
-
-            if ($existing !== null) {
-                return new RequestOutcome($existing, false, $this->castUpvote($existing, $member));
+        try {
+            if (! $party->allow_requests) {
+                throw RequestRefusedException::requestsDisabled();
             }
 
-            $request = TrackRequest::query()->create([
-                'party_id' => $party->id,
-                'party_member_id' => $member->id,
-                'provider_track_id' => $track->providerTrackId,
-                'title' => $track->name,
-                'artists' => array_map(fn ($artist): string => $artist->name, $track->artists),
-                'album' => $track->album->name,
-                'artwork_url' => $track->coverArtUrls[0] ?? null,
-                'duration_ms' => $track->durationMs,
-                'explicit' => $track->explicit,
-                'status' => RequestStatus::Queued,
-            ]);
-            $this->castUpvote($request, $member);
+            $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
-            return new RequestOutcome($request, true, true);
-        });
+            $outcome = DB::transaction(fn (): RequestOutcome => $this->place($party, $member, $track));
+        } catch (RequestRefusedException $refusal) {
+            if ($refusal->status() === RequestRefusedException::RULE_VIOLATION || $refusal->status() === RequestRefusedException::CONFLICT) {
+                RequestRejectedEvent::dispatch($party->code, $member->id, $providerTrackId, $refusal->getMessage());
+            }
+
+            throw $refusal;
+        }
 
         QueueUpdatedEvent::dispatch($party->code);
 
         return $outcome;
+    }
+
+    /**
+     * A duplicate of an active Request only adds an upvote, so it bypasses the rules that gate a new Request.
+     */
+    private function place(Party $party, PartyMember $member, TrackData $track): RequestOutcome
+    {
+        Party::query()->whereKey($party->id)->lockForUpdate()->first();
+
+        $existing = $this->matchingQuery($party, $track)
+            ->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued])
+            ->oldest('id')
+            ->first();
+
+        if ($existing !== null) {
+            return new RequestOutcome($existing, false, $this->castUpvote($existing, $member));
+        }
+
+        $this->enforceRules($party, $member, $track);
+
+        $request = TrackRequest::query()->create([
+            'party_id' => $party->id,
+            'party_member_id' => $member->id,
+            'provider_track_id' => $track->providerTrackId,
+            'title' => $track->name,
+            'artists' => array_map(fn ($artist): string => $artist->name, $track->artists),
+            'album' => $track->album->name,
+            'artwork_url' => $track->coverArtUrls[0] ?? null,
+            'isrc' => $track->isrc,
+            'duration_ms' => $track->durationMs,
+            'explicit' => $track->explicit,
+            'status' => RequestStatus::Queued,
+        ]);
+        $this->castUpvote($request, $member);
+
+        return new RequestOutcome($request, true, true);
+    }
+
+    /**
+     * @return Builder<TrackRequest>
+     */
+    private function matchingQuery(Party $party, TrackData $track): Builder
+    {
+        return TrackRequest::query()
+            ->where('party_id', $party->id)
+            ->where(function (Builder $query) use ($track): void {
+                $query->where('provider_track_id', $track->providerTrackId);
+                if ($track->isrc !== null) {
+                    $query->orWhere('isrc', $track->isrc);
+                }
+            });
+    }
+
+    private function enforceRules(Party $party, PartyMember $member, TrackData $track): void
+    {
+        $exempt = in_array($member->role, [PartyRole::Host, PartyRole::Vip], true);
+
+        if (! $exempt && $party->max_requests !== null) {
+            $active = TrackRequest::query()
+                ->where('party_id', $party->id)
+                ->where('party_member_id', $member->id)
+                ->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued, RequestStatus::UpNext])
+                ->count();
+
+            if ($active >= $party->max_requests) {
+                throw RequestRefusedException::requestLimitReached($party->max_requests);
+            }
+        }
+
+        $seconds = $track->durationMs / 1000;
+
+        if ($party->min_song_length && $seconds < $party->min_song_length) {
+            throw RequestRefusedException::trackTooShort($party->min_song_length);
+        }
+
+        if ($party->max_song_length && $seconds > $party->max_song_length) {
+            throw RequestRefusedException::trackTooLong($party->max_song_length);
+        }
+
+        if (! $party->explicit && $track->explicit) {
+            throw RequestRefusedException::explicitNotAllowed();
+        }
+
+        if ($party->no_repeat_interval) {
+            $played = $this->matchingQuery($party, $track)
+                ->where('status', RequestStatus::Played)
+                ->where('updated_at', '>=', now()->subSeconds($party->no_repeat_interval))
+                ->latest('updated_at')
+                ->first();
+
+            if ($played !== null) {
+                throw RequestRefusedException::playedRecently($played->updated_at);
+            }
+        }
+
+        if ($this->matchingQuery($party, $track)->where('status', RequestStatus::UpNext)->exists()) {
+            throw RequestRefusedException::alreadyUpNext();
+        }
     }
 
     private function fetchTrack(string $providerId, string $providerTrackId): TrackData

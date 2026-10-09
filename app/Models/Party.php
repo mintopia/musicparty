@@ -53,6 +53,10 @@ class Party extends Model
         'explicit' => 'boolean',
         'downvotes' => 'boolean',
         'downvotes_per_hour' => 'integer',
+        'max_requests' => 'integer',
+        'min_song_length' => 'integer',
+        'max_song_length' => 'integer',
+        'no_repeat_interval' => 'integer',
     ];
 
     public function toStringName(): string

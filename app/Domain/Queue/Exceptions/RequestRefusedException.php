@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Exceptions;
 
+use Carbon\CarbonInterface;
 use RuntimeException;
 
 class RequestRefusedException extends RuntimeException
@@ -17,6 +18,10 @@ class RequestRefusedException extends RuntimeException
     public const UNKNOWN_TRACK = 422;
 
     public const PROVIDER_UNAVAILABLE = 503;
+
+    public const RULE_VIOLATION = 422;
+
+    public const CONFLICT = 409;
 
     public static function notAMember(): self
     {
@@ -46,6 +51,36 @@ class RequestRefusedException extends RuntimeException
     public static function requestsDisabled(): self
     {
         return new self('Requests are disabled for this party.', self::REQUESTS_DISABLED);
+    }
+
+    public static function requestLimitReached(int $limit): self
+    {
+        return new self("You already have {$limit} active requests, which is the limit for this party.", self::RULE_VIOLATION);
+    }
+
+    public static function trackTooShort(int $minimumSeconds): self
+    {
+        return new self("That track is shorter than this party's minimum length of {$minimumSeconds} seconds.", self::RULE_VIOLATION);
+    }
+
+    public static function trackTooLong(int $maximumSeconds): self
+    {
+        return new self("That track is longer than this party's maximum length of {$maximumSeconds} seconds.", self::RULE_VIOLATION);
+    }
+
+    public static function explicitNotAllowed(): self
+    {
+        return new self('Explicit tracks are not allowed in this party.', self::RULE_VIOLATION);
+    }
+
+    public static function playedRecently(CarbonInterface $playedAt): self
+    {
+        return new self('That track was last played '.$playedAt->diffForHumans().' and cannot be requested again yet.', self::CONFLICT);
+    }
+
+    public static function alreadyUpNext(): self
+    {
+        return new self('That track is already Up Next.', self::CONFLICT);
     }
 
     public function status(): int

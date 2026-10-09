@@ -27,6 +27,7 @@ class TrackRequestFactory extends Factory
             'album' => fake()->words(2, true),
             'artwork_url' => null,
             'duration_ms' => fake()->numberBetween(120000, 300000),
+            'isrc' => null,
             'explicit' => false,
             'status' => RequestStatus::Queued,
         ];
