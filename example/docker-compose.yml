@@ -1,6 +1,6 @@
 services:
   musicparty:
-    image: ghcr.io/mintopia/musicparty:develop
+    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
     env_file: .env
     restart: unless-stopped
     depends_on:
@@ -8,7 +8,7 @@ services:
       - database
     volumes:
       - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
+      - ./uploads:/app/storage/app/public
 
   redis:
     image: redis:6.2.6
@@ -22,7 +22,7 @@ services:
       - ./database:/var/lib/mysql
 
   horizon:
-    image: ghcr.io/mintopia/musicparty:develop
+    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -30,14 +30,15 @@ services:
       - redis
     volumes:
       - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
+      - ./uploads:/app/storage/app/public
+    stop_grace_period: 90s
     entrypoint: [ "php", "artisan", "horizon" ]
     healthcheck:
         disable: true
 
 
   scheduler:
-    image: ghcr.io/mintopia/musicparty:develop
+    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -45,13 +46,13 @@ services:
       - redis
     volumes:
       - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
+      - ./uploads:/app/storage/app/public
     entrypoint: [ "php", "artisan", "schedule:work"]
     healthcheck:
         disable: true
 
   reverb:
-    image: ghcr.io/mintopia/musicparty:develop
+    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
     restart: unless-stopped
     env_file: .env
     depends_on:
@@ -59,13 +60,13 @@ services:
       - redis
     volumes:
       - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
+      - ./uploads:/app/storage/app/public
     entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
     healthcheck:
       disable: true
 
   artisan:
-    image: ghcr.io/mintopia/musicparty:develop
+    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
     profiles:
       - artisan
     env_file: .env
@@ -74,7 +75,7 @@ services:
       - redis
     volumes:
       - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
+      - ./uploads:/app/storage/app/public
     entrypoint: [ "php", "artisan" ]
     healthcheck:
       disable: true
