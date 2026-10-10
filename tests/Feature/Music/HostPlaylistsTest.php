@@ -7,9 +7,12 @@ use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\PartyState;
+use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
+use App\Models\TrackRequest;
 use App\Models\User;
 use App\Services\SocialProviders\SpotifyProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,12 +104,11 @@ it('persists selected playlists and clears them with null', function () {
         ->assertOk()
         ->assertExactJson(['data' => ['fallback_playlist_id' => 'playlist-1', 'history_playlist_id' => 'playlist-1']]);
 
-    expect($party->fresh()->backup_playlist_id)->toBe('playlist-1')
-        ->and($party->fresh()->backup_playlist_name)->toBe('Fallback Mix');
+    expect($party->fresh()->fallback_playlist_id)->toBe('playlist-1');
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => null, 'history_playlist_id' => null])->assertOk();
 
-    expect($party->fresh()->backup_playlist_id)->toBeNull()
+    expect($party->fresh()->fallback_playlist_id)->toBeNull()
         ->and($party->fresh()->history_playlist_id)->toBeNull();
 });
 
@@ -119,7 +121,7 @@ it('rejects playlists that do not belong to the host', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['fallback_playlist_id', 'history_playlist_id']);
 
-    expect($party->fresh()->backup_playlist_id)->toBeNull();
+    expect($party->fresh()->fallback_playlist_id)->toBeNull();
 });
 
 it('rejects a history playlist when the provider cannot write', function () {
@@ -283,4 +285,19 @@ it('skips silently when the host has no linked account', function () {
     app(AppendPlayToHistory::class)($party, 'track-1', $this->fake);
 
     expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+});
+
+it('tops the queue up from the playlist chosen through the picker', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['state' => PartyState::Live, 'music_provider' => 'fake']);
+    $tracks = array_map(playbackTrack(...), range(1, 8));
+    $fake = new FakeMusicProvider($tracks, [new PlaylistData('playlist-1', 'Fallback Mix')], ['playlist-1' => $tracks]);
+    $this->app->instance(MusicProvider::class, $fake);
+    $this->app->instance(FakeMusicProvider::class, $fake);
+    Sanctum::actingAs($host);
+
+    $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => 'playlist-1', 'history_playlist_id' => null])->assertOk();
+
+    expect(app(TopUpFallbackRequests::class)($party->fresh()))->toBe(5)
+        ->and(TrackRequest::query()->where('party_id', $party->id)->whereNull('party_member_id')->count())->toBe(5);
 });
