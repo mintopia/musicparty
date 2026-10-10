@@ -209,7 +209,7 @@ A Request's Score SHALL equal the sum of its Votes (up as +1, down as -1) plus a
 - **THEN** each Request has the same Score and position in all three
 
 ### Requirement: Ratings
-A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export.
+A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export. The TV screen's now-playing block SHALL show the live like and dislike counts of the current Play alongside its score; the TV payload MUST carry counts only and MUST NOT include Member identifiers.
 
 #### Scenario: Liking a Play
 - **WHEN** a Member likes the currently Playing Track
@@ -230,6 +230,14 @@ A Member SHALL be able to like or dislike a Play, once per Play, and to change o
 #### Scenario: Rating after the Party ends
 - **WHEN** a Member rates a Play in an Ended Party
 - **THEN** the system refuses
+
+#### Scenario: TV shows live rating counts
+- **WHEN** Members like or dislike the currently Playing Track
+- **THEN** the TV screen's now-playing block shows the updated like and dislike counts and the TV payload contains no Member identifiers
+
+#### Scenario: TV with no ratings
+- **WHEN** the currently Playing Track has no ratings
+- **THEN** the TV screen shows zero likes and zero dislikes
 
 ### Requirement: Track links to the Music Provider
 Every Track shown to Members (Now Playing, Up Next, the Queue, played history and search results) SHALL carry a `provider_url` built by the Party's Music Provider from the Track's provider Track id, in the API, page props and realtime payloads. The Member UI SHALL link the Track title and artwork to it, opening in a new tab with `rel="noopener"`, and SHALL render plain text when `provider_url` is null. The TV screen MUST NOT link Tracks. The system SHALL NOT save Tracks to a Member's own library.

@@ -146,7 +146,11 @@ onBeforeUnmount(() => {
                         <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span data-testid="tv-now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                         <Decorations :decorations="nowPlaying.decorations" />
-                        <div class="flex items-center gap-2"><Icon name="heart" /><span data-testid="tv-now-playing-score">{{ nowPlaying.score }}</span></div>
+                        <div class="flex items-center gap-4">
+                            <div class="flex items-center gap-2"><Icon name="heart" /><span data-testid="tv-now-playing-score">{{ nowPlaying.score }}</span></div>
+                            <div class="flex items-center gap-2" :title="`${nowPlaying.likes ?? 0} likes`"><Icon name="thumbUp" /><span data-testid="tv-now-playing-likes">{{ nowPlaying.likes ?? 0 }}</span></div>
+                            <div class="flex items-center gap-2" :title="`${nowPlaying.dislikes ?? 0} dislikes`"><Icon name="thumbDown" /><span data-testid="tv-now-playing-dislikes">{{ nowPlaying.dislikes ?? 0 }}</span></div>
+                        </div>
                         <div class="mt-auto">
                             <div class="h-1 w-full bg-white/80" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" data-testid="tv-progress">
                                 <div class="h-full bg-blue-600" :style="{width: `${progressPercent}%`, backgroundColor: 'var(--color-primary, #2563eb)'}" data-testid="tv-progress-fill"></div>

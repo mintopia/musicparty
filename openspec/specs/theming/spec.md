@@ -68,6 +68,10 @@ The system SHALL provide a fixed set of TV layout presets for the TV screen, sel
 - **WHEN** a value that is not a defined preset is submitted
 - **THEN** it is rejected with a validation error
 
+#### Scenario: Rating counts in every preset
+- **WHEN** the TV screen renders any layout preset with a Playing Track
+- **THEN** the now-playing block shows the like and dislike counts styled by that preset
+
 ### Requirement: Colour Scheme
 Each user SHALL be able to choose a Colour Scheme of light, dark or system, applied on top of whichever theme is in effect. Anonymous visitors SHALL be able to choose one too, and the choice SHALL persist on that device. The default SHALL be system.
 

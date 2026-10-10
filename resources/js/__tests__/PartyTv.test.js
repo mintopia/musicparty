@@ -75,6 +75,23 @@ describe('TV screen', () => {
         vi.useRealTimers();
     });
 
+    it('shows live like and dislike counts alongside the score', async () => {
+        const w = mount(Tv, {props: props({nowPlaying: entry({score: 2, likes: 5, dislikes: 3})})});
+        expect(w.get('[data-testid=tv-now-playing-likes]').text()).toBe('5');
+        expect(w.get('[data-testid=tv-now-playing-dislikes]').text()).toBe('3');
+        expect(w.get('[data-testid=tv-now-playing-score]').text()).toBe('2');
+
+        listeners['.queue.updated']({now_playing: entry({score: 3, likes: 6, dislikes: 3}), up_next: null});
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=tv-now-playing-likes]').text()).toBe('6');
+    });
+
+    it('shows zero counts when the entry has no rating summary', () => {
+        const w = mount(Tv, {props: props()});
+        expect(w.get('[data-testid=tv-now-playing-likes]').text()).toBe('0');
+        expect(w.get('[data-testid=tv-now-playing-dislikes]').text()).toBe('0');
+    });
+
     it('shows no progress without a start time', () => {
         const w = mount(Tv, {props: props()});
         expect(w.get('[data-testid=tv-elapsed]').text()).toBe('0:00');
