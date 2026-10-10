@@ -23,6 +23,7 @@ class AuthServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Gate::define('admin', fn (User $user) => $user->hasRole('admin'));
+        Gate::define('viewApiDocs', fn (User $user) => $user->hasRole('admin'));
         Gate::define('viewPulse', fn (User $user) => $user->hasRole('admin'));
     }
 }

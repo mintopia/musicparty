@@ -1,5 +1,6 @@
 <?php
 
+use App\Providers\ApiDocumentationServiceProvider;
 use App\Providers\AppServiceProvider;
 use App\Providers\AuthServiceProvider;
 use App\Providers\BroadcastServiceProvider;
@@ -178,6 +179,7 @@ return [
          * Application Service Providers...
          */
         AppServiceProvider::class,
+        ApiDocumentationServiceProvider::class,
         AuthServiceProvider::class,
         BroadcastServiceProvider::class,
         PrometheusServiceProvider::class,

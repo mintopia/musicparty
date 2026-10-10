@@ -21,7 +21,11 @@ class ControlPlaybackRequest extends FormRequest
      */
     public function rules(): array
     {
-        return match ($this->control()) {
+        return match (Control::tryFrom((string) $this->route('control'))) {
+            null => [
+                'position_ms' => ['integer', 'min:0'],
+                'level' => ['integer', 'min:0', 'max:100'],
+            ],
             Control::Seek => ['position_ms' => ['required', 'integer', 'min:0']],
             Control::Volume => ['level' => ['required', 'integer', 'min:0', 'max:100']],
             default => [],
