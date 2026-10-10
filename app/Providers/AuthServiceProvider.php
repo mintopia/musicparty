@@ -2,10 +2,8 @@
 
 namespace App\Providers;
 
-use App\Auth\IntegrationTokenGuard;
 use App\Domain\Identity\Models\User;
 use Illuminate\Foundation\Support\Providers\AuthServiceProvider as ServiceProvider;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 
 class AuthServiceProvider extends ServiceProvider
@@ -24,7 +22,6 @@ class AuthServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Auth::viaRequest('integration', new IntegrationTokenGuard);
         Gate::define('admin', fn (User $user) => $user->hasRole('admin'));
         Gate::define('viewPulse', fn (User $user) => $user->hasRole('admin'));
     }

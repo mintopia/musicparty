@@ -1,6 +1,7 @@
 <?php
 
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Actions\RevokeIntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Domain\Admin\Models\Role;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\User;
@@ -105,10 +106,10 @@ function exportAs(User $user): TestResponse
  */
 function exportWithToken(array $abilities): TestResponse
 {
-    IntegrationToken::factory()->withPlainText('mpi_export_token')->withAbilities($abilities)->create();
+    $plain = Integration::factory()->create()->createToken('export', $abilities)->plainTextToken;
     app('auth')->forgetGuards();
 
-    return test()->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer mpi_export_token']);
+    return test()->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer '.$plain]);
 }
 
 function shapeOf(mixed $value): mixed
@@ -240,9 +241,12 @@ describe('access', function () {
     });
 
     it('refuses revoked integration tokens', function () {
-        IntegrationToken::factory()->withPlainText('mpi_revoked')->withAbilities(['export'])->revoked()->create();
+        $integration = Integration::factory()->create();
+        $plain = $integration->createToken('export', ['export'])->plainTextToken;
+        app(RevokeIntegrationToken::class)->handle(User::factory()->create(), $integration);
+        app('auth')->forgetGuards();
 
-        $this->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer mpi_revoked'])->assertUnauthorized();
+        $this->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer '.$plain])->assertUnauthorized();
     });
 
     it('refuses anonymous callers', function () {

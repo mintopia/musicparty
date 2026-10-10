@@ -42,10 +42,6 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
-
-        'integration' => [
-            'driver' => 'integration',
-        ],
     ],
 
     /*

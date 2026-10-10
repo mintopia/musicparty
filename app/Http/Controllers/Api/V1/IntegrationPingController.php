@@ -2,10 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class IntegrationPingController extends Controller
 {
@@ -14,11 +15,11 @@ class IntegrationPingController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $token = $request->user('integration');
+        $token = Auth::guard('sanctum')->user();
 
         return response()->json(['data' => [
             'status' => 'ok',
-            'token' => $token instanceof IntegrationToken ? $token->name : null,
+            'token' => $token instanceof Integration ? $token->name : null,
         ]]);
     }
 }

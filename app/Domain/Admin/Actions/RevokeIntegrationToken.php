@@ -2,27 +2,33 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Domain\Identity\Models\User;
+use Illuminate\Support\Facades\DB;
 
 class RevokeIntegrationToken
 {
     public function __construct(private readonly RecordAdminAudit $audit) {}
 
-    public function handle(User $admin, IntegrationToken $token): IntegrationToken
+    public function handle(User $admin, Integration $integration): Integration
     {
-        if ($token->isRevoked()) {
-            return $token;
+        if ($integration->isRevoked()) {
+            return $integration;
         }
 
-        $token->forceFill(['revoked_at' => now()])->save();
+        $abilities = $integration->abilities();
+
+        DB::transaction(function () use ($integration): void {
+            $integration->forceFill(['revoked_at' => now()])->save();
+            $integration->tokens()->delete();
+        });
 
         $this->audit->handle($admin, 'integration_token.revoked', null, [
-            'token_id' => $token->id,
-            'name' => $token->name,
-            'abilities' => implode(',', $token->abilities),
+            'token_id' => $integration->id,
+            'name' => $integration->name,
+            'abilities' => implode(',', $abilities),
         ]);
 
-        return $token;
+        return $integration;
     }
 }
