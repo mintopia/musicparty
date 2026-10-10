@@ -4,6 +4,7 @@ namespace App\Domain\Playback\Actions;
 
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
+use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
@@ -12,7 +13,7 @@ use App\Models\Party;
 
 class ControlPlayback
 {
-    public function __construct(private readonly PartyPlayers $players) {}
+    public function __construct(private readonly PartyPlayers $players, private readonly EnqueueBackoff $backoff) {}
 
     /**
      * @throws PlaybackControlRefusedException
@@ -23,6 +24,10 @@ class ControlPlayback
 
         if (! $player->supports($control)) {
             throw PlaybackControlRefusedException::unsupported($control);
+        }
+
+        if (in_array($control, [Control::Play, Control::Skip], true)) {
+            $this->backoff->clearForParty($party);
         }
 
         try {

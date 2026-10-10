@@ -19,6 +19,9 @@ return [
         'idle_delay_seconds' => (int) env('MUSICPARTY_POLL_IDLE_DELAY', 60),
         'backoff_cap_seconds' => (int) env('MUSICPARTY_POLL_BACKOFF_CAP', 300),
     ],
+    'playback' => [
+        'enqueue_backoff' => [5, 15, 30, 60, 120, 300],
+    ],
     'search_rate_limit' => [
         'burst' => (int) env('MUSICPARTY_SEARCH_BURST', 30),
         'per_second' => (float) env('MUSICPARTY_SEARCH_PER_SECOND', 1),

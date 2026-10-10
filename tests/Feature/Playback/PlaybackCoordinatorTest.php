@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Party\Actions\GoLiveParty;
+use App\Domain\Playback\EnqueueBackoff;
+use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
@@ -157,6 +159,67 @@ it('retries sending an Up Next the player refused while disconnected', function 
     expect(requestStatuses($party))->toBe(['r1' => 'up_next'])->and(enqueuedTrackIds($player))->toBe([]);
 
     $player->reconnect();
+    app(EnqueueBackoff::class)->clearForParty($party);
+    $coordinator->tick($party);
+
+    expect(requestStatuses($party))->toBe(['r1' => 'playing']);
+});
+
+it('clears enqueued_at and backs off on any enqueue failure', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    $request = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $player->failEnqueueWith(new RuntimeException('boom'));
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->startIfIdle($party);
+    $coordinator->tick($party);
+    $this->travel(4)->seconds();
+    $coordinator->tick($party);
+
+    expect($request->fresh()->enqueued_at)->toBeNull()
+        ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_failed')->count())->toBe(1);
+
+    $this->travel(2)->seconds();
+    $coordinator->tick($party);
+
+    expect(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_failed')->count())->toBe(2);
+});
+
+it('logs each attempt then gives up after the final backoff step', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $player->failEnqueueWith(new PlayerDisconnectedException);
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->startIfIdle($party);
+    foreach ([5, 15, 30, 60, 120, 300] as $delay) {
+        $this->travel($delay)->seconds();
+        $coordinator->tick($party);
+    }
+    $this->travel(3600)->seconds();
+    $coordinator->tick($party);
+
+    expect(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_failed')->count())->toBe(7)
+        ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_abandoned')->count())->toBe(1);
+});
+
+it('retries at once on reconnect after giving up', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $player->failEnqueueWith(new PlayerDisconnectedException);
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->startIfIdle($party);
+    foreach ([5, 15, 30, 60, 120, 300] as $delay) {
+        $this->travel($delay)->seconds();
+        $coordinator->tick($party);
+    }
+
+    $player->failEnqueueWith(null);
+    app(EnqueueBackoff::class)->clearForParty($party);
     $coordinator->tick($party);
 
     expect(requestStatuses($party))->toBe(['r1' => 'playing']);
