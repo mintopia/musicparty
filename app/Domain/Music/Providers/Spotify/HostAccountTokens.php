@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Music\Accounts;
+namespace App\Domain\Music\Providers\Spotify;
 
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;

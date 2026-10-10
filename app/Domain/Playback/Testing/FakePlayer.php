@@ -2,6 +2,8 @@
 
 namespace App\Domain\Playback\Testing;
 
+use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Contracts\BindsToParty;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
@@ -10,12 +12,14 @@ use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
+use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use Carbon\CarbonImmutable;
 use Closure;
+use LogicException;
 use Throwable;
 
-class FakePlayer implements Player
+class FakePlayer implements BindsToParty, Player
 {
     private PlaybackState $state;
 
@@ -46,7 +50,33 @@ class FakePlayer implements Player
         private readonly bool $requiresHostAccount = false,
         private readonly array $supportedControls = [Control::Play, Control::Pause, Control::Skip, Control::Seek, Control::Volume],
     ) {
+        throw_unless(app()->environment('testing'), LogicException::class, 'The Fake Player is only available in the testing environment.');
+
         $this->state = PlaybackState::stopped();
+    }
+
+    public function forParty(Party $party): self
+    {
+        $code = $party->code;
+
+        $this->onTrackChanged(function (PlaybackState $state) use ($code): void {
+            $track = $state->currentTrack;
+            $party = Party::findByCode($code);
+
+            if ($track !== null && $party !== null) {
+                app(PlaybackCoordinator::class)->trackChanged($party, $track->providerTrackId);
+            }
+        });
+
+        $this->onStateChanged(function (PlaybackState $state) use ($code): void {
+            $party = Party::findByCode($code);
+
+            if ($state->status === PlaybackStatus::Stopped && $party !== null) {
+                app(PlaybackCoordinator::class)->playbackEnded($party);
+            }
+        });
+
+        return $this;
     }
 
     public function kind(): string

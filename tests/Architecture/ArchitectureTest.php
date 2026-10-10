@@ -72,3 +72,7 @@ it('detects domain access in a violating Reverb listener fixture', function () {
 it('keeps no classes under the removed legacy directories', function (string $directory) {
     expect(glob(dirname(__DIR__, 2).'/app/'.$directory.'/*'))->toBe([]);
 })->with(['Models', 'Events', 'Jobs', 'Listeners', 'Services']);
+
+arch('the Music context does not depend on the Playback context')
+    ->expect('App\Domain\Music')
+    ->not->toUse('App\Domain\Playback');

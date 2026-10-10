@@ -1,9 +1,10 @@
 <?php
 
-use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -16,7 +17,7 @@ beforeEach(function () {
     Cache::flush();
     $this->account = SpotifyFake::account()->create(['access_token' => 'host-token']);
     $this->host = (string) $this->account->getKey();
-    $this->provider = new SpotifyMusicProvider(new HostAccountTokens);
+    $this->provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
 });
 
 it('supports playlist write', function () {
@@ -57,7 +58,7 @@ it('fetches a playlist once across repeated calls and again after the entry is f
 
     expect($trackFetches())->toBe(1);
 
-    SpotifyMusicProvider::forgetPlaylistTracks('pl-1');
+    $this->provider->forgetPlaylist('pl-1');
     $this->provider->playlistTracks('pl-1', $this->host);
     $this->provider->playlistTracks('pl-1', $this->host);
 

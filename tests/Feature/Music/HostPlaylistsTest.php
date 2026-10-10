@@ -6,7 +6,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
 use App\Domain\Music\Actions\AppendPlayToHistory;
 use App\Domain\Music\Actions\AuthorisesHost;
-use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
@@ -14,6 +13,7 @@ use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
+use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
@@ -42,7 +42,7 @@ function makeUser(): User
 function makeHostedParty(User $host, array $attributes = []): Party
 {
     $party = new Party;
-    $party->forceFill(array_merge(['code' => strtoupper(fake()->unique()->lexify('????????')), 'name' => 'Test Party', 'user_id' => $host->id], $attributes));
+    $party->forceFill(array_merge(['code' => strtoupper(fake()->unique()->lexify('????????')), 'name' => 'Test Party', 'user_id' => $host->id, 'music_provider' => 'fake'], $attributes));
     Party::withoutEvents(fn () => $party->save());
 
     return $party;
@@ -70,7 +70,7 @@ function hostWithAccount(): array
 beforeEach(function () {
     Party::flushEventListeners();
     $this->fake = FakeMusicProvider::withDefaultCatalogue();
-    $this->app->instance(MusicProvider::class, $this->fake);
+    $this->app->instance(FakeMusicProvider::class, $this->fake);
 });
 
 it('lists the host playlists without tokens', function () {
@@ -131,7 +131,7 @@ it('rejects playlists that do not belong to the host', function () {
 it('rejects a history playlist when the provider cannot write', function () {
     [$host] = hostWithAccount();
     $party = makeHostedParty($host);
-    $this->app->instance(MusicProvider::class, new FakeMusicProvider(playlists: [new PlaylistData('playlist-1', 'Mix')], capabilities: []));
+    $this->app->instance(FakeMusicProvider::class, new FakeMusicProvider(playlists: [new PlaylistData('playlist-1', 'Mix')], capabilities: []));
     Sanctum::actingAs($host);
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => null, 'history_playlist_id' => 'playlist-1'])
@@ -274,7 +274,7 @@ it('retries a temporary failure without throwing into playback', function () {
         }
     };
 
-    $job->handle($this->fake, app(AuthorisesHost::class));
+    $job->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
 
     expect($this->fake->appendedTo('playlist-1'))->toBe([])
         ->and($job->releasedFor)->toBe(42);
@@ -294,7 +294,7 @@ it('logs a final failure without tokens and does not throw', function () {
         }
     };
 
-    $job->handle($this->fake, app(AuthorisesHost::class));
+    $job->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
 
     Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => ! str_contains(json_encode($context), $account->access_token));
 });
@@ -313,7 +313,6 @@ it('tops the queue up from the playlist chosen through the picker', function () 
     $party = makeHostedParty($host, ['state' => PartyState::Live, 'music_provider' => 'fake']);
     $tracks = array_map(playbackTrack(...), range(1, 8));
     $fake = new FakeMusicProvider($tracks, [new PlaylistData('playlist-1', 'Fallback Mix')], ['playlist-1' => $tracks]);
-    $this->app->instance(MusicProvider::class, $fake);
     $this->app->instance(FakeMusicProvider::class, $fake);
     Sanctum::actingAs($host);
 

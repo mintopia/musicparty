@@ -4,10 +4,11 @@ namespace App\Providers;
 
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
-use App\Domain\Music\Contracts\MusicProvider;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Contracts\PlaybackClient;
 use App\Domain\Playback\PartyPlayers;
+use App\Domain\Playback\PlayerFactory;
+use App\Domain\Playback\Spotify\SpotifyPlaybackClient;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\SystemRandomizer;
 use App\Support\RateLimiting\Bucket;
@@ -23,8 +24,9 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(MusicProvider::class, SpotifyMusicProvider::class);
+        $this->app->bind(PlaybackClient::class, SpotifyPlaybackClient::class);
         $this->app->scoped(PartyPlayers::class);
+        $this->app->singleton(PlayerFactory::class);
         $this->app->bind(Bucket::class, LeakyBucket::class);
         $this->app->bind(Randomizer::class, SystemRandomizer::class);
     }

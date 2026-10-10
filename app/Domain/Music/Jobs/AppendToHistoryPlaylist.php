@@ -4,10 +4,10 @@ namespace App\Domain\Music\Jobs;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
-use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\PairingCatalogue;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;
@@ -35,7 +35,7 @@ class AppendToHistoryPlaylist implements ShouldQueue
         $this->onQueue('default');
     }
 
-    public function handle(MusicProvider $provider, AuthorisesHost $accounts): void
+    public function handle(PairingCatalogue $catalogue, AuthorisesHost $accounts): void
     {
         $party = Party::query()->with('user')->find($this->partyId);
 
@@ -50,7 +50,7 @@ class AppendToHistoryPlaylist implements ShouldQueue
         }
 
         try {
-            $provider->appendToPlaylist($party->history_playlist_id, [$this->providerTrackId], (string) $account->id);
+            $catalogue->provider($this->providerId)->appendToPlaylist($party->history_playlist_id, [$this->providerTrackId], (string) $account->id);
         } catch (ProviderTemporaryFailure $failure) {
             if ($this->attempts() < $this->tries) {
                 $this->release($failure->retryAfterSeconds ?? $this->backoff()[min($this->attempts() - 1, 3)]);

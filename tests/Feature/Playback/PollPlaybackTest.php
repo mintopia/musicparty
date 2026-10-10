@@ -14,12 +14,14 @@ use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\ChangePartyPlayer;
+use App\Domain\Playback\Contracts\PlaybackClient;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
+use App\Domain\Playback\Testing\FakePlaybackClient;
 use App\Domain\Queue\Blocklist;
 use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\TrackRequest;
@@ -37,8 +39,9 @@ beforeEach(function () {
     CarbonImmutable::setTestNow('2026-01-01 12:00:00');
     Cache::flush();
     Queue::fake();
-    $this->provider = new FakeMusicProvider;
-    app()->instance(FakeMusicProvider::class, $this->provider);
+    app()->instance(FakeMusicProvider::class, new FakeMusicProvider);
+    $this->provider = new FakePlaybackClient;
+    app()->instance(PlaybackClient::class, $this->provider);
     $this->party = Party::factory()->live()->create(['player_kind' => 'polling']);
     $this->account = LinkedAccount::factory()
         ->for($this->party->user)

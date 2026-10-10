@@ -3,18 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Identity\Models\User;
-use App\Domain\Music\Accounts\HostAccountTokens;
-use App\Domain\Music\Actions\AuthorisesHost;
-use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
-use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
-use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Actions\ClaimBrowserPlayer;
+use App\Domain\Playback\Actions\FetchBrowserPlayerToken;
 use App\Domain\Playback\Actions\ReleaseBrowserPlayer;
 use App\Domain\Playback\Actions\ReportBrowserPlayerState;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\PlaybackStatus;
-use App\Domain\Playback\Players\BrowserPlayer;
 use App\Http\Requests\BrowserPlayerTabRequest;
 use App\Http\Requests\ReportBrowserPlayerStateRequest;
 use Illuminate\Http\JsonResponse;
@@ -24,27 +19,11 @@ use Inertia\Response;
 
 class BrowserPlayerController extends Controller
 {
-    public function show(Request $request, AuthorisesHost $hosts, HostAccountTokens $tokens, Party $party): Response
+    public function show(Request $request, FetchBrowserPlayerToken $fetchToken, Party $party): Response
     {
         $this->authoriseHost($request, $party);
 
-        $accessToken = null;
-        $error = null;
-
-        if ($party->player_kind !== BrowserPlayer::KIND) {
-            $error = 'This Party is not using the Browser Player.';
-        } else {
-            $account = $hosts->linkedAccountFor($this->host($request), $party->music_provider);
-
-            try {
-                $accessToken = $account === null ? null : $tokens->accessToken($account);
-                $error = $account === null ? 'Link your music account to use the Browser Player.' : null;
-            } catch (HostAccountNeedsRelink) {
-                $error = 'Your music account needs to be linked again.';
-            } catch (ProviderUnavailableException|ProviderTemporaryFailure) {
-                $error = 'The music provider is unavailable. Try again shortly.';
-            }
-        }
+        ['accessToken' => $accessToken, 'error' => $error] = $fetchToken($this->host($request), $party);
 
         return Inertia::render('Party/BrowserPlayer', [
             'party' => ['code' => $party->code, 'name' => $party->name],

@@ -4,7 +4,6 @@ use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Playback\Players\PollingPlayer;
 use App\Domain\Playback\Players\SoloistPlayer;
-use App\Domain\Playback\Testing\FakePlayer;
 
 return [
     'site_disk' => env('MUSICPARTY_SITE_DISK', 'public'),
@@ -35,7 +34,6 @@ return [
         'max_per_minute' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_PER_MINUTE', 120),
     ],
     'players' => [
-        'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
         'polling' => ['label' => 'Polling player', 'class' => PollingPlayer::class],
         'browser' => ['label' => 'Browser player', 'class' => BrowserPlayer::class],
         'soloist' => ['label' => 'Soloist player', 'class' => SoloistPlayer::class],
