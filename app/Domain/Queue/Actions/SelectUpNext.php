@@ -11,6 +11,7 @@ use App\Domain\Queue\SelectionMode;
 use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 readonly class SelectUpNext
@@ -21,6 +22,15 @@ readonly class SelectUpNext
      * Returns the newly locked Up Next Request, or null when one already exists or none is eligible.
      */
     public function __invoke(Party $party): ?TrackRequest
+    {
+        try {
+            return $this->select($party);
+        } catch (UniqueConstraintViolationException) {
+            return null;
+        }
+    }
+
+    private function select(Party $party): ?TrackRequest
     {
         return DB::transaction(function () use ($party): ?TrackRequest {
             $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
