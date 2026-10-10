@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\PlaybackCoordinator;
-use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

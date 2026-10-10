@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Actions\ChangePartyPlayer;
 use App\Domain\Playback\Actions\CheckPlaybackNow;
 use App\Domain\Playback\Actions\IssuePlayerToken;
@@ -14,8 +16,6 @@ use App\Http\Requests\Api\V1\IssuePlayerTokenRequest;
 use App\Http\Resources\V1\IssuedPlayerTokenResource;
 use App\Http\Resources\V1\PartyPlayerResource;
 use App\Http\Resources\V1\PlayerTokenResource;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

@@ -3,8 +3,8 @@
 namespace App\Domain\Party\Events;
 
 use App\Domain\Mod\Contracts\PartyScopedEvent;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
-use App\Models\Party;
 use Illuminate\Foundation\Events\Dispatchable;
 
 class PartyStateChanged implements PartyScopedEvent

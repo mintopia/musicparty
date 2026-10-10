@@ -2,12 +2,12 @@
 
 namespace App\Domain\Music\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Validation\ValidationException;
 
 class SelectPartyPlaylists

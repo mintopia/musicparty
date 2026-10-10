@@ -3,8 +3,8 @@
 namespace App\Jobs;
 
 use App\Domain\Mod\Actions\RunScheduledActions;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
-use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

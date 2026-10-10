@@ -6,7 +6,7 @@ use App\Domain\Mod\Data\Decoration;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\Play;
 use App\Models\TrackRequest;
 use Throwable;

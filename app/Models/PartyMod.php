@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Party\Models\Party;
 use Database\Factories\PartyModFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;

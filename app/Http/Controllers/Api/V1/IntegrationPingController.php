@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Admin\Models\IntegrationToken;
 use App\Http\Controllers\Controller;
-use App\Models\IntegrationToken;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

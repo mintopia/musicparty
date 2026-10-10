@@ -2,13 +2,13 @@
 
 namespace App\Domain\Mod\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\Data\RuleDecision;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Mod\RuleOutcome;
 use App\Domain\Music\Data\TrackData;
-use App\Models\Party;
-use App\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use Throwable;
 
 readonly class EvaluateRequestRules

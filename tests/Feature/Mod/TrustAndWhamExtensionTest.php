@@ -1,10 +1,10 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Actions\RunScheduledActions;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\SelectUpNext;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;

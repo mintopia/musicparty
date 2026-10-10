@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\Party;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 

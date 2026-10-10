@@ -2,10 +2,10 @@
 
 namespace App\Domain\Party\Actions;
 
-use App\Events\Party\PartyLogEntryAddedEvent;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Broadcast\PartyLogEntryAddedEvent;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 
 readonly class RecordPartyLogEntry
 {

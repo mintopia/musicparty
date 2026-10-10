@@ -2,14 +2,14 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\Concerns\ModeratesRequests;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 readonly class RemoveRequest

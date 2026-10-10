@@ -2,20 +2,20 @@
 
 namespace Tests\Architecture\Support;
 
+use App\Domain\Admin\Models\ProviderSetting;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Jobs\ProcessPlayerFrame;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
 use App\Models\Play;
-use App\Models\ProviderSetting;
 use App\Models\Rating;
 use App\Models\RequestVote;
-use App\Models\Role;
-use App\Models\Setting;
-use App\Models\SocialProvider;
 use App\Models\TrackRequest;
-use App\Models\User;
 use App\Observers\SettingObserver;
 use App\Observers\UserObserver;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

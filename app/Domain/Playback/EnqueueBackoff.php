@@ -2,8 +2,8 @@
 
 namespace App\Domain\Playback;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Support\Facades\Cache;
 

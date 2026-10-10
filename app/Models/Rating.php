@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Membership\Models\PartyMember;
 use Database\Factories\RatingFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

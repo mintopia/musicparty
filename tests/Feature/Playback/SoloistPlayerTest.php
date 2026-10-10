@@ -1,6 +1,8 @@
 <?php
 
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Playback\Actions\PairPlayer;
 use App\Domain\Playback\Control;
@@ -16,8 +18,6 @@ use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Player\PlayerCommandEvent;
 use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
 use App\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;

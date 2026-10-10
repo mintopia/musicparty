@@ -4,11 +4,11 @@ namespace App\Domain\Queue\Actions;
 
 use App\Domain\Mod\Actions\ApplyScoreModifiers;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\SelectionMode;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\UniqueConstraintViolationException;

@@ -2,14 +2,14 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\Concerns\ManagesBlocklist;
 use App\Domain\Party\Exceptions\BlocklistActionRefused;
 use App\Domain\Party\FallbackPlaylistCheck;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\BlocklistMatchType;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 readonly class UpdateBlocklistEntry

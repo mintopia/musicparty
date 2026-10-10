@@ -2,7 +2,7 @@
 
 namespace App\Domain\Admin;
 
-use App\Models\Setting;
+use App\Domain\Admin\Models\Setting;
 use Illuminate\Support\Facades\Storage;
 
 class SiteSettings

@@ -2,8 +2,8 @@
 
 namespace App\Domain\Stats\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Events\Party\StatsUpdatedEvent;
-use App\Models\Party;
 use App\Models\PartyStat;
 
 readonly class RefreshPartyStats

@@ -1,11 +1,11 @@
 <?php
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;

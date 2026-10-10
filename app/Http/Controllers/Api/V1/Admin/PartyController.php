@@ -4,9 +4,9 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Domain\Admin\Actions\EnterActAsHost;
 use App\Domain\Admin\Actions\LeaveActAsHost;
+use App\Domain\Party\Models\Party;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\V1\AdminPartyResource;
-use App\Models\Party;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 

@@ -7,11 +7,11 @@ use App\Domain\Music\Actions\SelectPartyPlaylists;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
+use App\Domain\Party\Models\Party;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyPlaylistRequest;
 use App\Http\Resources\V1\PartyPlaylistSelectionResource;
 use App\Http\Resources\V1\PlaylistResource;
-use App\Models\Party;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 

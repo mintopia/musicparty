@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use Carbon\CarbonImmutable;
 use Database\Factories\PlayFactory;
 use Illuminate\Database\Eloquent\Attributes\Scope;

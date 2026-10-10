@@ -2,11 +2,11 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;

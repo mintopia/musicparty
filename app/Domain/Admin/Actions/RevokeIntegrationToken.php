@@ -2,8 +2,8 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\IntegrationToken;
-use App\Models\User;
+use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Identity\Models\User;
 
 class RevokeIntegrationToken
 {

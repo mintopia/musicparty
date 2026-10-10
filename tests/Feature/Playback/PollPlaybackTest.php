@@ -1,5 +1,7 @@
 <?php
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
@@ -7,6 +9,8 @@ use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Actions\GoLiveParty;
 use App\Domain\Party\FallbackPlaylistCheck;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\ChangePartyPlayer;
@@ -18,11 +22,7 @@ use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Queue\Blocklist;
 use App\Domain\Queue\RequestStatus;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
 use App\Models\Play;
-use App\Models\SocialProvider;
 use App\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;

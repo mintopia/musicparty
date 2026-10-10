@@ -2,10 +2,13 @@
 
 namespace App\Domain\Playback\Players;
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
@@ -15,9 +18,6 @@ use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 

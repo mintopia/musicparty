@@ -1,15 +1,15 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\BlocklistMatchType;
 use App\Events\Party\RequestRejectedEvent;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;

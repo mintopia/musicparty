@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin\Actions;
 
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\AdminHostSession;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 
 class LeaveActAsHost
 {

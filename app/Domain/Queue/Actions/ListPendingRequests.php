@@ -2,12 +2,12 @@
 
 namespace App\Domain\Queue\Actions;
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class ListPendingRequests

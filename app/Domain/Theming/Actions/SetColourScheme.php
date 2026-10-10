@@ -2,8 +2,8 @@
 
 namespace App\Domain\Theming\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Theming\ColourScheme;
-use App\Models\User;
 
 class SetColourScheme
 {

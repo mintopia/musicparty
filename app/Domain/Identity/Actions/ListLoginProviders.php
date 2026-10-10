@@ -2,7 +2,7 @@
 
 namespace App\Domain\Identity\Actions;
 
-use App\Models\SocialProvider;
+use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Support\Collection;
 
 class ListLoginProviders

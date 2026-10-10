@@ -2,8 +2,8 @@
 
 namespace App\Events\Party;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\Actions\GetPartyTheme;
-use App\Models\Party;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;

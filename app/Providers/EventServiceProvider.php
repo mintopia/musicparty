@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
@@ -11,8 +13,6 @@ use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
 use App\Listeners\HandlePlayerClientEvent;
 use App\Listeners\MessageLoggedListener;
-use App\Models\Setting;
-use App\Models\User;
 use App\Observers\SettingObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;

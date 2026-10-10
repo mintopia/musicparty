@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\PartyMember;
+use App\Domain\Membership\Models\PartyMember;
 use App\Models\Play;
 use App\Models\Rating;
 use Illuminate\Database\Eloquent\Factories\Factory;

@@ -3,6 +3,7 @@
 namespace App\Domain\Playback\Players;
 
 use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
@@ -12,7 +13,6 @@ use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
 use App\Events\Player\BrowserPlayerCommandEvent;
-use App\Models\Party;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 

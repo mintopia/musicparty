@@ -2,14 +2,14 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
-use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\PairPlayer;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 readonly class CreateParty

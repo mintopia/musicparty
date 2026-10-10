@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin\Actions;
 
+use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
+use App\Domain\Identity\Models\SocialProvider;
 use App\Enums\SettingType;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
 use Illuminate\Support\Facades\DB;
 
 class EnsureSocialProvider

@@ -2,10 +2,10 @@
 
 namespace App\Domain\Playback\Jobs;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Players\SoloistPlayer;
-use App\Models\Party;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;

@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin\Actions;
 
+use App\Domain\Admin\Models\Setting;
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Identity\Models\User;
 use App\Enums\SettingType;
-use App\Models\Setting;
-use App\Models\User;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;

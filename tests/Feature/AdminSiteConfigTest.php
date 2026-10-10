@@ -1,12 +1,12 @@
 <?php
 
 use App\Domain\Admin\Actions\GrantRole;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
-use App\Models\AdminAuditEntry;
-use App\Models\Party;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;

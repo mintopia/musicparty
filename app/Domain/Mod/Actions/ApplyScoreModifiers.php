@@ -5,7 +5,7 @@ namespace App\Domain\Mod\Actions;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\TrackRequest;
 use Throwable;
 

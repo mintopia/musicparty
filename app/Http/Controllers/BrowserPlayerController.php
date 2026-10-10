@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Actions\ClaimBrowserPlayer;
 use App\Domain\Playback\Actions\ReleaseBrowserPlayer;
 use App\Domain\Playback\Actions\ReportBrowserPlayerState;
@@ -15,8 +17,6 @@ use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\Players\BrowserPlayer;
 use App\Http\Requests\BrowserPlayerTabRequest;
 use App\Http\Requests\ReportBrowserPlayerStateRequest;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

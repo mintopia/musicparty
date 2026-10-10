@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\BlocklistMatchType;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class BlocklistEntryFactory extends Factory
 {
+    protected $model = BlocklistEntry::class;
+
     /**
      * @return array<string, mixed>
      */

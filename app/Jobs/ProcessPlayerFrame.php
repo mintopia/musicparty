@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\PartyPlayers;
-use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

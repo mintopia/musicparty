@@ -1,18 +1,18 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Queue\RequestStatus;
 use App\Jobs\BroadcastPartyQueue;
 use App\Jobs\StartPlayback;
-use App\Models\Party;
 use App\Models\Play;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Laravel\Sanctum\Sanctum;

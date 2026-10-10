@@ -2,11 +2,11 @@
 
 namespace Tests\Fixtures\Mods;
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Contracts\RequestRule;
 use App\Domain\Mod\Data\ModContext;
 use App\Domain\Mod\Data\RuleVerdict;
 use App\Domain\Music\Data\TrackData;
-use App\Models\PartyMember;
 use Throwable;
 
 class ThrowingRuleMod extends BaseFixtureMod

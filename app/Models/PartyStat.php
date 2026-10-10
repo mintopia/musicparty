@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Domain\Party\Models\Party;
 use Database\Factories\PartyStatFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

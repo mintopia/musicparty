@@ -3,8 +3,8 @@
 namespace Database\Factories;
 
 use App\Domain\Admin\IntegrationAbility;
-use App\Models\IntegrationToken;
-use App\Models\User;
+use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
  */
 class IntegrationTokenFactory extends Factory
 {
+    protected $model = IntegrationToken::class;
+
     /**
      * @return array<string, mixed>
      */

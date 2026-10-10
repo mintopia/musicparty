@@ -3,6 +3,7 @@
 namespace App\Domain\Playback;
 
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
@@ -12,7 +13,6 @@ use App\Domain\Queue\Actions\SelectUpNext;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\RequestStatus;
 use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 use Throwable;

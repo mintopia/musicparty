@@ -5,9 +5,9 @@ namespace App\Domain\Mod\AiReview;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\ResolvePendingRequestForMod;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Throwable;
 

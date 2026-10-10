@@ -2,8 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Domain\Admin\Models\Setting;
 use App\Enums\SettingType;
-use App\Models\Setting;
 use Illuminate\Database\Seeder;
 
 class SettingsSeeder extends Seeder

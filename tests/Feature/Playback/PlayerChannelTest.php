@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;

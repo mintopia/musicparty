@@ -2,9 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Stats\Actions\GetPartyStats;
 use App\Http\Controllers\Controller;
-use App\Models\Party;
 use Illuminate\Http\JsonResponse;
 
 class PartyStatsController extends Controller

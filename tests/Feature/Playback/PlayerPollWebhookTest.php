@@ -1,9 +1,9 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Jobs\PollPlayback;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;

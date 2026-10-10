@@ -2,7 +2,7 @@
 
 namespace App\Domain\Theming\Actions;
 
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 class RenderPartyThemeCss
 {

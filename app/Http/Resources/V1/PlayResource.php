@@ -2,10 +2,10 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Models\Play;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

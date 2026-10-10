@@ -2,7 +2,7 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\IntegrationToken;
+use App\Domain\Admin\Models\IntegrationToken;
 use Illuminate\Database\Eloquent\Collection;
 
 class ListIntegrationTokens

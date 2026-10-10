@@ -1,9 +1,9 @@
 <?php
 
 use App\Domain\Identity\Actions\ResolveSocialUser;
-use App\Models\LinkedAccount;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;

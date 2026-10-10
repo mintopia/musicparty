@@ -2,7 +2,7 @@
 
 namespace Tests\Fixtures\Architecture;
 
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Laravel\Reverb\Events\MessageReceived;
 
 class ReverbListenerLeaker

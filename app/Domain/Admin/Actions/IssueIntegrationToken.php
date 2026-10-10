@@ -3,8 +3,8 @@
 namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\IntegrationAbility;
-use App\Models\IntegrationToken;
-use App\Models\User;
+use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Identity\Models\User;
 use Illuminate\Support\Str;
 
 class IssueIntegrationToken
