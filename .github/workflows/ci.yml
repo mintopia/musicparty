@@ -53,8 +53,8 @@ jobs:
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
       DB_DATABASE: musicparty
-      DB_USERNAME: musicparty
-      DB_PASSWORD: musicparty
+      DB_USERNAME: root
+      DB_PASSWORD: root
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -74,5 +74,3 @@ jobs:
           php artisan key:generate --no-interaction
       - name: Pest with coverage
         run: vendor/bin/pest --parallel --coverage
-      - name: Architecture, OpenAPI and AsyncAPI tests
-        run: php artisan test --parallel
