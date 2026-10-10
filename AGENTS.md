@@ -136,7 +136,7 @@ The Laravel Boost guidelines are specifically curated by Laravel maintainers for
 This application is a Laravel application and its main Laravel ecosystems package & versions are below. You are an expert with them all. Ensure you abide by these specific packages & versions.
 
 - php - 8.4.26
-- laravel/framework (LARAVEL) - v12
+- laravel/framework (LARAVEL) - v13
 - laravel/horizon (HORIZON) - v5
 - laravel/octane (OCTANE) - v2
 - laravel/prompts (PROMPTS) - v0
@@ -144,12 +144,12 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/reverb (REVERB) - v1
 - laravel/sanctum (SANCTUM) - v4
 - laravel/socialite (SOCIALITE) - v5
-- livewire/livewire (LIVEWIRE) - v3
-- laravel/mcp (MCP) - v0
+- livewire/livewire (LIVEWIRE) - v4
+- laravel/mcp (MCP) - v1
 - laravel/pint (PINT) - v1
-- pestphp/pest (PEST) - v3
+- pestphp/pest (PEST) - v5
 - phpunit/phpunit (PHPUNIT) - v11
-- laravel-echo (ECHO) - v1
+- laravel-echo (ECHO) - v2
 - vue (VUE) - v3
 
 
