@@ -10,7 +10,7 @@ These apply to every set of tickets created by `/to-tickets` or `/wayfinder`. Wh
    - `/to-tickets` from an existing issue: that issue is the epic. Add the `epic` label to it (removing `ready-for-agent` if present). Do not otherwise modify it.
    - `/to-tickets` with no source issue: create the epic first, summarising the plan, labelled `epic`.
    - `/wayfinder`: the map issue is the epic. Label it `wayfinder:map` **and** `epic`.
-2. **The epic is labelled `epic` and never `ready-for-agent`.** It may carry other labels (e.g. `wayfinder:map`, a work-type label).
+2. **The epic is labelled `epic` and never `ready-for-agent`.** It may carry other labels (e.g. `wayfinder:map`, a work-type label). Spec issues (from `/to-spec`) and wayfinding maps are epics: label them `epic` when created and never `ready-for-agent`, whatever the skill says. Harmonic picks up anything labelled `ready-for-agent`, so a spec carrying it gets consumed before `/to-tickets` can run.
 3. **Children are native GitHub sub-issues of the epic.** Create them with `gh issue create --parent <epic> ...` (or `gh issue edit <epic> --add-sub-issue <child>`). Never rely on a `Part of #<n>` body line alone.
 4. **Blocking edges use GitHub's native `blocked_by` dependencies** (see **Blocking** under Wayfinding operations). Never use a body-only `Blocked by:` line as a substitute.
 5. **`ready-for-agent` goes on last.** Create every ticket and wire every parent/child and `blocked_by` relationship first. Only then, in a final pass, add `ready-for-agent` to the children that qualify. Create children without any triage label.
@@ -44,7 +44,7 @@ GitHub shares one number space across issues and PRs, so a bare `#42` may be eit
 
 ## When a skill says "publish to the issue tracker"
 
-Create a GitHub issue.
+Create a GitHub issue. If it is a spec or a wayfinding map, label it `epic` and not `ready-for-agent` (rule 2).
 
 ## When a skill says "fetch the relevant ticket"
 
