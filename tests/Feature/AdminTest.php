@@ -8,7 +8,8 @@ use App\Domain\Admin\Actions\SuspendUser;
 use App\Models\AdminAuditEntry;
 use App\Models\AdminHostSession;
 use App\Models\Party;
-use App\Models\PartyLog;
+use App\Models\PartyLogEntry;
+use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
 use App\Providers\TelescopeServiceProvider;
@@ -355,8 +356,11 @@ it('enters and leaves act-as-host over the web writing the party log', function 
 
     $this->actingAs($admin)->delete(route('admin.parties.act-as-host.leave', $party))->assertRedirect();
     expect($admin->isActingAsHostIn($party))->toBeFalse()
-        ->and(PartyLog::query()->orderBy('id')->get()->map(fn ($e) => [$e->action, $e->acting_as_host, $e->user_id, $e->party_id])->all())
-        ->toBe([['act_as_host.entered', true, $admin->id, $party->id], ['act_as_host.left', true, $admin->id, $party->id]]);
+        ->and(PartyLogEntry::query()->orderBy('id')->get()->map(fn ($e) => [$e->action, $e->details, $e->user_id, $e->party_id])->all())
+        ->toBe([
+            ['act_as_host.entered', ['acting_as_host' => true], $admin->id, $party->id],
+            ['act_as_host.left', ['acting_as_host' => true], $admin->id, $party->id],
+        ]);
 });
 
 it('enters and leaves act-as-host over the api', function (): void {
@@ -367,7 +371,23 @@ it('enters and leaves act-as-host over the api', function (): void {
     $this->postJson("/api/v1/admin/parties/{$party->id}/act-as-host")->assertOk()->assertJsonPath('data.acting_as_host', true);
     $this->deleteJson("/api/v1/admin/parties/{$party->id}/act-as-host")->assertOk()->assertJsonPath('data.acting_as_host', false);
 
-    expect(PartyLog::query()->count())->toBe(2);
+    expect(PartyLogEntry::query()->count())->toBe(2);
+});
+
+it('shows act-as-host entering and leaving in the host party log', function (): void {
+    $admin = makeAdmin();
+    $party = makeParty(['code' => 'ABCD']);
+    $host = User::factory()->create();
+    PartyMember::factory()->for($party)->for($host)->host()->create();
+
+    app(EnterActAsHost::class)->handle($admin, $party);
+    app(LeaveActAsHost::class)->handle($admin, $party);
+
+    Sanctum::actingAs($host);
+    $this->getJson('/api/v1/parties/ABCD/log')->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment(['action' => 'act_as_host.entered'])
+        ->assertJsonFragment(['action' => 'act_as_host.left']);
 });
 
 it('does not duplicate or log no-op act-as-host transitions', function (): void {
@@ -378,7 +398,7 @@ it('does not duplicate or log no-op act-as-host transitions', function (): void 
     app(EnterActAsHost::class)->handle($admin, $party);
     app(EnterActAsHost::class)->handle($admin, $party);
 
-    expect(PartyLog::query()->count())->toBe(1)->and(AdminHostSession::query()->count())->toBe(1);
+    expect(PartyLogEntry::query()->count())->toBe(1)->and(AdminHostSession::query()->count())->toBe(1);
 });
 
 it('gives no host powers to a non-admin or a demoted admin', function (): void {
