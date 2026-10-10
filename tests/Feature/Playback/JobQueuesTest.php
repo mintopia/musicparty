@@ -2,6 +2,7 @@
 
 use App\Domain\Mod\Jobs\ReviewRequestWithAi;
 use App\Domain\Mod\Jobs\RunModScheduledActions;
+use App\Domain\Mod\Jobs\RunPartyScheduledActions;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Playback\Jobs\CheckSoloistHealth;
 use App\Domain\Playback\Jobs\PollPlayback;
@@ -24,6 +25,7 @@ it('routes each job to its queue', function (object $job, string $queue) {
     'broadcast' => fn () => [new BroadcastPartyQueue('ABC123'), 'broadcast'],
     'ai' => fn () => [new ReviewRequestWithAi(1, 1), 'mods-ai'],
     'mods' => fn () => [new RunModScheduledActions, 'default'],
+    'party mods' => fn () => [new RunPartyScheduledActions('ABC123'), 'ticks'],
     'history' => fn () => [new AppendToHistoryPlaylist(1, 'track', 'spotify'), 'default'],
 ]);
 
