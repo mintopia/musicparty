@@ -47,6 +47,10 @@ const describe = (entry) => {
             return `Disabled Mod ${entry.subject ?? ''}`.trim();
         case 'mod.settings_updated':
             return `Changed Mod ${entry.subject ?? ''} settings: ${Object.keys(entry.details?.changes ?? {}).join(', ')}`.trim();
+        case 'act_as_host.entered':
+            return 'An admin started acting as Host';
+        case 'act_as_host.left':
+            return 'An admin stopped acting as Host';
         default:
             return entry.action;
     }
