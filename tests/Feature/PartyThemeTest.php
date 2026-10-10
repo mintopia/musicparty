@@ -361,7 +361,7 @@ it('broadcasts the effective theme on the public party channel', function (): vo
     $party = createParty(['theme' => ['light' => ['primary' => '#abcdef']]]);
     $event = new ThemeUpdatedEvent($party->code);
 
-    expect($event->broadcastAs())->toBe('ThemeUpdated')
+    expect($event->broadcastAs())->toBe('theme.updated')
         ->and($event->broadcastOn()[0]->name)->toBe("party.{$party->code}")
         ->and($event->broadcastWith()['light']['primary'])->toBe('#abcdef');
 });

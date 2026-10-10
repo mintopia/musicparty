@@ -28,6 +28,11 @@ class PendingRequestResolvedEvent implements ShouldBroadcast
         return ['request_id' => $this->requestId, 'status' => $this->status];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'pending_request.resolved';
+    }
+
     /**
      * @return array<int, PrivateChannel>
      */

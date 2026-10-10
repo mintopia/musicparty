@@ -34,6 +34,11 @@ class RequestDecidedEvent implements ShouldBroadcast
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'request.decided';
+    }
+
     /**
      * @return array<int, PrivateChannel>
      */

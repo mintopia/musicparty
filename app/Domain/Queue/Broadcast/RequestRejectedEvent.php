@@ -29,6 +29,11 @@ class RequestRejectedEvent implements ShouldBroadcast
         return ['provider_track_id' => $this->providerTrackId, 'reason' => $this->reason];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'request.rejected';
+    }
+
     /**
      * @return array<int, PrivateChannel>
      */

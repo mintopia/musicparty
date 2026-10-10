@@ -9,6 +9,7 @@ use Tests\Fixtures\Architecture\CrossContextWriter;
 use Tests\Fixtures\Architecture\LeakyBroadcastEvent;
 use Tests\Fixtures\Architecture\ReverbListenerLeaker;
 use Tests\Fixtures\Architecture\SerialisingBroadcastEvent;
+use Tests\Fixtures\Architecture\UnnamedBroadcastEvent;
 
 $fixtureContexts = [
     'identity' => ['members' => [CrossContextWriter::class], 'models' => [User::class]],
@@ -23,6 +24,15 @@ it('detects cross-context model writes in a violating fixture', function () use 
     $violations = ArchitectureRules::crossContextWriteViolations([CrossContextWriter::class], $fixtureContexts);
 
     expect($violations)->toHaveKey(CrossContextWriter::class);
+});
+
+it('gives every broadcast event an explicit wire name', function () {
+    expect(ArchitectureRules::broadcastEvents(ArchitectureRules::appClasses()))->not->toBeEmpty()
+        ->and(ArchitectureRules::missingBroadcastAs(ArchitectureRules::appClasses()))->toBe([]);
+});
+
+it('detects a broadcast event without broadcastAs in a violating fixture', function () {
+    expect(ArchitectureRules::missingBroadcastAs([UnnamedBroadcastEvent::class]))->toBe([UnnamedBroadcastEvent::class]);
 });
 
 it('never serialises models in broadcast events', function () {

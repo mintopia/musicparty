@@ -27,6 +27,11 @@ class StatsUpdatedEvent implements ShouldBroadcast
         return $this->stats;
     }
 
+    public function broadcastAs(): string
+    {
+        return 'stats.updated';
+    }
+
     /**
      * @return array<int, PresenceChannel>
      */

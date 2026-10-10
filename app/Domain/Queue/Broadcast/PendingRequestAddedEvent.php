@@ -36,6 +36,11 @@ class PendingRequestAddedEvent implements ShouldBroadcast
         ];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'pending_request.added';
+    }
+
     /**
      * @return array<int, PrivateChannel>
      */

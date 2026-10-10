@@ -113,7 +113,7 @@
         "messages": {
             "Party.QueueUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Queue\\Broadcast\\QueueUpdatedEvent",
+                "name": "queue.updated",
                 "payload": {
                     "type": "object",
                     "additionalProperties": false,
@@ -726,7 +726,7 @@
             },
             "Party.RequestRejectedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Queue\\Broadcast\\RequestRejectedEvent",
+                "name": "request.rejected",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -750,7 +750,7 @@
             },
             "Party.PendingRequestAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Queue\\Broadcast\\PendingRequestAddedEvent",
+                "name": "pending_request.added",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -787,7 +787,7 @@
             },
             "Party.PendingRequestResolvedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Queue\\Broadcast\\PendingRequestResolvedEvent",
+                "name": "pending_request.resolved",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -811,7 +811,7 @@
             },
             "Party.PartyLogEntryAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Party\\Broadcast\\PartyLogEntryAddedEvent",
+                "name": "party_log.entry_added",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -843,7 +843,7 @@
             },
             "Party.RequestDecidedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Queue\\Broadcast\\RequestDecidedEvent",
+                "name": "request.decided",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -875,13 +875,12 @@
             },
             "Player.PlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Playback\\Broadcast\\PlayerCommandEvent",
+                "name": "player.command",
                 "payload": {
                     "additionalProperties": true,
                     "description": "Soloist-native frame object, passed through unchanged",
                     "type": "object"
                 },
-                "summary": "Event name player.command",
                 "title": "Player.PlayerCommandEvent",
                 "x-event-class": "App\\Domain\\Playback\\Broadcast\\PlayerCommandEvent"
             },
@@ -898,7 +897,7 @@
             },
             "Party.ThemeUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "ThemeUpdated",
+                "name": "theme.updated",
                 "payload": {
                     "additionalProperties": true,
                     "type": "object"
@@ -908,7 +907,7 @@
             },
             "Party.StatsUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Stats\\Broadcast\\StatsUpdatedEvent",
+                "name": "stats.updated",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -959,7 +958,7 @@
             },
             "Player.BrowserPlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent",
+                "name": "browser-player.command",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -983,7 +982,6 @@
                     ],
                     "type": "object"
                 },
-                "summary": "Event name browser-player.command",
                 "title": "Player.BrowserPlayerCommandEvent",
                 "x-event-class": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent"
             }

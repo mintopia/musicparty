@@ -27,6 +27,11 @@ class QueueUpdatedEvent implements ShouldBroadcast
         return $this->snapshot;
     }
 
+    public function broadcastAs(): string
+    {
+        return 'queue.updated';
+    }
+
     /**
      * @return array<int, Channel>
      */

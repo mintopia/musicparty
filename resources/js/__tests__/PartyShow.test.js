@@ -120,7 +120,7 @@ describe('Party page now playing and Up Next', () => {
             const w = mount(Show, {props: baseProps()});
             expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
             for (let i = 0; i < 10; i++) {
-                listeners['Party.QueueUpdatedEvent']();
+                listeners['.queue.updated']();
                 vi.advanceTimersByTime(200);
             }
             expect(reload).not.toHaveBeenCalled();
@@ -138,13 +138,13 @@ describe('Party page now playing and Up Next', () => {
         it('waits at least the trailing debounce and adds jitter', () => {
             const random = vi.spyOn(Math, 'random').mockReturnValue(0);
             const w = mount(Show, {props: baseProps()});
-            listeners['Party.QueueUpdatedEvent']();
+            listeners['.queue.updated']();
             vi.advanceTimersByTime(499);
             expect(reload).not.toHaveBeenCalled();
             vi.advanceTimersByTime(1);
             expect(reload).toHaveBeenCalledTimes(1);
             random.mockReturnValue(0.999);
-            listeners['Party.QueueUpdatedEvent']();
+            listeners['.queue.updated']();
             vi.advanceTimersByTime(1990);
             expect(reload).toHaveBeenCalledTimes(1);
             vi.advanceTimersByTime(10);
@@ -157,7 +157,7 @@ describe('Party page now playing and Up Next', () => {
             const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
             w.get('[data-testid=vote-up]').trigger('click');
             expect(put).toHaveBeenCalledTimes(1);
-            listeners['Party.QueueUpdatedEvent']();
+            listeners['.queue.updated']();
             vi.advanceTimersByTime(2000);
             expect(reload.mock.calls[0][0].async).toBe(true);
             w.unmount();
@@ -165,7 +165,7 @@ describe('Party page now playing and Up Next', () => {
 
         it('drops a pending reload on unmount', () => {
             const w = mount(Show, {props: baseProps()});
-            listeners['Party.QueueUpdatedEvent']();
+            listeners['.queue.updated']();
             w.unmount();
             vi.advanceTimersByTime(5000);
             expect(reload).not.toHaveBeenCalled();
