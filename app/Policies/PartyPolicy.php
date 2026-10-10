@@ -75,6 +75,11 @@ class PartyPolicy
         return $member !== null && ! $member->banned;
     }
 
+    public function exportPlaylist(User $user, Party $party): bool
+    {
+        return $this->viewMembers($user, $party);
+    }
+
     public function manageRoles(User $user, Party $party): bool
     {
         $member = $party->memberFor($user);
