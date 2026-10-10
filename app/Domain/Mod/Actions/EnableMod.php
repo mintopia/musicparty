@@ -31,7 +31,7 @@ readonly class EnableMod
                 return;
             }
 
-            $row->settings ??= $this->settings->defaults($mod);
+            $row->settings ??= $this->settings->encrypt($mod, $this->settings->defaults($mod));
             $row->enabled = true;
             $row->save();
 

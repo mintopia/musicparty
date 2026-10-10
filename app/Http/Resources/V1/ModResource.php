@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use App\Domain\Mod\Data\ModStatus;
 use App\Domain\Mod\Data\SettingDefinition;
+use App\Domain\Mod\SettingKind;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,7 +27,7 @@ class ModResource extends JsonResource
                 'key' => $definition->key,
                 'label' => $definition->label,
                 'kind' => $definition->kind->value,
-                'default' => $definition->kind->value === 'secret' ? null : $definition->default,
+                'default' => $definition->kind === SettingKind::Secret ? null : $definition->default,
                 'min' => $definition->min,
                 'max' => $definition->max,
                 'options' => $definition->options,
