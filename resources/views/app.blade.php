@@ -14,10 +14,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @php
         $pusherConfig = [
-            'appKey' => config('broadcasting.connections.reverb.key'),
-            'host' => config('broadcasting.connections.reverb.options.host'),
-            'port' => config('broadcasting.connections.reverb.options.port'),
-            'scheme' => config('broadcasting.connections.reverb.options.scheme'),
+            'appKey' => config('broadcasting.connections.reverb.client.key'),
+            'host' => config('broadcasting.connections.reverb.client.host'),
+            'port' => config('broadcasting.connections.reverb.client.port'),
+            'scheme' => config('broadcasting.connections.reverb.client.scheme'),
         ];
     @endphp
     <script>window.pusherConfig = @json($pusherConfig);</script>

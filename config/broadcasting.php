@@ -41,6 +41,13 @@ return [
                 'scheme' => env('REVERB_SCHEME', 'https'),
                 'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
             ],
+            'client' => [
+                'key' => env('REVERB_APP_KEY'),
+                'host' => env('REVERB_PUBLIC_HOST', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)),
+                'port' => env('REVERB_PUBLIC_PORT', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_PORT)
+                    ?? (parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_SCHEME) === 'https' ? 443 : 80)),
+                'scheme' => env('REVERB_PUBLIC_SCHEME', parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_SCHEME) ?: 'http'),
+            ],
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
             ],

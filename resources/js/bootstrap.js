@@ -19,13 +19,27 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 window.Pusher = Pusher;
 
-window.Echo = new Echo({
-     broadcaster: 'reverb',
-     key: window.pusherConfig.appKey,
-     wsHost: window.pusherConfig.host,
-     wsPort: window.pusherConfig.port,
-     wssHost: window.pusherConfig.host,
-     wssPort: window.pusherConfig.port,
-     forceTLS: window.pusherConfig.scheme === 'https',
-     enabledTransports: ['ws', 'wss'],
+const config = window.pusherConfig ?? {};
+
+const noopChannel = {};
+['listen', 'listenForWhisper', 'here', 'joining', 'leaving', 'error', 'whisper'].forEach((method) => {
+    noopChannel[method] = () => noopChannel;
 });
+
+window.Echo = config.appKey
+    ? new Echo({
+        broadcaster: 'reverb',
+        key: config.appKey,
+        wsHost: config.host,
+        wsPort: config.port,
+        wssHost: config.host,
+        wssPort: config.port,
+        forceTLS: config.scheme === 'https',
+        enabledTransports: ['ws', 'wss'],
+    })
+    : {
+        channel: () => noopChannel,
+        private: () => noopChannel,
+        join: () => noopChannel,
+        leave: () => {},
+    };
