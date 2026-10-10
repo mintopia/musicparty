@@ -14,7 +14,8 @@ readonly class RankQueue
     public function __construct(private ApplyScoreModifiers $modifiers) {}
 
     /**
-     * Orders by Score (votes plus Score Modifier adjustments), then request time, then id.
+     * Orders by Score (votes plus Score Modifier adjustments), then when the Request reached that score (earliest first), then requester
+     * (system Requests last), then request time, then id.
      * Each returned Request carries its effective Score in `score`.
      *
      * @param  Builder<TrackRequest>  $query
@@ -24,6 +25,9 @@ readonly class RankQueue
         $requests = $query
             ->withSum('votes as score', 'value')
             ->orderByRaw('COALESCE(score, 0) desc')
+            ->orderBy('score_changed_at')
+            ->orderByRaw('party_member_id is null')
+            ->orderBy('party_member_id')
             ->orderBy('created_at')
             ->orderBy('id')
             ->get();
@@ -52,6 +56,8 @@ readonly class RankQueue
         return $requests
             ->sortBy([
                 fn (TrackRequest $a, TrackRequest $b): int => (int) $b->score <=> (int) $a->score,
+                fn (TrackRequest $a, TrackRequest $b): int => $a->score_changed_at <=> $b->score_changed_at,
+                fn (TrackRequest $a, TrackRequest $b): int => ($a->party_member_id ?? PHP_INT_MAX) <=> ($b->party_member_id ?? PHP_INT_MAX),
                 fn (TrackRequest $a, TrackRequest $b): int => $a->created_at <=> $b->created_at,
                 fn (TrackRequest $a, TrackRequest $b): int => $a->id <=> $b->id,
             ])

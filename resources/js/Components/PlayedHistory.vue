@@ -2,6 +2,7 @@
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
 import Icon from './Icon.vue';
+import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatPlayedAt} from '../lib/format';
@@ -132,13 +133,14 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                         v-for="play in rows"
                         :key="play.id"
                         data-testid="history-item"
-                        class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-4 md:table-row md:px-0 md:py-0"
+                        :data-mine="play.is_mine ? 'true' : null"
+                        class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-4 data-[mine=true]:bg-primary/10 md:table-row md:px-0 md:py-0"
                     >
                         <td data-label="Song" :class="[cellClass, 'col-span-2 !block before:!hidden md:!table-cell']">
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 md:flex-nowrap">
-                                <TrackThumb :src="play.track.artwork_url" class="!h-10 !w-10 md:!h-10 md:!w-10" />
+                                <TrackLink :href="play.track.provider_url"><TrackThumb :src="play.track.artwork_url" class="!h-10 !w-10 md:!h-10 md:!w-10" /></TrackLink>
                                 <div class="min-w-0 flex-1">
-                                    <div class="truncate font-medium text-primary" data-testid="history-title">{{ play.track.title }}</div>
+                                    <div class="truncate font-medium text-primary" data-testid="history-title"><TrackLink :href="play.track.provider_url">{{ play.track.title }}</TrackLink></div>
                                     <div class="truncate text-muted">{{ play.track.artists.join(', ') }}</div>
                                     <Decorations :decorations="play.decorations" class="mt-1" />
                                 </div>

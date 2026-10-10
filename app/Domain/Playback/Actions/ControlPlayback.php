@@ -7,7 +7,9 @@ use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
+use App\Domain\Playback\Exceptions\PlayerCommandRejectedException;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\PartyPlayers;
 
@@ -36,6 +38,10 @@ class ControlPlayback
             throw PlaybackControlRefusedException::unsupported($control);
         } catch (PlayerDisconnectedException) {
             throw PlaybackControlRefusedException::disconnected();
+        } catch (PlayerRateLimitedException $failure) {
+            throw PlaybackControlRefusedException::rateLimited($failure->retryAfterSeconds);
+        } catch (PlayerCommandRejectedException $failure) {
+            throw PlaybackControlRefusedException::rejected($failure->getMessage());
         }
     }
 

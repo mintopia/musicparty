@@ -160,3 +160,26 @@ it('forgets a cached playlist without error', function (array $fixture) {
 
     expect($provider->playlistTracks('playlist-1', 'host-account-1'))->toBeArray();
 })->with('playlist providers');
+
+it('builds public Track and playlist urls with the id encoded', function (array $fixture) {
+    [$provider] = $fixture;
+
+    expect($provider->trackUrl('abc123'))->toEndWith('/track/abc123')
+        ->and($provider->playlistUrl('abc123'))->toEndWith('/playlist/abc123')
+        ->and($provider->trackUrl('a b/c?d#e'))->toEndWith('/track/a%20b%2Fc%3Fd%23e')
+        ->and($provider->playlistUrl('a b/c'))->toEndWith('/playlist/a%20b%2Fc');
+})->with('providers');
+
+it('returns no url for a missing or blank id', function (array $fixture, ?string $id) {
+    [$provider] = $fixture;
+
+    expect($provider->trackUrl($id))->toBeNull()
+        ->and($provider->playlistUrl($id))->toBeNull();
+})->with('providers')->with([null, '', '   ']);
+
+it('builds Spotify urls on open.spotify.com', function () {
+    $provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
+
+    expect($provider->trackUrl('4uLU6hMCjMI75M1A2tKUQC'))->toBe('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC')
+        ->and($provider->playlistUrl('37i9dQZF1DXcBWIGoYBM5M'))->toBe('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M');
+});

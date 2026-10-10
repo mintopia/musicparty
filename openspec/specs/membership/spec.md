@@ -48,11 +48,15 @@ Without logging in, a visitor SHALL be able to view only the TV screen, the publ
 - **THEN** further requests are refused with 429
 
 ### Requirement: Login with social credentials
-The system SHALL let users log in with the social providers enabled by an instance admin (Discord, Twitch, Steam, Spotify). Logging in SHALL NOT by itself grant any Party Role. One social identity (provider and external account id) SHALL map to exactly one user, even when the login callback is submitted twice at once. Logging out SHALL require a POST request with CSRF protection.
+The system SHALL let users log in with the social providers enabled by an instance admin (Discord, Twitch, Steam, Spotify, Google, Facebook). Logging in SHALL NOT by itself grant any Party Role. One social identity (provider and external account id) SHALL map to exactly one user, even when the login callback is submitted twice at once. Logging out SHALL require a POST request with CSRF protection.
 
 #### Scenario: Login with an enabled provider
 - **WHEN** a user completes login with an enabled social provider
 - **THEN** the user is logged in and can join Parties
+
+#### Scenario: Login with Google or Facebook
+- **WHEN** a user completes login with an enabled Google or Facebook provider
+- **THEN** the user is logged in through that provider, and joining a Party still requires a social login (no local or no-auth login exists)
 
 #### Scenario: Disabled provider
 - **WHEN** a social provider has not been enabled by an admin

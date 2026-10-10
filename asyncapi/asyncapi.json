@@ -132,6 +132,8 @@
                     "required": [
                         "version",
                         "code",
+                        "selection_mode",
+                        "started_at",
                         "now_playing",
                         "up_next",
                         "queue"
@@ -144,6 +146,22 @@
                         "code": {
                             "type": "string",
                             "description": "Party code"
+                        },
+                        "selection_mode": {
+                            "type": "string",
+                            "enum": [
+                                "deterministic",
+                                "weighted"
+                            ],
+                            "description": "How the next request is chosen"
+                        },
+                        "started_at": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time",
+                            "description": "When the now playing request started, null when nothing is playing"
                         },
                         "now_playing": {
                             "oneOf": [
@@ -177,7 +195,8 @@
                                                 "album",
                                                 "artwork_url",
                                                 "duration_ms",
-                                                "explicit"
+                                                "explicit",
+                                                "provider_url"
                                             ],
                                             "properties": {
                                                 "title": {
@@ -206,6 +225,12 @@
                                                 },
                                                 "explicit": {
                                                     "type": "boolean"
+                                                },
+                                                "provider_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             }
                                         },
@@ -355,7 +380,8 @@
                                                 "album",
                                                 "artwork_url",
                                                 "duration_ms",
-                                                "explicit"
+                                                "explicit",
+                                                "provider_url"
                                             ],
                                             "properties": {
                                                 "title": {
@@ -384,6 +410,12 @@
                                                 },
                                                 "explicit": {
                                                     "type": "boolean"
+                                                },
+                                                "provider_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             }
                                         },
@@ -515,6 +547,7 @@
                                     "dislikes",
                                     "play_id",
                                     "requested_by",
+                                    "has_other_votes",
                                     "decorations"
                                 ],
                                 "properties": {
@@ -530,7 +563,8 @@
                                             "album",
                                             "artwork_url",
                                             "duration_ms",
-                                            "explicit"
+                                            "explicit",
+                                            "provider_url"
                                         ],
                                         "properties": {
                                             "title": {
@@ -559,6 +593,12 @@
                                             },
                                             "explicit": {
                                                 "type": "boolean"
+                                            },
+                                            "provider_url": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
                                             }
                                         }
                                     },
@@ -600,6 +640,10 @@
                                                 "description": "Requester nickname"
                                             }
                                         }
+                                    },
+                                    "has_other_votes": {
+                                        "type": "boolean",
+                                        "description": "True when a Member other than the requester has a current Vote"
                                     },
                                     "decorations": {
                                         "type": "array",
@@ -967,6 +1011,20 @@
                         },
                         "most_downvoted": {
                             "description": "Most downvoted Requests",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "upvote_leaderboard": {
+                            "description": "Members ranked by upvotes received",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "downvote_leaderboard": {
+                            "description": "Members ranked by downvotes received",
                             "type": "array",
                             "items": {
                                 "type": "object"

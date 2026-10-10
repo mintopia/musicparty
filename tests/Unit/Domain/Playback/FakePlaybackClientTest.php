@@ -38,3 +38,20 @@ it('surfaces temporary failures from playback calls once', function () {
         ->and($client->queuedTracks())->toBe([])
         ->and($client->currentPlayback('host-account-1')->status)->toBe(PlaybackStatus::Stopped);
 });
+
+it('records playback commands for the host and surfaces an injected failure once', function () {
+    $client = new FakePlaybackClient;
+
+    $client->play('h');
+    $client->pause('h');
+    $client->next('h');
+    $client->seek(5000, 'h');
+    $client->volume(30, 'h');
+
+    expect($client->commands())->toBe([['play', null], ['pause', null], ['next', null], ['seek', 5000], ['volume', 30]]);
+
+    $client->rateLimitNext(3);
+
+    expect(fn () => $client->play('h'))->toThrow(ProviderTemporaryFailure::class)
+        ->and($client->commands())->toHaveCount(5);
+});

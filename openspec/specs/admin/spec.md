@@ -63,11 +63,15 @@ An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving
 - **THEN** the start and end entries are listed and flagged as act-as-Host
 
 ### Requirement: Social provider credentials
-Admins SHALL be able to configure login for the social providers Discord, Twitch, Steam and Spotify: enable or disable each and set its credentials. Stored secrets MUST be encrypted at rest and MUST NOT be displayed back in full after saving. Only enabled, configured providers SHALL be offered on the login page.
+Admins SHALL be able to configure login for the social providers Discord, Twitch, Steam, Spotify, Google and Facebook: enable or disable each and set its credentials. Stored secrets MUST be encrypted at rest and MUST NOT be displayed back in full after saving. Only enabled, configured providers SHALL be offered on the login page.
 
 #### Scenario: Enable provider
 - **WHEN** an admin saves valid credentials and enables a provider
 - **THEN** the login page offers that provider
+
+#### Scenario: Google and Facebook offered
+- **WHEN** an admin opens the provider settings
+- **THEN** Google and Facebook are listed alongside the other providers, each with a Client ID and Client Secret
 
 #### Scenario: Secret hidden
 - **WHEN** an admin reopens the provider settings
@@ -161,6 +165,7 @@ The system SHALL expose metrics in the Prometheus text format at a configurable 
 - uncaught exceptions
 - the Horizon queue and supervisor metrics
 - dropped Player frames by reason
+- for each Party, monotonic counts of Requests made (labelled `source=member|system`, where system Requests are raised by Mods), Votes cast (labelled `direction=up|down`) and Ratings cast (labelled `rating=like|dislike`), fed from domain events; retracted Votes and Ratings SHALL NOT be counted
 - the Party count by state
 - for each Live or Paused Party: Members, Queue length, total time played, and the ranked top Tracks, top requesters, most upvoted and most downvoted Requests as shown in Live Stats
 
@@ -189,6 +194,14 @@ Party-scoped series SHALL be labelled by party code and SHALL NOT be emitted for
 #### Scenario: Live Stats exported
 - **WHEN** a Live Party has played Tracks and received Votes
 - **THEN** the metrics show that Party's time played, top Tracks, top requesters, most upvoted and most downvoted Requests with the same values as its Live Stats
+
+#### Scenario: Request, Vote and Rating counters
+- **WHEN** a Member makes a Request, a Mod raises a system Request, a Member upvotes and downvotes, and a Member likes and dislikes a Play
+- **THEN** the Party's request counter increases under `source=member` and `source=system`, its vote counter under `direction=up` and `direction=down`, and its rating counter under `rating=like` and `rating=dislike`
+
+#### Scenario: Retractions and no-ops not counted
+- **WHEN** a Member retracts a Vote or Rating, or repeats the Vote or Rating they already hold
+- **THEN** no counter increases
 
 #### Scenario: Ended Party not exported
 - **WHEN** a Party is Ended

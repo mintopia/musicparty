@@ -44,7 +44,7 @@ function configureDiscord(User $admin, bool $enabled = true): void
     ])->assertRedirect();
 }
 
-it('lists the five providers masked on read', function (): void {
+it('lists the seven providers masked on read', function (): void {
     $admin = makeSiteAdmin();
     configureDiscord($admin);
 
@@ -52,7 +52,7 @@ it('lists the five providers masked on read', function (): void {
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('Admin/Providers')
-        ->has('providers', 5)
+        ->has('providers', 7)
         ->where('providers.0.code', 'discord')
         ->where('providers.0.enabled', true)
         ->where('providers.0.fields.0.value', 'abc123')
@@ -81,6 +81,12 @@ it('does not offer a disabled provider and refuses logins through it', function 
     $this->get('/login/discord')->assertRedirect(route('login'));
     $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Login with discord is not available.');
 });
+
+it('refuses to enable Google or Facebook without credentials', function (string $code): void {
+    $this->actingAs(makeSiteAdmin())->put("/admin/providers/{$code}", ['enabled' => true])->assertSessionHasErrors('enabled');
+
+    expect(SocialProvider::query()->whereCode($code)->value('enabled'))->toBeFalse();
+})->with(['google', 'facebook']);
 
 it('refuses to enable a provider that has no credentials', function (): void {
     $this->actingAs(makeSiteAdmin())->put('/admin/providers/spotify', ['enabled' => true])->assertSessionHasErrors('enabled');
@@ -222,7 +228,7 @@ it('behaves the same through the api as the web for providers', function (): voi
         ->assertJsonPath('data.enabled', true)
         ->assertJsonPath('data.fields.1.value', ProviderCatalogue::MASK);
 
-    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(5, 'data')->assertJsonMissing(['value' => 'api-secret']);
+    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(7, 'data')->assertJsonMissing(['value' => 'api-secret']);
     expect(AdminAuditEntry::query()->where('action', 'provider.credential_changed')->count())->toBe(2);
 
     $this->putJson('/api/v1/admin/providers/discord', ['enabled' => 'maybe'])->assertJsonValidationErrors('enabled');

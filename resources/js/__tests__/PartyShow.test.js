@@ -115,6 +115,33 @@ describe('Party page now playing and Up Next', () => {
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
 
+    describe('estimated play times', () => {
+        const startedAt = new Date(Date.now() - 41000).toISOString();
+        const queued = [entry({id: 7, status: 'queued', track: {...entry().track, duration_ms: 60000}})];
+
+        it('shows the Up Next countdown, per-position estimates and the total in deterministic mode', () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'deterministic'}, startedAt, queue: queued})});
+            expect(w.get('[data-testid=up-next-eta]').text()).toContain('Plays in');
+            expect(w.get('[data-testid=queue-item-eta]').text()).toContain('Estimated in');
+            expect(w.get('[data-testid=queue-total]').text()).toContain('Total');
+        });
+
+        it('shows only Up Next and the total in weighted mode', () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'weighted'}, startedAt, queue: queued})});
+            expect(w.find('[data-testid=up-next-eta]').exists()).toBe(true);
+            expect(w.find('[data-testid=queue-item-eta]').exists()).toBe(false);
+            expect(w.find('[data-testid=queue-total]').exists()).toBe(true);
+        });
+
+        it('recalculates from a Queue event', async () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'deterministic'}, startedAt, queue: queued})});
+            listeners['.queue.updated']({version: 1, code: 'FRI123', selection_mode: 'weighted', started_at: startedAt, now_playing: entry(), up_next: null, queue: queued});
+            await w.vm.$nextTick();
+            expect(w.find('[data-testid=up-next-eta]').exists()).toBe(false);
+            expect(w.find('[data-testid=queue-item-eta]').exists()).toBe(false);
+        });
+    });
+
     describe('realtime state', () => {
         const payload = (over = {}) => ({
             version: 1,
@@ -141,6 +168,24 @@ describe('Party page now playing and Up Next', () => {
             listeners['.queue.updated'](payload({queue: [entry({id: 5, status: 'queued', score: 4})]}));
             await w.vm.$nextTick();
             expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('true');
+        });
+
+        it('keeps the remove button for the requester across a Queue event and reflects other votes', async () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', is_mine: true, has_other_votes: false})]})});
+            expect(w.get('[data-testid=remove-request]').attributes('disabled')).toBeUndefined();
+            listeners['.queue.updated'](payload({queue: [entry({id: 5, status: 'queued', has_other_votes: true})]}));
+            await w.vm.$nextTick();
+            const button = w.get('[data-testid=remove-request]');
+            expect(button.attributes('disabled')).toBeDefined();
+            expect(button.attributes('title')).toBe('Someone has already voted on this request');
+        });
+
+        it('shows the remove button on a request approved after the page loaded', async () => {
+            const w = mount(Show, {props: baseProps({queue: []})});
+            listeners['.request.decided']({request_id: 7, status: 'queued', reason: null});
+            listeners['.queue.updated'](payload({queue: [entry({id: 7, status: 'queued'})]}));
+            await w.vm.$nextTick();
+            expect(w.find('[data-testid=remove-request]').exists()).toBe(true);
         });
 
         it('updates the highlight from a member vote event', async () => {
@@ -176,7 +221,7 @@ describe('Party page now playing and Up Next', () => {
             const w = mount(Show, {props: baseProps()});
             window.dispatchEvent(new Event('realtime:resync'));
             expect(reload).toHaveBeenCalledTimes(1);
-            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
+            expect(reload).toHaveBeenCalledWith({only: ['party', 'queue', 'nowPlaying', 'upNext', 'startedAt', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
             w.unmount();
             window.dispatchEvent(new Event('realtime:resync'));
             expect(reload).toHaveBeenCalledTimes(1);
@@ -276,6 +321,18 @@ describe('playback controls', () => {
         await w.find('[data-testid="playback-volume-input"]').setValue('80');
         await w.find('[data-testid="playback-volume-input"]').trigger('change');
         expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/volume', {level: 80}, expect.any(Object));
+    });
+
+    it('disables the controls for a browser player', () => {
+        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'browser'}})});
+        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeDefined();
+        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(true);
+    });
+
+    it('enables the controls for a polling player', () => {
+        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'polling'}})});
+        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeUndefined();
+        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(false);
     });
 
     it('shows a refusal returned by the server', async () => {

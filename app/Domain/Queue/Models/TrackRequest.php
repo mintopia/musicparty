@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\TrackRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -36,6 +37,7 @@ use Illuminate\Support\Carbon;
  * @property CarbonImmutable|null $started_at
  * @property string|null $selection_mode
  * @property int|null $selection_score
+ * @property CarbonImmutable|null $score_changed_at
  */
 #[Unguarded]
 #[UseFactory(TrackRequestFactory::class)]
@@ -43,6 +45,13 @@ class TrackRequest extends Model
 {
     /** @use HasFactory<TrackRequestFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $request): void {
+            $request->score_changed_at ??= CarbonImmutable::instance($request->created_at ?? $request->freshTimestamp());
+        });
+    }
 
     protected function casts(): array
     {
@@ -58,6 +67,7 @@ class TrackRequest extends Model
             'enqueue_unconfirmed' => 'boolean',
             'started_at' => 'immutable_datetime',
             'selection_score' => 'integer',
+            'score_changed_at' => 'immutable_datetime',
         ];
     }
 
@@ -83,6 +93,14 @@ class TrackRequest extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(RequestVote::class);
+    }
+
+    /**
+     * @param  Builder<TrackRequest>  $query
+     */
+    public function scopeWithHasOtherVotes(Builder $query): void
+    {
+        $query->withExists(['votes as has_other_votes' => fn ($votes) => $votes->whereColumn('request_votes.party_member_id', '!=', 'track_requests.party_member_id')]);
     }
 
     /**

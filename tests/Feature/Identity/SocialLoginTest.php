@@ -4,6 +4,8 @@ use App\Domain\Identity\Actions\ResolveSocialUser;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\SocialProviders\FacebookProvider;
+use App\Domain\Identity\SocialProviders\GoogleProvider;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -199,4 +201,34 @@ it('resolves one user and one linked account when a concurrent login inserts the
     expect($resolved->id)->toBe($competitor->id);
     expect(User::query()->count())->toBe($userCount);
     expect(LinkedAccount::query()->where('external_id', '1001')->count())->toBe(1);
+});
+
+it('logs in through the first-party Google and Facebook drivers', function (string $code): void {
+    config(["services.{$code}.client_id" => 'client-id', "services.{$code}.client_secret" => 'client-secret']);
+    $this->artisan('providers:seed')->assertSuccessful();
+    mockDriver()->shouldReceive('user')->once()->andReturn(remoteUser('2002', 'partygoer'));
+
+    $this->get(route('login.return', $code))->assertRedirect(route('login.signup'));
+
+    $this->assertAuthenticated();
+    expect(LinkedAccount::query()->firstOrFail()->external_id)->toBe('2002');
+})->with(['google', 'facebook']);
+
+it('refuses Google login when the provider is not configured', function (): void {
+    config(['services.google.client_id' => null, 'services.google.client_secret' => null]);
+    $this->artisan('providers:seed')->assertSuccessful();
+    Socialite::shouldReceive('buildProvider')->never();
+
+    $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+});
+
+it('builds Google and Facebook providers from the factory', function (): void {
+    $google = SocialProvider::factory()->google()->create();
+    $facebook = SocialProvider::factory()->facebook()->create();
+
+    expect($google->code)->toBe('google')
+        ->and($google->provider_class)->toBe(GoogleProvider::class)
+        ->and($facebook->code)->toBe('facebook')
+        ->and($facebook->provider_class)->toBe(FacebookProvider::class)
+        ->and($facebook->supports_auth)->toBeTrue();
 });

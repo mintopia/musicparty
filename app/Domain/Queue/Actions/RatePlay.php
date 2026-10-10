@@ -6,6 +6,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Broadcast\MemberRatingChangedEvent;
+use App\Domain\Queue\Events\RatingCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use App\Domain\Queue\Models\Play;
@@ -66,6 +67,10 @@ class RatePlay
 
         if ($memberChanged) {
             MemberRatingChangedEvent::dispatch($code, $member->id, $play->id, $direction?->weight() ?? 0);
+
+            if ($direction !== null) {
+                RatingCast::dispatch(Party::query()->whereKey($play->party_id)->firstOrFail(), $play, $member, $direction);
+            }
         }
 
         return Play::query()

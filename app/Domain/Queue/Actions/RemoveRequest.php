@@ -28,7 +28,9 @@ readonly class RemoveRequest
             $member = $this->activeMember($actor, $party);
             $locked = $this->lockRequest($party, $request);
 
-            if (! $this->isModerator($actor, $party) && $locked->party_member_id !== $member->id) {
+            $removingAsModerator = $this->isModerator($actor, $party);
+
+            if (! $removingAsModerator && $locked->party_member_id !== $member->id) {
                 throw RequestRefusedException::notAllowed();
             }
 
@@ -36,6 +38,10 @@ readonly class RemoveRequest
 
             if (! in_array($previous, [RequestStatus::Queued, RequestStatus::Pending], true)) {
                 throw RequestRefusedException::notRemovable();
+            }
+
+            if (! $removingAsModerator && $this->hasVoteFromAnotherMember($locked)) {
+                throw RequestRefusedException::alreadyVotedOn();
             }
 
             $this->decide($party, $locked, $member, RequestStatus::Removed, 'request.removed');
@@ -47,5 +53,10 @@ readonly class RemoveRequest
         $this->announceDecision($party, $request, $previous, $member);
 
         return $request;
+    }
+
+    private function hasVoteFromAnotherMember(TrackRequest $request): bool
+    {
+        return $request->votes()->where('party_member_id', '!=', $request->party_member_id)->exists();
     }
 }

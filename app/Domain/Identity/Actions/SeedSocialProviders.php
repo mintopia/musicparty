@@ -7,6 +7,8 @@ use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\SocialProviders\AbstractSocialProvider;
 use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\FacebookProvider;
+use App\Domain\Identity\SocialProviders\GoogleProvider;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
 use App\Domain\Identity\SocialProviders\SteamProvider;
 use App\Domain\Identity\SocialProviders\TwitchProvider;
@@ -22,6 +24,8 @@ class SeedSocialProviders
         'twitch' => TwitchProvider::class,
         'steam' => SteamProvider::class,
         'spotify' => SpotifyProvider::class,
+        'google' => GoogleProvider::class,
+        'facebook' => FacebookProvider::class,
     ];
 
     /**

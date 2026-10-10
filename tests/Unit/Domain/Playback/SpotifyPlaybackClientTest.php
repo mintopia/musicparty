@@ -5,6 +5,7 @@ use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Providers\Spotify\HostAccountTokens;
 use App\Domain\Music\Providers\Spotify\SpotifyApi;
+use App\Domain\Playback\Exceptions\PlayerCommandRejectedException;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\Spotify\SpotifyPlaybackClient;
 use Illuminate\Http\Client\Request;
@@ -105,3 +106,35 @@ it('treats a missing active device as a temporary failure when queueing', functi
 
     $this->client->queueTrack('track-9', $this->host);
 })->throws(ProviderTemporaryFailure::class);
+
+it('sends each playback command to the matching spotify endpoint', function () {
+    SpotifyFake::hostApi(['api.spotify.com/v1/me/player/*' => Http::response('', 204)]);
+
+    $this->client->play($this->host);
+    $this->client->pause($this->host);
+    $this->client->next($this->host);
+    $this->client->seek(1500, $this->host);
+    $this->client->volume(40, $this->host);
+
+    foreach ([['PUT', '/play'], ['PUT', '/pause'], ['POST', '/next'], ['PUT', '/seek?position_ms=1500'], ['PUT', '/volume?volume_percent=40']] as [$method, $path]) {
+        Http::assertSent(fn (Request $r): bool => $r->method() === $method && $r->url() === "https://api.spotify.com/v1/me/player{$path}");
+    }
+});
+
+it('rejects commands with no active device or a restriction', function (int $status, array $error, string $message) {
+    SpotifyFake::hostApi(['api.spotify.com/v1/me/player/*' => Http::response(['error' => $error], $status)]);
+
+    expect(fn () => $this->client->pause($this->host))->toThrow(PlayerCommandRejectedException::class, $message);
+})->with([
+    'no device' => [404, ['reason' => 'NO_ACTIVE_DEVICE'], 'no active device'],
+    'restriction' => [403, ['reason' => 'UNKNOWN', 'message' => 'Restriction violated'], 'Restriction violated'],
+    'restriction without message' => [403, ['reason' => 'PREMIUM_REQUIRED'], 'PREMIUM_REQUIRED'],
+]);
+
+it('backs off after a rate limited command', function () {
+    SpotifyFake::hostApi(['api.spotify.com/v1/me/player/*' => Http::response('', 429, ['Retry-After' => '4'])]);
+
+    expect(fn () => $this->client->volume(10, $this->host))->toThrow(ProviderTemporaryFailure::class)
+        ->and(fn () => $this->client->play($this->host))->toThrow(ProviderTemporaryFailure::class);
+    Http::assertSentCount(1);
+});

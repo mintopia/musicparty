@@ -140,7 +140,7 @@ A Party MAY be configured so that Requests, or Requests held by a Request Rule, 
 - **THEN** only its requester, the Host and Moderators can see it
 
 ### Requirement: Removing Requests
-The Host and Moderators SHALL be able to remove a Queued or Pending Request, moving it to Removed. A Member SHALL be able to remove their own Queued or Pending Request. A Request that is Up Next MAY be removed only by the Host or a Moderator and only if the Player is able to withdraw it; otherwise the removal SHALL be refused. A Playing Request MUST NOT be removed (skipping applies to playback, not the Request).
+The Host and Moderators SHALL be able to remove a Queued or Pending Request, moving it to Removed. A Member SHALL be able to remove their own Queued or Pending Request only while no other Member has a current Vote on it; a Vote that has been retracted no longer counts, and the check SHALL be made atomically with the removal. The Host and Moderators are not subject to this restriction. A Request that is Up Next MAY be removed only by the Host or a Moderator and only if the Player is able to withdraw it; otherwise the removal SHALL be refused. A Playing Request MUST NOT be removed (skipping applies to playback, not the Request).
 
 #### Scenario: Moderator removes
 - **WHEN** a Moderator removes a Queued Request
@@ -148,6 +148,22 @@ The Host and Moderators SHALL be able to remove a Queued or Pending Request, mov
 
 #### Scenario: Requester withdraws
 - **WHEN** a Member removes their own Queued Request
+- **THEN** it becomes Removed
+
+#### Scenario: Requester cannot withdraw after others vote
+- **WHEN** a Member removes their own Request that another Member has voted on
+- **THEN** the system refuses and states that someone has already voted
+
+#### Scenario: Requester withdraws after votes are retracted
+- **WHEN** every other Member's Vote on a Request has been retracted and the requester removes it
+- **THEN** it becomes Removed
+
+#### Scenario: Requester's own vote does not block removal
+- **WHEN** a Member who has voted on their own Request removes it and no other Member has voted
+- **THEN** it becomes Removed
+
+#### Scenario: Moderator removes a voted Request
+- **WHEN** a Moderator or the Host removes a Request that Members have voted on
 - **THEN** it becomes Removed
 
 #### Scenario: Cannot remove another's
@@ -209,7 +225,7 @@ A Request's Score SHALL equal the sum of its Votes (up as +1, down as -1) plus a
 - **THEN** each Request has the same Score and position in all three
 
 ### Requirement: Ratings
-A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export.
+A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export. The TV screen's now-playing block SHALL show the live like and dislike counts of the current Play alongside its score; the TV payload MUST carry counts only and MUST NOT include Member identifiers.
 
 #### Scenario: Liking a Play
 - **WHEN** a Member likes the currently Playing Track
@@ -230,6 +246,33 @@ A Member SHALL be able to like or dislike a Play, once per Play, and to change o
 #### Scenario: Rating after the Party ends
 - **WHEN** a Member rates a Play in an Ended Party
 - **THEN** the system refuses
+
+#### Scenario: TV shows live rating counts
+- **WHEN** Members like or dislike the currently Playing Track
+- **THEN** the TV screen's now-playing block shows the updated like and dislike counts and the TV payload contains no Member identifiers
+
+#### Scenario: TV with no ratings
+- **WHEN** the currently Playing Track has no ratings
+- **THEN** the TV screen shows zero likes and zero dislikes
+
+### Requirement: Track links to the Music Provider
+Every Track shown to Members (Now Playing, Up Next, the Queue, played history and search results) SHALL carry a `provider_url` built by the Party's Music Provider from the Track's provider Track id, in the API, page props and realtime payloads. The Member UI SHALL link the Track title and artwork to it, opening in a new tab with `rel="noopener"`, and SHALL render plain text when `provider_url` is null. The TV screen MUST NOT link Tracks. The system SHALL NOT save Tracks to a Member's own library.
+
+#### Scenario: Queue entry link
+- **WHEN** a Member views a queued Track in a Spotify Party
+- **THEN** its `provider_url` is `https://open.spotify.com/track/{id}` and its title and artwork open that page in a new tab
+
+#### Scenario: Played history and search results
+- **WHEN** a Member views played history or search results
+- **THEN** each Track carries a `provider_url` for its provider Track id
+
+#### Scenario: No link available
+- **WHEN** a Track has no `provider_url`
+- **THEN** its title and artwork render as plain text
+
+#### Scenario: TV screen
+- **WHEN** the TV screen shows a Track
+- **THEN** it is not a link
 
 ### Requirement: Queue top-up from the Fallback Playlist
 While a Party is Live, the system SHALL keep the Queue topped up to a configured minimum number of Queued Requests (default 5) using Tracks from the Fallback Playlist. Fallback Playlist Tracks SHALL be chosen in shuffled order, SHALL skip Tracks queued or played recently, SHALL pass the Party's rules, and SHALL become Requests with no requester. Fallback Requests SHALL be subject to Votes like any other Request.
@@ -260,3 +303,30 @@ A Party SHALL have at most one Up Next Request and at most one Playing Request a
 #### Scenario: Concurrent promotion
 - **WHEN** two processes try to make different Requests Up Next for the same Party at once
 - **THEN** one succeeds and the other fails without changing any Request
+
+### Requirement: Estimated play times
+Members SHALL be shown the time until the Up Next Request plays and the total duration of the Up Next Request and the Queue. The estimate SHALL be computed client-side from the broadcast state: the start time and duration of the Playing Request, each Request's duration and the Party's selection mode. Under deterministic selection each Queued Request SHALL also show an estimated play time, labelled as an estimate, following the ranked Queue order. Under weighted selection only the Up Next time and the total duration SHALL be shown. Estimates SHALL recalculate on each Queue update and tick locally without polling.
+
+#### Scenario: Deterministic estimates
+- **WHEN** a Party in deterministic mode has a Playing Request, an Up Next Request and Queued Requests
+- **THEN** the Up Next Request shows the time until the Playing Request ends, and each Queued Request shows that time plus the durations of every Request ahead of it
+
+#### Scenario: Weighted mode
+- **WHEN** a Party in weighted mode has an Up Next Request and Queued Requests
+- **THEN** only the Up Next time and the total duration are shown, with no per-position estimates
+
+#### Scenario: Nothing playing
+- **WHEN** no Request is Playing and a Request is Up Next
+- **THEN** the Up Next estimate counts from now
+
+#### Scenario: Overrunning Track
+- **WHEN** the Playing Request has passed its expected end
+- **THEN** estimates count from now rather than showing negative times
+
+#### Scenario: Unknown start time
+- **WHEN** a Request is Playing but its start time is unavailable
+- **THEN** no play-time estimate is shown, but the total duration still is
+
+#### Scenario: Queue update
+- **WHEN** a Queue update is broadcast
+- **THEN** the estimates are recalculated from the new payload

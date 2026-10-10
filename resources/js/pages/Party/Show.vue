@@ -3,6 +3,8 @@ import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, provide, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {RESYNC_EVENT} from '../../lib/realtimeResync';
+import {estimateQueue} from '../../lib/queueEta';
+import {formatTotal} from '../../lib/format';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
@@ -22,6 +24,7 @@ const props = defineProps({
     ratablePlay: {type: Object, default: null},
     memberVotes: {type: Object, default: null},
     upNext: {type: Object, default: null},
+    startedAt: {type: String, default: null},
     queue: {type: Array, default: () => []},
     history: {type: Object, default: null},
     filters: {type: Object, default: () => ({})},
@@ -43,6 +46,7 @@ const votesByRequest = () => ({
     ...Object.fromEntries(props.queue.filter((entry) => entry.my_vote !== undefined).map((entry) => [entry.id, entry.my_vote])),
     ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
 });
+const ownedRequestIds = () => props.queue.filter((entry) => entry.is_mine === true).map((entry) => entry.id);
 const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
 const liveState = ref(props.party.state);
@@ -60,25 +64,41 @@ const banned = ref(props.membership.banned);
 const liveNowPlaying = ref(props.nowPlaying);
 const liveUpNext = ref(props.upNext);
 const liveQueue = ref(props.queue);
+const liveStartedAt = ref(props.startedAt);
+const liveMode = ref(props.party.selection_mode);
+const now = ref(Date.now());
+let clock = null;
 const liveRatablePlay = ref(props.ratablePlay);
 const myVotes = ref(votesByRequest());
+const myRequestIds = ref(ownedRequestIds());
 const myRatings = ref(ratingsByPlay());
 
 watch(
-    () => [props.nowPlaying, props.upNext, props.queue, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
+    () => [props.nowPlaying, props.upNext, props.queue, props.startedAt, props.party.selection_mode, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
     () => {
         liveState.value = props.party.state;
         banned.value = props.membership.banned;
         liveNowPlaying.value = props.nowPlaying;
         liveUpNext.value = props.upNext;
         liveQueue.value = props.queue;
+        liveStartedAt.value = props.startedAt;
+        liveMode.value = props.party.selection_mode;
         liveRatablePlay.value = props.ratablePlay;
         myVotes.value = votesByRequest();
+        myRequestIds.value = ownedRequestIds();
         myRatings.value = ratingsByPlay();
     },
 );
 
-const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0})));
+const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0, is_mine: myRequestIds.value.includes(entry.id)})));
+const eta = computed(() => estimateQueue({
+    startedAt: liveStartedAt.value,
+    nowPlaying: liveNowPlaying.value,
+    upNext: liveUpNext.value,
+    queue: liveQueue.value,
+    mode: liveMode.value,
+    now: now.value,
+}));
 const shownRatablePlay = computed(() => {
     const play = liveRatablePlay.value;
 
@@ -86,7 +106,7 @@ const shownRatablePlay = computed(() => {
 });
 
 const resync = () => {
-    router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
+    router.reload({only: ['party', 'queue', 'nowPlaying', 'upNext', 'startedAt', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
 };
 
 const applyQueueUpdate = (payload) => {
@@ -98,6 +118,8 @@ const applyQueueUpdate = (payload) => {
     liveNowPlaying.value = payload.now_playing;
     liveUpNext.value = payload.up_next;
     liveQueue.value = payload.queue;
+    liveStartedAt.value = payload.started_at ?? null;
+    liveMode.value = payload.selection_mode ?? liveMode.value;
     const playing = payload.now_playing;
     liveRatablePlay.value = playing?.play_id
         ? {id: playing.play_id, track: playing.track, likes: playing.likes, dislikes: playing.dislikes, my_rating: 0}
@@ -105,6 +127,9 @@ const applyQueueUpdate = (payload) => {
 };
 
 onMounted(() => {
+    clock = setInterval(() => {
+        now.value = Date.now();
+    }, 1000);
     window.Echo?.channel(channelName)
         .listen('.queue.updated', applyQueueUpdate)
         .listen('.party.state_changed', (payload) => {
@@ -122,6 +147,7 @@ onMounted(() => {
         })
         .listen('.request.decided', (payload) => {
             if (payload.status === 'queued') {
+                myRequestIds.value = [...myRequestIds.value, payload.request_id];
                 pushToast('Your request was approved.');
             }
         })
@@ -133,6 +159,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    clearInterval(clock);
     window.removeEventListener(RESYNC_EVENT, resync);
     window.Echo?.leave(channelName);
     window.Echo?.leave(memberChannelName);
@@ -259,7 +286,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
 
-        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" />
+        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" :supported="party.playerKind !== 'browser'" />
         <Link
             v-if="canManage && party.playerKind === 'browser'"
             :href="`/parties/${party.code}/player`"
@@ -322,9 +349,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
                 </template>
             </dl>
             <template v-else-if="section === 'queue'">
-                <UpNextCard :up-next="liveUpNext" class="mb-6" />
-                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
-                <QueueList :queue="shownQueue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
+                <UpNextCard :up-next="liveUpNext" :plays-at="eta.upNextAt" :now="now" class="mb-6" />
+                <h2 class="mb-1 text-base font-bold md:text-lg">Queue</h2>
+                <p v-if="eta.totalMs > 0" data-testid="queue-total" class="mb-3 text-sm text-muted md:mb-4">Total {{ formatTotal(eta.totalMs) }}</p>
+                <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
@@ -332,6 +360,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>
+                <div v-if="party.playlistCsvUrl || party.historyPlaylistUrl" class="mb-3 flex flex-wrap gap-3 text-sm" data-testid="history-links">
+                    <a v-if="party.playlistCsvUrl" :href="party.playlistCsvUrl" download data-testid="download-playlist-csv" class="flex min-h-11 items-center rounded border border-border px-4 hover:text-primary">Download playlist (CSV)</a>
+                    <a v-if="party.historyPlaylistUrl" :href="party.historyPlaylistUrl" target="_blank" rel="noopener noreferrer" data-testid="history-playlist-link" class="flex min-h-11 items-center rounded border border-border px-4 hover:text-primary">Open History Playlist</a>
+                </div>
                 <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
             </template>
         </section>

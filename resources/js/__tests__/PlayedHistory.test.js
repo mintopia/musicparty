@@ -43,6 +43,14 @@ describe('PlayedHistory', () => {
         expect(w.find('[data-testid=history-list]').exists()).toBe(false);
     });
 
+    it('highlights the viewer\'s own requests', () => {
+        const w = mountHistory({history: {data: [play({id: 1, is_mine: true}), play({id: 2, is_mine: false})], meta: {from: 1, to: 2, total: 2, links: []}}});
+        const rows = w.findAll('[data-testid=history-item]');
+
+        expect(rows[0].attributes('data-mine')).toBe('true');
+        expect(rows[1].attributes('data-mine')).toBeUndefined();
+    });
+
     it('renders the play with its counts and requester', () => {
         const w = mountHistory();
 

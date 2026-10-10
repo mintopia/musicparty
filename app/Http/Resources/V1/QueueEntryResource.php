@@ -20,6 +20,7 @@ class QueueEntryResource extends JsonResource
         return [
             ...app(QueueEntryPresenter::class)($this->resource),
             'my_vote' => (int) $this->my_vote,
+            ...($this->resource->getAttribute('is_mine') === null ? [] : ['is_mine' => (bool) $this->resource->getAttribute('is_mine')]),
             ...($this->resource->relationLoaded('play') ? ['my_rating' => (int) $this->resource->play?->my_rating] : []),
         ];
     }

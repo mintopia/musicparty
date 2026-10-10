@@ -24,6 +24,25 @@ The system SHALL maintain Live Stats for every Party, visible to its Members thr
 - **WHEN** nothing has been played or requested yet
 - **THEN** the stats view shows empty states rather than errors
 
+### Requirement: Vote leaderboards
+Live Stats SHALL include two leaderboards of the Party's Members, one ranked by upvotes received and one by downvotes received on their Requests, showing the top entries of each. Votes on system Requests (those with no Member) and on Pending, Rejected or Removed Requests MUST NOT count. Leaderboards are visible only to Members of the Party, never on the TV screen or to anonymous visitors. Cached Live Stats written before the leaderboards existed MUST still render.
+
+#### Scenario: Members ranked by votes received
+- **WHEN** Members have received upvotes and downvotes on their Requests
+- **THEN** the stats view lists the Members with the most upvotes and the Members with the most downvotes, highest first
+
+#### Scenario: Fallback Requests excluded
+- **WHEN** a system Request from the Fallback Playlist receives Votes
+- **THEN** no leaderboard entry is created for it
+
+#### Scenario: No votes yet
+- **WHEN** no counted Votes have been cast
+- **THEN** both leaderboards show empty states
+
+#### Scenario: Older cached stats
+- **WHEN** a cached Live Stats payload lacks the leaderboard keys
+- **THEN** the stats view still renders, with empty leaderboards
+
 ### Requirement: Real-time updates
 Live Stats SHALL update in real time as Requests are made, Votes are cast and Plays complete, without the viewer reloading. Recalculation SHALL happen outside the request that caused it, and bursts of activity in a Party SHALL be coalesced into one recalculation, so that requesting, voting and rating are neither slowed down nor failed by Stats. Viewers SHALL see the update within about ten seconds. The data sent SHALL contain no member IDs or secrets beyond what is visible to Members in the Party.
 
@@ -83,6 +102,33 @@ A Party Export SHALL be retrievable by the Party's Host, by an instance admin, a
 #### Scenario: Moderator refused
 - **WHEN** a Moderator requests the export
 - **THEN** the request is refused
+
+#### Scenario: Members do not get the JSON export
+- **WHEN** a non-staff Member requests the JSON Party Export
+- **THEN** the request is refused, the Member playlist download being a separate feature
+
+### Requirement: Member playlist download
+The system SHALL let any non-banned Member of an Ended Party download the Party's Plays as a CSV file. The CSV SHALL have one row per Play in played order with the columns position, played at, title, artists, album, requester display name, score and Music Provider track URL. Cells that could be interpreted as spreadsheet formulas SHALL be neutralised. The JSON Party Export remains restricted to the Host, instance admins and Integration Tokens.
+
+#### Scenario: Member downloads the playlist
+- **WHEN** a Member requests the playlist download of an Ended Party
+- **THEN** a CSV is returned with a header row and one row per Play in played order, including the requester display name
+
+#### Scenario: Party has no Plays
+- **WHEN** a Member downloads the playlist of an Ended Party that played nothing
+- **THEN** the CSV contains only the header row
+
+#### Scenario: Party not Ended
+- **WHEN** the playlist download is requested for a Live or Paused Party
+- **THEN** the request is refused with an error stating the Party has not ended
+
+#### Scenario: Non-member or banned Member refused
+- **WHEN** a non-member, banned Member or anonymous caller requests the playlist download
+- **THEN** the request is refused
+
+#### Scenario: Formula injection
+- **WHEN** a Track title or other text cell begins with `=`, `+`, `-`, `@`, tab or carriage return
+- **THEN** the cell is prefixed with a single quote
 
 ### Requirement: Reopened Party exports
 If a Host reopens an Ended Party, its export SHALL be unavailable until it is Ended again, and a later export SHALL include Plays from the whole Party history.

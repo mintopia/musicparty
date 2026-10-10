@@ -93,6 +93,29 @@ The Polling Player SHALL observe playback by periodically asking the Music Provi
 - **WHEN** a poll shows nothing playing on the Host's account
 - **THEN** the Party's now-playing state shows idle
 
+### Requirement: Polling Player playback controls
+The Polling Player SHALL support the play, pause, skip, seek and volume controls by driving the Host's Spotify device through the Spotify Web API using the Host's linked account, under the shared Spotify rate-limit backoff. Volume SHALL be a whole percentage from 0 to 100. The Browser Player SHALL remain unsupported for every control.
+
+#### Scenario: Control reaches the Host's device
+- **WHEN** an authorised caller sends play, pause, skip, seek or volume for a Party that uses the Polling Player
+- **THEN** the matching command is sent to the Host's Spotify device and the call succeeds
+
+#### Scenario: No active device or restriction
+- **WHEN** Spotify reports no active device, or refuses the command for a restriction such as Premium being required
+- **THEN** the call is refused with a clear conflict error naming the reason, not a server error
+
+#### Scenario: Spotify rate limiting
+- **WHEN** Spotify is rate limiting requests
+- **THEN** the call is refused with a 429 error stating when to retry, without calling Spotify again until the back-off passes
+
+#### Scenario: Host account unavailable
+- **WHEN** the Host's account is not linked or Spotify rejects its credentials
+- **THEN** the call is refused as the Player being disconnected
+
+#### Scenario: Browser Player controls
+- **WHEN** a control is sent for a Party that uses the Browser Player
+- **THEN** the call is refused with the "unsupported by this Player" error and the UI shows the controls as disabled
+
 ### Requirement: Webhook
 The system SHALL accept an authenticated inbound HTTP call, made with a Player Token, that tells a Party's Polling Player to check playback immediately. A Webhook SHALL NOT be able to control playback.
 

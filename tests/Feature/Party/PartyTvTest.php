@@ -1,7 +1,9 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,4 +98,33 @@ it('throttles the anonymous API party routes with the same per-address budget', 
     $this->getJson('/api/v1/parties/ABCD')->assertTooManyRequests();
     $this->getJson('/api/v1/parties/ABCD/theme')->assertTooManyRequests();
     $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.50'])->getJson('/api/v1/parties/ABCD')->assertOk();
+});
+
+it('carries live like and dislike counts for the playing track without member identifiers', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD']);
+    $playing = TrackRequest::factory()->for($party)->create(['status' => RequestStatus::Playing]);
+    $play = Play::factory()->for($party)->create(['track_request_id' => $playing->id]);
+    $members = PartyMember::factory()->for($party)->count(3)->create();
+    Rating::factory()->for($play)->for($members[0], 'member')->create(['value' => 1]);
+    Rating::factory()->for($play)->for($members[1], 'member')->create(['value' => 1]);
+    Rating::factory()->for($play)->for($members[2], 'member')->create(['value' => -1]);
+
+    $this->withoutVite()->get('/parties/ABCD/tv')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('nowPlaying.likes', 2)
+            ->where('nowPlaying.dislikes', 1)
+            ->missing('nowPlaying.my_rating')
+            ->missing('nowPlaying.ratings')
+            ->missing('nowPlaying.members'));
+});
+
+it('reports zero counts when the playing track has no ratings', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD']);
+    $playing = TrackRequest::factory()->for($party)->create(['status' => RequestStatus::Playing]);
+    Play::factory()->for($party)->create(['track_request_id' => $playing->id]);
+
+    $this->withoutVite()->get('/parties/ABCD/tv')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('nowPlaying.likes', 0)
+            ->where('nowPlaying.dislikes', 0));
 });

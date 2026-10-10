@@ -44,6 +44,24 @@ readonly class PairingCatalogue
         return app($this->entries('music_providers')[$id]['class']);
     }
 
+    public function trackUrl(?string $providerId, ?string $providerTrackId): ?string
+    {
+        if ($providerId === null || ! isset($this->entries('music_providers')[$providerId])) {
+            return null;
+        }
+
+        return $this->provider($providerId)->trackUrl($providerTrackId);
+    }
+
+    public function playlistUrl(?string $providerId, ?string $providerPlaylistId): ?string
+    {
+        if ($providerId === null || ! isset($this->entries('music_providers')[$providerId])) {
+            return null;
+        }
+
+        return $this->provider($providerId)->playlistUrl($providerPlaylistId);
+    }
+
     public function player(string $kind): Player
     {
         return app(PlayerFactory::class)->make($kind);

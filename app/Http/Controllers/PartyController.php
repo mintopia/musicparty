@@ -107,8 +107,9 @@ class PartyController extends Controller
         SearchPartyProvider $search,
         ThrottleSearch $throttleSearch,
         EnabledMods $enabledMods,
+        PairingCatalogue $pairingCatalogue,
         Party $party,
-        string $section = 'queue',
+        ?string $section = null,
     ): Response|RedirectResponse {
         $member = $party->memberFor($this->currentUser($request));
 
@@ -116,6 +117,7 @@ class PartyController extends Controller
             return redirect()->route('home', ['code' => $party->code]);
         }
 
+        $section ??= $party->state === PartyState::Ended ? 'history' : 'queue';
         $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
         $results = null;
@@ -140,6 +142,12 @@ class PartyController extends Controller
                 'playerKind' => $party->player_kind,
                 'downvotes' => (bool) $party->downvotes,
                 'selection_mode' => $party->selection_mode->value,
+                'historyPlaylistUrl' => $party->history_playlist_id === null
+                    ? null
+                    : $pairingCatalogue->playlistUrl($party->music_provider, $party->history_playlist_id),
+                'playlistCsvUrl' => $party->state === PartyState::Ended && $this->currentUser($request)->can('exportPlaylist', $party)
+                    ? route('parties.playlist.csv', ['party' => $party->code])
+                    : null,
             ],
             'membership' => [
                 'id' => $member->id,
@@ -154,6 +162,7 @@ class PartyController extends Controller
             'ratablePlay' => $this->ratablePlay($request, $party, $member),
             'memberVotes' => $listMemberVotes($party, $member),
             'upNext' => $playback['up_next'],
+            'startedAt' => $playback['started_at'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
             'filters' => $request->filters(),

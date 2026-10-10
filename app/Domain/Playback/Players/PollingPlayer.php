@@ -18,10 +18,10 @@ use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
 use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
-use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
 use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Support\Facades\Cache;
 
 class PollingPlayer implements BindsToParty, Player
@@ -66,7 +66,7 @@ class PollingPlayer implements BindsToParty, Player
 
     public function supports(Control $control): bool
     {
-        return false;
+        return true;
     }
 
     public function state(): PlaybackState
@@ -158,27 +158,53 @@ class PollingPlayer implements BindsToParty, Player
 
     public function play(): void
     {
-        throw UnsupportedControl::for(Control::Play);
+        $this->command(fn (PlaybackClient $client, string $account) => $client->play($account));
     }
 
     public function pause(): void
     {
-        throw UnsupportedControl::for(Control::Pause);
+        $this->command(fn (PlaybackClient $client, string $account) => $client->pause($account));
     }
 
     public function skip(): void
     {
-        throw UnsupportedControl::for(Control::Skip);
+        $this->command(fn (PlaybackClient $client, string $account) => $client->next($account));
     }
 
     public function seek(int $positionMs): void
     {
-        throw UnsupportedControl::for(Control::Seek);
+        $this->command(fn (PlaybackClient $client, string $account) => $client->seek($positionMs, $account));
     }
 
     public function volume(int $level): void
     {
-        throw UnsupportedControl::for(Control::Volume);
+        $this->command(fn (PlaybackClient $client, string $account) => $client->volume($level, $account));
+    }
+
+    /**
+     * @param  Closure(PlaybackClient, string): void  $send
+     */
+    private function command(Closure $send): void
+    {
+        $account = $this->linkedHostAccount();
+
+        try {
+            $send($this->client, (string) $account->getKey());
+        } catch (ProviderTemporaryFailure $failure) {
+            throw $failure->retryAfterSeconds !== null
+                ? new PlayerRateLimitedException($failure->retryAfterSeconds)
+                : new PlayerDisconnectedException($failure->getMessage());
+        } catch (ProviderUnavailableException $failure) {
+            throw new PlayerDisconnectedException($failure->getMessage());
+        }
+    }
+
+    private function linkedHostAccount(): LinkedAccount
+    {
+        $party = $this->partyCode === null ? null : Party::findByCode($this->partyCode);
+        $account = $party === null ? null : $this->hostAccount($party);
+
+        return $account ?? throw new PlayerDisconnectedException('The Host account is not linked.');
     }
 
     private function stateKey(): string
