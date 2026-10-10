@@ -47,6 +47,10 @@ readonly class EvaluateRequestRules
 
     private function failureOutcome(EnabledMod $enabled): RuleOutcome
     {
-        return ($enabled->context->settings['failure_behaviour'] ?? 'accept') === 'hold' ? RuleOutcome::Hold : RuleOutcome::Accept;
+        return match ($enabled->context->settings['failure_behaviour'] ?? 'accept') {
+            'hold' => RuleOutcome::Hold,
+            'reject' => RuleOutcome::Reject,
+            default => RuleOutcome::Accept,
+        };
     }
 }

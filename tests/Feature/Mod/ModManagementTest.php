@@ -18,6 +18,7 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     $this->withoutVite();
+    app()->instance(ModRegistry::class, new ModRegistry);
     app(ModRegistry::class)->register(new SettingsFixtureMod);
     $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
     $this->other = Party::factory()->live()->create(['code' => 'WXYZ']);
