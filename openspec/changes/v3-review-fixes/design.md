@@ -96,7 +96,7 @@ Every broadcast gets an explicit dotted wire name. Expected outcome of the audit
 | `queue.updated` | `party.{code}` | `Show.vue`, `Tv.vue` apply the payload |
 | `party.state_changed` (new broadcast of `PartyStateChanged`) | `party.{code}` | `Show.vue`, `Tv.vue` |
 | `theme.updated` | `party.{code}` | `Tv.vue`, `Show.vue` |
-| `stats.updated` | `party.{code}` | `Stats.vue` |
+| `stats.updated` | `party.{code}.members` (presence) | `Stats.vue` |
 | presence | `party.{code}.members` | `Members.vue`; joined by every authenticated Party page (D7) |
 | `pending_request.added`, `pending_request.resolved` | `party.{code}.moderators` | `Pending.vue` |
 | `party_log.entry_added` | `party.{code}.moderators` | `Log.vue` |

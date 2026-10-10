@@ -6,7 +6,9 @@ use App\Domain\Admin\Models\Setting;
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
 use App\Domain\Party\Events\PartyLogEntryRecorded;
+use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Listeners\BroadcastPartyLogEntry;
+use App\Domain\Party\Listeners\BroadcastPartyState;
 use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
@@ -51,6 +53,7 @@ class EventServiceProvider extends ServiceProvider
             SpotifyExtendSocialite::class.'@handle',
         ],
         PartyLogEntryRecorded::class => [BroadcastPartyLogEntry::class],
+        PartyStateChanged::class => [BroadcastPartyState::class],
         RequestCreated::class => [RefreshStatsOnPartyActivity::class],
         VoteCast::class => [RefreshStatsOnPartyActivity::class],
         TrackEnded::class => [RefreshStatsOnPartyActivity::class],

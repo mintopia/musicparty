@@ -9,6 +9,9 @@
                 },
                 "Party.ThemeUpdatedEvent": {
                     "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
+                },
+                "Party.PartyStateChangedEvent": {
+                    "$ref": "#/components/messages/Party.PartyStateChangedEvent"
                 }
             },
             "parameters": {
@@ -39,7 +42,7 @@
         },
         "partyMember": {
             "address": "private-party.{code}.member.{memberId}",
-            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices Request decision notices (pending, approved, rejected, removed), and the Member's own Vote and Rating changes.",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices Request decision notices (pending, approved, rejected, removed), and the Member's own Vote and Rating changes, and the Ban notice sent just before the connection is terminated.",
             "messages": {
                 "Party.RequestRejectedEvent": {
                     "$ref": "#/components/messages/Party.RequestRejectedEvent"
@@ -52,6 +55,9 @@
                 },
                 "Party.MemberRatingChangedEvent": {
                     "$ref": "#/components/messages/Party.MemberRatingChangedEvent"
+                },
+                "Party.MemberBannedEvent": {
+                    "$ref": "#/components/messages/Party.MemberBannedEvent"
                 }
             },
             "parameters": {
@@ -1059,6 +1065,49 @@
                 },
                 "title": "Party.MemberRatingChangedEvent",
                 "x-event-class": "App\\Domain\\Queue\\Broadcast\\MemberRatingChangedEvent"
+            },
+            "Party.PartyStateChangedEvent": {
+                "contentType": "application/json",
+                "name": "party.state_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "state": {
+                            "description": "New Party state",
+                            "enum": [
+                                "live",
+                                "paused",
+                                "ended"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PartyStateChangedEvent",
+                "x-event-class": "App\\Domain\\Party\\Broadcast\\PartyStateChangedEvent"
+            },
+            "Party.MemberBannedEvent": {
+                "contentType": "application/json",
+                "name": "member.banned",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "member_id": {
+                            "description": "Id of the banned Member",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "member_id"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberBannedEvent",
+                "x-event-class": "App\\Domain\\Membership\\Broadcast\\MemberBannedEvent"
             }
         }
     },
@@ -1079,6 +1128,9 @@
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.PartyStateChangedEvent"
                 }
             ]
         },
@@ -1190,6 +1242,17 @@
             "messages": [
                 {
                     "$ref": "#/channels/partyMember/messages/Party.MemberRatingChangedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberBanned": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberBannedEvent"
                 }
             ]
         }

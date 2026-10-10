@@ -55,3 +55,22 @@ it('documents each broadcast event under its broadcastAs wire name', function ()
         expect($message['name'])->toBe($event->broadcastAs());
     }
 });
+
+it('has a consumer for every documented broadcast event', function () {
+    $externalConsumers = [
+        'player.command',
+        'browser-player.command',
+    ];
+
+    expect(AsyncApiCoverage::unconsumed(asyncApiSpec(), resource_path('js'), $externalConsumers))->toBe([]);
+});
+
+it('reports a documented event with no listener and no external consumer', function () {
+    $spec = ['components' => ['messages' => [
+        'Ghost' => ['name' => 'ghost.happened', 'x-event-class' => 'X'],
+        'Heard' => ['name' => 'queue.updated', 'x-event-class' => 'Y'],
+        'External' => ['name' => 'player.command', 'x-event-class' => 'Z'],
+    ]]];
+
+    expect(AsyncApiCoverage::unconsumed($spec, resource_path('js'), ['player.command']))->toBe(['ghost.happened']);
+});

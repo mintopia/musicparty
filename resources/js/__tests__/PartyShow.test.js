@@ -275,3 +275,30 @@ describe('playback controls', () => {
         expect(w.find('[data-testid="playback-error"]').text()).toContain('disconnected');
     });
 });
+
+describe('Party Show realtime state and toasts', () => {
+    it('applies party.state_changed without reload', async () => {
+        const w = mount(Show, {props: baseProps()});
+        listeners['.party.state_changed']({state: 'ended'});
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=party-state]').text()).toBe('ended');
+        expect(reload).not.toHaveBeenCalled();
+    });
+
+    it('toasts for rejected, approved and banned, but not for other decisions', async () => {
+        const w = mount(Show, {props: baseProps()});
+        listeners['.request.rejected']({provider_track_id: 'x', reason: 'Too loud'});
+        listeners['.request.decided']({request_id: 1, status: 'rejected', reason: null});
+        await w.vm.$nextTick();
+        expect(w.findAll('[data-testid=toast]')).toHaveLength(1);
+        expect(w.get('[data-testid=toast]').text()).toContain('Too loud');
+
+        listeners['.request.decided']({request_id: 1, status: 'approved', reason: null});
+        listeners['.member.banned']({member_id: 5});
+        await w.vm.$nextTick();
+        const texts = w.findAll('[data-testid=toast]').map((t) => t.text());
+        expect(texts).toHaveLength(3);
+        expect(texts[1]).toContain('approved');
+        expect(texts[2]).toContain('banned');
+    });
+});
