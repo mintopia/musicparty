@@ -55,6 +55,11 @@ class PartyPolicy
         return $party->canBeManagedBy($user);
     }
 
+    public function export(User $user, Party $party): bool
+    {
+        return $party->canBeManagedBy($user) || $user->hasRole('admin');
+    }
+
     public function viewLog(User $user, Party $party): bool
     {
         $member = $party->memberFor($user);

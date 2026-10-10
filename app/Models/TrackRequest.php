@@ -23,6 +23,8 @@ use Illuminate\Support\Carbon;
  * @property int|null $likes
  * @property int|null $dislikes
  * @property int|null $my_rating
+ * @property int|null $upvotes
+ * @property int|null $downvotes
  * @property int|null $party_member_id
  * @property string $provider_track_id
  * @property int $duration_ms
