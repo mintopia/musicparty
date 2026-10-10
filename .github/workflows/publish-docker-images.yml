@@ -6,6 +6,15 @@ on:
     types: [completed]
   workflow_dispatch:
 
+run-name: >-
+  ${{ github.event_name == 'workflow_dispatch'
+  && format('Docker image for {0} (on demand)', github.ref_name)
+  || format('Docker image for {0}', github.event.workflow_run.head_branch) }}
+
+concurrency:
+  group: publish-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
@@ -20,7 +29,9 @@ jobs:
     if: >-
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push')
+      github.event.workflow_run.event == 'push' &&
+      (contains(fromJSON('["master", "develop", "feature/v3-rewrite"]'), github.event.workflow_run.head_branch) ||
+      startsWith(github.event.workflow_run.head_branch, 'v')))
     strategy:
       fail-fast: true
       matrix:
@@ -141,6 +152,7 @@ jobs:
             type=raw,value=latest,enable=${{ env.PUBLISH_REF == 'master' }}
             type=raw,value=develop,enable=${{ env.PUBLISH_REF == 'develop' }}
             type=raw,value=feature-v3-rewrite,enable=${{ env.PUBLISH_REF == 'feature/v3-rewrite' }}
+            type=ref,event=branch,enable=${{ github.event_name == 'workflow_dispatch' }}
             type=raw,value=sha-${{ env.PUBLISH_SHA }}
             type=semver,pattern={{version}},value=${{ env.PUBLISH_REF }},enable=${{ startsWith(env.PUBLISH_REF, 'v') }}
 

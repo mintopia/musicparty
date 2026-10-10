@@ -23,6 +23,10 @@ class PlaylistCsvController extends Controller
         return response()->streamDownload(function () use ($rows): void {
             $out = fopen('php://output', 'w');
 
+            if ($out === false) {
+                return;
+            }
+
             foreach ($rows as $row) {
                 fputcsv($out, $row, ',', '"', '');
             }
