@@ -18,7 +18,7 @@ final class V2Schema
     public const V2_ONLY_TABLES = [
         'websockets_statistics_entries', 'themes', 'party_member_roles', 'artists', 'albums', 'songs',
         'artist_song', 'upcoming_songs', 'played_songs', 'votes', 'song_ratings', 'mods', 'mod_settings',
-        'party_mod_settings', 'party_mod_setting_events', 'party_moderations',
+        'party_mod_settings', 'party_mod_setting_events', 'party_moderations', 'telescope_entries',
     ];
 
     public static function create(): void
@@ -31,6 +31,14 @@ final class V2Schema
 
     private static function createSharedTables(): void
     {
+        Schema::create('telescope_entries', function (Blueprint $table) {
+            $table->bigIncrements('sequence');
+            $table->uuid('uuid')->unique();
+            $table->string('type', 20);
+            $table->longText('content');
+            $table->dateTime('created_at')->nullable();
+        });
+
         Schema::create('websockets_statistics_entries', function (Blueprint $table) {
             $table->id();
             $table->string('app_id');

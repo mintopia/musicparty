@@ -64,6 +64,9 @@ return new class extends Migration
         'themes',
         'party_member_roles',
         'websockets_statistics_entries',
+        'telescope_entries_tags',
+        'telescope_entries',
+        'telescope_monitoring',
     ];
 
     public function up(): void
