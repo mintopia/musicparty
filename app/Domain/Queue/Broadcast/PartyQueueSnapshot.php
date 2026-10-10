@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Broadcast;
 
+use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\TrackRequest;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Cache;
 class PartyQueueSnapshot
 {
     public const VERSION = 1;
+
+    public function __construct(private readonly ResolveDecorations $decorations) {}
 
     /**
      * @return array{version: int, sequence: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
@@ -77,6 +80,7 @@ class PartyQueueSnapshot
             'likes' => (int) $request->likes,
             'dislikes' => (int) $request->dislikes,
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
+            'decorations' => ($this->decorations)($request),
         ];
     }
 }

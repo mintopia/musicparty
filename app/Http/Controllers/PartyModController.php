@@ -6,6 +6,7 @@ use App\Domain\Mod\Actions\DisableMod;
 use App\Domain\Mod\Actions\EnableMod;
 use App\Domain\Mod\Actions\ListMods;
 use App\Domain\Mod\Actions\UpdateModSettings;
+use App\Domain\Mod\EnabledMods;
 use App\Http\Requests\Api\V1\UpdateModSettingsRequest;
 use App\Http\Resources\V1\ModResource;
 use App\Models\Party;
@@ -17,13 +18,14 @@ use Inertia\Response;
 
 class PartyModController extends Controller
 {
-    public function index(Request $request, ListMods $listMods, Party $party): Response
+    public function index(Request $request, ListMods $listMods, EnabledMods $enabledMods, Party $party): Response
     {
         $this->authorize('manageMods', $party);
 
         return Inertia::render('Party/Mods', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'mods' => ModResource::collection($listMods($party))->resolve($request),
+            'enabled_mods' => $enabledMods->idsFor($party),
         ]);
     }
 

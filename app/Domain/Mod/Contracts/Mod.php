@@ -29,6 +29,11 @@ interface Mod
     public function scoreModifiers(): array;
 
     /**
+     * @return list<DecorationProvider>
+     */
+    public function decorationProviders(): array;
+
+    /**
      * @return list<ScheduledAction>
      */
     public function scheduledActions(): array;
