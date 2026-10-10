@@ -74,6 +74,15 @@ jobs:
           --health-interval=5s
           --health-timeout=5s
           --health-retries=20
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
     env:
       DB_CONNECTION: mysql
       DB_HOST: 127.0.0.1
@@ -81,6 +90,7 @@ jobs:
       DB_DATABASE: musicparty
       DB_USERNAME: root
       DB_PASSWORD: root
+      REDIS_HOST: 127.0.0.1
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -88,7 +98,7 @@ jobs:
           php-version: '8.4'
           coverage: xdebug
           tools: composer:v2
-          extensions: opentelemetry
+          extensions: opentelemetry, redis
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache

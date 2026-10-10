@@ -199,12 +199,6 @@ parameters:
 			path: app/Models/Setting.php
 
 		-
-			message: '#^Property App\\Models\\Setting\:\:\$cached type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/Setting.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
 			identifier: property.notFound
 			count: 2

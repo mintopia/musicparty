@@ -5,7 +5,7 @@ namespace App\Support\RateLimiting;
 use Illuminate\Contracts\Redis\Factory as RedisFactory;
 use Illuminate\Support\Carbon;
 
-class LeakyBucket
+class LeakyBucket implements Bucket
 {
     private const string SCRIPT = <<<'LUA'
 local now = tonumber(ARGV[1])

@@ -6,7 +6,6 @@ use App\Models\PartyMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
@@ -18,12 +17,10 @@ beforeEach(function () {
     $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
     $this->user = User::factory()->create();
     PartyMember::factory()->for($this->party)->for($this->user)->create();
-    Redis::connection()->del("search:{$this->user->id}");
     Carbon::setTestNow(Carbon::parse('2026-01-01 12:00:00'));
 });
 
 afterEach(function () {
-    Redis::connection()->del("search:{$this->user->id}");
     Carbon::setTestNow();
 });
 
@@ -80,16 +77,13 @@ it('does not affect another user', function () {
 
     $other = User::factory()->create();
     PartyMember::factory()->for($this->party)->for($other)->create();
-    Redis::connection()->del("search:{$other->id}");
     Sanctum::actingAs($other);
 
     apiSearch()->assertOk();
-    Redis::connection()->del("search:{$other->id}");
 });
 
 it('does not spend allowance on non-members', function () {
     $outsider = User::factory()->create();
-    Redis::connection()->del("search:{$outsider->id}");
     Sanctum::actingAs($outsider);
 
     foreach (range(1, 35) as $attempt) {

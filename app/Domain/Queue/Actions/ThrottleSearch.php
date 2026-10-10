@@ -4,11 +4,11 @@ namespace App\Domain\Queue\Actions;
 
 use App\Domain\Queue\Exceptions\SearchRateLimitedException;
 use App\Models\User;
-use App\Support\RateLimiting\LeakyBucket;
+use App\Support\RateLimiting\Bucket;
 
 class ThrottleSearch
 {
-    public function __construct(private readonly LeakyBucket $bucket) {}
+    public function __construct(private readonly Bucket $bucket) {}
 
     public function __invoke(User $user): void
     {
