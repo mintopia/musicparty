@@ -22,7 +22,7 @@ class RatePlay
     public function __invoke(PartyMember $member, Play $play, ?VoteDirection $direction): Play
     {
         $changed = DB::transaction(function () use ($member, $play, $direction): bool {
-            $party = Party::query()->whereKey($play->party_id)->lockForUpdate()->firstOrFail();
+            $party = Party::query()->whereKey($play->party_id)->sharedLock()->firstOrFail();
 
             if ($party->state === PartyState::Ended) {
                 throw RequestRefusedException::partyEnded();
