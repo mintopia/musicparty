@@ -20,7 +20,7 @@ class BrowserPlayer implements Player
 {
     public const string KIND = 'browser';
 
-    private const int CLAIM_TTL_SECONDS = 30;
+    private const int CLAIM_TTL_SECONDS = 180;
 
     private const int STATE_TTL_SECONDS = 86400;
 
@@ -114,11 +114,10 @@ class BrowserPlayer implements Player
 
     public function remember(string $tabId, PlaybackState $state): bool
     {
-        if (! $this->holds($tabId)) {
+        if (! $this->claim($tabId)) {
             return false;
         }
 
-        Cache::put($this->claimKey(), $tabId, self::CLAIM_TTL_SECONDS);
         Cache::put($this->stateKey(), [
             'status' => $state->status->value,
             'provider' => $state->currentTrack?->providerId,

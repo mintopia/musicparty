@@ -207,7 +207,7 @@ it('ignores a release from a tab that is not the player', function () {
 it('frees an abandoned claim once it expires', function () {
     $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
 
-    $this->travel(31)->seconds();
+    $this->travel(181)->seconds();
 
     $this->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-b'])->assertOk();
 });
@@ -247,4 +247,30 @@ it('never broadcasts the token on any channel through a full playback flow', fun
 
     expect($broadcast)->not->toBeEmpty()
         ->and(implode('', $broadcast))->not->toContain('secret-host-token');
+});
+
+it('keeps the role across a long pause when the tab heartbeats', function () {
+    $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
+
+    $this->travel(120)->seconds();
+    $this->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
+    $this->travel(120)->seconds();
+
+    expect(browserPlayerFor($this->party)->holds('tab-a'))->toBeTrue();
+    browserPlayerFor($this->party)->enqueue('spotify', 'track-1');
+});
+
+it('lets a tab recover its expired role by reporting state', function () {
+    $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
+    $this->travel(181)->seconds();
+
+    $this->postJson(route('parties.player.report', $this->party), ['tab_id' => 'tab-a', 'status' => 'paused', 'track_id' => null, 'position_ms' => 0])->assertOk();
+
+    expect(browserPlayerFor($this->party)->holds('tab-a'))->toBeTrue();
+});
+
+it('does not let a report steal the role from another tab', function () {
+    $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
+
+    $this->postJson(route('parties.player.report', $this->party), ['tab_id' => 'tab-b', 'status' => 'paused', 'track_id' => null, 'position_ms' => 0])->assertStatus(409);
 });

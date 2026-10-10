@@ -104,4 +104,17 @@ describe('BrowserPlayer', () => {
         expect(JSON.stringify({...sessionStorage})).not.toContain('secret-token');
         expect(fetchMock.mock.calls.filter(([url]) => url.startsWith('/parties')).every(([, options]) => !options.body.includes('secret-token'))).toBe(true);
     });
+
+    it('re-claims the player role on a heartbeat even while paused', async () => {
+        vi.useFakeTimers();
+        const wrapper = mount(BrowserPlayer, {props});
+        mounted = wrapper;
+        await wrapper.get('[data-testid=player-start]').trigger('click');
+        await vi.advanceTimersByTimeAsync(0);
+        const claims = () => fetchMock.mock.calls.filter(([url]) => url === '/parties/ABCD/player/claim').length;
+        const before = claims();
+        await vi.advanceTimersByTimeAsync(20000);
+        expect(claims()).toBe(before + 1);
+        vi.useRealTimers();
+    });
 });

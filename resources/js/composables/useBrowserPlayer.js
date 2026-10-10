@@ -2,6 +2,7 @@ import {onBeforeUnmount, ref} from 'vue';
 
 const SDK_URL = 'https://sdk.scdn.co/spotify-player.js';
 const REPORT_INTERVAL_MS = 5000;
+const HEARTBEAT_INTERVAL_MS = 20000;
 
 const csrfToken = () => document.querySelector('meta[name="csrf-token"]')?.content ?? '';
 
@@ -27,6 +28,7 @@ export function useBrowserPlayer({partyCode, accessToken, channel}) {
     let player = null;
     let deviceId = null;
     let timer = null;
+    let heartbeat = null;
     let lastState = null;
 
     const post = (path, body) => fetch(`${base}/${path}`, {
@@ -105,12 +107,21 @@ export function useBrowserPlayer({partyCode, accessToken, channel}) {
                 report({...lastState, position: lastState.position + REPORT_INTERVAL_MS});
             }
         }, REPORT_INTERVAL_MS);
+        heartbeat = setInterval(async () => {
+            const response = await post('claim', {});
+
+            if (!response.ok) {
+                status.value = 'blocked';
+                message.value = (await response.json().catch(() => ({}))).message ?? 'Another tab is the player.';
+            }
+        }, HEARTBEAT_INTERVAL_MS);
         await player.connect();
         await player.activateElement?.();
     };
 
     const stop = () => {
         clearInterval(timer);
+        clearInterval(heartbeat);
         window.removeEventListener('pagehide', release);
         window.Echo?.leave(channel);
         player?.disconnect();
