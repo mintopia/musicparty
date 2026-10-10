@@ -1,81 +1,101 @@
-services:
-  musicparty:
-    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - database
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./uploads:/app/storage/app/public
+x-app: &app
+  image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
+  env_file: .env
+  volumes:
+    - ./logs:/app/storage/logs
+    - ./storage/app:/app/storage/app
 
+x-infrastructure: &infrastructure
+  database:
+    condition: service_healthy
   redis:
-    image: redis:6.2.6
-    restart: unless-stopped
+    condition: service_healthy
 
+services:
   database:
     image: mariadb:10.5-focal
     env_file: .env.mariadb
     restart: unless-stopped
     volumes:
       - ./database:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: redis:6.2.6
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - ./redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  migrate:
+    <<: *app
+    restart: "no"
+    command: ["migrate"]
+    depends_on: *infrastructure
+
+  web:
+    <<: *app
+    restart: unless-stopped
+    command: ["web"]
+    stop_grace_period: 30s
+    depends_on:
+      <<: *infrastructure
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "wget", "-q", "-O", "/dev/null", "http://localhost:8080/api/v1/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   horizon:
-    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
+    <<: *app
     restart: unless-stopped
-    env_file: .env
+    command: ["horizon"]
+    stop_grace_period: 75s
     depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./uploads:/app/storage/app/public
-    stop_grace_period: 90s
-    entrypoint: [ "php", "artisan", "horizon" ]
+      <<: *infrastructure
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
-        disable: true
-
+      disable: true
 
   scheduler:
-    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
+    <<: *app
     restart: unless-stopped
-    env_file: .env
+    command: ["scheduler"]
     depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./uploads:/app/storage/app/public
-    entrypoint: [ "php", "artisan", "schedule:work"]
+      <<: *infrastructure
+      migrate:
+        condition: service_completed_successfully
     healthcheck:
-        disable: true
+      disable: true
 
   reverb:
-    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
+    <<: *app
     restart: unless-stopped
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./uploads:/app/storage/app/public
-    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
+    command: ["reverb"]
+    stop_grace_period: 30s
+    depends_on: *infrastructure
     healthcheck:
       disable: true
 
   artisan:
-    image: ghcr.io/mintopia/musicparty:feature-v3-rewrite
+    <<: *app
     profiles:
       - artisan
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./uploads:/app/storage/app/public
-    entrypoint: [ "php", "artisan" ]
+    command: ["list"]
+    depends_on: *infrastructure
     healthcheck:
       disable: true
