@@ -144,6 +144,7 @@ it('rejects an oversized raw frame before decoding it', function (string $messag
     expect(discarded())->toBe(1);
 })->with([
     'undecodable oversize' => [fn () => '{'.str_repeat('x', 9000)],
+    'oversize valid frame on the player channel' => [fn () => clientFrame(['data' => ['blob' => str_repeat('x', 9000)]])],
     'oversize on a foreign channel' => [fn () => clientFrame(['channel' => 'private-party.X.moderators', 'data' => ['blob' => str_repeat('x', 9000)]])],
 ]);
 

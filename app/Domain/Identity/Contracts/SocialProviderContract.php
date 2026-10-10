@@ -16,8 +16,7 @@ interface SocialProviderContract
 
     /**
      * Fetch configuration information for the provider.
-     */
-    /**
+     *
      * @return array<string, \stdClass>
      */
     public function configMapping(): array;
