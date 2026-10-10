@@ -28,6 +28,7 @@ Route::get('/', [HomeController::class, 'home'])->name('home');
 
 Route::get('parties/{party}/tv', [PartyTvController::class, 'show'])
     ->where('party', '[A-Za-z]{4}')
+    ->middleware('throttle:party-public')
     ->name('parties.tv');
 
 Route::middleware('auth')->group(function () {

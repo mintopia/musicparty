@@ -21,6 +21,7 @@ return [
     'playback' => [
         'enqueue_backoff' => [5, 15, 30, 60, 120, 300],
     ],
+    'public_routes_per_minute' => (int) env('MUSICPARTY_PUBLIC_ROUTES_PER_MINUTE', 60),
     'search_rate_limit' => [
         'burst' => (int) env('MUSICPARTY_SEARCH_BURST', 30),
         'per_second' => (float) env('MUSICPARTY_SEARCH_PER_SECOND', 1),
