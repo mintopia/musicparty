@@ -85,7 +85,7 @@ The first-party Artist & Album Limit Mod SHALL reject a Request when the request
 - **THEN** they do not count towards the cap
 
 ### Requirement: Variety Mod
-The first-party Variety Mod SHALL be a Score Modifier that down-weights a Pending or Queued Request whose requester is the same as, or whose artist matches, the Party's currently Playing Request, in both weighted and deterministic selection. Its integer settings (0 to 100) are requester_penalty_percent (default 50) and artist_penalty_percent (default 50); 0 disables that penalty. A matching penalty multiplies the Request's vote score by (100 - penalty)% and the Mod returns the difference as its adjustment; both penalties apply multiplicatively. The adjusted score SHALL remain at least 1 for a Request with a positive vote score so it stays eligible in weighted mode, and a Request with a zero or negative vote score SHALL NOT be adjusted. Artists SHALL be matched by the shared name normalisation, with a multi-artist Track matching when any artist matches. The Playing Request SHALL be looked up once per rank pass, and no adjustment SHALL be made when nothing is Playing.
+The first-party Variety Mod SHALL be a Score Modifier that down-weights a Pending or Queued Request whose requester is the same as, or whose artist matches, the Party's currently Playing Request, in both weighted and deterministic selection. Its integer settings (0 to 100) are requester_penalty_percent (default 50) and artist_penalty_percent (default 50); 0 disables that penalty. A matching penalty multiplies the Request's vote score by (100 - penalty)%, rounded to the nearest whole number, and the Mod returns the difference as its adjustment; both penalties apply multiplicatively. The adjusted score SHALL remain at least 1 for a Request with a positive vote score so it stays eligible in weighted mode, and a Request with a zero or negative vote score SHALL NOT be adjusted. Artists SHALL be matched by the shared name normalisation, with a multi-artist Track matching when any artist matches. The Playing Request SHALL be looked up once per rank pass, and no adjustment SHALL be made when nothing is Playing.
 
 #### Scenario: Same requester
 - **WHEN** a Request has 10 votes, was made by the member who requested the Playing Request, and requester_penalty_percent is 50
@@ -97,7 +97,7 @@ The first-party Variety Mod SHALL be a Score Modifier that down-weights a Pendin
 
 #### Scenario: Both match
 - **WHEN** a Request matches on both requester and artist with both penalties at 50
-- **THEN** its effective score is 25% of its votes
+- **THEN** its effective score is 25% of its votes, rounded
 
 #### Scenario: Disabled penalty
 - **WHEN** a penalty setting is 0

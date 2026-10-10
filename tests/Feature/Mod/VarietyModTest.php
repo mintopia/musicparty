@@ -6,6 +6,7 @@ use App\Domain\Mod\ModSettings;
 use App\Domain\Mod\Variety\VarietyMod;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\RankQueue;
+use App\Domain\Queue\Actions\SelectUpNext;
 use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
@@ -158,4 +159,13 @@ it('looks up the playing request once per rank pass', function () {
     $lookups = collect(DB::getQueryLog())->filter(fn (array $q): bool => str_contains($q['query'], 'limit 1') && in_array(RequestStatus::Playing->value, $q['bindings'], true));
 
     expect($lookups)->toHaveCount(1);
+});
+
+it('lets a lower-voted different artist win selection over the playing artist', function () {
+    enableVariety($this->party);
+    varietyRequest($this->party, $this->host, ['The Band'], 4);
+    $variety = varietyRequest($this->party, $this->other, ['Someone'], 3);
+
+    expect(app(SelectUpNext::class)($this->party)->is($variety))->toBeTrue()
+        ->and($variety->fresh()->selection_score)->toBe(3);
 });
