@@ -20,7 +20,6 @@ use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::post('proxy', [HomeController::class, 'proxy'])->name('proxy');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
