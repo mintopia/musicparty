@@ -29,8 +29,8 @@ Terms such as Party, Host, Request, Queue, Up Next and Player are defined in [GL
 - Sanctum for API and Player Tokens. Pulse and Horizon dashboards are limited to admins.
 - OpenTelemetry and Prometheus metrics are available for observability (see below).
 
-Application code is split into bounded contexts under `app/Domain`: Admin, Identity, Mod, Music, Party, PartyLog,
-Playback, Queue, Stats and Theming. Music Providers and Players are separate concepts
+Application code is split into bounded contexts under `app/Domain`: Admin, Identity, Mod, Music, Party, Playback,
+Queue, Stats and Theming. Music Providers and Players are separate concepts
 ([ADR-0001](docs/adr/0001-separate-music-provider-and-player.md)).
 
 ## Local development
@@ -41,7 +41,7 @@ Requires Docker with Compose. The commands below use the helper services defined
 cp .env.example .env
 docker compose run --rm composer install
 docker compose run --rm artisan key:generate
-docker compose up -d db redis
+docker compose up -d --wait db redis
 docker compose run --rm artisan migrate
 docker compose run --rm artisan db:seed
 docker compose run --rm npm install
@@ -81,8 +81,8 @@ REVERB_PUBLIC_PORT=8080
 REVERB_PUBLIC_SCHEME=http
 ```
 
-For hot reloading, run `docker compose --profile vite up vite` instead of `npm run build`. A Traefik variant is in
-`docker-compose.override.traefik.yml`.
+For hot reloading, run `docker compose --profile vite up vite` instead of `npm run build`. `docker-compose.override.traefik.yml` is a development example that only routes the app to a local Traefik. It has no TLS
+and does not route Reverb, so it is not a production setup.
 
 Other helpers: `docker compose run --rm shell` opens a shell, and `docker compose run --rm artisan <command>` runs
 Artisan.
@@ -135,7 +135,7 @@ Each Party has one Player, chosen by its Host in the Party settings.
 - **Browser Player**: opens at `/parties/{code}/player` and plays audio in the Host's browser tab.
 - **Polling Player**: Music Party asks Spotify what is playing on the Host's account. Polling intervals are set with
   the `MUSICPARTY_POLL_*` variables. A Webhook can trigger an immediate check but cannot control playback.
-- **Soloist Player**: a [Soloist Proxy](../musicparty-soloist) connects in to Reverb and pushes playback events. The
+- **Soloist Player**: a Soloist proxy connects in to Reverb and pushes playback events. The
   Host issues a Player Token for the Party (`POST /api/v1/parties/{party}/player-tokens`), and the relay uses it to
   join the private `player.{code}` channel. Tokens are revocable by the Host. See
   [ADR-0003](docs/adr/0003-soloist-connects-via-reverb-pusher-protocol.md).
@@ -166,11 +166,11 @@ Images are published to `ghcr.io/mintopia/musicparty` by `.github/workflows/publ
 and `linux/arm64`. Tags: `latest` (master branch), `develop` (develop branch), `feature-v3-rewrite` (the v3 integration
 branch) and a version tag for each `vX.Y.Z` release.
 
-`example/docker-compose.yml` runs the web app, Horizon, the scheduler, Reverb, Redis and MariaDB from the image.
+`example/docker-compose.yml` uses the `feature-v3-rewrite` tag until v3 is released; change it to `latest` or a version tag once there is one. It runs the web app, Horizon, the scheduler, Reverb, Redis and MariaDB from the image.
 
 1. Copy `example/docker-compose.yml` somewhere, create `.env` and a `.env.mariadb` (`MYSQL_ROOT_PASSWORD`,
-   `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`), and `mkdir logs public`.
-2. In `.env` set `APP_URL`, `APP_KEY` (`docker compose run --rm artisan key:generate --show`), the `DB_*` values to
+   `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`), and `mkdir logs uploads`.
+2. In `.env` set `APP_URL`, `APP_KEY` (run `docker compose run --rm artisan key:generate --show` after creating `.env` with an empty `APP_KEY=`), the `DB_*` values to
    match MariaDB, and the provider credentials. The image already sets production defaults for drivers, Redis and Reverb.
 3. Set the public Reverb address that browsers will use: `REVERB_PUBLIC_HOST` to your hostname,
    `REVERB_PUBLIC_PORT=443` and `REVERB_PUBLIC_SCHEME=https`. Leave `REVERB_HOST/PORT/SCHEME` as the internal address
@@ -178,7 +178,7 @@ branch) and a version tag for each `vX.Y.Z` release.
 4. Start it:
 
 ```bash
-docker compose up -d redis database
+docker compose up -d --wait redis database
 docker compose run --rm artisan migrate --force
 docker compose run --rm artisan db:seed --force
 docker compose up -d
@@ -196,6 +196,15 @@ musicparty.example.com {
 }
 ```
 
+### Operations
+
+- Back up the MariaDB data directory (or run `mysqldump`) and the `uploads` directory, which holds uploaded theme
+  assets. Restore by loading the dump into a fresh database and putting `uploads` back.
+- To upgrade, pull the new image, run `docker compose run --rm artisan migrate --force`, then `docker compose up -d`.
+  Migrations are forward-only, so roll back by restoring the backup and the previous image tag.
+- Queued jobs can run for up to 60 seconds, so give Horizon a stop grace period of at least that long
+  (`stop_grace_period: 90s` on the `horizon` service) so a restart does not kill jobs part-way.
+
 ## Configuration
 
 Behaviour tuning is in `config/musicparty.php`. Useful variables:
@@ -203,8 +212,6 @@ Behaviour tuning is in `config/musicparty.php`. Useful variables:
 - `MUSICPARTY_FALLBACK_MINIMUM_QUEUE` is the Queue length below which the Fallback Playlist tops up (default 5).
 - `MUSICPARTY_JIT_LEAD_SECONDS` is how long before the end of a Track a just-in-time Player is fed Up Next (default 15).
 - `AI_REVIEW_OPENAI_MODEL` and `AI_REVIEW_JEV_MODEL` choose the models for the AI Request Review Mod.
-
-Everything is logged to the Laravel logger.
 
 ## Observability
 
@@ -218,7 +225,7 @@ OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
 ```
 
 `OTEL_PHP_EXCLUDED_URLS` defaults to `pulse,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*` to skip
-noisy URLs. A sample collector setup is in `collector.yml`:
+noisy URLs. A sample collector setup is in `collector.yml`, which you will need to adapt to your own backend and credentials:
 
 ```yaml
   collector:
@@ -227,7 +234,9 @@ noisy URLs. A sample collector setup is in `collector.yml`:
       - ./collector.yml:/etc/otelcol-contrib/config.yaml
 ```
 
-Prometheus metrics are provided by `spatie/laravel-prometheus` (`config/prometheus.php`).
+Prometheus metrics are served by `spatie/laravel-prometheus` at `PROMETHEUS_PATH` (default `/prometheus`). The endpoint
+returns 403 unless the scraper sends `PROMETHEUS_TOKEN` as a bearer token or connects from an address in
+`PROMETHEUS_ALLOWED_IPS`, so set one of them before pointing a scraper at it ([ADR-0009](docs/adr/0009-prometheus-exporter-via-spatie-laravel-prometheus.md)).
 
 ## Documentation
 
