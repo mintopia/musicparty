@@ -1076,7 +1076,8 @@
                                     "player_kind": {
                                         "enum": [
                                             "fake",
-                                            "polling"
+                                            "polling",
+                                            "browser"
                                         ],
                                         "type": "string"
                                     }

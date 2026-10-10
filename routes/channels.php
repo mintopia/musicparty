@@ -47,6 +47,12 @@ Broadcast::channel('party.{code}.moderators', function (User $user, string $code
         && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
 });
 
+Broadcast::channel('party.{code}.browser-player', function (User $user, string $code): bool {
+    $party = Party::findByCode($code);
+
+    return $party !== null && $party->canBeManagedBy($user);
+});
+
 Broadcast::channel('player.{code}', function (mixed $principal, string $code): bool {
     $party = Party::findByCode($code);
 

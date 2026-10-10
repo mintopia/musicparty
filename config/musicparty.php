@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Playback\Players\PollingPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
 
@@ -27,5 +28,6 @@ return [
     'players' => [
         'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
         'polling' => ['label' => 'Polling player', 'class' => PollingPlayer::class],
+        'browser' => ['label' => 'Browser player', 'class' => BrowserPlayer::class],
     ],
 ];

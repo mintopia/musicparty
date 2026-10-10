@@ -122,6 +122,20 @@
                     "description": "Party code"
                 }
             }
+        },
+        "partyBrowserPlayer": {
+            "address": "private-party.{code}.browser-player",
+            "description": "Host-only private channel (Echo name party.{code}.browser-player). Authorisable only by the Party's Host. Hands the next track to the Host's Browser Player just-in-time.",
+            "messages": {
+                "Player.BrowserPlayerCommandEvent": {
+                    "$ref": "#/components/messages/Player.BrowserPlayerCommandEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
         }
     },
     "components": {
@@ -965,6 +979,36 @@
                 },
                 "title": "Party.ThemeUpdatedEvent",
                 "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
+            },
+            "Player.BrowserPlayerCommandEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Player\\BrowserPlayerCommandEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "play"
+                            ],
+                            "type": "string"
+                        },
+                        "provider_id": {
+                            "type": "string"
+                        },
+                        "track_id": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "provider_id",
+                        "track_id"
+                    ],
+                    "type": "object"
+                },
+                "summary": "Event name browser-player.command",
+                "title": "Player.BrowserPlayerCommandEvent",
+                "x-event-class": "App\\Events\\Player\\BrowserPlayerCommandEvent"
             }
         }
     },
@@ -1088,6 +1132,17 @@
             "messages": [
                 {
                     "$ref": "#/channels/player/messages/Player.ClientFrame"
+                }
+            ]
+        },
+        "publishBrowserPlayerCommand": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyBrowserPlayer"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyBrowserPlayer/messages/Player.BrowserPlayerCommandEvent"
                 }
             ]
         }
