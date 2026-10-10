@@ -7,7 +7,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class PartyExportResource extends JsonResource
 {
-    public static $wrap = null;
+    public static $wrap;
 
     /**
      * @return array<string, mixed>

@@ -6,6 +6,7 @@ use App\Domain\Party\Actions\UnbanMember;
 use App\Domain\Queue\Actions\RatePlayedSong;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
+use App\Jobs\StartPlayback;
 use App\Models\Album;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -16,11 +17,13 @@ use App\Models\SongRating;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Queue::fake([StartPlayback::class]);
     app()->instance(FakeMusicProvider::class, FakeMusicProvider::withDefaultCatalogue());
     $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
     $this->host = PartyMember::factory()->for($this->party)->host()->create();

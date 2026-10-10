@@ -57,7 +57,7 @@ class SocialProvider extends Model
         $hasRequired = false;
 
         foreach ($this->settings as $setting) {
-            if (! $setting instanceof ProviderSetting || ! $setting->isRequired()) {
+            if (! $setting->isRequired()) {
                 continue;
             }
 

@@ -88,13 +88,13 @@ it('does not offer a disabled provider and refuses logins through it', function 
 
     $this->get('/login')->assertInertia(fn (Assert $page) => $page->has('providers', 0));
     $this->get('/login/discord')->assertRedirect(route('login'));
-    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Unable to login');
+    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Login with discord is not available.');
 });
 
 it('refuses to enable a provider that has no credentials', function (): void {
     $this->actingAs(makeSiteAdmin())->put('/admin/providers/spotify', ['enabled' => true])->assertSessionHasErrors('enabled');
 
-    expect(SocialProvider::query()->whereCode('spotify')->value('enabled'))->toBe(0);
+    expect(SocialProvider::query()->whereCode('spotify')->value('enabled'))->toBeFalse();
 });
 
 it('returns not found for an unknown provider', function (): void {

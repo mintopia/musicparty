@@ -1277,7 +1277,8 @@
                                         "enum": [
                                             "fake",
                                             "polling",
-                                            "browser"
+                                            "browser",
+                                            "soloist"
                                         ],
                                         "type": "string"
                                     }

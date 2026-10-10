@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Testing\FakeMusicProvider;
@@ -281,7 +282,7 @@ it('does not start a chain for a non-live party or another player', function () 
 
 it('starts a chain when a polling party goes live', function () {
     $party = Party::factory()->create(['player_kind' => 'polling']);
-    app()->instance(FallbackPlaylistGate::class, new readonly class(app(PairingCatalogue::class), app(Blocklist::class)) extends FallbackPlaylistGate
+    app()->instance(FallbackPlaylistGate::class, new readonly class(app(PairingCatalogue::class), app(Blocklist::class), app(AuthorisesHost::class)) extends FallbackPlaylistGate
     {
         public function check(Party $party): FallbackPlaylistCheck
         {
@@ -328,7 +329,7 @@ it('drops a stale chain job without polling or rescheduling', function () {
     Cache::put('playback.poll.'.$this->party->code.'.chain', 'current', 600);
 
     $stale = new PollPlayback($this->party->code, true, 'old');
-    app()->call([$stale, 'handle']);
+    app()->call($stale->handle(...));
     $stale->failed(new RuntimeException('boom'));
 
     Queue::assertNothingPushed();

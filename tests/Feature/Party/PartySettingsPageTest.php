@@ -30,7 +30,7 @@ it('renders the settings page for the host', function () {
             ->where('party.code', 'ABCD')
             ->has('settings', fn (Assert $s) => $s
                 ->has('allow_requests')->has('max_requests')->has('min_song_length')
-                ->has('max_song_length')->has('explicit')->has('no_repeat_interval')));
+                ->has('max_song_length')->has('explicit')->has('no_repeat_interval')->has('hold_requests')));
 });
 
 it('refuses the settings page to non-hosts', function (string $role) {
