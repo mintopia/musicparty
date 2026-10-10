@@ -42,6 +42,8 @@ class SpotifyMusicProvider implements MusicProvider
 
     private const int MAX_PAGES = 200;
 
+    private const int PLAYLIST_CACHE_SECONDS = 300;
+
     private const int DEFAULT_RETRY_AFTER_SECONDS = 30;
 
     public function __construct(private readonly HostAccountTokens $hostTokens) {}
@@ -110,7 +112,29 @@ class SpotifyMusicProvider implements MusicProvider
         return $playlists;
     }
 
+    public static function forgetPlaylistTracks(string $playlistId): void
+    {
+        Cache::forget(self::playlistCacheKey($playlistId));
+    }
+
+    private static function playlistCacheKey(string $playlistId): string
+    {
+        return "music.spotify.playlist.{$playlistId}";
+    }
+
     public function playlistTracks(string $playlistId, string $hostAccountId): array
+    {
+        return Cache::remember(
+            self::playlistCacheKey($playlistId),
+            self::PLAYLIST_CACHE_SECONDS,
+            fn (): array => $this->fetchPlaylistTracks($playlistId, $hostAccountId),
+        );
+    }
+
+    /**
+     * @return list<TrackData>
+     */
+    private function fetchPlaylistTracks(string $playlistId, string $hostAccountId): array
     {
         $tracks = [];
 
