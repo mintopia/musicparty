@@ -6,8 +6,10 @@ use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use App\Domain\Playback\Contracts\PlaybackClient;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
+use App\Domain\Playback\Exceptions\PlayerCommandRejectedException;
 use App\Domain\Playback\PlaybackStatus;
 use Carbon\CarbonImmutable;
+use Closure;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
 
@@ -57,6 +59,52 @@ class SpotifyPlaybackClient implements PlaybackClient
             fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL."/me/player/queue?uri={$uri}"),
             $hostAccountId,
         );
+
+        $this->api->guard($response);
+    }
+
+    public function play(string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL.'/me/player/play'), $hostAccountId);
+    }
+
+    public function pause(string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL.'/me/player/pause'), $hostAccountId);
+    }
+
+    public function next(string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL.'/me/player/next'), $hostAccountId);
+    }
+
+    public function seek(int $positionMs, string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL."/me/player/seek?position_ms={$positionMs}"), $hostAccountId);
+    }
+
+    public function volume(int $percent, string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL."/me/player/volume?volume_percent={$percent}"), $hostAccountId);
+    }
+
+    /**
+     * @param  Closure(PendingRequest): Response  $send
+     */
+    private function command(Closure $send, string $hostAccountId): void
+    {
+        $response = $this->api->userRequest($send, $hostAccountId);
+        $reason = $response->json('error.reason');
+
+        if ($response->status() === 404 || $reason === 'NO_ACTIVE_DEVICE') {
+            throw new PlayerCommandRejectedException('Spotify has no active device for the Host. Start playing on a Spotify device and try again.');
+        }
+
+        if ($response->status() === 403 && is_string($reason)) {
+            $message = $response->json('error.message');
+
+            throw new PlayerCommandRejectedException('Spotify refused the command: '.(is_string($message) && $message !== '' ? $message : $reason));
+        }
 
         $this->api->guard($response);
     }

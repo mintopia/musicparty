@@ -259,7 +259,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
 
-        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" />
+        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" :supported="party.playerKind !== 'browser'" />
         <Link
             v-if="canManage && party.playerKind === 'browser'"
             :href="`/parties/${party.code}/player`"

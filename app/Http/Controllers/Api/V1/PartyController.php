@@ -122,6 +122,13 @@ class PartyController extends Controller
         return PartyLogEntryResource::collection($listLog($party));
     }
 
+    /**
+     * Control playback.
+     *
+     * Sends play, pause, skip, seek or volume to the Party's Player. Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.
+     * Returns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,
+     * the Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting.
+     */
     public function playback(ControlPlaybackRequest $request, ControlPlayback $controlPlayback, Party $party): JsonResponse
     {
         try {
