@@ -48,6 +48,32 @@ const vote = (item, direction) => {
     }
 };
 
+const REMOVE_BLOCKED_REASON = 'Someone has already voted on this request';
+
+const canRemove = (item) => !props.readOnly && item.is_mine === true && item.status !== 'up_next';
+
+const removeBlocked = (item) => item.has_other_votes === true;
+
+const removeRequest = (item) => {
+    if (!canRemove(item) || removeBlocked(item) || pending.value === item.id) {
+        return;
+    }
+    router.delete(`/parties/${props.partyCode}/requests/${item.id}`, {
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            pending.value = item.id;
+            errors.value = {...errors.value, [item.id]: null};
+        },
+        onError: (e) => {
+            errors.value = {...errors.value, [item.id]: Object.values(e)[0] ?? 'Could not remove your request.'};
+        },
+        onFinish: () => {
+            pending.value = null;
+        },
+    });
+};
+
 const buttonClass = (active, activeColor) => [
     'flex h-11 w-11 items-center justify-center rounded hover:bg-border disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
     active ? activeColor : 'text-text',
@@ -95,6 +121,18 @@ const buttonClass = (active, activeColor) => [
                         @click="vote(item, 'down')"
                     >
                         <Icon name="arrowDown" />
+                    </button>
+                    <button
+                        v-if="canRemove(item)"
+                        type="button"
+                        data-testid="remove-request"
+                        :aria-label="`Remove ${item.track.title}`"
+                        :title="removeBlocked(item) ? REMOVE_BLOCKED_REASON : 'Remove your request'"
+                        :disabled="removeBlocked(item)"
+                        :class="buttonClass(false, '')"
+                        @click="removeRequest(item)"
+                    >
+                        <span aria-hidden="true">&times;</span>
                     </button>
                 </div>
             </div>
