@@ -29,6 +29,23 @@ class ThemeTokens
     ];
 
     /**
+     * @var list<string>
+     */
+    public const PARTY_KEYS = ['primary', 'accent', 'background', 'surface', 'text', 'danger'];
+
+    public const DEFAULT_TV_LAYOUT = 'default';
+
+    /**
+     * @var array<string, string>
+     */
+    public const TV_LAYOUTS = [
+        'default' => 'Default',
+        'compact' => 'Compact queue',
+        'fullscreen-art' => 'Full-screen artwork',
+        'queue-focus' => 'Queue focus',
+    ];
+
+    /**
      * @var array<string, array{label: string, stack: string}>
      */
     public const FONTS = [
@@ -92,6 +109,48 @@ class ThemeTokens
     public static function fontKeys(): array
     {
         return array_keys(self::FONTS);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function partyKeys(): array
+    {
+        return self::PARTY_KEYS;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function tvLayoutKeys(): array
+    {
+        return array_keys(self::TV_LAYOUTS);
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    public static function tvLayoutList(): array
+    {
+        $list = [];
+        foreach (self::TV_LAYOUTS as $value => $label) {
+            $list[] = ['value' => $value, 'label' => $label];
+        }
+
+        return $list;
+    }
+
+    /**
+     * @return list<array{key: string, label: string}>
+     */
+    public static function partyTokenList(): array
+    {
+        $list = [];
+        foreach (self::PARTY_KEYS as $key) {
+            $list[] = ['key' => $key, 'label' => self::LABELS[$key]];
+        }
+
+        return $list;
     }
 
     /**

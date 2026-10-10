@@ -45,6 +45,7 @@ class Party extends Model
         'show_qrcode' => false,
         'state' => 'paused',
         'selection_mode' => 'deterministic',
+        'tv_layout' => 'default',
     ];
 
     protected $casts = [
@@ -61,6 +62,7 @@ class Party extends Model
         'min_song_length' => 'integer',
         'max_song_length' => 'integer',
         'no_repeat_interval' => 'integer',
+        'theme' => 'array',
     ];
 
     public function toStringName(): string

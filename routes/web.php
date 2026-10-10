@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ThemeController as AdminThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Party\ThemeController as PartyThemeController;
 use App\Http\Controllers\PartyBlocklistController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyModController;
@@ -139,6 +140,18 @@ Route::middleware('auth')->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('play')
         ->name('parties.plays.rating.destroy');
+    Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.theme.show');
+    Route::put('parties/{party}/theme', [PartyThemeController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.theme.update');
+    Route::post('parties/{party}/theme', [PartyThemeController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.theme.upload');
+    Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.theme.destroy');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')

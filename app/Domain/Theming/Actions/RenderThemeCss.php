@@ -10,7 +10,14 @@ class RenderThemeCss
 
     public function handle(): string
     {
-        $theme = $this->getInstanceTheme->handle();
+        return $this->fromTheme($this->getInstanceTheme->handle());
+    }
+
+    /**
+     * @param  array{light: array<string, string>, dark: array<string, string>, font: string}  $theme
+     */
+    public function fromTheme(array $theme): string
+    {
         $light = $this->declarations($theme['light']);
         $dark = $this->declarations($theme['dark']);
         $font = ThemeTokens::FONTS[$theme['font']]['stack'] ?? ThemeTokens::FONTS[ThemeTokens::DEFAULT_FONT]['stack'];

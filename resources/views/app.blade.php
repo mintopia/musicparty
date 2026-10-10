@@ -30,6 +30,9 @@
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>{!! app(\App\Domain\Theming\Actions\RenderThemeCss::class)->handle() !!}</style>
+    @isset($partyThemeCss)
+        <style>{!! $partyThemeCss !!}</style>
+    @endisset
     @inertiaHead
 </head>
 <body>
