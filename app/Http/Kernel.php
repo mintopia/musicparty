@@ -3,6 +3,7 @@
 namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
+use App\Http\Middleware\AuthorizePartyExport;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
@@ -105,5 +106,6 @@ class Kernel extends HttpKernel
         'abilities' => CheckAbilities::class,
         'ability' => CheckForAnyAbility::class,
         'integration.ability' => EnsureIntegrationAbility::class,
+        'export.access' => AuthorizePartyExport::class,
     ];
 }

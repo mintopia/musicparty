@@ -33,6 +33,201 @@
                 "additionalProperties": true,
                 "type": "object"
             },
+            "PartyExportResource": {
+                "properties": {
+                    "exported_at": {
+                        "type": "string"
+                    },
+                    "members": {
+                        "items": {
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "nickname": {
+                                    "type": "string"
+                                },
+                                "role": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "type": "array"
+                    },
+                    "party": {
+                        "properties": {
+                            "code": {
+                                "type": "string"
+                            },
+                            "created_at": {
+                                "nullable": true,
+                                "type": "string"
+                            },
+                            "music_provider": {
+                                "nullable": true,
+                                "type": "string"
+                            },
+                            "name": {
+                                "nullable": true,
+                                "type": "string"
+                            },
+                            "selection_mode": {
+                                "nullable": true,
+                                "type": "string"
+                            },
+                            "state": {
+                                "type": "string"
+                            }
+                        },
+                        "type": "object"
+                    },
+                    "plays": {
+                        "items": {
+                            "properties": {
+                                "album": {
+                                    "nullable": true,
+                                    "type": "string"
+                                },
+                                "artists": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "duration_ms": {
+                                    "type": "integer"
+                                },
+                                "explicit": {
+                                    "type": "boolean"
+                                },
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "played_at": {
+                                    "type": "string"
+                                },
+                                "provider_track_id": {
+                                    "type": "string"
+                                },
+                                "request_id": {
+                                    "nullable": true,
+                                    "type": "integer"
+                                },
+                                "requested_by": {
+                                    "nullable": true,
+                                    "type": "integer"
+                                },
+                                "selection_mode": {
+                                    "nullable": true,
+                                    "type": "string"
+                                },
+                                "selection_score": {
+                                    "nullable": true,
+                                    "type": "integer"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "type": "array"
+                    },
+                    "ratings": {
+                        "items": {
+                            "properties": {
+                                "dislikes": {
+                                    "type": "integer"
+                                },
+                                "likes": {
+                                    "type": "integer"
+                                },
+                                "play_id": {
+                                    "type": "integer"
+                                },
+                                "score": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "type": "array"
+                    },
+                    "requests": {
+                        "items": {
+                            "properties": {
+                                "album": {
+                                    "nullable": true,
+                                    "type": "string"
+                                },
+                                "artists": {
+                                    "items": {
+                                        "type": "string"
+                                    },
+                                    "type": "array"
+                                },
+                                "duration_ms": {
+                                    "type": "integer"
+                                },
+                                "explicit": {
+                                    "type": "boolean"
+                                },
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "provider_track_id": {
+                                    "type": "string"
+                                },
+                                "rejection_reason": {
+                                    "nullable": true,
+                                    "type": "string"
+                                },
+                                "requested_at": {
+                                    "nullable": true,
+                                    "type": "string"
+                                },
+                                "requested_by": {
+                                    "nullable": true,
+                                    "type": "integer"
+                                },
+                                "status": {
+                                    "type": "string"
+                                },
+                                "title": {
+                                    "type": "string"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "type": "array"
+                    },
+                    "schema_version": {
+                        "type": "integer"
+                    },
+                    "votes": {
+                        "items": {
+                            "properties": {
+                                "downvotes": {
+                                    "type": "integer"
+                                },
+                                "request_id": {
+                                    "type": "integer"
+                                },
+                                "score": {
+                                    "type": "integer"
+                                },
+                                "upvotes": {
+                                    "type": "integer"
+                                }
+                            },
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "type": "object"
+            },
             "PartyMemberResource": {
                 "additionalProperties": true,
                 "type": "object"
@@ -67,6 +262,11 @@
             }
         },
         "securitySchemes": {
+            "integrationBearer": {
+                "description": "Integration Token carrying the required ability.",
+                "scheme": "bearer",
+                "type": "http"
+            },
             "sanctumBearer": {
                 "description": "Sanctum bearer token.",
                 "scheme": "bearer",
@@ -1748,6 +1948,54 @@
                     }
                 ],
                 "summary": "api.v1.parties.end"
+            }
+        },
+        "/api/v1/parties/{party}/export": {
+            "get": {
+                "operationId": "getApiV1PartiesPartyExport",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/PartyExportResource"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden. Only the Party Host, instance admins and Integration Tokens with the export ability may export."
+                    },
+                    "409": {
+                        "description": "The party has not ended (live, paused or reopened), so it cannot be exported yet."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "summary": "api.v1.parties.export"
             }
         },
         "/api/v1/parties/{party}/history": {

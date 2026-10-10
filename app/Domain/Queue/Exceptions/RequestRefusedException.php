@@ -99,6 +99,11 @@ class RequestRefusedException extends RuntimeException
         return new self('That track is already Up Next.', self::CONFLICT);
     }
 
+    public static function partyNotEnded(): self
+    {
+        return new self('This party has not ended, so it cannot be exported yet.', self::CONFLICT);
+    }
+
     public static function notAllowed(): self
     {
         return new self('You are not allowed to do that in this party.', self::NOT_ALLOWED);
