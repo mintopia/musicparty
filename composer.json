@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "dedoc/scramble": "^0.13.47",
         "guzzlehttp/guzzle": "^7.10",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/ai": "^1.2",
