@@ -157,3 +157,16 @@ describe('TV screen', () => {
         expect(reload).toHaveBeenCalledTimes(1);
     });
 });
+
+describe('TV screen party state', () => {
+    it('applies party.state_changed without a reload', async () => {
+        const w = mount(Tv, {props: props()});
+        expect(w.find('[data-testid=tv-party-state]').exists()).toBe(false);
+        listeners['.party.state_changed']({state: 'paused'});
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=tv-party-state]').text()).toBe('paused');
+        listeners['.party.state_changed']({state: 'live'});
+        await w.vm.$nextTick();
+        expect(w.find('[data-testid=tv-party-state]').exists()).toBe(false);
+    });
+});

@@ -3,6 +3,7 @@
 namespace App\Domain\Membership\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Broadcast\MemberBannedEvent;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
@@ -57,6 +58,8 @@ readonly class BanMember
                 'user_id' => $target->user_id,
                 'role' => $target->role->value,
             ]);
+
+            MemberBannedEvent::dispatch($party->code, $target->id);
 
             return $target;
         });

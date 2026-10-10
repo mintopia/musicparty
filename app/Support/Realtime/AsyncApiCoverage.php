@@ -62,4 +62,56 @@ class AsyncApiCoverage
 
         return $missing;
     }
+
+    /**
+     * @param  array<string, mixed>  $spec
+     * @param  list<string>  $externalConsumers
+     * @return list<string>
+     */
+    public static function unconsumed(array $spec, string $frontendDirectory, array $externalConsumers = []): array
+    {
+        $source = self::frontendSource($frontendDirectory);
+        $messages = $spec['components']['messages'] ?? [];
+        $unconsumed = [];
+
+        foreach (is_array($messages) ? $messages : [] as $message) {
+            if (! is_array($message) || ! isset($message['x-event-class'])) {
+                continue;
+            }
+
+            $name = (string) $message['name'];
+
+            if (in_array($name, $externalConsumers, true)) {
+                continue;
+            }
+
+            if (preg_match('/[\'"`]\.'.preg_quote($name, '/').'[\'"`]/', $source) !== 1) {
+                $unconsumed[] = $name;
+            }
+        }
+
+        sort($unconsumed);
+
+        return $unconsumed;
+    }
+
+    private static function frontendSource(string $directory): string
+    {
+        $source = '';
+        $files = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($directory, \FilesystemIterator::SKIP_DOTS));
+
+        foreach ($files as $file) {
+            if (! $file instanceof \SplFileInfo || ! in_array($file->getExtension(), ['vue', 'js', 'ts'], true)) {
+                continue;
+            }
+
+            if (str_contains($file->getPathname(), DIRECTORY_SEPARATOR.'__tests__'.DIRECTORY_SEPARATOR)) {
+                continue;
+            }
+
+            $source .= file_get_contents($file->getPathname())."\n";
+        }
+
+        return $source;
+    }
 }

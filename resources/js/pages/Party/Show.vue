@@ -42,6 +42,18 @@ const votesByRequest = () => ({
 });
 const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
+const liveState = ref(props.party.state);
+const toasts = ref([]);
+let toastId = 0;
+const pushToast = (message) => {
+    const id = ++toastId;
+    toasts.value = [...toasts.value, {id, message}];
+    setTimeout(() => {
+        toasts.value = toasts.value.filter((toast) => toast.id !== id);
+    }, 6000);
+};
+const banned = ref(props.membership.banned);
+
 const liveNowPlaying = ref(props.nowPlaying);
 const liveUpNext = ref(props.upNext);
 const liveQueue = ref(props.queue);
@@ -50,8 +62,10 @@ const myVotes = ref(votesByRequest());
 const myRatings = ref(ratingsByPlay());
 
 watch(
-    () => [props.nowPlaying, props.upNext, props.queue, props.ratablePlay, props.memberVotes],
+    () => [props.nowPlaying, props.upNext, props.queue, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
     () => {
+        liveState.value = props.party.state;
+        banned.value = props.membership.banned;
         liveNowPlaying.value = props.nowPlaying;
         liveUpNext.value = props.upNext;
         liveQueue.value = props.queue;
@@ -88,13 +102,29 @@ const applyQueueUpdate = (payload) => {
 };
 
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('.queue.updated', applyQueueUpdate);
+    window.Echo?.channel(channelName)
+        .listen('.queue.updated', applyQueueUpdate)
+        .listen('.party.state_changed', (payload) => {
+            liveState.value = payload.state;
+        });
     window.Echo?.private(memberChannelName)
         .listen('.member.vote_changed', (payload) => {
             myVotes.value = {...myVotes.value, [payload.request_id]: payload.value};
         })
         .listen('.member.rating_changed', (payload) => {
             myRatings.value = {...myRatings.value, [payload.play_id]: payload.value};
+        })
+        .listen('.request.rejected', (payload) => {
+            pushToast(payload.reason ? `Your request was rejected: ${payload.reason}` : 'Your request was rejected.');
+        })
+        .listen('.request.decided', (payload) => {
+            if (payload.status === 'queued') {
+                pushToast('Your request was approved.');
+            }
+        })
+        .listen('.member.banned', () => {
+            banned.value = true;
+            pushToast('You have been banned from this party.');
         });
     window.addEventListener(RESYNC_EVENT, resync);
 });
@@ -106,7 +136,7 @@ onBeforeUnmount(() => {
 });
 
 const canViewLog = computed(
-    () => !props.membership.banned && ['host', 'moderator'].includes(props.membership.role),
+    () => !banned.value && ['host', 'moderator'].includes(props.membership.role),
 );
 
 const page = usePage();
@@ -143,18 +173,21 @@ const stateClass = computed(
             live: 'bg-accent text-white',
             paused: 'border border-border text-muted',
             ended: 'bg-danger text-white',
-        })[props.party.state] ?? 'border border-border text-muted',
+        })[liveState.value] ?? 'border border-border text-muted',
 );
 
 const readOnlyMessage = computed(() =>
-    props.membership.banned ? 'You have been banned from this party.' : 'This party has ended.',
+    banned.value ? 'You have been banned from this party.' : 'This party has ended.',
 );
 
-const ratingLocked = computed(() => props.membership.banned || props.party.state === 'ended');
+const ratingLocked = computed(() => banned.value || liveState.value === 'ended');
 </script>
 
 <template>
     <Head :title="party.name" />
+    <div v-if="toasts.length > 0" class="fixed right-4 top-4 z-50 flex flex-col gap-2" data-testid="toasts">
+        <p v-for="toast in toasts" :key="toast.id" role="status" data-testid="toast" class="rounded border border-border bg-surface px-4 py-3 text-sm shadow">{{ toast.message }}</p>
+    </div>
     <NowPlayingBanner
         v-if="section === 'queue' || section === 'history'"
         :now-playing="liveNowPlaying"
@@ -170,7 +203,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     data-testid="party-state"
                     class="rounded px-2 py-0.5 text-xs font-medium capitalize"
                     :class="stateClass"
-                >{{ party.state }}</span>
+                >{{ liveState }}</span>
             </div>
             <div class="flex items-center gap-3">
                 <span data-testid="party-code" class="text-4xl font-semibold tracking-widest">{{ party.code }}</span>
@@ -188,7 +221,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
         <div v-if="canManage" class="flex flex-col gap-2" data-testid="lifecycle-controls">
             <div class="flex flex-wrap gap-2">
                 <button
-                    v-if="party.state === 'paused'"
+                    v-if="liveState === 'paused'"
                     type="button"
                     data-testid="go-live"
                     :disabled="transitioning"
@@ -196,7 +229,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('live')"
                 >Go Live</button>
                 <button
-                    v-if="party.state === 'live'"
+                    v-if="liveState === 'live'"
                     type="button"
                     data-testid="pause-party"
                     :disabled="transitioning"
@@ -204,7 +237,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('pause')"
                 >Pause</button>
                 <button
-                    v-if="party.state !== 'ended'"
+                    v-if="liveState !== 'ended'"
                     type="button"
                     data-testid="end-party"
                     :disabled="transitioning"
@@ -212,7 +245,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('end')"
                 >End</button>
                 <button
-                    v-if="party.state === 'ended'"
+                    v-if="liveState === 'ended'"
                     type="button"
                     data-testid="reopen-party"
                     :disabled="transitioning"
