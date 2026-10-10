@@ -4,6 +4,7 @@ namespace App\Domain\Party;
 
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Data\TrackData;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Queue\Blocklist;
 use App\Models\BlocklistEntry;
 use App\Models\Party;
@@ -23,6 +24,8 @@ readonly class FallbackPlaylistGate
         if ($playlistId === null || $playlistId === '') {
             return new FallbackPlaylistCheck(0, self::REQUIRED_PLAYABLE_TRACKS);
         }
+
+        SpotifyMusicProvider::forgetPlaylistTracks($playlistId);
 
         $recentlyPlayed = $this->recentlyPlayedTrackIds($party);
         $tracks = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId, $this->host->hostAccountIdFor($party));
