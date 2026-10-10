@@ -17,7 +17,7 @@ class PartyPlaylistSelectionResource extends JsonResource
     public function toArray(Request $request): array
     {
         return [
-            'fallback_playlist_id' => $this->resource->backup_playlist_id,
+            'fallback_playlist_id' => $this->resource->fallback_playlist_id,
             'history_playlist_id' => $this->resource->history_playlist_id,
         ];
     }
