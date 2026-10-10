@@ -1,4 +1,4 @@
-import {mount} from '@vue/test-utils';
+import {enableAutoUnmount, mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const reload = vi.fn();
@@ -34,6 +34,8 @@ const baseProps = (over = {}) => ({
     queue: [],
     ...over,
 });
+
+enableAutoUnmount(afterEach);
 
 let listeners;
 let echo;
@@ -101,6 +103,17 @@ describe('Party page now playing and Up Next', () => {
 
         afterEach(() => {
             vi.useRealTimers();
+        });
+
+        it('reloads once on realtime:resync and stops after unmount', () => {
+            const w = mount(Show, {props: baseProps()});
+            window.dispatchEvent(new Event('realtime:resync'));
+            vi.advanceTimersByTime(2000);
+            expect(reload).toHaveBeenCalledTimes(1);
+            w.unmount();
+            window.dispatchEvent(new Event('realtime:resync'));
+            vi.advanceTimersByTime(2000);
+            expect(reload).toHaveBeenCalledTimes(1);
         });
 
         it('coalesces 10 events in 2 seconds into one async reload inside the jitter window', () => {

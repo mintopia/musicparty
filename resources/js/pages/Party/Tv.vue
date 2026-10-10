@@ -1,5 +1,6 @@
 <script setup>
-import {Head} from '@inertiajs/vue3';
+import {Head, router} from '@inertiajs/vue3';
+import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 import Decorations from '../../Components/Decorations.vue';
@@ -63,8 +64,22 @@ const progressPercent = computed(() => (durationMs.value > 0 ? (elapsedMs.value 
 const backdropUrl = computed(() => nowPlaying.value?.track.artwork_url ?? upNext.value?.track.artwork_url ?? null);
 const channelName = `party.${props.party.code}`;
 
+const resync = () => {
+    router.reload({
+        only: ['nowPlaying', 'upNext', 'sequence', 'startedAt'],
+        async: true,
+        onSuccess: () => {
+            lastSequence = props.sequence;
+            nowPlaying.value = props.nowPlaying;
+            upNext.value = props.upNext;
+            startedAtMs.value = props.startedAt ? Date.parse(props.startedAt) : null;
+        },
+    });
+};
+
 onMounted(() => {
-    ticker = setInterval(() => {
+    window.addEventListener(RESYNC_EVENT, resync);
+    ticker =setInterval(() => {
         now.value = Date.now();
     }, 1000);
     const channel = window.Echo?.channel(channelName);
@@ -86,6 +101,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener(RESYNC_EVENT, resync);
     clearInterval(ticker);
     themeStyle.value?.remove();
     window.Echo?.leave(channelName);

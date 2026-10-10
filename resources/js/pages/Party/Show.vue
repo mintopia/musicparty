@@ -1,6 +1,7 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
+import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
@@ -46,9 +47,11 @@ const scheduleReload = () => {
 
 onMounted(() => {
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', scheduleReload);
+    window.addEventListener(RESYNC_EVENT, scheduleReload);
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener(RESYNC_EVENT, scheduleReload);
     clearTimeout(reloadTimer);
     window.Echo?.leave(channelName);
 });
