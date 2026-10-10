@@ -11,7 +11,7 @@ const live = ref(props.stats);
 const channelName = `party.${props.party.code}.members`;
 
 onMounted(() => {
-    window.Echo?.join(channelName).listen('Party.StatsUpdatedEvent', (payload) => {
+    window.Echo?.join(channelName).listen('.stats.updated', (payload) => {
         live.value = payload;
     });
 });

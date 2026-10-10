@@ -6,7 +6,7 @@ Synced from the archived v3-rewrite change.
 ## Requirements
 
 ### Requirement: Public party channel
-The system SHALL broadcast a Party's now-playing state, Up Next, and Queue on a public channel keyed by the party code, readable by anonymous clients. Payloads SHALL include Track information, scores, requester nicknames and Decorations, and SHALL NOT include member identifiers, tokens or other secrets.
+The system SHALL broadcast a Party's now-playing state, Up Next, and Queue on the public channel `party.{code}`, readable by anonymous clients. Payloads SHALL include Track information, scores, requester nicknames and Decorations, and SHALL NOT include member identifiers, tokens or other secrets.
 
 #### Scenario: Queue change broadcast
 - **WHEN** a Request is added, voted on, removed or promoted
@@ -25,7 +25,7 @@ The system SHALL broadcast a Party's now-playing state, Up Next, and Queue on a 
 - **THEN** it does not appear on the public channel until approved
 
 ### Requirement: Presence channel
-The system SHALL provide a presence channel per Party that only the Party's Members can join and that reports who is currently online, using the Member's nickname and avatar only.
+The system SHALL provide a presence channel `party.{code}.members` per Party that only the Party's Members can join and that reports who is currently online, using the Member's nickname and avatar only.
 
 #### Scenario: Member joins
 - **WHEN** a Member joins the presence channel
@@ -36,7 +36,7 @@ The system SHALL provide a presence channel per Party that only the Party's Memb
 - **THEN** authorisation is refused
 
 ### Requirement: Per-member channel
-The system SHALL provide a private channel per Member, authorisable only by that Member, carrying their own Votes, their own Pending Requests and notifications such as rejections and Bans.
+The system SHALL provide a private channel `party.{code}.member.{memberId}` per Member, authorisable only by that Member, carrying their own Votes, their own Pending Requests and notifications such as rejections and Bans.
 
 #### Scenario: Own Votes
 - **WHEN** a Member votes
@@ -51,7 +51,7 @@ The system SHALL provide a private channel per Member, authorisable only by that
 - **THEN** that Member is notified on their channel with the reason
 
 ### Requirement: Moderator channel
-The system SHALL provide a private channel per Party, authorisable only by the Host and Moderators, carrying Pending Requests and Party Log entries.
+The system SHALL provide a private channel `party.{code}.moderators` per Party, authorisable only by the Host and Moderators, carrying Pending Requests and Party Log entries.
 
 #### Scenario: Pending Request arrives
 - **WHEN** a Request is held as Pending
@@ -66,7 +66,7 @@ The system SHALL provide a private channel per Party, authorisable only by the H
 - **THEN** they stop receiving Moderator channel events
 
 ### Requirement: Player channel
-The system SHALL provide a private channel per Player, authorisable only with a valid, unrevoked Player Token for that Party, carrying Player frames inbound and commands outbound.
+The system SHALL provide a private channel `player.{code}` per Player, authorisable only with a valid, unrevoked Player Token for that Party, carrying Player frames inbound and commands outbound.
 
 #### Scenario: Authorised with Player Token
 - **WHEN** a client authorises with a Player Token for the Party
@@ -79,6 +79,20 @@ The system SHALL provide a private channel per Player, authorisable only with a 
 #### Scenario: Member session cannot join
 - **WHEN** a logged-in Member or admin session tries to subscribe without a Player Token
 - **THEN** authorisation is refused
+
+### Requirement: Browser Player channel
+The system SHALL provide a private channel `party.{code}.browser-player` per Party, authorisable only by users who can manage the Party, carrying commands to the Browser Player.
+
+#### Scenario: Non-manager subscribes
+- **WHEN** a user who cannot manage the Party tries to subscribe to the Browser Player channel
+- **THEN** authorisation is refused
+
+### Requirement: Explicit event wire names
+Every broadcast event SHALL declare an explicit dotted wire name through `broadcastAs()` (for example `queue.updated`, `theme.updated`, `stats.updated`, `pending_request.added`, `request.rejected`, `player.command`). Clients SHALL listen using the wire name with a leading dot, and the AsyncAPI document SHALL list the same name for each message.
+
+#### Scenario: Event without a wire name
+- **WHEN** a class implementing `ShouldBroadcast` or `ShouldBroadcastNow` does not declare `broadcastAs()`
+- **THEN** the architecture test fails
 
 ### Requirement: Channel authorisation
 Every non-public channel SHALL deny by default, and authorisation SHALL be re-evaluated on every subscription. No channel SHALL authorise all users.

@@ -80,11 +80,11 @@ onMounted(() => {
         now.value = Date.now();
     }, 1000);
     const channel = window.Echo?.channel(channelName);
-    channel?.listen('.ThemeUpdated', (payload) => {
+    channel?.listen('.theme.updated', (payload) => {
         theme.value = payload;
         applyThemeCss();
     });
-    channel?.listen('Party.QueueUpdatedEvent', (payload) => {
+    channel?.listen('.queue.updated', (payload) => {
         if (payload.now_playing?.id !== nowPlaying.value?.id) {
             startedAtMs.value = payload.now_playing ? Date.now() : null;
         }

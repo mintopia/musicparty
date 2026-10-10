@@ -20,7 +20,7 @@ class ThemeUpdatedEvent implements ShouldBroadcast
 
     public function broadcastAs(): string
     {
-        return 'ThemeUpdated';
+        return 'theme.updated';
     }
 
     /**

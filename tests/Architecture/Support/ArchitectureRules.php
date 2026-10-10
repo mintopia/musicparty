@@ -208,6 +208,18 @@ class ArchitectureRules
 
     /**
      * @param  array<int, class-string>  $classes
+     * @return array<int, class-string>
+     */
+    public static function missingBroadcastAs(array $classes): array
+    {
+        return array_values(array_filter(
+            self::broadcastEvents($classes),
+            static fn (string $class): bool => ! new ReflectionClass($class)->hasMethod('broadcastAs'),
+        ));
+    }
+
+    /**
+     * @param  array<int, class-string>  $classes
      * @return array<string, array<int, string>>
      */
     public static function modelSerialisationViolations(array $classes): array

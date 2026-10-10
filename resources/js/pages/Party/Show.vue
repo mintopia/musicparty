@@ -46,7 +46,7 @@ const scheduleReload = () => {
 };
 
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', scheduleReload);
+    window.Echo?.channel(channelName).listen('.queue.updated', scheduleReload);
     window.addEventListener(RESYNC_EVENT, scheduleReload);
 });
 

@@ -29,6 +29,11 @@ class PartyLogEntryAddedEvent implements ShouldBroadcast
         return ['id' => $this->entryId, 'action' => $this->action, 'subject' => $this->subject];
     }
 
+    public function broadcastAs(): string
+    {
+        return 'party_log.entry_added';
+    }
+
     /**
      * @return array<int, PrivateChannel>
      */

@@ -40,3 +40,15 @@ it('discovers broadcast events and ignores other classes', function () {
 
     expect($classes)->toContain(UndocumentedBroadcastEvent::class);
 });
+
+it('documents each broadcast event under its broadcastAs wire name', function () {
+    $messages = array_filter(asyncApiSpec()['components']['messages'], fn (array $message): bool => isset($message['x-event-class']));
+
+    expect($messages)->not->toBeEmpty();
+
+    foreach ($messages as $message) {
+        $event = new ReflectionClass($message['x-event-class'])->newInstanceWithoutConstructor();
+
+        expect($message['name'])->toBe($event->broadcastAs());
+    }
+});
