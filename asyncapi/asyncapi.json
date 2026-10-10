@@ -119,7 +119,6 @@
                     "additionalProperties": false,
                     "required": [
                         "version",
-                        "sequence",
                         "code",
                         "now_playing",
                         "up_next",
@@ -129,10 +128,6 @@
                         "version": {
                             "type": "integer",
                             "description": "Payload schema version"
-                        },
-                        "sequence": {
-                            "type": "integer",
-                            "description": "Monotonic per-party sequence; ignore snapshots older than the last seen"
                         },
                         "code": {
                             "type": "string",

@@ -7,7 +7,6 @@ use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\TrackRequest;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 
 class PartyQueueSnapshot
 {
@@ -16,7 +15,7 @@ class PartyQueueSnapshot
     public function __construct(private readonly ResolveDecorations $decorations) {}
 
     /**
-     * @return array{version: int, sequence: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
+     * @return array{version: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
      */
     public function build(Party $party): array
     {
@@ -36,7 +35,6 @@ class PartyQueueSnapshot
 
         return [
             'version' => self::VERSION,
-            'sequence' => $this->nextSequence($party),
             'code' => $party->code,
             'now_playing' => $nowPlaying === null ? null : $this->entry($nowPlaying),
             'up_next' => $upNext === null ? null : $this->entry($upNext),
@@ -45,14 +43,6 @@ class PartyQueueSnapshot
                 ->map(fn (TrackRequest $request): array => $this->entry($request))
                 ->all()),
         ];
-    }
-
-    private function nextSequence(Party $party): int
-    {
-        $key = "party-queue-sequence:{$party->id}";
-        Cache::add($key, 0, now()->addDay());
-
-        return (int) Cache::increment($key);
     }
 
     /**

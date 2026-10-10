@@ -14,7 +14,6 @@ const props = defineProps({
     party: {type: Object, required: true},
     nowPlaying: {type: Object, default: null},
     upNext: {type: Object, default: null},
-    sequence: {type: Number, default: 0},
     startedAt: {type: String, default: null},
     theme: {type: Object, default: null},
     enabled_mods: {type: Array, default: () => []},
@@ -50,7 +49,6 @@ const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
 const startedAtMs = ref(props.startedAt ? Date.parse(props.startedAt) : null);
 const now = ref(Date.now());
-let lastSequence = props.sequence;
 let ticker = null;
 
 const durationMs = computed(() => nowPlaying.value?.track.duration_ms ?? 0);
@@ -66,10 +64,9 @@ const channelName = `party.${props.party.code}`;
 
 const resync = () => {
     router.reload({
-        only: ['nowPlaying', 'upNext', 'sequence', 'startedAt'],
+        only: ['nowPlaying', 'upNext', 'startedAt'],
         async: true,
         onSuccess: () => {
-            lastSequence = props.sequence;
             nowPlaying.value = props.nowPlaying;
             upNext.value = props.upNext;
             startedAtMs.value = props.startedAt ? Date.parse(props.startedAt) : null;
@@ -88,10 +85,6 @@ onMounted(() => {
         applyThemeCss();
     });
     channel?.listen('Party.QueueUpdatedEvent', (payload) => {
-        if (payload.sequence <= lastSequence) {
-            return;
-        }
-        lastSequence = payload.sequence;
         if (payload.now_playing?.id !== nowPlaying.value?.id) {
             startedAtMs.value = payload.now_playing ? Date.now() : null;
         }
