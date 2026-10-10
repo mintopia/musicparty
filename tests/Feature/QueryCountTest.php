@@ -76,6 +76,7 @@ it('runs a constant number of queries for a vote', function () {
     $users = User::factory()->count(3)->create();
     $users->each(fn (User $user) => PartyMember::factory()->for($this->party)->for($user)->create());
     $vote = function () use (&$users): void {
+        $this->travelTo(now()->addMinute());
         Sanctum::actingAs($users->shift());
         $target = TrackRequest::query()->where('party_id', $this->party->id)->firstOrFail();
         $this->putJson("/api/v1/parties/ABCD/requests/{$target->id}/vote", ['value' => 'up'])->assertSuccessful();

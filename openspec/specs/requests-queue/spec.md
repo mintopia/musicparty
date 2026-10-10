@@ -140,7 +140,7 @@ A Party MAY be configured so that Requests, or Requests held by a Request Rule, 
 - **THEN** only its requester, the Host and Moderators can see it
 
 ### Requirement: Removing Requests
-The Host and Moderators SHALL be able to remove a Queued or Pending Request, moving it to Removed. A Member SHALL be able to remove their own Queued or Pending Request. A Request that is Up Next MAY be removed only by the Host or a Moderator and only if the Player is able to withdraw it; otherwise the removal SHALL be refused. A Playing Request MUST NOT be removed (skipping applies to playback, not the Request).
+The Host and Moderators SHALL be able to remove a Queued or Pending Request, moving it to Removed. A Member SHALL be able to remove their own Queued or Pending Request only while no other Member has a current Vote on it; a Vote that has been retracted no longer counts, and the check SHALL be made atomically with the removal. The Host and Moderators are not subject to this restriction. A Request that is Up Next MAY be removed only by the Host or a Moderator and only if the Player is able to withdraw it; otherwise the removal SHALL be refused. A Playing Request MUST NOT be removed (skipping applies to playback, not the Request).
 
 #### Scenario: Moderator removes
 - **WHEN** a Moderator removes a Queued Request
@@ -148,6 +148,22 @@ The Host and Moderators SHALL be able to remove a Queued or Pending Request, mov
 
 #### Scenario: Requester withdraws
 - **WHEN** a Member removes their own Queued Request
+- **THEN** it becomes Removed
+
+#### Scenario: Requester cannot withdraw after others vote
+- **WHEN** a Member removes their own Request that another Member has voted on
+- **THEN** the system refuses and states that someone has already voted
+
+#### Scenario: Requester withdraws after votes are retracted
+- **WHEN** every other Member's Vote on a Request has been retracted and the requester removes it
+- **THEN** it becomes Removed
+
+#### Scenario: Requester's own vote does not block removal
+- **WHEN** a Member who has voted on their own Request removes it and no other Member has voted
+- **THEN** it becomes Removed
+
+#### Scenario: Moderator removes a voted Request
+- **WHEN** a Moderator or the Host removes a Request that Members have voted on
 - **THEN** it becomes Removed
 
 #### Scenario: Cannot remove another's

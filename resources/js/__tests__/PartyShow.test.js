@@ -143,6 +143,24 @@ describe('Party page now playing and Up Next', () => {
             expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('true');
         });
 
+        it('keeps the remove button for the requester across a Queue event and reflects other votes', async () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', is_mine: true, has_other_votes: false})]})});
+            expect(w.get('[data-testid=remove-request]').attributes('disabled')).toBeUndefined();
+            listeners['.queue.updated'](payload({queue: [entry({id: 5, status: 'queued', has_other_votes: true})]}));
+            await w.vm.$nextTick();
+            const button = w.get('[data-testid=remove-request]');
+            expect(button.attributes('disabled')).toBeDefined();
+            expect(button.attributes('title')).toBe('Someone has already voted on this request');
+        });
+
+        it('shows the remove button on a request approved after the page loaded', async () => {
+            const w = mount(Show, {props: baseProps({queue: []})});
+            listeners['.request.decided']({request_id: 7, status: 'queued', reason: null});
+            listeners['.queue.updated'](payload({queue: [entry({id: 7, status: 'queued'})]}));
+            await w.vm.$nextTick();
+            expect(w.find('[data-testid=remove-request]').exists()).toBe(true);
+        });
+
         it('updates the highlight from a member vote event', async () => {
             const w = mount(Show, {props: baseProps({membership: {id: 9, role: 'member', banned: false}, queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
             expect(echo.private).toHaveBeenCalledWith('party.FRI123.member.9');

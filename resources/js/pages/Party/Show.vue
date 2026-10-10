@@ -43,6 +43,7 @@ const votesByRequest = () => ({
     ...Object.fromEntries(props.queue.filter((entry) => entry.my_vote !== undefined).map((entry) => [entry.id, entry.my_vote])),
     ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
 });
+const ownedRequestIds = () => props.queue.filter((entry) => entry.is_mine === true).map((entry) => entry.id);
 const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
 const liveState = ref(props.party.state);
@@ -62,6 +63,7 @@ const liveUpNext = ref(props.upNext);
 const liveQueue = ref(props.queue);
 const liveRatablePlay = ref(props.ratablePlay);
 const myVotes = ref(votesByRequest());
+const myRequestIds = ref(ownedRequestIds());
 const myRatings = ref(ratingsByPlay());
 
 watch(
@@ -74,11 +76,12 @@ watch(
         liveQueue.value = props.queue;
         liveRatablePlay.value = props.ratablePlay;
         myVotes.value = votesByRequest();
+        myRequestIds.value = ownedRequestIds();
         myRatings.value = ratingsByPlay();
     },
 );
 
-const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0})));
+const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0, is_mine: myRequestIds.value.includes(entry.id)})));
 const shownRatablePlay = computed(() => {
     const play = liveRatablePlay.value;
 
@@ -122,6 +125,7 @@ onMounted(() => {
         })
         .listen('.request.decided', (payload) => {
             if (payload.status === 'queued') {
+                myRequestIds.value = [...myRequestIds.value, payload.request_id];
                 pushToast('Your request was approved.');
             }
         })

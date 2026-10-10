@@ -5543,10 +5543,7 @@
                                 "type": "boolean"
                             },
                             "provider_url": {
-                                "type": [
-                                    "string",
-                                    "null"
-                                ]
+                                "type": "string"
                             }
                         },
                         "required": [

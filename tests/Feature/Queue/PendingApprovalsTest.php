@@ -13,6 +13,7 @@ use App\Domain\Queue\Broadcast\PendingRequestAddedEvent;
 use App\Domain\Queue\Broadcast\PendingRequestResolvedEvent;
 use App\Domain\Queue\Broadcast\QueueUpdatedEvent;
 use App\Domain\Queue\Broadcast\RequestDecidedEvent;
+use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -239,6 +240,62 @@ describe('remove', function () {
         expect($request->fresh()->status)->toBe(RequestStatus::Removed);
         Event::assertNotDispatched(RequestDecidedEvent::class);
     })->with([RequestStatus::Queued, RequestStatus::Pending]);
+
+    it('refuses a requester removing their own request once another member has voted', function () {
+        $request = pendingFor($this->guest, RequestStatus::Queued);
+        RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->other->id, 'value' => 1]);
+        asMember($this->guest);
+
+        $this->deleteJson(requestUrl($request))->assertStatus(409)->assertJsonPath('message', 'Someone has already voted on this request.');
+        expect($request->fresh()->status)->toBe(RequestStatus::Queued);
+    });
+
+    it('refuses the web removal once another member has voted', function () {
+        $request = pendingFor($this->guest, RequestStatus::Queued);
+        RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->other->id, 'value' => -1]);
+        $this->actingAs($this->guest->user);
+
+        $this->delete(route('parties.requests.destroy', ['party' => 'ABCD', 'trackRequest' => $request->id]));
+
+        expect($request->fresh()->status)->toBe(RequestStatus::Queued);
+    });
+
+    it('lets a requester remove their request when their own vote is the only one or others retracted', function (bool $otherVoted) {
+        $request = pendingFor($this->guest, RequestStatus::Queued);
+        RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->guest->id, 'value' => 1]);
+
+        if ($otherVoted) {
+            $vote = RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->other->id, 'value' => 1]);
+            $vote->delete();
+        }
+
+        asMember($this->guest);
+
+        $this->deleteJson(requestUrl($request))->assertOk();
+        expect($request->fresh()->status)->toBe(RequestStatus::Removed);
+    })->with([false, true]);
+
+    it('lets the host and moderators remove a voted request', function (string $who) {
+        $request = pendingFor($this->guest, RequestStatus::Queued);
+        RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->other->id, 'value' => 1]);
+        asMember($this->{$who});
+
+        $this->deleteJson(requestUrl($request))->assertOk();
+        expect($request->fresh()->status)->toBe(RequestStatus::Removed);
+    })->with(['host', 'moderator']);
+
+    it('flags ownership and other votes on the queue listing', function () {
+        $mine = pendingFor($this->guest, RequestStatus::Queued);
+        $theirs = pendingFor($this->other, RequestStatus::Queued);
+        RequestVote::factory()->create(['track_request_id' => $mine->id, 'party_member_id' => $this->guest->id, 'value' => 1]);
+        RequestVote::factory()->create(['track_request_id' => $theirs->id, 'party_member_id' => $this->guest->id, 'value' => 1]);
+        asMember($this->guest);
+
+        $entries = collect($this->getJson('/api/v1/parties/ABCD/queue')->assertOk()->json('data'))->keyBy('id');
+
+        expect($entries[$mine->id])->toMatchArray(['is_mine' => true, 'has_other_votes' => false])
+            ->and($entries[$theirs->id])->toMatchArray(['is_mine' => false, 'has_other_votes' => true]);
+    });
 
     it('refuses a guest or vip removing someone else\'s request', function (string $who) {
         $request = pendingFor($this->other, RequestStatus::Queued);

@@ -529,6 +529,7 @@
                                     "dislikes",
                                     "play_id",
                                     "requested_by",
+                                    "has_other_votes",
                                     "decorations"
                                 ],
                                 "properties": {
@@ -621,6 +622,10 @@
                                                 "description": "Requester nickname"
                                             }
                                         }
+                                    },
+                                    "has_other_votes": {
+                                        "type": "boolean",
+                                        "description": "True when a Member other than the requester has a current Vote"
                                     },
                                     "decorations": {
                                         "type": "array",
