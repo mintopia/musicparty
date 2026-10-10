@@ -12,6 +12,7 @@
 */
 
 use App\Domain\Party\PartyRole;
+use App\Http\Middleware\EnsurePlayerToken;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
@@ -45,3 +46,10 @@ Broadcast::channel('party.{code}.moderators', function (User $user, string $code
     return $member !== null && ! $member->banned
         && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
 });
+
+Broadcast::channel('player.{code}', function (mixed $principal, string $code): bool {
+    $party = Party::findByCode($code);
+
+    return $principal instanceof Party && $party !== null && $principal->is($party)
+        && $principal->tokenCan(EnsurePlayerToken::ABILITY);
+}, ['guards' => ['sanctum']]);

@@ -12,6 +12,10 @@ return [
     'music_providers' => [
         'fake' => ['label' => 'Fake (development)', 'class' => FakeMusicProvider::class],
     ],
+    'player_frames' => [
+        'max_bytes' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_BYTES', 8192),
+        'max_per_minute' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_PER_MINUTE', 120),
+    ],
     'players' => [
         'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
     ],
