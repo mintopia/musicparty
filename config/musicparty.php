@@ -2,6 +2,7 @@
 
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Playback\Players\PollingPlayer;
+use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
 
 return [
@@ -19,6 +20,10 @@ return [
         'idle_delay_seconds' => (int) env('MUSICPARTY_POLL_IDLE_DELAY', 60),
         'backoff_cap_seconds' => (int) env('MUSICPARTY_POLL_BACKOFF_CAP', 300),
     ],
+    'soloist' => [
+        'stale_after_seconds' => (int) env('MUSICPARTY_SOLOIST_STALE_AFTER', 30),
+        'disconnect_after_seconds' => (int) env('MUSICPARTY_SOLOIST_DISCONNECT_AFTER', 90),
+    ],
     'player_frames' => [
         'max_bytes' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_BYTES', 8192),
         'max_per_minute' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_PER_MINUTE', 120),
@@ -26,5 +31,6 @@ return [
     'players' => [
         'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
         'polling' => ['label' => 'Polling player', 'class' => PollingPlayer::class],
+        'soloist' => ['label' => 'Soloist player', 'class' => SoloistPlayer::class],
     ],
 ];

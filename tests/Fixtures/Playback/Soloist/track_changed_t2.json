@@ -1,0 +1,22 @@
+{
+  "type": "track_changed",
+  "item": {
+    "uri": "spotify:track:t2",
+    "decorations": {
+      "identity": {
+        "name": "Track t2"
+      },
+      "creators": [
+        {
+          "name": "Artist"
+        }
+      ],
+      "parent": {
+        "name": "Album"
+      },
+      "playback": {
+        "duration_ms": 180000
+      }
+    }
+  }
+}

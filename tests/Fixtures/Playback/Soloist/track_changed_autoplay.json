@@ -1,0 +1,22 @@
+{
+  "type": "track_changed",
+  "item": {
+    "uri": "spotify:track:auto1",
+    "decorations": {
+      "identity": {
+        "name": "Track auto1"
+      },
+      "creators": [
+        {
+          "name": "Artist"
+        }
+      ],
+      "parent": {
+        "name": "Album"
+      },
+      "playback": {
+        "duration_ms": 180000
+      }
+    }
+  }
+}

@@ -1,0 +1,51 @@
+{
+  "type": "queue_changed",
+  "upcoming": [
+    {
+      "uid": "u-9",
+      "source": "autoplay",
+      "item": {
+        "uri": "spotify:track:auto1",
+        "decorations": {
+          "identity": {
+            "name": "Track auto1"
+          },
+          "creators": [
+            {
+              "name": "Artist"
+            }
+          ],
+          "parent": {
+            "name": "Album"
+          },
+          "playback": {
+            "duration_ms": 180000
+          }
+        }
+      }
+    },
+    {
+      "uid": "u-10",
+      "source": "context",
+      "item": {
+        "uri": "spotify:track:ctx1",
+        "decorations": {
+          "identity": {
+            "name": "Track ctx1"
+          },
+          "creators": [
+            {
+              "name": "Artist"
+            }
+          ],
+          "parent": {
+            "name": "Album"
+          },
+          "playback": {
+            "duration_ms": 180000
+          }
+        }
+      }
+    }
+  ]
+}
