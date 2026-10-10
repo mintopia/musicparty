@@ -57,6 +57,33 @@ A Mod SHALL be able to supply Request Rules that judge a new Request as accept, 
 - **WHEN** a Request Rule holds a Request
 - **THEN** the Request becomes Pending and appears for Host and Moderators to approve or reject
 
+### Requirement: Artist and album limit Mod
+The first-party Artist & Album Limit Mod SHALL reject a Request when the requested Track's artist or album already has at least the configured maximum Tracks that are Pending, Queued or Up Next in the Party, or when that artist or album has a Play within the configured cooldown. Its integer settings (minimum 0) are max_per_artist (default 2), max_per_album (default 0) and cooldown_seconds (default 0); 0 means unlimited or off. Artists and albums SHALL be matched by case-insensitive, whitespace-trimmed name, a multi-artist Track SHALL be refused when any of its artists is over the limit, and the rejection reason SHALL be shown to the requester.
+
+#### Scenario: Artist cap reached
+- **WHEN** max_per_artist is 2 and the Party already holds two Pending or Queued Requests by the same artist
+- **THEN** a further Request by that artist is rejected with a reason naming the artist
+
+#### Scenario: Album cap reached
+- **WHEN** max_per_album is 1 and a Request from the same album is already Queued
+- **THEN** another Request from that album is rejected with a reason naming the album
+
+#### Scenario: Cooldown
+- **WHEN** cooldown_seconds is 600 and a Track by the artist or from the album played 5 minutes ago
+- **THEN** a Request for that artist or album is rejected until the cooldown elapses
+
+#### Scenario: Unlimited
+- **WHEN** a limit setting is 0
+- **THEN** that limit is not applied
+
+#### Scenario: Names match loosely
+- **WHEN** an existing Request's artist differs from the requested artist only by case or surrounding whitespace
+- **THEN** the two count as the same artist
+
+#### Scenario: Only waiting Requests count
+- **WHEN** earlier Requests by the artist are Played, Rejected or Removed, or belong to another Party
+- **THEN** they do not count towards the cap
+
 ### Requirement: Request Rule precedence
 When several Request Rules apply to a Request, reject SHALL take precedence over hold, and hold over accept.
 

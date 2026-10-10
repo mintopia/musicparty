@@ -1,10 +1,12 @@
 <?php
 
 use App\Domain\Mod\AiReview\AiRequestReviewMod;
+use App\Domain\Mod\ArtistAlbumLimit\ArtistAlbumLimitMod;
 
 return [
     'registered' => [
         AiRequestReviewMod::class,
+        ArtistAlbumLimitMod::class,
     ],
 
     'ai_review' => [
