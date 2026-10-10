@@ -14,11 +14,12 @@ class HomeController extends Controller
     public function home(Request $request, SiteSettings $site): Response|RedirectResponse
     {
         $defaultParty = $site->get('default_party');
-        if ($defaultParty !== null && Party::query()->where('code', $defaultParty)->exists()) {
+        if ($defaultParty !== null && ! $request->filled('code') && Party::query()->where('code', $defaultParty)->exists()) {
             return redirect('/parties/'.$defaultParty);
         }
 
         return Inertia::render('Home', [
+            'prefillCode' => strtoupper(substr(preg_replace('/[^A-Za-z]/', '', $request->string('code')->toString()) ?? '', 0, 4)),
             'canCreateParty' => $request->user()?->can('create', Party::class) ?? false,
         ]);
     }

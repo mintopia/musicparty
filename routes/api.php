@@ -51,7 +51,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/pause', [PartyController::class, 'pause'])->name('parties.pause');
         Route::post('parties/{party}/end', [PartyController::class, 'end'])->name('parties.end');
         Route::post('parties/{party}/reopen', [PartyController::class, 'reopen'])->name('parties.reopen');
-        Route::post('parties/{party}/join', [PartyController::class, 'join'])->name('parties.join');
+        Route::post('parties/{party}/join', [PartyController::class, 'join'])->middleware('throttle:party-join')->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::get('parties/{party}/members', [PartyMemberController::class, 'index'])->name('parties.members.index');
         Route::get('parties/{party}/stats', [PartyStatsController::class, 'show'])->name('parties.stats');
@@ -67,13 +67,13 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('parties/{party}/mods/{mod}', [PartyModController::class, 'disable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.disable');
         Route::put('parties/{party}/mods/{mod}/settings', [PartyModController::class, 'update'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.settings');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
-        Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
+        Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->middleware('throttle:party-requests')->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');
         Route::post('parties/{party}/requests/{trackRequest}/approve', [PartyRequestController::class, 'approve'])->whereNumber('trackRequest')->name('parties.requests.approve');
         Route::post('parties/{party}/requests/{trackRequest}/reject', [PartyRequestController::class, 'reject'])->whereNumber('trackRequest')->name('parties.requests.reject');
         Route::delete('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'destroy'])->whereNumber('trackRequest')->name('parties.requests.destroy');
-        Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');
-        Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->name('parties.requests.vote.destroy');
+        Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.store');
+        Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.destroy');
         Route::get('parties/{party}/history', [PartyPlayController::class, 'history'])->name('parties.history');
         Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');

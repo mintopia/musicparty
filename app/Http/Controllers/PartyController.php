@@ -98,7 +98,6 @@ class PartyController extends Controller
 
     public function show(
         ListPlayHistoryRequest $request,
-        JoinParty $joinParty,
         ListQueue $listQueue,
         ListPlayHistory $listHistory,
         PartyQueueSnapshot $snapshot,
@@ -106,8 +105,13 @@ class PartyController extends Controller
         EnabledMods $enabledMods,
         Party $party,
         string $section = 'queue',
-    ): Response {
-        $member = $joinParty($this->currentUser($request), $party);
+    ): Response|RedirectResponse {
+        $member = $party->memberFor($this->currentUser($request));
+
+        if ($member === null) {
+            return redirect()->route('home', ['code' => $party->code]);
+        }
+
         $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
         $results = null;

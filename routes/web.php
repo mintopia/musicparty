@@ -36,7 +36,7 @@ Route::middleware('auth')->group(function () {
 
     Route::get('parties/create', [PartyController::class, 'create'])->name('parties.create');
     Route::post('parties', [PartyController::class, 'store'])->name('parties.store');
-    Route::post('parties/join', [PartyController::class, 'join'])->name('parties.join');
+    Route::post('parties/join', [PartyController::class, 'join'])->middleware('throttle:party-join')->name('parties.join');
     Route::get('parties/{party}/player', [BrowserPlayerController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->middleware('cache.headers:no_store;private')
@@ -108,6 +108,7 @@ Route::middleware('auth')->group(function () {
         ->name('parties.update');
     Route::post('parties/{party}/requests', [PartyController::class, 'storeRequest'])
         ->where('party', '[A-Za-z]{4}')
+        ->middleware('throttle:party-requests')
         ->name('parties.requests.store');
     foreach (['live', 'pause', 'end', 'reopen'] as $transition) {
         Route::post("parties/{party}/{$transition}", [PartyController::class, $transition])
@@ -136,10 +137,12 @@ Route::middleware('auth')->group(function () {
     Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'storeVote'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('trackRequest')
+        ->middleware('throttle:party-votes')
         ->name('parties.requests.vote.store');
     Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'destroyVote'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('trackRequest')
+        ->middleware('throttle:party-votes')
         ->name('parties.requests.vote.destroy');
     Route::put('parties/{party}/plays/{play}/rating', [PartyController::class, 'storeRating'])
         ->where('party', '[A-Za-z]{4}')

@@ -3,11 +3,11 @@ import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import Icon from '../Components/Icon.vue';
 
-defineProps({canCreateParty: {type: Boolean, default: false}});
+const props = defineProps({canCreateParty: {type: Boolean, default: false}, prefillCode: {type: String, default: ''}});
 
 const user = computed(() => usePage().props.auth.user);
 
-const form = useForm({code: ''});
+const form = useForm({code: props.prefillCode});
 const submit = () => form.post('/parties/join');
 const normalise = () => {
     form.code = form.code.toUpperCase().replace(/[^A-Z]/g, '');

@@ -96,6 +96,8 @@ it('withholds the token when the account needs relinking', function () {
 });
 
 it('never puts the token on the party page or in broadcasts', function () {
+    PartyMember::factory()->for($this->party)->for($this->host)->create();
+
     $this->withoutVite()->actingAs($this->host)->get(route('parties.show', $this->party))
         ->assertOk()
         ->assertDontSee('secret-host-token', false);
