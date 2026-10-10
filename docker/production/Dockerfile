@@ -1,43 +1,53 @@
-# Use the FrankenPHP image for building/running composer
 FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10 AS composer
 
 WORKDIR /app/
 ENV HOME=/tmp
-RUN mkdir -p /app
 COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
-COPY . /app/
-COPY docker/production/production.env /app/.env
+COPY composer.json composer.lock /app/
 
 RUN composer install \
         --no-dev \
         --no-progress \
-        --optimize-autoloader \
-        --prefer-dist \
-        --ignore-platform-reqs
+        --no-scripts \
+        --no-autoloader \
+        --prefer-dist
 
-# Use the Node 24 (active LTS) image to do an npm install
+COPY . /app/
+COPY docker/production/production.env /app/.env
+
+RUN composer dump-autoload --no-dev --optimize && \
+    php artisan package:discover --ansi
+
 FROM node:24 AS npm
 
 WORKDIR /app/
 ENV HOME=/tmp
-RUN mkdir -p /app
-COPY --from=composer /app/ /app
+COPY package.json package-lock.json /app/
 
-RUN npm install --production=false && \
-    npm run build
+RUN npm ci
 
-# Now our final image
+COPY vite.config.js /app/
+COPY resources /app/resources
+COPY public /app/public
+
+RUN npm run build
+
 FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
-COPY --from=composer /app /app
-COPY --from=npm /app/public/build /app/public/build
-COPY docker/production/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && \
+RUN apk add --no-cache su-exec && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
 
+COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/Caddyfile /
+COPY docker/production/entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
+COPY --from=composer /app /app
+COPY --from=npm /app/public/build /app/public/build
+
+WORKDIR /app
+EXPOSE 8080
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php",  "artisan",  "octane:frankenphp", "--caddyfile=/Caddyfile", "--admin-host=0.0.0.0", "--port=80"]
+CMD ["web"]

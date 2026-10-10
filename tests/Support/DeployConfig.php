@@ -53,6 +53,45 @@ final readonly class DeployConfig
     }
 
     /**
+     * @return list<array{instruction: string, arguments: string, stage: int}>
+     */
+    public static function dockerfile(string $relativePath): array
+    {
+        $instructions = [];
+        $stage = -1;
+        $joined = preg_replace('/\\\\\R/', ' ', self::read($relativePath)) ?? '';
+
+        foreach (preg_split('/\R/', $joined) ?: [] as $line) {
+            $line = trim($line);
+
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            [$instruction, $arguments] = array_pad(preg_split('/\s+/', $line, 2) ?: [], 2, '');
+            $instruction = strtoupper($instruction);
+
+            if ($instruction === 'FROM') {
+                $stage++;
+            }
+
+            $instructions[] = ['instruction' => $instruction, 'arguments' => trim($arguments), 'stage' => $stage];
+        }
+
+        return $instructions;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public static function ini(string $relativePath): array
+    {
+        $parsed = parse_ini_string(self::read($relativePath), false, INI_SCANNER_RAW);
+
+        return array_map(strval(...), $parsed === false ? [] : $parsed);
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function toArray(): array
