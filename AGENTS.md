@@ -148,7 +148,7 @@ This application is a Laravel application and its main Laravel ecosystems packag
 - laravel/mcp (MCP) - v1
 - laravel/pint (PINT) - v1
 - pestphp/pest (PEST) - v5
-- phpunit/phpunit (PHPUNIT) - v11
+- phpunit/phpunit (PHPUNIT) - v13
 - laravel-echo (ECHO) - v2
 - vue (VUE) - v3
 
