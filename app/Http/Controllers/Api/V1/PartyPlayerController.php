@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Playback\Actions\ChangePartyPlayer;
+use App\Domain\Playback\Actions\CheckPlaybackNow;
 use App\Domain\Playback\Actions\IssuePlayerToken;
 use App\Domain\Playback\Actions\ListPlayerTokens;
 use App\Domain\Playback\Actions\RevokePlayerToken;
@@ -70,6 +71,15 @@ class PartyPlayerController extends Controller
         }
 
         return response()->noContent();
+    }
+
+    public function poll(Party $party, CheckPlaybackNow $checkPlaybackNow): Response
+    {
+        if (! $checkPlaybackNow($party)) {
+            abort(Response::HTTP_UNPROCESSABLE_ENTITY, 'The Party is not live with a Polling Player.');
+        }
+
+        return response()->noContent(Response::HTTP_ACCEPTED);
     }
 
     private function actor(): User
