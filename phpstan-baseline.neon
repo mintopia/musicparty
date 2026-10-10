@@ -319,18 +319,6 @@ parameters:
 			path: app/Http/Resources/V1/UpcomingSongResource.php
 
 		-
-			message: '#^Method App\\Jobs\\PartyUpdate\:\:middleware\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Jobs/PartyUpdate.php
-
-		-
-			message: '#^Parameter \#1 \$key of class Illuminate\\Queue\\Middleware\\WithoutOverlapping constructor expects string\|UnitEnum, int\<0, max\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Jobs/PartyUpdate.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 2
