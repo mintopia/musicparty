@@ -159,7 +159,7 @@ it('retries sending an Up Next the player refused while disconnected', function 
     expect(requestStatuses($party))->toBe(['r1' => 'up_next'])->and(enqueuedTrackIds($player))->toBe([]);
 
     $player->reconnect();
-    app(EnqueueBackoff::class)->clearForParty($party);
+    $this->travel(5)->seconds();
     $coordinator->tick($party);
 
     expect(requestStatuses($party))->toBe(['r1' => 'playing']);
@@ -205,7 +205,7 @@ it('logs each attempt then gives up after the final backoff step', function () {
         ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_abandoned')->count())->toBe(1);
 });
 
-it('retries at once on reconnect after giving up', function () {
+it('does not retry again after giving up until the backoff is cleared', function () {
     $party = livePlaybackParty();
     $player = useFakePlayer($party, FeedMode::Ahead);
     TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
@@ -217,8 +217,12 @@ it('retries at once on reconnect after giving up', function () {
         $this->travel($delay)->seconds();
         $coordinator->tick($party);
     }
-
     $player->failEnqueueWith(null);
+    $this->travel(3600)->seconds();
+    $coordinator->tick($party);
+
+    expect(requestStatuses($party))->toBe(['r1' => 'up_next']);
+
     app(EnqueueBackoff::class)->clearForParty($party);
     $coordinator->tick($party);
 

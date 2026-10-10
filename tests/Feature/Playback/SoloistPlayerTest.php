@@ -364,3 +364,20 @@ it('pairs only with Spotify', function () {
     expect(fn () => (new PairPlayer)($this->player, new FakeMusicProvider))->toThrow(IncompatibleProviderException::class);
     (new PairPlayer)($this->player, new FakeMusicProvider(id: 'spotify'));
 });
+
+it('retries a failed enqueue at once when the Soloist connects', function () {
+    $request = soloistRequest($this->party, 't1', RequestStatus::UpNext);
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->tick($this->party);
+    $coordinator->tick($this->party);
+
+    expect(soloistLog($this->party, 'player.enqueue_failed'))->toBe(1)
+        ->and($request->fresh()->enqueued_at)->toBeNull();
+
+    $this->player->markConnected();
+    $coordinator->tick($this->party);
+
+    expect(soloistCommands('add_to_queue'))->toHaveCount(1)
+        ->and($request->fresh()->enqueued_at)->not->toBeNull();
+});

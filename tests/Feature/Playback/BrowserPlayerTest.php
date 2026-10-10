@@ -1,17 +1,20 @@
 <?php
 
+use App\Domain\Playback\Actions\ClaimBrowserPlayer;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\Players\BrowserPlayer;
+use App\Domain\Queue\RequestStatus;
 use App\Events\Player\BrowserPlayerCommandEvent;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\SocialProvider;
+use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -275,4 +278,20 @@ it('does not let a report steal the role from another tab', function () {
     $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
 
     $this->postJson(route('parties.player.report', $this->party), ['tab_id' => 'tab-b', 'status' => 'paused', 'track_id' => null, 'position_ms' => 0])->assertStatus(409);
+});
+
+it('retries a failed enqueue at once when a tab claims the player', function () {
+    Event::fake([BrowserPlayerCommandEvent::class]);
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::UpNext]);
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->tick($this->party);
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->toBeNull();
+
+    app(ClaimBrowserPlayer::class)($this->party, 'tab-a');
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->not->toBeNull();
 });
