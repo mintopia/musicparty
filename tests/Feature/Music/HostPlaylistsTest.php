@@ -32,7 +32,7 @@ function makeUser(): User
     return $user;
 }
 
-function makeParty(User $host, array $attributes = []): Party
+function makeHostedParty(User $host, array $attributes = []): Party
 {
     $party = new Party;
     $party->forceFill(array_merge(['code' => fake()->unique()->lexify('????????'), 'name' => 'Test Party', 'user_id' => $host->id], $attributes));
@@ -68,7 +68,7 @@ beforeEach(function () {
 
 it('lists the host playlists without tokens', function () {
     [$host, $account] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     Sanctum::actingAs($host);
 
     $response = $this->getJson(route('api.v1.parties.playlists.index', $party))->assertOk();
@@ -79,7 +79,7 @@ it('lists the host playlists without tokens', function () {
 
 it('refuses non-hosts listing and selecting playlists', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     Sanctum::actingAs(makeUser());
 
     $this->getJson(route('api.v1.parties.playlists.index', $party))->assertForbidden();
@@ -89,12 +89,12 @@ it('refuses non-hosts listing and selecting playlists', function () {
 it('requires authentication', function () {
     [$host] = hostWithAccount();
 
-    $this->getJson(route('api.v1.parties.playlists.index', makeParty($host)))->assertUnauthorized();
+    $this->getJson(route('api.v1.parties.playlists.index', makeHostedParty($host)))->assertUnauthorized();
 });
 
 it('persists selected playlists and clears them with null', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     Sanctum::actingAs($host);
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => 'playlist-1', 'history_playlist_id' => 'playlist-1'])
@@ -112,7 +112,7 @@ it('persists selected playlists and clears them with null', function () {
 
 it('rejects playlists that do not belong to the host', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     Sanctum::actingAs($host);
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => 'foreign', 'history_playlist_id' => 'foreign-2'])
@@ -124,7 +124,7 @@ it('rejects playlists that do not belong to the host', function () {
 
 it('rejects a history playlist when the provider cannot write', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     $this->app->instance(MusicProvider::class, new FakeMusicProvider(playlists: [new PlaylistData('playlist-1', 'Mix')], capabilities: []));
     Sanctum::actingAs($host);
 
@@ -137,13 +137,13 @@ it('requires both playlist keys', function () {
     [$host] = hostWithAccount();
     Sanctum::actingAs($host);
 
-    $this->putJson(route('api.v1.parties.playlists.update', makeParty($host)), [])->assertUnprocessable()
+    $this->putJson(route('api.v1.parties.playlists.update', makeHostedParty($host)), [])->assertUnprocessable()
         ->assertJsonValidationErrors(['fallback_playlist_id', 'history_playlist_id']);
 });
 
 it('redirects the host to spotify with the playlist scopes', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
 
     $response = $this->actingAs($host)->get(route('spotify.link', $party))->assertRedirect();
 
@@ -156,7 +156,7 @@ it('redirects the host to spotify with the playlist scopes', function () {
 it('refuses non-hosts starting the link flow', function () {
     [$host] = hostWithAccount();
 
-    $this->actingAs(makeUser())->get(route('spotify.link', makeParty($host)))->assertForbidden();
+    $this->actingAs(makeUser())->get(route('spotify.link', makeHostedParty($host)))->assertForbidden();
 });
 
 function mockSpotifyCallback(): void
@@ -175,7 +175,7 @@ function mockSpotifyCallback(): void
 it('links the host account with encrypted tokens', function () {
     spotifyProvider();
     $host = makeUser();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     mockSpotifyCallback();
 
     $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])
@@ -195,7 +195,7 @@ it('links the host account with encrypted tokens', function () {
 it('clears needs_relink when re-linking and does not duplicate the account', function () {
     $host = makeUser();
     LinkedAccount::factory()->for($host)->needingRelink()->create(['social_provider_id' => spotifyProvider()->id]);
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     mockSpotifyCallback();
 
     $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'))->assertRedirect();
@@ -207,7 +207,7 @@ it('clears needs_relink when re-linking and does not duplicate the account', fun
 it('refuses linking by a non-host at callback', function () {
     spotifyProvider();
     $host = makeUser();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     $stranger = makeUser();
     mockSpotifyCallback();
 
@@ -220,7 +220,7 @@ it('refuses an external account already linked to another user', function () {
     $other = makeUser();
     LinkedAccount::factory()->for($other)->create(['social_provider_id' => spotifyProvider()->id, 'external_id' => 'spotify-user-1']);
     $host = makeUser();
-    $party = makeParty($host);
+    $party = makeHostedParty($host);
     mockSpotifyCallback();
 
     $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'))->assertRedirect(route('home'));
@@ -232,16 +232,16 @@ it('dispatches a history append only when a history playlist is set', function (
     Bus::fake();
     [$host] = hostWithAccount();
 
-    app(AppendPlayToHistory::class)(makeParty($host), 'track-1', $this->fake);
+    app(AppendPlayToHistory::class)(makeHostedParty($host), 'track-1', $this->fake);
     Bus::assertNotDispatched(AppendToHistoryPlaylist::class);
 
-    app(AppendPlayToHistory::class)(makeParty($host, ['history_playlist_id' => 'playlist-1']), 'track-1', $this->fake);
+    app(AppendPlayToHistory::class)(makeHostedParty($host, ['history_playlist_id' => 'playlist-1']), 'track-1', $this->fake);
     Bus::assertDispatched(AppendToHistoryPlaylist::class);
 });
 
 it('appends the played track to the history playlist through the provider', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host, ['history_playlist_id' => 'playlist-1']);
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
 
     app(AppendPlayToHistory::class)($party, 'track-2', $this->fake);
 
@@ -250,7 +250,7 @@ it('appends the played track to the history playlist through the provider', func
 
 it('retries a temporary failure without throwing into playback', function () {
     [$host] = hostWithAccount();
-    $party = makeParty($host, ['history_playlist_id' => 'playlist-1']);
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
     $this->fake->rateLimitNext(42);
 
     $job = Mockery::mock(AppendToHistoryPlaylist::class, [$party->id, 'track-1', 'fake'])->makePartial();
@@ -264,7 +264,7 @@ it('retries a temporary failure without throwing into playback', function () {
 
 it('logs a final failure without tokens and does not throw', function () {
     [$host, $account] = hostWithAccount();
-    $party = makeParty($host, ['history_playlist_id' => 'playlist-1']);
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
     $this->fake->failNextWith(new ProviderTemporaryFailure('down'));
     Log::spy();
 
@@ -278,7 +278,7 @@ it('logs a final failure without tokens and does not throw', function () {
 
 it('skips silently when the host has no linked account', function () {
     $host = makeUser();
-    $party = makeParty($host, ['history_playlist_id' => 'playlist-1']);
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
 
     app(AppendPlayToHistory::class)($party, 'track-1', $this->fake);
 

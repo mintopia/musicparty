@@ -7,7 +7,7 @@ const cfg = {
     perPartyPerSecond: Number(process.env.RATE ?? 1),
     payloadBytes: Number(process.env.PAYLOAD_BYTES ?? 4000),
     host: process.env.REVERB_HOST ?? '127.0.0.1',
-    port: Number(process.env.REVERB_PORT ?? 8080),
+    ports: (process.env.REVERB_PORTS ?? process.env.REVERB_PORT ?? '8080').split(',').map(Number),
     appId: process.env.REVERB_APP_ID ?? 'loadtest',
     key: process.env.REVERB_APP_KEY ?? 'loadkey',
     secret: process.env.REVERB_APP_SECRET ?? 'loadsecret',
@@ -22,9 +22,10 @@ let connected = 0;
 let failed = 0;
 const sockets = [];
 
+let connectIndex = 0;
 function connect(party) {
     return new Promise((resolve) => {
-        const ws = new WebSocket(`ws://${cfg.host}:${cfg.port}/app/${cfg.key}`);
+        const ws = new WebSocket(`ws://${cfg.host}:${cfg.ports[connectIndex++ % cfg.ports.length]}/app/${cfg.key}`);
         const timer = setTimeout(() => { failed++; resolve(); }, 20000);
         ws.onmessage = (m) => {
             const msg = JSON.parse(m.data);
@@ -62,7 +63,7 @@ async function publish(party) {
     const query = Object.entries(params).map(([k, v]) => `${k}=${v}`).sort().join('&');
     const path = `/apps/${cfg.appId}/events`;
     const sig = createHmac('sha256', cfg.secret).update(`POST\n${path}\n${query}`).digest('hex');
-    const res = await fetch(`http://${cfg.host}:${cfg.port}${path}?${query}&auth_signature=${sig}`, {
+    const res = await fetch(`http://${cfg.host}:${cfg.ports[0]}${path}?${query}&auth_signature=${sig}`, {
         method: 'POST', headers: { 'content-type': 'application/json' }, body,
     });
     return res.ok;
