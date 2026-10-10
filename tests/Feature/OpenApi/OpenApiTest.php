@@ -64,5 +64,5 @@ it('documents the create party request body', function () {
 
     expect($body['required'])->toEqualCanonicalizing(['name', 'music_provider', 'player_kind'])
         ->and($body['properties']['music_provider']['enum'])->toBe(['fake'])
-        ->and($body['properties']['player_kind']['enum'])->toBe(['fake', 'polling']);
+        ->and($body['properties']['player_kind']['enum'])->toBe(['fake', 'polling', 'browser']);
 });

@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\ThemeController as AdminThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\BrowserPlayerController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\SpotifyLinkController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyModController;
 use App\Http\Controllers\PartyTvController;
 use App\Http\Controllers\SignupController;
+use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -37,6 +39,19 @@ Route::middleware('auth')->group(function () {
     Route::get('parties/create', [PartyController::class, 'create'])->name('parties.create');
     Route::post('parties', [PartyController::class, 'store'])->name('parties.store');
     Route::post('parties/join', [PartyController::class, 'join'])->name('parties.join');
+    Route::get('parties/{party}/player', [BrowserPlayerController::class, 'show'])
+        ->where('party', '[A-Za-z]{4}')
+        ->middleware('cache.headers:no_store;private')
+        ->name('parties.player.show');
+    Route::post('parties/{party}/player/claim', [BrowserPlayerController::class, 'claim'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.claim');
+    Route::post('parties/{party}/player/state', [BrowserPlayerController::class, 'report'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.report');
+    Route::post('parties/{party}/player/release', [BrowserPlayerController::class, 'release'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.release');
     Route::get('parties/{party}/log', [PartyController::class, 'log'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.log');
