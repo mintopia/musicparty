@@ -20,12 +20,20 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
-        $this->assertInMemorySqlite();
-
         $this->withoutVite();
         $this->app->singleton(Bucket::class, FakeLeakyBucket::class);
         $this->app->singleton(CounterStore::class, InMemoryCounterStore::class);
         $this->stubHorizonRepositories();
+    }
+
+    /**
+     * @return array<class-string, class-string>
+     */
+    protected function setUpTraits(): array
+    {
+        $this->assertInMemorySqlite();
+
+        return parent::setUpTraits();
     }
 
     private function stubHorizonRepositories(): void
