@@ -8,6 +8,7 @@ use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Queue\Data\SearchHit;
+use App\Domain\Queue\Exceptions\ProviderRateLimitedException;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
@@ -30,7 +31,11 @@ class SearchPartyProvider
 
         try {
             $page = $this->catalogue->provider($party->music_provider)->search($query, self::LIMIT, 0);
-        } catch (ProviderTemporaryFailure|ProviderUnavailableException) {
+        } catch (ProviderTemporaryFailure $failure) {
+            throw $failure->retryAfterSeconds === null
+                ? RequestRefusedException::providerUnavailable()
+                : new ProviderRateLimitedException($failure->retryAfterSeconds);
+        } catch (ProviderUnavailableException) {
             throw RequestRefusedException::providerUnavailable();
         }
 

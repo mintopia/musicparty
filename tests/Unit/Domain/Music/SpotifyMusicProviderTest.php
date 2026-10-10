@@ -175,7 +175,7 @@ it('defaults the retry-after when the header is missing', function () {
     try {
         $this->provider->search('x', 1, 0);
     } catch (ProviderTemporaryFailure $e) {
-        expect($e->retryAfterSeconds)->toBe(30);
+        expect($e->retryAfterSeconds)->toBe(5);
     }
 });
 

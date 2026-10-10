@@ -14,6 +14,7 @@ use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
+use App\Domain\Queue\Exceptions\ProviderRateLimitedException;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\SearchRateLimitedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
@@ -155,7 +156,7 @@ class PartyRequestController extends Controller
             $payload['retry_at'] = $exception->retryAt->toIso8601String();
         }
 
-        $headers = $exception instanceof SearchRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
+        $headers = $exception instanceof SearchRateLimitedException || $exception instanceof ProviderRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
 
         return response()->json($payload, $exception->status(), $headers);
     }
