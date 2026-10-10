@@ -7,9 +7,10 @@ use App\Domain\Theming\Actions\GetPartyTheme;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class ThemeUpdatedEvent implements ShouldBroadcast
+class ThemeUpdatedEvent implements ShouldBroadcast, ShouldDispatchAfterCommit
 {
     use Dispatchable;
     use InteractsWithSockets;

@@ -5,9 +5,10 @@ namespace App\Domain\Playback\Broadcast;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Foundation\Events\Dispatchable;
 
-class BrowserPlayerCommandEvent implements ShouldBroadcastNow
+class BrowserPlayerCommandEvent implements ShouldBroadcastNow, ShouldDispatchAfterCommit
 {
     use Dispatchable;
     use InteractsWithSockets;

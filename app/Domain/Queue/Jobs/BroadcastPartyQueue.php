@@ -6,12 +6,13 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Broadcast\QueueUpdatedEvent;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Events\ShouldDispatchAfterCommit;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 
-class BroadcastPartyQueue implements ShouldBeUniqueUntilProcessing, ShouldQueue
+class BroadcastPartyQueue implements ShouldBeUniqueUntilProcessing, ShouldDispatchAfterCommit, ShouldQueue
 {
     use Dispatchable;
     use InteractsWithQueue;
