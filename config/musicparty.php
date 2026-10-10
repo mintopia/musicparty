@@ -19,6 +19,10 @@ return [
         'idle_delay_seconds' => (int) env('MUSICPARTY_POLL_IDLE_DELAY', 60),
         'backoff_cap_seconds' => (int) env('MUSICPARTY_POLL_BACKOFF_CAP', 300),
     ],
+    'player_frames' => [
+        'max_bytes' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_BYTES', 8192),
+        'max_per_minute' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_PER_MINUTE', 120),
+    ],
     'players' => [
         'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
         'polling' => ['label' => 'Polling player', 'class' => PollingPlayer::class],

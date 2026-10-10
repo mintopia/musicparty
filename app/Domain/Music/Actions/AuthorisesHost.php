@@ -26,4 +26,11 @@ class AuthorisesHost
             ->whereHas('provider', fn ($query) => $query->where('code', $providerCode))
             ->first();
     }
+
+    public function hostAccountIdFor(Party $party): string
+    {
+        $host = $party->user;
+
+        return $host instanceof User ? (string) $this->linkedAccountFor($host, $party->music_provider)?->id : '';
+    }
 }
