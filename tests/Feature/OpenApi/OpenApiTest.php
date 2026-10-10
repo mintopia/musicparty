@@ -49,7 +49,8 @@ it('documents sanctum security on authenticated routes only', function () {
     $paths = committedOpenApi()['paths'];
 
     expect($paths['/api/v1/parties/{party}/control']['post']['security'])->toBe([['sanctumBearer' => []], ['sanctumCookie' => []]])
-        ->and($paths['/api/v1/ping']['get'])->not->toHaveKey('security');
+        ->and($paths['/api/v1/ping']['get']['security'])->toBe([])
+        ->and($paths['/api/v1/integration/ping']['get']['security'])->toBe([['integrationBearer' => []]]);
 });
 
 it('derives a request body from the form request', function () {

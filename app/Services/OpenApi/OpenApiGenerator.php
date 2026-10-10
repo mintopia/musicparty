@@ -154,7 +154,7 @@ class OpenApiGenerator
                     ];
                 }
             } else {
-                $body = ['type' => 'object', 'properties' => $schema['properties']];
+                $body = ['type' => 'object', 'properties' => $schema['properties'] === [] ? new \stdClass : $schema['properties']];
                 if ($schema['required'] !== []) {
                     $body['required'] = $schema['required'];
                 }
@@ -178,6 +178,11 @@ class OpenApiGenerator
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
         }
 
+        if ($this->hasMiddleware($route, 'auth:integration')) {
+            $operation['security'] = [['integrationBearer' => []]];
+            $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
+        }
+
         $conflict = self::CONFLICT_DESCRIPTIONS[$route->getName() ?? ''] ?? null;
 
         if ($conflict !== null) {
@@ -188,6 +193,10 @@ class OpenApiGenerator
             $operation['security'] = [['sanctumBearer' => []], ['sanctumCookie' => []], ['integrationBearer' => []]];
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
             $operation['responses']['403'] = ['description' => 'Forbidden. Only the Party Host, instance admins and Integration Tokens with the export ability may export.'];
+        }
+
+        if (! isset($operation['security'])) {
+            $operation['security'] = [];
         }
 
         if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
