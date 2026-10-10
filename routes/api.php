@@ -28,7 +28,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('ping', [PingController::class, 'index'])->name('ping');
     Route::apiResource('parties', PartyController::class)->only(['show']);
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'user.principal'])->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
         Route::apiResource('parties', PartyController::class)->only(['store', 'update']);
         Route::post('parties/{party}/live', [PartyController::class, 'live'])->name('parties.live');

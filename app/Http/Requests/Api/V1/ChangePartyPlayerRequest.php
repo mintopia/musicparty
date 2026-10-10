@@ -31,6 +31,8 @@ class ChangePartyPlayerRequest extends FormRequest
         return [
             'player_kind.required' => 'A player kind must be provided.',
             'player_kind.string' => 'The player kind must be a string.',
+            'player_kind.max' => 'The player kind may not be longer than 255 characters.',
+            'music_provider.max' => 'The Music Provider may not be longer than 255 characters.',
             'music_provider.string' => 'The Music Provider must be a string, or null to keep the current one.',
         ];
     }

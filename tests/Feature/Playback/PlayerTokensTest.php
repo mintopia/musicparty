@@ -252,3 +252,9 @@ describe('player token middleware', function () {
         $this->withToken($this->plain)->getJson("/api/v1/__player/{$this->party->code}")->assertUnauthorized();
     });
 });
+
+it('refuses a player token principal on existing user routes', function (string $routeName) {
+    $this->withToken($this->party->createToken('Stage', ['player:connect'])->plainTextToken);
+
+    $this->getJson(route($routeName, $this->party))->assertForbidden();
+})->with(['api.v1.me' => ['api.v1.me'], 'api.v1.parties.log' => ['api.v1.parties.log'], 'api.v1.parties.members.index' => ['api.v1.parties.members.index']]);
