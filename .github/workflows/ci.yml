@@ -18,11 +18,12 @@ jobs:
           php-version: '8.4'
           coverage: none
           tools: composer:v2
+          extensions: opentelemetry
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-grpc
       - name: Pint
         run: vendor/bin/pint --test
       - name: PHPStan
@@ -61,11 +62,12 @@ jobs:
           php-version: '8.4'
           coverage: xdebug
           tools: composer:v2
+          extensions: opentelemetry
       - uses: actions/cache@v4
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
-      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-grpc
       - name: Prepare environment
         run: |
           cp .env.example .env
