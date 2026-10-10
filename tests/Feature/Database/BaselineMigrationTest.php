@@ -140,6 +140,18 @@ it('round-trips through rollback and migrate', function () {
     expect(describeSchema())->toEqual($expected);
 });
 
+it('rebuilds the schema when a pre-squash v3 database is rolled back and migrated again', function () {
+    V3PreSquashSchema::create();
+    $schemaBefore = describeSchema();
+    runBaseline();
+
+    runBaseline('migrate:rollback');
+    expect(Schema::hasTable('parties'))->toBeFalse();
+
+    runBaseline();
+    expect(describeSchema())->toEqual($schemaBefore);
+});
+
 it('matches the pre-squash v3 schema fixture column for column', function () {
     runBaseline();
     $fromEmpty = describeSchema();

@@ -92,7 +92,8 @@ return new class extends Migration
     private function isPreSquashV3(): bool
     {
         return Schema::hasTable('migrations')
-            && DB::table('migrations')->where('migration', self::PRE_SQUASH_MARKER)->exists();
+            && DB::table('migrations')->where('migration', self::PRE_SQUASH_MARKER)->exists()
+            && Schema::hasTable('parties');
     }
 
     /**
@@ -100,13 +101,26 @@ return new class extends Migration
      */
     private function dropTables(array $tables): void
     {
+        $constraintsWereEnabled = $this->foreignKeyConstraintsEnabled();
+
         Schema::disableForeignKeyConstraints();
 
         foreach ($tables as $table) {
             Schema::dropIfExists($table);
         }
 
-        Schema::enableForeignKeyConstraints();
+        if ($constraintsWereEnabled) {
+            Schema::enableForeignKeyConstraints();
+        }
+    }
+
+    private function foreignKeyConstraintsEnabled(): bool
+    {
+        $query = DB::connection()->getDriverName() === 'sqlite'
+            ? 'PRAGMA foreign_keys'
+            : 'SELECT @@foreign_key_checks';
+
+        return (bool) DB::scalar($query);
     }
 
     private function createIdentityTables(): void
