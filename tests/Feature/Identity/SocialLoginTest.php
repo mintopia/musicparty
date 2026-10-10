@@ -15,6 +15,9 @@ use Symfony\Component\HttpFoundation\RedirectResponse;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function seedDiscord(array $overrides = []): SocialProvider
 {
     config(['services.discord.client_id' => 'client-id', 'services.discord.client_secret' => 'client-secret']);

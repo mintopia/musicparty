@@ -12,7 +12,9 @@ use App\Domain\Playback\Testing\FakePlayer;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -46,16 +48,27 @@ function playbackControls(): array
     ];
 }
 
-function webControl(string $control, array $payload = [], string $code = 'ABCD')
+/**
+ * @param  array<string, mixed>  $payload
+ * @return TestResponse<Response>
+ */
+function webControl(string $control, array $payload = [], string $code = 'ABCD'): TestResponse
 {
     return test()->post("/parties/{$code}/playback/{$control}", $payload);
 }
 
-function apiControl(string $control, array $payload = [], string $code = 'ABCD')
+/**
+ * @param  array<string, mixed>  $payload
+ * @return TestResponse<Response>
+ */
+function apiControl(string $control, array $payload = [], string $code = 'ABCD'): TestResponse
 {
     return test()->postJson("/api/v1/parties/{$code}/playback/{$control}", $payload);
 }
 
+/**
+ * @return array<int, int|string|null>
+ */
 function lastCommand(FakePlayer $player): array
 {
     $command = array_last($player->commands());

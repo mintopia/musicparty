@@ -8,6 +8,9 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
+/**
+ * @implements CastsAttributes<mixed, mixed>
+ */
 class SettingValue implements CastsAttributes
 {
     /**

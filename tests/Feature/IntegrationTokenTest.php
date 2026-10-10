@@ -9,6 +9,7 @@ use App\Domain\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -21,16 +22,26 @@ function tokenAdmin(): User
     return $user->fresh();
 }
 
+/**
+ * @param  list<string>  $abilities
+ * @return array<string, mixed>
+ */
 function issueFor(User $admin, array $abilities = ['read'], string $name = 'Exporter'): array
 {
     return app(IssueIntegrationToken::class)->handle($admin, $name, $abilities);
 }
 
+/**
+ * @return TestResponse<Response>
+ */
 function inertiaGet(string $uri): TestResponse
 {
     return test()->get($uri, ['X-Inertia' => 'true', 'X-Inertia-Version' => (string) Inertia\Inertia::getVersion()]);
 }
 
+/**
+ * @return array<string, mixed>
+ */
 function bearer(string $plainText): array
 {
     app('auth')->forgetGuards();

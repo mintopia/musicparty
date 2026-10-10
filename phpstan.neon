@@ -4,5 +4,15 @@ includes:
 
 parameters:
     level: 8
+    parseModelCastsMethod: true
     paths:
         - app
+        - tests
+    ignoreErrors:
+        -
+            identifiers:
+                - property.notFound
+                - method.notFound
+            message: '#Pest\\(PendingCalls\\TestCall|Mixins\\Expectation)#'
+            paths:
+                - tests/*

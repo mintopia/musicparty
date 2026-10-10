@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\SocialProviders;
 
 use App\Domain\Identity\Models\LinkedAccount;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Manager\Config;
 use SocialiteProviders\Steam\Provider;
@@ -17,6 +18,9 @@ class SteamProvider extends AbstractSocialProvider
 
     protected bool $supportsAuth = true;
 
+    /**
+     * @return array<string, \stdClass>
+     */
     public function configMapping(): array
     {
         return [
@@ -28,7 +32,7 @@ class SteamProvider extends AbstractSocialProvider
         ];
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): \Laravel\Socialite\Contracts\Provider
     {
         $host = request()->getHost();
         $config = new Config(
@@ -43,7 +47,7 @@ class SteamProvider extends AbstractSocialProvider
         return Socialite::buildProvider(Provider::class, $config->get())->setConfig($config);
     }
 
-    protected function updateAccount(LinkedAccount $account, $remoteUser): void
+    protected function updateAccount(LinkedAccount $account, SocialiteUser $remoteUser): void
     {
         $account->avatar_url = $remoteUser->getAvatar();
         $account->name = $remoteUser->getNickname();

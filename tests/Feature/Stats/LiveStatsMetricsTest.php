@@ -44,6 +44,9 @@ function metricsPlayed(PartyMember $member, string $title, int $durationMs = 180
     return $request;
 }
 
+/**
+ * @param  array<string, mixed>  $state
+ */
 function scriptedMetricsParty(string $code, array $state = []): Party
 {
     $party = Party::factory()->live()->create(['code' => $code, ...$state]);

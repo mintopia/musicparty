@@ -39,16 +39,25 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @return array<string, mixed>
+ */
 function soloistFrame(string $name): array
 {
     return json_decode((string) file_get_contents(base_path("tests/Fixtures/Playback/Soloist/{$name}.json")), true, 512, JSON_THROW_ON_ERROR);
 }
 
+/**
+ * @return list<mixed>
+ */
 function soloistFrames(): array
 {
     return Event::dispatched(PlayerCommandEvent::class)->map(fn (array $args): array => $args[0]->broadcastWith())->values()->all();
 }
 
+/**
+ * @return list<mixed>
+ */
 function soloistCommands(string $command): array
 {
     return array_values(array_filter(soloistFrames(), fn (array $frame): bool => ($frame['command'] ?? null) === $command));
@@ -59,6 +68,9 @@ function soloistLog(Party $party, string $action): int
     return PartyLogEntry::query()->where('party_id', $party->id)->where('action', $action)->count();
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function soloistRequest(Party $party, string $trackId, RequestStatus $status, array $attributes = []): TrackRequest
 {
     return TrackRequest::factory()->for($party)->create(['provider_track_id' => $trackId, 'status' => $status, 'duration_ms' => 180000, ...$attributes]);

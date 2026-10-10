@@ -15,7 +15,7 @@ final class V2Schema
      *
      * @var list<string>
      */
-    public const V2_ONLY_TABLES = [
+    public const array V2_ONLY_TABLES = [
         'websockets_statistics_entries', 'themes', 'party_member_roles', 'artists', 'albums', 'songs',
         'artist_song', 'upcoming_songs', 'played_songs', 'votes', 'song_ratings', 'mods', 'mod_settings',
         'party_mod_settings', 'party_mod_setting_events', 'party_moderations', 'telescope_entries',

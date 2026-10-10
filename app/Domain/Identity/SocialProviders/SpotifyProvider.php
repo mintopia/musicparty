@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\SocialProviders;
 
 use App\Domain\Identity\Models\LinkedAccount;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Spotify\Provider;
 
@@ -16,7 +17,7 @@ class SpotifyProvider extends AbstractSocialProvider
 
     protected bool $supportsAuth = true;
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): \Laravel\Socialite\Contracts\Provider
     {
         return Socialite::buildProvider(Provider::class, [
             'client_id' => $this->provider->getSetting('client_id'),
@@ -42,7 +43,7 @@ class SpotifyProvider extends AbstractSocialProvider
         ]);
     }
 
-    protected function updateAccount(LinkedAccount $account, $remoteUser): void
+    protected function updateAccount(LinkedAccount $account, SocialiteUser $remoteUser): void
     {
         $account->avatar_url = $remoteUser->getAvatar();
         $account->refresh_token = $remoteUser->refreshToken;

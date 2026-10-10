@@ -15,7 +15,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -38,13 +40,19 @@ beforeEach(function () {
     $this->member = PartyMember::factory()->for($this->party)->create();
 });
 
-function ruleRequest(PartyMember $member, string $trackId)
+/**
+ * @return TestResponse<Response>
+ */
+function ruleRequest(PartyMember $member, string $trackId): TestResponse
 {
     Sanctum::actingAs($member->user);
 
     return test()->postJson('/api/v1/parties/ABCD/requests', ['provider_track_id' => $trackId]);
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function activeRequest(Party $party, PartyMember $member, array $attributes = []): TrackRequest
 {
     return TrackRequest::factory()->create(['party_id' => $party->id, 'party_member_id' => $member->id, ...$attributes]);
@@ -202,7 +210,10 @@ it('does not broadcast a rejection for non-rule refusals or accepted requests', 
     Event::assertNotDispatched(RequestRejectedEvent::class);
 })->with(['t1']);
 
-function authoriseMemberChannel(?User $user, string $channel)
+/**
+ * @return TestResponse<Response>
+ */
+function authoriseMemberChannel(?User $user, string $channel): TestResponse
 {
     $test = $user === null ? test() : test()->actingAs($user);
 

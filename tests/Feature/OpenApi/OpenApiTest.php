@@ -4,6 +4,9 @@ use App\Support\OpenApi\OpenApiCoverage;
 use App\Support\OpenApi\OpenApiGenerator;
 use Illuminate\Support\Facades\Route;
 
+/**
+ * @return array<string, mixed>
+ */
 function committedOpenApi(): array
 {
     return json_decode((string) file_get_contents(base_path('openapi/openapi.json')), true, flags: JSON_THROW_ON_ERROR);

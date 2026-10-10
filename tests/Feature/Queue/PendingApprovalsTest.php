@@ -17,8 +17,10 @@ use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -44,7 +46,10 @@ function asMember(PartyMember $member): void
     Sanctum::actingAs($member->user);
 }
 
-function requestTrack(PartyMember $member)
+/**
+ * @return TestResponse<Response>
+ */
+function requestTrack(PartyMember $member): TestResponse
 {
     asMember($member);
 

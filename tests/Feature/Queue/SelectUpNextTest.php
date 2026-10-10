@@ -22,6 +22,9 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function queuedWithScore(Party $party, int $score, array $attributes = []): TrackRequest
 {
     $request = TrackRequest::factory()->for($party)->create($attributes);
@@ -131,6 +134,9 @@ function weightedParty(int $seed = 1): Party
     return Party::factory()->live()->create(['selection_mode' => SelectionMode::Weighted]);
 }
 
+/**
+ * @return array<int, int>
+ */
 function pickRepeatedly(Party $party, int $rounds): array
 {
     $counts = [];

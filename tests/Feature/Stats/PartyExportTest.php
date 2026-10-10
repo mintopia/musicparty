@@ -16,7 +16,9 @@ use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -34,6 +36,9 @@ beforeEach(function () {
     $this->alice = PartyMember::factory()->for($this->party)->for(User::factory()->create(['nickname' => 'Alice']))->create();
 });
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function exportRequest(Party $party, PartyMember $requester, string $title, int $second, array $attributes = []): TrackRequest
 {
     return TrackRequest::factory()->create([
@@ -84,14 +89,21 @@ function seedExportData(): Play
     return $play;
 }
 
-function exportAs(User $user)
+/**
+ * @return TestResponse<Response>
+ */
+function exportAs(User $user): TestResponse
 {
     Sanctum::actingAs($user);
 
     return test()->getJson('/api/v1/parties/EXPT/export');
 }
 
-function exportWithToken(array $abilities)
+/**
+ * @param  list<string>  $abilities
+ * @return TestResponse<Response>
+ */
+function exportWithToken(array $abilities): TestResponse
 {
     IntegrationToken::factory()->withPlainText('mpi_export_token')->withAbilities($abilities)->create();
     app('auth')->forgetGuards();

@@ -56,7 +56,7 @@ class PartyController extends Controller
         return new PartyResource($party);
     }
 
-    public function show(Party $party)
+    public function show(Party $party): PartyResource
     {
         return new PartyResource($party);
     }

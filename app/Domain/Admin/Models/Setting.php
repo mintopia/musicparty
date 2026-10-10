@@ -5,6 +5,7 @@ namespace App\Domain\Admin\Models;
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
 use App\Support\Concerns\ToString;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -18,7 +19,9 @@ use Spatie\EloquentSortable\SortableTrait;
  */
 class Setting extends Model implements Sortable
 {
+    /** @use HasFactory<Factory<static>> */
     use HasFactory;
+
     use SortableTrait;
     use ToString;
 
@@ -27,6 +30,10 @@ class Setting extends Model implements Sortable
         'type' => SettingType::class,
     ];
 
+    /**
+     * @param  mixed  $default
+     * @return mixed
+     */
     public static function fetch(string $code, $default = null)
     {
         $key = "settings.{$code}";
@@ -52,6 +59,9 @@ class Setting extends Model implements Sortable
         Cache::forget("settings.{$this->code}");
     }
 
+    /**
+     * @return object{code: string, encrypted: bool, value: mixed}
+     */
     public function getValue()
     {
         return (object) [

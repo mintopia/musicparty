@@ -12,6 +12,10 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  array<string, mixed>  $overrides
+ * @return array<string, mixed>
+ */
 function partyPayload(array $overrides = []): array
 {
     return array_merge(['name' => 'Friday LAN', 'music_provider' => 'fake', 'player_kind' => 'fake'], $overrides);

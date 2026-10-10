@@ -25,6 +25,9 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function playIn(Party $party, array $attributes = []): Play
 {
     return Play::factory()->for($party)->create($attributes);

@@ -10,6 +10,9 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return array{Party, User}
+ */
 function settingsParty(string $role): array
 {
     $party = Party::factory()->create(['code' => 'ABCD']);

@@ -5,6 +5,7 @@ use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -16,6 +17,9 @@ beforeEach(function () {
     $this->plain = $this->party->createToken('Stage', ['player:connect'])->plainTextToken;
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function authorisePlayerChannel(object $test, string $code): TestResponse
 {
     return $test->postJson('/broadcasting/auth', ['channel_name' => 'private-player.'.$code, 'socket_id' => '1234.5678']);

@@ -6,6 +6,8 @@ use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -21,7 +23,10 @@ beforeEach(function () {
     $this->party = Party::factory()->create(['code' => 'ABCD']);
 });
 
-function authoriseModerators(?User $user, string $code = 'ABCD')
+/**
+ * @return TestResponse<Response>
+ */
+function authoriseModerators(?User $user, string $code = 'ABCD'): TestResponse
 {
     $test = $user === null ? test() : test()->actingAs($user);
 

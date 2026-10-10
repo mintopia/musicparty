@@ -6,8 +6,10 @@ use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -31,7 +33,10 @@ function operationUrl(string $operation, PartyMember $target, string $prefix = '
     return "{$prefix}/parties/ABCD/members/{$target->id}/{$suffix}";
 }
 
-function callOperation(PartyMember $actor, string $operation, PartyMember $target)
+/**
+ * @return TestResponse<Response>
+ */
+function callOperation(PartyMember $actor, string $operation, PartyMember $target): TestResponse
 {
     Sanctum::actingAs($actor->user);
 

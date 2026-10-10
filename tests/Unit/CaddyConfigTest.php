@@ -28,6 +28,9 @@ function caddyDirectives(array $block): array
     return array_column($block['children'], 'directive');
 }
 
+/**
+ * @return array<string, mixed>
+ */
 function mainSite(): array
 {
     $site = null;

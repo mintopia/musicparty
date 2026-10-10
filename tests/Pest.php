@@ -23,6 +23,7 @@ function playbackTrack(int $n, int $durationMs = 180000, bool $explicit = false)
 
 /**
  * @param  list<TrackData>  $playlist
+ * @param  array<string, mixed>  $attributes
  */
 function livePlaybackParty(array $playlist = [], array $attributes = []): Party
 {

@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Http\RedirectResponse;
 
 /**
  * @property-read Collection<int, ProviderSetting> $settings
@@ -21,7 +22,9 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 #[UseFactory(SocialProviderFactory::class)]
 class SocialProvider extends Model
 {
+    /** @use HasFactory<SocialProviderFactory> */
     use HasFactory;
+
     use ToString;
 
     protected $casts = [
@@ -29,14 +32,20 @@ class SocialProvider extends Model
         'auth_enabled' => 'boolean',
     ];
 
+    /**
+     * @var array<string, mixed>
+     */
     protected array $_settings = [];
 
+    /**
+     * @return HasMany<LinkedAccount, $this>
+     */
     public function accounts(): HasMany
     {
         return $this->hasMany(LinkedAccount::class);
     }
 
-    public function redirect(?string $redirectUrl = null)
+    public function redirect(?string $redirectUrl = null): RedirectResponse
     {
         return $this->getProvider($redirectUrl)->redirect();
     }
@@ -46,11 +55,17 @@ class SocialProvider extends Model
         return new $this->provider_class($this, $redirectUrl);
     }
 
+    /**
+     * @return mixed
+     */
     public function user(?string $redirectUrl = null)
     {
         return $this->getProvider($redirectUrl)->user();
     }
 
+    /**
+     * @return array<string, \stdClass>
+     */
     public function configMapping(): array
     {
         return $this->getProvider()->configMapping();
@@ -90,6 +105,9 @@ class SocialProvider extends Model
         return $this->code;
     }
 
+    /**
+     * @return MorphMany<ProviderSetting, $this>
+     */
     public function settings(): MorphMany
     {
         return $this->morphMany(ProviderSetting::class, 'provider');

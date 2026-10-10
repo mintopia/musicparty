@@ -43,6 +43,9 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
+/**
+ * @return array<int, array<string, mixed>>
+ */
 function queueDecorations(): array
 {
     return test()->getJson('/api/v1/parties/ABCD/queue')->assertOk()->json('data.0.decorations');

@@ -33,6 +33,9 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @return array<string, string>
+ */
 function requestStatuses(Party $party): array
 {
     return TrackRequest::query()->where('party_id', $party->id)->orderBy('id')->get()

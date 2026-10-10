@@ -24,7 +24,10 @@ use Laravel\Sanctum\HasApiTokens;
 class User extends Authenticatable
 {
     use HasApiTokens;
+
+    /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use Notifiable;
     use ToString;
 
@@ -62,6 +65,9 @@ class User extends Authenticatable
         return $this->belongsToMany(Party::class, 'party_members')->withPivot('role')->withTimestamps();
     }
 
+    /**
+     * @return HasMany<PartyMember, $this>
+     */
     public function partyMembers(): HasMany
     {
         return $this->hasMany(PartyMember::class);
@@ -97,6 +103,9 @@ class User extends Authenticatable
         return null;
     }
 
+    /**
+     * @return BelongsToMany<Role, $this>
+     */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
