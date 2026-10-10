@@ -33,9 +33,12 @@ beforeEach(function () {
         'musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class],
     ]);
 
-    $this->spotify = new stdClass;
-    $this->spotify->status = 429;
-    $this->spotify->override = null;
+    $this->spotify = new class
+    {
+        public int $status = 429;
+
+        public ?Closure $override = null;
+    };
     Http::preventStrayRequests();
     Http::fake([
         'accounts.spotify.com/*' => Http::response(SpotifyFake::fixture('token')),

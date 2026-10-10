@@ -12,7 +12,9 @@ use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\ClearUpNextEnqueued;
+use App\Domain\Queue\Actions\ConfirmUpNextEnqueued;
 use App\Domain\Queue\Actions\MarkUpNextEnqueued;
+use App\Domain\Queue\Actions\MarkUpNextEnqueueUnconfirmed;
 use App\Domain\Queue\Actions\SelectUpNext;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
@@ -32,6 +34,8 @@ class PlaybackCoordinator
         private readonly EnqueueBackoff $backoff,
         private readonly MarkUpNextEnqueued $markEnqueued,
         private readonly ClearUpNextEnqueued $clearEnqueued,
+        private readonly MarkUpNextEnqueueUnconfirmed $markUnconfirmed,
+        private readonly ConfirmUpNextEnqueued $confirmEnqueued,
     ) {}
 
     public function startIfIdle(Party $party): void
@@ -181,13 +185,7 @@ class PlaybackCoordinator
 
     private function markUnconfirmed(Party $party, TrackRequest $request): void
     {
-        $marked = TrackRequest::query()
-            ->whereKey($request->id)
-            ->where('status', RequestStatus::UpNext)
-            ->whereNotNull('enqueued_at')
-            ->update(['enqueue_unconfirmed' => true]);
-
-        if ($marked > 0) {
+        if (($this->markUnconfirmed)($request)) {
             ($this->record)($party, 'player.enqueue_unconfirmed', subject: $request->title, systemActor: 'player');
         }
     }
@@ -202,7 +200,7 @@ class PlaybackCoordinator
         }
 
         if (in_array($request->provider_track_id, $queued, true)) {
-            $request->forceFill(['enqueue_unconfirmed' => false])->save();
+            ($this->confirmEnqueued)($request);
 
             return;
         }

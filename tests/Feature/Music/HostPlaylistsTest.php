@@ -261,19 +261,6 @@ it('appends the played track to the history playlist through the provider', func
     expect($this->fake->appendedTo('playlist-1'))->toBe(['track-2']);
 });
 
-it('appends one Play to the history playlist once however often the job runs', function () {
-    [$host] = hostWithAccount();
-    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
-    $play = Play::factory()->for($party)->create(['provider_track_id' => 'track-1']);
-
-    foreach ([1, 2] as $_) {
-        new AppendToHistoryPlaylist($party->id, 'track-1', 'fake', $play->id)->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
-    }
-
-    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
-        ->and($play->fresh()->history_appended_at)->not->toBeNull();
-});
-
 it('retries a temporary failure without throwing into playback', function () {
     [$host] = hostWithAccount();
     $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
@@ -380,4 +367,17 @@ it('writes a party log entry and does not throw when the provider fails on advan
 
     expect($advance->playing)->not->toBeNull()
         ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'playlist.history_append_failed')->exists())->toBeTrue();
+});
+
+it('appends one Play to the history playlist once however often the job runs', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    $play = Play::factory()->for($party)->create(['provider_track_id' => 'track-1']);
+
+    foreach ([1, 2] as $_) {
+        new AppendToHistoryPlaylist($party->id, 'track-1', 'fake', $play->id)->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
+    }
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
+        ->and($play->fresh()->history_appended_at)->not->toBeNull();
 });

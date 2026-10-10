@@ -8,6 +8,7 @@ use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
+use App\Domain\Queue\Actions\MarkPlayAppendedToHistory;
 use App\Domain\Queue\Models\Play;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
@@ -81,7 +82,7 @@ class AppendToHistoryPlaylist implements ShouldQueue
     private function markAppended(): void
     {
         if ($this->playId !== null) {
-            Play::query()->whereKey($this->playId)->update(['history_appended_at' => now()]);
+            app(MarkPlayAppendedToHistory::class)($this->playId);
         }
     }
 
