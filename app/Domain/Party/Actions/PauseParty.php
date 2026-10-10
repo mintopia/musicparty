@@ -16,9 +16,9 @@ readonly class PauseParty
     /**
      * @throws InvalidPartyTransition
      */
-    public function __invoke(User $actor, Party $party): Party
+    public function __invoke(?User $actor, Party $party, ?string $systemActor = null, ?string $reason = null): Party
     {
-        return DB::transaction(function () use ($actor, $party): Party {
+        return DB::transaction(function () use ($actor, $party, $systemActor, $reason): Party {
             $party = Party::query()->lockForUpdate()->findOrFail($party->id);
             $old = $party->state;
 
@@ -28,7 +28,7 @@ readonly class PauseParty
 
             $party->forceFill(['state' => PartyState::Paused])->save();
 
-            ($this->record)($party, 'party.paused', $actor, details: ['old' => $old->value, 'new' => PartyState::Paused->value]);
+            ($this->record)($party, 'party.paused', $actor, systemActor: $systemActor, details: ['old' => $old->value, 'new' => PartyState::Paused->value, ...($reason === null ? [] : ['reason' => $reason])]);
 
             DB::afterCommit(fn () => PartyStateChanged::dispatch($party, $old, PartyState::Paused));
 

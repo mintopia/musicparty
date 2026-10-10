@@ -114,7 +114,11 @@ it('serves the create page with the pairing catalogue', function () {
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Party/Create')
             ->where('providers', [['id' => 'fake', 'label' => 'Fake (development)']])
-            ->where('players', [['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake']]]));
+            ->where('players', [
+                ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake']],
+                ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify']],
+                ['kind' => 'browser', 'label' => 'Browser player', 'compatibleProviders' => ['spotify']],
+            ]));
 });
 
 it('forbids the create page without the role', function () {

@@ -14,6 +14,8 @@ use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PartyMemberController;
 use App\Http\Controllers\Api\V1\PartyModController;
 use App\Http\Controllers\Api\V1\PartyPlayController;
+use App\Http\Controllers\Api\V1\PartyPlayerController;
+use App\Http\Controllers\Api\V1\PartyPlaylistController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PartyStatsController;
 use App\Http\Controllers\Api\V1\PartyThemeController;
@@ -37,9 +39,12 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('ping', [PingController::class, 'index'])->name('ping');
     Route::apiResource('parties', PartyController::class)->only(['show']);
+    Route::middleware(['auth:sanctum', 'player.token'])->group(function () {
+        Route::post('parties/{party}/player/poll', [PartyPlayerController::class, 'poll'])->name('parties.player.poll');
+    });
     Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->name('parties.theme.show');
     Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:integration', 'integration.ability:read'])->name('integration.ping');
-    Route::middleware('auth:sanctum')->group(function () {
+    Route::middleware(['auth:sanctum', 'user.principal'])->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
         Route::put('me/colour-scheme', [ColourSchemeController::class, 'update'])->name('me.colour-scheme');
         Route::apiResource('parties', PartyController::class)->only(['store', 'update']);
@@ -78,6 +83,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
         Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|seek|volume')->name('parties.playback');
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
+        Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
+        Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
+        Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');
+        Route::get('parties/{party}/player-tokens', [PartyPlayerController::class, 'index'])->name('parties.player-tokens.index');
+        Route::post('parties/{party}/player-tokens', [PartyPlayerController::class, 'store'])->name('parties.player-tokens.store');
+        Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerController::class, 'destroy'])->whereNumber('token')->name('parties.player-tokens.destroy');
         Route::put('parties/{party}/theme', [PartyThemeController::class, 'update'])->name('parties.theme.update');
         Route::post('parties/{party}/theme', [PartyThemeController::class, 'update'])->name('parties.theme.upload');
         Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])->name('parties.theme.destroy');

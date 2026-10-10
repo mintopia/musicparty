@@ -7,6 +7,7 @@ use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
+use App\Listeners\HandlePlayerClientEvent;
 use App\Listeners\MessageLoggedListener;
 use App\Models\Party;
 use App\Models\Setting;
@@ -26,6 +27,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 use Illuminate\Log\Events\MessageLogged;
+use Laravel\Reverb\Events\MessageReceived;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
 use SocialiteProviders\LaravelPassport\LaravelPassportExtendSocialite;
 use SocialiteProviders\Manager\SocialiteWasCalled;
@@ -67,6 +69,9 @@ class EventServiceProvider extends ServiceProvider
         RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
         MessageLogged::class => [
             MessageLoggedListener::class,
+        ],
+        MessageReceived::class => [
+            HandlePlayerClientEvent::class,
         ],
     ];
 

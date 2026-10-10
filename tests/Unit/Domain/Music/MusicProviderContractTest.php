@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -8,10 +9,43 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Exceptions\UnsupportedCapability;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Playback\Data\PlaybackState;
+use App\Domain\Playback\Data\TrackReference;
+use App\Domain\Playback\PlaybackStatus;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
+use Tests\Fixtures\Spotify\SpotifyFake;
 
 dataset('providers', [
-    'fake' => [fn (): array => [FakeMusicProvider::withDefaultCatalogue(), fn (MusicProvider $p) => $p->failNextWith(new ProviderUnavailableException('no credential'))]],
+    'fake' => [fn (): array => [
+        FakeMusicProvider::withDefaultCatalogue(),
+        fn (MusicProvider $p) => $p->failNextWith(new ProviderUnavailableException('no credential')),
+        fn (MusicProvider $p) => $p->failNextWith(new ProviderTemporaryFailure),
+        fn (MusicProvider $p, int $seconds) => $p->rateLimitNext($seconds),
+    ]],
+    'spotify' => [function (): array {
+        config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'US']]);
+        Cache::flush();
+        $control = new stdClass;
+        SpotifyFake::catalogue($control);
+
+        return [
+            new SpotifyMusicProvider(new HostAccountTokens),
+            fn () => config(['services.spotify.client_id' => null]),
+            fn () => $control->next = Http::response('', 503),
+            fn (MusicProvider $p, int $seconds) => $control->next = Http::response('', 429, ['Retry-After' => (string) $seconds]),
+        ];
+    }],
+]);
+
+dataset('playback providers', [
+    'fake' => [fn (): array => [FakeMusicProvider::withDefaultCatalogue()]],
+]);
+
+dataset('playlist providers', [
+    'fake' => [fn (): array => [FakeMusicProvider::withDefaultCatalogue()]],
 ]);
 
 it('pages search results within bounds', function (array $fixture) {
@@ -72,43 +106,43 @@ it('lists playlists and their tracks', function (array $fixture) {
     [$provider] = $fixture;
 
     $playlists = $provider->playlists('host-account-1');
-    $tracks = $provider->playlistTracks($playlists[0]->id);
+    $tracks = $provider->playlistTracks($playlists[0]->id, 'host-account-1');
 
     expect($playlists)->not->toBeEmpty()
         ->and($tracks)->toHaveCount($playlists[0]->trackCount)
         ->and($tracks[0])->toBeInstanceOf(TrackData::class)
-        ->and($provider->playlistTracks('unknown'))->toBe([]);
-})->with('providers');
+        ->and($provider->playlistTracks('unknown', 'host-account-1'))->toBe([]);
+})->with('playlist providers');
 
 it('declares playlist write support and appends', function (array $fixture) {
     [$provider] = $fixture;
 
     expect($provider->supports(Capability::PlaylistWrite))->toBeTrue();
 
-    $provider->appendToPlaylist('playlist-1', ['track-2']);
+    $provider->appendToPlaylist('playlist-1', ['track-2'], 'host-account-1');
 
-    expect($provider->playlistTracks('playlist-1'))->toHaveCount(3);
-})->with('providers');
+    expect($provider->playlistTracks('playlist-1', 'host-account-1'))->toHaveCount(3);
+})->with('playlist providers');
 
 it('refuses to append when playlist write is unsupported', function () {
     $provider = new FakeMusicProvider(capabilities: []);
 
     expect($provider->supports(Capability::PlaylistWrite))->toBeFalse();
 
-    $provider->appendToPlaylist('playlist-1', ['track-1']);
+    $provider->appendToPlaylist('playlist-1', ['track-1'], 'host-account-1');
 })->throws(UnsupportedCapability::class, 'playlist-write is unsupported by Music Provider');
 
 it('surfaces a temporary failure once then recovers', function (array $fixture) {
-    [$provider] = $fixture;
-    $provider->failNextWith(new ProviderTemporaryFailure);
+    [$provider, , $failTemporarily] = $fixture;
+    $failTemporarily($provider);
 
     expect(fn () => $provider->search('song', 10, 0))->toThrow(ProviderTemporaryFailure::class)
         ->and($provider->search('song', 10, 0)->total)->toBe(2);
 })->with('providers');
 
 it('surfaces rate limiting with the advised back-off', function (array $fixture) {
-    [$provider] = $fixture;
-    $provider->rateLimitNext(30);
+    [$provider, , , $rateLimit] = $fixture;
+    $rateLimit($provider, 30);
 
     try {
         $provider->getTrack('track-1');
@@ -124,3 +158,36 @@ it('reports unavailable when the search credential is missing', function (array 
 
     $provider->search('song', 10, 0);
 })->with('providers')->throws(ProviderUnavailableException::class);
+
+it('reports an idle host as stopped and the scripted playback otherwise', function (array $fixture) {
+    [$provider] = $fixture;
+
+    expect($provider->currentPlayback('host-account-1')->status)->toBe(PlaybackStatus::Stopped);
+
+    $playing = new PlaybackState(PlaybackStatus::Playing, new TrackReference('fake', 'track-1'), 1000, null, 180000);
+    $provider->playbackIs($playing);
+
+    expect($provider->currentPlayback('host-account-1'))->toBe($playing);
+})->with('playback providers');
+
+it('queues tracks for the host in order', function (array $fixture) {
+    [$provider] = $fixture;
+
+    $provider->queueTrack('track-1', 'host-account-1');
+    $provider->queueTrack('track-2', 'host-account-1');
+
+    expect($provider->queuedTracks())->toBe(['track-1', 'track-2']);
+})->with('playback providers');
+
+it('surfaces temporary failures from playback calls once', function (array $fixture) {
+    [$provider] = $fixture;
+    $provider->rateLimitNext(15);
+
+    expect(fn () => $provider->currentPlayback('host-account-1'))->toThrow(ProviderTemporaryFailure::class);
+
+    $provider->failNextWith(new ProviderTemporaryFailure);
+
+    expect(fn () => $provider->queueTrack('track-1', 'host-account-1'))->toThrow(ProviderTemporaryFailure::class)
+        ->and($provider->queuedTracks())->toBe([])
+        ->and($provider->currentPlayback('host-account-1')->status)->toBe(PlaybackStatus::Stopped);
+})->with('playback providers');

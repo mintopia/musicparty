@@ -54,4 +54,10 @@ return [
         'endpoint' => env('TICKETTAILOR_ENDPOINT', 'https://api.tickettailor.com'),
         'verifytls' => env('TICKETTAILOR_VERIFYTLS', true),
     ],
+
+    'spotify' => [
+        'client_id' => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+        'market' => env('SPOTIFY_MARKET', 'US'),
+    ],
 ];

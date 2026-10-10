@@ -1,0 +1,29 @@
+{
+  "type": "playback_state",
+  "status": "paused",
+  "position": {
+    "position_ms": 9000,
+    "timestamp_ms": 1767268800000,
+    "speed": 0.0
+  },
+  "volume": 60,
+  "item": {
+    "uri": "spotify:track:t1",
+    "decorations": {
+      "identity": {
+        "name": "Track t1"
+      },
+      "creators": [
+        {
+          "name": "Artist"
+        }
+      ],
+      "parent": {
+        "name": "Album"
+      },
+      "playback": {
+        "duration_ms": 180000
+      }
+    }
+  }
+}

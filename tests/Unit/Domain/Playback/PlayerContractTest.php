@@ -6,6 +6,7 @@ use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
+use App\Domain\Playback\Players\PollingPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
 use Carbon\CarbonImmutable;
 
@@ -112,3 +113,16 @@ it('rejects commands while disconnected and resumes after reconnect', function (
 
     expect($player->isConnected())->toBeTrue()->and($player->commands())->toHaveCount(1);
 })->with('players');
+
+it('exposes the same Player contract for every kind', function (Closure $make) {
+    $player = $make();
+
+    expect($player->feedMode())->toBe(FeedMode::Ahead)
+        ->and($player->state()->status)->toBe(PlaybackStatus::Stopped)
+        ->and($player->compatibleProviders())->not->toBeEmpty()
+        ->and($player->supports(Control::Skip))->toBeBool()
+        ->and($player->kind())->toBeString();
+})->with([
+    'fake' => [fn () => new FakePlayer],
+    'polling' => [fn () => app(PollingPlayer::class)],
+]);

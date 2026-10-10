@@ -75,7 +75,7 @@ trait ModeratesRequests
             BroadcastPartyQueue::dispatch($party->code);
         }
 
-        if ($decider === null || $decider->id !== $request->party_member_id) {
+        if ($request->party_member_id !== null && ($decider === null || $decider->id !== $request->party_member_id)) {
             RequestDecidedEvent::dispatch($party->code, $request->party_member_id, $request->id, $request->status->value, $reason);
         }
     }

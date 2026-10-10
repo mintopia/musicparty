@@ -6,8 +6,8 @@ use App\Domain\Music\Testing\FakeMusicProvider;
 it('records appended tracks per playlist', function () {
     $provider = FakeMusicProvider::withDefaultCatalogue();
 
-    $provider->appendToPlaylist('history', ['track-1']);
-    $provider->appendToPlaylist('history', ['track-2', 'track-3']);
+    $provider->appendToPlaylist('history', ['track-1'], 'host');
+    $provider->appendToPlaylist('history', ['track-2', 'track-3'], 'host');
 
     expect($provider->appendedTo('history'))->toBe(['track-1', 'track-2', 'track-3'])
         ->and($provider->appendedTo('other'))->toBe([]);
@@ -20,7 +20,7 @@ it('injects a failure into any operation and only once', function () {
     expect(fn () => $provider->playlists('acct'))->toThrow(ProviderTemporaryFailure::class, 'boom');
 
     $provider->failNextWith(new ProviderTemporaryFailure('boom'));
-    expect(fn () => $provider->appendToPlaylist('p', ['track-1']))->toThrow(ProviderTemporaryFailure::class);
+    expect(fn () => $provider->appendToPlaylist('p', ['track-1'], 'host'))->toThrow(ProviderTemporaryFailure::class);
     expect($provider->appendedTo('p'))->toBe([]);
 
     expect($provider->playlists('acct'))->not->toBeEmpty();

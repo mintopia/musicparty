@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
@@ -23,6 +24,7 @@ readonly class TopUpFallbackRequests
         private PairingCatalogue $catalogue,
         private FallbackPlaylistGate $gate,
         private RecordPartyLogEntry $record,
+        private AuthorisesHost $host,
     ) {}
 
     /**
@@ -38,7 +40,7 @@ readonly class TopUpFallbackRequests
         }
 
         try {
-            $pool = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId);
+            $pool = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId, $this->host->hostAccountIdFor($party));
         } catch (ProviderTemporaryFailure|ProviderUnavailableException) {
             return 0;
         }

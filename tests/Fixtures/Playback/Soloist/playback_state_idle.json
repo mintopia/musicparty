@@ -1,0 +1,11 @@
+{
+  "type": "playback_state",
+  "status": "idle",
+  "position": {
+    "position_ms": 0,
+    "timestamp_ms": 1767268800000,
+    "speed": 0.0
+  },
+  "volume": 60,
+  "logged_in": true
+}

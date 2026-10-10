@@ -108,6 +108,37 @@
                     "description": "Party code"
                 }
             }
+        },
+        "player": {
+            "address": "private-player.{code}",
+            "description": "Private Player channel (Echo name player.{code}). Authorisable only by an unrevoked Player Token for that Party (ability player:connect); User sessions are refused. Carries Soloist-native command frames to the Player and accepts inbound Pusher client events (client-*) from it.",
+            "messages": {
+                "Player.PlayerCommandEvent": {
+                    "$ref": "#/components/messages/Player.PlayerCommandEvent"
+                },
+                "Player.ClientFrame": {
+                    "$ref": "#/components/messages/Player.ClientFrame"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
+        },
+        "partyBrowserPlayer": {
+            "address": "private-party.{code}.browser-player",
+            "description": "Host-only private channel (Echo name party.{code}.browser-player). Authorisable only by the Party's Host. Hands the next track to the Host's Browser Player just-in-time.",
+            "messages": {
+                "Player.BrowserPlayerCommandEvent": {
+                    "$ref": "#/components/messages/Player.BrowserPlayerCommandEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
         }
     },
     "components": {
@@ -919,6 +950,29 @@
                 "title": "Party.RequestDecidedEvent",
                 "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
             },
+            "Player.PlayerCommandEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Player\\PlayerCommandEvent",
+                "payload": {
+                    "additionalProperties": true,
+                    "description": "Soloist-native frame object, passed through unchanged",
+                    "type": "object"
+                },
+                "summary": "Event name player.command",
+                "title": "Player.PlayerCommandEvent",
+                "x-event-class": "App\\Events\\Player\\PlayerCommandEvent"
+            },
+            "Player.ClientFrame": {
+                "contentType": "application/json",
+                "name": "client-frame",
+                "payload": {
+                    "additionalProperties": true,
+                    "description": "Soloist-native frame object, passed through unchanged",
+                    "type": "object"
+                },
+                "summary": "Inbound Pusher client event (any client-* name) from Soloist. Max 8192 bytes, 120 per minute per party; validated then queued as ProcessPlayerFrame.",
+                "title": "Player.ClientFrame"
+            },
             "Party.ThemeUpdatedEvent": {
                 "contentType": "application/json",
                 "name": "ThemeUpdated",
@@ -979,6 +1033,36 @@
                 },
                 "title": "Party.StatsUpdatedEvent",
                 "x-event-class": "App\\Events\\Party\\StatsUpdatedEvent"
+            },
+            "Player.BrowserPlayerCommandEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Player\\BrowserPlayerCommandEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "action": {
+                            "enum": [
+                                "play"
+                            ],
+                            "type": "string"
+                        },
+                        "provider_id": {
+                            "type": "string"
+                        },
+                        "track_id": {
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "action",
+                        "provider_id",
+                        "track_id"
+                    ],
+                    "type": "object"
+                },
+                "summary": "Event name browser-player.command",
+                "title": "Player.BrowserPlayerCommandEvent",
+                "x-event-class": "App\\Events\\Player\\BrowserPlayerCommandEvent"
             }
         }
     },
@@ -1083,6 +1167,39 @@
                 },
                 {
                     "$ref": "#/channels/partyModerators/messages/Party.PendingRequestResolvedEvent"
+                }
+            ]
+        },
+        "publishPlayerCommand": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/player"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/player/messages/Player.PlayerCommandEvent"
+                }
+            ]
+        },
+        "subscribePlayerFrame": {
+            "action": "receive",
+            "channel": {
+                "$ref": "#/channels/player"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/player/messages/Player.ClientFrame"
+                }
+            ]
+        },
+        "publishBrowserPlayerCommand": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyBrowserPlayer"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyBrowserPlayer/messages/Player.BrowserPlayerCommandEvent"
                 }
             ]
         }
