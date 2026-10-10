@@ -24,6 +24,9 @@ function csvRows(string $content): array
     return array_map(fn (string $line): array => str_getcsv($line, ',', '"', ''), array_values(array_filter(explode("\n", $content))));
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function csvPlay(Party $party, array $attributes = []): Play
 {
     return Play::factory()->for($party)->create($attributes);

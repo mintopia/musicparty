@@ -950,6 +950,7 @@
         "/v1/parties/{party}/playback/{control}": {
             "post": {
                 "operationId": "v1.parties.playback",
+                "description": "Sends play, pause, skip, seek or volume to the Party's Player. Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.\nReturns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,\nthe Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting.",
                 "summary": "Control playback",
                 "tags": [
                     "Party"
@@ -1040,8 +1041,7 @@
                     {
                         "sanctumCookie": []
                     }
-                ],
-                "description": "Sends play, pause, skip, seek or volume to the Party's Player. Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.\nReturns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,\nthe Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting."
+                ]
             }
         },
         "/v1/admin/parties/{party}/act-as-host": {
@@ -5570,6 +5570,9 @@
                             "name"
                         ]
                     },
+                    "is_mine": {
+                        "type": "boolean"
+                    },
                     "votes": {
                         "type": "integer"
                     },
@@ -5602,6 +5605,7 @@
                     "id",
                     "track",
                     "requested_by",
+                    "is_mine",
                     "votes",
                     "score",
                     "requested_at",

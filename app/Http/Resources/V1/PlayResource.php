@@ -34,7 +34,7 @@ class PlayResource extends JsonResource
                 'provider_url' => app(PairingCatalogue::class)->trackUrl($this->party?->music_provider, $this->provider_track_id),
             ],
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
-            'is_mine' => $request->user() !== null && $this->requester?->user_id === $request->user()->id,
+            'is_mine' => $this->isRequestedBy($request),
             'votes' => (int) $this->request?->votes_count,
             'score' => (int) $this->request?->score,
             'requested_at' => ($this->request instanceof TrackRequest ? $this->request->created_at : $this->played_at)?->toIso8601String(),
@@ -44,5 +44,10 @@ class PlayResource extends JsonResource
             'played_at' => $this->played_at->toIso8601String(),
             'decorations' => app(ResolveDecorations::class)($this->resource),
         ];
+    }
+
+    private function isRequestedBy(Request $request): bool
+    {
+        return $request->user() !== null && $this->requester?->user_id === $request->user()->id;
     }
 }
