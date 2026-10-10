@@ -178,8 +178,8 @@ describe('ProcessPlayerFrame', function () {
         expect(discarded())->toBe(1);
     });
 
-    it('queues on partyupdates', function () {
-        expect((new ProcessPlayerFrame('ABC123', ['a' => 1]))->queue)->toBe('partyupdates');
+    it('queues on player', function () {
+        expect((new ProcessPlayerFrame('ABC123', ['a' => 1]))->queue)->toBe('player');
     });
 });
 

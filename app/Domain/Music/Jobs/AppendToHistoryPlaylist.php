@@ -31,7 +31,9 @@ class AppendToHistoryPlaylist implements ShouldQueue
         public readonly int $partyId,
         public readonly string $providerTrackId,
         public readonly string $providerId,
-    ) {}
+    ) {
+        $this->onQueue('default');
+    }
 
     public function handle(MusicProvider $provider, AuthorisesHost $accounts): void
     {

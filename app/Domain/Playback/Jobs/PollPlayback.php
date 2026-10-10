@@ -40,7 +40,7 @@ class PollPlayback implements ShouldQueue
      */
     public function __construct(public readonly string $partyCode, public readonly bool $reschedule = true, public readonly ?string $chainToken = null)
     {
-        $this->onQueue('partyupdates');
+        $this->onQueue('polling');
     }
 
     public static function start(Party $party): bool
