@@ -215,24 +215,25 @@ Behaviour tuning is in `config/musicparty.php`. Useful variables:
 
 ## Observability
 
-The Docker images include the OpenTelemetry PHP extension and libraries. Configure it with environment variables and
-run a collector container, for example:
+OpenTelemetry is off by default (`OTEL_PHP_AUTOLOAD_ENABLED=false`) and the repository ships no collector config or
+backend credentials ([ADR-0016](docs/adr/0016-opentelemetry-via-operator-run-collector.md)). To enable it, run an
+OpenTelemetry collector yourself (a sidecar container or a separate process) and point the app at it with the standard
+exporter variables:
 
 ```dotenv
 OTEL_PHP_AUTOLOAD_ENABLED=true
 OTEL_SERVICE_NAME=musicparty
 OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
+OTEL_EXPORTER_OTLP_PROTOCOL=grpc
+OTEL_EXPORTER_OTLP_HEADERS=
 ```
 
-`OTEL_PHP_EXCLUDED_URLS` defaults to `pulse,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*` to skip
-noisy URLs. A sample collector setup is in `collector.yml`, which you will need to adapt to your own backend and credentials:
+The collector needs an OTLP receiver on that endpoint and an exporter for your backend; keep the backend credentials in
+the collector's own config, never in this repository or the app's environment. `OTEL_PHP_EXCLUDED_URLS` defaults to
+`pulse,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*` to skip noisy URLs.
 
-```yaml
-  collector:
-    image: otel/opentelemetry-collector-contrib
-    volumes:
-      - ./collector.yml:/etc/otelcol-contrib/config.yaml
-```
+To collect metrics too, add a Prometheus receiver to the collector that scrapes `/prometheus` (or your `PROMETHEUS_PATH`)
+with `PROMETHEUS_TOKEN` as a bearer token.
 
 Prometheus metrics are served by `spatie/laravel-prometheus` at `PROMETHEUS_PATH` (default `/prometheus`). The endpoint
 returns 403 unless the scraper sends `PROMETHEUS_TOKEN` as a bearer token or connects from an address in
