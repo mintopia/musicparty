@@ -19,6 +19,7 @@ class Kernel extends ConsoleKernel
         $schedule->job(new TickPlayback)->everyFiveSeconds()->withoutOverlapping()->onOneServer();
         $schedule->job(new CheckSoloistHealth)->everyTenSeconds()->onOneServer();
         $schedule->job(new RunModScheduledActions)->everyFiveSeconds()->onOneServer();
+        $schedule->command('horizon:snapshot')->everyFiveMinutes()->onOneServer();
     }
 
     /**
