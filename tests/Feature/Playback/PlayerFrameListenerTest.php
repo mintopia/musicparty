@@ -169,6 +169,32 @@ describe('ProcessPlayerFrame', function () {
             ->and(discarded())->toBe(0);
     });
 
+    it('uses the new player for the next job in the same worker after a player kind switch', function () {
+        $made = [];
+        app()->bind(FrameHandlingPlayer::class, function () use (&$made) {
+            return $made[] = new FrameHandlingPlayer;
+        });
+        config([
+            'musicparty.players.frames_a' => ['label' => 'A', 'class' => FrameHandlingPlayer::class],
+            'musicparty.players.frames_b' => ['label' => 'B', 'class' => FrameHandlingPlayer::class],
+        ]);
+        Party::query()->whereKey($this->party->id)->update(['player_kind' => 'frames_a']);
+        app(PartyPlayers::class)->forget($this->party);
+
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 1]);
+        ($this->drain)();
+
+        Party::query()->whereKey($this->party->id)->update(['player_kind' => 'frames_b']);
+        app()->forgetScopedInstances();
+
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 2]);
+        ($this->drain)();
+
+        expect($made)->toHaveCount(2)
+            ->and($made[0]->frames)->toBe([['n' => 1]])
+            ->and($made[1]->frames)->toBe([['n' => 2]]);
+    });
+
     it('counts a discard when the player reports the frame malformed', function () {
         ProcessPlayerFrame::enqueue($this->party->code, ['malformed' => true]);
         ($this->drain)();
