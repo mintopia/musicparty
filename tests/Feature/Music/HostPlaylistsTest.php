@@ -33,7 +33,7 @@ uses(RefreshDatabase::class);
 function makeUser(): User
 {
     $user = new User;
-    $user->forceFill(['nickname' => fake()->unique()->userName()]);
+    $user->forceFill(['nickname' => fake()->unique()->userName(), 'first_login' => false, 'terms_agreed_at' => now()]);
     $user->save();
 
     return $user;

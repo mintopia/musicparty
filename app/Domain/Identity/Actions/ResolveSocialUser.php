@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Actions;
 
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Exceptions\LoginRefusedException;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
@@ -13,6 +14,8 @@ use Laravel\Socialite\Two\User as TwoUser;
 
 class ResolveSocialUser
 {
+    public function __construct(private readonly SiteSettings $settings) {}
+
     /**
      * @throws LoginRefusedException
      */
@@ -47,6 +50,7 @@ class ResolveSocialUser
                 $user = new User;
                 $user->nickname = $remote->getNickname() ?: ($remote->getName() ?: 'Player');
                 $user->first_login = true;
+                $user->terms_agreed_at = $this->settings->get('terms_url') === null ? now() : null;
                 $user->save();
             }
 

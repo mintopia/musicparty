@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Actions\CompleteSignup;
 use App\Domain\Identity\Models\User;
 use App\Http\Requests\SignupRequest;
@@ -12,7 +13,7 @@ use Inertia\Response;
 
 class SignupController extends Controller
 {
-    public function show(Request $request): Response|RedirectResponse
+    public function show(Request $request, SiteSettings $settings): Response|RedirectResponse
     {
         $user = $this->currentUser($request);
 
@@ -22,7 +23,7 @@ class SignupController extends Controller
 
         return Inertia::render('Signup', [
             'nickname' => $user->nickname,
-            'termsUrl' => config('app.terms_url'),
+            'termsUrl' => $settings->get('terms_url'),
             'privacyUrl' => config('app.privacy_url'),
         ]);
     }

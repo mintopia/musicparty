@@ -31,7 +31,7 @@ Route::get('parties/{party}/tv', [PartyTvController::class, 'show'])
     ->middleware('throttle:party-public')
     ->name('parties.tv');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::get('signup', [SignupController::class, 'show'])->name('login.signup');
     Route::post('signup', [SignupController::class, 'store'])->name('login.signup.store');
 

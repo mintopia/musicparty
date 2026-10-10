@@ -20,7 +20,7 @@ class MeResource extends JsonResource
             'id' => $this->id,
             'nickname' => $this->nickname,
             'avatar' => $this->avatarUrl(),
-            'signup_complete' => ! $this->first_login && $this->terms_agreed_at !== null,
+            'signup_complete' => $this->hasCompletedSignup(),
         ];
     }
 }
