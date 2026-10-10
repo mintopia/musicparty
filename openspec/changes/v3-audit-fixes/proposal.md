@@ -2,7 +2,7 @@
 
 ## Why
 
-A codebase audit of `feature/v3-rewrite` on 2026-10-10 produced 31 findings. The worst come from v1/v2 code that still runs beside v3: a live Spotify session cookie committed to git, an open `/proxy` that writes Spotify tokens to the log, an unauthenticated Soloist webhook that lets anyone burn a Host's Spotify quota, and a legacy voting API that ignores membership, Bans and Party state. Others break production. With the shipped config, browsers try to reach Reverb at `ws://reverb:8080`. None of the Prometheus metrics work. Stats are recomputed inside every vote request, Player objects stay cached forever in Horizon workers, and a failed enqueue leaves the Party in dead air. Two v3 tasks were also never delivered: spec linting in CI (1.6) and the planned Horizon queues (1.8). This change fixes all of them except #4 (won't fix), so v3 can be released.
+A codebase audit of `feature/v3-rewrite` on 2026-10-10 produced 31 findings. The worst come from v1/v2 code that still runs beside v3: an example Spotify cookie file committed to git, an open `/proxy` that writes Spotify tokens to the log, an unauthenticated Soloist webhook that lets anyone burn a Host's Spotify quota, and a legacy voting API that ignores membership, Bans and Party state. Others break production. With the shipped config, browsers try to reach Reverb at `ws://reverb:8080`. None of the Prometheus metrics work. Stats are recomputed inside every vote request, Player objects stay cached forever in Horizon workers, and a failed enqueue leaves the Party in dead air. Two v3 tasks were also never delivered: spec linting in CI (1.6) and the planned Horizon queues (1.8). This change fixes all of them except #4 (won't fix), so v3 can be released.
 
 ## What Changes
 
@@ -30,11 +30,9 @@ A codebase audit of `feature/v3-rewrite` on 2026-10-10 produced 31 findings. The
 
 ### Operator steps (outside code, not ticketed)
 
-These need the account owner and cannot be done by Harmonic:
+These need the operator and cannot be done by Harmonic:
 
-1. Revoke the Spotify web session whose cookies were committed in `cookies.json`. Sign that Spotify account out everywhere and change its password. Deleting the file does not invalidate `sp_dc`.
-2. Optionally purge `cookies.json` from git history (`git filter-repo --path cookies.json --invert-paths`) and force-push every branch and tag. Forks and existing clones keep the old history, so step 1 is what actually protects the account.
-3. Before deploying, set `REVERB_PUBLIC_HOST/PORT/SCHEME` if they differ from `APP_URL`, set `PROMETHEUS_TOKEN` or `PROMETHEUS_ALLOWED_IPS` and point the scraper at it, make the reverse proxy forward `/app` and `/apps` to Reverb, and back up the database before the drop migrations run.
+1. Before deploying, set `REVERB_PUBLIC_HOST/PORT/SCHEME` if they differ from `APP_URL`, set `PROMETHEUS_TOKEN` or `PROMETHEUS_ALLOWED_IPS` and point the scraper at it, make the reverse proxy forward `/app` and `/apps` to Reverb, and back up the database before the drop migrations run.
 
 ## Capabilities
 
