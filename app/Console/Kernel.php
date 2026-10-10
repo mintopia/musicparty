@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Domain\Playback\Jobs\CheckSoloistHealth;
 use App\Jobs\RunModScheduledActions;
 use App\Jobs\TickPlayback;
 use Illuminate\Console\Scheduling\Schedule;
@@ -17,6 +18,7 @@ class Kernel extends ConsoleKernel
         $schedule->command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
         $schedule->command('telescope:prune')->daily()->onOneServer();
         $schedule->job(new TickPlayback)->everyFiveSeconds()->onOneServer();
+        $schedule->job(new CheckSoloistHealth)->everyTenSeconds()->onOneServer();
         $schedule->job(new RunModScheduledActions)->everyFiveSeconds()->onOneServer();
         $schedule->command('party:fallback')->everyMinute()->onOneServer();
         $schedule->command('party:force')->everyMinute()->onOneServer();
