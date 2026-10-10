@@ -387,7 +387,9 @@ it('shows act-as-host entering and leaving in the host party log', function (): 
     $this->getJson('/api/v1/parties/ABCD/log')->assertOk()
         ->assertJsonCount(2, 'data')
         ->assertJsonFragment(['action' => 'act_as_host.entered'])
-        ->assertJsonFragment(['action' => 'act_as_host.left']);
+        ->assertJsonFragment(['action' => 'act_as_host.left'])
+        ->assertJsonPath('data.0.details.acting_as_host', true)
+        ->assertJsonPath('data.1.details.acting_as_host', true);
 });
 
 it('does not duplicate or log no-op act-as-host transitions', function (): void {
