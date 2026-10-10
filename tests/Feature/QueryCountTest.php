@@ -35,7 +35,7 @@ function seedQueued(Party $party, int $count): void
 }
 
 /**
- * @param  Closure(): void  $measure
+ * @param  Closure(): mixed  $measure
  */
 function expectConstantQueries(Party $party, Closure $seed, Closure $measure): void
 {
@@ -77,7 +77,7 @@ it('runs a constant number of queries for a vote', function () {
     $users->each(fn (User $user) => PartyMember::factory()->for($this->party)->for($user)->create());
     $vote = function () use (&$users): void {
         Sanctum::actingAs($users->shift());
-        $target = TrackRequest::query()->where('party_id', $this->party->id)->first();
+        $target = TrackRequest::query()->where('party_id', $this->party->id)->firstOrFail();
         $this->putJson("/api/v1/parties/ABCD/requests/{$target->id}/vote", ['value' => 'up'])->assertSuccessful();
     };
     Queue::fake();

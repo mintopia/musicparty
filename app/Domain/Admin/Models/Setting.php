@@ -20,6 +20,7 @@ class Setting extends Model
 {
     /** @use HasFactory<Factory<static>> */
     use HasFactory;
+
     use ToString;
 
     protected $casts = [

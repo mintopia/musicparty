@@ -51,14 +51,12 @@ class CrossContextWriteRuleTest extends RuleTestCase
 
     protected function getRule(): Rule
     {
-        $contexts = ArchitectureRules::contexts();
-        array_push(
-            $contexts['identity']['members'],
+        $contexts = ArchitectureRules::contextsWithMembers('identity', [
             CrossContextSaver::class,
             CrossContextForceFiller::class,
             CrossContextQueryWriter::class,
             SameContextWriter::class,
-        );
+        ]);
 
         return new CrossContextWriteRule($contexts);
     }

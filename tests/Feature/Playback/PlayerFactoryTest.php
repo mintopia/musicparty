@@ -7,7 +7,7 @@ use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
 
 it('builds each production Player kind from the catalogue', function (string $kind, string $class) {
-    expect(app(PlayerFactory::class)->make($kind))->toBeInstanceOf($class);
+    expect(app(PlayerFactory::class)->make($kind) instanceof $class)->toBeTrue();
 })->with([
     'polling' => ['polling', PollingPlayer::class],
     'browser' => ['browser', BrowserPlayer::class],

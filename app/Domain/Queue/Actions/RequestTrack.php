@@ -61,7 +61,11 @@ class RequestTrack
             $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
             $outcome = $this->blocklist->deferringFailureRecords(
-                fn (): RequestOutcome => DB::transaction(fn (): RequestOutcome => $this->place($party, $member, $track, $decision)),
+                function () use ($party, $member, $track, &$decision): RequestOutcome {
+                    return DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
+                        return $this->place($party, $member, $track, $decision);
+                    });
+                },
             );
         } catch (RequestRefusedException $refusal) {
             if ($decision !== null) {

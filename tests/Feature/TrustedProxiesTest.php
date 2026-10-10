@@ -33,12 +33,16 @@ it('trusts any proxy by default', function (): void {
 });
 
 it('parses TRUSTED_PROXIES as a comma-separated list', function (string $value, string|array $expected): void {
+    $previous = [$_ENV['TRUSTED_PROXIES'] ?? null, $_SERVER['TRUSTED_PROXIES'] ?? null];
     putenv("TRUSTED_PROXIES={$value}");
+    $_ENV['TRUSTED_PROXIES'] = $_SERVER['TRUSTED_PROXIES'] = $value;
 
     try {
         expect((require config_path('trustedproxy.php'))['proxies'])->toBe($expected);
     } finally {
         putenv('TRUSTED_PROXIES');
+        $previous[0] === null ? $_ENV['TRUSTED_PROXIES'] = '*' : $_ENV['TRUSTED_PROXIES'] = $previous[0];
+        $previous[1] === null ? $_SERVER['TRUSTED_PROXIES'] = '*' : $_SERVER['TRUSTED_PROXIES'] = $previous[1];
     }
 })->with([
     'wildcard' => ['*', '*'],

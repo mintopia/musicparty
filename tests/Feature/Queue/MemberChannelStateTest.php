@@ -31,7 +31,7 @@ beforeEach(function () {
 /**
  * @return array<int, string>
  */
-function channelNames(object $event): array
+function channelNames(MemberVoteChangedEvent|MemberRatingChangedEvent $event): array
 {
     return array_map(fn (PrivateChannel $channel): string => $channel->name, $event->broadcastOn());
 }
