@@ -9,7 +9,7 @@ on:
     branches:
       - master
       - develop
-      - feature/youtube
+      - feature/v3-rewrite
     tags: [ 'v*.*.*' ]
   workflow_dispatch:
 
@@ -51,6 +51,7 @@ jobs:
           tags: |
             type=raw,value=latest,enable=${{ github.ref == format('refs/heads/{0}', 'master') }}
             type=raw,value=develop,enable=${{ github.ref == format('refs/heads/{0}', 'develop') }}
+            type=ref,event=branch,enable=${{ github.ref == format('refs/heads/{0}', 'feature/v3-rewrite') }}
             type=semver,pattern={{version}}
 
       - name: Build and push Docker image
