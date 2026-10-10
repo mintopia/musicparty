@@ -19,10 +19,29 @@ class Blocklist
 
     public function __construct(private readonly RecordPartyLogEntry $record) {}
 
+    private bool $deferring = false;
+
     /**
-     * Pattern failures are recorded after the caller's transaction so a refusal's rollback cannot discard them.
+     * Runs a callback whose transaction may roll back, recording pattern failures afterwards so the rollback cannot discard them.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
      */
-    public function flushFailures(): void
+    public function deferringFailureRecords(callable $callback): mixed
+    {
+        $this->deferring = true;
+
+        try {
+            return $callback();
+        } finally {
+            $this->deferring = false;
+            $this->recordFailures();
+        }
+    }
+
+    private function recordFailures(): void
     {
         $failures = $this->failures;
         $this->failures = [];
@@ -114,7 +133,10 @@ class Blocklist
 
         if (Cache::add("blocklist-pattern-failed:{$entry->id}", true, self::FAILURE_LOG_WINDOW_SECONDS)) {
             $this->failures[$entry->id] = ['entry' => $entry, 'error' => $error];
-            app()->terminating($this->flushFailures(...));
+
+            if (! $this->deferring) {
+                $this->recordFailures();
+            }
         }
 
         return true;

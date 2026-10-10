@@ -60,12 +60,10 @@ class RequestTrack
 
             $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
-            $outcome = DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
-                return $this->place($party, $member, $track, $decision);
-            });
+            $outcome = $this->blocklist->deferringFailureRecords(
+                fn (): RequestOutcome => DB::transaction(fn (): RequestOutcome => $this->place($party, $member, $track, $decision)),
+            );
         } catch (RequestRefusedException $refusal) {
-            $this->blocklist->flushFailures();
-
             if ($decision !== null) {
                 ($this->recordModDecision)($party, $decision, $track);
             }
@@ -76,8 +74,6 @@ class RequestTrack
 
             throw $refusal;
         }
-
-        $this->blocklist->flushFailures();
 
         if ($decision !== null && $outcome->created) {
             ($this->recordModDecision)($party, $decision, $track, $outcome->request->id);
@@ -169,7 +165,7 @@ class RequestTrack
     {
         $track = $this->fetchTrack($party->music_provider, $spec->providerTrackId);
 
-        return DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
+        return $this->blocklist->deferringFailureRecords(fn (): ?TrackRequest => DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
             $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->state !== PartyState::Live) {
@@ -187,7 +183,7 @@ class RequestTrack
             }
 
             return $this->createRequest($locked, null, $track, RequestStatus::Queued);
-        });
+        }));
     }
 
     private function createRequest(Party $party, ?PartyMember $member, TrackData $track, RequestStatus $status): TrackRequest

@@ -10,6 +10,7 @@ use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Queue\Blocklist;
 use App\Domain\Queue\BlocklistMatchType;
 use App\Domain\Queue\Broadcast\RequestRejectedEvent;
 use App\Domain\Queue\Models\TrackRequest;
@@ -30,6 +31,10 @@ function ruleTrack(string $id, int $seconds = 180, bool $explicit = false, ?stri
 {
     return new TrackData('fake', $id, "Song {$id}", [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), $seconds * 1000, $explicit, $isrc);
 }
+
+afterEach(function () {
+    ini_restore('pcre.backtrack_limit');
+});
 
 beforeEach(function () {
     Queue::fake([StartPlayback::class]);
@@ -302,5 +307,13 @@ it('fails closed and logs when a blocklist pattern errors, leaving other entries
 
     Log::shouldHaveReceived('warning')->with(Mockery::on(fn ($m) => str_contains($m, 'Blocklist pattern')), Mockery::on(fn ($c) => $c['blocklist_entry_id'] === $bad->id))->atLeast()->once();
     expect(PartyLogEntry::query()->where('action', 'blocklist.pattern_failed')->count())->toBe(1);
-    ini_restore('pcre.backtrack_limit');
+});
+
+it('records a pattern failure straight away when the blocklist is used outside a Request', function () {
+    ini_set('pcre.backtrack_limit', '100');
+    BlocklistEntry::factory()->for($this->party)->create(['match_type' => BlocklistMatchType::TrackName, 'value' => '(a+)+$', 'is_regex' => true]);
+    $track = new TrackData('fake', 't3', str_repeat('a', 5000).'!', [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), 180000, false);
+
+    expect(app(Blocklist::class)->firstMatch($this->party, $track))->not->toBeNull();
+    expect(PartyLogEntry::query()->where('action', 'blocklist.pattern_failed')->count())->toBe(1);
 });
