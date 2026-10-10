@@ -20,35 +20,6 @@
                 }
             }
         },
-        "privateParty": {
-            "address": "private-party.{code}",
-            "messages": {
-                "UpcomingSong.RemovedEvent": {
-                    "$ref": "#/components/messages/UpcomingSong.RemovedEvent"
-                },
-                "UpcomingSong.UpdatedEvent": {
-                    "$ref": "#/components/messages/UpcomingSong.UpdatedEvent"
-                }
-            },
-            "parameters": {
-                "code": {
-                    "description": "Party code"
-                }
-            }
-        },
-        "spotifyToken": {
-            "address": "spotifytoken.{userId}",
-            "messages": {
-                "User.SpotifyAccessTokenUpdatedEvent": {
-                    "$ref": "#/components/messages/User.SpotifyAccessTokenUpdatedEvent"
-                }
-            },
-            "parameters": {
-                "userId": {
-                    "description": "User id"
-                }
-            }
-        },
         "partyMembers": {
             "address": "presence-party.{code}.members",
             "description": "Presence channel (Echo name party.{code}.members). Joinable only by non-banned Members of the Party; unknown codes, non-Members, banned Members and unauthenticated callers are refused identically. Member payload carries only nickname and avatar. Also carries Live Stats updates (display names only, no member ids).",
@@ -715,16 +686,6 @@
                 "title": "UpcomingSong.UpdatedEvent",
                 "x-event-class": "App\\Events\\UpcomingSong\\UpdatedEvent"
             },
-            "User.SpotifyAccessTokenUpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "User.SpotifyAccessTokenUpdatedEvent",
-                "x-event-class": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent"
-            },
             "Presence.MemberAdded": {
                 "contentType": "application/json",
                 "name": "pusher:member_added",
@@ -1086,31 +1047,6 @@
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
-                }
-            ]
-        },
-        "publishPrivatePartyUpcomingSong": {
-            "action": "send",
-            "channel": {
-                "$ref": "#/channels/privateParty"
-            },
-            "messages": [
-                {
-                    "$ref": "#/channels/privateParty/messages/UpcomingSong.RemovedEvent"
-                },
-                {
-                    "$ref": "#/channels/privateParty/messages/UpcomingSong.UpdatedEvent"
-                }
-            ]
-        },
-        "publishSpotifyToken": {
-            "action": "send",
-            "channel": {
-                "$ref": "#/channels/spotifyToken"
-            },
-            "messages": [
-                {
-                    "$ref": "#/channels/spotifyToken/messages/User.SpotifyAccessTokenUpdatedEvent"
                 }
             ]
         },

@@ -3,7 +3,6 @@
 namespace App\Models;
 
 use App\Domain\Theming\ColourScheme;
-use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -201,7 +200,6 @@ class User extends Authenticatable
             $account->access_token = $this->session->getAccessToken();
             $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
             $account->save();
-            SpotifyAccessTokenUpdatedEvent::dispatch($this->id);
         }
 
         return $this->api;
