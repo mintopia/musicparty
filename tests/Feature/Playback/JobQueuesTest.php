@@ -14,7 +14,7 @@ use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 it('routes each job to its queue', function (object $job, string $queue) {
     expect($job->queue)->toBe($queue);
 })->with([
-    'frame' => fn () => [new ProcessPlayerFrame('ABC123', []), 'player'],
+    'frame' => fn () => [new ProcessPlayerFrame('ABC123'), 'player'],
     'start' => fn () => [new StartPlayback('ABC123'), 'player'],
     'tick' => fn () => [new TickPlayback, 'player'],
     'health' => fn () => [new CheckSoloistHealth, 'player'],

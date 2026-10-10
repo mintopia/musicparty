@@ -6,7 +6,6 @@ use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\PartyPlayers;
 use App\Models\Party;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -20,65 +19,90 @@ class ProcessPlayerFrame implements ShouldQueue
 
     public const DISCARDED_COUNTER = 'player-frames.discarded';
 
-    private const SEQUENCE_TTL_SECONDS = 86400;
+    private const STATE_TTL_SECONDS = 86400;
 
-    /**
-     * @param  array<string, mixed>  $frame
-     */
-    public function __construct(public readonly string $partyCode, public readonly array $frame, public readonly ?int $sequence = null)
+    private const FRAME_TTL_SECONDS = 300;
+
+    private const LOCK_SECONDS = 30;
+
+    public function __construct(public readonly string $partyCode)
     {
         $this->onQueue('player');
     }
 
-    public int $lockWaitSeconds = 3;
+    /**
+     * @param  array<string, mixed>  $frame
+     */
+    public static function enqueue(string $partyCode, array $frame): int
+    {
+        $counterKey = self::key('latest', $partyCode);
+        Cache::add($counterKey, 0, self::STATE_TTL_SECONDS);
+        $sequence = (int) Cache::increment($counterKey);
+
+        Cache::put(self::frameKey($partyCode, $sequence), $frame, self::FRAME_TTL_SECONDS);
+        self::dispatch($partyCode);
+
+        return $sequence;
+    }
 
     public function handle(PartyPlayers $players): void
     {
-        try {
-            Cache::lock('player-frame:'.$this->partyCode, 5)->block($this->lockWaitSeconds, fn () => $this->process($players));
-        } catch (LockTimeoutException) {
-            $this->release(1);
-        }
-    }
+        $lock = Cache::lock(self::key('lock', $this->partyCode), self::LOCK_SECONDS);
 
-    public static function sequenceKey(string $partyCode): string
-    {
-        return 'player-frame-seq:'.$partyCode;
-    }
-
-    private function process(PartyPlayers $players): void
-    {
-        if ($this->isStale()) {
-            $this->countDiscard();
-
+        if (! $lock->get()) {
             return;
         }
 
+        try {
+            $this->drain($players);
+        } finally {
+            $lock->release();
+        }
+
+        if ($this->hasPendingFrames()) {
+            self::dispatch($this->partyCode);
+        }
+    }
+
+    private function drain(PartyPlayers $players): void
+    {
         $party = Party::findByCode($this->partyCode);
         $player = $party === null ? null : $players->for($party);
 
-        if (! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($this->frame)) {
-            $this->countDiscard();
+        while (($sequence = $this->nextSequence()) !== null) {
+            $frame = Cache::pull(self::frameKey($this->partyCode, $sequence));
+            Cache::put(self::key('applied', $this->partyCode), $sequence, self::STATE_TTL_SECONDS);
+
+            if (! is_array($frame)) {
+                continue;
+            }
+
+            if (! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($frame)) {
+                Cache::add(self::DISCARDED_COUNTER, 0);
+                Cache::increment(self::DISCARDED_COUNTER);
+            }
         }
-
-        if ($this->sequence !== null) {
-            Cache::put(self::appliedKey($this->partyCode), $this->sequence, self::SEQUENCE_TTL_SECONDS);
-        }
     }
 
-    private static function appliedKey(string $partyCode): string
+    private function nextSequence(): ?int
     {
-        return 'player-frame-applied:'.$partyCode;
+        $next = (int) Cache::get(self::key('applied', $this->partyCode), 0) + 1;
+
+        return $next <= (int) Cache::get(self::key('latest', $this->partyCode), 0) ? $next : null;
     }
 
-    private function isStale(): bool
+    private function hasPendingFrames(): bool
     {
-        return $this->sequence !== null && $this->sequence <= (int) Cache::get(self::appliedKey($this->partyCode), 0);
+        return $this->nextSequence() !== null;
     }
 
-    private function countDiscard(): void
+    private static function key(string $name, string $partyCode): string
     {
-        Cache::add(self::DISCARDED_COUNTER, 0);
-        Cache::increment(self::DISCARDED_COUNTER);
+        return "player-frame-{$name}:{$partyCode}";
+    }
+
+    private static function frameKey(string $partyCode, int $sequence): string
+    {
+        return "player-frame:{$partyCode}:{$sequence}";
     }
 }

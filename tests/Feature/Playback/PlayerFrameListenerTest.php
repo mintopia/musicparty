@@ -74,25 +74,20 @@ function discarded(): int
     return (int) Cache::get(ProcessPlayerFrame::DISCARDED_COUNTER, 0);
 }
 
-it('dispatches a frame job for a client event on the player channel', function () {
+it('stores the frame and dispatches a drain job for a client event on the player channel', function () {
     receive(clientFrame());
 
-    Queue::assertPushed(ProcessPlayerFrame::class, fn (ProcessPlayerFrame $job) => $job->partyCode === 'ABC123' && $job->frame === ['status' => 'playing']);
-    expect(discarded())->toBe(0);
+    Queue::assertPushed(ProcessPlayerFrame::class, fn (ProcessPlayerFrame $job) => $job->partyCode === 'ABC123');
+    expect(Cache::get('player-frame:ABC123:1'))->toBe(['status' => 'playing'])
+        ->and(discarded())->toBe(0);
 });
 
 it('stamps frames with an increasing per party arrival sequence', function () {
-    receive(clientFrame());
-    receive(clientFrame());
+    receive(clientFrame(['data' => ['n' => 1]]));
+    receive(clientFrame(['data' => ['n' => 2]]));
 
-    $sequences = [];
-    Queue::assertPushed(ProcessPlayerFrame::class, function (ProcessPlayerFrame $job) use (&$sequences) {
-        $sequences[] = $job->sequence;
-
-        return true;
-    });
-
-    expect($sequences)->toBe([1, 2]);
+    expect(Cache::get('player-frame:ABC123:1'))->toBe(['n' => 1])
+        ->and(Cache::get('player-frame:ABC123:2'))->toBe(['n' => 2]);
 });
 
 it('ignores frames from a connection that is not subscribed to the player channel', function () {
@@ -163,23 +158,27 @@ describe('ProcessPlayerFrame', function () {
         $this->party = Party::factory()->create(['player_kind' => 'fake', 'music_provider' => 'fake']);
         $this->player = new FrameHandlingPlayer;
         app(PartyPlayers::class)->register($this->party, $this->player);
+        $this->drain = fn (?string $code = null) => (new ProcessPlayerFrame($code ?? $this->party->code))->handle(app(PartyPlayers::class));
     });
 
     it('hands the frame to the player', function () {
-        new ProcessPlayerFrame($this->party->code, ['status' => 'playing'])->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue($this->party->code, ['status' => 'playing']);
+        ($this->drain)();
 
         expect($this->player->frames)->toBe([['status' => 'playing']])
             ->and(discarded())->toBe(0);
     });
 
     it('counts a discard when the player reports the frame malformed', function () {
-        new ProcessPlayerFrame($this->party->code, ['malformed' => true])->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue($this->party->code, ['malformed' => true]);
+        ($this->drain)();
 
         expect(discarded())->toBe(1);
     });
 
     it('counts a discard for an unknown party', function () {
-        new ProcessPlayerFrame('NOSUCH', ['a' => 1])->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue('NOSUCH', ['a' => 1]);
+        ($this->drain)('NOSUCH');
 
         expect(discarded())->toBe(1)->and($this->player->frames)->toBe([]);
     });
@@ -187,73 +186,92 @@ describe('ProcessPlayerFrame', function () {
     it('counts a discard when the player cannot handle frames', function () {
         app(PartyPlayers::class)->register($this->party, new FakePlayer);
 
-        new ProcessPlayerFrame($this->party->code, ['a' => 1])->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue($this->party->code, ['a' => 1]);
+        ($this->drain)();
 
         expect(discarded())->toBe(1);
     });
 
-    it('processes a frame while holding the party lock so frames apply one at a time', function () {
-        $heldDuringFrame = null;
-        $this->player->onFrame = function () use (&$heldDuringFrame) {
-            $heldDuringFrame = Cache::lock('player-frame:'.$this->party->code, 5)->get() === false;
-        };
+    it('applies frames in arrival order in a single drain, a stale position_sync never after a newer track_changed', function () {
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'position_sync']);
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'position_sync', 'n' => 2]);
 
-        new ProcessPlayerFrame($this->party->code, ['status' => 'playing'])->handle(app(PartyPlayers::class));
+        ($this->drain)();
+        ($this->drain)();
 
-        expect($heldDuringFrame)->toBeTrue()
-            ->and(Cache::lock('player-frame:'.$this->party->code, 5)->get())->toBeTrue();
+        expect($this->player->frames)->toBe([
+            ['type' => 'position_sync'],
+            ['type' => 'track_changed'],
+            ['type' => 'position_sync', 'n' => 2],
+        ]);
     });
 
-    it('waits for a frame in flight and applies after it, never before', function () {
-        $lock = Cache::lock('player-frame:'.$this->party->code, 5);
-        $lock->get();
+    it('processes frames while holding the party lock so none run concurrently', function () {
+        $heldDuringFrame = null;
+        $this->player->onFrame = function () use (&$heldDuringFrame) {
+            $heldDuringFrame = Cache::lock('player-frame-lock:'.$this->party->code, 5)->get() === false;
+        };
 
-        $job = new ProcessPlayerFrame($this->party->code, ['type' => 'position_sync']);
-        $job->lockWaitSeconds = 0;
-        $job->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue($this->party->code, ['a' => 1]);
+        ($this->drain)();
+
+        expect($heldDuringFrame)->toBeTrue()
+            ->and(Cache::lock('player-frame-lock:'.$this->party->code, 5)->get())->toBeTrue();
+    });
+
+    it('leaves a frame arriving during processing for the holder to apply after it, losing nothing', function () {
+        $this->player->onFrame = function () {
+            if (count($this->player->frames) === 0) {
+                ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+                ($this->drain)();
+            }
+        };
+
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'position_sync']);
+        ($this->drain)();
+
+        expect(array_column($this->player->frames, 'type'))->toBe(['position_sync', 'track_changed']);
+    });
+
+    it('does not wait on a held lock and applies the frame on the next drain', function () {
+        $lock = Cache::lock('player-frame-lock:'.$this->party->code, 5);
+        $lock->get();
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+        ($this->drain)();
 
         expect($this->player->frames)->toBe([]);
 
         $lock->release();
-        $job->handle(app(PartyPlayers::class));
+        ($this->drain)();
 
-        expect($this->player->frames)->toBe([['type' => 'position_sync']]);
+        expect($this->player->frames)->toBe([['type' => 'track_changed']]);
     });
 
-    it('drops a stale position_sync that arrives after a newer track_changed', function () {
-        $handle = fn (array $frame, int $sequence) => (new ProcessPlayerFrame($this->party->code, $frame, $sequence))->handle(app(PartyPlayers::class));
+    it('skips a sequence whose frame expired and still applies later ones', function () {
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'lost']);
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+        Cache::forget('player-frame:'.$this->party->code.':1');
 
-        $handle(['type' => 'track_changed'], 2);
-        $handle(['type' => 'position_sync'], 1);
+        ($this->drain)();
 
-        expect(array_column($this->player->frames, 'type'))->toBe(['track_changed'])
-            ->and(discarded())->toBe(1);
+        expect($this->player->frames)->toBe([['type' => 'track_changed']]);
     });
 
-    it('applies frames in arrival order and drops a replayed sequence', function () {
-        $handle = fn (array $frame, int $sequence) => (new ProcessPlayerFrame($this->party->code, $frame, $sequence))->handle(app(PartyPlayers::class));
-
-        $handle(['type' => 'position_sync'], 1);
-        $handle(['type' => 'track_changed'], 2);
-        $handle(['type' => 'track_changed'], 2);
-
-        expect(array_column($this->player->frames, 'type'))->toBe(['position_sync', 'track_changed'])
-            ->and(discarded())->toBe(1);
-    });
-
-    it('keeps sequences separate per party', function () {
-        (new ProcessPlayerFrame($this->party->code, ['type' => 'track_changed'], 5))->handle(app(PartyPlayers::class));
+    it('keeps parties separate', function () {
         $other = Party::factory()->create(['player_kind' => 'fake', 'music_provider' => 'fake']);
         $otherPlayer = new FrameHandlingPlayer;
         app(PartyPlayers::class)->register($other, $otherPlayer);
 
-        (new ProcessPlayerFrame($other->code, ['type' => 'position_sync'], 1))->handle(app(PartyPlayers::class));
+        ProcessPlayerFrame::enqueue($this->party->code, ['for' => 'first']);
+        ProcessPlayerFrame::enqueue($other->code, ['for' => 'second']);
+        ($this->drain)($other->code);
 
-        expect($otherPlayer->frames)->toBe([['type' => 'position_sync']]);
+        expect($otherPlayer->frames)->toBe([['for' => 'second']])->and($this->player->frames)->toBe([]);
     });
 
     it('queues on player', function () {
-        expect((new ProcessPlayerFrame('ABC123', ['a' => 1]))->queue)->toBe('player');
+        expect((new ProcessPlayerFrame('ABC123'))->queue)->toBe('player');
     });
 });
 
