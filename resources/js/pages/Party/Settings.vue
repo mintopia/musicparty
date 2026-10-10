@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
 import {computed, provide} from 'vue';
 import ModSlot from '../../Components/ModSlot.vue';
@@ -8,6 +9,8 @@ const props = defineProps({
     settings: {type: Object, required: true},
     enabled_mods: {type: Array, default: () => []},
 });
+
+usePartyPresence(props.party.code);
 
 provide('enabledMods', computed(() => props.enabled_mods));
 

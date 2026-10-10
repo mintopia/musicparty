@@ -8,12 +8,13 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Party\Models\Party;
+use App\Support\Realtime\Contracts\RealtimeConnections;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 readonly class BanMember
 {
-    public function __construct(private RecordPartyLogEntry $record) {}
+    public function __construct(private RecordPartyLogEntry $record, private RealtimeConnections $connections) {}
 
     /**
      * @throws MembershipActionRefused
@@ -60,6 +61,8 @@ readonly class BanMember
             ]);
 
             MemberBannedEvent::dispatch($party->code, $target->id);
+
+            DB::afterCommit(fn () => $this->connections->terminateUser($target->user_id));
 
             return $target;
         });

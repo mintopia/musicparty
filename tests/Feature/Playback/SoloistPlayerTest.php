@@ -5,6 +5,7 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Playback\Actions\PairPlayer;
+use App\Domain\Playback\Actions\RevokePlayerToken;
 use App\Domain\Playback\Broadcast\PlayerCommandEvent;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
@@ -19,6 +20,7 @@ use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
+use App\Support\Realtime\PlayerConnections;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
@@ -35,6 +37,8 @@ beforeEach(function () {
     config(['musicparty.soloist.stale_after_seconds' => 30, 'musicparty.soloist.disconnect_after_seconds' => 90]);
     $this->party = livePlaybackParty([], ['player_kind' => 'soloist', 'music_provider' => 'fake']);
     $this->player = app(PartyPlayers::class)->for($this->party);
+    $this->token = $this->party->createToken('Stage', ['player:connect'])->accessToken;
+    app(PlayerConnections::class)->register('sock.1', $this->party->code, $this->token->getKey());
 });
 
 afterEach(fn () => CarbonImmutable::setTestNow());
@@ -392,4 +396,37 @@ it('retries a failed enqueue at once when the Soloist connects', function () {
 
     expect(soloistCommands('add_to_queue'))->toHaveCount(1)
         ->and($request->fresh()->enqueued_at)->not->toBeNull();
+});
+
+it('does not publish a player command once the connected token is revoked', function () {
+    $this->player->markConnected();
+    $this->player->play();
+    expect(soloistFrames())->not->toBeEmpty();
+
+    Event::fake([PlayerCommandEvent::class]);
+    $this->token->delete();
+    $this->player->play();
+
+    expect(soloistFrames())->toBeEmpty();
+});
+
+it('does not publish a player command when no token is connected', function () {
+    $this->player->markConnected();
+    Cache::forget('player-sockets:'.$this->party->code);
+    Event::fake([PlayerCommandEvent::class]);
+
+    $this->player->play();
+
+    expect(soloistFrames())->toBeEmpty();
+});
+
+it('clears the command target when the Host revokes the player token', function () {
+    $this->player->markConnected();
+    Event::fake([PlayerCommandEvent::class]);
+
+    app(RevokePlayerToken::class)($this->party->user, $this->party, $this->token->getKey());
+    $this->player->play();
+
+    expect(soloistFrames())->toBeEmpty()
+        ->and(app(PlayerConnections::class)->hasValidConnection($this->party->code))->toBeFalse();
 });

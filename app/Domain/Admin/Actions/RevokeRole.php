@@ -4,12 +4,13 @@ namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\AdminRole;
 use App\Domain\Identity\Models\User;
+use App\Support\Realtime\Contracts\RealtimeConnections;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class RevokeRole
 {
-    public function __construct(private readonly RecordAdminAudit $audit) {}
+    public function __construct(private readonly RecordAdminAudit $audit, private readonly RealtimeConnections $connections) {}
 
     public function handle(User $admin, User $user, string $role): User
     {
@@ -28,6 +29,7 @@ class RevokeRole
             $user->roles()->detach($user->roles()->whereCode($adminRole->value)->pluck('roles.id')->all());
             $user->forgetRoleCache();
             $this->audit->handle($admin, 'role.revoked', $user, ['role' => $adminRole->value]);
+            DB::afterCommit(fn () => $this->connections->terminateUser($user->id));
         });
 
         return $user;

@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
@@ -7,6 +8,8 @@ const props = defineProps({
     canModerate: {type: Boolean, required: true},
     requests: {type: Array, required: true},
 });
+
+usePartyPresence(props.party.code);
 
 const liveRequests = ref(props.requests);
 watch(() => props.requests, () => {

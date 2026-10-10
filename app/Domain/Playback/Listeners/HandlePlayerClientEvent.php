@@ -3,6 +3,7 @@
 namespace App\Domain\Playback\Listeners;
 
 use App\Domain\Playback\Jobs\ProcessPlayerFrame;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Reverb\Events\MessageReceived;
@@ -37,8 +38,16 @@ class HandlePlayerClientEvent
             return;
         }
 
-        $frame = $envelope['data'] ?? null;
         $code = strtoupper($channel[1]);
+
+        if (! app(PlayerConnections::class)->accepts($received->connection->id(), $code)) {
+            $this->discard();
+            $received->connection->disconnect();
+
+            return;
+        }
+
+        $frame = $envelope['data'] ?? null;
 
         if (! is_array($frame) || $frame === []
             || ! RateLimiter::attempt(

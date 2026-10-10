@@ -7,6 +7,7 @@ use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\PersonalAccessToken;
@@ -16,6 +17,7 @@ readonly class RevokePlayerToken
     public function __construct(
         private AuthorisesHost $authorisesHost,
         private RecordPartyLogEntry $record,
+        private PlayerConnections $connections,
     ) {}
 
     /**
@@ -29,6 +31,7 @@ readonly class RevokePlayerToken
 
             $token = $party->tokens()->whereKey($tokenId)->firstOrFail();
             $token->delete();
+            $this->connections->forgetToken($party->code, $tokenId);
 
             ($this->record)($party, 'player_token.revoked', $actor, $token->name, ['token_id' => $tokenId]);
         });

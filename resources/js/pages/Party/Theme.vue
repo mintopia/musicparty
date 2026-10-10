@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, router, useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {contrastWarnings, describeWarning} from '../../theme/contrast.js';
@@ -11,6 +12,8 @@ const props = defineProps({
     layouts: {type: Array, default: () => []},
     warnings: {type: Array, default: () => []},
 });
+
+usePartyPresence(props.party.code);
 
 const schemes = [
     {code: 'light', label: 'Light'},

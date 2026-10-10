@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, provide, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {RESYNC_EVENT} from '../../lib/realtimeResync';
@@ -29,6 +30,8 @@ const props = defineProps({
     search_error: {type: String, default: null},
     enabled_mods: {type: Array, default: () => []},
 });
+
+usePartyPresence(props.party.code);
 
 provide('enabledMods', computed(() => props.enabled_mods));
 

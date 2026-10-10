@@ -57,6 +57,7 @@ beforeEach(() => {
     echo = {
         channel: vi.fn(() => subscription()),
         private: vi.fn(() => subscription()),
+        join: vi.fn(() => subscription()),
         leave: vi.fn(),
     };
     window.Echo = echo;
@@ -68,6 +69,15 @@ beforeEach(() => {
 
 afterEach(() => {
     delete window.Echo;
+});
+
+describe('Party page presence', () => {
+    it('joins the members presence channel and leaves on unmount', () => {
+        const w = mount(Show, {props: baseProps()});
+        expect(echo.join).toHaveBeenCalledWith('party.FRI123.members');
+        w.unmount();
+        expect(echo.leave).toHaveBeenCalledWith('party.FRI123.members');
+    });
 });
 
 describe('Party page now playing and Up Next', () => {

@@ -24,6 +24,7 @@ use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Stats\Models\PartyStat;
 use App\Domain\Theming\Models\InstanceTheme;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Model;
@@ -208,6 +209,7 @@ class ArchitectureRules
         'Illuminate\\',
         'Laravel\\Reverb\\',
         ProcessPlayerFrame::class,
+        PlayerConnections::class,
     ];
 
     /**
