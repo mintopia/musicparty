@@ -39,13 +39,19 @@
         },
         "partyMember": {
             "address": "private-party.{code}.member.{memberId}",
-            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices and Request decision notices (pending, approved, rejected, removed).",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices Request decision notices (pending, approved, rejected, removed), and the Member's own Vote and Rating changes.",
             "messages": {
                 "Party.RequestRejectedEvent": {
                     "$ref": "#/components/messages/Party.RequestRejectedEvent"
                 },
                 "Party.RequestDecidedEvent": {
                     "$ref": "#/components/messages/Party.RequestDecidedEvent"
+                },
+                "Party.MemberVoteChangedEvent": {
+                    "$ref": "#/components/messages/Party.MemberVoteChangedEvent"
+                },
+                "Party.MemberRatingChangedEvent": {
+                    "$ref": "#/components/messages/Party.MemberRatingChangedEvent"
                 }
             },
             "parameters": {
@@ -984,6 +990,54 @@
                 },
                 "title": "Player.BrowserPlayerCommandEvent",
                 "x-event-class": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent"
+            },
+            "Party.MemberVoteChangedEvent": {
+                "contentType": "application/json",
+                "name": "member.vote_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request voted on",
+                            "type": "integer"
+                        },
+                        "value": {
+                            "description": "The Member's own value: 1, -1 or 0 when retracted",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberVoteChangedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\MemberVoteChangedEvent"
+            },
+            "Party.MemberRatingChangedEvent": {
+                "contentType": "application/json",
+                "name": "member.rating_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "play_id": {
+                            "description": "Id of the Play rated",
+                            "type": "integer"
+                        },
+                        "value": {
+                            "description": "The Member's own value: 1, -1 or 0 when retracted",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "play_id",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberRatingChangedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\MemberRatingChangedEvent"
             }
         }
     },
@@ -1093,6 +1147,28 @@
             "messages": [
                 {
                     "$ref": "#/channels/partyBrowserPlayer/messages/Player.BrowserPlayerCommandEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberVoteChanged": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberVoteChangedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberRatingChanged": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberRatingChangedEvent"
                 }
             ]
         }
