@@ -10,6 +10,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
+use Throwable;
 
 class RunModScheduledActions implements ShouldQueue
 {
@@ -27,8 +28,12 @@ class RunModScheduledActions implements ShouldQueue
         Party::query()
             ->where('state', PartyState::Live)
             ->each(function (Party $party) use ($mods): void {
-                if ($this->hasScheduledActions($mods, $party)) {
-                    RunPartyScheduledActions::dispatch($party->code);
+                try {
+                    if ($this->hasScheduledActions($mods, $party)) {
+                        RunPartyScheduledActions::dispatch($party->code);
+                    }
+                } catch (Throwable $exception) {
+                    report($exception);
                 }
             });
     }

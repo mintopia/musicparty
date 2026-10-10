@@ -113,6 +113,24 @@ it('fans out one job per Live party with scheduled Mods on the ticks queue', fun
     Queue::assertPushedOn('ticks', RunPartyScheduledActions::class, fn (RunPartyScheduledActions $job): bool => $job->partyCode === $this->party->code);
 });
 
+it('keeps fanning out to later parties when one party Mod throws while being inspected', function () {
+    $broken = Party::factory()->live()->create();
+    $later = Party::factory()->live()->create();
+    ModFixtures::enable($broken, new class('broken') extends SchedulerMod
+    {
+        public function scheduledActions(): array
+        {
+            throw new RuntimeException('boom');
+        }
+    });
+    ModFixtures::enable($later, new SchedulerMod);
+
+    (new RunModScheduledActions)->handle(app(EnabledMods::class));
+
+    Queue::assertPushedTimes(RunPartyScheduledActions::class, 1);
+    Queue::assertPushed(RunPartyScheduledActions::class, fn (RunPartyScheduledActions $job): bool => $job->partyCode === $later->code);
+});
+
 it('runs a party job for its party only', function () {
     $other = Party::factory()->live()->create();
     ModFixtures::enable($this->party, new SchedulerMod);
