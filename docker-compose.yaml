@@ -32,6 +32,10 @@ services:
       - db
     env_file: .env
     entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     healthcheck:
       disable: true
 

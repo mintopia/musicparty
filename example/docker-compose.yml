@@ -88,6 +88,10 @@ services:
     command: ["reverb"]
     stop_grace_period: 30s
     depends_on: *infrastructure
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     healthcheck:
       disable: true
 
