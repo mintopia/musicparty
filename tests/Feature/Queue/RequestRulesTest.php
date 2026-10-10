@@ -240,3 +240,20 @@ describe('per-member channel', function () {
         authoriseMemberChannel(null, "private-party.ABCD.member.{$this->member->id}")->assertForbidden();
     });
 });
+
+it('refuses a request when the member is banned while the provider lookup is pending', function () {
+    app(FakeMusicProvider::class)->onGetTrack(fn () => $this->member->forceFill(['banned' => true])->save());
+
+    ruleRequest($this->member, 't1')->assertForbidden();
+
+    expect(TrackRequest::query()->count())->toBe(0);
+});
+
+it('refuses an explicit track when explicit is turned off while the provider lookup is pending', function () {
+    $this->party->forceFill(['explicit' => true])->save();
+    app(FakeMusicProvider::class)->onGetTrack(fn () => Party::query()->whereKey($this->party->id)->update(['explicit' => false]));
+
+    ruleRequest($this->member, 'dirty')->assertUnprocessable()->assertJsonPath('message', 'Explicit tracks are not allowed in this party.');
+
+    expect(TrackRequest::query()->count())->toBe(0);
+});

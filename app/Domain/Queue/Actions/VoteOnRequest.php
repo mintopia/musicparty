@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Party\PartyState;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
@@ -25,6 +26,10 @@ class VoteOnRequest
     {
         $changed = DB::transaction(function () use ($party, $member, $request, $direction): bool {
             $party = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
+
+            if ($party->state === PartyState::Ended) {
+                throw RequestRefusedException::partyEndedVotingClosed();
+            }
 
             if ($member->fresh()?->banned !== false) {
                 throw RequestRefusedException::banned();
