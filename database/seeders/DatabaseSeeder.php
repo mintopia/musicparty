@@ -13,7 +13,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $this->call(RolesSeeder::class);
-        $this->call(PartyMemberRoleSeeder::class);
         $this->call(SocialProvidersSeeder::class);
         $this->call(SettingsSeeder::class);
         $this->call(ThemesSeeder::class);

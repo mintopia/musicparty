@@ -36,9 +36,10 @@ it('renders the login page as an Inertia page for guests', function (): void {
 it('shares the authenticated user with the shell', function (): void {
     $user = Mockery::mock(User::class)->makePartial();
     $user->forceFill(['id' => 7, 'nickname' => 'Alex']);
-    $user->setRelation('parties', collect([(object) ['code' => 'FRI123', 'name' => 'Friday Night LAN']]));
+    $user->setRelation('memberParties', collect([(object) ['code' => 'FRI123', 'name' => 'Friday Night LAN']]));
     $user->shouldReceive('getEmail')->andReturn(null);
     $user->shouldReceive('avatarUrl')->andReturn('https://example.com/alex.png');
+    $user->shouldReceive('hasRole')->andReturn(false);
 
     $this->withoutVite()->actingAs($user)->get(route('home'))
         ->assertInertia(fn (Assert $page): AssertableInertia => $page

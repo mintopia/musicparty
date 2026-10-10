@@ -29,6 +29,8 @@ class User extends Authenticatable
 
     protected $casts = [
         'terms_agreed_at' => 'datetime',
+        'first_login' => 'boolean',
+        'suspended' => 'boolean',
         'last_login' => 'datetime',
         'status_updated_at' => 'datetime',
         'status' => 'object',
@@ -64,6 +66,14 @@ class User extends Authenticatable
     public function parties(): HasMany
     {
         return $this->hasMany(Party::class);
+    }
+
+    /**
+     * @return BelongsToMany<Party, $this>
+     */
+    public function memberParties(): BelongsToMany
+    {
+        return $this->belongsToMany(Party::class, 'party_members')->withPivot('role')->withTimestamps();
     }
 
     public function partyMembers(): HasMany

@@ -17,6 +17,11 @@ class SocialProvider extends Model
     use HasFactory;
     use ToString;
 
+    protected $casts = [
+        'enabled' => 'boolean',
+        'auth_enabled' => 'boolean',
+    ];
+
     protected array $_settings = [];
 
     public function accounts(): HasMany
@@ -42,6 +47,30 @@ class SocialProvider extends Model
     public function configMapping(): array
     {
         return $this->getProvider()->configMapping();
+    }
+
+    public function isConfigured(): bool
+    {
+        $hasRequired = false;
+
+        foreach ($this->settings as $setting) {
+            if (! $setting instanceof ProviderSetting || ! $setting->isRequired()) {
+                continue;
+            }
+
+            $hasRequired = true;
+
+            if (blank($setting->value)) {
+                return false;
+            }
+        }
+
+        return $hasRequired;
+    }
+
+    public function isAvailableForLogin(): bool
+    {
+        return $this->enabled && $this->auth_enabled && $this->isConfigured();
     }
 
     protected function toStringName(): string

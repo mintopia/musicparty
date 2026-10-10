@@ -5,6 +5,7 @@ use App\Providers\AuthServiceProvider;
 use App\Providers\BroadcastServiceProvider;
 use App\Providers\EventServiceProvider;
 use App\Providers\HorizonServiceProvider;
+use App\Providers\ModServiceProvider;
 use App\Providers\PrometheusServiceProvider;
 use App\Providers\RouteServiceProvider;
 use App\Providers\TelescopeServiceProvider;
@@ -40,6 +41,10 @@ return [
     'env' => env('APP_ENV', 'production'),
 
     'version' => env('APP_VERSION', '2.0.0'),
+
+    'terms_url' => env('APP_TERMS_URL'),
+
+    'privacy_url' => env('APP_PRIVACY_URL'),
 
     /*
     |--------------------------------------------------------------------------
@@ -179,6 +184,7 @@ return [
         PrometheusServiceProvider::class,
         EventServiceProvider::class,
         HorizonServiceProvider::class,
+        ModServiceProvider::class,
         RouteServiceProvider::class,
         TelescopeServiceProvider::class,
         SocialiteProviders\Manager\ServiceProvider::class,
