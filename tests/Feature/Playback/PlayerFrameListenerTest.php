@@ -1,11 +1,13 @@
 <?php
 
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\Broadcast\PlayerCommandEvent;
 use App\Domain\Playback\Jobs\ProcessPlayerFrame;
 use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
+use App\Support\Metrics\CounterStore;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -296,6 +298,48 @@ describe('ProcessPlayerFrame', function () {
         ($this->drain)();
 
         expect($this->player->frames)->toBe([['type' => 'track_changed']])->and(discarded())->toBe(1);
+    });
+
+    it('counts an expired frame under the expired reason and logs it to the Party', function () {
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'lost']);
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+        Cache::forget('player-frame:'.$this->party->code.':1');
+
+        ($this->drain)();
+
+        $counters = app(CounterStore::class);
+        expect($counters->get('metrics.player_frames_dropped.expired'))->toBe(1)
+            ->and($counters->get('metrics.player_frames_dropped.out_of_order'))->toBe(0)
+            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details['reason'])->toBe('expired');
+    });
+
+    it('counts a frame that arrives behind the applied cursor as out of order and does not buffer it', function () {
+        Cache::forever('player-frame-applied:'.$this->party->code, 3);
+        Cache::put('player-frame-latest:'.$this->party->code, 2);
+
+        $sequence = ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'late']);
+
+        expect($sequence)->toBe(3)
+            ->and(Cache::has('player-frame:'.$this->party->code.':3'))->toBeFalse()
+            ->and(app(CounterStore::class)->get('metrics.player_frames_dropped.out_of_order'))->toBe(1)
+            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details['reason'])->toBe('out_of_order');
+        Queue::assertNotPushed(ProcessPlayerFrame::class);
+    });
+
+    it('writes one Party Log entry for ten drops in a minute and another after the window', function () {
+        foreach (range(1, 10) as $i) {
+            Cache::forever('player-frame-applied:'.$this->party->code, $i);
+            ProcessPlayerFrame::enqueue($this->party->code, ['n' => $i]);
+        }
+
+        expect(app(CounterStore::class)->get('metrics.player_frames_dropped.out_of_order'))->toBe(10)
+            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->count())->toBe(1);
+
+        $this->travel(61)->seconds();
+        Cache::forever('player-frame-applied:'.$this->party->code, 11);
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 11]);
+
+        expect(PartyLogEntry::query()->where('action', 'player.frames_dropped')->count())->toBe(2);
     });
 
     it('leaves a sequence whose frame is not stored yet for the next drain instead of skipping it', function () {

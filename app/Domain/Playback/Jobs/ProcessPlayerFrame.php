@@ -3,6 +3,7 @@
 namespace App\Domain\Playback\Jobs;
 
 use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Actions\RecordDroppedPlayerFrame;
 use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\PartyPlayers;
 use Illuminate\Bus\Queueable;
@@ -36,6 +37,14 @@ class ProcessPlayerFrame implements ShouldQueue
         $counterKey = self::key('latest', $partyCode);
         Cache::add($counterKey, 0);
         $sequence = (int) Cache::increment($counterKey);
+
+        $applied = (int) Cache::get(self::key('applied', $partyCode), 0);
+
+        if ($sequence <= $applied && $applied <= (int) Cache::get($counterKey, 0)) {
+            app(RecordDroppedPlayerFrame::class)($partyCode, RecordDroppedPlayerFrame::OUT_OF_ORDER, $sequence);
+
+            return $sequence;
+        }
 
         Cache::put(self::frameKey($partyCode, $sequence), $frame, self::FRAME_TTL_SECONDS);
         self::dispatch($partyCode);
@@ -75,6 +84,10 @@ class ProcessPlayerFrame implements ShouldQueue
             }
 
             Cache::forever(self::key('applied', $this->partyCode), $sequence);
+
+            if ($frame === null) {
+                app(RecordDroppedPlayerFrame::class)($this->partyCode, RecordDroppedPlayerFrame::EXPIRED, $sequence);
+            }
 
             if (! is_array($frame) || ! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($frame)) {
                 Cache::add(self::DISCARDED_COUNTER, 0);
