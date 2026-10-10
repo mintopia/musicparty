@@ -2,8 +2,11 @@
 
 use App\Domain\Theming\ColourScheme;
 use App\Models\User;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;
+
+uses(RefreshDatabase::class);
 
 const THEME_TOKENS = [
     'primary', 'accent', 'danger', 'background', 'surface', 'text', 'muted', 'border',

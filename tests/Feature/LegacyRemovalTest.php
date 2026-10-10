@@ -2,7 +2,10 @@
 
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
+
+uses(RefreshDatabase::class);
 
 it('renders the Inertia root placeholder at the home route', function () {
     $this->withoutVite()->get(route('home'))->assertOk()->assertSee('id="app"', false);
