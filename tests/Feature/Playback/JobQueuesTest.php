@@ -7,6 +7,7 @@ use App\Domain\Playback\Jobs\CheckSoloistHealth;
 use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\Jobs\ProcessPlayerFrame;
 use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Playback\Jobs\TickParty;
 use App\Domain\Playback\Jobs\TickPlayback;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -17,6 +18,7 @@ it('routes each job to its queue', function (object $job, string $queue) {
     'frame' => fn () => [new ProcessPlayerFrame('ABC123'), 'player'],
     'start' => fn () => [new StartPlayback('ABC123'), 'player'],
     'tick' => fn () => [new TickPlayback, 'player'],
+    'party tick' => fn () => [new TickParty('ABC123'), 'ticks'],
     'health' => fn () => [new CheckSoloistHealth, 'player'],
     'poll' => fn () => [new PollPlayback('ABC123'), 'polling'],
     'broadcast' => fn () => [new BroadcastPartyQueue('ABC123'), 'broadcast'],
@@ -28,7 +30,7 @@ it('routes each job to its queue', function (object $job, string $queue) {
 it('defines one supervisor per queue', function () {
     $queues = collect(config('horizon.defaults'))->flatMap(fn ($s) => $s['queue'])->sort()->values()->all();
 
-    expect($queues)->toBe(['broadcast', 'default', 'mods-ai', 'player', 'polling']);
+    expect($queues)->toBe(['broadcast', 'default', 'mods-ai', 'player', 'polling', 'ticks']);
 });
 
 it('sends every broadcast event to the broadcast queue', function () {

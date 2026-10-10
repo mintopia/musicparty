@@ -87,6 +87,7 @@ return [
         'redis:default' => 60,
         'redis:player' => 30,
         'redis:polling' => 60,
+        'redis:ticks' => 30,
         'redis:broadcast' => 30,
     ],
 
@@ -194,6 +195,19 @@ return [
             'nice' => 0,
         ],
 
+        'supervisor-ticks' => [
+            'connection' => 'redis',
+            'queue' => ['ticks'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 30,
+            'nice' => 0,
+        ],
+
         'supervisor-polling' => [
             'connection' => 'redis',
             'queue' => ['polling'],
@@ -252,6 +266,9 @@ return [
             'supervisor-player' => [
                 'maxProcesses' => 4,
             ],
+            'supervisor-ticks' => [
+                'maxProcesses' => 2,
+            ],
             'supervisor-polling' => [
                 'maxProcesses' => 2,
             ],
@@ -268,6 +285,9 @@ return [
 
         'local' => [
             'supervisor-player' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-ticks' => [
                 'maxProcesses' => 1,
             ],
             'supervisor-polling' => [

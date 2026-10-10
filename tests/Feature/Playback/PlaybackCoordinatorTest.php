@@ -9,6 +9,7 @@ use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Playback\Jobs\TickParty;
 use App\Domain\Playback\Jobs\TickPlayback;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
@@ -331,14 +332,18 @@ it('triggers playback when a party goes live and when a first request arrives', 
     Bus::assertDispatchedTimes(StartPlayback::class, 2);
 });
 
-it('ticks only live parties from the scheduled job and survives one failing party', function () {
+it('ticks only live parties from the dispatched party jobs', function () {
     $live = livePlaybackParty();
     $player = useFakePlayer($live, FeedMode::Ahead);
     TrackRequest::factory()->for($live)->create(['provider_track_id' => 'r1']);
     $paused = Party::factory()->create();
     TrackRequest::factory()->for($paused)->create();
 
-    (new TickPlayback)->handle(app(PlaybackCoordinator::class));
+    Bus::fake([BroadcastPartyQueue::class, TickParty::class]);
+
+    (new TickPlayback)->handle();
+    Bus::assertDispatchedTimes(TickParty::class, 1);
+    new TickParty($live->code)->handle(app(PlaybackCoordinator::class));
 
     expect($player->state()->currentTrack->providerTrackId)->toBe('r1')
         ->and(TrackRequest::query()->where('party_id', $paused->id)->first()->status)->toBe(RequestStatus::Queued);
@@ -348,5 +353,6 @@ it('schedules the playback tick', function () {
     $events = collect(app(Schedule::class)->events())
         ->filter(fn ($event): bool => str_contains((string) $event->description, TickPlayback::class) || str_contains($event->command ?? '', 'TickPlayback'));
 
-    expect($events)->not->toBeEmpty();
+    expect($events)->not->toBeEmpty()
+        ->and($events->first()?->withoutOverlapping)->toBeTrue();
 });

@@ -119,6 +119,7 @@ class HostAccountTokens
         try {
             return Http::withBasicAuth($clientId, $clientSecret)
                 ->asForm()
+                ->timeout(5)
                 ->post(self::TOKEN_URL, [
                     'grant_type' => 'refresh_token',
                     'refresh_token' => (string) $account->refresh_token,

@@ -16,7 +16,7 @@ class Kernel extends ConsoleKernel
     protected function schedule(Schedule $schedule): void
     {
         $schedule->command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
-        $schedule->job(new TickPlayback)->everyFiveSeconds()->onOneServer();
+        $schedule->job(new TickPlayback)->everyFiveSeconds()->withoutOverlapping()->onOneServer();
         $schedule->job(new CheckSoloistHealth)->everyTenSeconds()->onOneServer();
         $schedule->job(new RunModScheduledActions)->everyFiveSeconds()->onOneServer();
     }
