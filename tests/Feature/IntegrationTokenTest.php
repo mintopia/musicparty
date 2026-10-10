@@ -3,11 +3,13 @@
 use App\Domain\Admin\Actions\IssueIntegrationToken;
 use App\Domain\Admin\Actions\RevokeIntegrationToken;
 use App\Domain\Admin\Models\AdminAuditEntry;
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Domain\Admin\Models\Role;
 use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
+use Laravel\Sanctum\PersonalAccessToken;
 use Laravel\Sanctum\Sanctum;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -56,14 +58,16 @@ it('issues via the API showing plaintext once and storing only the hash', functi
         ->assertCreated()
         ->assertJsonPath('data.name', 'Exporter')
         ->assertJsonPath('data.abilities', ['read', 'export'])
-        ->assertJsonMissingPath('data.token_hash');
+        ->assertJsonMissingPath('data.token');
 
     $plain = $response->json('meta.token');
-    $stored = IntegrationToken::query()->firstOrFail();
-    expect($stored->token_hash)->toBe(hash('sha256', $plain))->and($stored->token_hash)->not->toBe($plain);
+    $stored = PersonalAccessToken::query()->firstOrFail();
+    expect($stored->token)->toBe(hash('sha256', explode('|', $plain, 2)[1]))->and($stored->token)->not->toBe($plain)
+        ->and($stored->tokenable)->toBeInstanceOf(Integration::class)
+        ->and($stored->abilities)->toBe(['read', 'export']);
 
     $list = $this->getJson('/api/v1/admin/tokens')->assertOk();
-    expect(json_encode($list->json()))->not->toContain($plain)->not->toContain($stored->token_hash);
+    expect(json_encode($list->json()))->not->toContain($plain)->not->toContain($stored->token);
     expect($list->json('data.0'))->toHaveKeys(['id', 'name', 'abilities', 'last_used_at'])->not->toHaveKey('token');
 });
 
@@ -72,14 +76,14 @@ it('issues via the web flashing the value once and listing without it', function
 
     $this->post('/admin/tokens', ['name' => 'Exporter', 'abilities' => ['export']])->assertRedirect();
     $plain = session('issued_token.value');
-    expect(IntegrationToken::query()->firstOrFail()->token_hash)->toBe(hash('sha256', $plain));
+    expect(PersonalAccessToken::query()->firstOrFail()->token)->toBe(hash('sha256', explode('|', $plain, 2)[1]));
 
     inertiaGet('/admin/tokens')
         ->assertJsonPath('component', 'Admin/Tokens/Index')
         ->assertJsonPath('props.issued.value', $plain)
         ->assertJsonCount(1, 'props.tokens.data')
         ->assertJsonPath('props.tokens.data.0.name', 'Exporter')
-        ->assertJsonMissingPath('props.tokens.data.0.token_hash');
+        ->assertJsonMissingPath('props.tokens.data.0.token');
 
     inertiaGet('/admin/tokens')->assertJsonPath('props.issued', null);
 });
@@ -95,21 +99,21 @@ it('refuses non-admins and anonymous visitors', function () {
     $this->post('/admin/tokens', $payload)->assertForbidden();
     $this->get('/admin/tokens')->assertForbidden();
 
-    $existing = IntegrationToken::factory()->create();
+    $existing = Integration::factory()->create();
 
     Sanctum::actingAs(User::factory()->create());
     $this->postJson('/api/v1/admin/tokens', $payload)->assertForbidden();
     $this->deleteJson("/api/v1/admin/tokens/{$existing->id}")->assertForbidden();
-    expect(IntegrationToken::query()->count())->toBe(1)->and($existing->fresh()->isRevoked())->toBeFalse();
+    expect(Integration::query()->count())->toBe(1)->and($existing->fresh()->isRevoked())->toBeFalse();
 });
 
 it('authenticates a valid token, touches last used, and enforces ability', function () {
     $admin = tokenAdmin();
     ['token' => $token, 'plainText' => $plain] = issueFor($admin, ['read']);
-    expect($token->last_used_at)->toBeNull();
+    expect($token->lastUsedAt())->toBeNull();
 
     $this->getJson('/api/v1/integration/ping', bearer($plain))->assertOk()->assertJsonPath('data.status', 'ok');
-    expect($token->fresh()->last_used_at)->not->toBeNull();
+    expect($token->fresh()->load('tokens')->lastUsedAt())->not->toBeNull();
 
     ['plainText' => $exportOnly] = issueFor($admin, ['export'], 'Export only');
     $this->getJson('/api/v1/integration/ping', bearer($exportOnly))->assertForbidden();
@@ -124,7 +128,7 @@ it('rejects unknown, missing and revoked tokens with 401', function () {
 
     app(RevokeIntegrationToken::class)->handle($admin, $token);
     $this->getJson('/api/v1/integration/ping', bearer($plain))->assertUnauthorized();
-    expect($token->fresh()->last_used_at)->toBeNull();
+    expect($token->fresh()->isRevoked())->toBeTrue()->and(PersonalAccessToken::query()->count())->toBe(0);
 });
 
 it('revokes via API and web through the same action', function () {
@@ -146,9 +150,26 @@ it('keeps token kinds separate in both directions', function () {
     ['plainText' => $integration] = issueFor($admin);
     $sanctum = $admin->createToken('personal')->plainTextToken;
 
-    $this->getJson('/api/v1/integration/ping', bearer($sanctum))->assertUnauthorized();
-    $this->getJson('/api/v1/admin/tokens', bearer($integration))->assertUnauthorized();
+    $this->getJson('/api/v1/integration/ping', bearer($sanctum))->assertForbidden();
+    $this->getJson('/api/v1/admin/tokens', bearer($integration))->assertForbidden();
     $this->getJson('/api/v1/admin/tokens', bearer($sanctum))->assertOk();
+});
+
+it('refuses a Player Token on integration endpoints', function () {
+    $party = Party::factory()->create();
+    $player = $party->createToken('Stage', ['player:connect', 'read'])->plainTextToken;
+
+    $this->getJson('/api/v1/integration/ping', bearer($player))->assertForbidden();
+});
+
+it('refuses an Integration Token on the Player channel', function () {
+    config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'k', 'broadcasting.connections.reverb.secret' => 's', 'broadcasting.connections.reverb.app_id' => '1']);
+    require base_path('routes/channels.php');
+    $party = Party::factory()->create();
+    ['plainText' => $plain] = issueFor(tokenAdmin(), ['read', 'export']);
+
+    $this->postJson('/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => 'private-player.'.$party->code], bearer($plain))
+        ->assertForbidden();
 });
 
 it('records audit entries without the secret', function () {
@@ -159,14 +180,14 @@ it('records audit entries without the secret', function () {
     $entries = AdminAuditEntry::query()->orderBy('id')->get();
     expect($entries->pluck('action')->all())->toBe(['integration_token.issued', 'integration_token.revoked']);
     expect($entries[0]->meta)->toMatchArray(['name' => 'Exporter', 'abilities' => 'read,export']);
-    expect(json_encode($entries->toArray()))->not->toContain($plain)->not->toContain($token->token_hash);
+    expect(json_encode($entries->toArray()))->not->toContain($plain);
 });
 
 it('validates issue requests on both surfaces', function (array $payload, string $field) {
     $this->actingAs(tokenAdmin());
     $this->postJson('/admin/tokens', $payload)->assertJsonValidationErrors($field);
     $this->postJson('/api/v1/admin/tokens', $payload)->assertJsonValidationErrors($field);
-    expect(IntegrationToken::query()->count())->toBe(0);
+    expect(Integration::query()->count())->toBe(0);
 })->with([
     'missing name' => [['abilities' => ['read']], 'name'],
     'overlong name' => [['name' => str_repeat('a', 101), 'abilities' => ['read']], 'name'],

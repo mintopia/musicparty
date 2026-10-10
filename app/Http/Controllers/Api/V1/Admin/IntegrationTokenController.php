@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 use App\Domain\Admin\Actions\IssueIntegrationToken;
 use App\Domain\Admin\Actions\ListIntegrationTokens;
 use App\Domain\Admin\Actions\RevokeIntegrationToken;
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\Admin\IssueIntegrationTokenRequest;
 use App\Http\Resources\V1\IntegrationTokenResource;
@@ -38,7 +38,7 @@ class IntegrationTokenController extends Controller
             ->setStatusCode(201);
     }
 
-    public function destroy(Request $request, IntegrationToken $token, RevokeIntegrationToken $revokeToken): IntegrationTokenResource
+    public function destroy(Request $request, Integration $token, RevokeIntegrationToken $revokeToken): IntegrationTokenResource
     {
         return new IntegrationTokenResource($revokeToken->handle($request->user() ?? throw new AuthenticationException, $token));
     }

@@ -97,7 +97,7 @@ class OpenApiGenerator
                     'integrationBearer' => [
                         'type' => 'http',
                         'scheme' => 'bearer',
-                        'description' => 'Integration Token carrying the required ability.',
+                        'description' => 'Integration Token, a Sanctum bearer token issued to an Integration, carrying the required ability.',
                     ],
                     'sanctumCookie' => [
                         'type' => 'apiKey',
@@ -185,9 +185,10 @@ class OpenApiGenerator
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
         }
 
-        if ($this->hasMiddleware($route, 'auth:integration')) {
+        if ($this->hasMiddleware($route, 'integration.ability')) {
             $operation['security'] = [['integrationBearer' => []]];
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
+            $operation['responses']['403'] = ['description' => 'Forbidden. The token is not an Integration Token or lacks the required ability.'];
         }
 
         $conflict = self::CONFLICT_DESCRIPTIONS[$route->getName() ?? ''] ?? null;

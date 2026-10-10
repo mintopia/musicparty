@@ -4,7 +4,7 @@ namespace Tests\Architecture\Support;
 
 use App\Domain\Admin\Models\AdminAuditEntry;
 use App\Domain\Admin\Models\AdminHostSession;
-use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\Models\Role;
 use App\Domain\Admin\Models\Setting;
@@ -85,7 +85,7 @@ class ArchitectureRules
                     Role::class,
                     AdminAuditEntry::class,
                     AdminHostSession::class,
-                    IntegrationToken::class,
+                    Integration::class,
                 ],
             ],
             'identity' => [

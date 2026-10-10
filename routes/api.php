@@ -41,7 +41,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/player/poll', [PartyPlayerController::class, 'poll'])->name('parties.player.poll');
     });
     Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->middleware('throttle:party-public')->name('parties.theme.show');
-    Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:integration', 'integration.ability:read'])->name('integration.ping');
+    Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:sanctum', 'integration.ability:read'])->name('integration.ping');
     Route::get('parties/{party}/export', [PartyExportController::class, 'show'])->middleware('export.access')->name('parties.export');
     Route::middleware(['auth:sanctum', 'user.principal', 'signup.complete'])->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
@@ -89,7 +89,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/theme', [PartyThemeController::class, 'update'])->name('parties.theme.upload');
         Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])->name('parties.theme.destroy');
     });
-    Route::middleware(['auth:sanctum', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
+    Route::middleware(['auth:sanctum', 'user.principal', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('tokens', [AdminIntegrationTokenController::class, 'index'])->name('tokens.index');
         Route::post('tokens', [AdminIntegrationTokenController::class, 'store'])->name('tokens.store');
         Route::delete('tokens/{token}', [AdminIntegrationTokenController::class, 'destroy'])->name('tokens.destroy');
