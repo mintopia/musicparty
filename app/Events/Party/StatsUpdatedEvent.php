@@ -15,6 +15,8 @@ class StatsUpdatedEvent implements ShouldBroadcast
     /**
      * @param  array<string, mixed>  $stats
      */
+    public string $broadcastQueue = 'broadcast';
+
     public function __construct(protected string $partyCode, protected array $stats) {}
 
     /**

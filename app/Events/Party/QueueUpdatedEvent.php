@@ -15,6 +15,8 @@ class QueueUpdatedEvent implements ShouldBroadcast
     /**
      * @param  array<string, mixed>  $snapshot
      */
+    public string $broadcastQueue = 'broadcast';
+
     public function __construct(protected string $partyCode, protected array $snapshot) {}
 
     /**

@@ -14,6 +14,8 @@ class ThemeUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     public function __construct(public readonly string $partyCode) {}
 
     public function broadcastAs(): string

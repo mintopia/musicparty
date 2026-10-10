@@ -24,7 +24,7 @@ class ProcessPlayerFrame implements ShouldQueue
      */
     public function __construct(public readonly string $partyCode, public readonly array $frame)
     {
-        $this->onQueue('partyupdates');
+        $this->onQueue('player');
     }
 
     public function handle(PartyPlayers $players): void

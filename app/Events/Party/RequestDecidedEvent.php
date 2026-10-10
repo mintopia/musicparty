@@ -12,6 +12,8 @@ class RequestDecidedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     public function __construct(
         protected string $partyCode,
         protected int $memberId,
