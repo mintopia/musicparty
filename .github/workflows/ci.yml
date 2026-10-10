@@ -88,3 +88,14 @@ jobs:
           php artisan key:generate --no-interaction
       - name: Pest with coverage
         run: vendor/bin/pest --parallel --coverage
+
+  publish:
+    needs: [static, frontend, specs, tests]
+    if: >-
+      github.event_name == 'push' &&
+      (contains(fromJSON('["master", "develop", "feature/v3-rewrite"]'), github.ref_name) ||
+      startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: read
+      packages: write
+    uses: ./.github/workflows/publish-docker-images.yml
