@@ -12,17 +12,6 @@ function dockerfileInstructions(string $path, string $instruction): array
     ));
 }
 
-function firstIndex(array $entries, callable $matches): int
-{
-    foreach (array_values($entries) as $index => $entry) {
-        if ($matches($entry['arguments'])) {
-            return $index;
-        }
-    }
-
-    return PHP_INT_MAX;
-}
-
 it('copies lock files as the first source copy of the stage that installs dependencies', function (string $lock) {
     $stageCopies = [];
 
@@ -90,7 +79,8 @@ it('sets up the user, drops privileges and caches before running a role', functi
         expect($script)->toContain("{$role})");
     }
 
-    expect(strpos($script, 'artisan optimize'))->toBeLessThan(strpos($script, 'exec su-exec'))
+    expect($script)->toContain('optimize\' failed')
+        ->and(strpos($script, 'artisan optimize'))->toBeLessThan(strpos($script, 'exec su-exec'))
         ->and(strpos($script, 'chown'))->toBeLessThan(strpos($script, 'artisan optimize'));
 });
 

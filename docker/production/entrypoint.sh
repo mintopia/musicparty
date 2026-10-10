@@ -16,7 +16,10 @@ fi
 chown -R "$PUID:$PGID" /app/storage /app/bootstrap/cache
 
 export HOME=/tmp
-su-exec "$PUID:$PGID" php /app/artisan optimize
+if ! su-exec "$PUID:$PGID" php /app/artisan optimize; then
+    echo "entrypoint: 'php artisan optimize' failed; check APP_KEY and the configuration. Exiting." >&2
+    exit 1
+fi
 
 ROLE="${1:-web}"
 [ "$#" -gt 0 ] && shift
