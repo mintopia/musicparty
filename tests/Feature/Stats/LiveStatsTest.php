@@ -3,13 +3,16 @@
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\StatsUpdatedEvent;
+use App\Jobs\RefreshPartyStatsJob;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\PartyStat;
 use App\Models\Play;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -29,6 +32,11 @@ function statsFor(): array
     Sanctum::actingAs(test()->alice->user);
 
     return test()->getJson('/api/v1/parties/ABCD/stats')->assertOk()->json('data');
+}
+
+function runStatsJob(): void
+{
+    app()->call([new RefreshPartyStatsJob(test()->party->id), 'handle']);
 }
 
 function playedRequest(PartyMember $member, array $attributes = []): TrackRequest
@@ -159,12 +167,15 @@ describe('projection', function () {
 
         $request = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->alice->id, 'status' => RequestStatus::Queued, 'title' => 'Scripted']);
         $this->putJson("/api/v1/parties/ABCD/requests/{$request->id}/vote", ['value' => 'up'])->assertSuccessful();
+        Queue::assertPushed(RefreshPartyStatsJob::class);
+        runStatsJob();
         Event::assertDispatched(StatsUpdatedEvent::class);
         expect(statsFor()['most_upvoted'][0]['title'])->toBe('Scripted');
 
         $request->forceFill(['status' => RequestStatus::UpNext, 'started_at' => now()])->save();
         app(AdvanceQueue::class)($this->party, $request->provider_track_id);
         app(AdvanceQueue::class)($this->party, null);
+        runStatsJob();
         expect(statsFor()['top_tracks'][0]['title'])->toBe('Scripted')
             ->and(statsFor()['top_requesters'][0]['nickname'])->toBe($this->alice->user->nickname);
 
@@ -172,7 +183,38 @@ describe('projection', function () {
         $other = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->bob->id, 'status' => RequestStatus::Queued]);
         RequestVote::factory()->create(['track_request_id' => $other->id, 'party_member_id' => $this->alice->id]);
         $this->deleteJson("/api/v1/parties/ABCD/requests/{$other->id}")->assertSuccessful();
+        runStatsJob();
         expect(collect(statsFor()['most_upvoted'])->pluck('title'))->not->toContain($other->title);
+    });
+
+    it('dispatches one delayed default-queue job for a burst of votes and runs no stats query in the request', function () {
+        Queue::fake();
+        $request = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->alice->id, 'status' => RequestStatus::Queued]);
+        $voters = PartyMember::factory()->for($this->party)->count(50)->create();
+
+        DB::enableQueryLog();
+        foreach ($voters as $voter) {
+            Sanctum::actingAs($voter->user);
+            $this->putJson("/api/v1/parties/ABCD/requests/{$request->id}/vote", ['value' => 'up'])->assertSuccessful();
+        }
+        $queries = collect(DB::getQueryLog())->pluck('query');
+
+        expect($queries->filter(fn (string $sql) => str_contains($sql, 'party_stats')))->toBeEmpty();
+        Queue::assertPushed(RefreshPartyStatsJob::class, 1);
+        Queue::assertPushedOn('default', RefreshPartyStatsJob::class, fn (RefreshPartyStatsJob $job) => $job->delay === 5);
+    });
+
+    it('lets the job run twice without error and keeps one row', function () {
+        runStatsJob();
+        runStatsJob();
+
+        expect(PartyStat::query()->where('party_id', $this->party->id)->count())->toBe(1);
+    });
+
+    it('ignores a job for a deleted party', function () {
+        app()->call([new RefreshPartyStatsJob(999999), 'handle']);
+
+        expect(PartyStat::query()->count())->toBe(0);
     });
 
     it('broadcasts only on the members channel with display names only', function () {

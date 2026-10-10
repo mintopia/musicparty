@@ -12,10 +12,16 @@ readonly class RefreshPartyStats
 
     public function __invoke(Party $party): PartyStat
     {
-        $stat = PartyStat::query()->updateOrCreate(['party_id' => $party->id], ['payload' => ($this->compute)($party)]);
+        $payload = ($this->compute)($party);
 
-        StatsUpdatedEvent::dispatch($party->code, $stat->payload);
+        PartyStat::query()->upsert(
+            [['party_id' => $party->id, 'payload' => json_encode($payload), 'created_at' => now(), 'updated_at' => now()]],
+            ['party_id'],
+            ['payload', 'updated_at'],
+        );
 
-        return $stat;
+        StatsUpdatedEvent::dispatch($party->code, $payload);
+
+        return PartyStat::query()->where('party_id', $party->id)->firstOrFail();
     }
 }
