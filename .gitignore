@@ -27,3 +27,5 @@ frankenphp-worker.php
 
 /cookies.json
 /collector.yml
+
+/.claude/worktrees/
