@@ -3,9 +3,10 @@
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PartyBlocklistController;
 use App\Http\Controllers\Api\V1\PartyController;
-use App\Http\Controllers\Api\V1\PartyPlaylistController;
 use App\Http\Controllers\Api\V1\PartyMemberController;
 use App\Http\Controllers\Api\V1\PartyPlayController;
+use App\Http\Controllers\Api\V1\PartyPlayerController;
+use App\Http\Controllers\Api\V1\PartyPlaylistController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
@@ -62,6 +63,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
         Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
+        Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');
+        Route::get('parties/{party}/player-tokens', [PartyPlayerController::class, 'index'])->name('parties.player-tokens.index');
+        Route::post('parties/{party}/player-tokens', [PartyPlayerController::class, 'store'])->name('parties.player-tokens.store');
+        Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerController::class, 'destroy'])->whereNumber('token')->name('parties.player-tokens.destroy');
         Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
         Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();
         Route::apiResource('parties.playedsongs.rate', SongRatingController::class)->only(['store'])->scoped();
