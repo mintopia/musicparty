@@ -167,7 +167,7 @@ class OpenApiGenerator
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
         }
 
-        if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'player.token')) {
+        if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
             $operation['responses']['403'] = ['description' => 'Forbidden.'];
         }
 

@@ -65,6 +65,9 @@ const itemClass = (active) => [
                 </div>
             </div>
 
+            <Link v-if="user.is_admin" href="/admin" :class="itemClass(path.startsWith('/admin'))">
+                <Icon name="user" />Admin
+            </Link>
             <Link href="/profile" :class="itemClass(isActive('/profile'))"><Icon name="user" />Profile</Link>
             <Link href="/logout" :class="itemClass(false)"><Icon name="logout" />Logout</Link>
         </template>

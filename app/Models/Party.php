@@ -49,6 +49,7 @@ class Party extends Model
         'show_qrcode' => false,
         'state' => 'paused',
         'selection_mode' => 'deterministic',
+        'tv_layout' => 'default',
     ];
 
     protected $casts = [
@@ -65,6 +66,7 @@ class Party extends Model
         'min_song_length' => 'integer',
         'max_song_length' => 'integer',
         'no_repeat_interval' => 'integer',
+        'theme' => 'array',
     ];
 
     public function toStringName(): string
@@ -118,6 +120,14 @@ class Party extends Model
     public function trustedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trusted_user_id');
+    }
+
+    /**
+     * @return HasMany<AdminHostSession, $this>
+     */
+    public function adminHostSessions(): HasMany
+    {
+        return $this->hasMany(AdminHostSession::class);
     }
 
     public function upcoming(): HasMany
@@ -661,7 +671,7 @@ class Party extends Model
 
     public function canBeManagedBy(User $user): bool
     {
-        if ($user->id === $this->user_id) {
+        if ($user->id === $this->user_id || $user->isActingAsHostIn($this)) {
             return true;
         }
 

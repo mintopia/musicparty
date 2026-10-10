@@ -9,6 +9,9 @@
                 },
                 "Party.UpdatedEvent": {
                     "$ref": "#/components/messages/Party.UpdatedEvent"
+                },
+                "Party.ThemeUpdatedEvent": {
+                    "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
                 }
             },
             "parameters": {
@@ -952,6 +955,16 @@
                 },
                 "summary": "Inbound Pusher client event (any client-* name) from Soloist. Max 8192 bytes, 120 per minute per party; validated then queued as ProcessPlayerFrame.",
                 "title": "Player.ClientFrame"
+            },
+            "Party.ThemeUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "ThemeUpdated",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "Party.ThemeUpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
             }
         }
     },
@@ -972,6 +985,9 @@
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
                 }
             ]
         },
