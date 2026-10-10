@@ -10,4 +10,9 @@ class ProviderUnavailableException extends RuntimeException
     {
         return new self("Music Provider '{$providerId}' is unavailable: no search credential is configured.");
     }
+
+    public static function rejectedRefresh(string $providerId): self
+    {
+        return new self("Music Provider '{$providerId}' is unavailable: the token endpoint rejected the client credentials or request.");
+    }
 }

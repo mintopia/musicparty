@@ -73,7 +73,11 @@ class HostAccountTokens
         }
 
         if ($response->failed()) {
-            return $this->rejected($account);
+            if ($response->json('error') === 'invalid_grant') {
+                $this->rejected($account);
+            }
+
+            throw ProviderUnavailableException::rejectedRefresh('spotify');
         }
 
         $token = $response->json('access_token');
