@@ -6,7 +6,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Actions\SelectPartyPlaylistIds;
 use App\Domain\Party\Models\Party;
 use Illuminate\Validation\ValidationException;
@@ -44,7 +43,7 @@ class SelectPartyPlaylists
         }
 
         foreach (array_filter([$party->fallback_playlist_id, $fallbackPlaylistId]) as $playlistId) {
-            SpotifyMusicProvider::forgetPlaylistTracks($playlistId);
+            $provider->forgetPlaylist($playlistId);
         }
 
         return ($this->selectPlaylistIds)($party, $fallbackPlaylistId, $historyPlaylistId);

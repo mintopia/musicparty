@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Api\V1;
 
 use App\Domain\Music\Actions\ListHostPlaylists;
 use App\Domain\Music\Actions\SelectPartyPlaylists;
-use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\PairingCatalogue;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyPlaylistRequest;
 use App\Http\Resources\V1\PartyPlaylistSelectionResource;
@@ -17,10 +17,10 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyPlaylistController extends Controller
 {
-    public function index(Request $request, Party $party, ListHostPlaylists $listHostPlaylists, MusicProvider $provider): AnonymousResourceCollection
+    public function index(Request $request, Party $party, ListHostPlaylists $listHostPlaylists, PairingCatalogue $catalogue): AnonymousResourceCollection
     {
         try {
-            $playlists = $listHostPlaylists($request->user() ?? abort(401), $party, $provider);
+            $playlists = $listHostPlaylists($request->user() ?? abort(401), $party, $catalogue->provider($party->music_provider));
         } catch (NotHostException $exception) {
             abort(403, $exception->getMessage());
         } catch (ProviderTemporaryFailure $exception) {
@@ -30,13 +30,13 @@ class PartyPlaylistController extends Controller
         return PlaylistResource::collection($playlists);
     }
 
-    public function update(PartyPlaylistRequest $request, Party $party, SelectPartyPlaylists $selectPartyPlaylists, MusicProvider $provider): PartyPlaylistSelectionResource
+    public function update(PartyPlaylistRequest $request, Party $party, SelectPartyPlaylists $selectPartyPlaylists, PairingCatalogue $catalogue): PartyPlaylistSelectionResource
     {
         try {
             $party = $selectPartyPlaylists(
                 $request->user() ?? abort(401),
                 $party,
-                $provider,
+                $catalogue->provider($party->music_provider),
                 $request->validated('fallback_playlist_id'),
                 $request->validated('history_playlist_id'),
             );

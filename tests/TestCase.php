@@ -11,6 +11,7 @@ use Laravel\Horizon\Contracts\JobRepository;
 use Laravel\Horizon\Contracts\MasterSupervisorRepository;
 use Laravel\Horizon\Contracts\MetricsRepository;
 use Laravel\Horizon\Contracts\WorkloadRepository;
+use Tests\Support\TestingServiceProvider;
 
 abstract class TestCase extends BaseTestCase
 {
@@ -20,6 +21,7 @@ abstract class TestCase extends BaseTestCase
     {
         parent::setUp();
 
+        $this->app->register(TestingServiceProvider::class);
         $this->withoutVite();
         $this->app->singleton(Bucket::class, FakeLeakyBucket::class);
         $this->app->singleton(CounterStore::class, InMemoryCounterStore::class);

@@ -2,8 +2,6 @@
 
 namespace App\Domain\Music\Providers;
 
-use App\Domain\Identity\Models\LinkedAccount;
-use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -13,11 +11,7 @@ use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Playback\Data\PlaybackState;
-use App\Domain\Playback\Data\TrackReference;
-use App\Domain\Playback\PlaybackStatus;
-use Carbon\CarbonImmutable;
-use Closure;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Http\Client\Response;
@@ -26,15 +20,13 @@ use Illuminate\Support\Facades\Http;
 
 class SpotifyMusicProvider implements MusicProvider
 {
-    public const ID = 'spotify';
+    public const ID = SpotifyApi::ID;
 
-    private const string API_URL = 'https://api.spotify.com/v1';
+    private const string API_URL = SpotifyApi::URL;
 
     private const string TOKEN_URL = 'https://accounts.spotify.com/api/token';
 
     private const string TOKEN_CACHE_KEY = 'music.spotify.access-token';
-
-    private const string BACKOFF_CACHE_KEY = 'music.spotify.backoff-until';
 
     private const int TOKEN_SAFETY_MARGIN_SECONDS = 60;
 
@@ -44,9 +36,7 @@ class SpotifyMusicProvider implements MusicProvider
 
     private const int PLAYLIST_CACHE_SECONDS = 300;
 
-    private const int DEFAULT_RETRY_AFTER_SECONDS = 30;
-
-    public function __construct(private readonly HostAccountTokens $hostTokens) {}
+    public function __construct(private readonly SpotifyApi $api) {}
 
     public function id(): string
     {
@@ -60,10 +50,10 @@ class SpotifyMusicProvider implements MusicProvider
             'type' => 'track',
             'limit' => $limit,
             'offset' => $offset,
-            'market' => $this->market(),
+            'market' => $this->api->market(),
         ], fn (mixed $value): bool => $value !== null));
 
-        $this->guard($response);
+        $this->api->guard($response);
 
         /** @var array<string, mixed> $tracks */
         $tracks = $response->json('tracks') ?? [];
@@ -81,14 +71,14 @@ class SpotifyMusicProvider implements MusicProvider
     public function getTrack(string $providerTrackId): ?TrackData
     {
         $response = $this->get('/tracks/'.rawurlencode($providerTrackId), array_filter([
-            'market' => $this->market(),
+            'market' => $this->api->market(),
         ], fn (mixed $value): bool => $value !== null));
 
         if ($response->status() === 404) {
             return null;
         }
 
-        $this->guard($response);
+        $this->api->guard($response);
 
         /** @var array<string, mixed> $track */
         $track = $response->json();
@@ -112,7 +102,7 @@ class SpotifyMusicProvider implements MusicProvider
         return $playlists;
     }
 
-    public static function forgetPlaylistTracks(string $playlistId): void
+    public function forgetPlaylist(string $playlistId): void
     {
         Cache::forget(self::playlistCacheKey($playlistId));
     }
@@ -140,7 +130,7 @@ class SpotifyMusicProvider implements MusicProvider
 
         foreach ($this->pages('/playlists/'.rawurlencode($playlistId).'/tracks', array_filter([
             'limit' => 100,
-            'market' => $this->market(),
+            'market' => $this->api->market(),
         ], fn (mixed $value): bool => $value !== null), $hostAccountId) as $entry) {
             $track = $entry['track'] ?? $entry['item'] ?? null;
 
@@ -166,72 +156,13 @@ class SpotifyMusicProvider implements MusicProvider
         $uris = array_map(fn (string $id): string => "spotify:track:{$id}", $providerTrackIds);
 
         foreach (array_chunk($uris, self::APPEND_CHUNK_SIZE) as $chunk) {
-            $response = $this->userRequest(
+            $response = $this->api->userRequest(
                 fn (PendingRequest $request): Response => $request->asJson()->post(self::API_URL.'/playlists/'.rawurlencode($playlistId).'/tracks', ['uris' => $chunk]),
                 $hostAccountId,
             );
 
-            $this->guard($response);
+            $this->api->guard($response);
         }
-    }
-
-    public function currentPlayback(string $hostAccountId): PlaybackState
-    {
-        $response = $this->userRequest(
-            fn (PendingRequest $request): Response => $request->get(self::API_URL.'/me/player', array_filter([
-                'market' => $this->market(),
-                'additional_types' => 'track',
-            ], fn (mixed $value): bool => $value !== null)),
-            $hostAccountId,
-        );
-
-        if ($response->status() === 204 || $response->status() === 202) {
-            return PlaybackState::stopped();
-        }
-
-        $this->guard($response);
-
-        $item = $response->json('item');
-
-        if (! is_array($item) || ($item['type'] ?? 'track') !== 'track' || ! isset($item['id'])) {
-            return PlaybackState::stopped();
-        }
-
-        $linkedFrom = $item['linked_from'] ?? null;
-        $trackId = is_array($linkedFrom) && isset($linkedFrom['id']) ? (string) $linkedFrom['id'] : (string) $item['id'];
-
-        return new PlaybackState(
-            $response->json('is_playing') === true ? PlaybackStatus::Playing : PlaybackStatus::Paused,
-            new TrackReference(self::ID, $trackId),
-            (int) $response->json('progress_ms', 0),
-            CarbonImmutable::now(),
-            isset($item['duration_ms']) ? (int) $item['duration_ms'] : null,
-        );
-    }
-
-    public function queueTrack(string $providerTrackId, string $hostAccountId): void
-    {
-        $uri = rawurlencode("spotify:track:{$providerTrackId}");
-
-        $response = $this->userRequest(
-            fn (PendingRequest $request): Response => $request->post(self::API_URL."/me/player/queue?uri={$uri}"),
-            $hostAccountId,
-        );
-
-        $this->guard($response);
-    }
-
-    private function hostAccount(string $hostAccountId): LinkedAccount
-    {
-        $account = ctype_digit($hostAccountId) ? LinkedAccount::query()->find((int) $hostAccountId) : null;
-
-        if ($account === null) {
-            throw ProviderUnavailableException::forProvider(self::ID);
-        }
-
-        $this->assertConfigured();
-
-        return $account;
     }
 
     /**
@@ -244,12 +175,12 @@ class SpotifyMusicProvider implements MusicProvider
         $url = self::API_URL.$path;
 
         for ($page = 0; $url !== null && $page < self::MAX_PAGES; $page++) {
-            $response = $this->userRequest(
+            $response = $this->api->userRequest(
                 fn (PendingRequest $request): Response => $request->get($url, $page === 0 ? $query : []),
                 $hostAccountId,
             );
 
-            $this->guard($response);
+            $this->api->guard($response);
 
             $items = [...$items, ...array_values(array_filter($response->json('items') ?? [], is_array(...)))];
             $next = $response->json('next');
@@ -260,33 +191,12 @@ class SpotifyMusicProvider implements MusicProvider
     }
 
     /**
-     * @param  Closure(PendingRequest): Response  $send
-     */
-    private function userRequest(Closure $send, string $hostAccountId): Response
-    {
-        $account = $this->hostAccount($hostAccountId);
-        $this->assertNotBackingOff();
-
-        try {
-            $response = $send(Http::withToken($this->hostTokens->accessToken($account))->acceptJson());
-
-            if ($response->status() === 401) {
-                $response = $send(Http::withToken($this->hostTokens->refreshAfterRejection($account))->acceptJson());
-            }
-
-            return $response;
-        } catch (ConnectionException) {
-            throw new ProviderTemporaryFailure('Spotify could not be reached.');
-        }
-    }
-
-    /**
      * @param  array<string, mixed>  $query
      */
     private function get(string $path, array $query): Response
     {
-        $this->assertConfigured();
-        $this->assertNotBackingOff();
+        $this->api->assertConfigured();
+        $this->api->assertNotBackingOff();
 
         try {
             $response = $this->send($path, $query, $this->accessToken());
@@ -312,23 +222,6 @@ class SpotifyMusicProvider implements MusicProvider
             ->get(self::API_URL.$path, $query);
     }
 
-    private function guard(Response $response): void
-    {
-        $status = $response->status();
-
-        if ($status === 429) {
-            throw $this->startBackoff($response);
-        }
-
-        if ($status === 401 || $status === 403) {
-            throw ProviderUnavailableException::forProvider(self::ID);
-        }
-
-        if ($status >= 400) {
-            throw new ProviderTemporaryFailure("Spotify responded with status {$status}.");
-        }
-    }
-
     private function accessToken(): string
     {
         /** @var string|null $cached */
@@ -339,11 +232,11 @@ class SpotifyMusicProvider implements MusicProvider
         }
 
         /** @var PendingRequest $request */
-        $request = Http::withBasicAuth($this->clientId() ?? '', $this->clientSecret() ?? '')->asForm();
+        $request = Http::withBasicAuth($this->api->clientId() ?? '', $this->api->clientSecret() ?? '')->asForm();
         $response = $request->post(self::TOKEN_URL, ['grant_type' => 'client_credentials']);
 
         if ($response->status() === 429) {
-            throw $this->startBackoff($response);
+            throw $this->api->startBackoff($response);
         }
 
         if ($response->serverError()) {
@@ -360,60 +253,6 @@ class SpotifyMusicProvider implements MusicProvider
         Cache::put(self::TOKEN_CACHE_KEY, $token, $ttl);
 
         return $token;
-    }
-
-    private function startBackoff(Response $response): ProviderTemporaryFailure
-    {
-        $header = $response->header('Retry-After');
-        $retryAfter = is_numeric($header) ? max(1, (int) $header) : self::DEFAULT_RETRY_AFTER_SECONDS;
-
-        Cache::put(self::BACKOFF_CACHE_KEY, now()->getTimestamp() + $retryAfter, $retryAfter);
-
-        return new ProviderTemporaryFailure('Spotify is rate limiting requests.', $retryAfter);
-    }
-
-    private function assertNotBackingOff(): void
-    {
-        $until = Cache::get(self::BACKOFF_CACHE_KEY);
-
-        if (! is_int($until)) {
-            return;
-        }
-
-        $remaining = $until - now()->getTimestamp();
-
-        if ($remaining > 0) {
-            throw new ProviderTemporaryFailure('Spotify is rate limiting requests.', $remaining);
-        }
-    }
-
-    private function assertConfigured(): void
-    {
-        if ($this->clientId() === null || $this->clientSecret() === null) {
-            throw ProviderUnavailableException::forProvider(self::ID);
-        }
-    }
-
-    private function clientId(): ?string
-    {
-        return $this->configured('client_id');
-    }
-
-    private function clientSecret(): ?string
-    {
-        return $this->configured('client_secret');
-    }
-
-    private function market(): ?string
-    {
-        return $this->configured('market');
-    }
-
-    private function configured(string $key): ?string
-    {
-        $value = config("services.spotify.{$key}");
-
-        return is_string($value) && $value !== '' ? $value : null;
     }
 
     /**

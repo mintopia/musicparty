@@ -116,7 +116,7 @@ it('advances the queue from playback_state and records the cached state', functi
     expect($upNext->fresh()->status)->toBe(RequestStatus::Playing)
         ->and($state->status)->toBe(PlaybackStatus::Playing)
         ->and($state->currentTrack->providerTrackId)->toBe('t1')
-        ->and($state->currentTrack->providerId)->toBe('spotify')
+        ->and($state->currentTrack->providerId)->toBe('fake')
         ->and($state->positionMs)->toBe(1500)
         ->and($state->durationMs)->toBe(180000)
         ->and(soloistCommands('pause'))->toBeEmpty();

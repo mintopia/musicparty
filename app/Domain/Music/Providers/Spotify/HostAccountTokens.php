@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Domain\Music\Accounts;
+namespace App\Domain\Music\Providers\Spotify;
 
 use App\Domain\Identity\Actions\UpdateLinkedAccount;
 use App\Domain\Identity\Models\LinkedAccount;

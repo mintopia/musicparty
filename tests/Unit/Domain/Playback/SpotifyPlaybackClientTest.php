@@ -1,10 +1,11 @@
 <?php
 
-use App\Domain\Music\Accounts\HostAccountTokens;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
+use App\Domain\Playback\Spotify\SpotifyPlaybackClient;
 use App\Domain\Playback\PlaybackStatus;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -17,13 +18,13 @@ beforeEach(function () {
     Cache::flush();
     $this->account = SpotifyFake::account()->create(['access_token' => 'host-token']);
     $this->host = (string) $this->account->getKey();
-    $this->provider = new SpotifyMusicProvider(new HostAccountTokens);
+    $this->client = new SpotifyPlaybackClient(new SpotifyApi(new HostAccountTokens));
 });
 
 it('maps a playing device to a playback state with position and duration', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player*' => Http::response(SpotifyFake::fixture('player-playing'))]);
 
-    $state = $this->provider->currentPlayback($this->host);
+    $state = $this->client->currentPlayback($this->host);
 
     expect($state->status)->toBe(PlaybackStatus::Playing)
         ->and($state->currentTrack->providerId)->toBe('spotify')
@@ -36,7 +37,7 @@ it('maps a playing device to a playback state with position and duration', funct
 it('maps a paused device to paused', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player*' => Http::response(SpotifyFake::fixture('player-paused'))]);
 
-    expect($this->provider->currentPlayback($this->host)->status)->toBe(PlaybackStatus::Paused);
+    expect($this->client->currentPlayback($this->host)->status)->toBe(PlaybackStatus::Paused);
 });
 
 it('reports the original id when spotify relinked the track', function () {
@@ -45,13 +46,13 @@ it('reports the original id when spotify relinked the track', function () {
     $body['item']['linked_from'] = ['id' => 'track-1'];
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player*' => Http::response($body)]);
 
-    expect($this->provider->currentPlayback($this->host)->currentTrack->providerTrackId)->toBe('track-1');
+    expect($this->client->currentPlayback($this->host)->currentTrack->providerTrackId)->toBe('track-1');
 });
 
 it('treats no active device and non-track items as idle', function (mixed $response) {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player*' => $response]);
 
-    $state = $this->provider->currentPlayback($this->host);
+    $state = $this->client->currentPlayback($this->host);
 
     expect($state->status)->toBe(PlaybackStatus::Stopped)->and($state->currentTrack)->toBeNull();
 })->with([
@@ -66,10 +67,10 @@ it('surfaces rate limiting and server errors as temporary failures', function ()
         ->push('', 503)
         ->push(SpotifyFake::fixture('error-rate-limited'), 429, ['Retry-After' => '17'])]);
 
-    expect(fn () => $this->provider->currentPlayback($this->host))->toThrow(ProviderTemporaryFailure::class);
+    expect(fn () => $this->client->currentPlayback($this->host))->toThrow(ProviderTemporaryFailure::class);
 
     try {
-        $this->provider->currentPlayback($this->host);
+        $this->client->currentPlayback($this->host);
         $this->fail('Expected a temporary failure.');
     } catch (ProviderTemporaryFailure $failure) {
         expect($failure->retryAfterSeconds)->toBe(17);
@@ -79,20 +80,20 @@ it('surfaces rate limiting and server errors as temporary failures', function ()
 it('reports unavailable on a forbidden playback request', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player*' => Http::response(SpotifyFake::fixture('error-unauthorized'), 403)]);
 
-    $this->provider->currentPlayback($this->host);
+    $this->client->currentPlayback($this->host);
 })->throws(ProviderUnavailableException::class);
 
 it('requires a relink when the account is flagged', function () {
     SpotifyFake::hostApi();
     $this->account->forceFill(['needs_relink' => true])->save();
 
-    $this->provider->currentPlayback($this->host);
+    $this->client->currentPlayback($this->host);
 })->throws(HostAccountNeedsRelink::class);
 
 it('adds a track to the host queue as a spotify uri', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player/queue*' => Http::response('', 204)]);
 
-    $this->provider->queueTrack('track-9', $this->host);
+    $this->client->queueTrack('track-9', $this->host);
 
     Http::assertSent(fn (Request $r): bool => $r->method() === 'POST'
         && str_starts_with($r->url(), 'https://api.spotify.com/v1/me/player/queue?uri=spotify%3Atrack%3Atrack-9')
@@ -102,5 +103,5 @@ it('adds a track to the host queue as a spotify uri', function () {
 it('treats a missing active device as a temporary failure when queueing', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/me/player/queue*' => Http::response(['error' => ['status' => 404, 'reason' => 'NO_ACTIVE_DEVICE']], 404)]);
 
-    $this->provider->queueTrack('track-9', $this->host);
+    $this->client->queueTrack('track-9', $this->host);
 })->throws(ProviderTemporaryFailure::class);
