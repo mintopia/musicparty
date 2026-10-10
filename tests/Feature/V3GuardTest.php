@@ -1,7 +1,5 @@
 <?php
 
-use App\Models\Song;
-use App\Models\UpcomingSong;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 
@@ -41,16 +39,6 @@ it('no longer ships legacy classes', function (string $class) {
     'youtube event' => 'App\Events\Party\PlayYouTubeVideoEvent',
     'cron tick event' => 'App\Events\Cron\HourTickEvent',
 ]);
-
-it('does not expose css_classes in the upcoming song API payload', function () {
-    $song = Mockery::mock(Song::class);
-    $song->shouldReceive('toApi')->andReturn(['id' => 1]);
-    $upcoming = new UpcomingSong;
-    $upcoming->setRelation('song', $song);
-    $upcoming->setRelation('user', null);
-
-    expect($upcoming->toApi())->not->toHaveKey('css_classes');
-});
 
 it('drops the css_classes column in a migration', function () {
     $migrations = collect(glob(database_path('migrations/*drop_css_classes*.php')));

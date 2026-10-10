@@ -4,34 +4,26 @@ namespace Tests\Architecture\Support;
 
 use App\Jobs\PartyUpdate;
 use App\Jobs\ProcessPlayerFrame;
-use App\Models\Album;
-use App\Models\Artist;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\PartyModeration;
-use App\Models\PlayedSong;
+use App\Models\Play;
+use App\Models\PlayRating;
 use App\Models\ProviderSetting;
+use App\Models\Rating;
+use App\Models\RequestVote;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SocialProvider;
-use App\Models\Song;
-use App\Models\SongRating;
 use App\Models\Theme;
-use App\Models\UpcomingSong;
+use App\Models\TrackRequest;
 use App\Models\User;
-use App\Models\Vote;
 use App\Observers\PartyObserver;
 use App\Observers\SettingObserver;
-use App\Observers\SongRatingObserver;
 use App\Observers\ThemeObserver;
-use App\Observers\UpcomingSongObserver;
 use App\Observers\UserObserver;
-use App\Observers\VoteObserver;
-use App\Services\PlayedSongAugmentService;
-use App\Services\SpotifySearchService;
-use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Model;
@@ -95,10 +87,7 @@ class ArchitectureRules
                     'App\\Domain\\Party\\',
                     PartyObserver::class,
                     ThemeObserver::class,
-                    UpcomingSongObserver::class,
-                    VoteObserver::class,
                     'App\\Events\\Party\\',
-                    'App\\Events\\UpcomingSong\\',
                     PartyUpdate::class,
                 ],
                 'models' => [
@@ -106,25 +95,20 @@ class ArchitectureRules
                     PartyMember::class,
                     PartyModeration::class,
                     PartyLogEntry::class,
-                    UpcomingSong::class,
-                    Vote::class,
                     Role::class,
                     Theme::class,
                 ],
             ],
-            'music' => [
+            'queue' => [
                 'members' => [
-                    PlayedSongAugmentService::class,
-                    UpcomingSongAugmentService::class,
-                    SpotifySearchService::class,
-                    SongRatingObserver::class,
+                    'App\\Domain\\Queue\\',
                 ],
                 'models' => [
-                    Song::class,
-                    Album::class,
-                    Artist::class,
-                    SongRating::class,
-                    PlayedSong::class,
+                    TrackRequest::class,
+                    RequestVote::class,
+                    Play::class,
+                    PlayRating::class,
+                    Rating::class,
                 ],
             ],
         ];

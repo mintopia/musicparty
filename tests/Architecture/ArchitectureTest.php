@@ -2,7 +2,7 @@
 
 use App\Listeners\HandlePlayerClientEvent;
 use App\Models\Party;
-use App\Models\Song;
+use App\Models\Play;
 use App\Models\User;
 use Tests\Architecture\Support\ArchitectureRules;
 use Tests\Fixtures\Architecture\CrossContextWriter;
@@ -12,7 +12,7 @@ use Tests\Fixtures\Architecture\SerialisingBroadcastEvent;
 
 $fixtureContexts = [
     'identity' => ['members' => [CrossContextWriter::class], 'models' => [User::class]],
-    'music' => ['members' => [], 'models' => [Song::class]],
+    'queue' => ['members' => [], 'models' => [Play::class]],
 ];
 
 it('keeps model writes inside their bounded context', function () {
