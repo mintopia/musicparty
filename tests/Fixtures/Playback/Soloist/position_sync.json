@@ -1,0 +1,8 @@
+{
+  "type": "position_sync",
+  "position": {
+    "position_ms": 42000,
+    "timestamp_ms": 1767268800000,
+    "speed": 1.0
+  }
+}

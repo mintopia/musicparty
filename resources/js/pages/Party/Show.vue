@@ -163,6 +163,12 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
         </div>
 
         <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" />
+        <Link
+            v-if="canManage && party.playerKind === 'browser'"
+            :href="`/parties/${party.code}/player`"
+            data-testid="open-browser-player"
+            class="flex min-h-11 items-center self-start rounded border border-border px-3 text-sm hover:text-primary"
+        >Open player</Link>
 
         <div
             v-if="readOnly"

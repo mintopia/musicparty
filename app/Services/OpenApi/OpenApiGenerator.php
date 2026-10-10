@@ -23,6 +23,8 @@ class OpenApiGenerator
     private const array REFUSAL_DESCRIPTIONS = [
         'api.v1.parties.plays.rating.store' => 'Validation failed, or the party has ended so ratings are closed.',
         'api.v1.parties.plays.rating.destroy' => 'The party has ended so ratings are closed.',
+        'api.v1.parties.player.poll' => 'The Party is not live, or its Player is not a Polling Player.',
+        'api.v1.parties.player.update' => 'Validation failed, or the player is not compatible with the Music Provider (the message lists the compatible options).',
     ];
 
     public function __construct(private readonly RuleSchemaMapper $mapper) {}
@@ -165,7 +167,7 @@ class OpenApiGenerator
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
         }
 
-        if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:')) {
+        if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
             $operation['responses']['403'] = ['description' => 'Forbidden.'];
         }
 

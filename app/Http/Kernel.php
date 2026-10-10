@@ -4,12 +4,14 @@ namespace App\Http;
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsurePlayerToken;
 use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MeasureRequest;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Http\Middleware\RejectPlayerTokens;
 use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
@@ -92,6 +94,8 @@ class Kernel extends HttpKernel
      */
     protected $middlewareAliases = [
         'auth' => Authenticate::class,
+        'player.token' => EnsurePlayerToken::class,
+        'user.principal' => RejectPlayerTokens::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'auth.session' => AuthenticateSession::class,
         'cache.headers' => SetCacheHeaders::class,

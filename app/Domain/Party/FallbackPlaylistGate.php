@@ -2,6 +2,7 @@
 
 namespace App\Domain\Party;
 
+use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Queue\Blocklist;
 use App\Models\BlocklistEntry;
@@ -13,7 +14,7 @@ readonly class FallbackPlaylistGate
 {
     public const REQUIRED_PLAYABLE_TRACKS = 20;
 
-    public function __construct(private PairingCatalogue $catalogue, private Blocklist $blocklist) {}
+    public function __construct(private PairingCatalogue $catalogue, private Blocklist $blocklist, private AuthorisesHost $host) {}
 
     public function check(Party $party): FallbackPlaylistCheck
     {
@@ -24,7 +25,7 @@ readonly class FallbackPlaylistGate
         }
 
         $recentlyPlayed = $this->recentlyPlayedTrackIds($party);
-        $tracks = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId);
+        $tracks = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId, $this->host->hostAccountIdFor($party));
 
         $blocked = $this->blocklist->enabledEntries($party);
 

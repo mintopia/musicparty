@@ -15,4 +15,10 @@ class VerifyCsrfToken extends Middleware
         '/webhooks/tickets/*',
         '/proxy',
     ];
+
+    protected function inExceptArray($request): bool
+    {
+        return parent::inExceptArray($request)
+            || ($request->is('broadcasting/auth') && $request->bearerToken() !== null);
+    }
 }

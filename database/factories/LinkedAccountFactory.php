@@ -22,6 +22,20 @@ class LinkedAccountFactory extends Factory
             'social_provider_id' => SocialProvider::factory(),
             'external_id' => (string) fake()->unique()->numberBetween(1000, 999999),
             'name' => fake()->userName(),
+            'access_token' => fake()->sha256(),
+            'refresh_token' => fake()->sha256(),
+            'access_token_expires_at' => now()->addHour(),
+            'needs_relink' => false,
         ];
+    }
+
+    public function expired(): static
+    {
+        return $this->state(fn (): array => ['access_token_expires_at' => now()->subMinute()]);
+    }
+
+    public function needingRelink(): static
+    {
+        return $this->state(fn (): array => ['needs_relink' => true]);
     }
 }

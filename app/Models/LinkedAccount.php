@@ -21,7 +21,9 @@ class LinkedAccount extends Model
     ];
 
     protected $casts = [
+        'access_token_expires_at' => 'datetime',
         'refresh_token_expires_at' => 'datetime',
+        'needs_relink' => 'boolean',
         'access_token' => 'encrypted',
         'refresh_token' => 'encrypted',
     ];

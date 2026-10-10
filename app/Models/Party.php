@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Music\Actions\AppendPlayToHistory;
+use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\SelectionMode;
@@ -19,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use NumPHP\LinAlg\LinAlg;
 
 /**
@@ -29,6 +32,7 @@ use NumPHP\LinAlg\LinAlg;
  */
 class Party extends Model
 {
+    use HasApiTokens;
     use HasFactory;
     use ToString;
 
@@ -436,8 +440,7 @@ class Party extends Model
             $song->save();
             if ($this->history_playlist_id !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->getSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                app(AppendPlayToHistory::class)($this, $song->song->spotify_id, app(MusicProvider::class));
             }
         }
     }

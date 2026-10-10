@@ -25,7 +25,7 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
-function ratingUrl(TrackRequest $track, string $code = 'ABCD'): string
+function requestRatingUrl(TrackRequest $track, string $code = 'ABCD'): string
 {
     return "/api/v1/parties/{$code}/requests/{$track->id}/rating";
 }
@@ -38,7 +38,7 @@ function ratingsFor(TrackRequest $track): int
 it('likes the now playing track', function () {
     Queue::fake();
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'up'])->assertOk()
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertOk()
         ->assertJsonPath('data.likes', 1)
         ->assertJsonPath('data.dislikes', 0)
         ->assertJsonPath('data.my_rating', 1);
@@ -47,16 +47,16 @@ it('likes the now playing track', function () {
 });
 
 it('dislikes the now playing track', function () {
-    $this->putJson(ratingUrl($this->track), ['value' => 'down'])->assertOk()
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'down'])->assertOk()
         ->assertJsonPath('data.likes', 0)
         ->assertJsonPath('data.dislikes', 1)
         ->assertJsonPath('data.my_rating', -1);
 });
 
 it('changes a rating while keeping a single row', function () {
-    $this->putJson(ratingUrl($this->track), ['value' => 'up']);
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up']);
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'down'])->assertOk()
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'down'])->assertOk()
         ->assertJsonPath('data.likes', 0)
         ->assertJsonPath('data.dislikes', 1)
         ->assertJsonPath('data.my_rating', -1);
@@ -65,9 +65,9 @@ it('changes a rating while keeping a single row', function () {
 });
 
 it('retracts a rating', function () {
-    $this->putJson(ratingUrl($this->track), ['value' => 'up']);
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up']);
 
-    $this->deleteJson(ratingUrl($this->track))->assertOk()
+    $this->deleteJson(requestRatingUrl($this->track))->assertOk()
         ->assertJsonPath('data.likes', 0)
         ->assertJsonPath('data.my_rating', 0);
 
@@ -75,15 +75,15 @@ it('retracts a rating', function () {
 });
 
 it('treats a repeated identical rating or a retract of nothing as a no-op without broadcasting', function () {
-    $this->putJson(ratingUrl($this->track), ['value' => 'up']);
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up']);
     Queue::fake();
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'up'])->assertOk()->assertJsonPath('data.likes', 1);
-    $this->deleteJson(ratingUrl($this->track))->assertOk();
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertOk()->assertJsonPath('data.likes', 1);
+    $this->deleteJson(requestRatingUrl($this->track))->assertOk();
     Queue::assertPushed(BroadcastPartyQueue::class, 1);
 
     Queue::fake();
-    $this->deleteJson(ratingUrl($this->track))->assertOk();
+    $this->deleteJson(requestRatingUrl($this->track))->assertOk();
     Queue::assertNothingPushed();
 });
 
@@ -92,7 +92,7 @@ it('counts ratings from several members', function () {
     PlayRating::factory()->for($this->track, 'request')->create();
     PlayRating::factory()->for($this->track, 'request')->dislike()->create();
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'up'])->assertOk()
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertOk()
         ->assertJsonPath('data.likes', 3)
         ->assertJsonPath('data.dislikes', 1)
         ->assertJsonPath('data.my_rating', 1);
@@ -102,7 +102,7 @@ it('refuses a banned member', function () {
     $this->member->forceFill(['banned' => true])->save();
     Queue::fake();
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'up'])->assertForbidden();
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertForbidden();
 
     expect(ratingsFor($this->track))->toBe(0);
     Queue::assertNothingPushed();
@@ -111,14 +111,14 @@ it('refuses a banned member', function () {
 it('refuses a user who is not a member', function () {
     Sanctum::actingAs(User::factory()->create());
 
-    $this->putJson(ratingUrl($this->track), ['value' => 'up'])->assertForbidden();
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertForbidden();
 });
 
 it('refuses requests that are not playing', function (RequestStatus $status) {
     $track = TrackRequest::factory()->for($this->party)->status($status)->create();
 
-    $this->putJson(ratingUrl($track), ['value' => 'up'])->assertStatus(409);
-    $this->deleteJson(ratingUrl($track))->assertStatus(409);
+    $this->putJson(requestRatingUrl($track), ['value' => 'up'])->assertStatus(409);
+    $this->deleteJson(requestRatingUrl($track))->assertStatus(409);
 
     expect(ratingsFor($track))->toBe(0);
 })->with([RequestStatus::Queued, RequestStatus::UpNext, RequestStatus::Played]);
@@ -133,17 +133,17 @@ it('enforces one rating per member at the database level', function () {
 it('returns not found for a request from another party', function () {
     Party::factory()->live()->create(['code' => 'WXYZ']);
 
-    $this->putJson(ratingUrl($this->track, 'WXYZ'), ['value' => 'up'])->assertNotFound();
+    $this->putJson(requestRatingUrl($this->track, 'WXYZ'), ['value' => 'up'])->assertNotFound();
 });
 
 it('validates the value', function () {
-    $this->putJson(ratingUrl($this->track), ['value' => 'sideways'])->assertUnprocessable()->assertJsonValidationErrors('value');
-    $this->putJson(ratingUrl($this->track))->assertUnprocessable();
+    $this->putJson(requestRatingUrl($this->track), ['value' => 'sideways'])->assertUnprocessable()->assertJsonValidationErrors('value');
+    $this->putJson(requestRatingUrl($this->track))->assertUnprocessable();
 });
 
 it('requires authentication', function () {
     $this->app['auth']->forgetGuards();
-    $this->withHeader('Authorization', '')->putJson(ratingUrl($this->track), ['value' => 'up'])->assertUnauthorized();
+    $this->withHeader('Authorization', '')->putJson(requestRatingUrl($this->track), ['value' => 'up'])->assertUnauthorized();
 });
 
 it('exposes like and dislike counts in the queue snapshot', function () {

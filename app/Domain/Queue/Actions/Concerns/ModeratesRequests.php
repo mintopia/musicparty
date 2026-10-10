@@ -6,8 +6,8 @@ use App\Domain\Party\PartyRole;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestResolvedEvent;
-use App\Events\Party\QueueUpdatedEvent;
 use App\Events\Party\RequestDecidedEvent;
+use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\TrackRequest;
@@ -67,10 +67,10 @@ trait ModeratesRequests
         }
 
         if ($request->status === RequestStatus::Queued || $previous === RequestStatus::Queued) {
-            QueueUpdatedEvent::dispatch($party->code);
+            BroadcastPartyQueue::dispatch($party->code);
         }
 
-        if ($decider === null || $decider->id !== $request->party_member_id) {
+        if ($request->party_member_id !== null && ($decider === null || $decider->id !== $request->party_member_id)) {
             RequestDecidedEvent::dispatch($party->code, $request->party_member_id, $request->id, $request->status->value, $reason);
         }
     }

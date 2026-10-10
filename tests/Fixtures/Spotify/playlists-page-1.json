@@ -1,0 +1,7 @@
+{
+    "items": [
+        {"id": "pl-1", "name": "Party Mix", "tracks": {"total": 3}},
+        {"id": "pl-2", "name": "Chill", "tracks": {"total": 0}}
+    ],
+    "next": "https://api.spotify.com/v1/me/playlists?offset=2&limit=2"
+}

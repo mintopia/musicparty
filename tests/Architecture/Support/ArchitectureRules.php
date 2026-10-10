@@ -3,6 +3,7 @@
 namespace Tests\Architecture\Support;
 
 use App\Jobs\PartyUpdate;
+use App\Jobs\ProcessPlayerFrame;
 use App\Models\Album;
 use App\Models\Artist;
 use App\Models\LinkedAccount;
@@ -161,6 +162,63 @@ class ArchitectureRules
     public static function appClasses(): array
     {
         return self::classesIn(self::appPath(), 'App');
+    }
+
+    public const LISTENER_ALLOWED_IMPORTS = [
+        'Illuminate\\',
+        'Laravel\\Reverb\\',
+        ProcessPlayerFrame::class,
+    ];
+
+    /**
+     * @param  array<int, class-string>  $classes
+     * @return array<int, class-string>
+     */
+    public static function reverbMessageListeners(array $classes): array
+    {
+        return array_values(array_filter($classes, static function (string $class): bool {
+            $reflection = new ReflectionClass($class);
+
+            return ! $reflection->isInterface()
+                && $reflection->hasMethod('handle')
+                && str_contains(self::methodSource($reflection->getMethod('handle')), 'MessageReceived');
+        }));
+    }
+
+    /**
+     * @param  array<int, class-string>  $classes
+     * @return array<string, array<int, string>>
+     */
+    public static function listenerDomainViolations(array $classes): array
+    {
+        $violations = [];
+
+        foreach (self::reverbMessageListeners($classes) as $class) {
+            $source = (string) file_get_contents(new ReflectionClass($class)->getFileName());
+            $found = [];
+
+            foreach (self::imports($source) as $import) {
+                $allowed = false;
+
+                foreach (self::LISTENER_ALLOWED_IMPORTS as $prefix) {
+                    $allowed = $allowed || str_starts_with($import, $prefix);
+                }
+
+                if (! $allowed) {
+                    $found[] = $import;
+                }
+            }
+
+            if (preg_match('/\\\\?App\\\\(Domain|Models|Actions)\\\\/', preg_replace('/^use\\s.*$/m', '', $source) ?? '', $match)) {
+                $found[] = $match[0];
+            }
+
+            if ($found !== []) {
+                $violations[$class] = array_values(array_unique($found));
+            }
+        }
+
+        return $violations;
     }
 
     /**
