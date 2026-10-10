@@ -41,6 +41,11 @@ class User extends Authenticatable
 
     protected ?string $email = null;
 
+    public function hasCompletedSignup(): bool
+    {
+        return ! $this->first_login && $this->terms_agreed_at !== null;
+    }
+
     /**
      * @return HasMany<LinkedAccount>
      */

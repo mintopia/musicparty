@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Admin\SiteSettings;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -15,11 +16,11 @@ class SignupRequest extends FormRequest
     /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
-    public function rules(): array
+    public function rules(SiteSettings $settings): array
     {
         return [
             'nickname' => 'required|string|min:2|max:32',
-            'terms' => 'accepted',
+            'terms' => $settings->get('terms_url') === null ? 'nullable' : 'accepted',
         ];
     }
 

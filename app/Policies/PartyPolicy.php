@@ -29,7 +29,7 @@ class PartyPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('create-party') || $user->hasRole('admin');
+        return $user->hasCompletedSignup() && ($user->hasRole('create-party') || $user->hasRole('admin'));
     }
 
     /**

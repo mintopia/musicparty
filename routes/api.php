@@ -43,7 +43,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->middleware('throttle:party-public')->name('parties.theme.show');
     Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:integration', 'integration.ability:read'])->name('integration.ping');
     Route::get('parties/{party}/export', [PartyExportController::class, 'show'])->middleware('export.access')->name('parties.export');
-    Route::middleware(['auth:sanctum', 'user.principal'])->group(function () {
+    Route::middleware(['auth:sanctum', 'user.principal', 'signup.complete'])->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
         Route::put('me/colour-scheme', [ColourSchemeController::class, 'update'])->name('me.colour-scheme');
         Route::apiResource('parties', PartyController::class)->only(['store', 'update']);

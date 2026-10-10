@@ -44,7 +44,7 @@ const submit = () => form.post(props.submitUrl);
                         </p>
                     </div>
 
-                    <div>
+                    <div v-if="termsUrl">
                         <label class="flex min-h-12 items-start gap-3 text-sm md:min-h-0">
                             <input
                                 v-model="form.terms"
@@ -54,8 +54,7 @@ const submit = () => form.post(props.submitUrl);
                             />
                             <span>
                                 I agree to the
-                                <a v-if="termsUrl" :href="termsUrl" target="_blank" rel="noopener" class="text-primary underline">Terms of Service</a>
-                                <template v-else>Terms of Service</template>
+                                <a :href="termsUrl" target="_blank" rel="noopener" class="text-primary underline">Terms of Service</a>
                                 <template v-if="privacyUrl">
                                     and
                                     <a :href="privacyUrl" target="_blank" rel="noopener" class="text-primary underline">Privacy Policy</a>
@@ -69,7 +68,7 @@ const submit = () => form.post(props.submitUrl);
 
                     <button
                         type="submit"
-                        :disabled="form.processing || !form.terms"
+                        :disabled="form.processing || (termsUrl && !form.terms)"
                         class="min-h-14 w-full rounded bg-primary px-4 text-base font-medium text-white transition hover:brightness-110 disabled:opacity-50 md:min-h-10 md:text-sm"
                     >
                         Continue
