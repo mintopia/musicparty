@@ -90,7 +90,7 @@ class User extends Authenticatable
     public function isActingAsHostIn(Party $party): bool
     {
         return $this->hasRole('admin')
-            && AdminHostSession::query()->where('user_id', $this->id)->where('party_id', $party->id)->exists();
+            && AdminHostSession::query()->active()->where('user_id', $this->id)->where('party_id', $party->id)->exists();
     }
 
     public function getEmail(): ?string

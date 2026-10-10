@@ -26,7 +26,7 @@ readonly class IssuePlayerToken
         ($this->authorisesHost)($actor, $party);
 
         return DB::transaction(function () use ($actor, $party, $name): NewAccessToken {
-            $token = $party->createToken($name, [EnsurePlayerToken::ABILITY]);
+            $token = $party->createToken($name, [EnsurePlayerToken::ABILITY], now()->addDays(config()->integer('musicparty.tokens.player_ttl_days')));
 
             ($this->record)($party, 'player_token.issued', $actor, $name, ['token_id' => $token->accessToken->getKey()]);
 

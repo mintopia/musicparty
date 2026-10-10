@@ -51,6 +51,8 @@ const describe = (entry) => {
             return 'An admin started acting as Host';
         case 'act_as_host.left':
             return 'An admin stopped acting as Host';
+        case 'act_as_host.expired':
+            return 'An admin\'s time acting as Host expired';
         default:
             return entry.action;
     }
