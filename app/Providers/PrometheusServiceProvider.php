@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use App\Domain\Playback\Actions\RecordDroppedPlayerFrame;
 use App\Domain\Stats\Actions\BuildLiveStatsMetrics;
+use App\Domain\Stats\Listeners\CountPartyActivity;
 use App\Http\Middleware\MetricsCollector;
 use App\Support\Metrics\CounterStore;
 use App\Support\Metrics\RedisCounterStore;
@@ -40,6 +41,18 @@ class PrometheusServiceProvider extends ServiceProvider
         Prometheus::addCounter('Player Frames Dropped', fn (): array => $this->countsFor(RecordDroppedPlayerFrame::COUNTER_PREFIX, RecordDroppedPlayerFrame::REASONS), 'player_frames_dropped_total')
             ->helpText('The number of Player frames dropped from the ordered buffer')
             ->label('reason');
+
+        $activityCounters = [
+            ['Party Requests', CountPartyActivity::REQUESTS, 'party_requests_total', 'The number of Requests made in a Party', 'source'],
+            ['Party Votes', CountPartyActivity::VOTES, 'party_votes_total', 'The number of Votes cast in a Party', 'direction'],
+            ['Party Ratings', CountPartyActivity::RATINGS, 'party_ratings_total', 'The number of Ratings cast in a Party', 'rating'],
+        ];
+
+        foreach ($activityCounters as [$title, $metric, $name, $help, $label]) {
+            Prometheus::addCounter($title, fn (): array => $this->activityCounts($metric), $name)
+                ->helpText($help)
+                ->labels(['party', $label]);
+        }
 
         $this->app->scoped(BuildLiveStatsMetrics::class);
 
@@ -83,6 +96,29 @@ class PrometheusServiceProvider extends ServiceProvider
         sort($codes);
 
         return $this->countsFor('metrics.http.status', $codes);
+    }
+
+    /**
+     * @return array<int, array{0: int, 1: array<int, string>}>
+     */
+    protected function activityCounts(string $metric): array
+    {
+        $counters = app(CounterStore::class);
+        $series = [];
+        foreach ($counters->members(CountPartyActivity::SERIES_SET) as $member) {
+            [$seriesMetric, $party, $label] = explode('|', $member);
+            if ($seriesMetric === $metric) {
+                $series[] = [$party, $label];
+            }
+        }
+        sort($series);
+
+        $result = [];
+        foreach ($series as [$party, $label]) {
+            $result[] = [$counters->get(CountPartyActivity::counterKey($metric, $party, $label)), [$party, $label]];
+        }
+
+        return $result;
     }
 
     /**

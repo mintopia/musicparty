@@ -10,11 +10,13 @@ use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Listeners\BroadcastPartyLogEntry;
 use App\Domain\Party\Listeners\BroadcastPartyState;
 use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
+use App\Domain\Queue\Events\RatingCast;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\Events\VoteCast;
+use App\Domain\Stats\Listeners\CountPartyActivity;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
 use App\Observers\SettingObserver;
 use App\Observers\UserObserver;
@@ -54,8 +56,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         PartyLogEntryRecorded::class => [BroadcastPartyLogEntry::class],
         PartyStateChanged::class => [BroadcastPartyState::class],
-        RequestCreated::class => [RefreshStatsOnPartyActivity::class],
-        VoteCast::class => [RefreshStatsOnPartyActivity::class],
+        RequestCreated::class => [RefreshStatsOnPartyActivity::class, CountPartyActivity::class],
+        VoteCast::class => [RefreshStatsOnPartyActivity::class, CountPartyActivity::class],
+        RatingCast::class => [CountPartyActivity::class],
         TrackEnded::class => [RefreshStatsOnPartyActivity::class],
         TrackStarted::class => [AppendStartedTrackToHistory::class],
         RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
