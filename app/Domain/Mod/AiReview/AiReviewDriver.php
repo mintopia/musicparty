@@ -2,6 +2,8 @@
 
 namespace App\Domain\Mod\AiReview;
 
+use App\Domain\Mod\Data\ModContext;
+
 enum AiReviewDriver: string
 {
     case OpenAi = 'openai';
@@ -21,6 +23,11 @@ enum AiReviewDriver: string
             self::OpenAi => 'openai_api_key',
             self::Jev => 'jev_api_key',
         };
+    }
+
+    public function apiKey(ModContext $context): string
+    {
+        return (string) ($context->settings[$this->keySetting()] ?? '');
     }
 
     public function model(): ?string

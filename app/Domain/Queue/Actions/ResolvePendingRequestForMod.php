@@ -18,7 +18,7 @@ readonly class ResolvePendingRequestForMod
     public function __construct(private RecordPartyLogEntry $record) {}
 
     /**
-     * Approves or rejects a Pending Request on behalf of a Mod. Returns null when the Request is no longer Pending.
+     * Returns null when the Request is no longer Pending.
      */
     public function __invoke(Party $party, int $requestId, RequestStatus $next, string $systemActor, ?string $reason = null): ?TrackRequest
     {

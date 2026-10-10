@@ -13,17 +13,17 @@ use RuntimeException;
 readonly class AiReviewRule implements RequestRule
 {
     /**
-     * Holds every Request as Pending and marks it for the queued review. A misconfigured Mod throws, so its failure behaviour applies.
+     * A misconfigured Mod throws so the Mod's failure behaviour applies.
      */
     public function judge(ModContext $context, PartyMember $member, TrackData $track): RuleVerdict
     {
         $driver = AiReviewDriver::tryFrom((string) ($context->settings['driver'] ?? ''));
 
-        if ($driver === null || (string) ($context->settings[$driver->keySetting()] ?? '') === '') {
+        if ($driver === null || $driver->apiKey($context) === '') {
             throw new RuntimeException('No credentials configured for the selected AI driver.');
         }
 
-        Cache::put(AiRequestReviewMod::pendingReviewKey($context->party->id, $track->providerTrackId), true, now()->addMinute());
+        Cache::put(AiRequestReviewMod::pendingReviewKey($context->party->id, $member->id, $track->providerTrackId), true, now()->addMinute());
 
         return RuleVerdict::hold('Awaiting AI review.');
     }

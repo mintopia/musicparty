@@ -14,9 +14,9 @@ class AiRequestReviewMod implements Mod
 {
     public const string ID = 'ai-request-review';
 
-    public static function pendingReviewKey(int $partyId, string $providerTrackId): string
+    public static function pendingReviewKey(int $partyId, int $memberId, string $providerTrackId): string
     {
-        return "ai-review:{$partyId}:{$providerTrackId}";
+        return "ai-review:{$partyId}:{$memberId}:{$providerTrackId}";
     }
 
     public function id(): string
@@ -67,7 +67,7 @@ class AiRequestReviewMod implements Mod
     {
         return [
             RequestCreated::class => function (object $event, ModContext $context): void {
-                if ($event instanceof RequestCreated && Cache::pull(self::pendingReviewKey($context->party->id, $event->request->provider_track_id))) {
+                if ($event instanceof RequestCreated && Cache::pull(self::pendingReviewKey($context->party->id, (int) $event->request->party_member_id, $event->request->provider_track_id))) {
                     ReviewRequestWithAi::dispatch($context->party->id, $event->request->id)->afterCommit();
                 }
             },

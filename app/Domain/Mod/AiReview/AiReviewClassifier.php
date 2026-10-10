@@ -26,7 +26,7 @@ readonly class AiReviewClassifier
     public function score(ModContext $context, TrackSummary $track): ReviewScore
     {
         $driver = AiReviewDriver::from((string) $context->settings['driver']);
-        $apiKey = (string) ($context->settings[$driver->keySetting()] ?? '');
+        $apiKey = $driver->apiKey($context);
 
         if ($apiKey === '') {
             throw new RuntimeException("No API key configured for the {$driver->value} driver.");
