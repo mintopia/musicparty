@@ -30,7 +30,8 @@ RUN npm install --production=false && \
 FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
-COPY --from=npm /app /app
+COPY --from=composer /app /app
+COPY --from=npm /app/public/build /app/public/build
 COPY docker/production/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
