@@ -82,6 +82,42 @@ final readonly class DeployConfig
     }
 
     /**
+     * @return list<array{directive: string, children: list<mixed>}>
+     */
+    public static function caddyfile(string $relativePath): array
+    {
+        $root = ['directive' => '', 'children' => []];
+        $stack = [&$root];
+
+        foreach (preg_split('/\R/', self::read($relativePath)) ?: [] as $line) {
+            $line = trim($line);
+
+            if ($line === '' || str_starts_with($line, '#')) {
+                continue;
+            }
+
+            if ($line === '}') {
+                array_pop($stack);
+
+                continue;
+            }
+
+            $opens = str_ends_with($line, '{');
+            $directive = trim($opens ? substr($line, 0, -1) : $line);
+            $current = &$stack[count($stack) - 1];
+            $current['children'][] = ['directive' => $directive, 'children' => []];
+
+            if ($opens) {
+                $stack[] = &$current['children'][count($current['children']) - 1];
+            }
+
+            unset($current);
+        }
+
+        return $root['children'];
+    }
+
+    /**
      * @return array<string, string>
      */
     public static function ini(string $relativePath): array

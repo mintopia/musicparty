@@ -5,9 +5,9 @@
 {
 	{$CADDY_GLOBAL_OPTIONS}
 
-    metrics
+	metrics
 
-	admin {$CADDY_SERVER_ADMIN_HOST}:{$CADDY_SERVER_ADMIN_PORT}
+	admin localhost:2019
 
 	frankenphp {
 		{$CADDY_SERVER_FRANKENPHP_OPTIONS:import worker}
@@ -16,19 +16,37 @@
 
 {$CADDY_EXTRA_CONFIG}
 
+:9180 {
+	metrics
+}
+
 {$CADDY_SERVER_SERVER_NAME} {
 	log {
 		level {$CADDY_SERVER_LOG_LEVEL}
 
-		# Redact the authorization query parameter that can be set by Mercure...
 		format filter {
 			wrap {$CADDY_SERVER_LOGGER}
 			fields {
-				uri query {
+				request>uri query {
 					replace authorization REDACTED
 				}
 			}
 		}
+	}
+
+	@https expression "{$APP_URL:http://localhost}".startsWith("https://")
+
+	header {
+		X-Content-Type-Options nosniff
+		X-Frame-Options DENY
+		Referrer-Policy strict-origin-when-cross-origin
+		Content-Security-Policy "frame-ancestors 'none'"
+	}
+
+	header @https Strict-Transport-Security "max-age=31536000"
+
+	request_body {
+		max_size {$CADDY_REQUEST_BODY_MAX_SIZE:20MB}
 	}
 
 	route {
