@@ -2,6 +2,8 @@
 
 namespace App\Support\Realtime;
 
+use Illuminate\Broadcasting\Broadcasters\Broadcaster;
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use ReflectionClass;
@@ -39,6 +41,85 @@ class AsyncApiCoverage
         sort($classes);
 
         return $classes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function registeredChannelPatterns(): array
+    {
+        $broadcaster = app(BroadcastManager::class)->driver();
+
+        if (! $broadcaster instanceof Broadcaster) {
+            throw new RuntimeException('The broadcaster does not expose its registered channels');
+        }
+
+        return array_values($broadcaster->getChannels()->keys()->map(fn (mixed $pattern): string => (string) $pattern)->all());
+    }
+
+    /**
+     * @param  list<string>  $patterns
+     * @param  array<string, mixed>  $spec
+     * @return list<string>
+     */
+    public static function undocumentedChannels(array $patterns, array $spec): array
+    {
+        $documented = [];
+
+        foreach (is_array($spec['channels'] ?? null) ? $spec['channels'] : [] as $channel) {
+            if (is_array($channel) && isset($channel['address'])) {
+                $documented[self::normaliseChannel((string) $channel['address'])] = true;
+            }
+        }
+
+        $missing = array_values(array_filter($patterns, fn (string $pattern): bool => ! isset($documented[self::normaliseChannel($pattern)])));
+        sort($missing);
+
+        return $missing;
+    }
+
+    /**
+     * @param  array<string, mixed>  $spec
+     * @param  array<class-string, callable(): object>  $fixtures
+     * @return list<string>
+     */
+    public static function payloadViolations(array $spec, array $fixtures): array
+    {
+        $messages = $spec['components']['messages'] ?? [];
+        $violations = [];
+
+        foreach (is_array($messages) ? $messages : [] as $message) {
+            if (! is_array($message) || ! isset($message['x-event-class'], $message['payload'])) {
+                continue;
+            }
+
+            $class = (string) $message['x-event-class'];
+            $name = (string) $message['name'];
+
+            if (! isset($fixtures[$class])) {
+                $violations[] = "{$name}: no fixture builds {$class}";
+
+                continue;
+            }
+
+            $event = $fixtures[$class]();
+            $payload = json_decode((string) json_encode(method_exists($event, 'broadcastWith') ? $event->broadcastWith() : []));
+
+            foreach (PayloadSchema::violations($payload, $message['payload']) as $violation) {
+                $violations[] = "{$name}: {$violation}";
+            }
+        }
+
+        sort($violations);
+
+        return $violations;
+    }
+
+    private static function normaliseChannel(string $address): string
+    {
+        $address = (string) preg_replace('/^(private|presence)-/', '', $address);
+
+        return (string) preg_replace('/\{[^}]+\}/', '{}', $address);
     }
 
     /**
