@@ -64,9 +64,6 @@ class AsyncApiCoverage
     }
 
     /**
-     * Wire names of documented broadcast events that no frontend listener consumes and
-     * that are not in the allowlist of consumers outside resources/js.
-     *
      * @param  array<string, mixed>  $spec
      * @param  list<string>  $externalConsumers
      * @return list<string>
