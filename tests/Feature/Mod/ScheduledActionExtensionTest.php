@@ -107,3 +107,21 @@ it('runs through the scheduled job for Live parties only', function () {
 
     expect(TrackRequest::query()->pluck('party_id')->all())->toBe([$this->party->id]);
 });
+
+it('creates one system request when two runs land in the same second and re-arms after the interval', function () {
+    ModFixtures::enable($this->party, $mod = new SchedulerMod(every: 60));
+
+    $created = app(RunScheduledActions::class)($this->party) + app(RunScheduledActions::class)($this->party);
+
+    expect($created)->toBe(1)
+        ->and($mod->runs)->toBe(1)
+        ->and(TrackRequest::query()->count())->toBe(1);
+
+    CarbonImmutable::setTestNow('2026-01-01 12:00:59');
+    app(RunScheduledActions::class)($this->party);
+    expect($mod->runs)->toBe(1);
+
+    CarbonImmutable::setTestNow('2026-01-01 12:01:01');
+    app(RunScheduledActions::class)($this->party);
+    expect($mod->runs)->toBe(2);
+});

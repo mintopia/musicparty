@@ -62,16 +62,8 @@ readonly class RunScheduledActions
     private function claimIfDue(Party $party, EnabledMod $enabled, int $index, int $everySeconds): bool
     {
         $key = "mods:last-run:{$party->id}:{$enabled->mod->id()}:{$index}";
-        $now = now()->getTimestamp();
-        $last = Cache::get($key);
 
-        if (is_int($last) && $now - $last < $everySeconds) {
-            return false;
-        }
-
-        Cache::put($key, $now);
-
-        return true;
+        return Cache::add($key, now()->getTimestamp(), $everySeconds);
     }
 
     private function place(Party $party, EnabledMod $enabled, SystemRequestSpec $spec): bool
