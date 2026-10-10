@@ -85,10 +85,28 @@ class Party extends Model
         return parent::resolveRouteBinding($value, $field);
     }
 
+    /** @var array<int, PartyMember> */
+    private array $memberCache = [];
+
     public function memberFor(User $user): ?PartyMember
     {
-        /** @var PartyMember|null */
-        return $this->members()->whereUserId($user->id)->first();
+        if (isset($this->memberCache[$user->id])) {
+            return $this->memberCache[$user->id];
+        }
+
+        /** @var PartyMember|null $member */
+        $member = $this->members()->whereUserId($user->id)->first();
+
+        if ($member !== null) {
+            $this->memberCache[$user->id] = $member;
+        }
+
+        return $member;
+    }
+
+    public function forgetMemberCache(): void
+    {
+        $this->memberCache = [];
     }
 
     /**

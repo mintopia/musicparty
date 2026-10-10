@@ -43,6 +43,8 @@ readonly class UnbanMember
 
             $target->forceFill(['banned' => false])->save();
 
+            $party->forgetMemberCache();
+
             ($this->record)($party, 'member.unbanned', $actor, $target->holder()->nickname, [
                 'user_id' => $target->user_id,
                 'role' => $target->role->value,

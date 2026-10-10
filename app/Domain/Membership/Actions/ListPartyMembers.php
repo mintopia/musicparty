@@ -19,7 +19,7 @@ readonly class ListPartyMembers
         return PartyMember::query()
             ->whereBelongsTo($party)
             ->when(! $includeBanned, fn ($query) => $query->where('banned', false))
-            ->with('user')
+            ->with('user.accounts')
             ->get()
             ->sortBy(fn (PartyMember $member): string => sprintf('%d-%s', $order[$member->role->value], mb_strtolower($member->holder()->nickname)))
             ->values();

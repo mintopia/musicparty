@@ -22,6 +22,7 @@ class GrantRole
 
         $model = Role::query()->firstOrCreate(['code' => $adminRole->value], ['name' => $adminRole->label()]);
         $user->roles()->syncWithoutDetaching([$model->id]);
+        $user->forgetRoleCache();
         $this->audit->handle($admin, 'role.granted', $user, ['role' => $adminRole->value]);
 
         return $user;

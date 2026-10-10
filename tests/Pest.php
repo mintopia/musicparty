@@ -9,6 +9,7 @@ use App\Domain\Playback\Data\PlayerCommand;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music', 'Unit/Domain/Playback');
@@ -52,4 +53,16 @@ function enqueuedTrackIds(FakePlayer $player): array
         fn (PlayerCommand $command): ?string => $command->providerTrackId,
         array_filter($player->commands(), fn (PlayerCommand $command): bool => $command->type === 'enqueue'),
     ));
+}
+
+function countQueries(Closure $callback): int
+{
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $callback();
+    $count = count(DB::getQueryLog());
+    DB::disableQueryLog();
+    DB::flushQueryLog();
+
+    return $count;
 }

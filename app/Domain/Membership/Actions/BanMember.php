@@ -51,6 +51,8 @@ readonly class BanMember
 
             $target->forceFill(['banned' => true])->save();
 
+            $party->forgetMemberCache();
+
             ($this->record)($party, 'member.banned', $actor, $target->holder()->nickname, [
                 'user_id' => $target->user_id,
                 'role' => $target->role->value,
