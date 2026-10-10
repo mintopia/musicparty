@@ -1,7 +1,7 @@
 <?php
 
+use App\Http\Middleware\AuthorizeMetricsScrape;
 use Spatie\Prometheus\Actions\RenderCollectorsAction;
-use Spatie\Prometheus\Http\Middleware\AllowIps;
 
 return [
     'enabled' => env('PROMETHEUS_ENABLED', true),
@@ -13,10 +13,15 @@ return [
     ],
 
     /*
-     * Only these IP's will be allowed to visit the above urls.
-     * All IP's are allowed when empty.
+     * Bearer token a scraper may present to visit the above urls.
      */
-    'allowed_ips' => array_filter(explode(',', env('PROMETHEUS_ALLOWED_IPS', ''))),
+    'token' => env('PROMETHEUS_TOKEN', ''),
+
+    /*
+     * IPs or CIDR ranges allowed to visit the above urls.
+     * Access is refused when neither a token nor an IP range is configured.
+     */
+    'allowed_ips' => array_values(array_filter(array_map('trim', explode(',', (string) env('PROMETHEUS_ALLOWED_IPS', ''))))),
 
     /*
      * This is the default namespace that will be
@@ -28,7 +33,7 @@ return [
      * The middleware that will be applied to the urls above
      */
     'middleware' => [
-        AllowIps::class,
+        AuthorizeMetricsScrape::class,
     ],
 
     /*

@@ -23,8 +23,41 @@ afterEach(function (): void {
 
 function scrape(): string
 {
-    return test()->get('/'.ltrim(config('prometheus.urls.default'), '/'))->assertOk()->getContent();
+    config(['prometheus.token' => 'scrape-token']);
+
+    return test()
+        ->withToken('scrape-token')
+        ->get('/'.ltrim(config('prometheus.urls.default'), '/'))
+        ->assertOk()
+        ->getContent();
 }
+
+function metricsUrl(): string
+{
+    return '/'.ltrim(config('prometheus.urls.default'), '/');
+}
+
+it('refuses scrapes when no token or IP range is configured', function (): void {
+    config(['prometheus.token' => '', 'prometheus.allowed_ips' => []]);
+
+    $this->get(metricsUrl())->assertForbidden();
+    $this->withToken('')->get(metricsUrl())->assertForbidden();
+});
+
+it('serves the right bearer token and refuses a wrong one', function (): void {
+    config(['prometheus.token' => 'right', 'prometheus.allowed_ips' => []]);
+
+    $this->withToken('right')->get(metricsUrl())->assertOk();
+    $this->withToken('wrong')->get(metricsUrl())->assertForbidden();
+    $this->get(metricsUrl())->assertForbidden();
+});
+
+it('serves an IP inside the allowed CIDR and refuses one outside', function (): void {
+    config(['prometheus.token' => '', 'prometheus.allowed_ips' => ['10.1.0.0/16']]);
+
+    $this->withServerVariables(['REMOTE_ADDR' => '10.1.2.3'])->get(metricsUrl())->assertOk();
+    $this->withServerVariables(['REMOTE_ADDR' => '10.2.2.3'])->get(metricsUrl())->assertForbidden();
+});
 
 it('reports request, method, status and exception counters and Horizon metrics', function (): void {
     $this->get('/metrics-test/ok')->assertOk();
