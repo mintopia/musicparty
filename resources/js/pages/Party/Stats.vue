@@ -32,6 +32,8 @@ const sections = computed(() => [
     {key: 'top-requesters', title: 'Top requesters', rows: live.value.top_requesters, empty: 'No requests have played yet.', label: (row) => row.nickname, value: (row) => `${row.plays} plays`},
     {key: 'most-upvoted', title: 'Most upvoted', rows: live.value.most_upvoted, empty: 'No upvoted requests yet.', label: (row) => `${row.title} - ${artists(row)}`, value: (row) => `+${row.score}`},
     {key: 'most-downvoted', title: 'Most downvoted', rows: live.value.most_downvoted, empty: 'No downvoted requests yet.', label: (row) => `${row.title} - ${artists(row)}`, value: (row) => `${row.score}`},
+    {key: 'upvote-leaderboard', title: 'Most upvoted members', rows: live.value.upvote_leaderboard ?? [], empty: 'No upvotes received yet.', label: (row) => row.nickname, value: (row) => `${row.votes} upvotes`},
+    {key: 'downvote-leaderboard', title: 'Most downvoted members', rows: live.value.downvote_leaderboard ?? [], empty: 'No downvotes received yet.', label: (row) => row.nickname, value: (row) => `${row.votes} downvotes`},
 ]);
 </script>
 
