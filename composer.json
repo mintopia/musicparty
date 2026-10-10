@@ -44,7 +44,8 @@
         "nunomaduro/collision": "^8.9",
         "pestphp/pest": "^5.3",
         "phpunit/phpunit": "^13.4",
-        "rector/rector": "^2.7"
+        "rector/rector": "^2.7",
+        "symfony/yaml": "^8.1"
     },
     "autoload": {
         "psr-4": {
