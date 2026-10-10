@@ -11,11 +11,11 @@ return [
     | framework when an event needs to be broadcast. You may set this to
     | any of the connections defined in the "connections" array below.
     |
-    | Supported: "pusher", "ably", "redis", "log", "null"
+    | Supported: "reverb", "redis", "log", "null"
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_DRIVER', 'reverb'),
 
     /*
     |--------------------------------------------------------------------------
@@ -36,10 +36,10 @@ return [
             'secret' => env('REVERB_APP_SECRET'),
             'app_id' => env('REVERB_APP_ID'),
             'options' => [
-                'host' => env('REVERB_HOST'),
-                'port' => env('REVERB_PORT', 443),
-                'scheme' => env('REVERB_SCHEME', 'https'),
-                'useTLS' => env('REVERB_SCHEME', 'https') === 'https',
+                'host' => env('REVERB_HOST', 'reverb'),
+                'port' => env('REVERB_PORT', 8080),
+                'scheme' => env('REVERB_SCHEME', 'http'),
+                'useTLS' => env('REVERB_SCHEME', 'http') === 'https',
             ],
             'client' => [
                 'key' => env('REVERB_APP_KEY'),
@@ -51,25 +51,6 @@ return [
             'client_options' => [
                 // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
             ],
-        ],
-
-        'pusher' => [
-            'driver' => 'pusher',
-            'key' => env('PUSHER_APP_KEY'),
-            'secret' => env('PUSHER_APP_SECRET'),
-            'app_id' => env('PUSHER_APP_ID'),
-            'options' => [
-                'cluster' => env('PUSHER_APP_CLUSTER'),
-                'encrypted' => true,
-                'host' => env('PUSHER_HOST'),
-                'port' => env('PUSHER_PORT'),
-                'scheme' => env('PUSHER_SCHEME'),
-            ],
-        ],
-
-        'ably' => [
-            'driver' => 'ably',
-            'key' => env('ABLY_KEY'),
         ],
 
         'redis' => [
