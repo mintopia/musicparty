@@ -46,4 +46,12 @@ class PartyFactory extends Factory
 
         return $code;
     }
+
+    /**
+     * @param  array<string, mixed>  $theme
+     */
+    public function withTheme(array $theme): static
+    {
+        return $this->state(fn (): array => ['theme' => $theme]);
+    }
 }
