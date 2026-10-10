@@ -5,6 +5,7 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Queue\Models\Play;
 use Tests\Architecture\Support\ArchitectureRules;
+use Tests\Fixtures\Architecture\Actions\RoleCheckingAction;
 use Tests\Fixtures\Architecture\CrossContextWriter;
 use Tests\Fixtures\Architecture\LeakyBroadcastEvent;
 use Tests\Fixtures\Architecture\ReverbListenerLeaker;
@@ -67,6 +68,14 @@ it('detects domain access in a violating Reverb listener fixture', function () {
 
     expect($violations)->toHaveKey(ReverbListenerLeaker::class)
         ->and($violations[ReverbListenerLeaker::class])->toContain(Party::class);
+});
+
+it('leaves party role authorisation to the Policies', function () {
+    expect(ArchitectureRules::partyRoleAuthorisationViolations(ArchitectureRules::appClasses()))->toBe([]);
+});
+
+it('detects a party role comparison in a violating Action fixture', function () {
+    expect(ArchitectureRules::partyRoleAuthorisationViolations([RoleCheckingAction::class]))->toBe([RoleCheckingAction::class]);
 });
 
 it('keeps no classes under the removed legacy directories', function (string $directory) {

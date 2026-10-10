@@ -3,7 +3,6 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Membership\Models\PartyMember;
-use App\Domain\Membership\PartyRole;
 use App\Domain\Mod\Actions\EvaluateRequestRules;
 use App\Domain\Mod\Actions\RecordRuleDecision;
 use App\Domain\Mod\Data\EnabledMod;
@@ -206,7 +205,7 @@ class RequestTrack
 
     private function holds(Party $party, PartyMember $member): bool
     {
-        return $party->hold_requests && ! in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
+        return $party->hold_requests && ! $member->role->isStaff();
     }
 
     /**
@@ -226,7 +225,7 @@ class RequestTrack
 
     private function enforceRules(Party $party, ?PartyMember $member, TrackData $track): void
     {
-        $exempt = $member === null || in_array($member->role, [PartyRole::Host, PartyRole::Vip], true);
+        $exempt = $member === null || $member->role->isExemptFromRequestLimit();
 
         if (! $exempt && $party->max_requests !== null) {
             $active = TrackRequest::query()

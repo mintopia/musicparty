@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Party\Models\Party;
+use Illuminate\Support\Facades\Gate;
 
 class AuthorisesHost
 {
@@ -14,7 +15,7 @@ class AuthorisesHost
      */
     public function __invoke(User $user, Party $party): void
     {
-        if ($user->id !== $party->user_id) {
+        if (Gate::forUser($user)->denies('host', $party)) {
             throw new NotHostException;
         }
     }

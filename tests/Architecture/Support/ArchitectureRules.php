@@ -469,4 +469,21 @@ class ArchitectureRules
 
         return array_merge($arrow[1], $assign[1]);
     }
+
+    /**
+     * @param  array<int, class-string>  $classes
+     * @return array<int, class-string>
+     */
+    public static function partyRoleAuthorisationViolations(array $classes): array
+    {
+        $pattern = '/(===|!==)\s*\$?[\w>:-]*PartyRole::|PartyRole::\w+\s*(===|!==)|in_array\([^;]*PartyRole::|match\s*\([^)]*->role\)/';
+
+        return array_values(array_filter($classes, static function (string $class) use ($pattern): bool {
+            $file = (new ReflectionClass($class))->getFileName();
+
+            return str_contains($class, '\\Actions\\')
+                && $file !== false
+                && preg_match($pattern, (string) file_get_contents($file)) === 1;
+        }));
+    }
 }

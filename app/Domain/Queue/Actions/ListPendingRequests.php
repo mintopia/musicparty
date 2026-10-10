@@ -3,12 +3,12 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Identity\Models\User;
-use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Gate;
 
 readonly class ListPendingRequests
 {
@@ -25,7 +25,7 @@ readonly class ListPendingRequests
             throw RequestRefusedException::notAllowed();
         }
 
-        $moderator = in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
+        $moderator = Gate::forUser($actor)->allows('moderate', $party);
 
         return TrackRequest::query()
             ->where('party_id', $party->id)

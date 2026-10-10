@@ -24,9 +24,9 @@ readonly class RevokePlayerToken
      */
     public function __invoke(User $actor, Party $party, int $tokenId): void
     {
-        ($this->authorisesHost)($actor, $party);
-
         DB::transaction(function () use ($actor, $party, $tokenId): void {
+            ($this->authorisesHost)($actor, $party);
+
             $token = $party->tokens()->whereKey($tokenId)->firstOrFail();
             $token->delete();
 

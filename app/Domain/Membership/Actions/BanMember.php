@@ -4,11 +4,11 @@ namespace App\Domain\Membership\Actions;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
-use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Party\Models\Party;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 readonly class BanMember
 {
@@ -20,9 +20,9 @@ readonly class BanMember
     public function __invoke(User $actor, Party $party, PartyMember $target): PartyMember
     {
         return DB::transaction(function () use ($actor, $party, $target): PartyMember {
-            $actingMember = $party->memberFor($actor);
+            $gate = Gate::forUser($actor);
 
-            if ($actingMember === null || $actingMember->banned || ! in_array($actingMember->role, [PartyRole::Host, PartyRole::Moderator], true)) {
+            if ($gate->denies('moderate', $party)) {
                 throw MembershipActionRefused::notAllowed();
             }
 
@@ -33,15 +33,15 @@ readonly class BanMember
                 ->with('user')
                 ->firstOrFail();
 
-            if ($target->role === PartyRole::Host) {
+            if ($target->role->isHost()) {
                 throw MembershipActionRefused::cannotBanHost();
             }
 
-            if ($target->is($actingMember)) {
+            if ($target->user_id === $actor->id) {
                 throw MembershipActionRefused::cannotBanSelf();
             }
 
-            if ($actingMember->role === PartyRole::Moderator && $target->role === PartyRole::Moderator) {
+            if ($gate->denies('moderateMember', [$party, $target])) {
                 throw MembershipActionRefused::cannotActOnModerator();
             }
 

@@ -27,7 +27,7 @@ readonly class RejectRequest
         $request = DB::transaction(function () use ($actor, $party, $request, $reason): TrackRequest {
             $member = $this->activeMember($actor, $party);
 
-            if (! $this->isModerator($member)) {
+            if (! $this->isModerator($actor, $party)) {
                 throw RequestRefusedException::notAllowed();
             }
 

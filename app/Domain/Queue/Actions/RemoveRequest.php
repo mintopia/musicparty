@@ -28,7 +28,7 @@ readonly class RemoveRequest
             $member = $this->activeMember($actor, $party);
             $locked = $this->lockRequest($party, $request);
 
-            if (! $this->isModerator($member) && $locked->party_member_id !== $member->id) {
+            if (! $this->isModerator($actor, $party) && $locked->party_member_id !== $member->id) {
                 throw RequestRefusedException::notAllowed();
             }
 
