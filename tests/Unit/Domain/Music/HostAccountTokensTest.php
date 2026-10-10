@@ -3,6 +3,7 @@
 use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
+use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Models\LinkedAccount;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -98,6 +99,28 @@ it('marks the account for relink when Spotify rejects the refresh', function (in
 
     expect($account->refresh()->needs_relink)->toBeTrue();
 })->with([400, 401]);
+
+it('treats non-grant rejections as provider unavailable and leaves the account linked', function (int $status, array $body) {
+    SpotifyFake::hostApi(['accounts.spotify.com/*' => Http::response($body, $status)]);
+    $account = SpotifyFake::account()->expired()->create();
+
+    expect(fn () => $this->tokens->accessToken($account))->toThrow(ProviderUnavailableException::class)
+        ->and($account->refresh()->needs_relink)->toBeFalse();
+})->with([
+    'invalid_client' => [401, ['error' => 'invalid_client']],
+    'invalid_request' => [400, ['error' => 'invalid_request']],
+    'unparseable body' => [400, []],
+]);
+
+it('recovers once a bad client secret is fixed', function () {
+    SpotifyFake::hostApi(['accounts.spotify.com/*' => Http::sequence()
+        ->push(['error' => 'invalid_client'], 401)
+        ->push(SpotifyFake::fixture('token-refresh'))]);
+    $account = SpotifyFake::account()->expired()->create();
+
+    expect(fn () => $this->tokens->accessToken($account))->toThrow(ProviderUnavailableException::class)
+        ->and($this->tokens->accessToken($account))->toBe('new-access-token');
+});
 
 it('does not call Spotify once relink is required', function () {
     Http::preventStrayRequests();
