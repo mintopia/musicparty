@@ -1,5 +1,7 @@
 # Only instance admins issue API tokens
 
+> **Amended** by ADR-0014. Who may issue tokens is unchanged. How they are stored changed: Integration Tokens are now Sanctum tokens on an `Integration` tokenable, and the custom `IntegrationTokenGuard` is gone.
+
 v3 exposes a full, OpenAPI-documented API, but ordinary users have no use for it, and long-lived tokens that users paste around are a liability. The API is called by only three kinds of client:
 - the Vue UI, using the Sanctum session cookie
 - Players, using Player Tokens that the Host issues per Party
