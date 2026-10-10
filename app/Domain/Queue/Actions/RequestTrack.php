@@ -60,9 +60,9 @@ class RequestTrack
 
             $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
-            $outcome = DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
-                return $this->place($party, $member, $track, $decision);
-            });
+            $outcome = $this->blocklist->deferringFailureRecords(
+                fn (): RequestOutcome => DB::transaction(fn (): RequestOutcome => $this->place($party, $member, $track, $decision)),
+            );
         } catch (RequestRefusedException $refusal) {
             if ($decision !== null) {
                 ($this->recordModDecision)($party, $decision, $track);
@@ -165,7 +165,7 @@ class RequestTrack
     {
         $track = $this->fetchTrack($party->music_provider, $spec->providerTrackId);
 
-        return DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
+        return $this->blocklist->deferringFailureRecords(fn (): ?TrackRequest => DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
             $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->state !== PartyState::Live) {
@@ -183,7 +183,7 @@ class RequestTrack
             }
 
             return $this->createRequest($locked, null, $track, RequestStatus::Queued);
-        });
+        }));
     }
 
     private function createRequest(Party $party, ?PartyMember $member, TrackData $track, RequestStatus $status): TrackRequest
@@ -259,7 +259,7 @@ class RequestTrack
 
         if ($party->no_repeat_interval) {
             $played = $this->matchingQuery($party, $track)
-                ->where('status', RequestStatus::Played)
+                ->whereIn('status', [RequestStatus::Playing, RequestStatus::Played])
                 ->where('updated_at', '>=', now()->subSeconds($party->no_repeat_interval))
                 ->latest('updated_at')
                 ->first();
