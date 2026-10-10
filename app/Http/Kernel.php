@@ -9,7 +9,6 @@ use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsurePlayerToken;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
-use App\Http\Middleware\MeasureRequest;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RejectPlayerTokens;
@@ -78,11 +77,6 @@ class Kernel extends HttpKernel
             ThrottleRequests::class.':api',
             SubstituteBindings::class,
             EnsureUserIsNotSuspended::class,
-        ],
-        'webhooks' => [
-            MeasureRequest::class,
-            EnsureFrontendRequestsAreStateful::class,
-            SubstituteBindings::class,
         ],
     ];
 

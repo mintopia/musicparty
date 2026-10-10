@@ -20,7 +20,6 @@ class Kernel extends ConsoleKernel
         $schedule->job(new TickPlayback)->everyFiveSeconds()->onOneServer();
         $schedule->job(new CheckSoloistHealth)->everyTenSeconds()->onOneServer();
         $schedule->job(new RunModScheduledActions)->everyFiveSeconds()->onOneServer();
-        $schedule->command('party:fallback')->everyMinute()->onOneServer();
         $schedule->command('party:force')->everyMinute()->onOneServer();
         $schedule->command('party:refreshaccesstokens')->everyMinute()->onOneServer();
     }

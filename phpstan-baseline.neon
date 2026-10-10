@@ -67,12 +67,6 @@ parameters:
 			path: app/Console/Commands/PartyCheck.php
 
 		-
-			message: '#^Method App\\Console\\Commands\\PartyFallback\:\:handle\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Console/Commands/PartyFallback.php
-
-		-
 			message: '#^Cannot call method getDevices\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: method.nonObject
 			count: 1
@@ -269,30 +263,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/Api/V1/VoteController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\Webhooks\\PartyController\:\:librespot\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/Webhooks/PartyController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\Webhooks\\PartyController\:\:simple\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/Webhooks/PartyController.php
-
-		-
-			message: '#^Method App\\Http\\Controllers\\Webhooks\\PartyController\:\:soloist\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/Webhooks/PartyController.php
-
-		-
-			message: '#^Call to static method startSpan\(\) on an unknown class App\\Services\\OpenTelemetry\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Middleware/MeasureRequest.php
 
 		-
 			message: '#^Method App\\Http\\Resources\\V1\\Collections\\AbstractCollectionResource\:\:paginationInformation\(\) has parameter \$default with no value type specified in iterable type array\.$#'

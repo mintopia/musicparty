@@ -2,7 +2,6 @@
 
 namespace Tests\Architecture\Support;
 
-use App\Jobs\PartyUpdate;
 use App\Jobs\ProcessPlayerFrame;
 use App\Models\Album;
 use App\Models\Artist;
@@ -99,7 +98,6 @@ class ArchitectureRules
                     VoteObserver::class,
                     'App\\Events\\Party\\',
                     'App\\Events\\UpcomingSong\\',
-                    PartyUpdate::class,
                 ],
                 'models' => [
                     Party::class,
