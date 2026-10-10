@@ -9,6 +9,7 @@ use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Party\Models\Party;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 readonly class ChangeMemberRole
 {
@@ -20,9 +21,7 @@ readonly class ChangeMemberRole
     public function __invoke(User $actor, Party $party, PartyMember $target, PartyRole $role): PartyMember
     {
         return DB::transaction(function () use ($actor, $party, $target, $role): PartyMember {
-            $actingMember = $party->memberFor($actor);
-
-            if ($actingMember === null || $actingMember->banned || $actingMember->role !== PartyRole::Host) {
+            if (Gate::forUser($actor)->denies('manageRoles', $party)) {
                 throw MembershipActionRefused::onlyHostChangesRoles();
             }
 
@@ -33,11 +32,11 @@ readonly class ChangeMemberRole
                 ->with('user')
                 ->firstOrFail();
 
-            if ($target->role === PartyRole::Host) {
+            if ($target->role->isHost()) {
                 throw MembershipActionRefused::hostRoleLocked();
             }
 
-            if ($role === PartyRole::Host) {
+            if ($role->isHost()) {
                 throw MembershipActionRefused::hostRoleNotAssignable();
             }
 
