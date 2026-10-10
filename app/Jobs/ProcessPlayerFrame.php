@@ -20,10 +20,12 @@ class ProcessPlayerFrame implements ShouldQueue
 
     public const DISCARDED_COUNTER = 'player-frames.discarded';
 
+    private const SEQUENCE_TTL_SECONDS = 86400;
+
     /**
      * @param  array<string, mixed>  $frame
      */
-    public function __construct(public readonly string $partyCode, public readonly array $frame)
+    public function __construct(public readonly string $partyCode, public readonly array $frame, public readonly ?int $sequence = null)
     {
         $this->onQueue('player');
     }
@@ -39,14 +41,44 @@ class ProcessPlayerFrame implements ShouldQueue
         }
     }
 
+    public static function sequenceKey(string $partyCode): string
+    {
+        return 'player-frame-seq:'.$partyCode;
+    }
+
     private function process(PartyPlayers $players): void
     {
+        if ($this->isStale()) {
+            $this->countDiscard();
+
+            return;
+        }
+
         $party = Party::findByCode($this->partyCode);
         $player = $party === null ? null : $players->for($party);
 
         if (! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($this->frame)) {
-            Cache::add(self::DISCARDED_COUNTER, 0);
-            Cache::increment(self::DISCARDED_COUNTER);
+            $this->countDiscard();
         }
+
+        if ($this->sequence !== null) {
+            Cache::put(self::appliedKey($this->partyCode), $this->sequence, self::SEQUENCE_TTL_SECONDS);
+        }
+    }
+
+    private static function appliedKey(string $partyCode): string
+    {
+        return 'player-frame-applied:'.$partyCode;
+    }
+
+    private function isStale(): bool
+    {
+        return $this->sequence !== null && $this->sequence <= (int) Cache::get(self::appliedKey($this->partyCode), 0);
+    }
+
+    private function countDiscard(): void
+    {
+        Cache::add(self::DISCARDED_COUNTER, 0);
+        Cache::increment(self::DISCARDED_COUNTER);
     }
 }

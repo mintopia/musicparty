@@ -47,6 +47,9 @@ class HandlePlayerClientEvent
             return;
         }
 
-        ProcessPlayerFrame::dispatch($code, $frame);
+        $sequenceKey = ProcessPlayerFrame::sequenceKey($code);
+        Cache::add($sequenceKey, 0, 86400);
+
+        ProcessPlayerFrame::dispatch($code, $frame, (int) Cache::increment($sequenceKey));
     }
 }

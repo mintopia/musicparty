@@ -10,11 +10,11 @@ class FrameHandlingPlayer extends FakePlayer implements HandlesPlayerFrames
     /** @var list<array<string, mixed>> */
     public array $frames = [];
 
+    public ?\Closure $onFrame = null;
+
     /**
      * @param  array<string, mixed>  $frame
      */
-    public ?\Closure $onFrame = null;
-
     public function handleFrame(array $frame): bool
     {
         if ($this->onFrame !== null) {
