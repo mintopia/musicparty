@@ -7,6 +7,7 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\ClearUpNextEnqueued;
@@ -159,6 +160,8 @@ class PlaybackCoordinator
 
         try {
             $player->enqueue($party->music_provider, $request->provider_track_id);
+        } catch (PlayerRateLimitedException) {
+            ($this->clearEnqueued)($request);
         } catch (Throwable $exception) {
             $this->recordEnqueueFailure($party, $request);
             ($this->clearEnqueued)($request);

@@ -23,7 +23,7 @@ class SpotifyApi
 
     private const string BACKOFF_CACHE_KEY = 'music.spotify.backoff-until';
 
-    private const int DEFAULT_RETRY_AFTER_SECONDS = 30;
+    private const int DEFAULT_RETRY_AFTER_SECONDS = 5;
 
     private const int HTTP_TIMEOUT_SECONDS = 5;
 
