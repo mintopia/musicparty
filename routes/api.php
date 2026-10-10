@@ -36,11 +36,11 @@ use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('ping', [PingController::class, 'index'])->name('ping');
-    Route::apiResource('parties', PartyController::class)->only(['show']);
+    Route::apiResource('parties', PartyController::class)->only(['show'])->middleware('throttle:party-public');
     Route::middleware(['auth:sanctum', 'player.token'])->group(function () {
         Route::post('parties/{party}/player/poll', [PartyPlayerController::class, 'poll'])->name('parties.player.poll');
     });
-    Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->name('parties.theme.show');
+    Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->middleware('throttle:party-public')->name('parties.theme.show');
     Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:integration', 'integration.ability:read'])->name('integration.ping');
     Route::get('parties/{party}/export', [PartyExportController::class, 'show'])->middleware('export.access')->name('parties.export');
     Route::middleware(['auth:sanctum', 'user.principal'])->group(function () {

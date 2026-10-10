@@ -84,3 +84,16 @@ it('reads the public route limit from config', function () {
     $this->withoutVite()->get('/parties/abcd/tv')->assertOk();
     $this->withoutVite()->get('/parties/abcd/tv')->assertTooManyRequests();
 });
+
+it('throttles the anonymous API party routes with the same per-address budget', function () {
+    config(['musicparty.public_routes_per_minute' => 3]);
+    Party::factory()->live()->create(['code' => 'ABCD']);
+
+    $this->getJson('/api/v1/parties/ABCD')->assertOk();
+    $this->getJson('/api/v1/parties/ABCD/theme')->assertOk();
+    $this->withoutVite()->get('/parties/abcd/tv')->assertOk();
+
+    $this->getJson('/api/v1/parties/ABCD')->assertTooManyRequests();
+    $this->getJson('/api/v1/parties/ABCD/theme')->assertTooManyRequests();
+    $this->withServerVariables(['REMOTE_ADDR' => '192.0.2.50'])->getJson('/api/v1/parties/ABCD')->assertOk();
+});
