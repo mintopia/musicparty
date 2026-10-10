@@ -238,6 +238,14 @@ Prometheus metrics are served by `spatie/laravel-prometheus` at `PROMETHEUS_PATH
 returns 403 unless the scraper sends `PROMETHEUS_TOKEN` as a bearer token or connects from an address in
 `PROMETHEUS_ALLOWED_IPS`, so set one of them before pointing a scraper at it ([ADR-0009](docs/adr/0009-prometheus-exporter-via-spatie-laravel-prometheus.md)).
 
+### Trusted proxies
+
+`TRUSTED_PROXIES` is a comma-separated list of proxy addresses or CIDRs (for example `10.0.0.0/8,192.0.2.7`) whose
+`X-Forwarded-*` headers the app honours. It defaults to `*`, which trusts any proxy. With the default, the client address
+is taken from `X-Forwarded-For` whoever sends it, so the metrics IP allow-list (`PROMETHEUS_ALLOWED_IPS`) and IP-keyed
+rate limits are only as strong as your network guarantee that clients reach the app only through the proxy. Where you
+know the proxy's address, set `TRUSTED_PROXIES` to it.
+
 ## Documentation
 
 - [GLOSSARY.md](GLOSSARY.md): domain language
