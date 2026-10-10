@@ -74,8 +74,9 @@ it('documents each broadcast event under its broadcastAs wire name', function ()
     foreach ($messages as $message) {
         $event = new ReflectionClass($message['x-event-class'])->newInstanceWithoutConstructor();
 
-        expect(method_exists($event, 'broadcastAs'))->toBeTrue()
-            ->and($message['name'])->toBe($event->broadcastAs()); // @phpstan-ignore method.notFound
+        assert(method_exists($event, 'broadcastAs'));
+
+        expect($message['name'])->toBe($event->broadcastAs());
     }
 });
 
@@ -172,11 +173,14 @@ it('fails when a documented field is no longer produced', function () {
 
 it('fails when a documented field type changes', function () {
     $fixtures = broadcastFixtures();
-    $fixtures[MemberBannedEvent::class] = fn () => new class('ABCD', 1) extends MemberBannedEvent
+    $fixtures[MemberBannedEvent::class] = fn () => new class
     {
+        /**
+         * @return array{member_id: string}
+         */
         public function broadcastWith(): array
         {
-            return ['member_id' => 'one']; // @phpstan-ignore return.type
+            return ['member_id' => 'one'];
         }
     };
 
