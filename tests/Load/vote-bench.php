@@ -1,7 +1,5 @@
 <?php
 
-// Usage: VOTERS=300 ROUNDS=5 REQUESTS=60 php tests/Load/vote-bench.php
-
 use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Events\VoteCast;
