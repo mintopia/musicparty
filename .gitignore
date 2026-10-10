@@ -18,7 +18,7 @@ yarn-error.log
 /.idea
 /.vscode
 /docker-compose.override.yml
-
+**/.DS_Store
 **/caddy
 frankenphp
 frankenphp-worker.php
