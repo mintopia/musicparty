@@ -197,9 +197,6 @@ musicparty.example.com {
 
 Behaviour tuning is in `config/musicparty.php`. Useful variables:
 
-- `MUSICPARTY_ALLOW_OVERLAPPING_UPDATES=false` stops Party updates from running at the same time.
-- `MUSICPARTY_WEBHOOK_DISPATCH_AFTER_REQUEST` and `MUSICPARTY_WEBHOOK_SHOULD_QUEUE` control how Webhook-triggered
-  updates are run. Set the latter to `false` to run the update inside the request.
 - `MUSICPARTY_FALLBACK_MINIMUM_QUEUE` is the Queue length below which the Fallback Playlist tops up (default 5).
 - `MUSICPARTY_JIT_LEAD_SECONDS` is how long before the end of a Track a just-in-time Player is fed Up Next (default 15).
 - `AI_REVIEW_OPENAI_MODEL` and `AI_REVIEW_JEV_MODEL` choose the models for the AI Request Review Mod.

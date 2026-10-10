@@ -2,7 +2,6 @@
 
 namespace Tests\Architecture\Support;
 
-use App\Jobs\PartyUpdate;
 use App\Jobs\ProcessPlayerFrame;
 use App\Models\LinkedAccount;
 use App\Models\Party;
@@ -88,7 +87,7 @@ class ArchitectureRules
                     PartyObserver::class,
                     ThemeObserver::class,
                     'App\\Events\\Party\\',
-                    PartyUpdate::class,
+                    'App\\Events\\UpcomingSong\\',
                 ],
                 'models' => [
                     Party::class,
