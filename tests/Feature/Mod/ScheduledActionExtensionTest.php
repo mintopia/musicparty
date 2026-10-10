@@ -1,7 +1,9 @@
 <?php
 
 use App\Domain\Mod\Actions\RunScheduledActions;
+use App\Domain\Mod\EnabledMods;
 use App\Domain\Mod\Jobs\RunModScheduledActions;
+use App\Domain\Mod\Jobs\RunPartyScheduledActions;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
@@ -9,6 +11,7 @@ use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Tests\Fixtures\Mods\ModFixtures;
 use Tests\Fixtures\Mods\SchedulerMod;
@@ -98,14 +101,65 @@ it('logs a failing action without throwing', function () {
     expect(PartyLogEntry::query()->where('action', 'mod.scheduled_action_failed')->sole()->details['error'])->toBe('schedule exploded');
 });
 
-it('runs through the scheduled job for Live parties only', function () {
+it('fans out one job per Live party with scheduled Mods on the ticks queue', function () {
     $paused = Party::factory()->create(['state' => 'paused']);
+    Party::factory()->live()->create();
     ModFixtures::enable($this->party, new SchedulerMod);
     ModFixtures::enable($paused, new SchedulerMod('scheduler-2'));
 
-    (new RunModScheduledActions)->handle(app(RunScheduledActions::class));
+    (new RunModScheduledActions)->handle(app(EnabledMods::class));
+
+    Queue::assertPushedTimes(RunPartyScheduledActions::class, 1);
+    Queue::assertPushedOn('ticks', RunPartyScheduledActions::class, fn (RunPartyScheduledActions $job): bool => $job->partyCode === $this->party->code);
+});
+
+it('runs a party job for its party only', function () {
+    $other = Party::factory()->live()->create();
+    ModFixtures::enable($this->party, new SchedulerMod);
+    ModFixtures::enable($other, new SchedulerMod);
+
+    (new RunPartyScheduledActions($this->party->code))->handle(app(RunScheduledActions::class));
 
     expect(TrackRequest::query()->pluck('party_id')->all())->toBe([$this->party->id]);
+});
+
+it('does not stack a second job for a party whose job is pending', function () {
+    $other = Party::factory()->live()->create();
+    Cache::lock('laravel_unique_job:'.RunPartyScheduledActions::class.':'.$this->party->code, 30)->get();
+
+    foreach ([$this->party, $other] as $party) {
+        RunPartyScheduledActions::dispatch($party->code);
+    }
+
+    Queue::assertPushedTimes(RunPartyScheduledActions::class, 1);
+});
+
+it('keeps running other parties when one party job throws', function () {
+    $broken = Party::factory()->live()->create();
+    ModFixtures::enable($broken, new class('broken') extends SchedulerMod
+    {
+        public function scheduledActions(): array
+        {
+            throw new RuntimeException('boom');
+        }
+    });
+    ModFixtures::enable($this->party, new SchedulerMod);
+    $run = app(RunScheduledActions::class);
+
+    expect(fn () => (new RunPartyScheduledActions($broken->code))->handle($run))->toThrow(RuntimeException::class);
+    (new RunPartyScheduledActions($this->party->code))->handle($run);
+
+    expect(TrackRequest::query()->pluck('party_id')->all())->toBe([$this->party->id]);
+});
+
+it('declares its guards', function () {
+    $job = new RunPartyScheduledActions('ABC123');
+
+    expect($job->queue)->toBe('ticks')
+        ->and($job->timeout)->toBe(20)
+        ->and($job->uniqueFor)->toBe(30)
+        ->and($job->uniqueId())->toBe('ABC123')
+        ->and($job->middleware()[0]->expiresAfter)->toBe(30);
 });
 
 it('creates one system request when two runs land in the same second and re-arms after the interval', function () {
