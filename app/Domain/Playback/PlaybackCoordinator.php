@@ -15,6 +15,7 @@ use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
+use Throwable;
 
 class PlaybackCoordinator
 {
@@ -24,6 +25,7 @@ class PlaybackCoordinator
         private readonly SelectUpNext $select,
         private readonly AdvanceQueue $advanceQueue,
         private readonly RecordPartyLogEntry $record,
+        private readonly EnqueueBackoff $backoff,
     ) {}
 
     public function startIfIdle(Party $party): void
@@ -138,7 +140,11 @@ class PlaybackCoordinator
                 ->whereNull('enqueued_at')
                 ->first();
 
-            $request?->forceFill(['enqueued_at' => now()])->save();
+            if ($request === null || ! $this->backoff->shouldAttempt($request)) {
+                return null;
+            }
+
+            $request->forceFill(['enqueued_at' => now()])->save();
 
             return $request;
         });
@@ -149,9 +155,24 @@ class PlaybackCoordinator
 
         try {
             $player->enqueue($party->music_provider, $request->provider_track_id);
-        } catch (PlayerDisconnectedException) {
+        } catch (Throwable $exception) {
+            $this->recordEnqueueFailure($party, $request);
             $request->forceFill(['enqueued_at' => null])->save();
-            ($this->record)($party, 'player.enqueue_failed', subject: $request->title, systemActor: 'player');
+
+            if (! $exception instanceof PlayerDisconnectedException) {
+                report($exception);
+            }
+        }
+    }
+
+    private function recordEnqueueFailure(Party $party, TrackRequest $request): void
+    {
+        $failure = $this->backoff->recordFailure($request);
+
+        ($this->record)($party, 'player.enqueue_failed', subject: $request->title, details: $failure, systemActor: 'player');
+
+        if ($failure['retry_in'] === null) {
+            ($this->record)($party, 'player.enqueue_abandoned', subject: $request->title, details: ['attempt' => $failure['attempt']], systemActor: 'player');
         }
     }
 

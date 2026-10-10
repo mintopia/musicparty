@@ -9,6 +9,7 @@ use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
+use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
@@ -454,6 +455,10 @@ class SoloistPlayer implements HandlesPlayerFrames, Player
 
         $this->put('health', $to->value);
         $this->log($action, null, $details === [] ? null : $details);
+
+        if ($to === PlayerHealth::Connected && ($party = $this->party()) !== null) {
+            app(EnqueueBackoff::class)->clearForParty($party);
+        }
     }
 
     private function assertConnected(): void

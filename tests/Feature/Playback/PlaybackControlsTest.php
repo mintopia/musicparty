@@ -1,11 +1,15 @@
 <?php
 
 use App\Domain\Party\PartyRole;
+use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\PartyPlayers;
+use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\Testing\FakePlayer;
+use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -195,4 +199,34 @@ it('returns not found for an unknown control', function () {
 it('exposes the control ability only to those who can manage the party', function () {
     expect(playbackUser($this->party, PartyRole::Host)->can('control', $this->party))->toBeTrue()
         ->and(playbackUser($this->party, PartyRole::Moderator)->can('control', $this->party))->toBeFalse();
+});
+
+it('retries a failed enqueue at once after the Host plays or skips', function (Control $control) {
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::UpNext]);
+    $coordinator = app(PlaybackCoordinator::class);
+    $this->player->disconnect();
+
+    $coordinator->tick($this->party);
+    $this->player->reconnect();
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->toBeNull();
+
+    app(ControlPlayback::class)($this->party, $control);
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->not->toBeNull();
+})->with([Control::Play, Control::Skip]);
+
+it('keeps the enqueue backoff when the Host pauses', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::UpNext]);
+    $coordinator = app(PlaybackCoordinator::class);
+    $this->player->disconnect();
+
+    $coordinator->tick($this->party);
+    $this->player->reconnect();
+    app(ControlPlayback::class)($this->party, Control::Pause);
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->toBeNull();
 });
