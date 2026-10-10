@@ -26,6 +26,7 @@ class RevokeRole
             }
 
             $user->roles()->detach($user->roles()->whereCode($adminRole->value)->pluck('roles.id')->all());
+            $user->forgetRoleCache();
             $this->audit->handle($admin, 'role.revoked', $user, ['role' => $adminRole->value]);
         });
 

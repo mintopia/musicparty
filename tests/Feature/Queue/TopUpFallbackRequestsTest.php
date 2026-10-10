@@ -6,6 +6,7 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\PlaybackCoordinator;
@@ -15,6 +16,7 @@ use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
@@ -168,4 +170,16 @@ it('resumes playback when the Host changes the playlist of an exhausted live par
     app(UpdatePartySettings::class)($host, $party, ['fallback_playlist_id' => 'pl2']);
 
     expect(enqueuedTrackIds($player))->not->toBeEmpty();
+});
+
+it('reads the blocklist once for a 500-track fallback top-up', function () {
+    $party = livePlaybackParty(array_map(playbackTrack(...), range(1, 500)));
+    BlocklistEntry::factory()->for($party)->create();
+
+    DB::enableQueryLog();
+    app(TopUpFallbackRequests::class)($party);
+    $blocklistReads = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'from "blocklist_entries"'))->count();
+    DB::disableQueryLog();
+
+    expect($blocklistReads)->toBe(1);
 });

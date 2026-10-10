@@ -47,6 +47,8 @@ readonly class ChangeMemberRole
             $old = $target->role;
             $target->forceFill(['role' => $role])->save();
 
+            $party->forgetMemberCache();
+
             ($this->record)($party, 'member.role_changed', $actor, $target->holder()->nickname, [
                 'user_id' => $target->user_id,
                 'old' => $old->value,

@@ -23,6 +23,9 @@ use Laravel\Sanctum\HasApiTokens;
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable
 {
+    /** @var array<int, string>|null */
+    private ?array $roleCodes = null;
+
     use HasApiTokens;
 
     /** @use HasFactory<UserFactory> */
@@ -84,7 +87,27 @@ class User extends Authenticatable
             $role = $role->code;
         }
 
-        return (bool) $this->roles()->whereCode($role)->count();
+        return in_array($role, $this->roleCodes(), true);
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function roleCodes(): array
+    {
+        return $this->roleCodes ??= $this->roles()->pluck('code')->all();
+    }
+
+    public function forgetRoleCache(): void
+    {
+        $this->roleCodes = null;
+    }
+
+    public function refresh(): static
+    {
+        $this->roleCodes = null;
+
+        return parent::refresh();
     }
 
     public function isActingAsHostIn(Party $party): bool
@@ -98,7 +121,7 @@ class User extends Authenticatable
         if ($this->email !== null) {
             return $this->email;
         }
-        $linked = $this->accounts()->whereNotNull('email')->first();
+        $linked = $this->accounts->first(fn (LinkedAccount $account): bool => $account->email !== null);
         if ($linked) {
             $this->email = $linked->email;
 
