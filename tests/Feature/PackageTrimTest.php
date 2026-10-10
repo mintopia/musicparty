@@ -33,12 +33,27 @@ it('resolves a SocialiteProviders driver for every catalogue entry', function (s
     expect(Socialite::driver($code))->toBeObject();
 })->with(fn (): array => ProviderCatalogue::codes());
 
+const FIRST_PARTY_SOCIALITE_CODES = ['google', 'facebook'];
+
+/**
+ * @return list<string>
+ */
+function communityCatalogueCodes(): array
+{
+    return array_values(array_diff(ProviderCatalogue::codes(), FIRST_PARTY_SOCIALITE_CODES));
+}
+
 it('has a catalogue entry for every required socialiteproviders package', function (): void {
-    expect(requiredSocialiteProviderPackages())->toEqualCanonicalizing(ProviderCatalogue::codes());
+    expect(requiredSocialiteProviderPackages())->toEqualCanonicalizing(communityCatalogueCodes());
 });
 
+it('serves Google and Facebook from first-party Socialite drivers', function (string $code): void {
+    expect(ProviderCatalogue::codes())->toContain($code)
+        ->and(requiredSocialiteProviderPackages())->not->toContain($code);
+})->with(FIRST_PARTY_SOCIALITE_CODES);
+
 it('registers a listener extending Socialite for every catalogue entry', function (): void {
-    expect(Event::getListeners(SocialiteWasCalled::class))->toHaveCount(count(ProviderCatalogue::codes()));
+    expect(Event::getListeners(SocialiteWasCalled::class))->toHaveCount(count(communityCatalogueCodes()));
 });
 
 it('does not require the removed packages directly', function (): void {

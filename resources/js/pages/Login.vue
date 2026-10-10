@@ -15,8 +15,10 @@ const brands = {
     discord: 'bg-[#5865f2]',
     steam: 'bg-[#00adee]',
     twitch: 'bg-[#9146ff]',
+    google: 'bg-[#4285f4]',
+    facebook: 'bg-[#1877f2]',
 };
-const knownIcons = ['discord', 'steam', 'twitch'];
+const knownIcons = ['discord', 'steam', 'twitch', 'google', 'facebook'];
 
 const items = computed(() =>
     (Array.isArray(props.providers) ? props.providers : []).map((provider) => ({

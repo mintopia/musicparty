@@ -13,16 +13,20 @@ beforeEach(function () {
         'services.twitch' => ['client_id' => 't-id', 'client_secret' => 't-secret'],
         'services.steam' => ['client_secret' => 'steam-key'],
         'services.spotify' => ['client_id' => null, 'client_secret' => null],
+        'services.google' => ['client_id' => 'g-id', 'client_secret' => 'g-secret'],
+        'services.facebook' => ['client_id' => null, 'client_secret' => null],
     ]);
 });
 
-it('seeds the four providers and enables the configured ones', function () {
+it('seeds the six providers and enables the configured ones', function () {
     $this->artisan('providers:seed')->assertSuccessful();
 
-    expect(SocialProvider::query()->pluck('code')->sort()->values()->all())->toBe(['discord', 'spotify', 'steam', 'twitch'])
+    expect(SocialProvider::query()->pluck('code')->sort()->values()->all())->toBe(['discord', 'facebook', 'google', 'spotify', 'steam', 'twitch'])
         ->and(SocialProvider::query()->where('code', 'discord')->first()->isAvailableForLogin())->toBeTrue()
         ->and(SocialProvider::query()->where('code', 'steam')->first()->isAvailableForLogin())->toBeTrue()
-        ->and(SocialProvider::query()->where('code', 'spotify')->first()->enabled)->toBeFalse();
+        ->and(SocialProvider::query()->where('code', 'google')->firstOrFail()->isAvailableForLogin())->toBeTrue()
+        ->and(SocialProvider::query()->where('code', 'spotify')->first()->enabled)->toBeFalse()
+        ->and(SocialProvider::query()->where('code', 'facebook')->firstOrFail()->enabled)->toBeFalse();
 });
 
 it('is idempotent and never overwrites stored values', function () {

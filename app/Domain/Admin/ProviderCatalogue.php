@@ -3,6 +3,8 @@
 namespace App\Domain\Admin;
 
 use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\FacebookProvider;
+use App\Domain\Identity\SocialProviders\GoogleProvider;
 use App\Domain\Identity\SocialProviders\LaravelPassportProvider;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
 use App\Domain\Identity\SocialProviders\SteamProvider;
@@ -32,6 +34,8 @@ final class ProviderCatalogue
                 'host' => ['name' => 'Passport Host', 'secret' => false],
             ]],
             'spotify' => ['name' => 'Spotify', 'class' => SpotifyProvider::class, 'fields' => $oauthFields],
+            'google' => ['name' => 'Google', 'class' => GoogleProvider::class, 'fields' => $oauthFields],
+            'facebook' => ['name' => 'Facebook', 'class' => FacebookProvider::class, 'fields' => $oauthFields],
         ];
     }
 
