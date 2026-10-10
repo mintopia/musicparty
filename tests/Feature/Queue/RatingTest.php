@@ -12,6 +12,7 @@ use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Facades\Schema;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -137,4 +138,8 @@ it('rates through the web play routes', function () {
 
     $this->delete("/parties/ABCD/plays/{$this->play->id}/rating")->assertSessionHasNoErrors();
     expect(Rating::query()->count())->toBe(0);
+});
+
+it('has no separate now-playing rating table', function () {
+    expect(Schema::hasTable('play_ratings'))->toBeFalse();
 });
