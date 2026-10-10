@@ -90,6 +90,9 @@ class SocialProvider extends Model
         return $this->code;
     }
 
+    /**
+     * @return MorphMany<ProviderSetting, $this>
+     */
     public function settings(): MorphMany
     {
         return $this->morphMany(ProviderSetting::class, 'provider');

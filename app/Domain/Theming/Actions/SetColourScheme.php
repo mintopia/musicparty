@@ -2,15 +2,16 @@
 
 namespace App\Domain\Theming\Actions;
 
+use App\Domain\Identity\Actions\SetUserColourScheme;
 use App\Domain\Identity\Models\User;
 use App\Domain\Theming\ColourScheme;
 
 class SetColourScheme
 {
+    public function __construct(private readonly SetUserColourScheme $setUserColourScheme) {}
+
     public function handle(User $user, ColourScheme $scheme): User
     {
-        $user->forceFill(['colour_scheme' => $scheme])->save();
-
-        return $user;
+        return ($this->setUserColourScheme)($user, $scheme);
     }
 }

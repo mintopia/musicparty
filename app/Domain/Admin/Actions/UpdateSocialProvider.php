@@ -4,6 +4,7 @@ namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
+use App\Domain\Identity\Actions\SetSocialProviderEnabled;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\DB;
@@ -14,6 +15,7 @@ class UpdateSocialProvider
     public function __construct(
         private readonly EnsureSocialProvider $ensure,
         private readonly RecordAdminAudit $audit,
+        private readonly SetSocialProviderEnabled $setEnabled,
     ) {}
 
     /**
@@ -39,7 +41,7 @@ class UpdateSocialProvider
                 if ($enabled && ! $provider->isConfigured()) {
                     throw ValidationException::withMessages(['enabled' => 'Set the credentials before enabling this provider.']);
                 }
-                $provider->forceFill(['enabled' => $enabled, 'auth_enabled' => $enabled])->save();
+                ($this->setEnabled)($provider, $enabled);
                 $this->audit->handle($admin, $enabled ? 'provider.enabled' : 'provider.disabled', null, ['provider' => $code]);
             }
 

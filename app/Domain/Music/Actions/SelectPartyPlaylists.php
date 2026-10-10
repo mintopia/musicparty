@@ -7,12 +7,13 @@ use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Party\Actions\SelectPartyPlaylistIds;
 use App\Domain\Party\Models\Party;
 use Illuminate\Validation\ValidationException;
 
 class SelectPartyPlaylists
 {
-    public function __construct(private readonly ListHostPlaylists $listHostPlaylists) {}
+    public function __construct(private readonly ListHostPlaylists $listHostPlaylists, private readonly SelectPartyPlaylistIds $selectPlaylistIds) {}
 
     /**
      * @throws NotHostException
@@ -46,10 +47,6 @@ class SelectPartyPlaylists
             SpotifyMusicProvider::forgetPlaylistTracks($playlistId);
         }
 
-        $party->fallback_playlist_id = $fallbackPlaylistId;
-        $party->history_playlist_id = $historyPlaylistId;
-        $party->save();
-
-        return $party;
+        return ($this->selectPlaylistIds)($party, $fallbackPlaylistId, $historyPlaylistId);
     }
 }

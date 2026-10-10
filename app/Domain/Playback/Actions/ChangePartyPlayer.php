@@ -5,6 +5,7 @@ namespace App\Domain\Playback\Actions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Party\Actions\ChangePartyPlayerSelection;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
@@ -22,6 +23,7 @@ readonly class ChangePartyPlayer
         private PairPlayer $pairPlayer,
         private RecordPartyLogEntry $record,
         private PartyPlayers $players,
+        private ChangePartyPlayerSelection $changeSelection,
     ) {}
 
     /**
@@ -59,7 +61,7 @@ readonly class ChangePartyPlayer
         }
 
         DB::transaction(function () use ($actor, $party, $from, $to): void {
-            $party->forceFill($to)->save();
+            ($this->changeSelection)($party, $to['player_kind'], $to['music_provider']);
 
             ($this->record)($party, 'player.changed', $actor, null, ['from' => $from, 'to' => $to]);
         });

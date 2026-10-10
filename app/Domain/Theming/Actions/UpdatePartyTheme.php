@@ -4,6 +4,7 @@ namespace App\Domain\Theming\Actions;
 
 use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Models\User;
+use App\Domain\Party\Actions\StorePartyTheme;
 use App\Domain\Party\Models\Party;
 use App\Domain\Theming\Broadcast\ThemeUpdatedEvent;
 use App\Domain\Theming\ThemeTokens;
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Storage;
 
 class UpdatePartyTheme
 {
-    public function __construct(private readonly GetPartyTheme $getPartyTheme) {}
+    public function __construct(private readonly GetPartyTheme $getPartyTheme, private readonly StorePartyTheme $storeTheme) {}
 
     /**
      * @param  array<string, mixed>  $data
@@ -49,19 +50,19 @@ class UpdatePartyTheme
             }
         }
 
-        $party->theme = $this->compact($overrides);
+        $attributes = ['theme' => $this->compact($overrides)];
 
         $layout = $data['tv_layout'] ?? null;
         if (is_string($layout) && array_key_exists($layout, ThemeTokens::TV_LAYOUTS)) {
-            $party->tv_layout = $layout;
+            $attributes['tv_layout'] = $layout;
         }
 
         $obsolete = [
-            ...$this->applyAsset($party, 'theme_logo_path', 'logo', $data),
-            ...$this->applyAsset($party, 'theme_background_path', 'background', $data),
+            ...$this->applyAsset($party, $attributes, 'theme_logo_path', 'logo', $data),
+            ...$this->applyAsset($party, $attributes, 'theme_background_path', 'background', $data),
         ];
 
-        $party->saveQuietly();
+        ($this->storeTheme)($party, $attributes);
         Storage::disk(SiteSettings::disk())->delete($obsolete);
 
         ThemeUpdatedEvent::dispatch($party->code);
@@ -70,18 +71,19 @@ class UpdatePartyTheme
     }
 
     /**
+     * @param  array<string, mixed>  $attributes
      * @param  array<string, mixed>  $data
      * @return list<string>
      */
-    private function applyAsset(Party $party, string $column, string $field, array $data): array
+    private function applyAsset(Party $party, array &$attributes, string $column, string $field, array $data): array
     {
         $previous = $party->{$column};
         $upload = $data[$field] ?? null;
 
         if ($upload instanceof UploadedFile) {
-            $party->{$column} = $upload->store('parties/'.$party->code.'/theme', ['disk' => SiteSettings::disk()]) ?: null;
+            $attributes[$column] = $upload->store('parties/'.$party->code.'/theme', ['disk' => SiteSettings::disk()]) ?: null;
         } elseif (filter_var($data['remove_'.$field] ?? false, FILTER_VALIDATE_BOOLEAN)) {
-            $party->{$column} = null;
+            $attributes[$column] = null;
         } else {
             return [];
         }

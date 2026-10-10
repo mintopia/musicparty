@@ -1,19 +1,32 @@
 <?php
 
-use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
-use App\Domain\Queue\Models\Play;
+use Illuminate\Database\Eloquent\Model;
 use Tests\Architecture\Support\ArchitectureRules;
 use Tests\Fixtures\Architecture\CrossContextWriter;
 use Tests\Fixtures\Architecture\LeakyBroadcastEvent;
 use Tests\Fixtures\Architecture\ReverbListenerLeaker;
 use Tests\Fixtures\Architecture\SerialisingBroadcastEvent;
 
-$fixtureContexts = [
-    'identity' => ['members' => [CrossContextWriter::class], 'models' => [User::class]],
-    'queue' => ['members' => [], 'models' => [Play::class]],
-];
+$fixtureContexts = ArchitectureRules::contexts();
+$fixtureContexts['identity']['members'][] = CrossContextWriter::class;
+
+it('maps all ten contexts and assigns every model to exactly one', function () {
+    $contexts = ArchitectureRules::contexts();
+    $models = array_filter(ArchitectureRules::appClasses(), fn (string $class): bool => str_contains($class, '\\Models\\') && is_subclass_of($class, Model::class));
+    $owned = array_merge(...array_column($contexts, 'models'));
+
+    expect(array_keys($contexts))->toBe(['admin', 'identity', 'membership', 'mod', 'music', 'party', 'playback', 'queue', 'stats', 'theming'])
+        ->and(array_values($models))->each->toBeIn($owned)
+        ->and(count($owned))->toBe(count(array_unique($owned)));
+
+    foreach ($contexts as $definition) {
+        foreach ($definition['models'] as $model) {
+            expect(str_starts_with($model, $definition['members'][0]))->toBeTrue();
+        }
+    }
+});
 
 it('keeps model writes inside their bounded context', function () {
     expect(ArchitectureRules::crossContextWriteViolations(ArchitectureRules::appClasses()))->toBe([]);

@@ -9,6 +9,8 @@ use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Queue\Actions\AdvanceQueue;
+use App\Domain\Queue\Actions\ClearUpNextEnqueued;
+use App\Domain\Queue\Actions\MarkUpNextEnqueued;
 use App\Domain\Queue\Actions\SelectUpNext;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
@@ -26,6 +28,8 @@ class PlaybackCoordinator
         private readonly AdvanceQueue $advanceQueue,
         private readonly RecordPartyLogEntry $record,
         private readonly EnqueueBackoff $backoff,
+        private readonly MarkUpNextEnqueued $markEnqueued,
+        private readonly ClearUpNextEnqueued $clearEnqueued,
     ) {}
 
     public function startIfIdle(Party $party): void
@@ -144,7 +148,7 @@ class PlaybackCoordinator
                 return null;
             }
 
-            $request->forceFill(['enqueued_at' => now()])->save();
+            ($this->markEnqueued)($request);
 
             return $request;
         });
@@ -157,7 +161,7 @@ class PlaybackCoordinator
             $player->enqueue($party->music_provider, $request->provider_track_id);
         } catch (Throwable $exception) {
             $this->recordEnqueueFailure($party, $request);
-            $request->forceFill(['enqueued_at' => null])->save();
+            ($this->clearEnqueued)($request);
 
             if (! $exception instanceof PlayerDisconnectedException) {
                 report($exception);
