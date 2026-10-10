@@ -1,9 +1,12 @@
 <?php
 
+use App\Domain\Identity\Actions\ResolveSocialUser;
 use App\Models\LinkedAccount;
 use App\Models\SocialProvider;
 use App\Models\User;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -159,4 +162,32 @@ it('logs out', function () {
     $this->actingAs(User::factory()->create())->get(route('logout'))->assertRedirect(route('home'));
 
     $this->assertGuest();
+});
+
+it('resolves one user and one linked account when a concurrent login inserts the identity first', function () {
+    $provider = seedDiscord();
+    $competitor = User::factory()->create();
+    $inserted = false;
+
+    DB::listen(function (QueryExecuted $query) use (&$inserted, $provider, $competitor): void {
+        if ($inserted || ! str_starts_with($query->sql, 'select') || ! str_contains($query->sql, '"linked_accounts"')) {
+            return;
+        }
+
+        $inserted = true;
+        DB::table('linked_accounts')->insert([
+            'user_id' => $competitor->id,
+            'social_provider_id' => $provider->id,
+            'external_id' => '1001',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    });
+
+    $userCount = User::query()->count();
+    $resolved = app(ResolveSocialUser::class)($provider, remoteUser('1001'));
+
+    expect($resolved->id)->toBe($competitor->id);
+    expect(User::query()->count())->toBe($userCount);
+    expect(LinkedAccount::query()->where('external_id', '1001')->count())->toBe(1);
 });
