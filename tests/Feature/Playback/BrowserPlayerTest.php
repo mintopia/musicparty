@@ -295,3 +295,22 @@ it('retries a failed enqueue at once when a tab claims the player', function () 
 
     expect($request->fresh()->enqueued_at)->not->toBeNull();
 });
+
+it('yields exactly one holder when two tabs claim at once', function () {
+    $player = browserPlayerFor($this->party);
+
+    $results = [$player->claim('tab-a'), $player->claim('tab-b')];
+
+    expect($results)->toBe([true, false])
+        ->and($player->holds('tab-a'))->toBeTrue()
+        ->and($player->holds('tab-b'))->toBeFalse();
+});
+
+it('keeps the first holder when the second claim races past the empty check', function () {
+    $player = browserPlayerFor($this->party);
+    Cache::add("playback.browser.{$this->party->code}.claim", 'tab-a', 180);
+
+    expect($player->claim('tab-b'))->toBeFalse()
+        ->and($player->claim('tab-a'))->toBeTrue()
+        ->and($player->holds('tab-a'))->toBeTrue();
+});
