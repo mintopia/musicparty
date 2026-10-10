@@ -583,7 +583,7 @@ parameters:
 			path: tests/Feature/Music/HostPlaylistsTest.php
 
 		-
-			message: '#^Property App\\Domain\\Music\\Jobs\\AppendToHistoryPlaylist@anonymous/tests/Feature/Music/HostPlaylistsTest\.php\:268\:\:\$releasedFor \(int\|null\) does not accept DateInterval\|DateTimeInterface\|int\.$#'
+			message: '#^Property App\\Domain\\Music\\Jobs\\AppendToHistoryPlaylist@anonymous/tests/Feature/Music/HostPlaylistsTest\.php\:269\:\:\$releasedFor \(int\|null\) does not accept DateInterval\|DateTimeInterface\|int\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: tests/Feature/Music/HostPlaylistsTest.php
@@ -1319,12 +1319,6 @@ parameters:
 			identifier: method.notFound
 			count: 1
 			path: tests/Unit/Domain/Music/SpotifyHostPlaylistsTest.php
-
-		-
-			message: '#^Call to an undefined method App\\Domain\\Identity\\Models\\LinkedAccount\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Domain\\Identity\\Models\\LinkedAccount\>\:\:getKey\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: tests/Unit/Domain/Music/SpotifyPlaybackTest.php
 
 		-
 			message: '#^Cannot access property \$providerTrackId on App\\Domain\\Playback\\Data\\TrackReference\|null\.$#'

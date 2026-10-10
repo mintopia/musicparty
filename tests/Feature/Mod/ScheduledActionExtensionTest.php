@@ -136,7 +136,7 @@ it('runs a party job for its party only', function () {
     ModFixtures::enable($this->party, new SchedulerMod);
     ModFixtures::enable($other, new SchedulerMod);
 
-    (new RunPartyScheduledActions($this->party->code))->handle(app(RunScheduledActions::class));
+    new RunPartyScheduledActions($this->party->code)->handle(app(RunScheduledActions::class));
 
     expect(TrackRequest::query()->pluck('party_id')->all())->toBe([$this->party->id]);
 });
@@ -164,8 +164,8 @@ it('keeps running other parties when one party job throws', function () {
     ModFixtures::enable($this->party, new SchedulerMod);
     $run = app(RunScheduledActions::class);
 
-    expect(fn () => (new RunPartyScheduledActions($broken->code))->handle($run))->toThrow(RuntimeException::class);
-    (new RunPartyScheduledActions($this->party->code))->handle($run);
+    expect(fn () => new RunPartyScheduledActions($broken->code)->handle($run))->toThrow(RuntimeException::class);
+    new RunPartyScheduledActions($this->party->code)->handle($run);
 
     expect(TrackRequest::query()->pluck('party_id')->all())->toBe([$this->party->id]);
 });

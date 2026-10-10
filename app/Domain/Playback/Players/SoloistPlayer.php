@@ -85,6 +85,7 @@ class SoloistPlayer implements BindsToParty, HandlesPlayerFrames, Player
             (int) ($stored['position_ms'] ?? 0),
             isset($stored['updated_at']) ? CarbonImmutable::parse((string) $stored['updated_at']) : null,
             isset($stored['duration_ms']) ? (int) $stored['duration_ms'] : null,
+            $this->list('upcoming'),
         );
     }
 

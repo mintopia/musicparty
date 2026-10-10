@@ -40,7 +40,9 @@ it('reports emitted state', function (Closure $make) {
 
     $player->emitState($state);
 
-    expect($player->state())->toBe($state)->and($seen)->toBe([$state]);
+    expect($player->state()->status)->toBe($state->status)
+        ->and($player->state()->positionMs)->toBe($state->positionMs)
+        ->and($seen)->toBe([$state]);
 })->with('players');
 
 it('signals track changes to listeners and updates state', function (Closure $make) {

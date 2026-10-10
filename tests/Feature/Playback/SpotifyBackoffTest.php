@@ -14,6 +14,7 @@ use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -32,14 +33,20 @@ beforeEach(function () {
         'musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class],
     ]);
 
-    $this->spotify = new stdClass;
-    $this->spotify->status = 429;
+    $this->spotify = new class
+    {
+        public int $status = 429;
+
+        public ?Closure $override = null;
+    };
     Http::preventStrayRequests();
     Http::fake([
         'accounts.spotify.com/*' => Http::response(SpotifyFake::fixture('token')),
-        'api.spotify.com/*' => fn (Request $request) => $this->spotify->status === 429
+        'api.spotify.com/*' => fn (Request $request) => $this->spotify->override !== null
+            ? ($this->spotify->override)($request)
+            : ($this->spotify->status === 429
             ? Http::response('', 429, ['Retry-After' => '7'])
-            : (str_contains($request->url(), '/me/player/queue') ? Http::response('', 204) : Http::response(SpotifyFake::fixture('playlist-tracks'))),
+            : (str_contains($request->url(), '/me/player/queue') ? Http::response('', 204) : Http::response(SpotifyFake::fixture('playlist-tracks')))),
     ]);
 
     $this->partyA = backoffParty('AAAA');
@@ -153,3 +160,31 @@ it('resumes every kind of call once the Retry-After has passed', function () {
     expect($request->fresh()->enqueued_at)->not->toBeNull()
         ->and(spotifyApiCalls())->toBeGreaterThan(1);
 });
+
+it('keeps the claim when Spotify answers an enqueue with a server error or times out', function (Closure $response) {
+    $this->spotify->override = $response;
+    $request = TrackRequest::factory()->for($this->partyB)->create(['status' => RequestStatus::UpNext, 'provider_track_id' => 'track-1']);
+
+    app(PlaybackCoordinator::class)->tick($this->partyB);
+
+    expect($request->fresh()->enqueued_at)->not->toBeNull()
+        ->and($request->fresh()->enqueue_unconfirmed)->toBeTrue()
+        ->and(Cache::get("playback.enqueue-backoff.{$request->id}"))->toBeNull();
+})->with([
+    '503' => fn () => fn () => Http::response('', 503),
+    'timeout' => fn () => fn () => throw new ConnectionException('cURL error 28: Operation timed out'),
+]);
+
+it('releases the claim when Spotify refuses the enqueue or the connection is refused', function (Closure $response) {
+    $this->spotify->override = $response;
+    $request = TrackRequest::factory()->for($this->partyB)->create(['status' => RequestStatus::UpNext, 'provider_track_id' => 'track-1']);
+
+    app(PlaybackCoordinator::class)->tick($this->partyB);
+
+    expect($request->fresh()->enqueued_at)->toBeNull()
+        ->and($request->fresh()->enqueue_unconfirmed)->toBeFalse()
+        ->and(Cache::get("playback.enqueue-backoff.{$request->id}"))->not->toBeNull();
+})->with([
+    '404' => fn () => fn () => Http::response('', 404),
+    'refused' => fn () => fn () => throw new ConnectionException('cURL error 7: Failed to connect: Connection refused'),
+]);

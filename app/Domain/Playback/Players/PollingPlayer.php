@@ -16,6 +16,7 @@ use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
 use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
@@ -145,9 +146,11 @@ class PollingPlayer implements BindsToParty, Player
         try {
             $this->client->queueTrack($providerTrackId, (string) $account->getKey());
         } catch (ProviderTemporaryFailure $failure) {
-            throw $failure->retryAfterSeconds === null
-                ? new PlayerDisconnectedException($failure->getMessage())
-                : new PlayerRateLimitedException($failure->retryAfterSeconds);
+            throw match (true) {
+                $failure->retryAfterSeconds !== null => new PlayerRateLimitedException($failure->retryAfterSeconds),
+                $failure->outcomeUnknown => new PlayerEnqueueUnconfirmedException($failure->getMessage()),
+                default => new PlayerDisconnectedException($failure->getMessage()),
+            };
         } catch (ProviderUnavailableException $failure) {
             throw new PlayerDisconnectedException($failure->getMessage());
         }
