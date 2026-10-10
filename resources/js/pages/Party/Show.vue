@@ -32,13 +32,24 @@ provide('enabledMods', computed(() => props.enabled_mods));
 
 const channelName = `party.${props.party.code}`;
 
+const RELOAD_DEBOUNCE_MS = 500;
+const RELOAD_JITTER_MS = 1500;
+let reloadTimer = null;
+
+const scheduleReload = () => {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
+    }, RELOAD_DEBOUNCE_MS + Math.random() * RELOAD_JITTER_MS);
+};
+
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true});
-    });
+    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', scheduleReload);
 });
 
 onBeforeUnmount(() => {
+    clearTimeout(reloadTimer);
     window.Echo?.leave(channelName);
 });
 

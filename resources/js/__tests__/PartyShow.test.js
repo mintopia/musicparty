@@ -94,13 +94,69 @@ describe('Party page now playing and Up Next', () => {
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
 
-    it('reloads now playing and up next live on QueueUpdatedEvent', () => {
-        const w = mount(Show, {props: baseProps()});
-        expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
-        listeners['Party.QueueUpdatedEvent']();
-        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true});
-        w.unmount();
-        expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
+    describe('QueueUpdatedEvent reloads', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('coalesces 10 events in 2 seconds into one async reload inside the jitter window', () => {
+            const w = mount(Show, {props: baseProps()});
+            expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
+            for (let i = 0; i < 10; i++) {
+                listeners['Party.QueueUpdatedEvent']();
+                vi.advanceTimersByTime(200);
+            }
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(499);
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1501);
+            expect(reload).toHaveBeenCalledTimes(1);
+            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
+            vi.advanceTimersByTime(10000);
+            expect(reload).toHaveBeenCalledTimes(1);
+            w.unmount();
+            expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
+        });
+
+        it('waits at least the trailing debounce and adds jitter', () => {
+            const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+            const w = mount(Show, {props: baseProps()});
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(499);
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1);
+            expect(reload).toHaveBeenCalledTimes(1);
+            random.mockReturnValue(0.999);
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(1990);
+            expect(reload).toHaveBeenCalledTimes(1);
+            vi.advanceTimersByTime(10);
+            expect(reload).toHaveBeenCalledTimes(2);
+            random.mockRestore();
+            w.unmount();
+        });
+
+        it('does not cancel an in-flight vote because the reload is async', () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
+            w.get('[data-testid=vote-up]').trigger('click');
+            expect(put).toHaveBeenCalledTimes(1);
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(2000);
+            expect(reload.mock.calls[0][0].async).toBe(true);
+            w.unmount();
+        });
+
+        it('drops a pending reload on unmount', () => {
+            const w = mount(Show, {props: baseProps()});
+            listeners['Party.QueueUpdatedEvent']();
+            w.unmount();
+            vi.advanceTimersByTime(5000);
+            expect(reload).not.toHaveBeenCalled();
+        });
     });
 });
 
