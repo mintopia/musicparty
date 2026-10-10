@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Stats\Actions\BuildLiveStatsMetrics;
 use App\Http\Middleware\MetricsCollector;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\ServiceProvider;
@@ -31,6 +32,25 @@ class PrometheusServiceProvider extends ServiceProvider
 
         Prometheus::addCounter('Uncaught Exceptions', fn (): int => (int) Redis::get('metrics.exceptions'), 'uncaught_exceptions_total')
             ->helpText('The number of uncaught exceptions');
+
+        $this->app->scoped(BuildLiveStatsMetrics::class);
+
+        $gauges = [
+            ['Parties', 'parties', 'The number of Parties in each state', ['state']],
+            ['Party Members', 'party_members', 'Members of a Live or Paused Party, excluding Banned ones', ['party']],
+            ['Party Queue Length', 'party_queue_length', 'Queued Requests in a Live or Paused Party', ['party']],
+            ['Party Time Played', 'party_time_played_seconds', 'Seconds of music played in a Live or Paused Party', ['party']],
+            ['Party Top Track Plays', 'party_top_track_plays', 'Plays of the top Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+            ['Party Top Requester Plays', 'party_top_requester_plays', 'Plays of the top requesters in a Live or Paused Party', ['party', 'rank', 'member']],
+            ['Party Most Upvoted Score', 'party_most_upvoted_score', 'Score of the most upvoted Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+            ['Party Most Downvoted Score', 'party_most_downvoted_score', 'Score of the most downvoted Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+        ];
+
+        foreach ($gauges as [$label, $name, $help, $labels]) {
+            Prometheus::addGauge($label, fn (): array => app(BuildLiveStatsMetrics::class)->series($name), $name)
+                ->helpText($help)
+                ->labels($labels);
+        }
     }
 
     public function boot(): void
