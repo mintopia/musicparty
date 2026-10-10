@@ -3302,6 +3302,45 @@
                 "summary": "api.v1.parties.search"
             }
         },
+        "/api/v1/parties/{party}/stats": {
+            "get": {
+                "operationId": "getApiV1PartiesPartyStats",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.stats"
+            }
+        },
         "/api/v1/parties/{party}/theme": {
             "delete": {
                 "operationId": "deleteApiV1PartiesPartyTheme",

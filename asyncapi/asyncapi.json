@@ -51,13 +51,16 @@
         },
         "partyMembers": {
             "address": "presence-party.{code}.members",
-            "description": "Presence channel (Echo name party.{code}.members). Joinable only by non-banned Members of the Party; unknown codes, non-Members, banned Members and unauthenticated callers are refused identically. Member payload carries only nickname and avatar.",
+            "description": "Presence channel (Echo name party.{code}.members). Joinable only by non-banned Members of the Party; unknown codes, non-Members, banned Members and unauthenticated callers are refused identically. Member payload carries only nickname and avatar. Also carries Live Stats updates (display names only, no member ids).",
             "messages": {
                 "Presence.MemberAdded": {
                     "$ref": "#/components/messages/Presence.MemberAdded"
                 },
                 "Presence.MemberRemoved": {
                     "$ref": "#/components/messages/Presence.MemberRemoved"
+                },
+                "Party.StatsUpdatedEvent": {
+                    "$ref": "#/components/messages/Party.StatsUpdatedEvent"
                 }
             },
             "parameters": {
@@ -925,6 +928,57 @@
                 },
                 "title": "Party.ThemeUpdatedEvent",
                 "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
+            },
+            "Party.StatsUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\StatsUpdatedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "top_tracks": {
+                            "description": "Most played Tracks",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "top_requesters": {
+                            "description": "Members whose Requests played most, by nickname",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "most_upvoted": {
+                            "description": "Most upvoted Requests",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "most_downvoted": {
+                            "description": "Most downvoted Requests",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "total_time_played_ms": {
+                            "description": "Total milliseconds of Tracks played",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "top_tracks",
+                        "top_requesters",
+                        "most_upvoted",
+                        "most_downvoted",
+                        "total_time_played_ms"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.StatsUpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\StatsUpdatedEvent"
             }
         }
     },
@@ -987,6 +1041,9 @@
                 },
                 {
                     "$ref": "#/channels/partyMembers/messages/Presence.MemberRemoved"
+                },
+                {
+                    "$ref": "#/channels/partyMembers/messages/Party.StatsUpdatedEvent"
                 }
             ]
         },

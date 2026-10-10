@@ -2,6 +2,11 @@
 
 namespace App\Providers;
 
+use App\Domain\Queue\Events\RequestCreated;
+use App\Domain\Queue\Events\RequestDecisionRecorded;
+use App\Domain\Queue\Events\TrackEnded;
+use App\Domain\Queue\Events\VoteCast;
+use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
 use App\Listeners\MessageLoggedListener;
 use App\Models\Party;
 use App\Models\Setting;
@@ -56,6 +61,10 @@ class EventServiceProvider extends ServiceProvider
             LaravelPassportExtendSocialite::class.'@handle',
             SpotifyExtendSocialite::class.'@handle',
         ],
+        RequestCreated::class => [RefreshStatsOnPartyActivity::class],
+        VoteCast::class => [RefreshStatsOnPartyActivity::class],
+        TrackEnded::class => [RefreshStatsOnPartyActivity::class],
+        RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
         MessageLogged::class => [
             MessageLoggedListener::class,
         ],
