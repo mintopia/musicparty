@@ -12,6 +12,7 @@ use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\SystemRandomizer;
 use App\Support\RateLimiting\Bucket;
 use App\Support\RateLimiting\LeakyBucket;
+use Fruitcake\LaravelDebugbar\ServiceProvider as DebugbarServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
@@ -27,6 +28,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(PartyPlayers::class);
         $this->app->bind(Bucket::class, LeakyBucket::class);
         $this->app->bind(Randomizer::class, SystemRandomizer::class);
+
+        if ($this->app->environment('local') && config('app.debug') && class_exists(DebugbarServiceProvider::class)) {
+            $this->app->register(DebugbarServiceProvider::class);
+        }
     }
 
     /**

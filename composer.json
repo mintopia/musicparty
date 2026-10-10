@@ -23,13 +23,11 @@
         "open-telemetry/sdk": "^1.15",
         "open-telemetry/transport-grpc": "^1.2",
         "pusher/pusher-php-server": "^7.3",
-        "ramsey/uuid": "^4.9",
         "socialiteproviders/discord": "^4.2",
         "socialiteproviders/laravelpassport": "^4.3",
         "socialiteproviders/spotify": "^4.1",
         "socialiteproviders/steam": "^4.4",
         "socialiteproviders/twitch": "^5.4",
-        "spatie/eloquent-sortable": "^5.0",
         "spatie/laravel-prometheus": "^1.7"
     },
     "require-dev": {
@@ -87,7 +85,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "barryvdh/laravel-debugbar"
+            ]
         }
     },
     "config": {

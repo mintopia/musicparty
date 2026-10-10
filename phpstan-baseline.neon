@@ -133,12 +133,6 @@ parameters:
 			path: app/Domain/Admin/Models/ProviderSetting.php
 
 		-
-			message: '#^Method App\\Domain\\Admin\\Models\\ProviderSetting\:\:buildSortQuery\(\) return type with generic class Illuminate\\Database\\Eloquent\\Builder does not specify its types\: TModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Domain/Admin/Models/ProviderSetting.php
-
-		-
 			message: '#^Method App\\Domain\\Admin\\Models\\ProviderSetting\:\:provider\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
