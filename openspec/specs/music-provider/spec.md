@@ -110,6 +110,25 @@ The system SHALL store Music Provider access and refresh tokens encrypted at res
 - **WHEN** a refresh fails because the instance's client credentials are wrong (for Spotify, `invalid_client`)
 - **THEN** no Host account is marked as needing re-linking, the failure is treated as the Provider being unavailable, and refreshes succeed again once the credentials are fixed
 
+### Requirement: Public Track and playlist links
+The Music Provider contract SHALL build a public URL for a Track from its provider Track id, and a public URL for a playlist from its provider playlist id, so Members can open the item at the Music Provider. The id MUST be URL-encoded into the URL, and a missing, null or blank id MUST yield no URL rather than a malformed one. The Spotify Provider SHALL build `https://open.spotify.com/track/{id}` and `https://open.spotify.com/playlist/{id}`.
+
+#### Scenario: Spotify Track link
+- **WHEN** a public URL is built for the Spotify Track id `4uLU6hMCjMI75M1A2tKUQC`
+- **THEN** the URL is `https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC`
+
+#### Scenario: Spotify playlist link
+- **WHEN** a public URL is built for a Spotify playlist id
+- **THEN** the URL is `https://open.spotify.com/playlist/{id}`
+
+#### Scenario: Id needing encoding
+- **WHEN** a public URL is built for an id containing reserved characters such as `/` or a space
+- **THEN** the characters are percent-encoded in the URL
+
+#### Scenario: Missing id
+- **WHEN** a public URL is requested for a null, empty or blank id
+- **THEN** no URL is returned
+
 ### Requirement: Spotify Provider
 The system SHALL provide a Spotify Music Provider implementing the contract, using instance-level client credentials for search and Track lookup and the Host's linked account for playlists and for Players that need one.
 

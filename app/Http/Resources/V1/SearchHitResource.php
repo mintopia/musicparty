@@ -24,6 +24,7 @@ class SearchHitResource extends JsonResource
             'artwork_url' => $this->track->coverArtUrls[0] ?? null,
             'duration_ms' => $this->track->durationMs,
             'explicit' => $this->track->explicit,
+            'provider_url' => $this->providerUrl,
             'queued' => $this->queued,
             'requested_by' => $this->requestedBy,
             'score' => $this->score,

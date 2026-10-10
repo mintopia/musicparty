@@ -30,7 +30,8 @@ class SearchPartyProvider
         }
 
         try {
-            $page = $this->catalogue->provider($party->music_provider)->search($query, self::LIMIT, 0);
+            $provider = $this->catalogue->provider($party->music_provider);
+            $page = $provider->search($query, self::LIMIT, 0);
         } catch (ProviderTemporaryFailure $failure) {
             throw $failure->retryAfterSeconds === null
                 ? RequestRefusedException::providerUnavailable()
@@ -50,7 +51,7 @@ class SearchPartyProvider
             ->keyBy('provider_track_id');
 
         return array_map(
-            function ($track) use ($queued): SearchHit {
+            function ($track) use ($queued, $provider): SearchHit {
                 $request = $queued->get($track->providerTrackId);
                 $requester = $request?->requester?->user;
 
@@ -59,6 +60,7 @@ class SearchPartyProvider
                     $request !== null,
                     $requester instanceof User ? $requester->nickname : null,
                     (int) $request?->score,
+                    $provider->trackUrl($track->providerTrackId),
                 );
             },
             $page->items,

@@ -1,5 +1,6 @@
 <script setup>
 import Icon from './Icon.vue';
+import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
@@ -11,9 +12,9 @@ defineProps({upNext: {type: Object, default: null}});
     <section aria-labelledby="up-next-heading" data-testid="up-next">
         <h2 id="up-next-heading" class="mb-3 text-base font-bold md:mb-4 md:text-lg">Up Next</h2>
         <div v-if="upNext" data-testid="up-next-card" class="flex items-center gap-3 rounded border border-border bg-surface px-3 py-3 md:gap-4 md:px-5 md:py-4">
-            <TrackThumb :src="upNext.track.artwork_url" />
+            <TrackLink :href="upNext.track.provider_url"><TrackThumb :src="upNext.track.artwork_url" /></TrackLink>
             <div class="min-w-0 flex-1">
-                <div class="truncate text-sm">{{ upNext.track.title }}</div>
+                <div class="truncate text-sm"><TrackLink :href="upNext.track.provider_url">{{ upNext.track.title }}</TrackLink></div>
                 <div class="truncate text-sm text-muted">{{ upNext.track.artists.join(', ') }}</div>
                 <div class="truncate text-xs text-muted md:text-sm">{{ requesterLabel(upNext) }}</div>
                 <Decorations :decorations="upNext.decorations" class="mt-1" />

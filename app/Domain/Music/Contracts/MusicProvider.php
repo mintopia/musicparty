@@ -44,6 +44,16 @@ interface MusicProvider
 
     public function forgetPlaylist(string $playlistId): void;
 
+    /**
+     * The public Music Provider page for a Track, or null when no usable id is given.
+     */
+    public function trackUrl(?string $providerTrackId): ?string;
+
+    /**
+     * The public Music Provider page for a playlist, or null when no usable id is given.
+     */
+    public function playlistUrl(?string $providerPlaylistId): ?string;
+
     public function supports(Capability $capability): bool;
 
     /**

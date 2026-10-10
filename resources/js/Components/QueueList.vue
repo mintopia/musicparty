@@ -2,6 +2,7 @@
 import {router} from '@inertiajs/vue3';
 import {ref} from 'vue';
 import Icon from './Icon.vue';
+import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import ModSlot from './ModSlot.vue';
 import TrackThumb from './TrackThumb.vue';
@@ -58,9 +59,9 @@ const buttonClass = (active, activeColor) => [
     <ul v-else data-testid="queue-list" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
         <li v-for="item in queue" :key="item.id" data-testid="queue-item" class="px-3 py-3 md:px-5 md:py-4">
             <div class="flex items-center gap-3 md:gap-4">
-                <TrackThumb :src="item.track.artwork_url" />
+                <TrackLink :href="item.track.provider_url"><TrackThumb :src="item.track.artwork_url" /></TrackLink>
                 <div class="min-w-0 flex-1">
-                    <div class="truncate text-sm">{{ item.track.title }}</div>
+                    <div class="truncate text-sm"><TrackLink :href="item.track.provider_url">{{ item.track.title }}</TrackLink></div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
                     <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
                     <Decorations :decorations="item.decorations" class="mt-1" />

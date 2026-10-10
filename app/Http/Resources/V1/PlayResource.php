@@ -4,6 +4,7 @@ namespace App\Http\Resources\V1;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Mod\Actions\ResolveDecorations;
+use App\Domain\Party\PairingCatalogue;
 use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\TrackRequest;
 use Illuminate\Http\Request;
@@ -30,6 +31,7 @@ class PlayResource extends JsonResource
                 'artwork_url' => $this->artwork_url,
                 'duration_ms' => $this->duration_ms,
                 'explicit' => $this->explicit,
+                'provider_url' => app(PairingCatalogue::class)->trackUrl($this->party?->music_provider, $this->provider_track_id),
             ],
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'votes' => (int) $this->request?->votes_count,

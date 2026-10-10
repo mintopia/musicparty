@@ -177,7 +177,8 @@
                                                 "album",
                                                 "artwork_url",
                                                 "duration_ms",
-                                                "explicit"
+                                                "explicit",
+                                                "provider_url"
                                             ],
                                             "properties": {
                                                 "title": {
@@ -206,6 +207,12 @@
                                                 },
                                                 "explicit": {
                                                     "type": "boolean"
+                                                },
+                                                "provider_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             }
                                         },
@@ -355,7 +362,8 @@
                                                 "album",
                                                 "artwork_url",
                                                 "duration_ms",
-                                                "explicit"
+                                                "explicit",
+                                                "provider_url"
                                             ],
                                             "properties": {
                                                 "title": {
@@ -384,6 +392,12 @@
                                                 },
                                                 "explicit": {
                                                     "type": "boolean"
+                                                },
+                                                "provider_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
                                                 }
                                             }
                                         },
@@ -530,7 +544,8 @@
                                             "album",
                                             "artwork_url",
                                             "duration_ms",
-                                            "explicit"
+                                            "explicit",
+                                            "provider_url"
                                         ],
                                         "properties": {
                                             "title": {
@@ -559,6 +574,12 @@
                                             },
                                             "explicit": {
                                                 "type": "boolean"
+                                            },
+                                            "provider_url": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
                                             }
                                         }
                                     },

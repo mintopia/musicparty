@@ -231,6 +231,25 @@ A Member SHALL be able to like or dislike a Play, once per Play, and to change o
 - **WHEN** a Member rates a Play in an Ended Party
 - **THEN** the system refuses
 
+### Requirement: Track links to the Music Provider
+Every Track shown to Members (Now Playing, Up Next, the Queue, played history and search results) SHALL carry a `provider_url` built by the Party's Music Provider from the Track's provider Track id, in the API, page props and realtime payloads. The Member UI SHALL link the Track title and artwork to it, opening in a new tab with `rel="noopener"`, and SHALL render plain text when `provider_url` is null. The TV screen MUST NOT link Tracks. The system SHALL NOT save Tracks to a Member's own library.
+
+#### Scenario: Queue entry link
+- **WHEN** a Member views a queued Track in a Spotify Party
+- **THEN** its `provider_url` is `https://open.spotify.com/track/{id}` and its title and artwork open that page in a new tab
+
+#### Scenario: Played history and search results
+- **WHEN** a Member views played history or search results
+- **THEN** each Track carries a `provider_url` for its provider Track id
+
+#### Scenario: No link available
+- **WHEN** a Track has no `provider_url`
+- **THEN** its title and artwork render as plain text
+
+#### Scenario: TV screen
+- **WHEN** the TV screen shows a Track
+- **THEN** it is not a link
+
 ### Requirement: Queue top-up from the Fallback Playlist
 While a Party is Live, the system SHALL keep the Queue topped up to a configured minimum number of Queued Requests (default 5) using Tracks from the Fallback Playlist. Fallback Playlist Tracks SHALL be chosen in shuffled order, SHALL skip Tracks queued or played recently, SHALL pass the Party's rules, and SHALL become Requests with no requester. Fallback Requests SHALL be subject to Votes like any other Request.
 

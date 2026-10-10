@@ -4,11 +4,12 @@ namespace App\Domain\Queue\Presenters;
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Mod\Actions\ResolveDecorations;
+use App\Domain\Party\PairingCatalogue;
 use App\Domain\Queue\Models\TrackRequest;
 
 readonly class QueueEntryPresenter
 {
-    public function __construct(private ResolveDecorations $decorations) {}
+    public function __construct(private ResolveDecorations $decorations, private PairingCatalogue $catalogue) {}
 
     /**
      * The public fields of a Queue entry, identical for the API, page props and broadcasts.
@@ -29,6 +30,7 @@ readonly class QueueEntryPresenter
                 'artwork_url' => $request->artwork_url,
                 'duration_ms' => $request->duration_ms,
                 'explicit' => $request->explicit,
+                'provider_url' => $this->catalogue->trackUrl($request->party?->music_provider, $request->provider_track_id),
             ],
             'status' => $request->status->value,
             'score' => (int) $request->score,

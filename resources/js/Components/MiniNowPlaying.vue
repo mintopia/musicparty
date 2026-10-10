@@ -1,5 +1,6 @@
 <script setup>
 import Icon from './Icon.vue';
+import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import {useRatePlay} from '../lib/rating';
 
@@ -26,7 +27,7 @@ const buttonClass = (active, activeColor) => [
     >
         <div class="min-w-0 flex-1">
             <template v-if="nowPlaying">
-                <div class="truncate text-sm font-medium">{{ nowPlaying.track.title }}</div>
+                <div class="truncate text-sm font-medium"><TrackLink :href="nowPlaying.track.provider_url">{{ nowPlaying.track.title }}</TrackLink></div>
                 <div class="truncate text-xs text-muted">{{ nowPlaying.track.artists.join(', ') }}</div>
                 <Decorations :decorations="nowPlaying.decorations" />
             </template>
