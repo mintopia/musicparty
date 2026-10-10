@@ -22,7 +22,7 @@ return [
      * This is the default namespace that will be
      * used by all metrics
      */
-    'default_namespace' => env('PROMETHEUS_NAMESPACE', 'app'),
+    'default_namespace' => env('PROMETHEUS_NAMESPACE', 'musicparty'),
 
     /*
      * The middleware that will be applied to the urls above
