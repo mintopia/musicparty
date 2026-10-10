@@ -64,3 +64,23 @@ it('reports when the now playing track started', function () {
         ->assertInertia(fn (Assert $page): Assert => $page
             ->where('startedAt', '2026-01-01T00:00:00+00:00'));
 });
+
+it('throttles the anonymous TV route per client address', function () {
+    Party::factory()->live()->create(['code' => 'ABCD']);
+
+    foreach (range(1, 60) as $attempt) {
+        $this->withoutVite()->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])->get('/parties/abcd/tv')->assertOk();
+    }
+
+    $this->withoutVite()->withServerVariables(['REMOTE_ADDR' => '192.0.2.10'])->get('/parties/abcd/tv')->assertTooManyRequests();
+    $this->withoutVite()->withServerVariables(['REMOTE_ADDR' => '192.0.2.11'])->get('/parties/abcd/tv')->assertOk();
+});
+
+it('reads the public route limit from config', function () {
+    config(['musicparty.public_routes_per_minute' => 2]);
+    Party::factory()->live()->create(['code' => 'ABCD']);
+
+    $this->withoutVite()->get('/parties/abcd/tv')->assertOk();
+    $this->withoutVite()->get('/parties/abcd/tv')->assertOk();
+    $this->withoutVite()->get('/parties/abcd/tv')->assertTooManyRequests();
+});
