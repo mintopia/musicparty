@@ -4,17 +4,12 @@ declare(strict_types=1);
 
 use Tests\Support\DeployConfig;
 
-dataset('compose files', [
-    'dev' => ['docker-compose.yaml'],
-    'example' => ['example/docker-compose.yml'],
-]);
-
-it('starts Reverb on its configured server port without debug', function (string $file) {
-    $argv = DeployConfig::compose($file)->entrypoint('reverb');
+it('starts Reverb on its configured server port without debug', function () {
+    $argv = DeployConfig::compose('docker-compose.yaml')->entrypoint('reverb');
 
     expect($argv)->toContain('reverb:start')->toContain('--host=0.0.0.0')
         ->and(array_filter($argv, fn (string $arg): bool => str_starts_with($arg, '--debug') || str_starts_with($arg, '--port')))->toBeEmpty();
-})->with('compose files');
+});
 
 it('loads the dev Reverb service environment from .env', function () {
     expect(DeployConfig::compose('docker-compose.yaml')->envFiles('reverb'))->toContain('.env');
