@@ -20,7 +20,7 @@ use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::post('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
 
