@@ -118,7 +118,7 @@ onMounted(() => {
             pushToast(payload.reason ? `Your request was rejected: ${payload.reason}` : 'Your request was rejected.');
         })
         .listen('.request.decided', (payload) => {
-            if (payload.status === 'approved') {
+            if (payload.status === 'queued') {
                 pushToast('Your request was approved.');
             }
         })

@@ -293,7 +293,7 @@ describe('Party Show realtime state and toasts', () => {
         expect(w.findAll('[data-testid=toast]')).toHaveLength(1);
         expect(w.get('[data-testid=toast]').text()).toContain('Too loud');
 
-        listeners['.request.decided']({request_id: 1, status: 'approved', reason: null});
+        listeners['.request.decided']({request_id: 1, status: 'queued', reason: null});
         listeners['.member.banned']({member_id: 5});
         await w.vm.$nextTick();
         const texts = w.findAll('[data-testid=toast]').map((t) => t.text());
