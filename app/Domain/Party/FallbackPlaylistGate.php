@@ -37,10 +37,9 @@ readonly class FallbackPlaylistGate
     }
 
     /**
-     * @param  array<string, true>  $recentlyPlayed
-     * @param  Collection<int, BlocklistEntry>  $blocked
+     * @param  Collection<int, BlocklistEntry>|null  $blocked  Pre-loaded enabled Blocklist entries; looked up per call when null.
      */
-    private function isPlayable(Party $party, TrackData $track, array $recentlyPlayed, Collection $blocked): bool
+    public function passesRules(Party $party, TrackData $track, ?Collection $blocked = null): bool
     {
         $seconds = $track->durationMs / 1000;
 
@@ -48,8 +47,16 @@ readonly class FallbackPlaylistGate
             && ($party->explicit || ! $track->explicit)
             && ($party->min_song_length === null || $seconds >= $party->min_song_length)
             && ($party->max_song_length === null || $seconds <= $party->max_song_length)
-            && ! isset($recentlyPlayed[$track->providerTrackId])
-            && $this->blocklist->firstMatchIn($blocked, $track) === null;
+            && ($blocked === null ? $this->blocklist->firstMatch($party, $track) : $this->blocklist->firstMatchIn($blocked, $track)) === null;
+    }
+
+    /**
+     * @param  array<string, true>  $recentlyPlayed
+     * @param  Collection<int, BlocklistEntry>  $blocked
+     */
+    private function isPlayable(Party $party, TrackData $track, array $recentlyPlayed, Collection $blocked): bool
+    {
+        return $this->passesRules($party, $track, $blocked) && ! isset($recentlyPlayed[$track->providerTrackId]);
     }
 
     /**

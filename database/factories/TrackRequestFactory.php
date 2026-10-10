@@ -32,4 +32,14 @@ class TrackRequestFactory extends Factory
             'status' => RequestStatus::Queued,
         ];
     }
+
+    public function fallback(): static
+    {
+        return $this->state(fn (): array => ['party_member_id' => null]);
+    }
+
+    public function status(RequestStatus $status): static
+    {
+        return $this->state(fn (): array => ['status' => $status]);
+    }
 }

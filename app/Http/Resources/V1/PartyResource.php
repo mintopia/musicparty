@@ -32,6 +32,7 @@ class PartyResource extends JsonResource
             'hold_requests' => (bool) $this->hold_requests,
             'downvotes' => (bool) $this->downvotes,
             'downvotes_per_hour' => $this->downvotes_per_hour,
+            'selection_mode' => $this->selection_mode->value,
             'role' => $user === null ? null : $this->memberFor($user)?->role->value,
         ];
     }

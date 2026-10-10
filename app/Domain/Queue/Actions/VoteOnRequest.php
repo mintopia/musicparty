@@ -6,7 +6,7 @@ use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Events\Party\QueueUpdatedEvent;
+use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
@@ -66,7 +66,7 @@ class VoteOnRequest
         });
 
         if ($changed) {
-            QueueUpdatedEvent::dispatch($party->code);
+            BroadcastPartyQueue::dispatch($party->code);
         }
 
         return TrackRequest::query()

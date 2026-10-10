@@ -2,6 +2,7 @@
 
 namespace App\Console;
 
+use App\Jobs\TickPlayback;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 
@@ -14,6 +15,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
         $schedule->command('telescope:prune')->daily()->onOneServer();
+        $schedule->job(new TickPlayback)->everyFiveSeconds()->onOneServer();
         $schedule->command('party:fallback')->everyMinute()->onOneServer();
         $schedule->command('party:force')->everyMinute()->onOneServer();
         $schedule->command('party:refreshaccesstokens')->everyMinute()->onOneServer();

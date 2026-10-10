@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Queue\SelectionMode;
 use App\Models\Party;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
 
 class UpdatePartyRequest extends FormRequest
@@ -31,6 +33,7 @@ class UpdatePartyRequest extends FormRequest
             'hold_requests' => 'sometimes|boolean',
             'downvotes' => 'sometimes|boolean',
             'downvotes_per_hour' => 'sometimes|nullable|integer|min:0|max:1000',
+            'selection_mode' => ['sometimes', Rule::enum(SelectionMode::class)],
         ];
     }
 
@@ -73,6 +76,7 @@ class UpdatePartyRequest extends FormRequest
             'downvotes_per_hour.integer' => 'The downvote limit must be a whole number.',
             'downvotes_per_hour.min' => 'The downvote limit cannot be negative.',
             'downvotes_per_hour.max' => 'The downvote limit may not be more than :max per hour.',
+            'selection_mode.enum' => 'The selection mode must be deterministic or weighted.',
         ];
     }
 }

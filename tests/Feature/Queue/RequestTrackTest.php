@@ -4,20 +4,23 @@ use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\QueueUpdatedEvent;
+use App\Jobs\BroadcastPartyQueue;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    Bus::fake([StartPlayback::class]);
     app()->instance(FakeMusicProvider::class, FakeMusicProvider::withDefaultCatalogue());
     $this->party = Party::factory()->live()->create(['code' => 'ABCD']);
     $this->user = User::factory()->create();
@@ -32,7 +35,7 @@ function apiRequest(User $user, string $trackId = 'track-1', string $code = 'ABC
 }
 
 it('creates a queued request with the requester upvote through the API', function () {
-    Event::fake([QueueUpdatedEvent::class]);
+    Queue::fake();
 
     apiRequest($this->user)->assertCreated()
         ->assertJsonPath('data.track.title', 'Alpha Song')
@@ -45,7 +48,7 @@ it('creates a queued request with the requester upvote through the API', functio
     expect($request->status)->toBe(RequestStatus::Queued)
         ->and($request->party_member_id)->toBe($this->member->id)
         ->and($request->votes()->sole()->value)->toBe(1);
-    Event::assertDispatched(QueueUpdatedEvent::class, fn ($event) => $event->broadcastWith() === ['code' => 'ABCD']);
+    Queue::assertPushed(BroadcastPartyQueue::class, fn ($job) => $job->partyCode === 'ABCD');
 });
 
 it('adds an upvote to the existing request when the track is already queued', function () {

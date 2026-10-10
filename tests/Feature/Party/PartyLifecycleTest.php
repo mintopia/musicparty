@@ -6,16 +6,20 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\PartyState;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
+
+beforeEach(fn () => Bus::fake([StartPlayback::class]));
 
 /**
  * @param  array<string, mixed>  $overrides
@@ -306,4 +310,28 @@ it('rejects a minimum length above the stored maximum', function () {
     $this->patchJson("/api/v1/parties/{$party->code}", ['min_song_length' => 300])
         ->assertUnprocessable()
         ->assertJsonValidationErrors('min_song_length');
+});
+
+it('lets the host switch selection mode via web and API, logging the change', function () {
+    [$party, $host] = lifecycleParty();
+
+    $this->actingAs($host)->patch(route('parties.update', 'ABCD'), ['selection_mode' => 'weighted'])->assertRedirect();
+    expect($party->fresh()->selection_mode->value)->toBe('weighted');
+
+    $entry = PartyLogEntry::query()->where('subject', 'selection_mode')->sole();
+    expect($entry->details)->toBe(['old' => 'deterministic', 'new' => 'weighted']);
+
+    Sanctum::actingAs($host);
+    $this->patchJson(route('api.v1.parties.update', 'ABCD'), ['selection_mode' => 'deterministic'])
+        ->assertOk()->assertJsonPath('data.selection_mode', 'deterministic');
+});
+
+it('rejects an unknown selection mode', function () {
+    [$party, $host] = lifecycleParty();
+    Sanctum::actingAs($host);
+
+    $this->patchJson(route('api.v1.parties.update', 'ABCD'), ['selection_mode' => 'chaos'])
+        ->assertUnprocessable()->assertJsonValidationErrors('selection_mode');
+
+    expect($party->fresh()->selection_mode->value)->toBe('deterministic');
 });

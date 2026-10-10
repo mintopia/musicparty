@@ -16,29 +16,43 @@ use App\Domain\Party\Actions\UnbanMember;
 use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Actions\ControlPlayback;
+use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Queue\Actions\ApproveRequest;
 use App\Domain\Queue\Actions\ListPendingRequests;
+use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Actions\RateNowPlaying;
+use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\VoteOnRequest;
+use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
+use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\ListPlayHistoryRequest;
+use App\Http\Requests\RateNowPlayingRequest;
+use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PartyMemberResource;
+use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\Play;
+use App\Models\PlayRating;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -84,14 +98,17 @@ class PartyController extends Controller
     }
 
     public function show(
-        Request $request,
+        ListPlayHistoryRequest $request,
         JoinParty $joinParty,
         ListQueue $listQueue,
+        ListPlayHistory $listHistory,
+        PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
         Party $party,
         string $section = 'queue',
     ): Response {
         $member = $joinParty($this->currentUser($request), $party);
+        $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
         $results = null;
         $searchError = null;
@@ -122,8 +139,13 @@ class PartyController extends Controller
             'canManage' => $party->canBeManagedBy($this->currentUser($request)),
             'canManageBlocklist' => $this->currentUser($request)->can('moderate', $party),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
-            'nowPlaying' => null,
+            'nowPlaying' => $playback['now_playing'],
+            'myRating' => $this->myRating($playback['now_playing'], $member),
+            'ratablePlay' => $this->ratablePlay($request, $party, $member),
+            'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
+            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
+            'filters' => $request->filters(),
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,
@@ -152,7 +174,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('successMessage', 'Settings saved');
@@ -343,6 +365,29 @@ class PartyController extends Controller
         return $this->applyVote($request, $vote, $party, $trackRequest, null);
     }
 
+    public function storeRating(RatePlayRequest $request, RatePlay $ratePlay, Party $party, Play $play): RedirectResponse
+    {
+        return $this->applyRating($request, $ratePlay, $party, $play, $request->direction());
+    }
+
+    public function destroyRating(Request $request, RatePlay $ratePlay, Party $party, Play $play): RedirectResponse
+    {
+        return $this->applyRating($request, $ratePlay, $party, $play, null);
+    }
+
+    private function applyRating(Request $request, RatePlay $ratePlay, Party $party, Play $play, ?VoteDirection $direction): RedirectResponse
+    {
+        abort_unless($play->party_id === $party->id, 404);
+
+        try {
+            $ratePlay($party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $play, $direction);
+        } catch (RequestRefusedException $exception) {
+            return back()->withErrors(['rating' => $exception->getMessage()]);
+        }
+
+        return back();
+    }
+
     private function applyVote(Request $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): RedirectResponse
     {
         abort_unless($trackRequest->party_id === $party->id, 404);
@@ -354,6 +399,72 @@ class PartyController extends Controller
         }
 
         return back();
+    }
+
+    public function control(ControlPlaybackRequest $request, ControlPlayback $controlPlayback, Party $party): RedirectResponse
+    {
+        try {
+            $controlPlayback($party, $request->control(), $request->value());
+        } catch (PlaybackControlRefusedException $exception) {
+            return back()->withErrors(['playback' => $exception->getMessage()]);
+        }
+
+        return back();
+    }
+
+    public function storeNowPlayingRating(RateNowPlayingRequest $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        return $this->applyNowPlayingRating($request, $rate, $party, $trackRequest, $request->direction());
+    }
+
+    public function destroyNowPlayingRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): RedirectResponse
+    {
+        return $this->applyNowPlayingRating($request, $rate, $party, $trackRequest, null);
+    }
+
+    private function applyNowPlayingRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): RedirectResponse
+    {
+        abort_unless($trackRequest->party_id === $party->id, 404);
+
+        try {
+            $rate($party, $party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $trackRequest, $direction);
+        } catch (RequestRefusedException $exception) {
+            return back()->withErrors(['rating' => $exception->getMessage()]);
+        }
+
+        return back();
+    }
+
+    /**
+     * @param  array<string, mixed>|null  $nowPlaying
+     */
+    private function myRating(?array $nowPlaying, PartyMember $member): int
+    {
+        if ($nowPlaying === null) {
+            return 0;
+        }
+
+        return (int) PlayRating::query()
+            ->where('track_request_id', $nowPlaying['id'])
+            ->where('party_member_id', $member->id)
+            ->value('value');
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function ratablePlay(Request $request, Party $party, PartyMember $member): ?array
+    {
+        $play = Play::query()
+            ->where('party_id', $party->id)
+            ->whereHas('request', fn ($query) => $query->where('status', RequestStatus::Playing))
+            ->withHistoryRelations()
+            ->withRatingSummary($member)
+            ->orderByDesc('played_at')
+            ->orderByDesc('id')
+            ->first();
+
+        return $play === null ? null : new PlayResource($play)->resolve($request);
     }
 
     private function currentUser(Request $request): User

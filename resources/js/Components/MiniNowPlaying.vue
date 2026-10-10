@@ -1,7 +1,13 @@
 <script setup>
 import Icon from './Icon.vue';
+import RatingButtons from './RatingButtons.vue';
 
-defineProps({nowPlaying: {type: Object, default: null}});
+defineProps({
+    nowPlaying: {type: Object, default: null},
+    partyCode: {type: String, default: ''},
+    myRating: {type: Number, default: 0},
+    readOnly: {type: Boolean, default: false},
+});
 </script>
 
 <template>
@@ -11,11 +17,12 @@ defineProps({nowPlaying: {type: Object, default: null}});
     >
         <div class="min-w-0 flex-1">
             <template v-if="nowPlaying">
-                <div class="truncate text-sm font-medium">{{ nowPlaying.title }}</div>
-                <div class="truncate text-xs text-muted">{{ nowPlaying.artist }}</div>
+                <div class="truncate text-sm font-medium">{{ nowPlaying.track.title }}</div>
+                <div class="truncate text-xs text-muted">{{ nowPlaying.track.artists.join(', ') }}</div>
             </template>
             <div v-else class="text-sm text-muted">Nothing playing</div>
         </div>
+        <RatingButtons v-if="nowPlaying && !readOnly" class="text-text" :now-playing="nowPlaying" :party-code="partyCode" :my-rating="myRating" />
         <button
             type="button"
             disabled

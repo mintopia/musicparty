@@ -13,6 +13,8 @@ class RequestRefusedException extends RuntimeException
 
     public const PARTY_NOT_LIVE = 422;
 
+    public const PARTY_ENDED = 422;
+
     public const REQUESTS_DISABLED = 422;
 
     public const UNKNOWN_TRACK = 422;
@@ -50,6 +52,11 @@ class RequestRefusedException extends RuntimeException
     public static function partyNotLive(): self
     {
         return new self('This party is not live, so requests are closed.', self::PARTY_NOT_LIVE);
+    }
+
+    public static function partyEnded(): self
+    {
+        return new self('This party has ended, so ratings are closed.', self::PARTY_ENDED);
     }
 
     public static function requestsDisabled(): self

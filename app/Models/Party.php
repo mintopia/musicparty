@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\SelectionMode;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
@@ -43,12 +44,14 @@ class Party extends Model
         'active' => true,
         'show_qrcode' => false,
         'state' => 'paused',
+        'selection_mode' => 'deterministic',
     ];
 
     protected $casts = [
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
         'state' => PartyState::class,
+        'selection_mode' => SelectionMode::class,
         'allow_requests' => 'boolean',
         'explicit' => 'boolean',
         'downvotes' => 'boolean',

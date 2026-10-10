@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Domain\Queue\RequestStatus;
+use Carbon\CarbonImmutable;
 use Database\Factories\TrackRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -19,6 +20,18 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property Carbon|null $decided_at
  * @property string|null $rejection_reason
+ * @property int|null $likes
+ * @property int|null $dislikes
+ * @property int|null $my_rating
+ * @property int|null $party_member_id
+ * @property string $provider_track_id
+ * @property int $duration_ms
+ * @property CarbonImmutable|null $not_before
+ * @property CarbonImmutable|null $up_next_at
+ * @property CarbonImmutable|null $enqueued_at
+ * @property CarbonImmutable|null $started_at
+ * @property string|null $selection_mode
+ * @property int|null $selection_score
  */
 #[Unguarded]
 class TrackRequest extends Model
@@ -34,6 +47,11 @@ class TrackRequest extends Model
             'explicit' => 'boolean',
             'duration_ms' => 'integer',
             'decided_at' => 'datetime',
+            'not_before' => 'immutable_datetime',
+            'up_next_at' => 'immutable_datetime',
+            'enqueued_at' => 'immutable_datetime',
+            'started_at' => 'immutable_datetime',
+            'selection_score' => 'integer',
         ];
     }
 
@@ -59,5 +77,13 @@ class TrackRequest extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(RequestVote::class);
+    }
+
+    /**
+     * @return HasMany<PlayRating, $this>
+     */
+    public function ratings(): HasMany
+    {
+        return $this->hasMany(PlayRating::class);
     }
 }

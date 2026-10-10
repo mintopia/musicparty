@@ -13,9 +13,10 @@ use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestAddedEvent;
-use App\Events\Party\QueueUpdatedEvent;
 use App\Events\Party\RequestDecidedEvent;
 use App\Events\Party\RequestRejectedEvent;
+use App\Jobs\BroadcastPartyQueue;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\RequestVote;
@@ -56,6 +57,10 @@ class RequestTrack
 
         $this->announce($party, $member, $outcome);
 
+        if ($outcome->created && $outcome->request->status === RequestStatus::Queued) {
+            StartPlayback::dispatch($party->code);
+        }
+
         return $outcome;
     }
 
@@ -64,7 +69,7 @@ class RequestTrack
         $request = $outcome->request;
 
         if ($request->status !== RequestStatus::Pending) {
-            QueueUpdatedEvent::dispatch($party->code);
+            BroadcastPartyQueue::dispatch($party->code);
 
             return;
         }

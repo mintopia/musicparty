@@ -10,8 +10,11 @@ use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Playback\Actions\ControlPlayback;
+use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyControlRequest;
+use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
@@ -64,7 +67,7 @@ class PartyController extends Controller
         $user = $request->user();
         assert($user instanceof User);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
         $result = $updateSettings($user, $party, $settings);
 
         $response = new PartyResource($result['party']);
@@ -118,6 +121,17 @@ class PartyController extends Controller
         $this->authorize('viewLog', $party);
 
         return PartyLogEntryResource::collection($listLog($party));
+    }
+
+    public function playback(ControlPlaybackRequest $request, ControlPlayback $controlPlayback, Party $party): JsonResponse
+    {
+        try {
+            $controlPlayback($party, $request->control(), $request->value());
+        } catch (PlaybackControlRefusedException $exception) {
+            return response()->json(['message' => $exception->getMessage()], $exception->status());
+        }
+
+        return response()->json(['data' => ['control' => $request->control()->value, 'value' => $request->value()]]);
     }
 
     public function control(PartyControlRequest $request, Party $party)

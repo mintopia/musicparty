@@ -2,8 +2,12 @@
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
+import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
+import UpNextCard from '../../Components/UpNextCard.vue';
+import PlayedHistory from '../../Components/PlayedHistory.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
+import PlaybackControls from '../../Components/PlaybackControls.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -13,7 +17,12 @@ const props = defineProps({
     canManageBlocklist: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
+    myRating: {type: Number, default: 0},
+    ratablePlay: {type: Object, default: null},
+    upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
+    history: {type: Object, default: null},
+    filters: {type: Object, default: () => ({})},
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
@@ -23,7 +32,7 @@ const channelName = `party.${props.party.code}`;
 
 onMounted(() => {
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying'], preserveScroll: true});
+        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
     });
 });
 
@@ -76,13 +85,19 @@ const readOnlyMessage = computed(() =>
     props.membership.banned ? 'You have been banned from this party.' : 'This party has ended.',
 );
 
-const placeholders = {
-    history: 'Nothing has been played yet.',
-};
+const ratingLocked = computed(() => props.membership.banned || props.party.state === 'ended');
 </script>
 
 <template>
     <Head :title="party.name" />
+    <NowPlayingBanner
+        v-if="section === 'queue' || section === 'history'"
+        :now-playing="nowPlaying"
+        :ratable-play="ratablePlay"
+        :my-rating="myRating"
+        :party-code="party.code"
+        :read-only="ratingLocked"
+    />
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
@@ -144,6 +159,8 @@ const placeholders = {
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
 
+        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" />
+
         <div
             v-if="readOnly"
             role="status"
@@ -153,7 +170,7 @@ const placeholders = {
             {{ readOnlyMessage }}
         </div>
 
-        <section :class="section === 'queue' || section === 'search' ? '' : 'rounded border border-border bg-surface px-5 py-5'">
+        <section :class="['queue', 'search', 'history'].includes(section) ? '' : 'rounded border border-border bg-surface px-5 py-5'">
             <dl v-if="section === 'party'" class="grid grid-cols-[auto_1fr] gap-x-4 gap-y-2 text-sm">
                 <dt class="text-muted">Code</dt>
                 <dd>{{ party.code }}</dd>
@@ -189,6 +206,7 @@ const placeholders = {
                 </template>
             </dl>
             <template v-else-if="section === 'queue'">
+                <UpNextCard :up-next="upNext" class="mb-6" />
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
                 <QueueList :queue="queue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>
@@ -196,7 +214,10 @@ const placeholders = {
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
                 <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
             </template>
-            <p v-else class="text-sm text-muted">{{ placeholders[section] }}</p>
+            <template v-else-if="section === 'history'">
+                <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>
+                <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
+            </template>
         </section>
     </div>
 </template>
