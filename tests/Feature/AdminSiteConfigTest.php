@@ -5,7 +5,6 @@ use App\Domain\Admin\ProviderCatalogue;
 use App\Models\AdminAuditEntry;
 use App\Models\Party;
 use App\Models\ProviderSetting;
-use App\Models\Setting;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -17,15 +16,7 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
-function resetSettingsCache(): void
-{
-    new ReflectionProperty(Setting::class, 'cached')->setValue(null, []);
-}
-
-afterEach(fn () => resetSettingsCache());
-
 beforeEach(function (): void {
-    resetSettingsCache();
     Storage::fake('public');
     $this->withoutVite();
 });
