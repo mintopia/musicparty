@@ -7,9 +7,6 @@ namespace Tests\Support;
 use RuntimeException;
 use Symfony\Component\Yaml\Yaml;
 
-/**
- * Parsed view of a deployment file (Compose file, workflow or env file) for structural assertions.
- */
 final readonly class DeployConfig
 {
     /**
@@ -85,8 +82,6 @@ final readonly class DeployConfig
     }
 
     /**
-     * Command as an argv list, whether written as a string or a list.
-     *
      * @return list<string>
      */
     public function command(string $service, string $key = 'command'): array
@@ -109,8 +104,6 @@ final readonly class DeployConfig
     }
 
     /**
-     * env_file normalised to a list of paths.
-     *
      * @return list<string>
      */
     public function envFiles(string $service): array
@@ -124,8 +117,6 @@ final readonly class DeployConfig
     }
 
     /**
-     * environment normalised to a key => value map, accepting map or KEY=VALUE list form.
-     *
      * @return array<string, string|null>
      */
     public function environment(string $service): array
