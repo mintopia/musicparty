@@ -23,7 +23,6 @@ const props = (over = {}) => ({
     party: {code: 'FRI1', name: 'Friday Night LAN', state: 'live', joinUrl: 'http://localhost/parties/FRI1'},
     nowPlaying: entry(),
     upNext: entry({id: 2, track: {title: 'Lights Out', artists: ['Allstars'], album: null, artwork_url: null, duration_ms: 193000, explicit: false}}),
-    sequence: 5,
     startedAt: null,
     ...over,
 });
@@ -95,18 +94,19 @@ describe('TV screen', () => {
         expect(echo.join).not.toHaveBeenCalled();
     });
 
-    it('applies newer snapshots and ignores stale ones', async () => {
+    it('applies every snapshot it receives, including after a reload with any payload', async () => {
         const w = mount(Tv, {props: props()});
         const next = entry({id: 9, track: {title: 'Fresh', artists: ['X'], album: null, artwork_url: null, duration_ms: 1000, explicit: false}});
 
-        listeners['Party.QueueUpdatedEvent']({sequence: 6, now_playing: next, up_next: null});
+        listeners['Party.QueueUpdatedEvent']({now_playing: next, up_next: null});
         await w.vm.$nextTick();
         expect(w.get('[data-testid=tv-now-playing-title]').text()).toBe('Fresh');
         expect(w.find('[data-testid=tv-up-next-empty]').exists()).toBe(true);
 
-        listeners['Party.QueueUpdatedEvent']({sequence: 5, now_playing: entry(), up_next: null});
+        const earlier = entry({id: 3, track: {title: 'Earlier', artists: ['Y'], album: null, artwork_url: null, duration_ms: 1000, explicit: false}});
+        listeners['Party.QueueUpdatedEvent']({now_playing: earlier, up_next: null});
         await w.vm.$nextTick();
-        expect(w.get('[data-testid=tv-now-playing-title]').text()).toBe('Fresh');
+        expect(w.get('[data-testid=tv-now-playing-title]').text()).toBe('Earlier');
     });
 
     it('leaves the channel on unmount', () => {
@@ -151,7 +151,7 @@ describe('TV screen', () => {
         const w = mount(Tv, {props: props()});
         window.dispatchEvent(new Event('realtime:resync'));
         expect(reload).toHaveBeenCalledTimes(1);
-        expect(reload.mock.calls[0][0].only).toEqual(['nowPlaying', 'upNext', 'sequence', 'startedAt']);
+        expect(reload.mock.calls[0][0].only).toEqual(['nowPlaying', 'upNext', 'startedAt']);
         w.unmount();
         window.dispatchEvent(new Event('realtime:resync'));
         expect(reload).toHaveBeenCalledTimes(1);

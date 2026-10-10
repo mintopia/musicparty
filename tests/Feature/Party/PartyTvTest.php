@@ -25,7 +25,7 @@ it('renders the TV screen for guests without authentication', function () {
             ->where('nowPlaying.id', $playing->id)
             ->where('nowPlaying.track.title', 'Now Song')
             ->where('upNext.id', $next->id)
-            ->has('sequence')
+            ->missing('sequence')
             ->where('startedAt', null));
 });
 

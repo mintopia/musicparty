@@ -49,7 +49,6 @@ it('builds a snapshot of now playing, up next and the ordered queue with nicknam
     $snapshot = app(PartyQueueSnapshot::class)->build($this->party);
 
     expect($snapshot['version'])->toBe(1)
-        ->and($snapshot['sequence'])->toBe(1)
         ->and($snapshot['code'])->toBe('ABCD')
         ->and($snapshot['now_playing']['track']['title'])->toBe('Now')
         ->and($snapshot['now_playing']['requested_by'])->toBe(['name' => 'Alice'])
@@ -63,18 +62,11 @@ it('has a stable payload shape', function () {
 
     $snapshot = app(PartyQueueSnapshot::class)->build($this->party);
 
-    expect(array_keys($snapshot))->toBe(['version', 'sequence', 'code', 'now_playing', 'up_next', 'queue'])
+    expect(array_keys($snapshot))->toBe(['version', 'code', 'now_playing', 'up_next', 'queue'])
         ->and($snapshot['now_playing'])->toBeNull()
         ->and($snapshot['up_next'])->toBeNull()
         ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'requested_by', 'decorations'])
         ->and(array_keys($snapshot['queue'][0]['track']))->toBe(['title', 'artists', 'album', 'artwork_url', 'duration_ms', 'explicit']);
-});
-
-it('increments the sequence on every snapshot', function () {
-    $builder = app(PartyQueueSnapshot::class);
-
-    expect($builder->build($this->party)['sequence'])->toBe(1)
-        ->and($builder->build($this->party)['sequence'])->toBe(2);
 });
 
 it('excludes pending, rejected and played requests and other parties', function () {
