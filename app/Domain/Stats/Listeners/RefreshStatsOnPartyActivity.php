@@ -6,15 +6,12 @@ use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\VoteCast;
-use App\Domain\Stats\Actions\RefreshPartyStats;
-use App\Models\Party;
+use App\Jobs\RefreshPartyStatsJob;
 
 readonly class RefreshStatsOnPartyActivity
 {
-    public function __construct(private RefreshPartyStats $refresh) {}
-
     public function handle(RequestCreated|VoteCast|TrackEnded|RequestDecisionRecorded $event): void
     {
-        ($this->refresh)($event instanceof RequestDecisionRecorded ? Party::query()->findOrFail($event->partyId) : $event->party);
+        RefreshPartyStatsJob::dispatch($event instanceof RequestDecisionRecorded ? $event->partyId : $event->party->id);
     }
 }
