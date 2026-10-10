@@ -11,11 +11,11 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
-use App\Jobs\ProcessPlayerFrame;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
+use App\Domain\Playback\Jobs\ProcessPlayerFrame;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Observers\SettingObserver;
 use App\Observers\UserObserver;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -63,10 +63,8 @@ class ArchitectureRules
             'identity' => [
                 'members' => [
                     'App\\Domain\\Identity\\',
-                    'App\\Services\\SocialProviders\\',
                     UserObserver::class,
                     SettingObserver::class,
-                    'App\\Events\\User\\',
                 ],
                 'models' => [
                     User::class,
@@ -79,7 +77,6 @@ class ArchitectureRules
             'party' => [
                 'members' => [
                     'App\\Domain\\Party\\',
-                    'App\\Events\\Party\\',
                 ],
                 'models' => [
                     Party::class,
@@ -181,7 +178,7 @@ class ArchitectureRules
                 }
             }
 
-            if (preg_match('/\\\\?App\\\\(Domain|Models|Actions)\\\\/', preg_replace('/^use\\s.*$/m', '', $source) ?? '', $match)) {
+            if (preg_match('/\\\\?App\\\\(Domain|Models|Actions)\\\\/', preg_replace('/^(?:use|namespace)\\s.*$/m', '', $source) ?? '', $match)) {
                 $found[] = $match[0];
             }
 
@@ -422,13 +419,24 @@ class ArchitectureRules
     }
 
     /**
+     * @return array<int, class-string>
+     */
+    private static function modelClasses(): array
+    {
+        return array_values(array_filter(
+            self::appClasses(),
+            static fn (string $class): bool => str_contains($class, '\\Models\\') && is_subclass_of($class, Model::class),
+        ));
+    }
+
+    /**
      * @return array<int, ReflectionMethod>
      */
     private static function supportingMethods(string $name): array
     {
         $methods = [];
 
-        foreach (self::classesIn(self::appPath('Models'), 'App\\Models') as $model) {
+        foreach (self::modelClasses() as $model) {
             $reflection = new ReflectionClass($model);
 
             if ($reflection->hasMethod($name) && $reflection->getMethod($name)->getDeclaringClass()->getName() === $model) {

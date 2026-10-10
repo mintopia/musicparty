@@ -6,13 +6,13 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Broadcast\PendingRequestResolvedEvent;
+use App\Domain\Queue\Broadcast\RequestDecidedEvent;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\PendingRequestResolvedEvent;
-use App\Events\Party\RequestDecidedEvent;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\TrackRequest;
 
 trait ModeratesRequests
 {

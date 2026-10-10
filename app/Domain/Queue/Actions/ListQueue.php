@@ -4,8 +4,8 @@ namespace App\Domain\Queue\Actions;
 
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Collection;
 
 class ListQueue

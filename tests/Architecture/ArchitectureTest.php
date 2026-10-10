@@ -2,8 +2,8 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
-use App\Listeners\HandlePlayerClientEvent;
-use App\Models\Play;
+use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
+use App\Domain\Queue\Models\Play;
 use Tests\Architecture\Support\ArchitectureRules;
 use Tests\Fixtures\Architecture\CrossContextWriter;
 use Tests\Fixtures\Architecture\LeakyBroadcastEvent;
@@ -58,3 +58,7 @@ it('detects domain access in a violating Reverb listener fixture', function () {
     expect($violations)->toHaveKey(ReverbListenerLeaker::class)
         ->and($violations[ReverbListenerLeaker::class])->toContain(Party::class);
 });
+
+it('keeps no classes under the removed legacy directories', function (string $directory) {
+    expect(glob(dirname(__DIR__, 2).'/app/'.$directory.'/*'))->toBe([]);
+})->with(['Models', 'Events', 'Jobs', 'Listeners', 'Services']);

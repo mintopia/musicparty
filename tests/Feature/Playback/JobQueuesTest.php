@@ -1,14 +1,14 @@
 <?php
 
+use App\Domain\Mod\Jobs\ReviewRequestWithAi;
+use App\Domain\Mod\Jobs\RunModScheduledActions;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Playback\Jobs\CheckSoloistHealth;
 use App\Domain\Playback\Jobs\PollPlayback;
-use App\Jobs\BroadcastPartyQueue;
-use App\Jobs\ProcessPlayerFrame;
-use App\Jobs\ReviewRequestWithAi;
-use App\Jobs\RunModScheduledActions;
-use App\Jobs\StartPlayback;
-use App\Jobs\TickPlayback;
+use App\Domain\Playback\Jobs\ProcessPlayerFrame;
+use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Playback\Jobs\TickPlayback;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 
 it('routes each job to its queue', function (object $job, string $queue) {
@@ -32,8 +32,8 @@ it('defines one supervisor per queue', function () {
 });
 
 it('sends every broadcast event to the broadcast queue', function () {
-    $events = collect(glob(app_path('Events/Party/*.php')))
-        ->map(fn (string $file) => 'App\\Events\\Party\\'.basename($file, '.php'))
+    $events = collect(glob(app_path('Domain/{Queue,Stats,Theming}/Broadcast/*Event.php'), GLOB_BRACE))
+        ->map(fn (string $file) => 'App\\Domain\\'.basename(dirname($file, 2)).'\\Broadcast\\'.basename($file, '.php'))
         ->filter(fn (string $class) => is_subclass_of($class, ShouldBroadcast::class));
 
     expect($events)->not->toBeEmpty();

@@ -6,9 +6,9 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Data\QueueAdvance;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Play;
-use App\Models\TrackRequest;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 

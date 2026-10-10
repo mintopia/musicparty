@@ -1,7 +1,7 @@
 <?php
 
-use App\Services\OpenApi\OpenApiCoverage;
-use App\Services\OpenApi\OpenApiGenerator;
+use App\Support\OpenApi\OpenApiCoverage;
+use App\Support\OpenApi\OpenApiGenerator;
 use Illuminate\Support\Facades\Route;
 
 function committedOpenApi(): array

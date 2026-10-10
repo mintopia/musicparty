@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\OpenApi\RuleSchemaMapper;
+use App\Support\OpenApi\RuleSchemaMapper;
 
 it('maps common validation rules to schemas', function () {
     $result = (new RuleSchemaMapper)->map([

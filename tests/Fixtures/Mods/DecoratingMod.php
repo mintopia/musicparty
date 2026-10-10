@@ -4,8 +4,8 @@ namespace Tests\Fixtures\Mods;
 
 use App\Domain\Mod\Contracts\DecorationProvider;
 use App\Domain\Mod\Data\ModContext;
-use App\Models\Play;
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use RuntimeException;
 
 class DecoratingMod extends BaseFixtureMod

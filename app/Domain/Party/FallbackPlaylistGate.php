@@ -8,7 +8,7 @@ use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Blocklist;
-use App\Models\Play;
+use App\Domain\Queue\Models\Play;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class FallbackPlaylistGate

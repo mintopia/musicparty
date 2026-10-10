@@ -3,13 +3,13 @@
 namespace App\Domain\Mod\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModSettings;
 use App\Domain\Mod\PartyMods;
 use App\Domain\Mod\SettingKind;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\PartyMod;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

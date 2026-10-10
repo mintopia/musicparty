@@ -3,8 +3,8 @@
 namespace App\Domain\Mod;
 
 use App\Domain\Mod\Data\ModContext;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Party\Models\Party;
-use App\Models\PartyMod;
 
 class PartyMods
 {

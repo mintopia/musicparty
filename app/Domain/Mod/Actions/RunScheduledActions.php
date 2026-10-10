@@ -8,11 +8,11 @@ use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Jobs\StartPlayback;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
-use App\Jobs\BroadcastPartyQueue;
-use App\Jobs\StartPlayback;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 

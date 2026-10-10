@@ -3,10 +3,10 @@
 namespace App\Domain\Mod\Actions;
 
 use App\Domain\Mod\Data\ModStatus;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\ModSettings;
 use App\Domain\Party\Models\Party;
-use App\Models\PartyMod;
 
 readonly class ListMods
 {

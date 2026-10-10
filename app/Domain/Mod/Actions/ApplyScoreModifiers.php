@@ -6,7 +6,7 @@ use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\TrackRequest;
 use Throwable;
 
 readonly class ApplyScoreModifiers

@@ -113,7 +113,7 @@
         "messages": {
             "Party.QueueUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\QueueUpdatedEvent",
+                "name": "App\\Domain\\Queue\\Broadcast\\QueueUpdatedEvent",
                 "payload": {
                     "type": "object",
                     "additionalProperties": false,
@@ -645,7 +645,7 @@
                     }
                 },
                 "title": "Party.QueueUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\QueueUpdatedEvent",
                 "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
             },
             "Presence.MemberAdded": {
@@ -726,7 +726,7 @@
             },
             "Party.RequestRejectedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\RequestRejectedEvent",
+                "name": "App\\Domain\\Queue\\Broadcast\\RequestRejectedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -746,11 +746,11 @@
                     "type": "object"
                 },
                 "title": "Party.RequestRejectedEvent",
-                "x-event-class": "App\\Events\\Party\\RequestRejectedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\RequestRejectedEvent"
             },
             "Party.PendingRequestAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PendingRequestAddedEvent",
+                "name": "App\\Domain\\Queue\\Broadcast\\PendingRequestAddedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -783,11 +783,11 @@
                     "type": "object"
                 },
                 "title": "Party.PendingRequestAddedEvent",
-                "x-event-class": "App\\Events\\Party\\PendingRequestAddedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\PendingRequestAddedEvent"
             },
             "Party.PendingRequestResolvedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PendingRequestResolvedEvent",
+                "name": "App\\Domain\\Queue\\Broadcast\\PendingRequestResolvedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -807,11 +807,11 @@
                     "type": "object"
                 },
                 "title": "Party.PendingRequestResolvedEvent",
-                "x-event-class": "App\\Events\\Party\\PendingRequestResolvedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\PendingRequestResolvedEvent"
             },
             "Party.PartyLogEntryAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PartyLogEntryAddedEvent",
+                "name": "App\\Domain\\Party\\Broadcast\\PartyLogEntryAddedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -839,11 +839,11 @@
                     "type": "object"
                 },
                 "title": "Party.PartyLogEntryAddedEvent",
-                "x-event-class": "App\\Events\\Party\\PartyLogEntryAddedEvent"
+                "x-event-class": "App\\Domain\\Party\\Broadcast\\PartyLogEntryAddedEvent"
             },
             "Party.RequestDecidedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\RequestDecidedEvent",
+                "name": "App\\Domain\\Queue\\Broadcast\\RequestDecidedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -871,11 +871,11 @@
                     "type": "object"
                 },
                 "title": "Party.RequestDecidedEvent",
-                "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\RequestDecidedEvent"
             },
             "Player.PlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Player\\PlayerCommandEvent",
+                "name": "App\\Domain\\Playback\\Broadcast\\PlayerCommandEvent",
                 "payload": {
                     "additionalProperties": true,
                     "description": "Soloist-native frame object, passed through unchanged",
@@ -883,7 +883,7 @@
                 },
                 "summary": "Event name player.command",
                 "title": "Player.PlayerCommandEvent",
-                "x-event-class": "App\\Events\\Player\\PlayerCommandEvent"
+                "x-event-class": "App\\Domain\\Playback\\Broadcast\\PlayerCommandEvent"
             },
             "Player.ClientFrame": {
                 "contentType": "application/json",
@@ -904,11 +904,11 @@
                     "type": "object"
                 },
                 "title": "Party.ThemeUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
+                "x-event-class": "App\\Domain\\Theming\\Broadcast\\ThemeUpdatedEvent"
             },
             "Party.StatsUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\StatsUpdatedEvent",
+                "name": "App\\Domain\\Stats\\Broadcast\\StatsUpdatedEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -955,11 +955,11 @@
                     "type": "object"
                 },
                 "title": "Party.StatsUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\StatsUpdatedEvent"
+                "x-event-class": "App\\Domain\\Stats\\Broadcast\\StatsUpdatedEvent"
             },
             "Player.BrowserPlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Player\\BrowserPlayerCommandEvent",
+                "name": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -985,7 +985,7 @@
                 },
                 "summary": "Event name browser-player.command",
                 "title": "Player.BrowserPlayerCommandEvent",
-                "x-event-class": "App\\Events\\Player\\BrowserPlayerCommandEvent"
+                "x-event-class": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent"
             }
         }
     },

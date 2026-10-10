@@ -12,9 +12,9 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Play;
-use App\Models\TrackRequest;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 

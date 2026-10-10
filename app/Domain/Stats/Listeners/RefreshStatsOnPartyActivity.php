@@ -6,7 +6,7 @@ use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\VoteCast;
-use App\Jobs\RefreshPartyStatsJob;
+use App\Domain\Stats\Jobs\RefreshPartyStatsJob;
 
 readonly class RefreshStatsOnPartyActivity
 {

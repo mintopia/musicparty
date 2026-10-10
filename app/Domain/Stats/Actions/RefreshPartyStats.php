@@ -3,8 +3,8 @@
 namespace App\Domain\Stats\Actions;
 
 use App\Domain\Party\Models\Party;
-use App\Events\Party\StatsUpdatedEvent;
-use App\Models\PartyStat;
+use App\Domain\Stats\Broadcast\StatsUpdatedEvent;
+use App\Domain\Stats\Models\PartyStat;
 
 readonly class RefreshPartyStats
 {

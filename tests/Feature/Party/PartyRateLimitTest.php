@@ -2,7 +2,7 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 

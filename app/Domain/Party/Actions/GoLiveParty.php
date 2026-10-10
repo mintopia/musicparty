@@ -10,7 +10,7 @@ use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Jobs\PollPlayback;
-use App\Jobs\StartPlayback;
+use App\Domain\Playback\Jobs\StartPlayback;
 use Illuminate\Support\Facades\DB;
 
 readonly class GoLiveParty
