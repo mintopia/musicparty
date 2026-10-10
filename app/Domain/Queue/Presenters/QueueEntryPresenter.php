@@ -20,6 +20,7 @@ readonly class QueueEntryPresenter
     {
         $requester = $request->requester?->user;
         $play = $request->relationLoaded('play') ? $request->play : null;
+        $hasOtherVotes = $request->getAttribute('has_other_votes');
 
         return [
             'id' => $request->id,
@@ -36,6 +37,7 @@ readonly class QueueEntryPresenter
             'score' => (int) $request->score,
             ...($request->relationLoaded('play') ? ['likes' => (int) $play?->likes, 'dislikes' => (int) $play?->dislikes, 'play_id' => $play?->id] : []),
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
+            ...($hasOtherVotes === null ? [] : ['has_other_votes' => (bool) $hasOtherVotes]),
             'decorations' => ($this->decorations)($request),
         ];
     }

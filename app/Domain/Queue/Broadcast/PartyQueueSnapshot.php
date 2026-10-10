@@ -23,7 +23,8 @@ class PartyQueueSnapshot
             ->where('party_id', $party->id)
             ->whereIn('status', [RequestStatus::Playing, RequestStatus::UpNext, RequestStatus::Queued])
             ->with('requester.user', 'party')
-            ->with(['play' => fn ($query) => $query->withRatingSummary()]))->requests;
+            ->with(['play' => fn ($query) => $query->withRatingSummary()])
+            ->withHasOtherVotes())->requests;
 
         $nowPlaying = $requests->first(fn (TrackRequest $request): bool => $request->status === RequestStatus::Playing);
         $upNext = $requests->first(fn (TrackRequest $request): bool => $request->status === RequestStatus::UpNext);

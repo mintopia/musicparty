@@ -9,6 +9,7 @@ use Carbon\CarbonImmutable;
 use Database\Factories\TrackRequestFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -92,6 +93,14 @@ class TrackRequest extends Model
     public function votes(): HasMany
     {
         return $this->hasMany(RequestVote::class);
+    }
+
+    /**
+     * @param  Builder<TrackRequest>  $query
+     */
+    public function scopeWithHasOtherVotes(Builder $query): void
+    {
+        $query->withExists(['votes as has_other_votes' => fn ($votes) => $votes->whereColumn('request_votes.party_member_id', '!=', 'track_requests.party_member_id')]);
     }
 
     /**

@@ -23,7 +23,7 @@ readonly class ListQueue
             ->with('requester.user', 'party')
             ->with(['play' => fn ($query) => $query->withRatingSummary($viewer)])
             ->withSum(['votes as my_vote' => fn ($query) => $query->where('party_member_id', $viewer?->id)], 'value')
-            ->withExists(['votes as has_other_votes' => fn ($query) => $query->whereColumn('request_votes.party_member_id', '!=', 'track_requests.party_member_id')]))->requests;
+            ->withHasOtherVotes())->requests;
 
         $requests->each(fn (TrackRequest $request) => $request->setAttribute('is_mine', $viewer !== null && $request->party_member_id === $viewer->id));
 
