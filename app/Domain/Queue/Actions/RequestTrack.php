@@ -64,6 +64,8 @@ class RequestTrack
                 return $this->place($party, $member, $track, $decision);
             });
         } catch (RequestRefusedException $refusal) {
+            $this->blocklist->flushFailures();
+
             if ($decision !== null) {
                 ($this->recordModDecision)($party, $decision, $track);
             }
@@ -74,6 +76,8 @@ class RequestTrack
 
             throw $refusal;
         }
+
+        $this->blocklist->flushFailures();
 
         if ($decision !== null && $outcome->created) {
             ($this->recordModDecision)($party, $decision, $track, $outcome->request->id);
@@ -259,7 +263,7 @@ class RequestTrack
 
         if ($party->no_repeat_interval) {
             $played = $this->matchingQuery($party, $track)
-                ->where('status', RequestStatus::Played)
+                ->whereIn('status', [RequestStatus::Playing, RequestStatus::Played])
                 ->where('updated_at', '>=', now()->subSeconds($party->no_repeat_interval))
                 ->latest('updated_at')
                 ->first();

@@ -6,14 +6,19 @@ use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Queue\BlocklistMatchType;
 use App\Domain\Queue\Broadcast\RequestRejectedEvent;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
@@ -267,4 +272,35 @@ it('refuses an explicit track when explicit is turned off while the provider loo
     ruleRequest($this->member, 'dirty')->assertUnprocessable()->assertJsonPath('message', 'Explicit tracks are not allowed in this party.');
 
     expect(TrackRequest::query()->count())->toBe(0);
+});
+
+it('treats the Playing request as played for the no-repeat rule', function (int $interval, int $status) {
+    $this->party->forceFill(['no_repeat_interval' => $interval])->save();
+    activeRequest($this->party, PartyMember::factory()->for($this->party)->create(), ['provider_track_id' => 't1', 'isrc' => 'ISRC1', 'status' => RequestStatus::Playing]);
+
+    ruleRequest($this->member, 't1')->assertStatus($status);
+})->with([
+    'interval set' => [3600, 409],
+    'interval zero' => [0, 201],
+]);
+
+it('fails closed and logs when a blocklist pattern errors, leaving other entries evaluating', function () {
+    ini_set('pcre.backtrack_limit', '100');
+    Cache::flush();
+    $bad = BlocklistEntry::factory()->for($this->party)->create(['match_type' => BlocklistMatchType::TrackName, 'value' => '(a+)+$', 'is_regex' => true]);
+    $good = BlocklistEntry::factory()->for($this->party)->create(['match_type' => BlocklistMatchType::TrackName, 'value' => 'Song t2', 'is_regex' => false]);
+    app()->instance(FakeMusicProvider::class, new FakeMusicProvider([
+        ruleTrack('t1'),
+        new TrackData('fake', 't2', 'Song t2', [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), 180000, false),
+        new TrackData('fake', 't3', str_repeat('a', 5000).'!', [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), 180000, false),
+    ]));
+    Log::spy();
+
+    ruleRequest($this->member, 't3')->assertStatus(422);
+    ruleRequest($this->member, 't3')->assertStatus(422);
+    ruleRequest($this->member, 't2')->assertStatus(422);
+
+    Log::shouldHaveReceived('warning')->with(Mockery::on(fn ($m) => str_contains($m, 'Blocklist pattern')), Mockery::on(fn ($c) => $c['blocklist_entry_id'] === $bad->id))->atLeast()->once();
+    expect(PartyLogEntry::query()->where('action', 'blocklist.pattern_failed')->count())->toBe(1);
+    ini_restore('pcre.backtrack_limit');
 });
