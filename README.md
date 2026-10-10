@@ -159,7 +159,8 @@ AsyncAPI tests. Run `vendor/bin/pint` to fix formatting.
 ## Production deployment
 
 Images are published to `ghcr.io/mintopia/musicparty` by `.github/workflows/publish-docker-images.yml` for `linux/amd64`
-and `linux/arm64`. Tags: `latest` (master branch), `develop` (develop branch) and a version tag for each `vX.Y.Z` release.
+and `linux/arm64`. Tags: `latest` (master branch), `develop` (develop branch), `feature-v3-rewrite` (the v3 integration
+branch) and a version tag for each `vX.Y.Z` release.
 
 `example/docker-compose.yml` runs the web app, Horizon, the scheduler, Reverb, Redis and MariaDB from the image.
 
