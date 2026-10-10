@@ -162,9 +162,15 @@ it('handles a provider failure gracefully', function () {
 });
 
 it('logs out', function () {
-    $this->actingAs(User::factory()->create())->get(route('logout'))->assertRedirect(route('home'));
+    $this->actingAs(User::factory()->create())->post(route('logout'))->assertRedirect(route('home'));
 
     $this->assertGuest();
+});
+
+it('stays logged in on GET /logout', function () {
+    $this->actingAs(User::factory()->create())->get('/logout')->assertMethodNotAllowed();
+
+    $this->assertAuthenticated();
 });
 
 it('resolves one user and one linked account when a concurrent login inserts the identity first', function () {
