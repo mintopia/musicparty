@@ -12,14 +12,16 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function home(SiteSettings $site): Response|RedirectResponse
+    public function home(Request $request, SiteSettings $site): Response|RedirectResponse
     {
         $defaultParty = $site->get('default_party');
         if ($defaultParty !== null && Party::query()->where('code', $defaultParty)->exists()) {
             return redirect('/parties/'.$defaultParty);
         }
 
-        return Inertia::render('Home');
+        return Inertia::render('Home', [
+            'canCreateParty' => $request->user()?->can('create', Party::class) ?? false,
+        ]);
     }
 
     public function proxy(Request $request): \Illuminate\Http\Response

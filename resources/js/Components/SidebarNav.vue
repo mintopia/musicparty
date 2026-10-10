@@ -54,6 +54,14 @@ const itemClass = (active) => [
                         :href="`/parties/${party.code}/search`"
                         :class="[itemClass(isActive(`/parties/${party.code}/search`)), '!pl-11']"
                     >Search</Link>
+                    <Link
+                        :href="`/parties/${party.code}/history`"
+                        :class="[itemClass(isActive(`/parties/${party.code}/history`)), '!pl-11']"
+                    >History</Link>
+                    <Link
+                        :href="`/parties/${party.code}/party`"
+                        :class="[itemClass(isActive(`/parties/${party.code}/party`)), '!pl-11']"
+                    >Party</Link>
                 </div>
             </div>
 

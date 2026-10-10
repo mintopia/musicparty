@@ -21,8 +21,8 @@ class SocialProviderFactory extends Factory
             'code' => 'discord',
             'provider_class' => DiscordProvider::class,
             'supports_auth' => true,
-            'enabled' => false,
-            'auth_enabled' => false,
+            'enabled' => true,
+            'auth_enabled' => true,
             'can_be_renamed' => false,
         ];
     }

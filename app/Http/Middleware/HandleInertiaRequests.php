@@ -32,7 +32,7 @@ class HandleInertiaRequests extends Middleware
                 ] : null,
             ],
             'parties' => fn (): array => $request->user()
-                ? $request->user()->parties->map(fn ($party): array => [
+                ? $request->user()->memberParties->map(fn ($party): array => [
                     'code' => $party->code,
                     'name' => $party->name,
                 ])->values()->all()

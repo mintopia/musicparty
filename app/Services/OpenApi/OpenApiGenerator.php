@@ -15,6 +15,16 @@ class OpenApiGenerator
 {
     public const API_PREFIX = 'api/';
 
+    /**
+     * Extra 422 descriptions for routes whose action refuses requests beyond validation.
+     *
+     * @var array<string, string>
+     */
+    private const array REFUSAL_DESCRIPTIONS = [
+        'api.v1.parties.plays.rating.store' => 'Validation failed, or the party has ended so ratings are closed.',
+        'api.v1.parties.plays.rating.destroy' => 'The party has ended so ratings are closed.',
+    ];
+
     public function __construct(private readonly RuleSchemaMapper $mapper) {}
 
     public static function isApiRoute(Route $route): bool
@@ -142,6 +152,12 @@ class OpenApiGenerator
             }
 
             $operation['responses']['422'] = ['description' => 'Validation failed.'];
+        }
+
+        $refusal = self::REFUSAL_DESCRIPTIONS[$route->getName() ?? ''] ?? null;
+
+        if ($refusal !== null) {
+            $operation['responses']['422'] = ['description' => $refusal];
         }
 
         if ($this->requiresSanctum($route)) {
