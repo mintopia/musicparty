@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\OpenApi\OpenApiGenerator;
+use App\Support\OpenApi\OpenApiGenerator;
 use Illuminate\Console\Command;
 
 class GenerateOpenApi extends Command

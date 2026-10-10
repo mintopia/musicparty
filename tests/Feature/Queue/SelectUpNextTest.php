@@ -4,12 +4,12 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Queue\Actions\SelectUpNext;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\SelectionMode;
 use App\Domain\Queue\Testing\SeededRandomizer;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 

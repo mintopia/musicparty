@@ -3,8 +3,8 @@
 use App\Domain\Admin\Actions\GrantRole;
 use App\Domain\Admin\Models\AdminAuditEntry;
 use App\Domain\Identity\Models\User;
+use App\Domain\Theming\Models\InstanceTheme;
 use App\Domain\Theming\ThemeTokens;
-use App\Models\InstanceTheme;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;

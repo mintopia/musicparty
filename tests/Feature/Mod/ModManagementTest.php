@@ -2,11 +2,11 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\PartyMods;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
-use App\Models\PartyMod;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;

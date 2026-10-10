@@ -1,6 +1,6 @@
 <?php
 
-use App\Services\AsyncApi\AsyncApiCoverage;
+use App\Support\Realtime\AsyncApiCoverage;
 use Tests\Fixtures\UndocumentedBroadcastEvent;
 
 function asyncApiSpec(): array
@@ -8,8 +8,8 @@ function asyncApiSpec(): array
     return json_decode((string) file_get_contents(base_path('asyncapi/asyncapi.json')), true, flags: JSON_THROW_ON_ERROR);
 }
 
-it('documents every broadcast event under app/Events', function () {
-    $classes = AsyncApiCoverage::discoverBroadcastEvents(app_path('Events'), 'App\\Events');
+it('documents every broadcast event under app/Domain', function () {
+    $classes = AsyncApiCoverage::discoverBroadcastEvents(app_path('Domain'), 'App\\Domain');
 
     expect($classes)->not->toBeEmpty()
         ->and(AsyncApiCoverage::undocumented($classes, asyncApiSpec()))->toBe([]);
@@ -30,7 +30,7 @@ it('is a valid AsyncAPI 3 skeleton referencing existing messages', function () {
 });
 
 it('reports a broadcast event missing from the spec', function () {
-    $classes = [...AsyncApiCoverage::discoverBroadcastEvents(app_path('Events'), 'App\\Events'), UndocumentedBroadcastEvent::class];
+    $classes = [...AsyncApiCoverage::discoverBroadcastEvents(app_path('Domain'), 'App\\Domain'), UndocumentedBroadcastEvent::class];
 
     expect(AsyncApiCoverage::undocumented($classes, asyncApiSpec()))->toBe([UndocumentedBroadcastEvent::class]);
 });

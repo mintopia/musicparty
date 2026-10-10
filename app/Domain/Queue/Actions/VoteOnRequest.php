@@ -8,11 +8,11 @@ use App\Domain\Party\PartyState;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 
 class VoteOnRequest

@@ -2,7 +2,7 @@
 
 namespace Tests\Fixtures\Architecture;
 
-use App\Models\Play;
+use App\Domain\Queue\Models\Play;
 
 class CrossContextWriter
 {

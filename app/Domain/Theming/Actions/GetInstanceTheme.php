@@ -2,8 +2,8 @@
 
 namespace App\Domain\Theming\Actions;
 
+use App\Domain\Theming\Models\InstanceTheme;
 use App\Domain\Theming\ThemeTokens;
-use App\Models\InstanceTheme;
 
 class GetInstanceTheme
 {

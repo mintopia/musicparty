@@ -3,10 +3,10 @@
 namespace Tests\Fixtures\Mods;
 
 use App\Domain\Mod\Contracts\Mod;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\PartyMods;
 use App\Domain\Party\Models\Party;
-use App\Models\PartyMod;
 
 class ModFixtures
 {

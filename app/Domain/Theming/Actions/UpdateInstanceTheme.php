@@ -4,8 +4,8 @@ namespace App\Domain\Theming\Actions;
 
 use App\Domain\Admin\Actions\RecordAdminAudit;
 use App\Domain\Identity\Models\User;
+use App\Domain\Theming\Models\InstanceTheme;
 use App\Domain\Theming\ThemeTokens;
-use App\Models\InstanceTheme;
 
 class UpdateInstanceTheme
 {

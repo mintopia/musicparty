@@ -6,8 +6,8 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class ListPendingRequests

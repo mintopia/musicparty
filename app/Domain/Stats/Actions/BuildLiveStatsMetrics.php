@@ -5,9 +5,9 @@ namespace App\Domain\Stats\Actions;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\PartyStat;
-use App\Models\TrackRequest;
+use App\Domain\Stats\Models\PartyStat;
 
 class BuildLiveStatsMetrics
 {

@@ -2,9 +2,9 @@
 
 namespace App\Console;
 
+use App\Domain\Mod\Jobs\RunModScheduledActions;
 use App\Domain\Playback\Jobs\CheckSoloistHealth;
-use App\Jobs\RunModScheduledActions;
-use App\Jobs\TickPlayback;
+use App\Domain\Playback\Jobs\TickPlayback;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 

@@ -2,11 +2,11 @@
 
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Stats\Actions\GetPartyStats;
-use App\Models\Play;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 

@@ -9,8 +9,8 @@ use App\Domain\Playback\Control;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\Testing\FakePlayer;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 

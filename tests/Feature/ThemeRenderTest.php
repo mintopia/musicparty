@@ -1,8 +1,8 @@
 <?php
 
 use App\Domain\Theming\Actions\RenderThemeCss;
+use App\Domain\Theming\Models\InstanceTheme;
 use App\Domain\Theming\ThemeTokens;
-use App\Models\InstanceTheme;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

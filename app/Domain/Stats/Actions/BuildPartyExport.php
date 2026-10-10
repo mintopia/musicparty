@@ -6,8 +6,8 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
-use App\Models\Play;
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 
 readonly class BuildPartyExport
 {
