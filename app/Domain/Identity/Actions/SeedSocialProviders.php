@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\Actions;
 
+use App\Domain\Admin\Actions\SaveProviderSetting;
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\SocialProviders\AbstractSocialProvider;
@@ -50,7 +51,7 @@ class SeedSocialProviders
 
             if (blank($setting->value) && filled($configured)) {
                 $setting->value = $configured;
-                $setting->save();
+                app(SaveProviderSetting::class)($setting);
             }
 
             if ($setting->isRequired() && blank($setting->value)) {

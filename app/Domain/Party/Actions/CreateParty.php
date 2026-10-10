@@ -3,8 +3,7 @@
 namespace App\Domain\Party\Actions;
 
 use App\Domain\Identity\Models\User;
-use App\Domain\Membership\Models\PartyMember;
-use App\Domain\Membership\PartyRole;
+use App\Domain\Membership\Actions\AddHostMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
@@ -19,6 +18,7 @@ readonly class CreateParty
         private PairPlayer $pairPlayer,
         private GeneratePartyCode $generateCode,
         private RecordPartyLogEntry $record,
+        private AddHostMember $addHost,
     ) {}
 
     /**
@@ -38,11 +38,7 @@ readonly class CreateParty
                 'state' => PartyState::Paused,
             ]);
 
-            PartyMember::query()->forceCreate([
-                'party_id' => $party->id,
-                'user_id' => $host->id,
-                'role' => PartyRole::Host,
-            ]);
+            ($this->addHost)($party, $host);
 
             ($this->record)($party, 'party.created', $host, details: [
                 'name' => $name,

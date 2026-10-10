@@ -2,6 +2,9 @@
 
 namespace Tests\Architecture\Support;
 
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Admin\Models\IntegrationToken;
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\Models\Role;
 use App\Domain\Admin\Models\Setting;
@@ -9,6 +12,8 @@ use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Models\PartyMod;
+use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\Jobs\ProcessPlayerFrame;
@@ -16,8 +21,8 @@ use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\Rating;
 use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
-use App\Observers\SettingObserver;
-use App\Observers\UserObserver;
+use App\Domain\Stats\Models\PartyStat;
+use App\Domain\Theming\Models\InstanceTheme;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Model;
@@ -52,6 +57,16 @@ class ArchitectureRules
         'update',
         'delete',
         'forceDelete',
+        'forceFill',
+        'increment',
+        'decrement',
+        'touch',
+        'push',
+        'restore',
+        'insertOrIgnore',
+        'insertGetId',
+        'updateOrInsert',
+        'truncate',
     ];
 
     /**
@@ -60,18 +75,50 @@ class ArchitectureRules
     public static function contexts(): array
     {
         return [
+            'admin' => [
+                'members' => [
+                    'App\\Domain\\Admin\\',
+                ],
+                'models' => [
+                    Setting::class,
+                    ProviderSetting::class,
+                    Role::class,
+                    AdminAuditEntry::class,
+                    AdminHostSession::class,
+                    IntegrationToken::class,
+                ],
+            ],
             'identity' => [
                 'members' => [
                     'App\\Domain\\Identity\\',
-                    UserObserver::class,
-                    SettingObserver::class,
                 ],
                 'models' => [
                     User::class,
                     LinkedAccount::class,
                     SocialProvider::class,
-                    ProviderSetting::class,
-                    Setting::class,
+                ],
+            ],
+            'membership' => [
+                'members' => [
+                    'App\\Domain\\Membership\\',
+                ],
+                'models' => [
+                    PartyMember::class,
+                ],
+            ],
+            'mod' => [
+                'members' => [
+                    'App\\Domain\\Mod\\',
+                ],
+                'models' => [
+                    PartyMod::class,
+                ],
+            ],
+            'music' => [
+                'members' => [
+                    'App\\Domain\\Music\\',
+                ],
+                'models' => [
                 ],
             ],
             'party' => [
@@ -80,9 +127,15 @@ class ArchitectureRules
                 ],
                 'models' => [
                     Party::class,
-                    PartyMember::class,
                     PartyLogEntry::class,
-                    Role::class,
+                    BlocklistEntry::class,
+                ],
+            ],
+            'playback' => [
+                'members' => [
+                    'App\\Domain\\Playback\\',
+                ],
+                'models' => [
                 ],
             ],
             'queue' => [
@@ -94,6 +147,22 @@ class ArchitectureRules
                     RequestVote::class,
                     Play::class,
                     Rating::class,
+                ],
+            ],
+            'stats' => [
+                'members' => [
+                    'App\\Domain\\Stats\\',
+                ],
+                'models' => [
+                    PartyStat::class,
+                ],
+            ],
+            'theming' => [
+                'members' => [
+                    'App\\Domain\\Theming\\',
+                ],
+                'models' => [
+                    InstanceTheme::class,
                 ],
             ],
         ];
@@ -312,13 +381,7 @@ class ArchitectureRules
     public static function crossContextWriteViolations(array $classes, ?array $contexts = null): array
     {
         $contexts ??= self::contexts();
-        $owner = [];
-
-        foreach ($contexts as $name => $definition) {
-            foreach ($definition['models'] as $model) {
-                $owner[$model] = $name;
-            }
-        }
+        $owner = self::modelOwners($contexts);
 
         $violations = [];
 
@@ -363,9 +426,26 @@ class ArchitectureRules
 
     /**
      * @param  array<string, array{members: array<int, string>, models: array<int, string>}>  $contexts
+     * @return array<string, string>
+     */
+    public static function modelOwners(array $contexts): array
+    {
+        $owner = [];
+
+        foreach ($contexts as $name => $definition) {
+            foreach ($definition['models'] as $model) {
+                $owner[$model] = $name;
+            }
+        }
+
+        return $owner;
+    }
+
+    /**
+     * @param  array<string, array{members: array<int, string>, models: array<int, string>}>  $contexts
      * @param  array<string, string>  $owner
      */
-    private static function contextOf(string $class, array $contexts, array $owner): ?string
+    public static function contextOf(string $class, array $contexts, array $owner): ?string
     {
         if (isset($owner[$class])) {
             return $owner[$class];

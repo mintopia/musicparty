@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\SocialProviders;
 
+use App\Domain\Admin\Actions\SaveProviderSetting;
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Identity\Contracts\SocialProviderContract;
 use App\Domain\Identity\Models\LinkedAccount;
@@ -98,9 +99,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $setting->encrypted = $config->encrypted ?? false;
             $setting->description = $config->description ?? null;
             $setting->type = $config->type ?? SettingType::stString;
-            if ($setting->isDirty()) {
-                $setting->save();
-            }
+            app(SaveProviderSetting::class)($setting);
         }
     }
 

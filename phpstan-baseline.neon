@@ -193,12 +193,6 @@ parameters:
 			path: app/Domain/Admin/Models/Setting.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Domain/Identity/Models/SocialProvider.php
-
-		-
 			message: '#^Class App\\Domain\\Identity\\Models\\SocialProvider uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -225,12 +219,6 @@ parameters:
 		-
 			message: '#^Method App\\Domain\\Identity\\Models\\SocialProvider\:\:redirect\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Domain/Identity/Models/SocialProvider.php
-
-		-
-			message: '#^Method App\\Domain\\Identity\\Models\\SocialProvider\:\:settings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
 			count: 1
 			path: app/Domain/Identity/Models/SocialProvider.php
 
@@ -325,30 +313,6 @@ parameters:
 			path: app/Domain/Identity/Contracts/SocialProviderContract.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$encrypted\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php
-
-		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
 			identifier: property.notFound
 			count: 1
@@ -356,12 +320,6 @@ parameters:
 
 		-
 			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$validation\.$#'
 			identifier: property.notFound
 			count: 1
 			path: app/Domain/Identity/SocialProviders/AbstractSocialProvider.php

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Accounts;
 
+use App\Domain\Identity\Actions\UpdateLinkedAccount;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
@@ -50,7 +51,7 @@ class HostAccountTokens
      */
     public function refreshAfterRejection(LinkedAccount $account): string
     {
-        $account->forceFill(['access_token_expires_at' => now()->subSecond()])->save();
+        $this->updateAccount()($account, ['access_token_expires_at' => now()->subSecond()]);
 
         return $this->accessToken($account);
     }
@@ -87,16 +88,23 @@ class HostAccountTokens
         }
 
         $rotated = $response->json('refresh_token');
-        $account->access_token = $token;
-        $account->access_token_expires_at = now()->addSeconds((int) $response->json('expires_in', 3600));
+        $attributes = [
+            'access_token' => $token,
+            'access_token_expires_at' => now()->addSeconds((int) $response->json('expires_in', 3600)),
+        ];
 
         if (is_string($rotated) && $rotated !== '') {
-            $account->refresh_token = $rotated;
+            $attributes['refresh_token'] = $rotated;
         }
 
-        $account->save();
+        $this->updateAccount()($account, $attributes);
 
         return $token;
+    }
+
+    private function updateAccount(): UpdateLinkedAccount
+    {
+        return app(UpdateLinkedAccount::class);
     }
 
     private function requestRefresh(LinkedAccount $account): Response
@@ -122,8 +130,7 @@ class HostAccountTokens
 
     private function rejected(LinkedAccount $account): never
     {
-        $account->needs_relink = true;
-        $account->save();
+        $this->updateAccount()($account, ['needs_relink' => true]);
 
         throw HostAccountNeedsRelink::forAccount($account->getKey());
     }

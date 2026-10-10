@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Actions;
 
+use App\Domain\Identity\Actions\UpdateLinkedAccount;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
@@ -12,7 +13,7 @@ use App\Domain\Party\Models\Party;
 
 class LinkHostAccount
 {
-    public function __construct(private readonly AuthorisesHost $authorisesHost) {}
+    public function __construct(private readonly AuthorisesHost $authorisesHost, private readonly UpdateLinkedAccount $updateLinkedAccount) {}
 
     /**
      * @throws NotHostException
@@ -41,14 +42,14 @@ class LinkHostAccount
 
         $account->provider()->associate($provider);
         $account->user()->associate($user);
-        $account->external_id = $data->externalId;
-        $account->name = $data->name;
-        $account->access_token = $data->accessToken;
-        $account->refresh_token = $data->refreshToken ?? $account->refresh_token;
-        $account->access_token_expires_at = $data->expiresIn !== null ? now()->addSeconds($data->expiresIn) : null;
-        $account->needs_relink = false;
-        $account->save();
 
-        return $account;
+        return ($this->updateLinkedAccount)($account, [
+            'external_id' => $data->externalId,
+            'name' => $data->name,
+            'access_token' => $data->accessToken,
+            'refresh_token' => $data->refreshToken ?? $account->refresh_token,
+            'access_token_expires_at' => $data->expiresIn !== null ? now()->addSeconds($data->expiresIn) : null,
+            'needs_relink' => false,
+        ]);
     }
 }
