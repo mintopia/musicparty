@@ -36,6 +36,7 @@ FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
 RUN apk add --no-cache su-exec && \
+    install-php-extensions uv && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
 

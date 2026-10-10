@@ -62,6 +62,10 @@ services:
       - ./logs:/app/storage/logs
       - ./uploads:/app/storage/app/public
     entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     healthcheck:
       disable: true
 

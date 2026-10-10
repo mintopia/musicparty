@@ -25,3 +25,18 @@ it('has no VITE Reverb variables in the env files', function (string $file) {
 
     expect($vite)->toBeEmpty();
 })->with(['example/.env.example', 'docker/production/production.env', '.env.example']);
+
+it('raises the open file limit for the Reverb service', function (string $file) {
+    $nofile = DeployConfig::compose($file)->service('reverb')['ulimits']['nofile'] ?? [];
+
+    expect($nofile)->toBe(['soft' => 65535, 'hard' => 65535]);
+})->with('compose files');
+
+it('installs the uv extension in the production and develop images', function (string $dockerfile) {
+    $runs = implode("\n", array_column(
+        array_filter(DeployConfig::dockerfile($dockerfile), fn (array $entry): bool => $entry['instruction'] === 'RUN'),
+        'arguments',
+    ));
+
+    expect($runs)->toMatch('/install-php-extensions\b[^&]*\buv\b/');
+})->with(['docker/production/Dockerfile', 'docker/develop/Dockerfile']);
