@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 use Tests\Support\DeployConfig;
 
+dataset('compose files', ['docker-compose.yaml', 'example/docker-compose.yml']);
+
 it('starts Reverb on its configured server port without debug', function () {
     $argv = DeployConfig::compose('docker-compose.yaml')->entrypoint('reverb');
 
