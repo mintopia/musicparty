@@ -202,9 +202,7 @@ class OpenApiGenerator
             $operation['responses']['403'] = ['description' => 'Forbidden. Only the Party Host, instance admins and Integration Tokens with the export ability may export.'];
         }
 
-        if (! isset($operation['security'])) {
-            $operation['security'] = [];
-        }
+        $operation['security'] ??= [];
 
         if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
             $operation['responses']['403'] = ['description' => 'Forbidden.'];

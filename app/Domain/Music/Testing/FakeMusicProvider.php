@@ -22,7 +22,7 @@ class FakeMusicProvider implements MusicProvider
     private array $appended = [];
 
     /** @var (callable(string): void)|null */
-    private $getTrackHook = null;
+    private $getTrackHook;
 
     private ?PlaybackState $playback = null;
 

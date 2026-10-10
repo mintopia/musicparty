@@ -15,8 +15,9 @@ uses(RefreshDatabase::class);
 function scrapeLiveStats(): string
 {
     app()->forgetScopedInstances();
+    config(['prometheus.token' => 'scrape-token']);
 
-    return test()->get('/'.ltrim(config('prometheus.urls.default'), '/'))->assertOk()->getContent();
+    return test()->withToken('scrape-token')->get('/'.ltrim(config('prometheus.urls.default'), '/'))->assertOk()->getContent();
 }
 
 function metricsPlayed(PartyMember $member, string $title, int $durationMs = 180000): TrackRequest

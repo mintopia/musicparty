@@ -122,10 +122,10 @@ it('emits ratings from the queue entry resource when the play summary is loaded'
         ->with(['play' => fn ($query) => $query->withRatingSummary($this->member)])
         ->firstOrFail();
 
-    expect((new QueueEntryResource($track))->resolve())
+    expect(new QueueEntryResource($track)->resolve())
         ->toMatchArray(['likes' => 0, 'dislikes' => 1, 'my_rating' => -1]);
 
-    expect((new QueueEntryResource($this->track->fresh()))->resolve())
+    expect(new QueueEntryResource($this->track->fresh())->resolve())
         ->not->toHaveKeys(['likes', 'dislikes', 'my_rating']);
 });
 

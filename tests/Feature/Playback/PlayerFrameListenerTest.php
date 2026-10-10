@@ -158,7 +158,7 @@ describe('ProcessPlayerFrame', function () {
         $this->party = Party::factory()->create(['player_kind' => 'fake', 'music_provider' => 'fake']);
         $this->player = new FrameHandlingPlayer;
         app(PartyPlayers::class)->register($this->party, $this->player);
-        $this->drain = fn (?string $code = null) => (new ProcessPlayerFrame($code ?? $this->party->code))->handle(app(PartyPlayers::class));
+        $this->drain = fn (?string $code = null) => new ProcessPlayerFrame($code ?? $this->party->code)->handle(app(PartyPlayers::class));
     });
 
     it('hands the frame to the player', function () {
