@@ -4,6 +4,9 @@ namespace App\Models;
 
 use App\Domain\Music\Actions\AppendPlayToHistory;
 use App\Domain\Music\Contracts\MusicProvider;
+use App\Domain\Party\PartyRole;
+use App\Domain\Party\PartyState;
+use App\Domain\Queue\SelectionMode;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
@@ -17,9 +20,13 @@ use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use NumPHP\LinAlg\LinAlg;
 
 /**
+ * @property PartyState $state
+ * @property string $music_provider
+ *
  * @mixin IdeHelperParty
  */
 class Party extends Model
@@ -38,11 +45,24 @@ class Party extends Model
         'poll' => false,
         'active' => true,
         'show_qrcode' => false,
+        'state' => 'paused',
+        'selection_mode' => 'deterministic',
     ];
 
     protected $casts = [
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
+        'state' => PartyState::class,
+        'selection_mode' => SelectionMode::class,
+        'allow_requests' => 'boolean',
+        'explicit' => 'boolean',
+        'downvotes' => 'boolean',
+        'hold_requests' => 'boolean',
+        'downvotes_per_hour' => 'integer',
+        'max_requests' => 'integer',
+        'min_song_length' => 'integer',
+        'max_song_length' => 'integer',
+        'no_repeat_interval' => 'integer',
     ];
 
     public function toStringName(): string
@@ -55,9 +75,37 @@ class Party extends Model
         return 'code';
     }
 
+    public static function findByCode(string $code): ?self
+    {
+        return static::query()->where('code', Str::upper(trim($code)))->first();
+    }
+
+    public function resolveRouteBinding($value, $field = null)
+    {
+        if ($field === null || $field === 'code') {
+            return self::findByCode((string) $value);
+        }
+
+        return parent::resolveRouteBinding($value, $field);
+    }
+
+    public function memberFor(User $user): ?PartyMember
+    {
+        /** @var PartyMember|null */
+        return $this->members()->whereUserId($user->id)->first();
+    }
+
     public function members(): HasMany
     {
         return $this->hasMany(PartyMember::class);
+    }
+
+    /**
+     * @return HasMany<BlocklistEntry, $this>
+     */
+    public function blocklistEntries(): HasMany
+    {
+        return $this->hasMany(BlocklistEntry::class);
     }
 
     public function user(): BelongsTo
@@ -95,7 +143,7 @@ class Party extends Model
         return match ($childType) {
             'upcomingsong', 'song' => $this->upcoming()->whereId($value)->with(['song', 'user'])->first(),
             'playedsong' => $this->history()->whereId($value)->with(['song', 'upcoming', 'upcoming.user'])->first(),
-            'user' => $this->members()->whereId($value)->with(['user', 'role'])->first(),
+            'user' => $this->members()->whereId($value)->with(['user'])->first(),
             default => parent::resolveChildRouteBinding($childType, $value, $field),
         };
     }
@@ -409,20 +457,14 @@ class Party extends Model
 
     public function getMember(User $user): PartyMember
     {
-        $member = $this->members()->whereUserId($user->id)->first();
+        $member = $this->memberFor($user);
         if ($member) {
             return $member;
         }
         $member = new PartyMember;
         $member->party()->associate($this);
         $member->user()->associate($user);
-
-        $roleCode = 'user';
-        if ($user->id === $this->user_id) {
-            $roleCode = 'owner';
-        }
-        $role = PartyMemberRole::whereCode($roleCode)->first();
-        $member->role()->associate($role);
+        $member->role = $user->id === $this->user_id ? PartyRole::Host : PartyRole::Guest;
         $member->save();
 
         return $member;
@@ -617,11 +659,11 @@ class Party extends Model
 
     public function canBeManagedBy(User $user): bool
     {
-        if ($user->id === $this->owner_id) {
+        if ($user->id === $this->user_id) {
             return true;
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
+        return $this->members()->whereUserId($user->id)->where('role', PartyRole::Host->value)->exists();
     }
 
     public function pushUpdate(): void

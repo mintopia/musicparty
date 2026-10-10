@@ -31,6 +31,25 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'discord' => [
+        'client_id' => env('DISCORD_CLIENT_ID'),
+        'client_secret' => env('DISCORD_CLIENT_SECRET'),
+    ],
+
+    'twitch' => [
+        'client_id' => env('TWITCH_CLIENT_ID'),
+        'client_secret' => env('TWITCH_CLIENT_SECRET'),
+    ],
+
+    'steam' => [
+        'client_secret' => env('STEAM_API_KEY'),
+    ],
+
+    'spotify' => [
+        'client_id' => env('SPOTIFY_CLIENT_ID'),
+        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
+    ],
+
     'tickettailor' => [
         'endpoint' => env('TICKETTAILOR_ENDPOINT', 'https://api.tickettailor.com'),
         'verifytls' => env('TICKETTAILOR_VERIFYTLS', true),

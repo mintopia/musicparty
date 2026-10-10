@@ -4,6 +4,9 @@
         "party": {
             "address": "party.{code}",
             "messages": {
+                "Party.QueueUpdatedEvent": {
+                    "$ref": "#/components/messages/Party.QueueUpdatedEvent"
+                },
                 "Party.UpdatedEvent": {
                     "$ref": "#/components/messages/Party.UpdatedEvent"
                 }
@@ -42,10 +45,393 @@
                     "description": "User id"
                 }
             }
+        },
+        "partyMembers": {
+            "address": "presence-party.{code}.members",
+            "description": "Presence channel (Echo name party.{code}.members). Joinable only by non-banned Members of the Party; unknown codes, non-Members, banned Members and unauthenticated callers are refused identically. Member payload carries only nickname and avatar.",
+            "messages": {
+                "Presence.MemberAdded": {
+                    "$ref": "#/components/messages/Presence.MemberAdded"
+                },
+                "Presence.MemberRemoved": {
+                    "$ref": "#/components/messages/Presence.MemberRemoved"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
+        },
+        "partyMember": {
+            "address": "private-party.{code}.member.{memberId}",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices and Request decision notices (pending, approved, rejected, removed).",
+            "messages": {
+                "Party.RequestRejectedEvent": {
+                    "$ref": "#/components/messages/Party.RequestRejectedEvent"
+                },
+                "Party.RequestDecidedEvent": {
+                    "$ref": "#/components/messages/Party.RequestDecidedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                },
+                "memberId": {
+                    "description": "Party Member id"
+                }
+            }
+        },
+        "partyModerators": {
+            "address": "private-party.{code}.moderators",
+            "description": "Private Moderator channel (Echo name party.{code}.moderators). Authorisable only by non-banned Host and Moderators, re-evaluated on every subscription; unknown codes, Guests, VIPs, banned Members and unauthenticated callers are refused. Carries Pending Requests and Party Log entries.",
+            "messages": {
+                "Party.PartyLogEntryAddedEvent": {
+                    "$ref": "#/components/messages/Party.PartyLogEntryAddedEvent"
+                },
+                "Party.PendingRequestAddedEvent": {
+                    "$ref": "#/components/messages/Party.PendingRequestAddedEvent"
+                },
+                "Party.PendingRequestResolvedEvent": {
+                    "$ref": "#/components/messages/Party.PendingRequestResolvedEvent"
+                }
+            },
+            "parameters": {
+                "code": {
+                    "description": "Party code"
+                }
+            }
         }
     },
     "components": {
         "messages": {
+            "Party.QueueUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\QueueUpdatedEvent",
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "version",
+                        "sequence",
+                        "code",
+                        "now_playing",
+                        "up_next",
+                        "queue"
+                    ],
+                    "properties": {
+                        "version": {
+                            "type": "integer",
+                            "description": "Payload schema version"
+                        },
+                        "sequence": {
+                            "type": "integer",
+                            "description": "Monotonic per-party sequence; ignore snapshots older than the last seen"
+                        },
+                        "code": {
+                            "type": "string",
+                            "description": "Party code"
+                        },
+                        "now_playing": {
+                            "oneOf": [
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "track",
+                                        "status",
+                                        "score",
+                                        "likes",
+                                        "dislikes",
+                                        "requested_by"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "track": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "title",
+                                                "artists",
+                                                "album",
+                                                "artwork_url",
+                                                "duration_ms",
+                                                "explicit"
+                                            ],
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "artists": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "album": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "artwork_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "duration_ms": {
+                                                    "type": "integer"
+                                                },
+                                                "explicit": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "queued",
+                                                "up_next",
+                                                "playing"
+                                            ]
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        },
+                                        "likes": {
+                                            "type": "integer"
+                                        },
+                                        "dislikes": {
+                                            "type": "integer"
+                                        },
+                                        "requested_by": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Requester nickname"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "up_next": {
+                            "oneOf": [
+                                {
+                                    "type": "null"
+                                },
+                                {
+                                    "type": "object",
+                                    "additionalProperties": false,
+                                    "required": [
+                                        "id",
+                                        "track",
+                                        "status",
+                                        "score",
+                                        "likes",
+                                        "dislikes",
+                                        "requested_by"
+                                    ],
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "track": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "title",
+                                                "artists",
+                                                "album",
+                                                "artwork_url",
+                                                "duration_ms",
+                                                "explicit"
+                                            ],
+                                            "properties": {
+                                                "title": {
+                                                    "type": "string"
+                                                },
+                                                "artists": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "album": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "artwork_url": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "duration_ms": {
+                                                    "type": "integer"
+                                                },
+                                                "explicit": {
+                                                    "type": "boolean"
+                                                }
+                                            }
+                                        },
+                                        "status": {
+                                            "type": "string",
+                                            "enum": [
+                                                "queued",
+                                                "up_next",
+                                                "playing"
+                                            ]
+                                        },
+                                        "score": {
+                                            "type": "integer"
+                                        },
+                                        "likes": {
+                                            "type": "integer"
+                                        },
+                                        "dislikes": {
+                                            "type": "integer"
+                                        },
+                                        "requested_by": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "name"
+                                            ],
+                                            "properties": {
+                                                "name": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Requester nickname"
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            ]
+                        },
+                        "queue": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "additionalProperties": false,
+                                "required": [
+                                    "id",
+                                    "track",
+                                    "status",
+                                    "score",
+                                    "likes",
+                                    "dislikes",
+                                    "requested_by"
+                                ],
+                                "properties": {
+                                    "id": {
+                                        "type": "integer"
+                                    },
+                                    "track": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "title",
+                                            "artists",
+                                            "album",
+                                            "artwork_url",
+                                            "duration_ms",
+                                            "explicit"
+                                        ],
+                                        "properties": {
+                                            "title": {
+                                                "type": "string"
+                                            },
+                                            "artists": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "album": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "artwork_url": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ]
+                                            },
+                                            "duration_ms": {
+                                                "type": "integer"
+                                            },
+                                            "explicit": {
+                                                "type": "boolean"
+                                            }
+                                        }
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "queued",
+                                            "up_next",
+                                            "playing"
+                                        ]
+                                    },
+                                    "score": {
+                                        "type": "integer"
+                                    },
+                                    "likes": {
+                                        "type": "integer"
+                                    },
+                                    "dislikes": {
+                                        "type": "integer"
+                                    },
+                                    "requested_by": {
+                                        "type": "object",
+                                        "additionalProperties": false,
+                                        "required": [
+                                            "name"
+                                        ],
+                                        "properties": {
+                                            "name": {
+                                                "type": [
+                                                    "string",
+                                                    "null"
+                                                ],
+                                                "description": "Requester nickname"
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "title": "Party.QueueUpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
+                "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
+            },
             "Party.UpdatedEvent": {
                 "contentType": "application/json",
                 "name": "App\\Events\\Party\\UpdatedEvent",
@@ -85,6 +471,231 @@
                 },
                 "title": "User.SpotifyAccessTokenUpdatedEvent",
                 "x-event-class": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent"
+            },
+            "Presence.MemberAdded": {
+                "contentType": "application/json",
+                "name": "pusher:member_added",
+                "title": "Presence.MemberAdded",
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "id",
+                        "info"
+                    ],
+                    "properties": {
+                        "id": {
+                            "description": "Auth identifier supplied by the presence protocol",
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        },
+                        "info": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "nickname",
+                                "avatar"
+                            ],
+                            "properties": {
+                                "nickname": {
+                                    "type": "string"
+                                },
+                                "avatar": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Presence.MemberRemoved": {
+                "contentType": "application/json",
+                "name": "pusher:member_removed",
+                "title": "Presence.MemberRemoved",
+                "payload": {
+                    "type": "object",
+                    "additionalProperties": false,
+                    "required": [
+                        "id",
+                        "info"
+                    ],
+                    "properties": {
+                        "id": {
+                            "description": "Auth identifier supplied by the presence protocol",
+                            "type": [
+                                "string",
+                                "integer"
+                            ]
+                        },
+                        "info": {
+                            "type": "object",
+                            "additionalProperties": false,
+                            "required": [
+                                "nickname",
+                                "avatar"
+                            ],
+                            "properties": {
+                                "nickname": {
+                                    "type": "string"
+                                },
+                                "avatar": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "Party.RequestRejectedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\RequestRejectedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "provider_track_id": {
+                            "description": "Track the Member tried to request",
+                            "type": "string"
+                        },
+                        "reason": {
+                            "description": "Specific Request rule that refused the Request",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "provider_track_id",
+                        "reason"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.RequestRejectedEvent",
+                "x-event-class": "App\\Events\\Party\\RequestRejectedEvent"
+            },
+            "Party.PendingRequestAddedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PendingRequestAddedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the held Request",
+                            "type": "integer"
+                        },
+                        "title": {
+                            "description": "Track title",
+                            "type": "string"
+                        },
+                        "artists": {
+                            "description": "Track artists",
+                            "items": {
+                                "type": "string"
+                            },
+                            "type": "array"
+                        },
+                        "requested_by_member_id": {
+                            "description": "Party Member who requested the Track",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "title",
+                        "artists",
+                        "requested_by_member_id"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PendingRequestAddedEvent",
+                "x-event-class": "App\\Events\\Party\\PendingRequestAddedEvent"
+            },
+            "Party.PendingRequestResolvedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PendingRequestResolvedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request that left Pending",
+                            "type": "integer"
+                        },
+                        "status": {
+                            "description": "Resulting status: queued, rejected or removed",
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "status"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PendingRequestResolvedEvent",
+                "x-event-class": "App\\Events\\Party\\PendingRequestResolvedEvent"
+            },
+            "Party.PartyLogEntryAddedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\PartyLogEntryAddedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "id": {
+                            "description": "Party Log entry id",
+                            "type": "integer"
+                        },
+                        "action": {
+                            "description": "Party Log action key",
+                            "type": "string"
+                        },
+                        "subject": {
+                            "description": "Log entry subject, when it has one",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "id",
+                        "action",
+                        "subject"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PartyLogEntryAddedEvent",
+                "x-event-class": "App\\Events\\Party\\PartyLogEntryAddedEvent"
+            },
+            "Party.RequestDecidedEvent": {
+                "contentType": "application/json",
+                "name": "App\\Events\\Party\\RequestDecidedEvent",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request",
+                            "type": "integer"
+                        },
+                        "status": {
+                            "description": "Current status: pending, queued, rejected or removed",
+                            "type": "string"
+                        },
+                        "reason": {
+                            "description": "Moderator's optional rejection reason",
+                            "type": [
+                                "string",
+                                "null"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "status",
+                        "reason"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.RequestDecidedEvent",
+                "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
             }
         }
     },
@@ -102,6 +713,9 @@
             "messages": [
                 {
                     "$ref": "#/channels/party/messages/Party.UpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
                 }
             ]
         },
@@ -127,6 +741,59 @@
             "messages": [
                 {
                     "$ref": "#/channels/spotifyToken/messages/User.SpotifyAccessTokenUpdatedEvent"
+                }
+            ]
+        },
+        "subscribePartyMembers": {
+            "action": "receive",
+            "channel": {
+                "$ref": "#/channels/partyMembers"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMembers/messages/Presence.MemberAdded"
+                },
+                {
+                    "$ref": "#/channels/partyMembers/messages/Presence.MemberRemoved"
+                }
+            ]
+        },
+        "publishPartyMemberRequestRejected": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.RequestRejectedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberRequestDecided": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.RequestDecidedEvent"
+                }
+            ]
+        },
+        "publishPartyModerators": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyModerators"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PartyLogEntryAddedEvent"
+                },
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PendingRequestAddedEvent"
+                },
+                {
+                    "$ref": "#/channels/partyModerators/messages/Party.PendingRequestResolvedEvent"
                 }
             ]
         }

@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\LinkedAccount;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -18,8 +19,9 @@ class LinkedAccountFactory extends Factory
     {
         return [
             'user_id' => User::factory(),
-            'external_id' => fake()->unique()->uuid(),
-            'name' => fake()->name(),
+            'social_provider_id' => SocialProvider::factory(),
+            'external_id' => (string) fake()->unique()->numberBetween(1000, 999999),
+            'name' => fake()->userName(),
             'access_token' => fake()->sha256(),
             'refresh_token' => fake()->sha256(),
             'access_token_expires_at' => now()->addHour(),

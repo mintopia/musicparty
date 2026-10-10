@@ -58,3 +58,11 @@ it('derives a request body from the form request', function () {
     expect($body['required'])->toBe(['action'])
         ->and($body['properties']['action']['enum'])->toBe(['play', 'pause', 'next', 'previous']);
 });
+
+it('documents the create party request body', function () {
+    $body = committedOpenApi()['paths']['/api/v1/parties']['post']['requestBody']['content']['application/json']['schema'];
+
+    expect($body['required'])->toEqualCanonicalizing(['name', 'music_provider', 'player_kind'])
+        ->and($body['properties']['music_provider']['enum'])->toBe(['fake'])
+        ->and($body['properties']['player_kind']['enum'])->toBe(['fake']);
+});
