@@ -42,19 +42,12 @@ describe('SidebarNav admin link', () => {
 });
 
 describe('Admin Dashboard', () => {
-    it('links to each tool and disables a null telescope', () => {
-        const wrapper = mount(Dashboard, {props: {links: {horizon: '/horizon', pulse: '/pulse', telescope: null}}});
+    it('links to horizon and pulse only', () => {
+        const wrapper = mount(Dashboard, {props: {links: {horizon: '/horizon', pulse: '/pulse'}}});
 
         expect(wrapper.find('a[href="/horizon"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/pulse"]').exists()).toBe(true);
-        const card = wrapper.find('[data-testid="card-telescope"]');
-        expect(card.find('a').exists()).toBe(false);
-        expect(card.find('[aria-disabled="true"]').exists()).toBe(true);
-    });
-
-    it('links to telescope when available', () => {
-        const wrapper = mount(Dashboard, {props: {links: {horizon: '/h', pulse: '/p', telescope: '/telescope'}}});
-        expect(wrapper.find('a[href="/telescope"]').exists()).toBe(true);
+        expect(wrapper.find('[data-testid="card-telescope"]').exists()).toBe(false);
     });
 });
 

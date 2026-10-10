@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Str;
-use Laravel\Telescope\Jobs\ProcessPendingUpdates;
 
 return [
 
@@ -122,9 +121,7 @@ return [
     |
     */
 
-    'silenced' => [
-        ProcessPendingUpdates::class,
-    ],
+    'silenced' => [],
 
     /*
     |--------------------------------------------------------------------------
