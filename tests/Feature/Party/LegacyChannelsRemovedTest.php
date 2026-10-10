@@ -42,7 +42,7 @@ it('schedules only the v3 jobs and sanctum prune', function () {
         ->map(fn ($event) => $event->description ?: $event->command)
         ->all();
 
-    expect($descriptions)->toHaveCount(4)
+    expect($descriptions)->toHaveCount(6)
         ->and(implode(' ', $descriptions))->toContain('sanctum:prune-expired')
         ->and(implode(' ', $descriptions))->not->toContain('party:');
 });

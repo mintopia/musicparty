@@ -299,13 +299,13 @@ it('fails closed and logs when a blocklist pattern errors, leaving other entries
         new TrackData('fake', 't2', 'Song t2', [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), 180000, false),
         new TrackData('fake', 't3', str_repeat('a', 5000).'!', [new ArtistData('a', 'Artist')], new AlbumData('al', 'Album'), 180000, false),
     ]));
-    Log::spy();
+    $log = Log::spy();
 
     ruleRequest($this->member, 't3')->assertStatus(422);
     ruleRequest($this->member, 't3')->assertStatus(422);
     ruleRequest($this->member, 't2')->assertStatus(422);
 
-    Log::shouldHaveReceived('warning')->with(Mockery::on(fn ($m) => str_contains($m, 'Blocklist pattern')), Mockery::on(fn ($c) => $c['blocklist_entry_id'] === $bad->id))->atLeast()->once();
+    $log->shouldHaveReceived('warning')->with(Mockery::on(fn ($m) => str_contains($m, 'Blocklist pattern')), Mockery::on(fn ($c) => $c['blocklist_entry_id'] === $bad->id))->atLeast()->once();
     expect(PartyLogEntry::query()->where('action', 'blocklist.pattern_failed')->count())->toBe(1);
 });
 

@@ -72,6 +72,25 @@ class ArchitectureRules
     ];
 
     /**
+     * @param  array<int, string>  $members
+     * @return array<string, array{members: array<int, string>, models: array<int, string>}>
+     */
+    public static function contextsWithMembers(string $context, array $members): array
+    {
+        $result = [];
+
+        foreach (self::contexts() as $name => $definition) {
+            if ($name === $context) {
+                $definition['members'] = [...$definition['members'], ...$members];
+            }
+
+            $result[$name] = $definition;
+        }
+
+        return $result;
+    }
+
+    /**
      * @return array<string, array{members: array<int, string>, models: array<int, string>}>
      */
     public static function contexts(): array

@@ -11,8 +11,7 @@ use Tests\Fixtures\Architecture\ReverbListenerLeaker;
 use Tests\Fixtures\Architecture\SerialisingBroadcastEvent;
 use Tests\Fixtures\Architecture\UnnamedBroadcastEvent;
 
-$fixtureContexts = ArchitectureRules::contexts();
-$fixtureContexts['identity']['members'][] = CrossContextWriter::class;
+$fixtureContexts = ArchitectureRules::contextsWithMembers('identity', [CrossContextWriter::class]);
 
 it('maps all ten contexts and assigns every model to exactly one', function () {
     $contexts = ArchitectureRules::contexts();

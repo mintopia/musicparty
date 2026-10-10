@@ -14,15 +14,13 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection;
-use Laravel\Reverb\Contracts\WebSocketConnection;
 use Laravel\Reverb\Events\MessageReceived;
 use Laravel\Reverb\Protocols\Pusher\Channels\Channel;
 use Laravel\Reverb\Protocols\Pusher\Channels\ChannelConnection;
 use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
-use Ratchet\RFC6455\Messaging\Frame;
 use Tests\Fixtures\Playback\FrameHandlingPlayer;
+use Tests\Fixtures\Playback\StubReverbConnection;
 
 uses(RefreshDatabase::class);
 
@@ -36,33 +34,9 @@ beforeEach(function () {
     app(PlayerConnections::class)->register('stub', 'ABC123', $this->token->getKey());
 });
 
-function stubReverbConnection(): Connection
+function stubReverbConnection(): StubReverbConnection
 {
-    return new class(Mockery::mock(WebSocketConnection::class), Mockery::mock(Application::class), null) extends Connection
-    {
-        public int $disconnects = 0;
-
-        public function disconnect(): void
-        {
-            $this->disconnects++;
-        }
-
-        public function identifier(): string
-        {
-            return 'stub';
-        }
-
-        public function id(): string
-        {
-            return 'stub';
-        }
-
-        public function send(string $message): void {}
-
-        public function control(string $type = Frame::OP_PING): void {}
-
-        public function terminate(): void {}
-    };
+    return new StubReverbConnection;
 }
 
 function receive(string $message, bool $subscribed = true, ?Connection $connection = null): void
@@ -322,7 +296,7 @@ describe('ProcessPlayerFrame', function () {
         $counters = app(CounterStore::class);
         expect($counters->get('metrics.player_frames_dropped.expired'))->toBe(1)
             ->and($counters->get('metrics.player_frames_dropped.out_of_order'))->toBe(0)
-            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details['reason'])->toBe('expired');
+            ->and(data_get(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details, 'reason'))->toBe('expired');
     });
 
     it('counts a frame that arrives behind the applied cursor as out of order and does not buffer it', function () {
@@ -334,7 +308,7 @@ describe('ProcessPlayerFrame', function () {
         expect($sequence)->toBe(3)
             ->and(Cache::has('player-frame:'.$this->party->code.':3'))->toBeFalse()
             ->and(app(CounterStore::class)->get('metrics.player_frames_dropped.out_of_order'))->toBe(1)
-            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details['reason'])->toBe('out_of_order');
+            ->and(data_get(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details, 'reason'))->toBe('out_of_order');
         Queue::assertNotPushed(ProcessPlayerFrame::class);
     });
 
@@ -417,7 +391,7 @@ it('drops the frame and disconnects when the token is revoked, expired or the so
     match ($case) {
         'revoked' => $this->token->delete(),
         'expired' => $this->token->forceFill(['expires_at' => now()->subMinute()])->save(),
-        'unknown' => null,
+        default => null,
     };
     $connection = stubReverbConnection();
     $message = clientFrame();

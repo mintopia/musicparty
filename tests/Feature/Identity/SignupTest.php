@@ -111,7 +111,7 @@ it('keeps signup, logout and the me endpoint reachable for an unsigned-up user',
     $user = User::factory()->firstLogin()->create();
 
     $this->actingAs($user)->get(route('login.signup'))->assertOk();
-    $this->actingAs($user)->get(route('logout'))->assertRedirect();
+    $this->actingAs($user)->post(route('logout'))->assertRedirect();
     $this->actingAs($user, 'sanctum')->getJson(route('api.v1.me'))->assertOk();
 });
 

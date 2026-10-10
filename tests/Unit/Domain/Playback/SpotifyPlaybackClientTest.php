@@ -1,12 +1,12 @@
 <?php
 
-use App\Domain\Music\Providers\Spotify\HostAccountTokens;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
 use App\Domain\Music\Providers\Spotify\SpotifyApi;
-use App\Domain\Playback\Spotify\SpotifyPlaybackClient;
 use App\Domain\Playback\PlaybackStatus;
+use App\Domain\Playback\Spotify\SpotifyPlaybackClient;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -16,7 +16,7 @@ beforeEach(function () {
     SpotifyFake::useInMemoryDatabase();
     config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
     Cache::flush();
-    $this->account = SpotifyFake::account()->create(['access_token' => 'host-token']);
+    $this->account = SpotifyFake::account()->createOne(['access_token' => 'host-token']);
     $this->host = (string) $this->account->getKey();
     $this->client = new SpotifyPlaybackClient(new SpotifyApi(new HostAccountTokens));
 });

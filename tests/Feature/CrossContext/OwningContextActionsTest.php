@@ -87,5 +87,5 @@ it('saves a provider setting only when it changed', function () {
 
     $setting->value = 'b';
     app(SaveProviderSetting::class)($setting);
-    expect($setting->fresh()->value)->toBe('b');
+    expect($setting->fresh()?->value)->toBe('b');
 });

@@ -140,10 +140,12 @@ class CrossContextWriteRule implements Rule
                 continue;
             }
 
-            foreach ([[EloquentBuilder::class, 'TModel'], [Relation::class, 'TRelatedModel']] as [$base, $template]) {
-                if ($reflection->is($base)) {
-                    array_push($models, ...$type->getTemplateType($base, $template)->getObjectClassNames());
-                }
+            if ($reflection->is(EloquentBuilder::class)) {
+                array_push($models, ...$type->getTemplateType(EloquentBuilder::class, 'TModel')->getObjectClassNames());
+            }
+
+            if ($reflection->is(Relation::class)) {
+                array_push($models, ...$type->getTemplateType(Relation::class, 'TRelatedModel')->getObjectClassNames());
             }
         }
 

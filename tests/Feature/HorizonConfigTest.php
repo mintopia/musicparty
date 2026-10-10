@@ -14,7 +14,7 @@ it('keeps the player and ticks supervisors at one try', function (string $superv
 })->with(['supervisor-player', 'supervisor-ticks']);
 
 it('resolves supervisors for any environment through the wildcard block', function (string $environment) {
-    $supervisors = collect(config('horizon.environments'))
+    $supervisors = collect(config()->array('horizon.environments'))
         ->first(fn (array $_, string $name): bool => Str::is($name, $environment));
 
     expect(array_keys($supervisors))->toEqual(array_keys(config('horizon.defaults')));
@@ -22,10 +22,10 @@ it('resolves supervisors for any environment through the wildcard block', functi
 
 it('schedules horizon:snapshot every five minutes', function () {
     $event = collect(app(Schedule::class)->events())
-        ->first(fn ($event): bool => str_contains($event->command, 'horizon:snapshot'));
+        ->first(fn ($event): bool => str_contains((string) $event->command, 'horizon:snapshot'));
 
     expect($event)->not->toBeNull()
-        ->and($event->expression)->toBe('*/5 * * * *');
+        ->and($event?->expression)->toBe('*/5 * * * *');
 });
 
 it('keeps every supervisor timeout below the Horizon stop grace period', function () {

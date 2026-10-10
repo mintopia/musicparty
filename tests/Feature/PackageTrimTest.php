@@ -12,16 +12,19 @@ use SocialiteProviders\Manager\SocialiteWasCalled;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return list<string>
+ */
 function requiredSocialiteProviderPackages(): array
 {
     $composer = json_decode((string) file_get_contents(base_path('composer.json')), true, flags: JSON_THROW_ON_ERROR);
 
     $packages = array_filter(
         array_keys($composer['require']),
-        fn (string $package): bool => str_starts_with($package, 'socialiteproviders/') && $package !== 'socialiteproviders/manager',
+        fn (int|string $package): bool => str_starts_with((string) $package, 'socialiteproviders/') && $package !== 'socialiteproviders/manager',
     );
 
-    return array_values(array_map(fn (string $package): string => substr($package, strlen('socialiteproviders/')), $packages));
+    return array_values(array_map(fn (int|string $package): string => substr((string) $package, strlen('socialiteproviders/')), $packages));
 }
 
 it('resolves a SocialiteProviders driver for every catalogue entry', function (string $code): void {

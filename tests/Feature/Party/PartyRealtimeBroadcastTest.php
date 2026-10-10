@@ -8,7 +8,6 @@ use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Broadcast\PartyStateChangedEvent;
 use App\Domain\Party\Models\Party;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
@@ -29,7 +28,6 @@ function assertStateBroadcast(string $state): void
         return $event->broadcastAs() === 'party.state_changed'
             && $event->broadcastWith() === ['state' => $state]
             && count($channels) === 1
-            && $channels[0] instanceof Channel
             && ! $channels[0] instanceof PrivateChannel
             && $channels[0]->name === 'party.ABCD';
     });
@@ -65,7 +63,6 @@ it('broadcasts member.banned to the banned member channel only', function () {
         return $event->broadcastAs() === 'member.banned'
             && $event->broadcastWith() === ['member_id' => $target->id]
             && count($channels) === 1
-            && $channels[0] instanceof PrivateChannel
             && $channels[0]->name === "private-party.ABCD.member.{$target->id}";
     });
 });

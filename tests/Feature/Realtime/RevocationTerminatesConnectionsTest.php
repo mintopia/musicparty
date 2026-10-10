@@ -25,7 +25,7 @@ beforeEach(function () {
 });
 
 it('is the fake in tests', function () {
-    expect($this->connections)->toBeInstanceOf(FakeRealtimeConnections::class);
+    expect(app(RealtimeConnections::class))->toBeInstanceOf(FakeRealtimeConnections::class);
 });
 
 it('terminates a banned member once, after commit, following the banned event', function () {

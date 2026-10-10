@@ -109,12 +109,6 @@ parameters:
 			path: app/Providers/EventServiceProvider.php
 
 		-
-			message: '#^Method App\\Domain\\Identity\\Contracts\\SocialProviderContract\:\:configMapping\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Domain/Identity/Contracts/SocialProviderContract.php
-
-		-
 			message: '#^Access to an undefined property Laravel\\Socialite\\Contracts\\User\:\:\$refreshToken\.$#'
 			identifier: property.notFound
 			count: 1
@@ -257,12 +251,6 @@ parameters:
 			identifier: class.notFound
 			count: 1
 			path: app/Domain/Party/Models/Party.php
-
-		-
-			message: '#^Property App\\Providers\\EventServiceProvider\:\:\$listen \(array\<class\-string, array\<int, class\-string\>\>\) does not accept default value of type array\<string, list\<string\>\>\.$#'
-			identifier: property.defaultValue
-			count: 1
-			path: app/Providers/EventServiceProvider.php
 
 		-
 			message: '#^Parameter \#1 \$array of function array_slice expects array, list\<string\>\|false given\.$#'
@@ -871,26 +859,8 @@ parameters:
 			path: tests/Feature/Playback/PlayerChannelTest.php
 
 		-
-			message: '#^Default value of the parameter \#1 \$type \(int\) of method Laravel\\Reverb\\Contracts\\Connection@anonymous/tests/Feature/Playback/PlayerFrameListenerTest\.php\:35\:\:control\(\) is incompatible with type string\.$#'
-			identifier: parameter.defaultValue
-			count: 1
-			path: tests/Feature/Playback/PlayerFrameListenerTest.php
-
-		-
 			message: '#^Function clientFrame\(\) should return string but returns string\|false\.$#'
 			identifier: return.type
-			count: 1
-			path: tests/Feature/Playback/PlayerFrameListenerTest.php
-
-		-
-			message: '#^Parameter \#1 \$connection of class Laravel\\Reverb\\Contracts\\Connection@anonymous/tests/Feature/Playback/PlayerFrameListenerTest\.php\:35 constructor expects Laravel\\Reverb\\Contracts\\WebSocketConnection, Mockery\\MockInterface given\.$#'
-			identifier: argument.type
-			count: 1
-			path: tests/Feature/Playback/PlayerFrameListenerTest.php
-
-		-
-			message: '#^Parameter \#2 \$application of class Laravel\\Reverb\\Contracts\\Connection@anonymous/tests/Feature/Playback/PlayerFrameListenerTest\.php\:35 constructor expects Laravel\\Reverb\\Application, Mockery\\MockInterface given\.$#'
-			identifier: argument.type
 			count: 1
 			path: tests/Feature/Playback/PlayerFrameListenerTest.php
 
