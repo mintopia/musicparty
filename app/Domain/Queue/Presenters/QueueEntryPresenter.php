@@ -32,7 +32,7 @@ readonly class QueueEntryPresenter
             ],
             'status' => $request->status->value,
             'score' => (int) $request->score,
-            ...($request->relationLoaded('play') ? ['likes' => (int) $play?->likes, 'dislikes' => (int) $play?->dislikes] : []),
+            ...($request->relationLoaded('play') ? ['likes' => (int) $play?->likes, 'dislikes' => (int) $play?->dislikes, 'play_id' => $play?->id] : []),
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'decorations' => ($this->decorations)($request),
         ];

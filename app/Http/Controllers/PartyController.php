@@ -142,6 +142,7 @@ class PartyController extends Controller
                 'selection_mode' => $party->selection_mode->value,
             ],
             'membership' => [
+                'id' => $member->id,
                 'role' => $member->role->value,
                 'banned' => $member->banned,
             ],

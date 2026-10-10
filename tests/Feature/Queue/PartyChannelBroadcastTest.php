@@ -65,7 +65,7 @@ it('has a stable payload shape', function () {
     expect(array_keys($snapshot))->toBe(['version', 'code', 'now_playing', 'up_next', 'queue'])
         ->and($snapshot['now_playing'])->toBeNull()
         ->and($snapshot['up_next'])->toBeNull()
-        ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'requested_by', 'decorations'])
+        ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'play_id', 'requested_by', 'decorations'])
         ->and(array_keys($snapshot['queue'][0]['track']))->toBe(['title', 'artists', 'album', 'artwork_url', 'duration_ms', 'explicit']);
 });
 
