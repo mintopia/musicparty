@@ -118,6 +118,7 @@ it('serves the create page with the pairing catalogue', function () {
                 ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake']],
                 ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify']],
                 ['kind' => 'browser', 'label' => 'Browser player', 'compatibleProviders' => ['spotify']],
+                ['kind' => 'soloist', 'label' => 'Soloist player', 'compatibleProviders' => ['spotify']],
             ]));
 });
 

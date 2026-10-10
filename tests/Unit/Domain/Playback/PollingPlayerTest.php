@@ -69,7 +69,7 @@ it('computes the poll delay from playback state', function (PlaybackState $state
     'near the end' => [fn () => new PlaybackState(PlaybackStatus::Playing, new TrackReference('s', 't'), 176000, null, 180000), 5],
     'past the end' => [fn () => new PlaybackState(PlaybackStatus::Playing, new TrackReference('s', 't'), 181000, null, 180000), 2],
     'paused' => [fn () => new PlaybackState(PlaybackStatus::Paused, new TrackReference('s', 't'), 0, null, 180000), 60],
-    'idle' => [fn () => PlaybackState::stopped(), 60],
+    'idle' => [PlaybackState::stopped(), 60],
 ]);
 
 it('backs off exponentially up to a cap and honours retry-after', function (int $failures, ?int $retryAfter, int $seconds) {

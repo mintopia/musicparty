@@ -6,6 +6,7 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\RequestRejectedEvent;
+use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\TrackRequest;
@@ -13,6 +14,7 @@ use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
@@ -23,6 +25,7 @@ function ruleTrack(string $id, int $seconds = 180, bool $explicit = false, ?stri
 }
 
 beforeEach(function () {
+    Queue::fake([StartPlayback::class]);
     app()->instance(FakeMusicProvider::class, new FakeMusicProvider([
         ruleTrack('t1', isrc: 'ISRC1'),
         ruleTrack('t1-remaster', isrc: 'ISRC1'),
