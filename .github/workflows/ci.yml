@@ -2,6 +2,11 @@ name: CI
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'openspec/**'
+      - 'tests/**'
+      - '*.md'
   pull_request:
 
 permissions:
