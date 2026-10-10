@@ -61,7 +61,7 @@ it('publishes only after CI succeeds on the same commit', function () {
     expect($checkout['with']['ref'])->toBe('${{ env.PUBLISH_SHA }}');
 });
 
-it('scans before pushing, then attests and tags by commit', function () {
+it('scans before pushing, then attests every platform image', function () {
     $steps = DeployConfig::workflow(WORKFLOWS[1])->toArray()['jobs']['build']['steps'];
     $order = array_map(fn (array $step): string => explode('@', $step['uses'] ?? '')[0], $steps);
 
@@ -72,11 +72,45 @@ it('scans before pushing, then attests and tags by commit', function () {
 
     $scanWith = $steps[$scan]['with'];
     $pushWith = $steps[$push]['with'];
-    $meta = collect($steps)->firstWhere('id', 'meta')['with']['tags'];
 
     expect($scanWith['severity'])->toBe('CRITICAL')
         ->and($scanWith['exit-code'])->toBe('1')
         ->and($pushWith['sbom'])->toBeTrue()
-        ->and($pushWith['provenance'])->toBe('mode=max')
-        ->and($meta)->toContain('sha-${{ env.PUBLISH_SHA }}');
+        ->and($pushWith['provenance'])->toBe('mode=max');
+});
+
+it('builds each architecture natively in parallel and pushes by digest', function () {
+    $build = DeployConfig::workflow(WORKFLOWS[1])->toArray()['jobs']['build'];
+    $include = collect($build['strategy']['matrix']['include'])->keyBy('platform');
+
+    expect($include->keys()->sort()->values()->all())->toBe(['linux/amd64', 'linux/arm64'])
+        ->and($include['linux/amd64']['runner'])->toBe('ubuntu-latest')
+        ->and($include['linux/arm64']['runner'])->toBe('ubuntu-24.04-arm')
+        ->and($build['runs-on'])->toBe('${{ matrix.runner }}')
+        ->and($build['steps'])->not->toContain(fn (array $step): bool => str_starts_with($step['uses'] ?? '', 'docker/setup-qemu-action@'));
+
+    $push = collect($build['steps'])->firstWhere('id', 'build-and-push')['with'];
+
+    expect($push['platforms'])->toBe('${{ matrix.platform }}')
+        ->and($push['outputs'])->toContain('push-by-digest=true')
+        ->and($push['outputs'])->toContain('push=true')
+        ->and($push)->not->toHaveKey('tags');
+});
+
+it('merges the digests into one tagged manifest after every build', function () {
+    $merge = DeployConfig::workflow(WORKFLOWS[1])->toArray()['jobs']['merge'];
+    $meta = collect($merge['steps'])->firstWhere('id', 'meta')['with']['tags'];
+    $commands = collect($merge['steps'])->pluck('run')->filter()->implode("\n");
+
+    expect($merge['needs'])->toBe('build')
+        ->and($meta)->toContain('sha-${{ env.PUBLISH_SHA }}')
+        ->and($commands)->toContain('docker buildx imagetools create');
+});
+
+it('skips CI, and so publishing, for documentation-only pushes', function () {
+    $workflow = DeployConfig::workflow(WORKFLOWS[0])->toArray();
+    $trigger = $workflow['on'] ?? $workflow[true];
+
+    expect($trigger['push']['paths-ignore'])->toBe(['docs/**', 'openspec/**', 'tests/**', '*.md'])
+        ->and($trigger['pull_request'] ?? null)->toBeNull();
 });
