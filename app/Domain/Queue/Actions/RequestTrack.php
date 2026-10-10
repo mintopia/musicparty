@@ -112,9 +112,22 @@ class RequestTrack
     /**
      * A duplicate of an active Request only adds an upvote, so it bypasses the rules that gate a new Request.
      */
-    private function place(Party $party, PartyMember $member, TrackData $track, ?RuleDecision &$decision): RequestOutcome
+    private function place(Party $stale, PartyMember $staleMember, TrackData $track, ?RuleDecision &$decision): RequestOutcome
     {
-        Party::query()->whereKey($party->id)->lockForUpdate()->first();
+        $party = Party::query()->whereKey($stale->id)->lockForUpdate()->firstOrFail();
+        $member = $staleMember->fresh();
+
+        if ($member === null || $member->banned) {
+            throw RequestRefusedException::banned();
+        }
+
+        if ($party->state !== PartyState::Live) {
+            throw RequestRefusedException::partyNotLive();
+        }
+
+        if (! $party->allow_requests) {
+            throw RequestRefusedException::requestsDisabled();
+        }
 
         $existing = $this->matchingQuery($party, $track)
             ->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued])

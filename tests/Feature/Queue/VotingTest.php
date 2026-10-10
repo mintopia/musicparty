@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Party\PartyState;
 use App\Domain\Queue\RequestStatus;
 use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
@@ -282,4 +283,14 @@ describe('web', function () {
         $this->actingAs($this->user)->put($url, ['value' => 'nope'])->assertSessionHasErrors('value');
         $this->put($url, ['value' => 'up'])->assertRedirect();
     });
+});
+
+it('refuses voting in an ended party with no score change and no broadcast', function () {
+    $this->party->forceFill(['state' => PartyState::Ended])->save();
+    Queue::fake();
+
+    castVote($this->track, 'up')->assertUnprocessable()->assertJsonPath('message', 'This party has ended, so voting is closed.');
+
+    Queue::assertNothingPushed();
+    expect(RequestVote::query()->count())->toBe(0);
 });

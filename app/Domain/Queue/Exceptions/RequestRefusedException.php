@@ -59,6 +59,11 @@ class RequestRefusedException extends RuntimeException
         return new self('This party has ended, so ratings are closed.', self::PARTY_ENDED);
     }
 
+    public static function partyEndedVotingClosed(): self
+    {
+        return new self('This party has ended, so voting is closed.', self::PARTY_ENDED);
+    }
+
     public static function requestsDisabled(): self
     {
         return new self('Requests are disabled for this party.', self::REQUESTS_DISABLED);
