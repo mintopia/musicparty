@@ -39,7 +39,7 @@ it('sends every broadcast event to the broadcast queue', function () {
     expect($events)->not->toBeEmpty();
 
     foreach ($events as $class) {
-        $event = (new ReflectionClass($class))->newInstanceWithoutConstructor();
+        $event = new ReflectionClass($class)->newInstanceWithoutConstructor();
 
         expect($event->broadcastQueue)->toBe('broadcast', $class);
     }

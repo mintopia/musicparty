@@ -71,7 +71,7 @@ class PrometheusServiceProvider extends ServiceProvider
      */
     protected function statusCounts(): array
     {
-        $codes = array_map('strval', Redis::smembers(MetricsCollector::STATUS_CODES_KEY));
+        $codes = array_map(strval(...), Redis::smembers(MetricsCollector::STATUS_CODES_KEY));
         sort($codes);
 
         return $this->countsFor('metrics.http.status', $codes);

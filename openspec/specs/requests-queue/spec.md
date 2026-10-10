@@ -21,7 +21,7 @@ A Request SHALL be in exactly one of the states Pending, Queued, Up Next, Playin
 - **THEN** the Request is Queued, not Pending
 
 ### Requirement: Requesting a Track
-A logged-in, non-Banned Member SHALL be able to request a Track from the Party's Music Provider while the Party is Live and accepting Requests. The Track SHALL come from the Party's Music Provider catalogue. The requester SHALL automatically cast an upvote on their own Request.
+A logged-in, non-Banned Member SHALL be able to request a Track from the Party's Music Provider while the Party is Live and accepting Requests. The Track SHALL come from the Party's Music Provider catalogue. The requester SHALL automatically cast an upvote on their own Request. The Party state, Party settings and the Member's Ban status SHALL be evaluated as they are when the Request is committed, not as they were when it was submitted.
 
 #### Scenario: Successful request
 - **WHEN** a Guest requests a Track that passes all request rules
@@ -34,6 +34,14 @@ A logged-in, non-Banned Member SHALL be able to request a Track from the Party's
 #### Scenario: Banned requester
 - **WHEN** a Banned Member requests a Track
 - **THEN** the Request is refused
+
+#### Scenario: Ban during a pending request
+- **WHEN** a Moderator bans a Member while that Member's request is waiting on the Music Provider
+- **THEN** the Request is refused and not added to the Queue
+
+#### Scenario: Setting changed during a pending request
+- **WHEN** the Host disables explicit Tracks while a request for an explicit Track is waiting on the Music Provider
+- **THEN** the Request is refused by the explicit filter
 
 ### Requirement: Request rules
 The system SHALL evaluate each new Request against the Party's rules and refuse it with a specific reason when any rule fails. The rules are: Requests accepted; maximum Requests per Member (VIP and Host exempt); minimum and maximum Track length; explicit filter; Blocklist; no-repeat interval; the Track is not already Up Next; and no similar Track already in the Queue. Requests SHALL be refused at the first failing rule and the refusal reason SHALL be shown to the requester.
@@ -135,7 +143,7 @@ The Host and Moderators SHALL be able to remove a Queued or Pending Request, mov
 - **THEN** the system refuses
 
 ### Requirement: Votes
-A Member SHALL be able to cast one Vote, up or down, per Request, and to change or retract it. Banned Members MUST NOT vote. Members MUST NOT vote on Requests that are not Queued. Downvotes SHALL be disableable per Party. When downvotes are enabled, a Member SHALL be limited to the Party's configured number of downvotes per hour, after which further downvotes are refused until the allowance recovers. Retracting or changing a Vote SHALL restore allowance consistent with the rolling hour rule.
+A Member SHALL be able to cast one Vote, up or down, per Request, and to change or retract it. Banned Members MUST NOT vote. Members MUST NOT vote on Requests that are not Queued, or in a Party that is Ended. Downvotes SHALL be disableable per Party. When downvotes are enabled, a Member SHALL be limited to the Party's configured number of downvotes per hour, after which further downvotes are refused until the allowance recovers. Retracting or changing a Vote SHALL restore allowance consistent with the rolling hour rule. Ban status and Party state SHALL be checked against current data at the moment the Vote is committed.
 
 #### Scenario: Casting a Vote
 - **WHEN** a Guest upvotes a Queued Request
@@ -157,9 +165,17 @@ A Member SHALL be able to cast one Vote, up or down, per Request, and to change 
 - **WHEN** a Member who has used their hourly downvote allowance attempts another downvote
 - **THEN** the system refuses and states when they can downvote again
 
+#### Scenario: Concurrent downvotes
+- **WHEN** a Member sends several downvotes at the same moment that together exceed their hourly allowance
+- **THEN** only the downvotes within the allowance are accepted
+
 #### Scenario: Voting on an Up Next Request
 - **WHEN** a Member votes on the Up Next Request
 - **THEN** the Vote is refused because the Up Next Request is locked
+
+#### Scenario: Voting after the Party ends
+- **WHEN** a Member votes on a Request that is still Queued in a Party that has been Ended
+- **THEN** the Vote is refused, the score does not change and nothing is broadcast
 
 ### Requirement: Score
 A Request's score SHALL equal the sum of its Votes (up as +1, down as -1) plus adjustments applied by Score Modifiers. Scores SHALL be visible to Members and update in real time.
@@ -169,7 +185,7 @@ A Request's score SHALL equal the sum of its Votes (up as +1, down as -1) plus a
 - **THEN** its score is 6
 
 ### Requirement: Ratings
-A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Banned Members MUST NOT rate. Ratings SHALL be included in Live Stats and the Party Export.
+A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export.
 
 #### Scenario: Liking a Play
 - **WHEN** a Member likes the currently Playing Track
@@ -181,6 +197,14 @@ A Member SHALL be able to like or dislike a Play, once per Play, and to change o
 
 #### Scenario: Banned Member rating
 - **WHEN** a Banned Member attempts to rate a Play
+- **THEN** the system refuses
+
+#### Scenario: Rating while playing shows in history
+- **WHEN** Members like a Track while it is playing and the Track then ends
+- **THEN** the played history shows those likes for that Play, and a Member cannot add a second like to it
+
+#### Scenario: Rating after the Party ends
+- **WHEN** a Member rates a Play in an Ended Party
 - **THEN** the system refuses
 
 ### Requirement: Queue top-up from the Fallback Playlist

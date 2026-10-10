@@ -19,9 +19,9 @@ class ProcessPlayerFrame implements ShouldQueue
 
     public const DISCARDED_COUNTER = 'player-frames.discarded';
 
-    private const FRAME_TTL_SECONDS = 300;
+    private const int FRAME_TTL_SECONDS = 300;
 
-    private const LOCK_SECONDS = 30;
+    private const int LOCK_SECONDS = 30;
 
     public function __construct(public readonly string $partyCode)
     {

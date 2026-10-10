@@ -17,7 +17,7 @@ The system SHALL define a Player contract through which Music Party observes and
 - **THEN** the system refuses with a clear "unsupported by this Player" error
 
 ### Requirement: One Player per Party and Compatibility
-A Party SHALL use exactly one Player. Each Player kind SHALL declare its Compatibility with Music Providers, and the system SHALL refuse to pair a Music Provider with an incompatible Player.
+A Party SHALL use exactly one Player. Each Player kind SHALL declare its Compatibility with Music Providers, and the system SHALL refuse to pair a Music Provider with an incompatible Player. A change of Player SHALL take effect in every web and background worker without a restart.
 
 #### Scenario: Incompatible pairing
 - **WHEN** a Host selects a Player kind not compatible with the Party's Music Provider
@@ -27,8 +27,12 @@ A Party SHALL use exactly one Player. Each Player kind SHALL declare its Compati
 - **WHEN** a Host changes a Party's Player
 - **THEN** the change is recorded in the Party Log and the old Player stops receiving commands
 
+#### Scenario: Change seen by running workers
+- **WHEN** a Host changes a Party from the Polling Player to the Soloist Player while background workers are running
+- **THEN** the next Player message or playback tick for that Party is handled by the Soloist Player without restarting any worker
+
 ### Requirement: Feed Modes and the Up Next hand-off
-Each Player SHALL declare a Feed Mode. In "just-in-time" mode the system SHALL, shortly before the current Track ends, select the next Request, lock it as Up Next and give it to the Player. In "ahead" mode the system SHALL keep exactly one Up Next Request loaded in the Player and refill it after each Track change. A locked Up Next SHALL NOT change when Votes change.
+Each Player SHALL declare a Feed Mode. In "just-in-time" mode the system SHALL, shortly before the current Track ends, select the next Request, lock it as Up Next and give it to the Player. In "ahead" mode the system SHALL keep exactly one Up Next Request loaded in the Player and refill it after each Track change. A locked Up Next SHALL NOT change when Votes change. If handing the Up Next Request to the Player fails for any reason, the hand-off SHALL be retried with increasing delays from a configured schedule. Each failed attempt SHALL be recorded in the Party Log. When the final delay has been used, the system SHALL stop retrying and record that it gave up. A Player reconnect or a Host playback control SHALL reset the retries.
 
 #### Scenario: Just-in-time hand-off
 - **WHEN** the current Track has about 15 seconds remaining under a just-in-time Player
@@ -49,6 +53,18 @@ Each Player SHALL declare a Feed Mode. In "just-in-time" mode the system SHALL, 
 #### Scenario: Nothing eligible
 - **WHEN** the Queue is empty and no Fallback Track is eligible
 - **THEN** playback stops and the Provider's own autoplay is not allowed to take over
+
+#### Scenario: Hand-off fails
+- **WHEN** sending the Up Next Request to the Player fails, for example because the realtime server is restarting
+- **THEN** the Request stays Up Next and becomes eligible to be sent again, a Party Log entry records the attempt and when the next one will be made, and no attempt is made before then
+
+#### Scenario: Hand-off retries exhausted
+- **WHEN** the attempt after the final delay in the schedule also fails
+- **THEN** the system stops retrying that Request and records in the Party Log that it gave up
+
+#### Scenario: Retry after reconnect
+- **WHEN** the Player reconnects or the Host uses a playback control after the hand-off has failed
+- **THEN** the hand-off is attempted again immediately
 
 ### Requirement: Polling Player
 The Polling Player SHALL observe playback by periodically asking the Music Provider what is playing on the Host's linked account, using the "ahead" Feed Mode. It SHALL require a linked Host account and SHALL be compatible with Spotify.
@@ -188,7 +204,7 @@ The Soloist proxy (repository musicparty-soloist) SHALL gain support for relayin
 - **THEN** the proxy reports the failure and backs off rather than retrying rapidly
 
 ### Requirement: Browser Player
-The Browser Player SHALL play audio in the Host's browser and be event-driven using the "just-in-time" Feed Mode. It SHALL need a linked Host account for the in-browser playback token, and that token SHALL never be sent on a public channel, in a public API response or to any client other than the Host's own authenticated session.
+The Browser Player SHALL play audio in the Host's browser and be event-driven using the "just-in-time" Feed Mode. It SHALL need a linked Host account for the in-browser playback token, and that token SHALL never be sent on a public channel, in a public API response or to any client other than the Host's own authenticated session. Only one browser tab SHALL hold the Player role at a time, even when tabs claim it at the same moment.
 
 #### Scenario: Playback in the Host's browser
 - **WHEN** the Host opens the Party's player page and starts the Browser Player
@@ -206,6 +222,10 @@ The Browser Player SHALL play audio in the Host's browser and be event-driven us
 - **WHEN** the Host opens the player page in a second tab
 - **THEN** only one tab holds the Player role and the other is told so
 
+#### Scenario: Simultaneous claims
+- **WHEN** two tabs claim the Player role at the same moment
+- **THEN** exactly one tab holds it
+
 ### Requirement: Fake Player for tests
 The system SHALL include a fake Player usable in automated tests that can emit playback events, report any Feed Mode, record the commands sent to it and simulate disconnects.
 
@@ -216,3 +236,14 @@ The system SHALL include a fake Player usable in automated tests that can emit p
 #### Scenario: Asserting commands
 - **WHEN** the hand-off runs in a test
 - **THEN** the fake Player records exactly which Request was handed off and when
+
+### Requirement: Ordered Player message handling
+Messages received from a Party's Player SHALL be applied one at a time and in the order they were received, so that a later message never has its effect undone by an earlier one.
+
+#### Scenario: Burst of frames
+- **WHEN** a Soloist Player sends a track change followed immediately by a position update
+- **THEN** the Party's playback state reflects the new Track after both are processed
+
+#### Scenario: Pause then play
+- **WHEN** a Player reports paused and then playing in quick succession
+- **THEN** the Party's playback state ends as playing

@@ -1,8 +1,11 @@
 <?php
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
+
+uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
     config(['database.redis.options.prefix' => 'metrics_test_'.getmypid().'_']);

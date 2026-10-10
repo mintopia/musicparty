@@ -33,7 +33,7 @@ LUA;
     {
         $interval = 1000 / $perSecond;
         $tolerance = $interval * ($burst - 1);
-        $now = (int) Carbon::now()->getTimestampMs();
+        $now = Carbon::now()->getTimestampMs();
 
         $wait = $this->redis->connection()->command('eval', [self::SCRIPT, [$key, $now, $interval, $tolerance], 1]);
 
