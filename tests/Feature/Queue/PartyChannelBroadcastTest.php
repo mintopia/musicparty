@@ -57,12 +57,30 @@ it('builds a snapshot of now playing, up next and the ordered queue with nicknam
         ->and($snapshot['queue'][0]['score'])->toBe(1);
 });
 
+it('carries the selection mode and the now playing start time', function () {
+    $nowPlaying = trackFor($this->party, $this->member, RequestStatus::Playing, 'Now');
+    $nowPlaying->update(['started_at' => '2026-10-10 12:00:00']);
+    $this->party->forceFill(['selection_mode' => 'weighted'])->save();
+
+    $snapshot = app(PartyQueueSnapshot::class)->build($this->party->refresh());
+
+    expect($snapshot['selection_mode'])->toBe('weighted')
+        ->and($snapshot['started_at'])->toBe('2026-10-10T12:00:00+00:00');
+});
+
+it('has a null start time and the deterministic mode when idle', function () {
+    $snapshot = app(PartyQueueSnapshot::class)->build($this->party);
+
+    expect($snapshot['started_at'])->toBeNull()
+        ->and($snapshot['selection_mode'])->toBe('deterministic');
+});
+
 it('has a stable payload shape', function () {
     trackFor($this->party, $this->member, RequestStatus::Queued, 'Only');
 
     $snapshot = app(PartyQueueSnapshot::class)->build($this->party);
 
-    expect(array_keys($snapshot))->toBe(['version', 'code', 'now_playing', 'up_next', 'queue'])
+    expect(array_keys($snapshot))->toBe(['version', 'code', 'selection_mode', 'started_at', 'now_playing', 'up_next', 'queue'])
         ->and($snapshot['now_playing'])->toBeNull()
         ->and($snapshot['up_next'])->toBeNull()
         ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'play_id', 'requested_by', 'decorations'])

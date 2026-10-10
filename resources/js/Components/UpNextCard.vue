@@ -3,9 +3,13 @@ import Icon from './Icon.vue';
 import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
-import {formatDuration, requesterLabel} from '../lib/format';
+import {formatClock, formatCountdown, formatDuration, requesterLabel} from '../lib/format';
 
-defineProps({upNext: {type: Object, default: null}});
+defineProps({
+    upNext: {type: Object, default: null},
+    playsAt: {type: Number, default: null},
+    now: {type: Number, default: 0},
+});
 </script>
 
 <template>
@@ -21,6 +25,7 @@ defineProps({upNext: {type: Object, default: null}});
             </div>
             <div class="flex flex-col items-end gap-1 text-sm text-muted">
                 <span class="tabular-nums">{{ formatDuration(upNext.track.duration_ms) }}</span>
+                <span v-if="playsAt !== null" data-testid="up-next-eta" class="text-xs tabular-nums">Plays in {{ formatCountdown(playsAt, now) }} (~{{ formatClock(playsAt) }})</span>
                 <span data-testid="up-next-votes">{{ upNext.score }} {{ upNext.score === 1 ? 'vote' : 'votes' }}</span>
                 <span data-testid="up-next-locked" class="flex items-center gap-1 text-xs"><Icon name="lock" /><span>Locked</span></span>
             </div>

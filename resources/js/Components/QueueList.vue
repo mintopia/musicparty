@@ -6,13 +6,15 @@ import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
 import ModSlot from './ModSlot.vue';
 import TrackThumb from './TrackThumb.vue';
-import {formatDuration, requesterLabel} from '../lib/format';
+import {formatClock, formatCountdown, formatDuration, requesterLabel} from '../lib/format';
 
 const props = defineProps({
     queue: {type: Array, default: () => []},
     partyCode: {type: String, default: ''},
     downvotesEnabled: {type: Boolean, default: true},
     readOnly: {type: Boolean, default: false},
+    startsAt: {type: Object, default: () => ({})},
+    now: {type: Number, default: 0},
 });
 
 const pending = ref(null);
@@ -64,6 +66,7 @@ const buttonClass = (active, activeColor) => [
                     <div class="truncate text-sm"><TrackLink :href="item.track.provider_url">{{ item.track.title }}</TrackLink></div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
                     <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
+                    <div v-if="startsAt[item.id] !== undefined" data-testid="queue-item-eta" class="truncate text-xs tabular-nums text-muted">Estimated in {{ formatCountdown(startsAt[item.id], now) }} (~{{ formatClock(startsAt[item.id]) }})</div>
                     <Decorations :decorations="item.decorations" class="mt-1" />
                 </div>
                 <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(item.track.duration_ms) }}</span>

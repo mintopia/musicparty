@@ -287,3 +287,30 @@ A Party SHALL have at most one Up Next Request and at most one Playing Request a
 #### Scenario: Concurrent promotion
 - **WHEN** two processes try to make different Requests Up Next for the same Party at once
 - **THEN** one succeeds and the other fails without changing any Request
+
+### Requirement: Estimated play times
+Members SHALL be shown the time until the Up Next Request plays and the total duration of the Up Next Request and the Queue. The estimate SHALL be computed client-side from the broadcast state: the start time and duration of the Playing Request, each Request's duration and the Party's selection mode. Under deterministic selection each Queued Request SHALL also show an estimated play time, labelled as an estimate, following the ranked Queue order. Under weighted selection only the Up Next time and the total duration SHALL be shown. Estimates SHALL recalculate on each Queue update and tick locally without polling.
+
+#### Scenario: Deterministic estimates
+- **WHEN** a Party in deterministic mode has a Playing Request, an Up Next Request and Queued Requests
+- **THEN** the Up Next Request shows the time until the Playing Request ends, and each Queued Request shows that time plus the durations of every Request ahead of it
+
+#### Scenario: Weighted mode
+- **WHEN** a Party in weighted mode has an Up Next Request and Queued Requests
+- **THEN** only the Up Next time and the total duration are shown, with no per-position estimates
+
+#### Scenario: Nothing playing
+- **WHEN** no Request is Playing and a Request is Up Next
+- **THEN** the Up Next estimate counts from now
+
+#### Scenario: Overrunning Track
+- **WHEN** the Playing Request has passed its expected end
+- **THEN** estimates count from now rather than showing negative times
+
+#### Scenario: Unknown start time
+- **WHEN** a Request is Playing but its start time is unavailable
+- **THEN** no play-time estimate is shown, but the total duration still is
+
+#### Scenario: Queue update
+- **WHEN** a Queue update is broadcast
+- **THEN** the estimates are recalculated from the new payload

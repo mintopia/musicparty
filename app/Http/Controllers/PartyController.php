@@ -162,6 +162,7 @@ class PartyController extends Controller
             'ratablePlay' => $this->ratablePlay($request, $party, $member),
             'memberVotes' => $listMemberVotes($party, $member),
             'upNext' => $playback['up_next'],
+            'startedAt' => $playback['started_at'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
             'filters' => $request->filters(),
