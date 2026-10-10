@@ -154,6 +154,7 @@
                                         "score",
                                         "likes",
                                         "dislikes",
+                                        "play_id",
                                         "requested_by",
                                         "decorations"
                                     ],
@@ -218,6 +219,12 @@
                                         },
                                         "dislikes": {
                                             "type": "integer"
+                                        },
+                                        "play_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
                                         },
                                         "requested_by": {
                                             "type": "object",
@@ -325,6 +332,7 @@
                                         "score",
                                         "likes",
                                         "dislikes",
+                                        "play_id",
                                         "requested_by",
                                         "decorations"
                                     ],
@@ -389,6 +397,12 @@
                                         },
                                         "dislikes": {
                                             "type": "integer"
+                                        },
+                                        "play_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
                                         },
                                         "requested_by": {
                                             "type": "object",
@@ -493,6 +507,7 @@
                                     "score",
                                     "likes",
                                     "dislikes",
+                                    "play_id",
                                     "requested_by",
                                     "decorations"
                                 ],
@@ -557,6 +572,12 @@
                                     },
                                     "dislikes": {
                                         "type": "integer"
+                                    },
+                                    "play_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "requested_by": {
                                         "type": "object",

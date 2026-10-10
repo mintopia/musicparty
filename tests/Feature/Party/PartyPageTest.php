@@ -30,7 +30,9 @@ it('renders the party page with exact props', function () {
                 'selection_mode' => 'deterministic',
                 'downvotes' => true,
             ])
-            ->where('membership', ['role' => 'moderator', 'banned' => false])
+            ->where('membership.role', 'moderator')
+            ->where('membership.banned', false)
+            ->has('membership.id')
             ->where('section', 'queue')
             ->where('readOnly', false)
             ->where('nowPlaying', null)

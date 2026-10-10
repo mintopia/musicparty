@@ -1,6 +1,6 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, provide, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
@@ -19,6 +19,7 @@ const props = defineProps({
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
     ratablePlay: {type: Object, default: null},
+    memberVotes: {type: Object, default: null},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     history: {type: Object, default: null},
@@ -32,28 +33,76 @@ const props = defineProps({
 provide('enabledMods', computed(() => props.enabled_mods));
 
 const channelName = `party.${props.party.code}`;
+const memberChannelName = `${channelName}.member.${props.membership.id}`;
+const KNOWN_PAYLOAD_VERSION = 1;
 
-const RELOAD_DEBOUNCE_MS = 500;
-const RELOAD_JITTER_MS = 1500;
-let reloadTimer = null;
+const votesByRequest = () => ({
+    ...Object.fromEntries(props.queue.filter((entry) => entry.my_vote !== undefined).map((entry) => [entry.id, entry.my_vote])),
+    ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
+});
+const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
-const scheduleReload = () => {
-    clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(() => {
-        reloadTimer = null;
-        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
-    }, RELOAD_DEBOUNCE_MS + Math.random() * RELOAD_JITTER_MS);
+const liveNowPlaying = ref(props.nowPlaying);
+const liveUpNext = ref(props.upNext);
+const liveQueue = ref(props.queue);
+const liveRatablePlay = ref(props.ratablePlay);
+const myVotes = ref(votesByRequest());
+const myRatings = ref(ratingsByPlay());
+
+watch(
+    () => [props.nowPlaying, props.upNext, props.queue, props.ratablePlay, props.memberVotes],
+    () => {
+        liveNowPlaying.value = props.nowPlaying;
+        liveUpNext.value = props.upNext;
+        liveQueue.value = props.queue;
+        liveRatablePlay.value = props.ratablePlay;
+        myVotes.value = votesByRequest();
+        myRatings.value = ratingsByPlay();
+    },
+);
+
+const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0})));
+const shownRatablePlay = computed(() => {
+    const play = liveRatablePlay.value;
+
+    return play === null ? null : {...play, my_rating: myRatings.value[play.id] ?? play.my_rating};
+});
+
+const resync = () => {
+    router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
+};
+
+const applyQueueUpdate = (payload) => {
+    if (payload.version > KNOWN_PAYLOAD_VERSION) {
+        resync();
+
+        return;
+    }
+    liveNowPlaying.value = payload.now_playing;
+    liveUpNext.value = payload.up_next;
+    liveQueue.value = payload.queue;
+    const playing = payload.now_playing;
+    liveRatablePlay.value = playing?.play_id
+        ? {id: playing.play_id, track: playing.track, likes: playing.likes, dislikes: playing.dislikes, my_rating: 0}
+        : null;
 };
 
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('.queue.updated', scheduleReload);
-    window.addEventListener(RESYNC_EVENT, scheduleReload);
+    window.Echo?.channel(channelName).listen('.queue.updated', applyQueueUpdate);
+    window.Echo?.private(memberChannelName)
+        .listen('.member.vote_changed', (payload) => {
+            myVotes.value = {...myVotes.value, [payload.request_id]: payload.value};
+        })
+        .listen('.member.rating_changed', (payload) => {
+            myRatings.value = {...myRatings.value, [payload.play_id]: payload.value};
+        });
+    window.addEventListener(RESYNC_EVENT, resync);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener(RESYNC_EVENT, scheduleReload);
-    clearTimeout(reloadTimer);
+    window.removeEventListener(RESYNC_EVENT, resync);
     window.Echo?.leave(channelName);
+    window.Echo?.leave(memberChannelName);
 });
 
 const canViewLog = computed(
@@ -108,8 +157,8 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
     <Head :title="party.name" />
     <NowPlayingBanner
         v-if="section === 'queue' || section === 'history'"
-        :now-playing="nowPlaying"
-        :ratable-play="ratablePlay"
+        :now-playing="liveNowPlaying"
+        :ratable-play="shownRatablePlay"
         :party-code="party.code"
         :read-only="ratingLocked"
     />
@@ -237,9 +286,9 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                 </template>
             </dl>
             <template v-else-if="section === 'queue'">
-                <UpNextCard :up-next="upNext" class="mb-6" />
+                <UpNextCard :up-next="liveUpNext" class="mb-6" />
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
-                <QueueList :queue="queue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
+                <QueueList :queue="shownQueue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
