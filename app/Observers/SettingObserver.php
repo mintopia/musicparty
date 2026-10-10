@@ -2,7 +2,7 @@
 
 namespace App\Observers;
 
-use App\Models\Setting;
+use App\Domain\Admin\Models\Setting;
 
 class SettingObserver
 {

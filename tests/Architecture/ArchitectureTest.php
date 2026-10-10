@@ -1,9 +1,9 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use App\Listeners\HandlePlayerClientEvent;
-use App\Models\Party;
 use App\Models\Play;
-use App\Models\User;
 use Tests\Architecture\Support\ArchitectureRules;
 use Tests\Fixtures\Architecture\CrossContextWriter;
 use Tests\Fixtures\Architecture\LeakyBroadcastEvent;

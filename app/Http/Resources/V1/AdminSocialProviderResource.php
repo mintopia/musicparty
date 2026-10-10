@@ -2,9 +2,9 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
+use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

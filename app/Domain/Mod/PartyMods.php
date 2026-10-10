@@ -3,7 +3,7 @@
 namespace App\Domain\Mod;
 
 use App\Domain\Mod\Data\ModContext;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\PartyMod;
 
 class PartyMods

@@ -2,9 +2,9 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Theming\Actions\GetPartyTheme;
-use App\Models\Party;
 use App\Models\Play;
 
 readonly class ShowPartyTv

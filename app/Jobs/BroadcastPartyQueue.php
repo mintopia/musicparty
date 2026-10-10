@@ -2,9 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Events\Party\QueueUpdatedEvent;
-use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;

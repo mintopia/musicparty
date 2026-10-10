@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Stats\Actions\ComputePartyStats;
-use App\Models\Party;
 use App\Models\PartyStat;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

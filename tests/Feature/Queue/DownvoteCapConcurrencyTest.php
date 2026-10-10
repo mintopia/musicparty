@@ -1,11 +1,11 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\DatabaseTruncation;

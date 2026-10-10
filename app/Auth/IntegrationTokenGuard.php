@@ -2,7 +2,7 @@
 
 namespace App\Auth;
 
-use App\Models\IntegrationToken;
+use App\Domain\Admin\Models\IntegrationToken;
 use Illuminate\Http\Request;
 
 class IntegrationTokenGuard

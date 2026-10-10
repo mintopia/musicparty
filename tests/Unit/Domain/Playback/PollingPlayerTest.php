@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
@@ -9,7 +10,6 @@ use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\Players\PollingPlayer;
-use App\Models\Party;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 

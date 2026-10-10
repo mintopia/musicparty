@@ -2,6 +2,7 @@
 
 namespace App\Domain\Playback;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Data\PlaybackState;
@@ -9,7 +10,6 @@ use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Playback\Players\PollingPlayer;
 use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Models\Party;
 
 class PartyPlayers
 {

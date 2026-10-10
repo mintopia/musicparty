@@ -2,17 +2,17 @@
 
 namespace App\Domain\Queue\Actions\Concerns;
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestResolvedEvent;
 use App\Events\Party\RequestDecidedEvent;
 use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\TrackRequest;
-use App\Models\User;
 
 trait ModeratesRequests
 {

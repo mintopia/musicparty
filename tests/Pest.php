@@ -4,11 +4,11 @@ use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Data\PlayerCommand;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Models\Party;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music', 'Unit/Domain/Playback');

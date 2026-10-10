@@ -4,7 +4,7 @@ namespace App\Domain\Music\Actions;
 
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 class AppendPlayToHistory
 {

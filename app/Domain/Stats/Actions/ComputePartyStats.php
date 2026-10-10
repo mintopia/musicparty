@@ -2,8 +2,8 @@
 
 namespace App\Domain\Stats\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\Play;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;

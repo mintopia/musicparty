@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin;
 
-use App\Services\SocialProviders\DiscordProvider;
-use App\Services\SocialProviders\SpotifyProvider;
-use App\Services\SocialProviders\SteamProvider;
-use App\Services\SocialProviders\TwitchProvider;
+use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SteamProvider;
+use App\Domain\Identity\SocialProviders\TwitchProvider;
 
 final class ProviderCatalogue
 {

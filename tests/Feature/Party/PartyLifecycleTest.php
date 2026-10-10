@@ -1,17 +1,17 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PartyState;
 use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
 use App\Models\Play;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;

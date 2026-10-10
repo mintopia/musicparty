@@ -1,13 +1,13 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
 use App\Domain\Music\Testing\FakeMusicProvider;
-use App\Domain\Party\PartyRole;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Route;
 use Laravel\Sanctum\PersonalAccessToken;

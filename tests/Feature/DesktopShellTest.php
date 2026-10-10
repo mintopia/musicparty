@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Theming\ColourScheme;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia;
 use Inertia\Testing\AssertableInertia as Assert;

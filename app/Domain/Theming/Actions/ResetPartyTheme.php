@@ -3,10 +3,10 @@
 namespace App\Domain\Theming\Actions;
 
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\ThemeTokens;
 use App\Events\Party\ThemeUpdatedEvent;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Storage;
 

@@ -2,13 +2,17 @@
 
 namespace App\Providers;
 
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\SystemRandomizer;
 use App\Support\RateLimiting\Bucket;
 use App\Support\RateLimiting\LeakyBucket;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
 
@@ -30,6 +34,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Relation::morphMap([
+            'App\\Models\\User' => User::class,
+            'App\\Models\\Party' => Party::class,
+            'App\\Models\\SocialProvider' => SocialProvider::class,
+        ]);
+
         Pulse::user(fn ($user) => [
             'name' => $user->nickname,
             'extra' => $user->getEmail() ?? '',

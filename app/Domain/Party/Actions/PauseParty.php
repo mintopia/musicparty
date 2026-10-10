@@ -2,11 +2,11 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 readonly class PauseParty

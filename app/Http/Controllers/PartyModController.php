@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Mod\Actions\DisableMod;
 use App\Domain\Mod\Actions\EnableMod;
 use App\Domain\Mod\Actions\ListMods;
 use App\Domain\Mod\Actions\UpdateModSettings;
 use App\Domain\Mod\EnabledMods;
+use App\Domain\Party\Models\Party;
 use App\Http\Requests\Api\V1\UpdateModSettingsRequest;
 use App\Http\Resources\V1\ModResource;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

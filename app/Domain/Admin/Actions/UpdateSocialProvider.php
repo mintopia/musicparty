@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin\Actions;
 
+use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

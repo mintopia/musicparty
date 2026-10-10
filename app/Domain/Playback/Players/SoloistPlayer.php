@@ -4,6 +4,7 @@ namespace App\Domain\Playback\Players;
 
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
@@ -17,7 +18,6 @@ use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\PlayerHealth;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Player\PlayerCommandEvent;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;

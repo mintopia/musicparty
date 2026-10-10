@@ -1,18 +1,18 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
 use App\Models\Play;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 

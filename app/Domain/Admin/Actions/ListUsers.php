@@ -2,7 +2,7 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ListUsers

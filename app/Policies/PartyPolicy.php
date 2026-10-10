@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
-use App\Domain\Party\PartyRole;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 
 class PartyPolicy
 {

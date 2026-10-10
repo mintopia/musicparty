@@ -2,7 +2,7 @@
 
 namespace Tests\Fixtures\Spotify;
 
-use App\Models\LinkedAccount;
+use App\Domain\Identity\Models\LinkedAccount;
 use Database\Factories\LinkedAccountFactory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;

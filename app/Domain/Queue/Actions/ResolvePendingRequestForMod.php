@@ -3,12 +3,12 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestResolvedEvent;
 use App\Events\Party\RequestDecidedEvent;
 use App\Jobs\BroadcastPartyQueue;
 use App\Jobs\StartPlayback;
-use App\Models\Party;
 use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 use InvalidArgumentException;

@@ -2,10 +2,10 @@
 
 use App\Domain\Admin\Actions\IssueIntegrationToken;
 use App\Domain\Admin\Actions\RevokeIntegrationToken;
-use App\Models\AdminAuditEntry;
-use App\Models\IntegrationToken;
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;

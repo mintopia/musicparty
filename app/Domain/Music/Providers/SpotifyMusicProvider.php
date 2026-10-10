@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Providers;
 
+use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
@@ -15,7 +16,6 @@ use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\PlaybackStatus;
-use App\Models\LinkedAccount;
 use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Client\ConnectionException;

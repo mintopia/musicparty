@@ -1,9 +1,9 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Stats\Actions\GetPartyStats;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\Play;
 use App\Models\RequestVote;
 use App\Models\TrackRequest;

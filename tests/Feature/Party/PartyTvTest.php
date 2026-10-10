@@ -1,7 +1,7 @@
 <?php
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\Play;
 use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;

@@ -2,11 +2,11 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Data\QueueAdvance;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\Play;
 use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;

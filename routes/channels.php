@@ -11,10 +11,10 @@
 |
 */
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Http\Middleware\EnsurePlayerToken;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('party.{code}.members', function (User $user, string $code): array|false {

@@ -5,7 +5,7 @@ namespace App\Domain\Mod\Actions;
 use App\Domain\Mod\Data\ModStatus;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\ModSettings;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\PartyMod;
 
 readonly class ListMods

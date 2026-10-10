@@ -3,7 +3,7 @@
 namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\AdminRole;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 

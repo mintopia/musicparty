@@ -2,10 +2,10 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Players\BrowserPlayer;
-use App\Models\Party;
 
 readonly class ResolveBrowserPlayer
 {

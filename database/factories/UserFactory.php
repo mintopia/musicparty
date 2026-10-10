@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class UserFactory extends Factory
 {
+    protected $model = User::class;
+
     /**
      * @return array<string, mixed>
      */

@@ -1,7 +1,7 @@
 <?php
 
 use App\Domain\Party\Actions\GeneratePartyCode;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);

@@ -1,16 +1,16 @@
 <?php
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\Testing\FakePlayer;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\TrackRequestFactory;

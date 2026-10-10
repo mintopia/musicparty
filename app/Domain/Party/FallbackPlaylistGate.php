@@ -5,9 +5,9 @@ namespace App\Domain\Party;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Blocklist;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
 use App\Models\Play;
 use Illuminate\Database\Eloquent\Collection;
 

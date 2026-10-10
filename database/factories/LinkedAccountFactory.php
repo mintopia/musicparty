@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\LinkedAccount;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class LinkedAccountFactory extends Factory
 {
+    protected $model = LinkedAccount::class;
+
     /**
      * @return array<string, mixed>
      */

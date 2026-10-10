@@ -2,7 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
+use App\Domain\Admin\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Log;
 

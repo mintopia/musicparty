@@ -2,8 +2,8 @@
 
 namespace App\Domain\Party\Actions;
 
-use App\Models\Party;
-use App\Models\PartyLogEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 readonly class ListPartyLog

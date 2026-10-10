@@ -2,17 +2,17 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\AddBlocklistEntry;
 use App\Domain\Party\Actions\ListBlocklistEntries;
 use App\Domain\Party\Actions\RemoveBlocklistEntry;
 use App\Domain\Party\Actions\UpdateBlocklistEntry;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\StoreBlocklistEntryRequest;
 use App\Http\Requests\Api\V1\UpdateBlocklistEntryRequest;
 use App\Http\Resources\V1\BlocklistEntryResource;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;

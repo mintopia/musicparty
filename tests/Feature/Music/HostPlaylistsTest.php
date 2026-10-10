@@ -1,5 +1,9 @@
 <?php
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
 use App\Domain\Music\Actions\AppendPlayToHistory;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Contracts\MusicProvider;
@@ -8,17 +12,13 @@ use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
 use App\Domain\Queue\RequestStatus;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\SocialProvider;
 use App\Models\TrackRequest;
-use App\Models\User;
-use App\Services\SocialProviders\SpotifyProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;

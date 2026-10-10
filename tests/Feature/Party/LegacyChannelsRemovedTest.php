@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Party;
-use App\Models\PartyMember;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;

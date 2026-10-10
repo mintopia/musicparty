@@ -2,8 +2,8 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Queue\Exceptions\SearchRateLimitedException;
-use App\Models\User;
 use App\Support\RateLimiting\Bucket;
 
 class ThrottleSearch

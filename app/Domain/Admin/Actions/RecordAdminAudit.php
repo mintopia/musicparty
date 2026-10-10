@@ -2,8 +2,8 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\AdminAuditEntry;
-use App\Models\User;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Identity\Models\User;
 
 class RecordAdminAudit
 {

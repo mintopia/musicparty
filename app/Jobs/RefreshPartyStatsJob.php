@@ -2,8 +2,8 @@
 
 namespace App\Jobs;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Stats\Actions\RefreshPartyStats;
-use App\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUniqueUntilProcessing;
 use Illuminate\Contracts\Queue\ShouldQueue;

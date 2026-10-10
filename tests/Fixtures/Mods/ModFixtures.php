@@ -5,7 +5,7 @@ namespace Tests\Fixtures\Mods;
 use App\Domain\Mod\Contracts\Mod;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\PartyMods;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\PartyMod;
 
 class ModFixtures

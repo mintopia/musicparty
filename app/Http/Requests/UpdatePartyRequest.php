@@ -2,8 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\SelectionMode;
-use App\Models\Party;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;

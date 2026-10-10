@@ -3,9 +3,9 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Admin\IntegrationAbility;
-use App\Models\IntegrationToken;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Admin\Models\IntegrationToken;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;

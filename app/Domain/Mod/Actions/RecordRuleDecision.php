@@ -6,7 +6,7 @@ use App\Domain\Mod\Data\RuleDecision;
 use App\Domain\Mod\RuleOutcome;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 readonly class RecordRuleDecision
 {

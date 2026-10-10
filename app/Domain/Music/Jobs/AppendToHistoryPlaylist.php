@@ -2,12 +2,12 @@
 
 namespace App\Domain\Music\Jobs;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Support\Facades\Log;

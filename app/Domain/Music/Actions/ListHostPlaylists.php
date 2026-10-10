@@ -2,12 +2,12 @@
 
 namespace App\Domain\Music\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 
 class ListHostPlaylists
 {

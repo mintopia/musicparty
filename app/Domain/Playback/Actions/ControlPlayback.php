@@ -2,6 +2,7 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\EnqueueBackoff;
@@ -9,7 +10,6 @@ use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\PartyPlayers;
-use App\Models\Party;
 
 class ControlPlayback
 {

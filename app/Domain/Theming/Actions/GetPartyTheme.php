@@ -3,8 +3,8 @@
 namespace App\Domain\Theming\Actions;
 
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\ThemeTokens;
-use App\Models\Party;
 use Illuminate\Support\Facades\Storage;
 
 class GetPartyTheme

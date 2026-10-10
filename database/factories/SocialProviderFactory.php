@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\SocialProvider;
-use App\Services\SocialProviders\DiscordProvider;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\SocialProviders\DiscordProvider;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class SocialProviderFactory extends Factory
 {
+    protected $model = SocialProvider::class;
+
     /**
      * @return array<string, mixed>
      */

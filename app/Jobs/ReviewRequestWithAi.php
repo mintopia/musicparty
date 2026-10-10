@@ -3,7 +3,7 @@
 namespace App\Jobs;
 
 use App\Domain\Mod\AiReview\AiRequestReviewer;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;

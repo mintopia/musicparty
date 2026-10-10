@@ -2,11 +2,11 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Players\PollingPlayer;
-use App\Models\Party;
 
 readonly class CheckPlaybackNow
 {

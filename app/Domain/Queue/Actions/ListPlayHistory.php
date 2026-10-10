@@ -2,9 +2,9 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\PlayHistoryType;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\Play;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;

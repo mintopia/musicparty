@@ -2,7 +2,7 @@
 
 namespace App\Http\Middleware;
 
-use App\Models\IntegrationToken;
+use App\Domain\Admin\Models\IntegrationToken;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\Setting;
+use App\Domain\Admin\Models\Setting;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 

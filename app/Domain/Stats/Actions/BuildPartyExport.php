@@ -2,10 +2,10 @@
 
 namespace App\Domain\Stats\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\Play;
 use App\Models\TrackRequest;
 

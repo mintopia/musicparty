@@ -1,8 +1,8 @@
 <?php
 
-use App\Models\LinkedAccount;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
 use Laravel\Socialite\Facades\Socialite;

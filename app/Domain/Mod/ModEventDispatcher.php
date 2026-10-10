@@ -5,7 +5,7 @@ namespace App\Domain\Mod;
 use App\Domain\Mod\Contracts\PartyScopedEvent;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Throwable;
 
 readonly class ModEventDispatcher

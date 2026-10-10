@@ -2,11 +2,11 @@
 
 namespace Database\Seeders;
 
-use App\Services\SocialProviders\DiscordProvider;
-use App\Services\SocialProviders\LaravelPassportProvider;
-use App\Services\SocialProviders\SpotifyProvider;
-use App\Services\SocialProviders\SteamProvider;
-use App\Services\SocialProviders\TwitchProvider;
+use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\LaravelPassportProvider;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SteamProvider;
+use App\Domain\Identity\SocialProviders\TwitchProvider;
 use Illuminate\Database\Seeder;
 
 class SocialProvidersSeeder extends Seeder

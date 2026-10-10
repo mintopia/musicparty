@@ -2,10 +2,10 @@
 
 namespace App\Domain\Music\Actions;
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Exceptions\NotHostException;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 
 class AuthorisesHost
 {

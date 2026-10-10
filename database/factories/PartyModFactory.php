@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use App\Models\PartyMod;
 use Illuminate\Database\Eloquent\Factories\Factory;
 

@@ -122,7 +122,7 @@ Spotify application needs the second redirect URL above. Set `SPOTIFY_MARKET` to
 There is no automatic admin. Log in once, then grant the `admin` role from the console (replace the user id):
 
 ```bash
-docker compose run --rm artisan tinker --execute="App\Models\User::find(1)->roles()->attach(App\Models\Role::whereCode('admin')->first())"
+docker compose run --rm artisan tinker --execute="App\Domain\Identity\Models\User::find(1)->roles()->attach(App\Domain\Admin\Models\Role::whereCode('admin')->first())"
 ```
 
 Admins can then grant roles to other users in the admin area, issue Integration Tokens and edit site settings and the

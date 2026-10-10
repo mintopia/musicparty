@@ -2,8 +2,8 @@
 
 namespace App\Observers;
 
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\User;
 
 class UserObserver
 {

@@ -2,11 +2,11 @@
 
 namespace App\Domain\Queue\Broadcast;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Mod\Actions\ResolveDecorations;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
 use App\Models\TrackRequest;
-use App\Models\User;
 
 class PartyQueueSnapshot
 {

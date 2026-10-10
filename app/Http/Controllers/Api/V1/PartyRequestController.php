@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\ApproveRequest;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
@@ -22,10 +25,7 @@ use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
-use App\Models\Party;
-use App\Models\PartyMember;
 use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
