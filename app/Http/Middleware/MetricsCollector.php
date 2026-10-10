@@ -2,10 +2,10 @@
 
 namespace App\Http\Middleware;
 
+use App\Support\Metrics\CounterStore;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use Symfony\Component\HttpFoundation\Response;
 
 class MetricsCollector
@@ -15,6 +15,8 @@ class MetricsCollector
     public const OTHER_METHOD = 'OTHER';
 
     public const STATUS_CODES_KEY = 'metrics.http.status_codes';
+
+    public function __construct(protected CounterStore $counters) {}
 
     /**
      * @param  Closure(Request): (Response)  $next
@@ -43,9 +45,9 @@ class MetricsCollector
             $method = self::OTHER_METHOD;
         }
 
-        Redis::incr("metrics.http.method.{$method}");
-        Redis::incr("metrics.http.status.{$statusCode}");
-        Redis::sadd(self::STATUS_CODES_KEY, $statusCode);
-        Redis::incr('metrics.http.requests');
+        $this->counters->increment("metrics.http.method.{$method}");
+        $this->counters->increment("metrics.http.status.{$statusCode}");
+        $this->counters->addMember(self::STATUS_CODES_KEY, $statusCode);
+        $this->counters->increment('metrics.http.requests');
     }
 }

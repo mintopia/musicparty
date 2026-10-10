@@ -4,7 +4,8 @@ namespace App\Providers;
 
 use App\Domain\Stats\Actions\BuildLiveStatsMetrics;
 use App\Http\Middleware\MetricsCollector;
-use Illuminate\Support\Facades\Redis;
+use App\Support\Metrics\CounterStore;
+use App\Support\Metrics\RedisCounterStore;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Prometheus\Collectors\Horizon\CurrentMasterSupervisorCollector;
 use Spatie\Prometheus\Collectors\Horizon\CurrentProcessesPerQueueCollector;
@@ -19,7 +20,9 @@ class PrometheusServiceProvider extends ServiceProvider
 {
     public function register(): void
     {
-        Prometheus::addCounter('HTTP Requests', fn (): int => (int) Redis::get('metrics.http.requests'), 'http_requests_total')
+        $this->app->singleton(CounterStore::class, RedisCounterStore::class);
+
+        Prometheus::addCounter('HTTP Requests', fn (): int => app(CounterStore::class)->get('metrics.http.requests'), 'http_requests_total')
             ->helpText('The number of handled HTTP requests');
 
         Prometheus::addCounter('HTTP Methods', fn (): array => $this->methodCounts(), 'http_requests_by_method_total')
@@ -30,7 +33,7 @@ class PrometheusServiceProvider extends ServiceProvider
             ->helpText('The numbers of each HTTP status code returned')
             ->label('code');
 
-        Prometheus::addCounter('Uncaught Exceptions', fn (): int => (int) Redis::get('metrics.exceptions'), 'uncaught_exceptions_total')
+        Prometheus::addCounter('Uncaught Exceptions', fn (): int => app(CounterStore::class)->get('metrics.exceptions'), 'uncaught_exceptions_total')
             ->helpText('The number of uncaught exceptions');
 
         $this->app->scoped(BuildLiveStatsMetrics::class);
@@ -71,7 +74,7 @@ class PrometheusServiceProvider extends ServiceProvider
      */
     protected function statusCounts(): array
     {
-        $codes = array_map(strval(...), Redis::smembers(MetricsCollector::STATUS_CODES_KEY));
+        $codes = app(CounterStore::class)->members(MetricsCollector::STATUS_CODES_KEY);
         sort($codes);
 
         return $this->countsFor('metrics.http.status', $codes);
@@ -87,10 +90,10 @@ class PrometheusServiceProvider extends ServiceProvider
             return [];
         }
 
-        $values = Redis::mget(array_map(fn (string $name): string => "{$prefix}.{$name}", $names));
+        $values = app(CounterStore::class)->many(array_values(array_map(fn (string $name): string => "{$prefix}.{$name}", $names)));
         $result = [];
         foreach ($names as $index => $name) {
-            $result[] = [(int) ($values[$index] ?? 0), [$name]];
+            $result[] = [$values[$index], [$name]];
         }
 
         return $result;

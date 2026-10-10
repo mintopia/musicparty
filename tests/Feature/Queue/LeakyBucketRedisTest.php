@@ -5,6 +5,8 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Str;
 
+pest()->group('redis');
+
 beforeEach(function () {
     try {
         Redis::connection()->ping();
