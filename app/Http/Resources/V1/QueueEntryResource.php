@@ -2,9 +2,8 @@
 
 namespace App\Http\Resources\V1;
 
-use App\Domain\Identity\Models\User;
-use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Domain\Queue\Models\TrackRequest;
+use App\Domain\Queue\Presenters\QueueEntryPresenter;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -18,29 +17,10 @@ class QueueEntryResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $requester = $this->requester?->user;
-        $play = $this->resource->relationLoaded('play') ? $this->resource->play : null;
-
         return [
-            'id' => $this->id,
-            'track' => [
-                'title' => $this->title,
-                'artists' => $this->artists,
-                'album' => $this->album,
-                'artwork_url' => $this->artwork_url,
-                'duration_ms' => $this->duration_ms,
-                'explicit' => $this->explicit,
-            ],
-            'status' => $this->status->value,
-            'score' => (int) $this->score,
-            'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
+            ...app(QueueEntryPresenter::class)($this->resource),
             'my_vote' => (int) $this->my_vote,
-            'decorations' => app(ResolveDecorations::class)($this->resource),
-            ...($play?->likes === null ? [] : [
-                'likes' => (int) $play->likes,
-                'dislikes' => (int) $play->dislikes,
-                'my_rating' => (int) $play->my_rating,
-            ]),
+            ...($this->resource->relationLoaded('play') ? ['my_rating' => (int) $this->resource->play?->my_rating] : []),
         ];
     }
 }
