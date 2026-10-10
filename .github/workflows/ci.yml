@@ -8,6 +8,7 @@ on:
       - 'tests/**'
       - '*.md'
   pull_request:
+  workflow_dispatch:
 
 permissions:
   contents: read
