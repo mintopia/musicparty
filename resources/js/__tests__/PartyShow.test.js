@@ -115,6 +115,33 @@ describe('Party page now playing and Up Next', () => {
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
 
+    describe('estimated play times', () => {
+        const startedAt = new Date(Date.now() - 41000).toISOString();
+        const queued = [entry({id: 7, status: 'queued', track: {...entry().track, duration_ms: 60000}})];
+
+        it('shows the Up Next countdown, per-position estimates and the total in deterministic mode', () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'deterministic'}, startedAt, queue: queued})});
+            expect(w.get('[data-testid=up-next-eta]').text()).toContain('Plays in');
+            expect(w.get('[data-testid=queue-item-eta]').text()).toContain('Estimated in');
+            expect(w.get('[data-testid=queue-total]').text()).toContain('Total');
+        });
+
+        it('shows only Up Next and the total in weighted mode', () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'weighted'}, startedAt, queue: queued})});
+            expect(w.find('[data-testid=up-next-eta]').exists()).toBe(true);
+            expect(w.find('[data-testid=queue-item-eta]').exists()).toBe(false);
+            expect(w.find('[data-testid=queue-total]').exists()).toBe(true);
+        });
+
+        it('recalculates from a Queue event', async () => {
+            const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'x', state: 'live', downvotes: true, selection_mode: 'deterministic'}, startedAt, queue: queued})});
+            listeners['.queue.updated']({version: 1, code: 'FRI123', selection_mode: 'weighted', started_at: startedAt, now_playing: entry(), up_next: null, queue: queued});
+            await w.vm.$nextTick();
+            expect(w.find('[data-testid=up-next-eta]').exists()).toBe(false);
+            expect(w.find('[data-testid=queue-item-eta]').exists()).toBe(false);
+        });
+    });
+
     describe('realtime state', () => {
         const payload = (over = {}) => ({
             version: 1,
@@ -194,7 +221,7 @@ describe('Party page now playing and Up Next', () => {
             const w = mount(Show, {props: baseProps()});
             window.dispatchEvent(new Event('realtime:resync'));
             expect(reload).toHaveBeenCalledTimes(1);
-            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
+            expect(reload).toHaveBeenCalledWith({only: ['party', 'queue', 'nowPlaying', 'upNext', 'startedAt', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
             w.unmount();
             window.dispatchEvent(new Event('realtime:resync'));
             expect(reload).toHaveBeenCalledTimes(1);

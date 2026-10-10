@@ -24,3 +24,12 @@ export const formatPlayedAt = (iso, now = Date.now()) => {
     }
     return `${seconds} ${seconds === 1 ? 'second' : 'seconds'} ago`;
 };
+
+export const formatCountdown = (target, now) => formatDuration(Math.max(0, target - now));
+
+export const formatClock = (target) => new Date(target).toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'});
+
+export const formatTotal = (ms) => {
+    const minutes = Math.round((ms ?? 0) / 60000);
+    return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
+};

@@ -15,7 +15,7 @@ class PartyQueueSnapshot
     public function __construct(private readonly RankQueue $rank, private readonly QueueEntryPresenter $presenter) {}
 
     /**
-     * @return array{version: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
+     * @return array{version: int, code: string, selection_mode: string, started_at: string|null, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
      */
     public function build(Party $party): array
     {
@@ -32,6 +32,8 @@ class PartyQueueSnapshot
         return [
             'version' => self::VERSION,
             'code' => $party->code,
+            'selection_mode' => $party->selection_mode->value,
+            'started_at' => $nowPlaying?->started_at?->toIso8601String(),
             'now_playing' => $nowPlaying === null ? null : $this->entry($nowPlaying),
             'up_next' => $upNext === null ? null : $this->entry($upNext),
             'queue' => array_values($requests

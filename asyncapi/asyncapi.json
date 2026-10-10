@@ -132,6 +132,8 @@
                     "required": [
                         "version",
                         "code",
+                        "selection_mode",
+                        "started_at",
                         "now_playing",
                         "up_next",
                         "queue"
@@ -144,6 +146,22 @@
                         "code": {
                             "type": "string",
                             "description": "Party code"
+                        },
+                        "selection_mode": {
+                            "type": "string",
+                            "enum": [
+                                "deterministic",
+                                "weighted"
+                            ],
+                            "description": "How the next request is chosen"
+                        },
+                        "started_at": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "format": "date-time",
+                            "description": "When the now playing request started, null when nothing is playing"
                         },
                         "now_playing": {
                             "oneOf": [
