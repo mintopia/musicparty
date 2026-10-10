@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Domain\Mod\Contracts\Mod;
 use App\Domain\Mod\Contracts\PartyScopedEvent;
 use App\Domain\Mod\ModEventDispatcher;
@@ -16,6 +17,7 @@ class ModServiceProvider extends ServiceProvider
     {
         $this->app->singleton(ModRegistry::class);
         $this->app->scoped(PartyMods::class);
+        $this->app->scoped(ResolveDecorations::class);
     }
 
     public function boot(): void

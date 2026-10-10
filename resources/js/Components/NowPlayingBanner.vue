@@ -1,5 +1,7 @@
 <script setup>
 import Icon from './Icon.vue';
+import Decorations from './Decorations.vue';
+import ModSlot from './ModSlot.vue';
 import RatingButtons from './RatingButtons.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 import {useRatePlay} from '../lib/rating';
@@ -36,6 +38,8 @@ const thumbClass = (active, activeColor) => [
                 <div class="flex items-center gap-2 text-sm"><Icon name="user" /><span data-testid="now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
                 <div v-if="nowPlaying.track.album" class="flex items-center gap-2 text-sm"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                 <div class="flex items-center gap-2 text-sm"><Icon name="musicPlus" /><span data-testid="now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
+                <Decorations :decorations="nowPlaying.decorations" />
+                <ModSlot name="now-playing" :now-playing="nowPlaying" />
                 <div class="mt-2 flex justify-end text-sm tabular-nums">{{ formatDuration(nowPlaying.track.duration_ms) }}</div>
                 <div v-if="ratablePlay" data-testid="now-playing-rating" class="flex items-center justify-center gap-2">
                     <button

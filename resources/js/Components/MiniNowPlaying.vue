@@ -1,5 +1,6 @@
 <script setup>
 import Icon from './Icon.vue';
+import Decorations from './Decorations.vue';
 import RatingButtons from './RatingButtons.vue';
 
 defineProps({
@@ -19,6 +20,7 @@ defineProps({
             <template v-if="nowPlaying">
                 <div class="truncate text-sm font-medium">{{ nowPlaying.track.title }}</div>
                 <div class="truncate text-xs text-muted">{{ nowPlaying.track.artists.join(', ') }}</div>
+                <Decorations :decorations="nowPlaying.decorations" />
             </template>
             <div v-else class="text-sm text-muted">Nothing playing</div>
         </div>

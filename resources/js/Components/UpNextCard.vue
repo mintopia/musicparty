@@ -1,5 +1,6 @@
 <script setup>
 import Icon from './Icon.vue';
+import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 
@@ -15,6 +16,7 @@ defineProps({upNext: {type: Object, default: null}});
                 <div class="truncate text-sm">{{ upNext.track.title }}</div>
                 <div class="truncate text-sm text-muted">{{ upNext.track.artists.join(', ') }}</div>
                 <div class="truncate text-xs text-muted md:text-sm">{{ requesterLabel(upNext) }}</div>
+                <Decorations :decorations="upNext.decorations" class="mt-1" />
             </div>
             <div class="flex flex-col items-end gap-1 text-sm text-muted">
                 <span class="tabular-nums">{{ formatDuration(upNext.track.duration_ms) }}</span>

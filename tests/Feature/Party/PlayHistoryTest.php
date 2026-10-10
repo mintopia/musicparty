@@ -140,6 +140,7 @@ it('loads the history without per-row queries', function () {
         playIn($this->party, ['track_request_id' => $request->id, 'party_member_id' => $this->member->id]);
     }
     DB::flushQueryLog();
+    app()->forgetScopedInstances();
     $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(12, 'data');
 
     expect(count(DB::getQueryLog()))->toBe($withSix);

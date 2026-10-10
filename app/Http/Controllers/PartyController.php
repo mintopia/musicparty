@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\BanMember;
 use App\Domain\Party\Actions\ChangeMemberRole;
 use App\Domain\Party\Actions\CreateParty;
@@ -104,6 +105,7 @@ class PartyController extends Controller
         ListPlayHistory $listHistory,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
+        EnabledMods $enabledMods,
         Party $party,
         string $section = 'queue',
     ): Response {
@@ -149,10 +151,11 @@ class PartyController extends Controller
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,
+            'enabled_mods' => $enabledMods->idsFor($party),
         ]);
     }
 
-    public function settings(Party $party): Response
+    public function settings(EnabledMods $enabledMods, Party $party): Response
     {
         $this->authorize('update', $party);
 
@@ -167,6 +170,7 @@ class PartyController extends Controller
                 'hold_requests' => (bool) $party->hold_requests,
                 'no_repeat_interval' => $party->no_repeat_interval,
             ],
+            'enabled_mods' => $enabledMods->idsFor($party),
         ]);
     }
 

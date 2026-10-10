@@ -6,6 +6,7 @@ use App\Domain\Mod\ModSettings;
 use App\Domain\Mod\PartyMods;
 use App\Domain\Mod\SettingKind;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Jobs\BroadcastPartyQueue;
 use App\Models\Party;
 use App\Models\PartyMod;
 use App\Models\User;
@@ -30,7 +31,9 @@ readonly class UpdateModSettings
     {
         $mod = ($this->findMod)($modId);
 
-        DB::transaction(function () use ($actor, $party, $mod, $input): void {
+        $changed = false;
+
+        DB::transaction(function () use (&$changed, $actor, $party, $mod, $input): void {
             $row = PartyMod::query()->whereBelongsTo($party)->where('mod_id', $mod->id())->where('enabled', true)->lockForUpdate()->first();
 
             if ($row === null) {
@@ -60,9 +63,15 @@ readonly class UpdateModSettings
 
             $row->forceFill(['settings' => $this->settings->encrypt($mod, $next)])->save();
 
+            $changed = true;
+
             ($this->record)($party, 'mod.settings_updated', $actor, $mod->id(), ['changes' => $details]);
         });
 
         $this->partyMods->forget($party);
+
+        if ($changed) {
+            BroadcastPartyQueue::dispatch($party->code);
+        }
     }
 }

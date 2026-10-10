@@ -5,6 +5,7 @@ import {computed, reactive, ref} from 'vue';
 const props = defineProps({
     party: {type: Object, required: true},
     mods: {type: Array, required: true},
+    enabled_mods: {type: Array, default: () => []},
 });
 
 const page = usePage();

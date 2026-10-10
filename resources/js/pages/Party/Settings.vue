@@ -1,11 +1,15 @@
 <script setup>
 import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
-import {computed} from 'vue';
+import {computed, provide} from 'vue';
+import ModSlot from '../../Components/ModSlot.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
     settings: {type: Object, required: true},
+    enabled_mods: {type: Array, default: () => []},
 });
+
+provide('enabledMods', computed(() => props.enabled_mods));
 
 const page = usePage();
 const successMessage = computed(() => page.props.flash?.successMessage ?? null);
@@ -88,6 +92,8 @@ const numberFields = [
                 <input v-model="form.hold_requests" type="checkbox" data-testid="setting-hold_requests">
                 <span>Hold new requests for approval</span>
             </label>
+
+            <ModSlot name="settings" :party="party" :settings="settings" />
 
             <div>
                 <button
