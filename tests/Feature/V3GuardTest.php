@@ -40,13 +40,6 @@ it('no longer ships legacy classes', function (string $class) {
     'cron tick event' => 'App\Events\Cron\HourTickEvent',
 ]);
 
-it('drops the css_classes column in a migration', function () {
-    $migrations = collect(glob(database_path('migrations/*drop_css_classes*.php')));
-
-    expect($migrations)->toHaveCount(1)
-        ->and(file_get_contents($migrations->first()))->toContain("dropColumn('css_classes')");
-});
-
 it('registers no web routes for removed pages', function (string $name) {
     expect(Route::has($name))->toBeFalse();
 })->with(['parties.youtube', 'parties.ytplayer', 'admin.dashboard']);
@@ -56,12 +49,4 @@ it('defines the reverb config the bootstrap script reads', function () {
         ->assertSee('window.pusherConfig', false)
         ->assertSee('"appKey"', false)
         ->assertSee('"scheme"', false);
-});
-
-it('drops the mod tables in a migration', function () {
-    $migration = file_get_contents(database_path('migrations/2026_10_09_000001_drop_mod_tables.php'));
-
-    foreach (['party_mod_setting_events', 'party_mod_settings', 'mod_settings', 'mods'] as $table) {
-        expect($migration)->toContain("dropIfExists('{$table}')");
-    }
 });

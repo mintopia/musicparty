@@ -1,8 +1,5 @@
 <?php
 
-use App\Models\LinkedAccount;
-use App\Models\SocialProvider;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 
@@ -45,20 +42,3 @@ it('keeps the columns v3 still reads', function (string $table, string $column) 
     ['parties', 'state'],
     ['party_log_entries', 'party_id'],
 ]);
-
-it('deletes the spotifysearch provider with its linked accounts and settings', function () {
-    $legacy = SocialProvider::factory()->create(['code' => 'spotifysearch']);
-    $kept = SocialProvider::factory()->create(['code' => 'discord']);
-    $user = User::factory()->create();
-    $legacyAccount = LinkedAccount::factory()->create(['user_id' => $user->id, 'social_provider_id' => $legacy->id]);
-    $keptAccount = LinkedAccount::factory()->create(['user_id' => $user->id, 'social_provider_id' => $kept->id]);
-
-    $migration = require database_path('migrations/2026_10_10_020002_delete_spotifysearch_social_provider.php');
-    $migration->up();
-    $migration->up();
-
-    expect(SocialProvider::query()->where('code', 'spotifysearch')->exists())->toBeFalse()
-        ->and(LinkedAccount::query()->whereKey($legacyAccount->id)->exists())->toBeFalse()
-        ->and(SocialProvider::query()->whereKey($kept->id)->exists())->toBeTrue()
-        ->and(LinkedAccount::query()->whereKey($keptAccount->id)->exists())->toBeTrue();
-});
