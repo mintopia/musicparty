@@ -23,6 +23,7 @@ use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListMemberVotes;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
@@ -101,6 +102,7 @@ class PartyController extends Controller
         ListPlayHistoryRequest $request,
         ListQueue $listQueue,
         ListPlayHistory $listHistory,
+        ListMemberVotes $listMemberVotes,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
         ThrottleSearch $throttleSearch,
@@ -149,6 +151,7 @@ class PartyController extends Controller
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => $playback['now_playing'],
             'ratablePlay' => $this->ratablePlay($request, $party, $member),
+            'memberVotes' => $listMemberVotes($party, $member),
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,

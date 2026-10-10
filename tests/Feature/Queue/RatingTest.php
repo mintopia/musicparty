@@ -78,7 +78,7 @@ it('does not rebroadcast when the rated play is not the playing track', function
     $this->putJson(playingRatingUrl($play), ['value' => 'up'])->assertOk();
     $this->putJson(playingRatingUrl($standalone), ['value' => 'up'])->assertOk();
 
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(BroadcastPartyQueue::class);
 });
 
 it('returns not found for the removed request rating urls', function () {

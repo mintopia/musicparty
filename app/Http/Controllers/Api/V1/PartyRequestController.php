@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListMemberVotes;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Actions\RejectRequest;
@@ -22,8 +23,10 @@ use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SearchTracksRequest;
 use App\Http\Requests\CastVoteRequest;
+use App\Http\Requests\MemberVotesRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
+use App\Http\Resources\V1\MemberVotesResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use Illuminate\Http\JsonResponse;
@@ -67,6 +70,15 @@ class PartyRequestController extends Controller
     {
         try {
             return QueueEntryResource::collection($listQueue($party, $this->member($request, $party)));
+        } catch (RequestRefusedException $exception) {
+            return $this->refusal($exception);
+        }
+    }
+
+    public function memberVotes(MemberVotesRequest $request, ListMemberVotes $listMemberVotes, Party $party): MemberVotesResource|JsonResponse
+    {
+        try {
+            return new MemberVotesResource($listMemberVotes($party, $this->member($request, $party)));
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }
