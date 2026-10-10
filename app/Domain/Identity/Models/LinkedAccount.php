@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 #[UseFactory(LinkedAccountFactory::class)]
 class LinkedAccount extends Model
 {
+    /** @use HasFactory<LinkedAccountFactory> */
     use HasFactory;
+
     use ToString;
 
     protected $hidden = [
@@ -23,19 +25,31 @@ class LinkedAccount extends Model
         'refresh_token',
     ];
 
-    protected $casts = [
-        'access_token_expires_at' => 'datetime',
-        'refresh_token_expires_at' => 'datetime',
-        'needs_relink' => 'boolean',
-        'access_token' => 'encrypted',
-        'refresh_token' => 'encrypted',
-    ];
+    /**
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'access_token_expires_at' => 'datetime',
+            'refresh_token_expires_at' => 'datetime',
+            'needs_relink' => 'boolean',
+            'access_token' => 'encrypted',
+            'refresh_token' => 'encrypted',
+        ];
+    }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<SocialProvider, $this>
+     */
     public function provider(): BelongsTo
     {
         return $this->belongsTo(SocialProvider::class, 'social_provider_id');

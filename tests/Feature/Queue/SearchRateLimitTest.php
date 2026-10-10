@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -24,6 +25,9 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function apiSearch(): TestResponse
 {
     return test()->getJson('/api/v1/parties/ABCD/search?q=song');

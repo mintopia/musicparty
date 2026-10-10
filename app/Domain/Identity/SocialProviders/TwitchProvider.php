@@ -15,7 +15,7 @@ class TwitchProvider extends AbstractSocialProvider
 
     protected bool $supportsAuth = true;
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): \Laravel\Socialite\Contracts\Provider
     {
         return Socialite::buildProvider(Provider::class, [
             'client_id' => $this->provider->getSetting('client_id'),

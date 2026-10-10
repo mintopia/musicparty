@@ -18,9 +18,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[UseFactory(RoleFactory::class)]
 class Role extends Model
 {
+    /** @use HasFactory<RoleFactory> */
     use HasFactory;
+
     use ToString;
 
+    /**
+     * @return BelongsToMany<User, $this>
+     */
     public function users(): BelongsToMany
     {
         return $this->belongsToMany(User::class)->withTimestamps();

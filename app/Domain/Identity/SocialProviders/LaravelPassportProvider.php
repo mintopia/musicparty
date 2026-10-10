@@ -27,7 +27,7 @@ class LaravelPassportProvider extends AbstractSocialProvider
         }
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): \Laravel\Socialite\Contracts\Provider
     {
         $config = new Config(
             $this->provider->getSetting('client_id'),
@@ -40,6 +40,9 @@ class LaravelPassportProvider extends AbstractSocialProvider
             ->setConfig($config)->with(['prompt' => 'none']);
     }
 
+    /**
+     * @return array<string, \stdClass>
+     */
     public function configMapping(): array
     {
         return array_merge(

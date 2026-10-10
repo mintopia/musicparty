@@ -473,6 +473,7 @@ class ArchitectureRules
     }
 
     /**
+     * @param  ReflectionClass<object>  $reflection
      * @return array<int, string>
      */
     private static function allTraits(ReflectionClass $reflection): array

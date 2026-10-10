@@ -49,6 +49,9 @@ function bindEnoughTracks(int $count = 20): void
     bindPlaylist(array_map(fn (int $n): TrackData => fakeTrack($n), range(1, $count)));
 }
 
+/**
+ * @return array{Party, User}
+ */
 function lifecycleParty(string $state = 'paused', string $role = 'host', bool $playlist = true): array
 {
     $party = Party::factory()->create([
@@ -66,6 +69,9 @@ function recordPlay(Party $party, string $providerTrackId, DateTimeInterface $pl
     Play::factory()->for($party)->create(['provider_track_id' => $providerTrackId, 'played_at' => $playedAt]);
 }
 
+/**
+ * @return array{int, int, bool}
+ */
 function gateCheck(Party $party): array
 {
     $check = app(FallbackPlaylistGate::class)->check($party->fresh());

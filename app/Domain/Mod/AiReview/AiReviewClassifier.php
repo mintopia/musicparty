@@ -3,6 +3,7 @@
 namespace App\Domain\Mod\AiReview;
 
 use App\Domain\Mod\Data\ModContext;
+use Laravel\Ai\Ai;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Classification\Score;
 use Laravel\Ai\Responses\Data\ScoreAnswer;
@@ -32,8 +33,11 @@ readonly class AiReviewClassifier
             throw new RuntimeException("No API key configured for the {$driver->value} driver.");
         }
 
-        $provider = 'ai-review-'.$context->party->id.'-'.substr(hash('sha256', $driver->value.$apiKey), 0, 12);
-        config(["ai.providers.{$provider}" => [...(array) config("ai.providers.{$driver->provider()}"), 'key' => $apiKey]]);
+        $provider = Ai::build([
+            ...(array) config("ai.providers.{$driver->provider()}"),
+            'name' => 'ai-review-'.$context->party->id.'-'.substr(hash('sha256', $driver->value.$apiKey), 0, 12),
+            'key' => $apiKey,
+        ])->name();
 
         $rubric = (string) $context->settings['rubric'];
         $timeout = (int) $context->settings['timeout_seconds'];

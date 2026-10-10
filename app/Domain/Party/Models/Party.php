@@ -28,7 +28,10 @@ use Laravel\Sanctum\HasApiTokens;
 class Party extends Model
 {
     use HasApiTokens;
+
+    /** @use HasFactory<PartyFactory> */
     use HasFactory;
+
     use ToString;
 
     protected $attributes = [
@@ -40,20 +43,23 @@ class Party extends Model
         'tv_layout' => 'default',
     ];
 
-    protected $casts = [
-        'state' => PartyState::class,
-        'selection_mode' => SelectionMode::class,
-        'allow_requests' => 'boolean',
-        'explicit' => 'boolean',
-        'downvotes' => 'boolean',
-        'hold_requests' => 'boolean',
-        'downvotes_per_hour' => 'integer',
-        'max_requests' => 'integer',
-        'min_song_length' => 'integer',
-        'max_song_length' => 'integer',
-        'no_repeat_interval' => 'integer',
-        'theme' => 'array',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'state' => PartyState::class,
+            'selection_mode' => SelectionMode::class,
+            'allow_requests' => 'boolean',
+            'explicit' => 'boolean',
+            'downvotes' => 'boolean',
+            'hold_requests' => 'boolean',
+            'downvotes_per_hour' => 'integer',
+            'max_requests' => 'integer',
+            'min_song_length' => 'integer',
+            'max_song_length' => 'integer',
+            'no_repeat_interval' => 'integer',
+            'theme' => 'array',
+        ];
+    }
 
     public function toStringName(): string
     {
@@ -85,6 +91,9 @@ class Party extends Model
         return $this->members()->whereUserId($user->id)->first();
     }
 
+    /**
+     * @return HasMany<PartyMember, $this>
+     */
     public function members(): HasMany
     {
         return $this->hasMany(PartyMember::class);
@@ -98,6 +107,9 @@ class Party extends Model
         return $this->hasMany(BlocklistEntry::class);
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

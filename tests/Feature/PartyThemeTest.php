@@ -25,6 +25,9 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function quietParty(array $attributes = []): Party
 {
     return Party::withoutEvents(fn (): Party => Party::factory()->create($attributes));
@@ -43,11 +46,18 @@ function partyMemberWithRole(Party $party, string $role): User
     return ($state === null ? $factory : $factory->{$state}())->create()->user;
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function createParty(array $attributes = []): Party
 {
     return quietParty($attributes);
 }
 
+/**
+ * @param  array<string, mixed>  $theme
+ * @return array{Party, User}
+ */
 function hostedParty(array $theme = []): array
 {
     $party = createParty($theme === [] ? [] : ['theme' => $theme]);

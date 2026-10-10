@@ -14,6 +14,12 @@ class HandlePlayerClientEvent
 
     public function handle(MessageReceived $received): void
     {
+        if (strlen($received->message) > (int) config('musicparty.player_frames.max_bytes')) {
+            $this->discard();
+
+            return;
+        }
+
         $envelope = json_decode($received->message, true);
 
         if (! is_array($envelope) || ! is_string($envelope['channel'] ?? null)
@@ -34,19 +40,23 @@ class HandlePlayerClientEvent
         $frame = $envelope['data'] ?? null;
         $code = strtoupper($channel[1]);
 
-        if (strlen($received->message) > (int) config('musicparty.player_frames.max_bytes')
-            || ! is_array($frame) || $frame === []
+        if (! is_array($frame) || $frame === []
             || ! RateLimiter::attempt(
                 'player-frames:'.$code,
                 (int) config('musicparty.player_frames.max_per_minute'),
                 static fn (): bool => true,
             )) {
-            Cache::add(ProcessPlayerFrame::DISCARDED_COUNTER, 0);
-            Cache::increment(ProcessPlayerFrame::DISCARDED_COUNTER);
+            $this->discard();
 
             return;
         }
 
         ProcessPlayerFrame::enqueue($code, $frame);
+    }
+
+    private function discard(): void
+    {
+        Cache::add(ProcessPlayerFrame::DISCARDED_COUNTER, 0);
+        Cache::increment(ProcessPlayerFrame::DISCARDED_COUNTER);
     }
 }

@@ -6,6 +6,7 @@ use App\Casts\SettingValue;
 use App\Enums\SettingType;
 use App\Support\Concerns\ToString;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Log;
  */
 class Setting extends Model
 {
+    /** @use HasFactory<Factory<static>> */
     use HasFactory;
     use ToString;
 
@@ -41,6 +43,10 @@ class Setting extends Model
         return $query->orderBy('order');
     }
 
+    /**
+     * @param  mixed  $default
+     * @return mixed
+     */
     public static function fetch(string $code, $default = null)
     {
         $key = "settings.{$code}";
@@ -66,6 +72,9 @@ class Setting extends Model
         Cache::forget("settings.{$this->code}");
     }
 
+    /**
+     * @return object{code: string, encrypted: bool, value: mixed}
+     */
     public function getValue()
     {
         return (object) [

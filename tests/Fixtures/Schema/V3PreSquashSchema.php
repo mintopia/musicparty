@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Schema;
  */
 final class V3PreSquashSchema
 {
-    public const FINAL_MIGRATION = '2026_10_10_020002_delete_spotifysearch_social_provider';
+    public const string FINAL_MIGRATION = '2026_10_10_020002_delete_spotifysearch_social_provider';
 
     public static function create(): void
     {

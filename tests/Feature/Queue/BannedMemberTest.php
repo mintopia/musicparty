@@ -17,7 +17,9 @@ use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -35,7 +37,10 @@ function playFor(Party $party): Play
     return Play::factory()->create(['party_id' => $party->id]);
 }
 
-function rateRequest(User $user, Play $play, string $value = 'up')
+/**
+ * @return TestResponse<Response>
+ */
+function rateRequest(User $user, Play $play, string $value = 'up'): TestResponse
 {
     Sanctum::actingAs($user);
 

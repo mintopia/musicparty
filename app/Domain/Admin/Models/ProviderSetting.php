@@ -5,6 +5,7 @@ namespace App\Domain\Admin\Models;
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  */
 class ProviderSetting extends Model
 {
+    /** @use HasFactory<Factory<static>> */
     use HasFactory;
 
     protected $casts = [
@@ -40,6 +42,9 @@ class ProviderSetting extends Model
         return $query->orderBy('order');
     }
 
+    /**
+     * @return MorphTo<Model, $this>
+     */
     public function provider(): MorphTo
     {
         return $this->morphTo();

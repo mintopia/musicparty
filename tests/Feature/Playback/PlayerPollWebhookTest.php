@@ -8,6 +8,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -18,6 +19,9 @@ beforeEach(function () {
     $this->token = $this->party->createToken('Stage', ['player:connect'])->plainTextToken;
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function pollWebhook(Party $party, ?string $token): TestResponse
 {
     $request = $token === null ? test() : test()->withToken($token);

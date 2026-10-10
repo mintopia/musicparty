@@ -39,6 +39,9 @@ function makeUser(): User
     return $user;
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function makeHostedParty(User $host, array $attributes = []): Party
 {
     $party = new Party;
@@ -59,6 +62,9 @@ function spotifyProvider(string $code = 'spotify'): SocialProvider
     return $provider;
 }
 
+/**
+ * @return array{User, LinkedAccount}
+ */
 function hostWithAccount(): array
 {
     $host = makeUser();

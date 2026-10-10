@@ -3,6 +3,9 @@
 use App\Support\Realtime\AsyncApiCoverage;
 use Tests\Fixtures\UndocumentedBroadcastEvent;
 
+/**
+ * @return array<string, mixed>
+ */
 function asyncApiSpec(): array
 {
     return json_decode((string) file_get_contents(base_path('asyncapi/asyncapi.json')), true, flags: JSON_THROW_ON_ERROR);

@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 use Tests\Support\DeployConfig;
 
+/**
+ * @return list<mixed>
+ */
 function dockerfileInstructions(string $path, string $instruction): array
 {
     return array_values(array_filter(

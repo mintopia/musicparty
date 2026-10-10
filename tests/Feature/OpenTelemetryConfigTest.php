@@ -6,6 +6,9 @@ use OpenTelemetry\SDK\Common\Configuration\Configuration;
 use OpenTelemetry\SDK\Common\Configuration\Variables;
 use Tests\Support\DeployConfig;
 
+/**
+ * @param  array<string, mixed>  $values
+ */
 function withOtelEnv(array $values, Closure $callback): void
 {
     $previous = [];

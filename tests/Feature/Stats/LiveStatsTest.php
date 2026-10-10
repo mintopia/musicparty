@@ -27,6 +27,9 @@ beforeEach(function () {
     $this->bob = PartyMember::factory()->for($this->party)->create();
 });
 
+/**
+ * @return array<string, mixed>
+ */
 function statsFor(): array
 {
     Sanctum::actingAs(test()->alice->user);
@@ -39,6 +42,9 @@ function runStatsJob(): void
     app()->call([new RefreshPartyStatsJob(test()->party->id), 'handle']);
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function playedRequest(PartyMember $member, array $attributes = []): TrackRequest
 {
     $request = TrackRequest::factory()->create([

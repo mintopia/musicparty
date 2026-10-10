@@ -64,6 +64,9 @@ function receive(string $message, bool $subscribed = true): void
     app(HandlePlayerClientEvent::class)->handle(new MessageReceived($connection, $message));
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function clientFrame(array $overrides = []): string
 {
     return json_encode($overrides + ['event' => 'client-state', 'channel' => 'private-player.abc123', 'data' => ['status' => 'playing']]);
@@ -132,6 +135,17 @@ it('discards and counts unusable frames', function (string $message) {
     'empty data' => [fn () => clientFrame(['data' => []])],
     'scalar data' => [fn () => clientFrame(['data' => 'text'])],
     'missing data' => [fn () => json_encode(['event' => 'client-x', 'channel' => 'private-player.ABC123'])],
+]);
+
+it('rejects an oversized raw frame before decoding it', function (string $message) {
+    receive($message);
+
+    Queue::assertNothingPushed();
+    expect(discarded())->toBe(1);
+})->with([
+    'undecodable oversize' => [fn () => '{'.str_repeat('x', 9000)],
+    'oversize valid frame on the player channel' => [fn () => clientFrame(['data' => ['blob' => str_repeat('x', 9000)]])],
+    'oversize on a foreign channel' => [fn () => clientFrame(['channel' => 'private-party.X.moderators', 'data' => ['blob' => str_repeat('x', 9000)]])],
 ]);
 
 it('discards frames over the per party rate limit', function () {

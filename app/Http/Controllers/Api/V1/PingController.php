@@ -7,7 +7,7 @@ use App\Http\Resources\V1\PingResource;
 
 class PingController extends Controller
 {
-    public function index()
+    public function index(): PingResource
     {
         return new PingResource(null);
     }

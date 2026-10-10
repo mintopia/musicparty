@@ -14,8 +14,10 @@ use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -27,7 +29,10 @@ beforeEach(function () {
     $this->member = PartyMember::factory()->for($this->party)->for($this->user)->create();
 });
 
-function apiRequest(User $user, string $trackId = 'track-1', string $code = 'ABCD')
+/**
+ * @return TestResponse<Response>
+ */
+function apiRequest(User $user, string $trackId = 'track-1', string $code = 'ABCD'): TestResponse
 {
     Sanctum::actingAs($user);
 

@@ -21,6 +21,9 @@ uses(RefreshDatabase::class);
 beforeEach(fn () => CarbonImmutable::setTestNow('2026-01-01 12:00:00'));
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @return array<int, mixed>
+ */
 function queuedTrackIds(Party $party): array
 {
     return TrackRequest::query()->where('party_id', $party->id)->where('status', RequestStatus::Queued)->pluck('provider_track_id')->sort()->values()->all();
@@ -105,6 +108,9 @@ it('shuffles the playlist rather than always taking the head', function () {
     expect(queuedTrackIds($party))->not->toBe(['p1', 'p2', 'p3', 'p4', 'p5']);
 });
 
+/**
+ * @return array<mixed>
+ */
 function fallbackLog(Party $party): array
 {
     return PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'like', 'fallback.%')->orderBy('id')->pluck('action')->all();

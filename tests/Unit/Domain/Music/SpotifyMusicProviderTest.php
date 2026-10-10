@@ -17,6 +17,9 @@ beforeEach(function () {
     $this->provider = new SpotifyMusicProvider(new HostAccountTokens);
 });
 
+/**
+ * @param  array<string, mixed>  $api
+ */
 function fakeSpotify(array $api): void
 {
     Http::fake(['accounts.spotify.com/*' => Http::response(SpotifyFake::fixture('token'))] + $api);

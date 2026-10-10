@@ -13,7 +13,9 @@ use App\Domain\Queue\Broadcast\RequestRejectedEvent;
 use App\Domain\Queue\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -32,7 +34,10 @@ beforeEach(function () {
     $this->member = PartyMember::factory()->for($this->party)->create();
 });
 
-function requestBlockable(PartyMember $member, string $trackId)
+/**
+ * @return TestResponse<Response>
+ */
+function requestBlockable(PartyMember $member, string $trackId): TestResponse
 {
     Sanctum::actingAs($member->user);
 

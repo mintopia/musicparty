@@ -36,6 +36,8 @@ jobs:
         run: vendor/bin/pint --test
       - name: PHPStan
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+      - name: PHPStan baseline has no missing types
+        run: '! grep -q missingType phpstan-baseline.neon'
       - name: Rector
         run: vendor/bin/rector process --dry-run --no-progress-bar
 

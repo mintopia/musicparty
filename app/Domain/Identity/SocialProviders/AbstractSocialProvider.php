@@ -14,6 +14,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 
 abstract class AbstractSocialProvider implements SocialProviderContract
@@ -41,6 +42,9 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         $this->redirectUrl = route('login.return', $this->code);
     }
 
+    /**
+     * @return array<string, \stdClass>
+     */
     public function configMapping(): array
     {
         return [
@@ -113,7 +117,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         return $this->getSocialiteProvider()->redirect();
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): Provider
     {
         return Socialite::driver($this->socialiteProviderCode);
     }
@@ -171,7 +175,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         return $localUser;
     }
 
-    protected function updateAccount(LinkedAccount $account, $remoteUser): void
+    protected function updateAccount(LinkedAccount $account, SocialiteUser $remoteUser): void
     {
         $account->avatar_url = $remoteUser->getAvatar();
         $account->refresh_token = $remoteUser->refreshToken;

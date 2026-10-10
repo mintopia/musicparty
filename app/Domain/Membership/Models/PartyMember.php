@@ -21,6 +21,7 @@ use LogicException;
 #[UseFactory(PartyMemberFactory::class)]
 class PartyMember extends Model
 {
+    /** @use HasFactory<PartyMemberFactory> */
     use HasFactory;
 
     protected $attributes = [
@@ -36,6 +37,9 @@ class PartyMember extends Model
         ];
     }
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -48,6 +52,9 @@ class PartyMember extends Model
         return $user instanceof User ? $user : throw new LogicException("Party member {$this->id} has no user.");
     }
 
+    /**
+     * @return BelongsTo<Party, $this>
+     */
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
