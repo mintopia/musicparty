@@ -2,12 +2,12 @@
 
 namespace Tests\Fixtures\Architecture;
 
-use App\Models\Song;
+use App\Models\Play;
 
 class CrossContextWriter
 {
     public function write(): void
     {
-        Song::create(['name' => 'x']);
+        Play::create(['title' => 'x']);
     }
 }
