@@ -71,7 +71,7 @@ it('builds images only when called by CI or dispatched on demand, from the trigg
 
 it('tags on-demand builds with the branch name', function () {
     $merge = DeployConfig::workflow(WORKFLOWS[1])->toArray()['jobs']['merge'];
-    $meta = collect($merge['steps'])->firstWhere('id', 'meta')['with']['tags'];
+    $meta = array_column($merge['steps'], 'with', 'id')['meta']['tags'];
 
     expect($meta)->toContain("type=ref,event=branch,enable=\${{ github.event_name == 'workflow_dispatch' }}");
 });
