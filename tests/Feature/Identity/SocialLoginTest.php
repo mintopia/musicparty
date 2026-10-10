@@ -4,6 +4,8 @@ use App\Domain\Identity\Actions\ResolveSocialUser;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\SocialProviders\FacebookProvider;
+use App\Domain\Identity\SocialProviders\GoogleProvider;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
@@ -218,4 +220,15 @@ it('refuses Google login when the provider is not configured', function (): void
     Socialite::shouldReceive('buildProvider')->never();
 
     $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+});
+
+it('builds Google and Facebook providers from the factory', function (): void {
+    $google = SocialProvider::factory()->google()->create();
+    $facebook = SocialProvider::factory()->facebook()->create();
+
+    expect($google->code)->toBe('google')
+        ->and($google->provider_class)->toBe(GoogleProvider::class)
+        ->and($facebook->code)->toBe('facebook')
+        ->and($facebook->provider_class)->toBe(FacebookProvider::class)
+        ->and($facebook->supports_auth)->toBeTrue();
 });
