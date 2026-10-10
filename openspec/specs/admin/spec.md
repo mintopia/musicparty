@@ -63,11 +63,15 @@ An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving
 - **THEN** the start and end entries are listed and flagged as act-as-Host
 
 ### Requirement: Social provider credentials
-Admins SHALL be able to configure login for the social providers Discord, Twitch, Steam and Spotify: enable or disable each and set its credentials. Stored secrets MUST be encrypted at rest and MUST NOT be displayed back in full after saving. Only enabled, configured providers SHALL be offered on the login page.
+Admins SHALL be able to configure login for the social providers Discord, Twitch, Steam, Spotify, Google and Facebook: enable or disable each and set its credentials. Stored secrets MUST be encrypted at rest and MUST NOT be displayed back in full after saving. Only enabled, configured providers SHALL be offered on the login page.
 
 #### Scenario: Enable provider
 - **WHEN** an admin saves valid credentials and enables a provider
 - **THEN** the login page offers that provider
+
+#### Scenario: Google and Facebook offered
+- **WHEN** an admin opens the provider settings
+- **THEN** Google and Facebook are listed alongside the other providers, each with a Client ID and Client Secret
 
 #### Scenario: Secret hidden
 - **WHEN** an admin reopens the provider settings

@@ -8,3 +8,5 @@ Decision:
 - Remove the direct `ramsey/uuid` requirement.
 
 Consequences: one fewer third-party runtime package. Adding a login provider means adding its driver, a catalogue entry and the test row together.
+
+Amendment (Google and Facebook): Laravel Socialite ships first-party `google` and `facebook` drivers, so those catalogue entries need no `socialiteproviders/*` package or `SocialiteWasCalled` listener. The one-driver-per-catalogue-entry rule is satisfied by a first-party driver when one exists; `socialiteproviders/*` is only required for providers Socialite does not cover. `PackageTrimTest` compares required `socialiteproviders/*` packages against the catalogue minus the first-party codes.
