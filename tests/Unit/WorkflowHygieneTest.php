@@ -30,7 +30,7 @@ it('pins every action to a 40-character commit SHA', function (string $path) {
     expect($uses)->not->toBeEmpty();
 
     foreach ($uses as $reference) {
-        expect($reference)->toMatch('/^[\w.\-]+\/[\w.\-\/]+@[0-9a-f]{40}$/');
+        expect($reference)->toMatch('/^([\w.\-]+\/[\w.\-\/]+@[0-9a-f]{40}|\.\/\.github\/workflows\/[\w.\-]+\.yml)$/');
     }
 })->with(WORKFLOWS);
 
@@ -46,19 +46,34 @@ it('limits CI to read-only contents', function () {
     expect(DeployConfig::workflow(WORKFLOWS[0])->toArray()['permissions'])->toBe(['contents' => 'read']);
 });
 
-it('publishes only after CI succeeds on the same commit', function () {
+it('publishes long-lived branches and version tags only after every CI job passes', function () {
+    $publish = DeployConfig::workflow(WORKFLOWS[0])->toArray()['jobs']['publish'];
+
+    expect($publish['uses'])->toBe('./'.WORKFLOWS[1])
+        ->and($publish['needs'])->toEqualCanonicalizing(['static', 'frontend', 'specs', 'tests'])
+        ->and($publish['permissions'])->toBe(['contents' => 'read', 'packages' => 'write'])
+        ->and($publish['if'])->toContain("github.event_name == 'push'")
+        ->and($publish['if'])->toContain('"master", "develop", "feature/v3-rewrite"')
+        ->and($publish['if'])->toContain("startsWith(github.ref, 'refs/tags/v')");
+});
+
+it('builds images only when called by CI or dispatched on demand, from the triggering commit', function () {
     $workflow = DeployConfig::workflow(WORKFLOWS[1])->toArray();
     $trigger = $workflow['on'] ?? $workflow[true];
 
-    expect($trigger['workflow_run']['workflows'])->toBe(['CI'])
-        ->and($trigger['workflow_run']['types'])->toBe(['completed'])
-        ->and($trigger)->not->toHaveKey('push')
-        ->and($workflow['jobs']['build']['if'])->toContain("workflow_run.conclusion == 'success'")
-        ->and($workflow['env']['PUBLISH_SHA'])->toContain('workflow_run.head_sha');
+    expect(array_keys($trigger))->toEqualCanonicalizing(['workflow_call', 'workflow_dispatch'])
+        ->and($workflow['env']['PUBLISH_SHA'])->toBe('${{ github.sha }}');
 
     $checkout = collect($workflow['jobs']['build']['steps'])->first(fn (array $step): bool => str_starts_with($step['uses'] ?? '', 'actions/checkout@'));
 
     expect($checkout['with']['ref'])->toBe('${{ env.PUBLISH_SHA }}');
+});
+
+it('tags on-demand builds with the branch name', function () {
+    $merge = DeployConfig::workflow(WORKFLOWS[1])->toArray()['jobs']['merge'];
+    $meta = collect($merge['steps'])->firstWhere('id', 'meta')['with']['tags'];
+
+    expect($meta)->toContain("type=ref,event=branch,enable=\${{ github.event_name == 'workflow_dispatch' }}");
 });
 
 it('scans before pushing, then attests every platform image', function () {
