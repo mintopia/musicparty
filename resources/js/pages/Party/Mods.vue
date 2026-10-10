@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
 
@@ -7,6 +8,8 @@ const props = defineProps({
     mods: {type: Array, required: true},
     enabled_mods: {type: Array, default: () => []},
 });
+
+usePartyPresence(props.party.code);
 
 const page = usePage();
 const successMessage = computed(() => page.props.flash?.successMessage ?? null);

@@ -20,6 +20,7 @@ use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\PlayerHealth;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
+use App\Support\Realtime\PlayerConnections;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 
@@ -485,7 +486,7 @@ class SoloistPlayer implements BindsToParty, HandlesPlayerFrames, Player
      */
     private function dispatchFrame(array $frame): void
     {
-        if ($this->partyCode !== null) {
+        if ($this->partyCode !== null && app(PlayerConnections::class)->hasValidConnection($this->partyCode)) {
             PlayerCommandEvent::dispatch($this->partyCode, $frame);
         }
     }

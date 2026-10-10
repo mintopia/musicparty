@@ -18,7 +18,7 @@ let echo;
 beforeEach(() => {
     listeners = {};
     const channel = {listen: vi.fn((event, cb) => { listeners[event] = cb; return channel; })};
-    echo = {private: vi.fn(() => channel), leave: vi.fn()};
+    echo = {private: vi.fn(() => channel), join: vi.fn(() => channel), leave: vi.fn()};
     window.Echo = echo;
 });
 

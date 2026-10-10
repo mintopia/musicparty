@@ -1,4 +1,5 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
@@ -6,6 +7,8 @@ const props = defineProps({
     party: {type: Object, required: true},
     entries: {type: Object, required: true},
 });
+
+usePartyPresence(props.party.code);
 
 const liveRows = ref(props.entries?.data ?? []);
 watch(() => props.entries, () => {

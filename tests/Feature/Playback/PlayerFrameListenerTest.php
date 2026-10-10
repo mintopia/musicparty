@@ -8,6 +8,7 @@ use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
 use App\Support\Metrics\CounterStore;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -30,12 +31,22 @@ beforeEach(function () {
     RateLimiter::clear('player-frames:ABC123');
     config(['musicparty.player_frames.max_bytes' => 8192, 'musicparty.player_frames.max_per_minute' => 3]);
     Queue::fake();
+    $this->party = Party::factory()->create(['code' => 'ABC123', 'music_provider' => 'fake', 'player_kind' => 'fake']);
+    $this->token = $this->party->createToken('Stage', ['player:connect'])->accessToken;
+    app(PlayerConnections::class)->register('stub', 'ABC123', $this->token->getKey());
 });
 
 function stubReverbConnection(): Connection
 {
     return new class(Mockery::mock(WebSocketConnection::class), Mockery::mock(Application::class), null) extends Connection
     {
+        public int $disconnects = 0;
+
+        public function disconnect(): void
+        {
+            $this->disconnects++;
+        }
+
         public function identifier(): string
         {
             return 'stub';
@@ -54,9 +65,9 @@ function stubReverbConnection(): Connection
     };
 }
 
-function receive(string $message, bool $subscribed = true): void
+function receive(string $message, bool $subscribed = true, ?Connection $connection = null): void
 {
-    $connection = stubReverbConnection();
+    $connection ??= stubReverbConnection();
     $channel = Mockery::mock(Channel::class);
     $channel->shouldReceive('find')->with($connection)->andReturn($subscribed ? Mockery::mock(ChannelConnection::class) : null);
     $manager = Mockery::mock(ChannelManager::class);
@@ -163,6 +174,7 @@ it('rate limits each party separately', function () {
     foreach (range(1, 4) as $i) {
         receive(clientFrame());
     }
+    app(PlayerConnections::class)->register('stub', 'OTHER1', $this->token->getKey());
     receive(clientFrame(['channel' => 'private-player.OTHER1']));
 
     Queue::assertPushed(ProcessPlayerFrame::class, 4);
@@ -390,4 +402,42 @@ it('broadcasts player commands on the private player channel', function () {
         ->and($event->broadcastOn()[0]->name)->toBe('private-player.ABC123')
         ->and($event->broadcastAs())->toBe('player.command')
         ->and($event->broadcastWith())->toBe(['cmd' => 'pause']);
+});
+
+it('applies a frame from a socket whose token is valid', function () {
+    $connection = stubReverbConnection();
+
+    receive(clientFrame(), connection: $connection);
+
+    Queue::assertPushed(ProcessPlayerFrame::class);
+    expect($connection->disconnects)->toBe(0);
+});
+
+it('drops the frame and disconnects when the token is revoked, expired or the socket unknown', function (string $case) {
+    match ($case) {
+        'revoked' => $this->token->delete(),
+        'expired' => $this->token->forceFill(['expires_at' => now()->subMinute()])->save(),
+        'unknown' => null,
+    };
+    $connection = stubReverbConnection();
+    $message = clientFrame();
+
+    if ($case === 'unknown') {
+        Cache::flush();
+    }
+
+    receive($message, connection: $connection);
+
+    Queue::assertNothingPushed();
+    expect($connection->disconnects)->toBe(1)->and(discarded())->toBe(1);
+})->with(['revoked', 'expired', 'unknown']);
+
+it('refuses a socket registered for a different party', function () {
+    app(PlayerConnections::class)->register('stub', 'OTHER1', $this->token->getKey());
+    $connection = stubReverbConnection();
+
+    receive(clientFrame(), connection: $connection);
+
+    Queue::assertNothingPushed();
+    expect($connection->disconnects)->toBe(1);
 });

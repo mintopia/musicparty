@@ -8,12 +8,13 @@ use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Party\Models\Party;
+use App\Support\Realtime\Contracts\RealtimeConnections;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 
 readonly class ChangeMemberRole
 {
-    public function __construct(private RecordPartyLogEntry $record) {}
+    public function __construct(private RecordPartyLogEntry $record, private RealtimeConnections $connections) {}
 
     /**
      * @throws MembershipActionRefused
@@ -54,6 +55,10 @@ readonly class ChangeMemberRole
                 'old' => $old->value,
                 'new' => $role->value,
             ]);
+
+            if ($old->isModerator()) {
+                DB::afterCommit(fn () => $this->connections->terminateUser($target->user_id));
+            }
 
             return $target;
         });

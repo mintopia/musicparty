@@ -3,6 +3,7 @@
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
@@ -30,6 +31,23 @@ it('authorises the matching party player token', function () {
     $this->withToken($this->plain);
 
     authorisePlayerChannel($this, $this->party->code)->assertOk()->assertJsonStructure(['auth']);
+});
+
+it('records the socket against the token when authorising', function () {
+    $this->withToken($this->plain);
+
+    authorisePlayerChannel($this, $this->party->code)->assertOk();
+
+    expect(app(PlayerConnections::class)->accepts('1234.5678', $this->party->code))->toBeTrue()
+        ->and(app(PlayerConnections::class)->accepts('9999.0000', $this->party->code))->toBeFalse();
+});
+
+it('does not record a socket for a refused authorisation', function () {
+    $this->withToken($this->party->createToken('Weak', ['other:thing'])->plainTextToken);
+
+    authorisePlayerChannel($this, $this->party->code)->assertForbidden();
+
+    expect(app(PlayerConnections::class)->accepts('1234.5678', $this->party->code))->toBeFalse();
 });
 
 it('refuses a token for another party', function () {
