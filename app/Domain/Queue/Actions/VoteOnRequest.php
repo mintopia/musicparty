@@ -25,13 +25,15 @@ class VoteOnRequest
     public function __invoke(Party $party, PartyMember $member, TrackRequest $request, ?VoteDirection $direction): TrackRequest
     {
         $changed = DB::transaction(function () use ($party, $member, $request, $direction): bool {
-            $party = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
+            $party = Party::query()->whereKey($party->id)->sharedLock()->firstOrFail();
 
             if ($party->state === PartyState::Ended) {
                 throw RequestRefusedException::partyEndedVotingClosed();
             }
 
-            if ($member->fresh()?->banned !== false) {
+            $lockedMember = PartyMember::query()->whereKey($member->id)->lockForUpdate()->first();
+
+            if ($lockedMember === null || $lockedMember->banned) {
                 throw RequestRefusedException::banned();
             }
 
