@@ -5,11 +5,16 @@ use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
+use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Queue\Actions\AdvanceQueue;
+use App\Domain\Queue\RequestStatus;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyLogEntry;
 use App\Models\SocialProvider;
+use App\Models\TrackRequest;
 use App\Models\User;
 use App\Services\SocialProviders\SpotifyProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -283,4 +288,44 @@ it('skips silently when the host has no linked account', function () {
     app(AppendPlayToHistory::class)($party, 'track-1', $this->fake);
 
     expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+});
+
+function startTrackedRequest(Party $party): TrackRequest
+{
+    $request = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'track-1', 'status' => RequestStatus::UpNext]);
+    Party::flushEventListeners();
+
+    return $request;
+}
+
+it('appends the started track to the history playlist when the queue advances', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    startTrackedRequest($party);
+
+    app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1']);
+});
+
+it('appends nothing when no history playlist is set', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host);
+    startTrackedRequest($party);
+
+    app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+});
+
+it('writes a party log entry and does not throw when the provider fails on advance', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    startTrackedRequest($party);
+    $this->fake->failNextWith(new ProviderUnavailableException('down'));
+
+    $advance = app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($advance->playing)->not->toBeNull()
+        ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'playlist.history_append_failed')->exists())->toBeTrue();
 });

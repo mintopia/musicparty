@@ -5,6 +5,7 @@ namespace App\Domain\Music\Jobs;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
+use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -73,5 +74,11 @@ class AppendToHistoryPlaylist implements ShouldQueue
             'provider' => $this->providerId,
             'exception' => $failure::class,
         ]);
+
+        $party = Party::query()->find($this->partyId);
+
+        if ($party !== null) {
+            app(RecordPartyLogEntry::class)($party, 'playlist.history_append_failed', systemActor: 'history', details: ['provider' => $this->providerId, 'exception' => $failure::class]);
+        }
     }
 }

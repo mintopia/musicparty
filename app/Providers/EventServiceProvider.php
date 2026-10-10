@@ -2,9 +2,11 @@
 
 namespace App\Providers;
 
+use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
+use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
 use App\Listeners\HandlePlayerClientEvent;
@@ -66,6 +68,7 @@ class EventServiceProvider extends ServiceProvider
         RequestCreated::class => [RefreshStatsOnPartyActivity::class],
         VoteCast::class => [RefreshStatsOnPartyActivity::class],
         TrackEnded::class => [RefreshStatsOnPartyActivity::class],
+        TrackStarted::class => [AppendStartedTrackToHistory::class],
         RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
         MessageLogged::class => [
             MessageLoggedListener::class,
