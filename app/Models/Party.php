@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Laravel\Sanctum\HasApiTokens;
 use NumPHP\LinAlg\LinAlg;
 
 /**
@@ -31,6 +32,7 @@ use NumPHP\LinAlg\LinAlg;
  */
 class Party extends Model
 {
+    use HasApiTokens;
     use HasFactory;
     use ToString;
 

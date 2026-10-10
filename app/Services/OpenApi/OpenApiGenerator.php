@@ -23,6 +23,7 @@ class OpenApiGenerator
     private const array REFUSAL_DESCRIPTIONS = [
         'api.v1.parties.plays.rating.store' => 'Validation failed, or the party has ended so ratings are closed.',
         'api.v1.parties.plays.rating.destroy' => 'The party has ended so ratings are closed.',
+        'api.v1.parties.player.update' => 'Validation failed, or the player is not compatible with the Music Provider (the message lists the compatible options).',
     ];
 
     public function __construct(private readonly RuleSchemaMapper $mapper) {}
