@@ -278,6 +278,18 @@ describe('playback controls', () => {
         expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/volume', {level: 80}, expect.any(Object));
     });
 
+    it('disables the controls for a browser player', () => {
+        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'browser'}})});
+        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeDefined();
+        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(true);
+    });
+
+    it('enables the controls for a polling player', () => {
+        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'polling'}})});
+        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeUndefined();
+        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(false);
+    });
+
     it('shows a refusal returned by the server', async () => {
         post.mockImplementationOnce((_url, _data, options) => options.onError({playback: 'The Player is disconnected, so playback cannot be controlled.'}));
         const w = mount(Show, {props: baseProps({canManage: true})});

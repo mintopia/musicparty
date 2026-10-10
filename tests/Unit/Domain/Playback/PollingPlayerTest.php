@@ -5,7 +5,6 @@ use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
-use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\PlaybackStatus;
@@ -23,7 +22,7 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
-it('is an ahead player for Spotify that needs a Host account and has no direct controls', function () {
+it('is an ahead player for Spotify that needs a Host account and supports every control', function () {
     expect($this->player->kind())->toBe('polling')
         ->and($this->player->feedMode())->toBe(FeedMode::Ahead)
         ->and($this->player->requiresHostAccount())->toBeTrue()
@@ -31,14 +30,8 @@ it('is an ahead player for Spotify that needs a Host account and has no direct c
         ->and($this->player->state()->status)->toBe(PlaybackStatus::Stopped);
 
     foreach (Control::cases() as $control) {
-        expect($this->player->supports($control))->toBeFalse();
+        expect($this->player->supports($control))->toBeTrue();
     }
-
-    expect(fn () => $this->player->pause())->toThrow(UnsupportedControl::class)
-        ->and(fn () => $this->player->skip())->toThrow(UnsupportedControl::class)
-        ->and(fn () => $this->player->play())->toThrow(UnsupportedControl::class)
-        ->and(fn () => $this->player->seek(1))->toThrow(UnsupportedControl::class)
-        ->and(fn () => $this->player->volume(1))->toThrow(UnsupportedControl::class);
 });
 
 it('persists the last seen state and track in the cache rather than memory', function () {

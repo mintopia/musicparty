@@ -13,6 +13,10 @@ class PlaybackControlRefusedException extends RuntimeException
 
     public const UNSUPPORTED = 422;
 
+    public const REJECTED = 409;
+
+    public const RATE_LIMITED = 429;
+
     public static function noPlayer(): self
     {
         return new self('No Player is paired with this party, so playback cannot be controlled.', self::NO_PLAYER);
@@ -26,6 +30,16 @@ class PlaybackControlRefusedException extends RuntimeException
     public static function unsupported(Control $control): self
     {
         return new self("This Player does not support {$control->value}.", self::UNSUPPORTED);
+    }
+
+    public static function rejected(string $reason): self
+    {
+        return new self($reason, self::REJECTED);
+    }
+
+    public static function rateLimited(int $retryAfterSeconds): self
+    {
+        return new self("The Music Provider is rate limiting requests. Retry in {$retryAfterSeconds} seconds.", self::RATE_LIMITED);
     }
 
     public function status(): int
