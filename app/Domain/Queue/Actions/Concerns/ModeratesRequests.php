@@ -3,6 +3,7 @@
 namespace App\Domain\Queue\Actions\Concerns;
 
 use App\Domain\Party\PartyRole;
+use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestResolvedEvent;
@@ -62,6 +63,10 @@ trait ModeratesRequests
 
     protected function announceDecision(Party $party, TrackRequest $request, RequestStatus $previous, ?PartyMember $decider = null, ?string $reason = null): void
     {
+        if (in_array($request->status, [RequestStatus::Rejected, RequestStatus::Removed], true)) {
+            RequestDecisionRecorded::dispatch($party->id, $request->id, $request->status->value);
+        }
+
         if ($previous === RequestStatus::Pending) {
             PendingRequestResolvedEvent::dispatch($party->code, $request->id, $request->status->value);
         }

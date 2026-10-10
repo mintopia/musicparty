@@ -57,6 +57,9 @@ Route::middleware('auth')->group(function () {
     Route::get('parties/{party}/members', [PartyController::class, 'members'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.members');
+    Route::get('parties/{party}/stats', [PartyController::class, 'stats'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.stats');
     Route::put('parties/{party}/members/{member}/role', [PartyController::class, 'changeMemberRole'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('member')

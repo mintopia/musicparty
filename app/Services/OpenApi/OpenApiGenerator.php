@@ -2,6 +2,7 @@
 
 namespace App\Services\OpenApi;
 
+use App\Http\Resources\V1\PartyExportResource;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Http\Resources\Json\ResourceCollection;
@@ -25,6 +26,11 @@ class OpenApiGenerator
         'api.v1.parties.plays.rating.destroy' => 'The party has ended so ratings are closed.',
         'api.v1.parties.player.poll' => 'The Party is not live, or its Player is not a Polling Player.',
         'api.v1.parties.player.update' => 'Validation failed, or the player is not compatible with the Music Provider (the message lists the compatible options).',
+    ];
+
+    /** @var array<string, string> */
+    private const array CONFLICT_DESCRIPTIONS = [
+        'api.v1.parties.export' => 'The party has not ended (live, paused or reopened), so it cannot be exported yet.',
     ];
 
     public function __construct(private readonly RuleSchemaMapper $mapper) {}
@@ -87,6 +93,11 @@ class OpenApiGenerator
                         'type' => 'http',
                         'scheme' => 'bearer',
                         'description' => 'Sanctum bearer token.',
+                    ],
+                    'integrationBearer' => [
+                        'type' => 'http',
+                        'scheme' => 'bearer',
+                        'description' => 'Integration Token carrying the required ability.',
                     ],
                     'sanctumCookie' => [
                         'type' => 'apiKey',
@@ -165,6 +176,18 @@ class OpenApiGenerator
         if ($this->requiresSanctum($route)) {
             $operation['security'] = [['sanctumBearer' => []], ['sanctumCookie' => []]];
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
+        }
+
+        $conflict = self::CONFLICT_DESCRIPTIONS[$route->getName() ?? ''] ?? null;
+
+        if ($conflict !== null) {
+            $operation['responses']['409'] = ['description' => $conflict];
+        }
+
+        if ($this->hasMiddleware($route, 'export.access')) {
+            $operation['security'] = [['sanctumBearer' => []], ['sanctumCookie' => []], ['integrationBearer' => []]];
+            $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
+            $operation['responses']['403'] = ['description' => 'Forbidden. Only the Party Host, instance admins and Integration Tokens with the export ability may export.'];
         }
 
         if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
@@ -275,6 +298,13 @@ class OpenApiGenerator
         }
 
         $name = class_basename($class);
+
+        if ($class === PartyExportResource::class) {
+            $schemas[$name] = PartyExportResource::openApiSchema();
+
+            return ['$ref' => '#/components/schemas/'.$name];
+        }
+
         $schemas[$name] = ['type' => 'object', 'additionalProperties' => true];
 
         if (is_subclass_of($class, ResourceCollection::class)) {

@@ -34,6 +34,7 @@ use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
+use App\Domain\Stats\Actions\GetPartyStats;
 use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\ControlPlaybackRequest;
@@ -251,6 +252,16 @@ class PartyController extends Controller
                 'canChangeRoles' => $user->can('manageRoles', $party),
                 'canBan' => $user->can('moderate', $party),
             ],
+        ]);
+    }
+
+    public function stats(GetPartyStats $getStats, Party $party): Response
+    {
+        $this->authorize('viewMembers', $party);
+
+        return Inertia::render('Party/Stats', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'stats' => $getStats($party),
         ]);
     }
 

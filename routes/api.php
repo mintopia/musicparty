@@ -11,12 +11,14 @@ use App\Http\Controllers\Api\V1\IntegrationPingController;
 use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PartyBlocklistController;
 use App\Http\Controllers\Api\V1\PartyController;
+use App\Http\Controllers\Api\V1\PartyExportController;
 use App\Http\Controllers\Api\V1\PartyMemberController;
 use App\Http\Controllers\Api\V1\PartyModController;
 use App\Http\Controllers\Api\V1\PartyPlayController;
 use App\Http\Controllers\Api\V1\PartyPlayerController;
 use App\Http\Controllers\Api\V1\PartyPlaylistController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
+use App\Http\Controllers\Api\V1\PartyStatsController;
 use App\Http\Controllers\Api\V1\PartyThemeController;
 use App\Http\Controllers\Api\V1\PingController;
 use App\Http\Controllers\Api\V1\SongRatingController;
@@ -43,6 +45,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     });
     Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])->name('parties.theme.show');
     Route::get('integration/ping', [IntegrationPingController::class, 'index'])->middleware(['auth:integration', 'integration.ability:read'])->name('integration.ping');
+    Route::get('parties/{party}/export', [PartyExportController::class, 'show'])->middleware('export.access')->name('parties.export');
     Route::middleware(['auth:sanctum', 'user.principal'])->group(function () {
         Route::get('me', [MeController::class, 'show'])->name('me');
         Route::put('me/colour-scheme', [ColourSchemeController::class, 'update'])->name('me.colour-scheme');
@@ -54,6 +57,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/join', [PartyController::class, 'join'])->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::get('parties/{party}/members', [PartyMemberController::class, 'index'])->name('parties.members.index');
+        Route::get('parties/{party}/stats', [PartyStatsController::class, 'show'])->name('parties.stats');
         Route::put('parties/{party}/members/{member}/role', [PartyMemberController::class, 'role'])->whereNumber('member')->name('parties.members.role');
         Route::put('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'ban'])->whereNumber('member')->name('parties.members.ban');
         Route::delete('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'unban'])->whereNumber('member')->name('parties.members.unban');
