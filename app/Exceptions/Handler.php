@@ -8,6 +8,8 @@ use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
@@ -30,6 +32,14 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
+        $this->reportable(function (Throwable $e): void {
+            try {
+                Redis::incr('metrics.exceptions');
+            } catch (Throwable $metricsFailure) {
+                Log::warning("Unable to store metrics: {$metricsFailure->getMessage()}");
+            }
+        });
+
         $this->map(fn (IncompatibleProviderException $e): ValidationException => ValidationException::withMessages([
             'player_kind' => [$e->getMessage()],
         ]));

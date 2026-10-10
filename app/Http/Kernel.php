@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsurePlayerToken;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\MetricsCollector;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
 use App\Http\Middleware\RejectPlayerTokens;
@@ -53,6 +54,7 @@ class Kernel extends HttpKernel
         ValidatePostSize::class,
         TrimStrings::class,
         ConvertEmptyStringsToNull::class,
+        MetricsCollector::class,
     ];
 
     /**

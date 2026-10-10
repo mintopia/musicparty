@@ -10,27 +10,26 @@ use Symfony\Component\HttpFoundation\Response;
 
 class MetricsCollector
 {
+    public const METHODS = ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'];
+
+    public const OTHER_METHOD = 'OTHER';
+
+    public const STATUS_CODES_KEY = 'metrics.http.status_codes';
+
     /**
-     * Handle an incoming request.
-     *
      * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
         $response = $next($request);
-        $promUrl = config('prometheus.urls.default');
-        if (! str_starts_with($promUrl, '/')) {
-            $promUrl = "/{$promUrl}";
-        }
-        if ($request->getRequestUri() === $promUrl) {
+
+        if ($request->path() === trim((string) config('prometheus.urls.default'), '/')) {
             return $response;
         }
-        $method = $request->getMethod();
-        $statusCode = $response->getStatusCode();
+
         try {
-            $this->storeMetrics($method, $statusCode);
-        } catch (\Exception $ex) {
-            // Purposely do nothing other than logging
+            $this->storeMetrics($request->getMethod(), $response->getStatusCode());
+        } catch (\Throwable $ex) {
             Log::warning("Unable to store metrics: {$ex->getMessage()}");
         }
 
@@ -39,8 +38,14 @@ class MetricsCollector
 
     protected function storeMetrics(string $method, int $statusCode): void
     {
-        Redis::incr("metrics.http.method.{$method}", 1);
-        Redis::incr("metrics.http.status.{$statusCode}", 1);
-        Redis::incr('metrics.http.requests', 1);
+        $method = strtoupper($method);
+        if (! in_array($method, self::METHODS, true)) {
+            $method = self::OTHER_METHOD;
+        }
+
+        Redis::incr("metrics.http.method.{$method}");
+        Redis::incr("metrics.http.status.{$statusCode}");
+        Redis::sadd(self::STATUS_CODES_KEY, $statusCode);
+        Redis::incr('metrics.http.requests');
     }
 }
