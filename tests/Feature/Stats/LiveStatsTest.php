@@ -97,7 +97,7 @@ describe('access', function () {
 describe('content', function () {
     it('shows empty states for an empty party', function () {
         expect(statsFor())->toBe([
-            'top_tracks' => [], 'top_requesters' => [], 'most_upvoted' => [], 'most_downvoted' => [], 'total_time_played_ms' => 0,
+            'top_tracks' => [], 'top_requesters' => [], 'most_upvoted' => [], 'most_downvoted' => [], 'upvote_leaderboard' => [], 'downvote_leaderboard' => [], 'total_time_played_ms' => 0,
         ]);
     });
 
@@ -139,6 +139,25 @@ describe('content', function () {
             ->and($stats['most_upvoted'][0])->toMatchArray(['title' => 'Up', 'score' => 2, 'requested_by' => $this->alice->user->nickname])
             ->and($stats['most_downvoted'])->toHaveCount(1)
             ->and($stats['most_downvoted'][0])->toMatchArray(['title' => 'Down', 'score' => -1]);
+    });
+
+    it('ranks members by votes received and excludes system and removed requests', function () {
+        $first = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->alice->id]);
+        $second = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->alice->id]);
+        $other = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->bob->id]);
+        $system = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => null]);
+        $gone = TrackRequest::factory()->create(['party_id' => $this->party->id, 'party_member_id' => $this->bob->id, 'status' => RequestStatus::Removed]);
+        foreach ([$first, $second, $system, $gone] as $request) {
+            RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $this->host->id, 'value' => 1]);
+        }
+        RequestVote::factory()->create(['track_request_id' => $first->id, 'party_member_id' => $this->bob->id, 'value' => 1]);
+        RequestVote::factory()->create(['track_request_id' => $other->id, 'party_member_id' => $this->alice->id, 'value' => -1]);
+        RequestVote::factory()->create(['track_request_id' => $other->id, 'party_member_id' => $this->host->id, 'value' => -1]);
+
+        $stats = statsFor();
+
+        expect($stats['upvote_leaderboard'])->toBe([['nickname' => $this->alice->user->nickname, 'votes' => 3]])
+            ->and($stats['downvote_leaderboard'])->toBe([['nickname' => $this->bob->user->nickname, 'votes' => 2]]);
     });
 
     it('excludes plays whose request was rejected or removed', function () {

@@ -972,6 +972,20 @@
                                 "type": "object"
                             }
                         },
+                        "upvote_leaderboard": {
+                            "description": "Members ranked by upvotes received",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
+                        "downvote_leaderboard": {
+                            "description": "Members ranked by downvotes received",
+                            "type": "array",
+                            "items": {
+                                "type": "object"
+                            }
+                        },
                         "total_time_played_ms": {
                             "description": "Total milliseconds of Tracks played",
                             "type": "integer"

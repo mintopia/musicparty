@@ -25,4 +25,10 @@ describe('Party Stats', () => {
         expect(w.findAll('[data-testid="stats-top-tracks-row"]')).toHaveLength(1);
         expect(w.get('[data-testid="stats-time-played"]').text()).toBe('1h 5m');
     });
+
+    it('renders leaderboards and tolerates cached payloads without them', () => {
+        const w = mountStats({...empty, upvote_leaderboard: [{nickname: 'Alice', votes: 3}]});
+        expect(w.findAll('[data-testid="stats-upvote-leaderboard-row"]')).toHaveLength(1);
+        expect(w.find('[data-testid="stats-downvote-leaderboard-empty"]').exists()).toBe(true);
+    });
 });

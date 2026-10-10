@@ -24,6 +24,25 @@ The system SHALL maintain Live Stats for every Party, visible to its Members thr
 - **WHEN** nothing has been played or requested yet
 - **THEN** the stats view shows empty states rather than errors
 
+### Requirement: Vote leaderboards
+Live Stats SHALL include two leaderboards of the Party's Members, one ranked by upvotes received and one by downvotes received on their Requests, showing the top entries of each. Votes on system Requests (those with no Member) and on Pending, Rejected or Removed Requests MUST NOT count. Leaderboards are visible only to Members of the Party, never on the TV screen or to anonymous visitors. Cached Live Stats written before the leaderboards existed MUST still render.
+
+#### Scenario: Members ranked by votes received
+- **WHEN** Members have received upvotes and downvotes on their Requests
+- **THEN** the stats view lists the Members with the most upvotes and the Members with the most downvotes, highest first
+
+#### Scenario: Fallback Requests excluded
+- **WHEN** a system Request from the Fallback Playlist receives Votes
+- **THEN** no leaderboard entry is created for it
+
+#### Scenario: No votes yet
+- **WHEN** no counted Votes have been cast
+- **THEN** both leaderboards show empty states
+
+#### Scenario: Older cached stats
+- **WHEN** a cached Live Stats payload lacks the leaderboard keys
+- **THEN** the stats view still renders, with empty leaderboards
+
 ### Requirement: Real-time updates
 Live Stats SHALL update in real time as Requests are made, Votes are cast and Plays complete, without the viewer reloading. Recalculation SHALL happen outside the request that caused it, and bursts of activity in a Party SHALL be coalesced into one recalculation, so that requesting, voting and rating are neither slowed down nor failed by Stats. Viewers SHALL see the update within about ten seconds. The data sent SHALL contain no member IDs or secrets beyond what is visible to Members in the Party.
 
