@@ -1,8 +1,11 @@
-import {mount} from '@vue/test-utils';
+import {enableAutoUnmount, mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
+
+const reload = vi.fn();
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
+    router: {reload: (...args) => reload(...args)},
 }));
 
 import Tv from '../pages/Party/Tv.vue';
@@ -25,6 +28,8 @@ const props = (over = {}) => ({
     ...over,
 });
 
+enableAutoUnmount(afterEach);
+
 let listeners;
 let echo;
 
@@ -40,6 +45,7 @@ beforeEach(() => {
 });
 
 afterEach(() => {
+    reload.mockReset();
     delete window.Echo;
 });
 
@@ -139,5 +145,15 @@ describe('TV screen', () => {
             w.unmount();
             expect(document.getElementById('party-theme-live')).toBeNull();
         });
+    });
+
+    it('reloads on realtime:resync and applies the fresh props', () => {
+        const w = mount(Tv, {props: props()});
+        window.dispatchEvent(new Event('realtime:resync'));
+        expect(reload).toHaveBeenCalledTimes(1);
+        expect(reload.mock.calls[0][0].only).toEqual(['nowPlaying', 'upNext', 'sequence', 'startedAt']);
+        w.unmount();
+        window.dispatchEvent(new Event('realtime:resync'));
+        expect(reload).toHaveBeenCalledTimes(1);
     });
 });

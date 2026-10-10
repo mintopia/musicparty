@@ -2,6 +2,7 @@ import axios from 'axios';
 import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
+import {bindRealtimeResync} from './lib/realtimeResync';
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -43,3 +44,5 @@ window.Echo = config.appKey
         join: () => noopChannel,
         leave: () => {},
     };
+
+bindRealtimeResync(window.Echo);
