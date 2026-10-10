@@ -42,7 +42,7 @@ function makeUser(): User
 function makeHostedParty(User $host, array $attributes = []): Party
 {
     $party = new Party;
-    $party->forceFill(array_merge(['code' => fake()->unique()->lexify('????????'), 'name' => 'Test Party', 'user_id' => $host->id], $attributes));
+    $party->forceFill(array_merge(['code' => strtoupper(fake()->unique()->lexify('????????')), 'name' => 'Test Party', 'user_id' => $host->id], $attributes));
     Party::withoutEvents(fn () => $party->save());
 
     return $party;

@@ -7,9 +7,9 @@ use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
+use App\Support\Metrics\CounterStore;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Validation\ValidationException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
@@ -34,7 +34,7 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (Throwable $e): void {
             try {
-                Redis::incr('metrics.exceptions');
+                app(CounterStore::class)->increment('metrics.exceptions');
             } catch (Throwable $metricsFailure) {
                 Log::warning("Unable to store metrics: {$metricsFailure->getMessage()}");
             }
