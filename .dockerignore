@@ -18,3 +18,10 @@ yarn-error.log
 Dockerfile
 README.md
 docker-compose.yaml
+/tests
+/docs
+/openspec
+/asyncapi
+/example
+/.github
+/cookies.json
