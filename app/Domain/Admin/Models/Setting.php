@@ -5,27 +5,41 @@ namespace App\Domain\Admin\Models;
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
 use App\Support\Concerns\ToString;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
-use Spatie\EloquentSortable\Sortable;
-use Spatie\EloquentSortable\SortableTrait;
 
 /**
  * @mixin IdeHelperSetting
  */
-class Setting extends Model implements Sortable
+class Setting extends Model
 {
     use HasFactory;
-    use SortableTrait;
     use ToString;
 
     protected $casts = [
         'value' => SettingValue::class,
         'type' => SettingType::class,
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (Setting $setting): void {
+            $setting->order ??= (int) static::query()->max('order') + 1;
+        });
+    }
+
+    /**
+     * @param  Builder<Setting>  $query
+     * @return Builder<Setting>
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('order');
+    }
 
     public static function fetch(string $code, $default = null)
     {

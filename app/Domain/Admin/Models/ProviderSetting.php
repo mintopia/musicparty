@@ -8,25 +8,36 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Spatie\EloquentSortable\Sortable;
-use Spatie\EloquentSortable\SortableTrait;
 
 /**
  * @mixin IdeHelperProviderSetting
  */
-class ProviderSetting extends Model implements Sortable
+class ProviderSetting extends Model
 {
     use HasFactory;
-    use SortableTrait;
 
     protected $casts = [
         'value' => SettingValue::class,
         'type' => SettingType::class,
     ];
 
-    public function buildSortQuery(): Builder
+    protected static function booted(): void
     {
-        return static::query()->where('provider_id', $this->provider_id)->where('provider_type', $this->provider_type);
+        static::creating(function (ProviderSetting $setting): void {
+            $setting->order ??= (int) static::query()
+                ->where('provider_id', $setting->provider_id)
+                ->where('provider_type', $setting->provider_type)
+                ->max('order') + 1;
+        });
+    }
+
+    /**
+     * @param  Builder<ProviderSetting>  $query
+     * @return Builder<ProviderSetting>
+     */
+    public function scopeOrdered(Builder $query): Builder
+    {
+        return $query->orderBy('order');
     }
 
     public function provider(): MorphTo
