@@ -29,6 +29,8 @@ class RequestRefusedException extends RuntimeException
 
     public const NOT_ALLOWED = 403;
 
+    public const SEARCH_RATE_LIMITED = 429;
+
     public static function notAMember(): self
     {
         return new self('Join the party to request tracks.', self::NOT_A_MEMBER);
