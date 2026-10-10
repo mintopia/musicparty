@@ -94,7 +94,7 @@ final class SpotifyFake
 
     public static function account(): LinkedAccountFactory
     {
-        return LinkedAccount::factory()->state(['user_id' => 1]);
+        return LinkedAccount::factory()->state(['user_id' => 1, 'social_provider_id' => 1]);
     }
 
     private static function consume(stdClass $control): mixed

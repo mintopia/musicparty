@@ -9,6 +9,7 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Exceptions\UnsupportedCapability;
+use App\Domain\Playback\Data\PlaybackState;
 
 interface MusicProvider
 {
@@ -41,6 +42,18 @@ interface MusicProvider
      * @throws ProviderTemporaryFailure
      */
     public function playlistTracks(string $playlistId, string $hostAccountId): array;
+
+    /**
+     * @throws ProviderUnavailableException
+     * @throws ProviderTemporaryFailure
+     */
+    public function currentPlayback(string $hostAccountId): PlaybackState;
+
+    /**
+     * @throws ProviderUnavailableException
+     * @throws ProviderTemporaryFailure
+     */
+    public function queueTrack(string $providerTrackId, string $hostAccountId): void;
 
     public function supports(Capability $capability): bool;
 

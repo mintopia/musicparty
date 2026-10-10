@@ -11,6 +11,7 @@ use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\UnsupportedCapability;
+use App\Domain\Playback\Data\PlaybackState;
 use Throwable;
 
 class FakeMusicProvider implements MusicProvider
@@ -19,6 +20,11 @@ class FakeMusicProvider implements MusicProvider
 
     /** @var array<string, list<string>> */
     private array $appended = [];
+
+    private ?PlaybackState $playback = null;
+
+    /** @var list<string> */
+    private array $queued = [];
 
     /**
      * @param  list<TrackData>  $tracks
@@ -68,6 +74,35 @@ class FakeMusicProvider implements MusicProvider
     public function rateLimitNext(int $retryAfterSeconds): self
     {
         return $this->failNextWith(new ProviderTemporaryFailure('The Music Provider is rate limiting requests.', $retryAfterSeconds));
+    }
+
+    public function playbackIs(PlaybackState $state): self
+    {
+        $this->playback = $state;
+
+        return $this;
+    }
+
+    public function currentPlayback(string $hostAccountId): PlaybackState
+    {
+        $this->throwInjectedFailure();
+
+        return $this->playback ?? PlaybackState::stopped();
+    }
+
+    public function queueTrack(string $providerTrackId, string $hostAccountId): void
+    {
+        $this->throwInjectedFailure();
+
+        $this->queued[] = $providerTrackId;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function queuedTracks(): array
+    {
+        return $this->queued;
     }
 
     public function search(string $query, int $limit, int $offset): SearchPage

@@ -1,0 +1,27 @@
+{
+  "device": {
+    "id": "device-1",
+    "is_active": true,
+    "name": "Party Speaker",
+    "type": "Speaker"
+  },
+  "progress_ms": 61000,
+  "is_playing": true,
+  "currently_playing_type": "episode",
+  "item": {
+    "id": "episode-1",
+    "type": "episode",
+    "name": "Alpha Song",
+    "duration_ms": 180000,
+    "artists": [
+      {
+        "id": "artist-1",
+        "name": "Test Artist"
+      }
+    ],
+    "album": {
+      "id": "album-1",
+      "name": "Test Album"
+    }
+  }
+}

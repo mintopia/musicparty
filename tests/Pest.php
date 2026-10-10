@@ -11,7 +11,7 @@ use App\Domain\Playback\Testing\FakePlayer;
 use App\Models\Party;
 use Tests\TestCase;
 
-pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music');
+pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music', 'Unit/Domain/Playback');
 
 function playbackTrack(int $n, int $durationMs = 180000, bool $explicit = false): TrackData
 {
