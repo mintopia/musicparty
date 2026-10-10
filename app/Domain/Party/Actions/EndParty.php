@@ -2,6 +2,7 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\PartyState;
 use App\Models\Party;
@@ -28,6 +29,8 @@ readonly class EndParty
             $party->forceFill(['state' => PartyState::Ended])->save();
 
             ($this->record)($party, 'party.ended', $actor, details: ['old' => $old->value, 'new' => PartyState::Ended->value]);
+
+            DB::afterCommit(fn () => PartyStateChanged::dispatch($party, $old, PartyState::Ended));
 
             return $party;
         });

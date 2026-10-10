@@ -1,5 +1,7 @@
 # Thin Jev HTTP client instead of laravel/ai for the Jev driver
 
+> **Superseded.** `laravel/ai` 1.2 ships a `Classification` API with `Score` questions and a `typesafe` (Jev) provider, so the premise below no longer holds. Both drivers now go through `laravel/ai` (`Classification::of()->question(new Score(...))`), with the normalized score from `ScoreAnswer::normalized()` driving the thresholds. No thin Jev HTTP client or `ReviewClassifier` interface exists.
+
 The AI Request Review Mod needs two classifier drivers, OpenAI and Jev. The mods spec says both go through `laravel/ai` unless an ADR records otherwise. This is that ADR.
 
 `laravel/ai` is a chat and structured-output SDK and does not support Jev as a provider. Jev is served by TypeSafe's Decisions API (a `state` plus typed Noul, Score and Choice questions), not an OpenAI-compatible chat endpoint. Jev's Score also returns a probability-weighted ordinal position, per-level probabilities and a confidence, which a `laravel/ai` score cannot represent. See `docs/research/jev-score-mapping.md`.

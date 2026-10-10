@@ -2,6 +2,7 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\FallbackPlaylistGate;
@@ -39,6 +40,8 @@ readonly class GoLiveParty
             $party->forceFill(['state' => PartyState::Live])->save();
 
             ($this->record)($party, 'party.went_live', $actor, details: ['old' => $old->value, 'new' => PartyState::Live->value]);
+
+            DB::afterCommit(fn () => PartyStateChanged::dispatch($party, $old, PartyState::Live));
 
             return $party;
         });

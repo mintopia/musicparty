@@ -3,6 +3,8 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Queue\Data\QueueAdvance;
+use App\Domain\Queue\Events\TrackEnded;
+use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\Play;
@@ -34,6 +36,7 @@ readonly class AdvanceQueue
 
             foreach ($playing as $previous) {
                 $this->finish($previous);
+                DB::afterCommit(fn () => TrackEnded::dispatch($party, $previous));
             }
 
             if (! $expected) {
@@ -42,6 +45,7 @@ readonly class AdvanceQueue
 
             $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now()])->save();
             $this->recordPlay($upNext);
+            DB::afterCommit(fn () => TrackStarted::dispatch($party, $upNext));
 
             return new QueueAdvance($upNext);
         });

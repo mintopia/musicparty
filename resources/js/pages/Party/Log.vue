@@ -41,6 +41,12 @@ const describe = (entry) => {
         }
         case 'blocklist.entry_removed':
             return `Removed blocklist entry ${entry.subject ?? ''}`.trim();
+        case 'mod.enabled':
+            return `Enabled Mod ${entry.subject ?? ''}`.trim();
+        case 'mod.disabled':
+            return `Disabled Mod ${entry.subject ?? ''}`.trim();
+        case 'mod.settings_updated':
+            return `Changed Mod ${entry.subject ?? ''} settings: ${Object.keys(entry.details?.changes ?? {}).join(', ')}`.trim();
         default:
             return entry.action;
     }

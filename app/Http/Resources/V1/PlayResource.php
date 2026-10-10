@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Models\Play;
 use App\Models\TrackRequest;
 use App\Models\User;
@@ -38,6 +39,7 @@ class PlayResource extends JsonResource
             'dislikes' => (int) $this->dislikes,
             'my_rating' => (int) $this->my_rating,
             'played_at' => $this->played_at->toIso8601String(),
+            'decorations' => app(ResolveDecorations::class)($this->resource),
         ];
     }
 }

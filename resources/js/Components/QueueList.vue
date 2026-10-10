@@ -2,6 +2,8 @@
 import {router} from '@inertiajs/vue3';
 import {ref} from 'vue';
 import Icon from './Icon.vue';
+import Decorations from './Decorations.vue';
+import ModSlot from './ModSlot.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 
@@ -61,6 +63,7 @@ const buttonClass = (active, activeColor) => [
                     <div class="truncate text-sm">{{ item.track.title }}</div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
                     <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
+                    <Decorations :decorations="item.decorations" class="mt-1" />
                 </div>
                 <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(item.track.duration_ms) }}</span>
                 <div class="flex items-center">
@@ -94,6 +97,7 @@ const buttonClass = (active, activeColor) => [
                     </button>
                 </div>
             </div>
+            <ModSlot name="queue-item" :item="item" />
             <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-sm text-danger">{{ errors[item.id] }}</p>
         </li>
     </ul>
