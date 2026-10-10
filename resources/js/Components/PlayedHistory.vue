@@ -2,6 +2,7 @@
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
 import Icon from './Icon.vue';
+import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatPlayedAt} from '../lib/format';
 import {useRatePlay} from '../lib/rating';
@@ -139,6 +140,7 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                                 <div class="min-w-0 flex-1">
                                     <div class="truncate font-medium text-primary" data-testid="history-title">{{ play.track.title }}</div>
                                     <div class="truncate text-muted">{{ play.track.artists.join(', ') }}</div>
+                                    <Decorations :decorations="play.decorations" class="mt-1" />
                                 </div>
                                 <div data-testid="history-rating" class="flex shrink-0 items-center gap-1">
                                     <button

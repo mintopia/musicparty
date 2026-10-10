@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Mod\Actions\ApplyScoreModifiers;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Randomizer;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 readonly class SelectUpNext
 {
-    public function __construct(private RecordPartyLogEntry $record, private Randomizer $randomizer) {}
+    public function __construct(private RecordPartyLogEntry $record, private Randomizer $randomizer, private ApplyScoreModifiers $modifiers) {}
 
     /**
      * Returns the newly locked Up Next Request, or null when one already exists or none is eligible.
@@ -47,7 +48,10 @@ readonly class SelectUpNext
                 ->orderBy('id');
 
             $mode = $locked->selection_mode;
-            $candidate = $mode === SelectionMode::Weighted ? $this->roulette($ranked->get()) : $ranked->first();
+            $eligible = $ranked->get();
+            $adjustments = ($this->modifiers)($locked, $eligible);
+            $eligible = $this->withEffectiveScores($eligible, $adjustments);
+            $candidate = $mode === SelectionMode::Weighted ? $this->roulette($eligible) : $eligible->first();
 
             if ($candidate === null) {
                 return null;
@@ -63,6 +67,16 @@ readonly class SelectUpNext
                 'selection_score' => $score,
             ])->save();
 
+            foreach ($adjustments[$candidate->id] ?? [] as $modId => $adjustment) {
+                ($this->record)($locked, 'mod.score_adjusted', subject: $candidate->title, details: [
+                    'mod' => $adjustment['name'],
+                    'mod_id' => $modId,
+                    'request_id' => $candidate->id,
+                    'adjustment' => $adjustment['value'],
+                    'score' => $score,
+                ], systemActor: 'mod:'.$modId);
+            }
+
             ($this->record)($locked, 'queue.selected', subject: $candidate->title, details: [
                 'request_id' => $candidate->id,
                 'mode' => $mode->value,
@@ -72,6 +86,31 @@ readonly class SelectUpNext
 
             return $candidate;
         });
+    }
+
+    /**
+     * @param  Collection<int, TrackRequest>  $eligible  ordered by vote score descending
+     * @param  array<int, array<string, array{name: string, value: int}>>  $adjustments
+     * @return Collection<int, TrackRequest>
+     */
+    private function withEffectiveScores(Collection $eligible, array $adjustments): Collection
+    {
+        if ($adjustments === []) {
+            return $eligible;
+        }
+
+        foreach ($eligible as $request) {
+            $request->score = (int) $request->score + array_sum(array_column($adjustments[$request->id] ?? [], 'value'));
+            $request->syncOriginalAttribute('score');
+        }
+
+        return $eligible
+            ->sortBy([
+                fn (TrackRequest $a, TrackRequest $b): int => (int) $b->score <=> (int) $a->score,
+                fn (TrackRequest $a, TrackRequest $b): int => $a->created_at <=> $b->created_at,
+                fn (TrackRequest $a, TrackRequest $b): int => $a->id <=> $b->id,
+            ])
+            ->values();
     }
 
     /**

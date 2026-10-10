@@ -148,7 +148,8 @@
                                         "score",
                                         "likes",
                                         "dislikes",
-                                        "requested_by"
+                                        "requested_by",
+                                        "decorations"
                                     ],
                                     "properties": {
                                         "id": {
@@ -225,6 +226,77 @@
                                                         "null"
                                                     ],
                                                     "description": "Requester nickname"
+                                                }
+                                            }
+                                        },
+                                        "decorations": {
+                                            "type": "array",
+                                            "description": "Decorations attached by Mods enabled for the Party; empty when none",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "required": [
+                                                    "mod_id",
+                                                    "badge",
+                                                    "label",
+                                                    "icon",
+                                                    "accent",
+                                                    "variant"
+                                                ],
+                                                "properties": {
+                                                    "mod_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "badge": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "maxLength": 24
+                                                    },
+                                                    "label": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "maxLength": 60
+                                                    },
+                                                    "icon": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "enum": [
+                                                            "star",
+                                                            "flame",
+                                                            "shield",
+                                                            "clock",
+                                                            "gift",
+                                                            "snowflake",
+                                                            "alert",
+                                                            "check",
+                                                            null
+                                                        ]
+                                                    },
+                                                    "accent": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "accent",
+                                                            "success",
+                                                            "warning",
+                                                            "danger",
+                                                            "info",
+                                                            "muted"
+                                                        ]
+                                                    },
+                                                    "variant": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "solid",
+                                                            "soft",
+                                                            "outline"
+                                                        ]
+                                                    }
                                                 }
                                             }
                                         }
@@ -247,7 +319,8 @@
                                         "score",
                                         "likes",
                                         "dislikes",
-                                        "requested_by"
+                                        "requested_by",
+                                        "decorations"
                                     ],
                                     "properties": {
                                         "id": {
@@ -326,6 +399,77 @@
                                                     "description": "Requester nickname"
                                                 }
                                             }
+                                        },
+                                        "decorations": {
+                                            "type": "array",
+                                            "description": "Decorations attached by Mods enabled for the Party; empty when none",
+                                            "items": {
+                                                "type": "object",
+                                                "additionalProperties": false,
+                                                "required": [
+                                                    "mod_id",
+                                                    "badge",
+                                                    "label",
+                                                    "icon",
+                                                    "accent",
+                                                    "variant"
+                                                ],
+                                                "properties": {
+                                                    "mod_id": {
+                                                        "type": "string"
+                                                    },
+                                                    "badge": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "maxLength": 24
+                                                    },
+                                                    "label": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "maxLength": 60
+                                                    },
+                                                    "icon": {
+                                                        "type": [
+                                                            "string",
+                                                            "null"
+                                                        ],
+                                                        "enum": [
+                                                            "star",
+                                                            "flame",
+                                                            "shield",
+                                                            "clock",
+                                                            "gift",
+                                                            "snowflake",
+                                                            "alert",
+                                                            "check",
+                                                            null
+                                                        ]
+                                                    },
+                                                    "accent": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "accent",
+                                                            "success",
+                                                            "warning",
+                                                            "danger",
+                                                            "info",
+                                                            "muted"
+                                                        ]
+                                                    },
+                                                    "variant": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "solid",
+                                                            "soft",
+                                                            "outline"
+                                                        ]
+                                                    }
+                                                }
+                                            }
                                         }
                                     }
                                 }
@@ -343,7 +487,8 @@
                                     "score",
                                     "likes",
                                     "dislikes",
-                                    "requested_by"
+                                    "requested_by",
+                                    "decorations"
                                 ],
                                 "properties": {
                                     "id": {
@@ -420,6 +565,77 @@
                                                     "null"
                                                 ],
                                                 "description": "Requester nickname"
+                                            }
+                                        }
+                                    },
+                                    "decorations": {
+                                        "type": "array",
+                                        "description": "Decorations attached by Mods enabled for the Party; empty when none",
+                                        "items": {
+                                            "type": "object",
+                                            "additionalProperties": false,
+                                            "required": [
+                                                "mod_id",
+                                                "badge",
+                                                "label",
+                                                "icon",
+                                                "accent",
+                                                "variant"
+                                            ],
+                                            "properties": {
+                                                "mod_id": {
+                                                    "type": "string"
+                                                },
+                                                "badge": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 24
+                                                },
+                                                "label": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "maxLength": 60
+                                                },
+                                                "icon": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "enum": [
+                                                        "star",
+                                                        "flame",
+                                                        "shield",
+                                                        "clock",
+                                                        "gift",
+                                                        "snowflake",
+                                                        "alert",
+                                                        "check",
+                                                        null
+                                                    ]
+                                                },
+                                                "accent": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "accent",
+                                                        "success",
+                                                        "warning",
+                                                        "danger",
+                                                        "info",
+                                                        "muted"
+                                                    ]
+                                                },
+                                                "variant": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "solid",
+                                                        "soft",
+                                                        "outline"
+                                                    ]
+                                                }
                                             }
                                         }
                                     }

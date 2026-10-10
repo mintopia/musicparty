@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
+use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
@@ -33,6 +34,7 @@ class QueueEntryResource extends JsonResource
             'score' => (int) $this->score,
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'my_vote' => (int) $this->my_vote,
+            'decorations' => app(ResolveDecorations::class)($this->resource),
             ...($this->likes === null ? [] : [
                 'likes' => (int) $this->likes,
                 'dislikes' => (int) $this->dislikes,
