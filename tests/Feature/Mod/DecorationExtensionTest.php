@@ -4,6 +4,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Actions\DisableMod;
 use App\Domain\Mod\Actions\EnableMod;
+use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Domain\Mod\Actions\UpdateModSettings;
 use App\Domain\Mod\Data\Decoration;
 use App\Domain\Mod\DecorationAccent;
@@ -142,6 +143,42 @@ it('survives a throwing provider and logs it to the Party Log', function () {
     $entry = PartyLogEntry::query()->where('action', 'mod.decoration_failed')->firstOrFail();
     expect($entry->system_actor)->toBe('mod:broken')
         ->and($entry->details)->toMatchArray(['mod_id' => 'broken', 'request_id' => $this->queued->id]);
+});
+
+it('logs a failing provider once a minute however many requests and queue reads hit it', function () {
+    ModFixtures::enable($this->party, new DecoratingMod('broken', failing: true));
+    ModFixtures::enable($this->party, new DecoratingMod('working', [['badge' => 'OK']]));
+    $resolve = app(ResolveDecorations::class);
+    $failures = fn () => PartyLogEntry::query()->where('action', 'mod.decoration_failed')->count();
+
+    foreach (TrackRequest::factory()->for($this->party)->for($this->member, 'requester')->count(30)->create() as $request) {
+        $resolve($request);
+    }
+    for ($read = 0; $read < 20; $read++) {
+        expect(array_column(queueDecorations(), 'mod_id'))->toBe(['working']);
+    }
+
+    expect($failures())->toBe(1);
+
+    $this->travel(61)->seconds();
+    queueDecorations();
+    queueDecorations();
+
+    expect($failures())->toBe(2);
+});
+
+it('throttles failures per Mod and per Party', function () {
+    $other = Party::factory()->live()->create();
+    $otherRequest = TrackRequest::factory()->for($other)->create(['status' => RequestStatus::Queued]);
+    ModFixtures::enable($this->party, new DecoratingMod('broken', failing: true));
+    ModFixtures::enable($this->party, new DecoratingMod('also-broken', failing: true));
+    ModFixtures::enable($other, new DecoratingMod('broken', failing: true));
+
+    queueDecorations();
+    queueDecorations();
+    app(ResolveDecorations::class)($otherRequest);
+
+    expect(PartyLogEntry::query()->where('action', 'mod.decoration_failed')->count())->toBe(3);
 });
 
 it('carries play decorations in the history API', function () {
