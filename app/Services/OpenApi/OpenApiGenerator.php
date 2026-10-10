@@ -173,6 +173,13 @@ class OpenApiGenerator
             $operation['responses']['422'] = ['description' => $refusal];
         }
 
+        if ($route->getName() === 'api.v1.parties.search') {
+            $operation['responses']['429'] = [
+                'description' => 'Too many searches. The per-user search allowance (a burst of 30, refilling at 1 per second, shared across the web and API) is used up; retry after the number of seconds in the Retry-After header.',
+                'headers' => ['Retry-After' => ['description' => 'Seconds until another search is allowed.', 'schema' => ['type' => 'integer']]],
+            ];
+        }
+
         if ($this->requiresSanctum($route)) {
             $operation['security'] = [['sanctumBearer' => []], ['sanctumCookie' => []]];
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];

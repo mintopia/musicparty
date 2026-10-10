@@ -28,6 +28,7 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
@@ -102,6 +103,7 @@ class PartyController extends Controller
         ListPlayHistory $listHistory,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
+        ThrottleSearch $throttleSearch,
         EnabledMods $enabledMods,
         Party $party,
         string $section = 'queue',
@@ -119,6 +121,7 @@ class PartyController extends Controller
 
         if ($query !== '') {
             try {
+                $throttleSearch($this->currentUser($request));
                 $results = SearchHitResource::collection($search($party, $query))->resolve($request);
             } catch (RequestRefusedException $exception) {
                 $results = [];

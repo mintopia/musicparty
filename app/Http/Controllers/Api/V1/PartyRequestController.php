@@ -9,8 +9,10 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Exceptions\SearchRateLimitedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
@@ -30,10 +32,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyRequestController extends Controller
 {
-    public function search(SearchTracksRequest $request, SearchPartyProvider $search, Party $party): AnonymousResourceCollection|JsonResponse
+    public function search(SearchTracksRequest $request, SearchPartyProvider $search, ThrottleSearch $throttle, Party $party): AnonymousResourceCollection|JsonResponse
     {
         try {
             $this->member($request, $party);
+            $throttle($this->currentUser($request));
 
             return SearchHitResource::collection($search($party, $request->string('q')->toString()));
         } catch (RequestRefusedException $exception) {
@@ -152,6 +155,8 @@ class PartyRequestController extends Controller
             $payload['retry_at'] = $exception->retryAt->toIso8601String();
         }
 
-        return response()->json($payload, $exception->status());
+        $headers = $exception instanceof SearchRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
+
+        return response()->json($payload, $exception->status(), $headers);
     }
 }

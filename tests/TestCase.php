@@ -2,6 +2,8 @@
 
 namespace Tests;
 
+use App\Support\RateLimiting\Bucket;
+use App\Support\RateLimiting\Testing\FakeLeakyBucket;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
 abstract class TestCase extends BaseTestCase
@@ -13,5 +15,6 @@ abstract class TestCase extends BaseTestCase
         parent::setUp();
 
         $this->withoutVite();
+        $this->app->singleton(Bucket::class, FakeLeakyBucket::class);
     }
 }

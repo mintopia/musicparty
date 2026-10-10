@@ -259,13 +259,25 @@ it('retries a temporary failure without throwing into playback', function () {
     $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
     $this->fake->rateLimitNext(42);
 
-    $job = Mockery::mock(AppendToHistoryPlaylist::class, [$party->id, 'track-1', 'fake'])->makePartial();
-    $job->shouldReceive('attempts')->andReturn(1);
-    $job->shouldReceive('release')->once()->with(42);
+    $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
+    {
+        public ?int $releasedFor = null;
+
+        public function attempts(): int
+        {
+            return 1;
+        }
+
+        public function release($delay = 0): void
+        {
+            $this->releasedFor = $delay;
+        }
+    };
 
     $job->handle($this->fake, app(AuthorisesHost::class));
 
-    expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+    expect($this->fake->appendedTo('playlist-1'))->toBe([])
+        ->and($job->releasedFor)->toBe(42);
 });
 
 it('logs a final failure without tokens and does not throw', function () {
@@ -274,8 +286,13 @@ it('logs a final failure without tokens and does not throw', function () {
     $this->fake->failNextWith(new ProviderTemporaryFailure('down'));
     Log::spy();
 
-    $job = Mockery::mock(AppendToHistoryPlaylist::class, [$party->id, 'track-1', 'fake'])->makePartial();
-    $job->shouldReceive('attempts')->andReturn(5);
+    $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
+    {
+        public function attempts(): int
+        {
+            return 5;
+        }
+    };
 
     $job->handle($this->fake, app(AuthorisesHost::class));
 
