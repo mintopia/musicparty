@@ -7,6 +7,7 @@ use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
+use App\Domain\Playback\Jobs\PollPlayback;
 use App\Domain\Playback\PartyPlayers;
 use App\Models\Party;
 use App\Models\User;
@@ -64,6 +65,7 @@ readonly class ChangePartyPlayer
         });
 
         $this->players->forget($party);
+        PollPlayback::start($party);
 
         return $party;
     }

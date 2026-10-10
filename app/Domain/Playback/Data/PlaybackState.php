@@ -12,6 +12,7 @@ final readonly class PlaybackState
         public ?TrackReference $currentTrack = null,
         public int $positionMs = 0,
         public ?CarbonImmutable $updatedAt = null,
+        public ?int $durationMs = null,
     ) {}
 
     public static function stopped(): self

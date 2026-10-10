@@ -6,6 +6,7 @@ use App\Domain\Party\Exceptions\FallbackPlaylistInsufficient;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Jobs\PollPlayback;
 use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\User;
@@ -43,6 +44,7 @@ readonly class GoLiveParty
         });
 
         StartPlayback::dispatch($live->code);
+        PollPlayback::start($live);
 
         return $live;
     }

@@ -12,7 +12,11 @@ use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Playback\Data\PlaybackState;
+use App\Domain\Playback\Data\TrackReference;
+use App\Domain\Playback\PlaybackStatus;
 use App\Models\LinkedAccount;
+use Carbon\CarbonImmutable;
 use Closure;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -145,6 +149,52 @@ class SpotifyMusicProvider implements MusicProvider
 
             $this->guard($response);
         }
+    }
+
+    public function currentPlayback(string $hostAccountId): PlaybackState
+    {
+        $response = $this->userRequest(
+            fn (PendingRequest $request): Response => $request->get(self::API_URL.'/me/player', array_filter([
+                'market' => $this->market(),
+                'additional_types' => 'track',
+            ], fn (mixed $value): bool => $value !== null)),
+            $hostAccountId,
+        );
+
+        if ($response->status() === 204 || $response->status() === 202) {
+            return PlaybackState::stopped();
+        }
+
+        $this->guard($response);
+
+        $item = $response->json('item');
+
+        if (! is_array($item) || ($item['type'] ?? 'track') !== 'track' || ! isset($item['id'])) {
+            return PlaybackState::stopped();
+        }
+
+        $linkedFrom = $item['linked_from'] ?? null;
+        $trackId = is_array($linkedFrom) && isset($linkedFrom['id']) ? (string) $linkedFrom['id'] : (string) $item['id'];
+
+        return new PlaybackState(
+            $response->json('is_playing') === true ? PlaybackStatus::Playing : PlaybackStatus::Paused,
+            new TrackReference(self::ID, $trackId),
+            (int) $response->json('progress_ms', 0),
+            CarbonImmutable::now(),
+            isset($item['duration_ms']) ? (int) $item['duration_ms'] : null,
+        );
+    }
+
+    public function queueTrack(string $providerTrackId, string $hostAccountId): void
+    {
+        $uri = rawurlencode("spotify:track:{$providerTrackId}");
+
+        $response = $this->userRequest(
+            fn (PendingRequest $request): Response => $request->post(self::API_URL."/me/player/queue?uri={$uri}"),
+            $hostAccountId,
+        );
+
+        $this->guard($response);
     }
 
     private function hostAccount(string $hostAccountId): LinkedAccount
