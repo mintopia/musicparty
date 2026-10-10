@@ -22,6 +22,7 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 use Throwable;
 
 class PollPlayback implements ShouldQueue
@@ -37,7 +38,7 @@ class PollPlayback implements ShouldQueue
     /**
      * @param  bool  $reschedule  false for a one-off "check now" poll that leaves the running chain alone
      */
-    public function __construct(public readonly string $partyCode, public readonly bool $reschedule = true)
+    public function __construct(public readonly string $partyCode, public readonly bool $reschedule = true, public readonly ?string $chainToken = null)
     {
         $this->onQueue('partyupdates');
     }
@@ -48,11 +49,13 @@ class PollPlayback implements ShouldQueue
             return false;
         }
 
-        if (! Cache::add(self::chainKey($party->code), true, self::CHAIN_GRACE_SECONDS)) {
+        $token = Str::random(16);
+
+        if (! Cache::add(self::chainKey($party->code), $token, self::CHAIN_GRACE_SECONDS)) {
             return false;
         }
 
-        self::dispatch($party->code);
+        self::dispatch($party->code, true, $token);
 
         return true;
     }
@@ -99,6 +102,10 @@ class PollPlayback implements ShouldQueue
 
     public function handle(PartyPlayers $players, PlaybackCoordinator $coordinator): void
     {
+        if ($this->isStale()) {
+            return;
+        }
+
         $party = Party::findByCode($this->partyCode);
         $player = $party === null ? null : $players->for($party);
 
@@ -146,6 +153,10 @@ class PollPlayback implements ShouldQueue
     public function failed(Throwable $failure): void
     {
         Log::warning('Playback poll failed', ['party' => $this->partyCode, 'exception' => $failure::class]);
+
+        if ($this->isStale()) {
+            return;
+        }
 
         $this->reschedule(self::setting('backoff_cap_seconds'));
     }
@@ -205,8 +216,15 @@ class PollPlayback implements ShouldQueue
             return;
         }
 
-        Cache::put(self::chainKey($this->partyCode), true, $delay + self::CHAIN_GRACE_SECONDS);
-        self::dispatch($this->partyCode)->delay($delay);
+        Cache::put(self::chainKey($this->partyCode), $this->chainToken ?? true, $delay + self::CHAIN_GRACE_SECONDS);
+        self::dispatch($this->partyCode, true, $this->chainToken)->delay($delay);
+    }
+
+    private function isStale(): bool
+    {
+        return $this->reschedule
+            && $this->chainToken !== null
+            && Cache::get(self::chainKey($this->partyCode)) !== $this->chainToken;
     }
 
     private function stop(): void

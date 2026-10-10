@@ -322,3 +322,26 @@ it('re-arms the chain after an unexpected failure', function () {
 
     assertRescheduledIn(300);
 });
+
+it('drops a stale chain job without polling or rescheduling', function () {
+    $this->provider->playbackIs(playing('t1'));
+    Cache::put('playback.poll.'.$this->party->code.'.chain', 'current', 600);
+
+    $stale = new PollPlayback($this->party->code, true, 'old');
+    app()->call([$stale, 'handle']);
+    $stale->failed(new RuntimeException('boom'));
+
+    Queue::assertNothingPushed();
+    expect(Cache::get('playback.poll.'.$this->party->code.'.chain'))->toBe('current')
+        ->and(Play::count())->toBe(0);
+});
+
+it('keeps the chain token when rescheduling', function () {
+    PollPlayback::start($this->party);
+    $token = Cache::get('playback.poll.'.$this->party->code.'.chain');
+
+    $this->provider->playbackIs(playing('t1'));
+    app()->call([new PollPlayback($this->party->code, true, $token), 'handle']);
+
+    Queue::assertPushed(PollPlayback::class, fn (PollPlayback $job): bool => $job->chainToken === $token && $job->delay !== null);
+});
