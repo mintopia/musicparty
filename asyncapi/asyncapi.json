@@ -9,6 +9,9 @@
                 },
                 "Party.UpdatedEvent": {
                     "$ref": "#/components/messages/Party.UpdatedEvent"
+                },
+                "Party.ThemeUpdatedEvent": {
+                    "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
                 }
             },
             "parameters": {
@@ -912,6 +915,16 @@
                 },
                 "title": "Party.RequestDecidedEvent",
                 "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
+            },
+            "Party.ThemeUpdatedEvent": {
+                "contentType": "application/json",
+                "name": "ThemeUpdated",
+                "payload": {
+                    "additionalProperties": true,
+                    "type": "object"
+                },
+                "title": "Party.ThemeUpdatedEvent",
+                "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
             }
         }
     },
@@ -932,6 +945,9 @@
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
                 }
             ]
         },

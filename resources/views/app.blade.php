@@ -23,13 +23,16 @@
     <script>window.pusherConfig = @json($pusherConfig);</script>
     <script>
         (function () {
-            var scheme = @json(auth()->user()?->colour_scheme->value) || localStorage.getItem('colourScheme') || 'system';
+            var scheme = @json(auth()->user()?->colour_scheme?->value) || localStorage.getItem('colourScheme') || 'system';
             var dark = scheme === 'dark' || (scheme === 'system' && matchMedia('(prefers-color-scheme: dark)').matches);
             document.documentElement.classList.toggle('dark', dark);
         })();
     </script>
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <style>{!! app(\App\Domain\Theming\Actions\RenderThemeCss::class)->handle() !!}</style>
+    @isset($partyThemeCss)
+        <style>{!! $partyThemeCss !!}</style>
+    @endisset
     @inertiaHead
 </head>
 <body>

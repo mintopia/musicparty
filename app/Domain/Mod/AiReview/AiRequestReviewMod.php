@@ -58,6 +58,11 @@ class AiRequestReviewMod implements Mod
         return [];
     }
 
+    public function decorationProviders(): array
+    {
+        return [];
+    }
+
     public function scheduledActions(): array
     {
         return [];
