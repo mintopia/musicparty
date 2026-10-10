@@ -59,11 +59,12 @@ services:
       - "8000:80"
   reverb:
     ports:
-      - "8080:80"
+      - "8080:8080"
 ```
 
-Then set these in `.env` and restart the containers. The browser takes the Reverb host, port and scheme from this
-configuration, so they must be values your browser can reach.
+Then set these in `.env` and restart the containers. `REVERB_HOST/PORT/SCHEME` are the internal address the app
+publishes to. `REVERB_PUBLIC_HOST/PORT/SCHEME` are what the browser connects to, so they must be values your browser
+can reach.
 
 ```dotenv
 APP_URL=http://localhost:8000
@@ -72,9 +73,12 @@ QUEUE_CONNECTION=redis
 REVERB_APP_ID=musicparty
 REVERB_APP_KEY=musicparty
 REVERB_APP_SECRET=secret
-REVERB_HOST=localhost
+REVERB_HOST=reverb
 REVERB_PORT=8080
 REVERB_SCHEME=http
+REVERB_PUBLIC_HOST=localhost
+REVERB_PUBLIC_PORT=8080
+REVERB_PUBLIC_SCHEME=http
 ```
 
 For hot reloading, run `docker compose --profile vite up vite` instead of `npm run build`. A Traefik variant is in
@@ -168,8 +172,9 @@ branch) and a version tag for each `vX.Y.Z` release.
    `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`), and `mkdir logs public`.
 2. In `.env` set `APP_URL`, `APP_KEY` (`docker compose run --rm artisan key:generate --show`), the `DB_*` values to
    match MariaDB, and the provider credentials. The image already sets production defaults for drivers, Redis and Reverb.
-3. Set the public Reverb address that browsers will use: `REVERB_HOST` to your hostname, `REVERB_PORT=443`,
-   `REVERB_SCHEME=https`. Change the default `REVERB_APP_KEY` and `REVERB_APP_SECRET`.
+3. Set the public Reverb address that browsers will use: `REVERB_PUBLIC_HOST` to your hostname,
+   `REVERB_PUBLIC_PORT=443` and `REVERB_PUBLIC_SCHEME=https`. Leave `REVERB_HOST/PORT/SCHEME` as the internal address
+   (`reverb`, `8080`, `http`). They default from `APP_URL` when unset. Change the default `REVERB_APP_KEY` and `REVERB_APP_SECRET`.
 4. Start it:
 
 ```bash
@@ -179,16 +184,14 @@ docker compose run --rm artisan db:seed --force
 docker compose up -d
 ```
 
-Put a reverse proxy in front. Both `musicparty` and `reverb` listen on port 80. Send WebSocket upgrades to Reverb and
-everything else to the app, for example with Caddy:
+Put a reverse proxy in front. `musicparty` listens on port 80 and `reverb` on port 8080 (`REVERB_SERVER_PORT`). Forward
+`/app` (WebSocket connections) and `/apps` (Reverb's HTTP API) to Reverb and everything else to the app, for example
+with Caddy:
 
 ```
 musicparty.example.com {
-  @websockets {
-    header Connection *Upgrade*
-    header Upgrade    websocket
-  }
-  reverse_proxy @websockets musicparty-reverb-1
+  @reverb path /app /app/* /apps /apps/*
+  reverse_proxy @reverb musicparty-reverb-1:8080
   reverse_proxy musicparty-musicparty-1
 }
 ```
