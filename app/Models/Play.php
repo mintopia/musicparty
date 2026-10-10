@@ -70,14 +70,6 @@ class Play extends Model
     }
 
     /**
-     * @return HasMany<PlayRating, $this>
-     */
-    public function ratings(): HasMany
-    {
-        return $this->hasMany(PlayRating::class, 'track_request_id', 'track_request_id');
-    }
-
-    /**
      * @return HasMany<Rating, $this>
      */
     public function memberRatings(): HasMany

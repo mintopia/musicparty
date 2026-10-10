@@ -74,8 +74,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'destroy'])->whereNumber('trackRequest')->name('parties.requests.destroy');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->name('parties.requests.vote.store');
         Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->name('parties.requests.vote.destroy');
-        Route::put('parties/{party}/requests/{trackRequest}/rating', [PartyRequestController::class, 'rate'])->whereNumber('trackRequest')->name('parties.requests.rating.store');
-        Route::delete('parties/{party}/requests/{trackRequest}/rating', [PartyRequestController::class, 'retractRating'])->whereNumber('trackRequest')->name('parties.requests.rating.destroy');
         Route::get('parties/{party}/history', [PartyPlayController::class, 'history'])->name('parties.history');
         Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');

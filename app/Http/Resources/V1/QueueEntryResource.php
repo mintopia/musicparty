@@ -19,6 +19,7 @@ class QueueEntryResource extends JsonResource
     public function toArray(Request $request): array
     {
         $requester = $this->requester?->user;
+        $play = $this->resource->relationLoaded('play') ? $this->resource->play : null;
 
         return [
             'id' => $this->id,
@@ -35,10 +36,10 @@ class QueueEntryResource extends JsonResource
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'my_vote' => (int) $this->my_vote,
             'decorations' => app(ResolveDecorations::class)($this->resource),
-            ...($this->likes === null ? [] : [
-                'likes' => (int) $this->likes,
-                'dislikes' => (int) $this->dislikes,
-                'my_rating' => (int) $this->my_rating,
+            ...($play?->likes === null ? [] : [
+                'likes' => (int) $play->likes,
+                'dislikes' => (int) $play->dislikes,
+                'my_rating' => (int) $play->my_rating,
             ]),
         ];
     }

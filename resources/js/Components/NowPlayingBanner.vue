@@ -2,14 +2,12 @@
 import Icon from './Icon.vue';
 import Decorations from './Decorations.vue';
 import ModSlot from './ModSlot.vue';
-import RatingButtons from './RatingButtons.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 import {useRatePlay} from '../lib/rating';
 
 const props = defineProps({
     nowPlaying: {type: Object, default: null},
     ratablePlay: {type: Object, default: null},
-    myRating: {type: Number, default: 0},
     partyCode: {type: String, default: ''},
     readOnly: {type: Boolean, default: false},
 });
@@ -62,7 +60,6 @@ const thumbClass = (active, activeColor) => [
                         @click="rate('up')"
                     ><Icon name="thumbUp" class="h-5 w-5" /></button>
                 </div>
-                <RatingButtons v-else-if="!readOnly" :now-playing="nowPlaying" :party-code="partyCode" :my-rating="myRating" />
                 <p v-if="error" role="alert" data-testid="rating-error" class="text-center text-sm text-danger">{{ error }}</p>
             </div>
         </div>

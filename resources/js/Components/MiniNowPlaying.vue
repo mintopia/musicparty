@@ -1,14 +1,22 @@
 <script setup>
 import Icon from './Icon.vue';
 import Decorations from './Decorations.vue';
-import RatingButtons from './RatingButtons.vue';
+import {useRatePlay} from '../lib/rating';
 
-defineProps({
+const props = defineProps({
     nowPlaying: {type: Object, default: null},
     partyCode: {type: String, default: ''},
-    myRating: {type: Number, default: 0},
+    ratablePlay: {type: Object, default: null},
     readOnly: {type: Boolean, default: false},
 });
+
+const {pending, error, rate: ratePlay} = useRatePlay(() => props.partyCode, () => props.readOnly);
+const rate = (direction) => ratePlay(props.ratablePlay, direction);
+
+const buttonClass = (active, activeColor) => [
+    'flex h-11 w-11 items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
+    active ? activeColor : '',
+];
 </script>
 
 <template>
@@ -24,7 +32,30 @@ defineProps({
             </template>
             <div v-else class="text-sm text-muted">Nothing playing</div>
         </div>
-        <RatingButtons v-if="nowPlaying && !readOnly" class="text-text" :now-playing="nowPlaying" :party-code="partyCode" :my-rating="myRating" />
+        <div v-if="ratablePlay && !readOnly" data-testid="rating" class="flex flex-col items-center text-text">
+            <div class="flex items-center justify-center gap-1">
+                <button
+                    type="button"
+                    data-testid="rating-dislike"
+                    aria-label="Dislike"
+                    :aria-pressed="ratablePlay.my_rating === -1"
+                    :disabled="pending"
+                    :class="buttonClass(ratablePlay.my_rating === -1, 'text-danger')"
+                    @click="rate('down')"
+                ><Icon name="thumbDown" /></button>
+                <span data-testid="rating-count" class="min-w-6 text-center text-sm tabular-nums" :title="`${ratablePlay.likes ?? 0} likes, ${ratablePlay.dislikes ?? 0} dislikes`">{{ (ratablePlay.likes ?? 0) - (ratablePlay.dislikes ?? 0) }}</span>
+                <button
+                    type="button"
+                    data-testid="rating-like"
+                    aria-label="Like"
+                    :aria-pressed="ratablePlay.my_rating === 1"
+                    :disabled="pending"
+                    :class="buttonClass(ratablePlay.my_rating === 1, 'text-accent')"
+                    @click="rate('up')"
+                ><Icon name="thumbUp" /></button>
+            </div>
+            <p v-if="error" role="alert" data-testid="rating-error" class="text-xs text-danger">{{ error }}</p>
+        </div>
         <button
             type="button"
             disabled

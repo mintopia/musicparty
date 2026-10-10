@@ -141,14 +141,6 @@ Route::middleware('auth')->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('trackRequest')
         ->name('parties.requests.vote.destroy');
-    Route::put('parties/{party}/requests/{trackRequest}/rating', [PartyController::class, 'storeNowPlayingRating'])
-        ->where('party', '[A-Za-z]{4}')
-        ->whereNumber('trackRequest')
-        ->name('parties.requests.rating.store');
-    Route::delete('parties/{party}/requests/{trackRequest}/rating', [PartyController::class, 'destroyNowPlayingRating'])
-        ->where('party', '[A-Za-z]{4}')
-        ->whereNumber('trackRequest')
-        ->name('parties.requests.rating.destroy');
     Route::put('parties/{party}/plays/{play}/rating', [PartyController::class, 'storeRating'])
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('play')

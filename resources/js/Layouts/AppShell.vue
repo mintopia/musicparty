@@ -29,7 +29,7 @@ const party = computed(() => usePage().props.party ?? null);
                 <MiniNowPlaying
                     :now-playing="usePage().props.nowPlaying ?? null"
                     :party-code="usePage().props.party?.code ?? ''"
-                    :my-rating="usePage().props.myRating ?? 0"
+                    :ratable-play="usePage().props.ratablePlay ?? null"
                     :read-only="usePage().props.readOnly ?? false"
                 />
                 <MobileTabBar :code="party.code" />
