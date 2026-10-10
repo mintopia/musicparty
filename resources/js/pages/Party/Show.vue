@@ -332,6 +332,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>
+                <div v-if="party.playlistCsvUrl || party.historyPlaylistUrl" class="mb-3 flex flex-wrap gap-3 text-sm" data-testid="history-links">
+                    <a v-if="party.playlistCsvUrl" :href="party.playlistCsvUrl" download data-testid="download-playlist-csv" class="flex min-h-11 items-center rounded border border-border px-4 hover:text-primary">Download playlist (CSV)</a>
+                    <a v-if="party.historyPlaylistUrl" :href="party.historyPlaylistUrl" target="_blank" rel="noopener noreferrer" data-testid="history-playlist-link" class="flex min-h-11 items-center rounded border border-border px-4 hover:text-primary">Open History Playlist</a>
+                </div>
                 <PlayedHistory :history="history" :filters="filters" :party-code="party.code" :read-only="ratingLocked" />
             </template>
         </section>

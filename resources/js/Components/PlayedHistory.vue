@@ -133,7 +133,8 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                         v-for="play in rows"
                         :key="play.id"
                         data-testid="history-item"
-                        class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-4 md:table-row md:px-0 md:py-0"
+                        :data-mine="play.is_mine ? 'true' : null"
+                        class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-4 data-[mine=true]:bg-primary/10 md:table-row md:px-0 md:py-0"
                     >
                         <td data-label="Song" :class="[cellClass, 'col-span-2 !block before:!hidden md:!table-cell']">
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 md:flex-nowrap">

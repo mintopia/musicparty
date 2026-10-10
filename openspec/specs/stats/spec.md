@@ -103,6 +103,33 @@ A Party Export SHALL be retrievable by the Party's Host, by an instance admin, a
 - **WHEN** a Moderator requests the export
 - **THEN** the request is refused
 
+#### Scenario: Members do not get the JSON export
+- **WHEN** a non-staff Member requests the JSON Party Export
+- **THEN** the request is refused, the Member playlist download being a separate feature
+
+### Requirement: Member playlist download
+The system SHALL let any non-banned Member of an Ended Party download the Party's Plays as a CSV file. The CSV SHALL have one row per Play in played order with the columns position, played at, title, artists, album, requester display name, score and Music Provider track URL. Cells that could be interpreted as spreadsheet formulas SHALL be neutralised. The JSON Party Export remains restricted to the Host, instance admins and Integration Tokens.
+
+#### Scenario: Member downloads the playlist
+- **WHEN** a Member requests the playlist download of an Ended Party
+- **THEN** a CSV is returned with a header row and one row per Play in played order, including the requester display name
+
+#### Scenario: Party has no Plays
+- **WHEN** a Member downloads the playlist of an Ended Party that played nothing
+- **THEN** the CSV contains only the header row
+
+#### Scenario: Party not Ended
+- **WHEN** the playlist download is requested for a Live or Paused Party
+- **THEN** the request is refused with an error stating the Party has not ended
+
+#### Scenario: Non-member or banned Member refused
+- **WHEN** a non-member, banned Member or anonymous caller requests the playlist download
+- **THEN** the request is refused
+
+#### Scenario: Formula injection
+- **WHEN** a Track title or other text cell begins with `=`, `+`, `-`, `@`, tab or carriage return
+- **THEN** the cell is prefixed with a single quote
+
 ### Requirement: Reopened Party exports
 If a Host reopens an Ended Party, its export SHALL be unavailable until it is Ended again, and a later export SHALL include Plays from the whole Party history.
 

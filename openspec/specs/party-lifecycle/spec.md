@@ -146,6 +146,10 @@ When a History Playlist is configured, the system SHALL append each Track to it 
 - **WHEN** a Track starts playing in a Party with no History Playlist configured
 - **THEN** no playlist is modified and playback continues normally
 
+#### Scenario: Link on the ended Party page
+- **WHEN** a Member views an Ended Party that has a History Playlist configured
+- **THEN** the page shows a link to the History Playlist at the Music Provider, and shows none when no History Playlist is configured
+
 #### Scenario: Provider failure
 - **WHEN** appending to the History Playlist fails
 - **THEN** playback is not interrupted and the failure is recorded in the Party Log

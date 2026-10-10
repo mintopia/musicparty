@@ -10,6 +10,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BrowserPlayerController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Party\PlaylistCsvController as PartyPlaylistCsvController;
 use App\Http\Controllers\Party\ThemeController as PartyThemeController;
 use App\Http\Controllers\PartyBlocklistController;
 use App\Http\Controllers\PartyController;
@@ -153,6 +154,9 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('play')
         ->name('parties.plays.rating.destroy');
+    Route::get('parties/{party}/playlist.csv', PartyPlaylistCsvController::class)
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.playlist.csv');
     Route::get('parties/{party}/theme', [PartyThemeController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.theme.show');
