@@ -1,6 +1,6 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
@@ -26,7 +26,10 @@ const props = defineProps({
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
+    enabled_mods: {type: Array, default: () => []},
 });
+
+provide('enabledMods', computed(() => props.enabled_mods));
 
 const channelName = `party.${props.party.code}`;
 
@@ -190,6 +193,12 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     <dt class="text-muted">Settings</dt>
                     <dd>
                         <Link :href="`/parties/${party.code}/settings`" class="hover:text-primary" data-testid="party-settings-link">Party Settings</Link>
+                    </dd>
+                </template>
+                <template v-if="canManage && !membership.banned">
+                    <dt class="text-muted">Mods</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/mods`" class="hover:text-primary" data-testid="party-mods-link">Party Mods</Link>
                     </dd>
                 </template>
                 <template v-if="canManageBlocklist && !membership.banned">

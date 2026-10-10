@@ -2,6 +2,12 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Mod\Actions\EvaluateRequestRules;
+use App\Domain\Mod\Actions\RecordRuleDecision;
+use App\Domain\Mod\Data\EnabledMod;
+use App\Domain\Mod\Data\RuleDecision;
+use App\Domain\Mod\Data\SystemRequestSpec;
+use App\Domain\Mod\RuleOutcome;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
@@ -10,6 +16,7 @@ use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Blocklist;
 use App\Domain\Queue\Data\RequestOutcome;
+use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\RequestStatus;
 use App\Events\Party\PendingRequestAddedEvent;
@@ -27,7 +34,12 @@ use Illuminate\Support\Facades\DB;
 
 class RequestTrack
 {
-    public function __construct(private readonly PairingCatalogue $catalogue, private readonly Blocklist $blocklist) {}
+    public function __construct(
+        private readonly PairingCatalogue $catalogue,
+        private readonly Blocklist $blocklist,
+        private readonly EvaluateRequestRules $evaluateModRules,
+        private readonly RecordRuleDecision $recordModDecision,
+    ) {}
 
     public function __invoke(Party $party, PartyMember $member, string $providerTrackId): RequestOutcome
     {
@@ -39,6 +51,9 @@ class RequestTrack
             throw RequestRefusedException::partyNotLive();
         }
 
+        $decision = null;
+        $track = null;
+
         try {
             if (! $party->allow_requests) {
                 throw RequestRefusedException::requestsDisabled();
@@ -46,13 +61,27 @@ class RequestTrack
 
             $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
-            $outcome = DB::transaction(fn (): RequestOutcome => $this->place($party, $member, $track));
+            $outcome = DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
+                return $this->place($party, $member, $track, $decision);
+            });
         } catch (RequestRefusedException $refusal) {
+            if ($decision !== null) {
+                ($this->recordModDecision)($party, $decision, $track);
+            }
+
             if ($refusal->status() === RequestRefusedException::RULE_VIOLATION || $refusal->status() === RequestRefusedException::CONFLICT) {
                 RequestRejectedEvent::dispatch($party->code, $member->id, $providerTrackId, $refusal->getMessage());
             }
 
             throw $refusal;
+        }
+
+        if ($decision !== null && $outcome->created) {
+            ($this->recordModDecision)($party, $decision, $track, $outcome->request->id);
+        }
+
+        if ($outcome->created) {
+            RequestCreated::dispatch($party, $outcome->request);
         }
 
         $this->announce($party, $member, $outcome);
@@ -83,7 +112,7 @@ class RequestTrack
     /**
      * A duplicate of an active Request only adds an upvote, so it bypasses the rules that gate a new Request.
      */
-    private function place(Party $party, PartyMember $member, TrackData $track): RequestOutcome
+    private function place(Party $party, PartyMember $member, TrackData $track, ?RuleDecision &$decision): RequestOutcome
     {
         Party::query()->whereKey($party->id)->lockForUpdate()->first();
 
@@ -98,9 +127,58 @@ class RequestTrack
 
         $this->enforceRules($party, $member, $track);
 
-        $request = TrackRequest::query()->create([
+        $decision = ($this->evaluateModRules)($party, $member, $track);
+
+        if ($decision->outcome === RuleOutcome::Reject && $decision->decidedBy !== null) {
+            throw RequestRefusedException::rejectedByMod($decision->decidedBy->mod->name(), $decision->reason ?? 'No reason given.');
+        }
+
+        $request = $this->createRequest(
+            $party,
+            $member,
+            $track,
+            $decision->outcome === RuleOutcome::Hold || $this->holds($party, $member) ? RequestStatus::Pending : RequestStatus::Queued,
+        );
+        $this->castUpvote($request, $member);
+
+        return new RequestOutcome($request, true, true);
+    }
+
+    /**
+     * Creates a member-less Request on behalf of a Mod. Returns null when the Track is already active in the Party.
+     *
+     * @throws RequestRefusedException
+     */
+    public function placeSystemRequest(Party $party, EnabledMod $source, SystemRequestSpec $spec): ?TrackRequest
+    {
+        $track = $this->fetchTrack($party->music_provider, $spec->providerTrackId);
+
+        return DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
+            $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
+
+            if ($locked->state !== PartyState::Live) {
+                return null;
+            }
+
+            $active = $this->matchingQuery($locked, $track)->whereIn('status', [RequestStatus::Pending, RequestStatus::Queued])->exists();
+
+            if ($active) {
+                return null;
+            }
+
+            if (! $spec->bypassRules) {
+                $this->enforceRules($locked, null, $track);
+            }
+
+            return $this->createRequest($locked, null, $track, RequestStatus::Queued);
+        });
+    }
+
+    private function createRequest(Party $party, ?PartyMember $member, TrackData $track, RequestStatus $status): TrackRequest
+    {
+        return TrackRequest::query()->create([
             'party_id' => $party->id,
-            'party_member_id' => $member->id,
+            'party_member_id' => $member?->id,
             'provider_track_id' => $track->providerTrackId,
             'title' => $track->name,
             'artists' => array_map(fn ($artist): string => $artist->name, $track->artists),
@@ -109,11 +187,8 @@ class RequestTrack
             'isrc' => $track->isrc,
             'duration_ms' => $track->durationMs,
             'explicit' => $track->explicit,
-            'status' => $this->holds($party, $member) ? RequestStatus::Pending : RequestStatus::Queued,
+            'status' => $status,
         ]);
-        $this->castUpvote($request, $member);
-
-        return new RequestOutcome($request, true, true);
     }
 
     private function holds(Party $party, PartyMember $member): bool
@@ -136,9 +211,9 @@ class RequestTrack
             });
     }
 
-    private function enforceRules(Party $party, PartyMember $member, TrackData $track): void
+    private function enforceRules(Party $party, ?PartyMember $member, TrackData $track): void
     {
-        $exempt = in_array($member->role, [PartyRole::Host, PartyRole::Vip], true);
+        $exempt = $member === null || in_array($member->role, [PartyRole::Host, PartyRole::Vip], true);
 
         if (! $exempt && $party->max_requests !== null) {
             $active = TrackRequest::query()

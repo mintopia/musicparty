@@ -114,6 +114,11 @@ class RequestRefusedException extends RuntimeException
         return new self('That request can no longer be removed here.', self::CONFLICT);
     }
 
+    public static function rejectedByMod(string $modName, string $reason): self
+    {
+        return new self("{$modName} rejected this request: {$reason}", self::RULE_VIOLATION);
+    }
+
     public function status(): int
     {
         $code = $this->getCode();

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
 use App\Domain\Queue\RequestStatus;
@@ -67,6 +68,7 @@ class VoteOnRequest
 
         if ($changed) {
             BroadcastPartyQueue::dispatch($party->code);
+            VoteCast::dispatch($party, $request, $member, $direction);
         }
 
         return TrackRequest::query()

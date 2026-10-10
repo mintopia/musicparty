@@ -5,6 +5,7 @@ use App\Providers\AuthServiceProvider;
 use App\Providers\BroadcastServiceProvider;
 use App\Providers\EventServiceProvider;
 use App\Providers\HorizonServiceProvider;
+use App\Providers\ModServiceProvider;
 use App\Providers\PrometheusServiceProvider;
 use App\Providers\RouteServiceProvider;
 use App\Providers\TelescopeServiceProvider;
@@ -183,6 +184,7 @@ return [
         PrometheusServiceProvider::class,
         EventServiceProvider::class,
         HorizonServiceProvider::class,
+        ModServiceProvider::class,
         RouteServiceProvider::class,
         TelescopeServiceProvider::class,
         SocialiteProviders\Manager\ServiceProvider::class,

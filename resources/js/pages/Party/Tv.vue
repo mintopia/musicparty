@@ -1,7 +1,8 @@
 <script setup>
 import {Head} from '@inertiajs/vue3';
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
+import Decorations from '../../Components/Decorations.vue';
 import QrCode from '../../Components/QrCode.vue';
 import TrackThumb from '../../Components/TrackThumb.vue';
 import {formatDuration, requesterLabel} from '../../lib/format';
@@ -14,7 +15,10 @@ const props = defineProps({
     upNext: {type: Object, default: null},
     sequence: {type: Number, default: 0},
     startedAt: {type: String, default: null},
+    enabled_mods: {type: Array, default: () => []},
 });
+
+provide('enabledMods', computed(() => props.enabled_mods));
 
 const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
@@ -88,6 +92,7 @@ onBeforeUnmount(() => {
                         <div class="flex items-center gap-2"><Icon name="user" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
                         <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span data-testid="tv-now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
+                        <Decorations :decorations="nowPlaying.decorations" />
                         <div class="flex items-center gap-2"><Icon name="heart" /><span data-testid="tv-now-playing-score">{{ nowPlaying.score }}</span></div>
                         <div class="mt-auto">
                             <div class="h-1 w-full bg-white/80" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" data-testid="tv-progress">
@@ -112,6 +117,7 @@ onBeforeUnmount(() => {
                         <div class="flex items-center gap-2"><Icon name="user" /><span class="truncate">{{ upNext.track.artists.join(', ') }}</span></div>
                         <div v-if="upNext.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ upNext.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span>{{ requesterLabel(upNext) }}</span></div>
+                        <Decorations :decorations="upNext.decorations" />
                     </div>
                 </div>
                 <p v-else data-testid="tv-up-next-empty" class="text-xl text-white/50">Nothing queued yet.</p>
