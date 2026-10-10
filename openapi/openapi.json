@@ -1165,8 +1165,16 @@
                             }
                         },
                         "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
                     }
                 },
+                "security": [
+                    {
+                        "integrationBearer": []
+                    }
+                ],
                 "summary": "api.v1.integration.ping"
             }
         },
@@ -1364,6 +1372,7 @@
                         "description": "Forbidden."
                     }
                 },
+                "security": [],
                 "summary": "api.v1.parties.show"
             },
             "patch": {
@@ -2714,7 +2723,7 @@
                     "content": {
                         "application/json": {
                             "schema": {
-                                "properties": [],
+                                "properties": {},
                                 "type": "object"
                             }
                         }
@@ -4048,6 +4057,7 @@
                         "description": "Successful response."
                     }
                 },
+                "security": [],
                 "summary": "api.v1.parties.theme.show"
             },
             "post": {
@@ -4630,6 +4640,7 @@
                         "description": "Successful response."
                     }
                 },
+                "security": [],
                 "summary": "api.v1.ping"
             }
         }

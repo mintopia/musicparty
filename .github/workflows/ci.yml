@@ -31,6 +31,32 @@ jobs:
       - name: Rector
         run: vendor/bin/rector process --dry-run --no-progress-bar
 
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+      - run: npm ci --no-audit --no-fund
+      - name: Vitest
+        run: npm test
+      - name: Vite build
+        run: npm run build
+
+  specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Lint OpenAPI
+        run: npx --yes @redocly/cli@2.62.1 lint openapi/openapi.json
+      - name: Validate AsyncAPI
+        run: npx --yes @asyncapi/cli@6.2.0 validate asyncapi/asyncapi.json --fail-severity warn
+
   tests:
     runs-on: ubuntu-latest
     services:

@@ -159,7 +159,7 @@ describe('rating', () => {
     it('hides the buttons when read only or nothing is playing', () => {
         expect(mount(MiniNowPlaying, {props: {nowPlaying: rated(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).find('[data-testid="rating"]').exists()).toBe(false);
-        expect(mount(Show, {props: baseProps({readOnly: true})}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'Friday Night LAN', state: 'ended', downvotes: true}})}).find('[data-testid="rating"]').exists()).toBe(false);
     });
 });
 
