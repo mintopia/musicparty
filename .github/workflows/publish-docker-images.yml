@@ -1,18 +1,13 @@
 name: Publish Docker Images
 
 on:
-  workflow_run:
-    workflows: [CI]
-    types: [completed]
+  workflow_call:
   workflow_dispatch:
 
-run-name: >-
-  ${{ github.event_name == 'workflow_dispatch'
-  && format('Docker image for {0} (on demand)', github.ref_name)
-  || format('Docker image for {0}', github.event.workflow_run.head_branch) }}
+run-name: Docker image for ${{ github.ref_name }} (on demand)
 
 concurrency:
-  group: publish-${{ github.event.workflow_run.head_branch || github.ref_name }}
+  group: publish-${{ github.ref_name }}
   cancel-in-progress: true
 
 permissions:
@@ -21,17 +16,11 @@ permissions:
 env:
   REGISTRY: ghcr.io
   IMAGE_NAME: ${{ github.repository }}
-  PUBLISH_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
-  PUBLISH_REF: ${{ github.event.workflow_run.head_branch || github.ref_name }}
+  PUBLISH_SHA: ${{ github.sha }}
+  PUBLISH_REF: ${{ github.ref_name }}
 
 jobs:
   build:
-    if: >-
-      github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-      github.event.workflow_run.event == 'push' &&
-      (contains(fromJSON('["master", "develop", "feature/v3-rewrite"]'), github.event.workflow_run.head_branch) ||
-      startsWith(github.event.workflow_run.head_branch, 'v')))
     strategy:
       fail-fast: true
       matrix:
