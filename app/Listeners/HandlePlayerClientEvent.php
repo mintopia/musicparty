@@ -6,6 +6,7 @@ use App\Jobs\ProcessPlayerFrame;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\RateLimiter;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 
 class HandlePlayerClientEvent
 {
@@ -23,6 +24,10 @@ class HandlePlayerClientEvent
         $event = $envelope['event'] ?? null;
 
         if (! is_string($event) || ! str_starts_with($event, 'client-')) {
+            return;
+        }
+
+        if (app(ChannelManager::class)->find($envelope['channel'])?->find($received->connection) === null) {
             return;
         }
 

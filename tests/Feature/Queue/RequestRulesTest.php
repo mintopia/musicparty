@@ -185,10 +185,8 @@ it('notifies the requester privately when a rule refuses', function () {
 
     ruleRequest($this->member, 'long')->assertUnprocessable();
 
-    Event::assertDispatched(RequestRejectedEvent::class, function (RequestRejectedEvent $event) {
-        return $event->broadcastOn()[0]->name === "private-party.ABCD.member.{$this->member->id}"
-            && $event->broadcastWith() === ['provider_track_id' => 'long', 'reason' => "That track is longer than this party's maximum length of 10 seconds."];
-    });
+    Event::assertDispatched(RequestRejectedEvent::class, fn (RequestRejectedEvent $event) => $event->broadcastOn()[0]->name === "private-party.ABCD.member.{$this->member->id}"
+        && $event->broadcastWith() === ['provider_track_id' => 'long', 'reason' => "That track is longer than this party's maximum length of 10 seconds."]);
 });
 
 it('does not broadcast a rejection for non-rule refusals or accepted requests', function (string $trackId) {

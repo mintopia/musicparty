@@ -15,6 +15,9 @@ use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection;
 use Laravel\Reverb\Contracts\WebSocketConnection;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Channels\Channel;
+use Laravel\Reverb\Protocols\Pusher\Channels\ChannelConnection;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 use Ratchet\RFC6455\Messaging\Frame;
 use Tests\Fixtures\Playback\FrameHandlingPlayer;
 
@@ -49,9 +52,16 @@ function stubReverbConnection(): Connection
     };
 }
 
-function receive(string $message): void
+function receive(string $message, bool $subscribed = true): void
 {
-    app(HandlePlayerClientEvent::class)->handle(new MessageReceived(stubReverbConnection(), $message));
+    $connection = stubReverbConnection();
+    $channel = Mockery::mock(Channel::class);
+    $channel->shouldReceive('find')->with($connection)->andReturn($subscribed ? Mockery::mock(ChannelConnection::class) : null);
+    $manager = Mockery::mock(ChannelManager::class);
+    $manager->shouldReceive('find')->andReturn($subscribed ? $channel : null);
+    app()->instance(ChannelManager::class, $manager);
+
+    app(HandlePlayerClientEvent::class)->handle(new MessageReceived($connection, $message));
 }
 
 function clientFrame(array $overrides = []): string
@@ -69,6 +79,22 @@ it('dispatches a frame job for a client event on the player channel', function (
 
     Queue::assertPushed(ProcessPlayerFrame::class, fn (ProcessPlayerFrame $job) => $job->partyCode === 'ABC123' && $job->frame === ['status' => 'playing']);
     expect(discarded())->toBe(0);
+});
+
+it('ignores frames from a connection that is not subscribed to the player channel', function () {
+    receive(clientFrame(), subscribed: false);
+
+    Queue::assertNothingPushed();
+});
+
+it('ignores frames for a channel the server does not know', function () {
+    $manager = Mockery::mock(ChannelManager::class);
+    $manager->shouldReceive('find')->andReturn(null);
+    app()->instance(ChannelManager::class, $manager);
+
+    app(HandlePlayerClientEvent::class)->handle(new MessageReceived(stubReverbConnection(), clientFrame()));
+
+    Queue::assertNothingPushed();
 });
 
 it('ignores messages that are not player client events', function (string $message) {
