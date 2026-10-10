@@ -25,6 +25,8 @@ class SpotifyApi
 
     private const int DEFAULT_RETRY_AFTER_SECONDS = 30;
 
+    private const int HTTP_TIMEOUT_SECONDS = 5;
+
     public function __construct(private readonly HostAccountTokens $hostTokens) {}
 
     /**
@@ -39,10 +41,10 @@ class SpotifyApi
         $this->assertNotBackingOff();
 
         try {
-            $response = $send(Http::withToken($this->hostTokens->accessToken($account))->acceptJson());
+            $response = $send(Http::withToken($this->hostTokens->accessToken($account))->acceptJson()->timeout(self::HTTP_TIMEOUT_SECONDS));
 
             if ($response->status() === 401) {
-                $response = $send(Http::withToken($this->hostTokens->refreshAfterRejection($account))->acceptJson());
+                $response = $send(Http::withToken($this->hostTokens->refreshAfterRejection($account))->acceptJson()->timeout(self::HTTP_TIMEOUT_SECONDS));
             }
 
             return $response;

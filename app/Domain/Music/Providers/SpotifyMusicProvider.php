@@ -219,6 +219,7 @@ class SpotifyMusicProvider implements MusicProvider
     {
         return Http::withToken($token)
             ->acceptJson()
+            ->timeout(5)
             ->get(self::API_URL.$path, $query);
     }
 
@@ -232,7 +233,7 @@ class SpotifyMusicProvider implements MusicProvider
         }
 
         /** @var PendingRequest $request */
-        $request = Http::withBasicAuth($this->api->clientId() ?? '', $this->api->clientSecret() ?? '')->asForm();
+        $request = Http::withBasicAuth($this->api->clientId() ?? '', $this->api->clientSecret() ?? '')->asForm()->timeout(5);
         $response = $request->post(self::TOKEN_URL, ['grant_type' => 'client_credentials']);
 
         if ($response->status() === 429) {
