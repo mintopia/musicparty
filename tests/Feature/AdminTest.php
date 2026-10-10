@@ -12,17 +12,12 @@ use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
-use App\Providers\TelescopeServiceProvider;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
-use Laravel\Telescope\Http\Middleware\Authorize;
-use Laravel\Telescope\Telescope;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(RefreshDatabase::class);
 
@@ -108,32 +103,14 @@ it('keeps horizon and pulse behind the admin gate', function (string $uri): void
     $this->actingAs(makeAdmin())->get($uri)->assertSuccessful();
 })->with(['/horizon', '/pulse']);
 
-it('allows only admins through the horizon, pulse and telescope gates', function (string $ability): void {
+it('allows only admins through the horizon and pulse gates', function (string $ability): void {
     expect(Gate::forUser(makeAdmin())->allows($ability))->toBeTrue()
         ->and(Gate::forUser(User::factory()->create())->allows($ability))->toBeFalse()
         ->and(Gate::forUser(makeUserWithRole('create-party'))->allows($ability))->toBeFalse();
-})->with(['viewHorizon', 'viewPulse', 'viewTelescope']);
+})->with(['viewHorizon', 'viewPulse']);
 
-it('refuses non-admins at the telescope authorisation middleware', function (): void {
-    config(['telescope.enabled' => true]);
-    $provider = app()->getProvider(TelescopeServiceProvider::class);
-    (fn () => $this->authorization())->call($provider);
-    $middleware = new Authorize;
-    $next = fn () => response('ok');
-    $as = function (User $user) use ($middleware, $next) {
-        $this->actingAs($user);
-
-        return $middleware->handle(Request::create('/telescope'), $next);
-    };
-
-    expect(fn () => $as(User::factory()->create()))->toThrow(HttpException::class)
-        ->and($as(makeAdmin())->getContent())->toBe('ok');
-});
-
-afterEach(fn () => Telescope::auth(fn (): bool => app()->environment('local')));
-
-it('turns telescope off by default', function (): void {
-    expect(file_get_contents(config_path('telescope.php')))->toContain("env('TELESCOPE_ENABLED', false)");
+it('serves no telescope route', function (): void {
+    $this->actingAs(makeAdmin())->get('/telescope')->assertNotFound();
 });
 
 it('shows the dashboard links to admins', function (): void {
@@ -142,12 +119,7 @@ it('shows the dashboard links to admins', function (): void {
             ->component('Admin/Dashboard')
             ->where('links.horizon', url('/horizon'))
             ->where('links.pulse', url('/pulse'))
-            ->where('links.telescope', null));
-
-    config(['telescope.enabled' => true]);
-
-    $this->withoutVite()->actingAs(makeAdmin())->get(route('admin.index'))
-        ->assertInertia(fn (Assert $page): Assert => $page->where('links.telescope', url('/telescope')));
+            ->missing('links.telescope'));
 });
 
 it('shares is_admin true for admins', function (): void {

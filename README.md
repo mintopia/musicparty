@@ -26,7 +26,7 @@ Terms such as Party, Host, Request, Queue, Up Next and Player are defined in [GL
 - Inertia with Vue 3, Vite and Tailwind CSS v4.
 - MariaDB and Redis. Horizon runs queued work and a scheduler drives playback ticks, fallback checks and token refresh.
 - Reverb provides realtime updates over the Pusher protocol, with Laravel Echo in the browser.
-- Sanctum for API and Player Tokens. Telescope, Pulse and Horizon dashboards are limited to admins.
+- Sanctum for API and Player Tokens. Pulse and Horizon dashboards are limited to admins.
 - OpenTelemetry and Prometheus metrics are available for observability (see below).
 
 Application code is split into bounded contexts under `app/Domain`: Admin, Identity, Mod, Music, Party, PartyLog,
@@ -214,7 +214,7 @@ OTEL_SERVICE_NAME=musicparty
 OTEL_EXPORTER_OTLP_ENDPOINT=http://collector:4317
 ```
 
-`OTEL_PHP_EXCLUDED_URLS` defaults to `pulse,telescope/.*,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*` to skip
+`OTEL_PHP_EXCLUDED_URLS` defaults to `pulse,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*` to skip
 noisy URLs. A sample collector setup is in `collector.yml`:
 
 ```yaml

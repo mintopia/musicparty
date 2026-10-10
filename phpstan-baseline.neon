@@ -337,12 +337,6 @@ parameters:
 			path: app/Providers/PrometheusServiceProvider.php
 
 		-
-			message: '#^Cannot call method avatarUrl\(\) on App\\Models\\User\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Providers/TelescopeServiceProvider.php
-
-		-
 			message: '#^Method App\\Services\\Contracts\\SocialProviderContract\:\:configMapping\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1

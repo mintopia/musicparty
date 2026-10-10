@@ -10,14 +10,13 @@ const props = defineProps({links: {type: Object, required: true}});
 const cards = computed(() => [
     {key: 'horizon', label: 'Horizon', description: 'Queue workers and jobs'},
     {key: 'pulse', label: 'Pulse', description: 'Application performance'},
-    {key: 'telescope', label: 'Telescope', description: 'Requests, exceptions and logs'},
 ].map((card) => ({...card, href: props.links[card.key] ?? null})));
 </script>
 
 <template>
     <Head title="Admin" />
     <h1 class="text-xl font-semibold">Admin dashboard</h1>
-    <ul class="mt-4 grid gap-4 sm:grid-cols-3">
+    <ul class="mt-4 grid gap-4 sm:grid-cols-2">
         <li
             v-for="card in cards"
             :key="card.key"
