@@ -192,6 +192,12 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                         <Link :href="`/parties/${party.code}/settings`" class="hover:text-primary" data-testid="party-settings-link">Party Settings</Link>
                     </dd>
                 </template>
+                <template v-if="canManage && !membership.banned">
+                    <dt class="text-muted">Mods</dt>
+                    <dd>
+                        <Link :href="`/parties/${party.code}/mods`" class="hover:text-primary" data-testid="party-mods-link">Party Mods</Link>
+                    </dd>
+                </template>
                 <template v-if="canManageBlocklist && !membership.banned">
                     <dt class="text-muted">Blocklist</dt>
                     <dd>

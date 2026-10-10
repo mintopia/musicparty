@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\V1\MeController;
 use App\Http\Controllers\Api\V1\PartyBlocklistController;
 use App\Http\Controllers\Api\V1\PartyController;
 use App\Http\Controllers\Api\V1\PartyMemberController;
+use App\Http\Controllers\Api\V1\PartyModController;
 use App\Http\Controllers\Api\V1\PartyPlayController;
 use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PingController;
@@ -43,6 +44,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/blocklist', [PartyBlocklistController::class, 'store'])->name('parties.blocklist.store');
         Route::put('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'update'])->whereNumber('entry')->name('parties.blocklist.update');
         Route::delete('parties/{party}/blocklist/{entry}', [PartyBlocklistController::class, 'destroy'])->whereNumber('entry')->name('parties.blocklist.destroy');
+        Route::get('parties/{party}/mods', [PartyModController::class, 'index'])->name('parties.mods.index');
+        Route::put('parties/{party}/mods/{mod}', [PartyModController::class, 'enable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.enable');
+        Route::delete('parties/{party}/mods/{mod}', [PartyModController::class, 'disable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.disable');
+        Route::put('parties/{party}/mods/{mod}/settings', [PartyModController::class, 'update'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.settings');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');

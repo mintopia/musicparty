@@ -3,6 +3,7 @@
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\PartyBlocklistController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PartyModController;
 use App\Http\Controllers\PartyTvController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\UserController;
@@ -59,6 +60,21 @@ Route::middleware('auth')->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('entry')
         ->name('parties.blocklist.destroy');
+    Route::get('parties/{party}/mods', [PartyModController::class, 'index'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.mods');
+    Route::put('parties/{party}/mods/{mod}', [PartyModController::class, 'enable'])
+        ->where('party', '[A-Za-z]{4}')
+        ->where('mod', '[a-z0-9_-]+')
+        ->name('parties.mods.enable');
+    Route::delete('parties/{party}/mods/{mod}', [PartyModController::class, 'disable'])
+        ->where('party', '[A-Za-z]{4}')
+        ->where('mod', '[a-z0-9_-]+')
+        ->name('parties.mods.disable');
+    Route::put('parties/{party}/mods/{mod}/settings', [PartyModController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->where('mod', '[a-z0-9_-]+')
+        ->name('parties.mods.settings');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');

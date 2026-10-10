@@ -45,6 +45,11 @@ class PartyPolicy
         return $party->canBeManagedBy($user);
     }
 
+    public function manageMods(User $user, Party $party): bool
+    {
+        return $party->canBeManagedBy($user);
+    }
+
     public function control(User $user, Party $party): bool
     {
         return $party->canBeManagedBy($user);

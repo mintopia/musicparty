@@ -2,6 +2,7 @@
 
 namespace App\Domain\Party\Actions;
 
+use App\Domain\Party\Events\PartyStateChanged;
 use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\PartyState;
 use App\Models\Party;
@@ -28,6 +29,8 @@ readonly class PauseParty
             $party->forceFill(['state' => PartyState::Paused])->save();
 
             ($this->record)($party, 'party.paused', $actor, details: ['old' => $old->value, 'new' => PartyState::Paused->value]);
+
+            DB::afterCommit(fn () => PartyStateChanged::dispatch($party, $old, PartyState::Paused));
 
             return $party;
         });
