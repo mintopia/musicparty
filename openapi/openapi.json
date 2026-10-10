@@ -125,7 +125,8 @@
                                     },
                                     "player_kind": {
                                         "enum": [
-                                            "fake"
+                                            "fake",
+                                            "polling"
                                         ],
                                         "type": "string"
                                     }
@@ -1829,6 +1830,51 @@
                     }
                 ],
                 "summary": "api.v1.parties.player-tokens.destroy"
+            }
+        },
+        "/api/v1/parties/{party}/player/poll": {
+            "post": {
+                "operationId": "postApiV1PartiesPartyPlayerPoll",
+                "parameters": [
+                    {
+                        "in": "path",
+                        "name": "party",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object"
+                                }
+                            }
+                        },
+                        "description": "Successful response."
+                    },
+                    "401": {
+                        "description": "Unauthenticated."
+                    },
+                    "403": {
+                        "description": "Forbidden."
+                    },
+                    "422": {
+                        "description": "The Party is not live, or its Player is not a Polling Player."
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumBearer": []
+                    },
+                    {
+                        "sanctumCookie": []
+                    }
+                ],
+                "summary": "api.v1.parties.player.poll"
             }
         },
         "/api/v1/parties/{party}/playlists": {
