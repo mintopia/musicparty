@@ -9,7 +9,6 @@ use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\PartyModeration;
 use App\Models\Play;
-use App\Models\PlayRating;
 use App\Models\ProviderSetting;
 use App\Models\Rating;
 use App\Models\RequestVote;
@@ -106,7 +105,6 @@ class ArchitectureRules
                     TrackRequest::class,
                     RequestVote::class,
                     Play::class,
-                    PlayRating::class,
                     Rating::class,
                 ],
             ],

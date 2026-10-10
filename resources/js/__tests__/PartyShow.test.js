@@ -98,7 +98,7 @@ describe('Party page now playing and Up Next', () => {
         const w = mount(Show, {props: baseProps()});
         expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
         listeners['Party.QueueUpdatedEvent']();
-        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
+        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true});
         w.unmount();
         expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
     });
@@ -135,29 +135,36 @@ describe('MiniNowPlaying', () => {
 });
 
 describe('rating', () => {
-    const rated = () => entry({likes: 3, dislikes: 1});
+    const play = (over = {}) => ({id: 7, track: {title: 'T', artists: ['A'], album: null, artwork_url: null, duration_ms: 1, explicit: false}, likes: 3, dislikes: 1, my_rating: 0, ...over});
 
-    it.each([
-        ['MiniNowPlaying', MiniNowPlaying],
-        ['Show', Show],
-    ])('likes, switches and retracts on %s', async (_name, component) => {
-        const props = component === Show ? baseProps({nowPlaying: rated(), myRating: 0}) : {nowPlaying: rated(), partyCode: 'FRI123', myRating: 0};
-        const w = mount(component, {props});
+    it('likes, switches and retracts from MiniNowPlaying against the Play rating route', async () => {
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry(), partyCode: 'FRI123', ratablePlay: play()}});
         expect(w.find('[data-testid="rating-count"]').text()).toBe('2');
 
         await w.find('[data-testid="rating-like"]').trigger('click');
-        expect(put).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', {value: 'up'}, expect.any(Object));
+        expect(put).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', {value: 'up'}, expect.any(Object));
 
-        await w.setProps({myRating: 1});
+        await w.setProps({ratablePlay: play({my_rating: 1})});
         await w.find('[data-testid="rating-like"]').trigger('click');
-        expect(destroy).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', expect.any(Object));
+        expect(destroy).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', expect.any(Object));
 
         await w.find('[data-testid="rating-dislike"]').trigger('click');
-        expect(put).toHaveBeenLastCalledWith('/parties/FRI123/requests/1/rating', {value: 'down'}, expect.any(Object));
+        expect(put).toHaveBeenLastCalledWith('/parties/FRI123/plays/7/rating', {value: 'down'}, expect.any(Object));
+    });
+
+    it('rates the Play from the Show banner', async () => {
+        const w = mount(Show, {props: baseProps({ratablePlay: play()})});
+
+        await w.get('[data-testid=rate-like]').trigger('click');
+        expect(put).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', {value: 'up'}, expect.any(Object));
+    });
+
+    it('hides the mini rating without a ratable play', () => {
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: entry(), ratablePlay: null}}).find('[data-testid="rating"]').exists()).toBe(false);
     });
 
     it('hides the buttons when read only or nothing is playing', () => {
-        expect(mount(MiniNowPlaying, {props: {nowPlaying: rated(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: entry(), ratablePlay: play(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'Friday Night LAN', state: 'ended', downvotes: true}})}).find('[data-testid="rating"]').exists()).toBe(false);
     });

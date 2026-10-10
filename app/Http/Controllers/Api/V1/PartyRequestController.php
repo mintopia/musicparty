@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Queue\Actions\ApproveRequest;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
-use App\Domain\Queue\Actions\RateNowPlaying;
 use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
@@ -17,7 +16,6 @@ use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SearchTracksRequest;
 use App\Http\Requests\CastVoteRequest;
-use App\Http\Requests\RateNowPlayingRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Resources\V1\QueueEntryResource;
@@ -111,27 +109,6 @@ class PartyRequestController extends Controller
 
         try {
             return new QueueEntryResource($vote($party, $this->member($request, $party), $trackRequest, $direction));
-        } catch (RequestRefusedException $exception) {
-            return $this->refusal($exception);
-        }
-    }
-
-    public function rate(RateNowPlayingRequest $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
-    {
-        return $this->applyRating($request, $rate, $party, $trackRequest, $request->direction());
-    }
-
-    public function retractRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
-    {
-        return $this->applyRating($request, $rate, $party, $trackRequest, null);
-    }
-
-    private function applyRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): QueueEntryResource|JsonResponse
-    {
-        abort_unless($trackRequest->party_id === $party->id, 404);
-
-        try {
-            return new QueueEntryResource($rate($party, $this->member($request, $party), $trackRequest, $direction));
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }

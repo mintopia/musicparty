@@ -17,7 +17,6 @@ const props = defineProps({
     canManageBlocklist: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
-    myRating: {type: Number, default: 0},
     ratablePlay: {type: Object, default: null},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
@@ -35,7 +34,7 @@ const channelName = `party.${props.party.code}`;
 
 onMounted(() => {
     window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
+        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true});
     });
 });
 
@@ -97,7 +96,6 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
         v-if="section === 'queue' || section === 'history'"
         :now-playing="nowPlaying"
         :ratable-play="ratablePlay"
-        :my-rating="myRating"
         :party-code="party.code"
         :read-only="ratingLocked"
     />
