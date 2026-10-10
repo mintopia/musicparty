@@ -178,6 +178,43 @@ describe('ProcessPlayerFrame', function () {
         expect(discarded())->toBe(1);
     });
 
+    it('processes a frame while holding the party lock so frames apply one at a time', function () {
+        $heldDuringFrame = null;
+        $this->player->onFrame = function () use (&$heldDuringFrame) {
+            $heldDuringFrame = Cache::lock('player-frame:'.$this->party->code, 5)->get() === false;
+        };
+
+        new ProcessPlayerFrame($this->party->code, ['status' => 'playing'])->handle(app(PartyPlayers::class));
+
+        expect($heldDuringFrame)->toBeTrue()
+            ->and(Cache::lock('player-frame:'.$this->party->code, 5)->get())->toBeTrue();
+    });
+
+    it('waits for a frame in flight and applies after it, never before', function () {
+        $lock = Cache::lock('player-frame:'.$this->party->code, 5);
+        $lock->get();
+
+        $job = new ProcessPlayerFrame($this->party->code, ['type' => 'position_sync']);
+        $job->lockWaitSeconds = 0;
+        $job->handle(app(PartyPlayers::class));
+
+        expect($this->player->frames)->toBe([]);
+
+        $lock->release();
+        $job->handle(app(PartyPlayers::class));
+
+        expect($this->player->frames)->toBe([['type' => 'position_sync']]);
+    });
+
+    it('applies a stale position_sync before a newer track_changed, not after', function () {
+        $handle = fn (array $frame) => (new ProcessPlayerFrame($this->party->code, $frame))->handle(app(PartyPlayers::class));
+
+        $handle(['type' => 'position_sync']);
+        $handle(['type' => 'track_changed']);
+
+        expect(array_column($this->player->frames, 'type'))->toBe(['position_sync', 'track_changed']);
+    });
+
     it('queues on player', function () {
         expect((new ProcessPlayerFrame('ABC123', ['a' => 1]))->queue)->toBe('player');
     });

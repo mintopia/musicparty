@@ -6,6 +6,7 @@ use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\PartyPlayers;
 use App\Models\Party;
 use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
@@ -27,7 +28,18 @@ class ProcessPlayerFrame implements ShouldQueue
         $this->onQueue('player');
     }
 
+    public int $lockWaitSeconds = 3;
+
     public function handle(PartyPlayers $players): void
+    {
+        try {
+            Cache::lock('player-frame:'.$this->partyCode, 5)->block($this->lockWaitSeconds, fn () => $this->process($players));
+        } catch (LockTimeoutException) {
+            $this->release(1);
+        }
+    }
+
+    private function process(PartyPlayers $players): void
     {
         $party = Party::findByCode($this->partyCode);
         $player = $party === null ? null : $players->for($party);

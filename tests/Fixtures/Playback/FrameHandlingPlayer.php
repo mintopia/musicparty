@@ -13,8 +13,14 @@ class FrameHandlingPlayer extends FakePlayer implements HandlesPlayerFrames
     /**
      * @param  array<string, mixed>  $frame
      */
+    public ?\Closure $onFrame = null;
+
     public function handleFrame(array $frame): bool
     {
+        if ($this->onFrame !== null) {
+            ($this->onFrame)();
+        }
+
         $this->frames[] = $frame;
 
         return ! isset($frame['malformed']);
