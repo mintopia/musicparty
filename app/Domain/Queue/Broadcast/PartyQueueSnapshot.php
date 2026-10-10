@@ -2,33 +2,28 @@
 
 namespace App\Domain\Queue\Broadcast;
 
-use App\Domain\Identity\Models\User;
-use App\Domain\Mod\Actions\ResolveDecorations;
 use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Actions\RankQueue;
 use App\Domain\Queue\Models\TrackRequest;
+use App\Domain\Queue\Presenters\QueueEntryPresenter;
 use App\Domain\Queue\RequestStatus;
 
 class PartyQueueSnapshot
 {
     public const VERSION = 1;
 
-    public function __construct(private readonly ResolveDecorations $decorations) {}
+    public function __construct(private readonly RankQueue $rank, private readonly QueueEntryPresenter $presenter) {}
 
     /**
      * @return array{version: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
      */
     public function build(Party $party): array
     {
-        $requests = TrackRequest::query()
+        $requests = ($this->rank)($party, TrackRequest::query()
             ->where('party_id', $party->id)
             ->whereIn('status', [RequestStatus::Playing, RequestStatus::UpNext, RequestStatus::Queued])
             ->with('requester.user')
-            ->withSum('votes as score', 'value')
-            ->with(['play' => fn ($query) => $query->withRatingSummary()])
-            ->orderByRaw('COALESCE(score, 0) desc')
-            ->orderBy('created_at')
-            ->orderBy('id')
-            ->get();
+            ->with(['play' => fn ($query) => $query->withRatingSummary()]))->requests;
 
         $nowPlaying = $requests->first(fn (TrackRequest $request): bool => $request->status === RequestStatus::Playing);
         $upNext = $requests->first(fn (TrackRequest $request): bool => $request->status === RequestStatus::UpNext);
@@ -50,24 +45,6 @@ class PartyQueueSnapshot
      */
     private function entry(TrackRequest $request): array
     {
-        $requester = $request->requester?->user;
-
-        return [
-            'id' => $request->id,
-            'track' => [
-                'title' => $request->title,
-                'artists' => $request->artists,
-                'album' => $request->album,
-                'artwork_url' => $request->artwork_url,
-                'duration_ms' => $request->duration_ms,
-                'explicit' => $request->explicit,
-            ],
-            'status' => $request->status->value,
-            'score' => (int) $request->score,
-            'likes' => (int) $request->play?->likes,
-            'dislikes' => (int) $request->play?->dislikes,
-            'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
-            'decorations' => ($this->decorations)($request),
-        ];
+        return ($this->presenter)($request);
     }
 }

@@ -2,7 +2,6 @@
 
 namespace App\Domain\Queue\Actions;
 
-use App\Domain\Mod\Actions\ApplyScoreModifiers;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
@@ -16,7 +15,7 @@ use Illuminate\Support\Facades\DB;
 
 readonly class SelectUpNext
 {
-    public function __construct(private RecordPartyLogEntry $record, private Randomizer $randomizer, private ApplyScoreModifiers $modifiers) {}
+    public function __construct(private RecordPartyLogEntry $record, private Randomizer $randomizer, private RankQueue $rank) {}
 
     /**
      * Returns the newly locked Up Next Request, or null when one already exists or none is eligible.
@@ -48,19 +47,14 @@ readonly class SelectUpNext
                 return null;
             }
 
-            $ranked = TrackRequest::query()
+            $ranked = ($this->rank)($locked, TrackRequest::query()
                 ->where('party_id', $locked->id)
                 ->where('status', RequestStatus::Queued)
-                ->where(fn ($query) => $query->whereNull('not_before')->orWhere('not_before', '<=', now()))
-                ->withSum('votes as score', 'value')
-                ->orderByRaw('COALESCE(score, 0) desc')
-                ->orderBy('created_at')
-                ->orderBy('id');
+                ->where(fn ($query) => $query->whereNull('not_before')->orWhere('not_before', '<=', now())));
 
             $mode = $locked->selection_mode;
-            $eligible = $ranked->get();
-            $adjustments = ($this->modifiers)($locked, $eligible);
-            $eligible = $this->withEffectiveScores($eligible, $adjustments);
+            $eligible = $ranked->requests;
+            $adjustments = $ranked->adjustments;
             $candidate = $mode === SelectionMode::Weighted ? $this->roulette($eligible) : $eligible->first();
 
             if ($candidate === null) {
@@ -96,31 +90,6 @@ readonly class SelectUpNext
 
             return $candidate;
         });
-    }
-
-    /**
-     * @param  Collection<int, TrackRequest>  $eligible  ordered by vote score descending
-     * @param  array<int, array<string, array{name: string, value: int}>>  $adjustments
-     * @return Collection<int, TrackRequest>
-     */
-    private function withEffectiveScores(Collection $eligible, array $adjustments): Collection
-    {
-        if ($adjustments === []) {
-            return $eligible;
-        }
-
-        foreach ($eligible as $request) {
-            $request->score = (int) $request->score + array_sum(array_column($adjustments[$request->id] ?? [], 'value'));
-            $request->syncOriginalAttribute('score');
-        }
-
-        return $eligible
-            ->sortBy([
-                fn (TrackRequest $a, TrackRequest $b): int => (int) $b->score <=> (int) $a->score,
-                fn (TrackRequest $a, TrackRequest $b): int => $a->created_at <=> $b->created_at,
-                fn (TrackRequest $a, TrackRequest $b): int => $a->id <=> $b->id,
-            ])
-            ->values();
     }
 
     /**

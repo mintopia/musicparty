@@ -12,7 +12,7 @@ readonly class ShowPartyTv
     public function __construct(private PartyQueueSnapshot $snapshot, private GetPartyTheme $getPartyTheme) {}
 
     /**
-     * @return array{party: array{code: string, name: string, state: string, joinUrl: string}, nowPlaying: array<string, mixed>|null, upNext: array<string, mixed>|null, startedAt: string|null, theme: array<string, mixed>}
+     * @return array{party: array{code: string, name: string, state: string, selection_mode: string, joinUrl: string}, nowPlaying: array<string, mixed>|null, upNext: array<string, mixed>|null, startedAt: string|null, theme: array<string, mixed>}
      */
     public function __invoke(Party $party): array
     {
@@ -28,6 +28,7 @@ readonly class ShowPartyTv
                 'code' => $party->code,
                 'name' => $party->name,
                 'state' => $party->state->value,
+                'selection_mode' => $party->selection_mode->value,
                 'joinUrl' => route('parties.show', ['party' => $party->code]),
             ],
             'nowPlaying' => $playback['now_playing'],

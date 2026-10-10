@@ -137,6 +137,7 @@ class PartyController extends Controller
                 'musicProvider' => $party->music_provider,
                 'playerKind' => $party->player_kind,
                 'downvotes' => (bool) $party->downvotes,
+                'selection_mode' => $party->selection_mode->value,
             ],
             'membership' => [
                 'role' => $member->role->value,

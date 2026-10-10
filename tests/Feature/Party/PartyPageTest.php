@@ -27,6 +27,7 @@ it('renders the party page with exact props', function () {
                 'state' => 'live',
                 'musicProvider' => 'fake',
                 'playerKind' => 'fake',
+                'selection_mode' => 'deterministic',
                 'downvotes' => true,
             ])
             ->where('membership', ['role' => 'moderator', 'banned' => false])
