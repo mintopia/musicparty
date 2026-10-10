@@ -11,5 +11,6 @@ final readonly class SearchHit
         public bool $queued,
         public ?string $requestedBy = null,
         public int $score = 0,
+        public ?string $providerUrl = null,
     ) {}
 }

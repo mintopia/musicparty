@@ -119,6 +119,25 @@ class FakeMusicProvider implements MusicProvider
         return null;
     }
 
+    public function trackUrl(?string $providerTrackId): ?string
+    {
+        return $this->publicUrl('track', $providerTrackId);
+    }
+
+    public function playlistUrl(?string $providerPlaylistId): ?string
+    {
+        return $this->publicUrl('playlist', $providerPlaylistId);
+    }
+
+    private function publicUrl(string $kind, ?string $id): ?string
+    {
+        if ($id === null || trim($id) === '') {
+            return null;
+        }
+
+        return "https://{$this->id}.test/{$kind}/".rawurlencode($id);
+    }
+
     public function playlists(string $hostAccountId): array
     {
         $this->throwInjectedFailure();

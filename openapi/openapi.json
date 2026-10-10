@@ -5540,6 +5540,12 @@
                             },
                             "explicit": {
                                 "type": "boolean"
+                            },
+                            "provider_url": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
                             }
                         },
                         "required": [
@@ -5548,7 +5554,8 @@
                             "album",
                             "artwork_url",
                             "duration_ms",
-                            "explicit"
+                            "explicit",
+                            "provider_url"
                         ]
                     },
                     "requested_by": {
@@ -5762,6 +5769,12 @@
                     "explicit": {
                         "type": "boolean"
                     },
+                    "provider_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
                     "queued": {
                         "type": "boolean"
                     },
@@ -5783,6 +5796,7 @@
                     "artwork_url",
                     "duration_ms",
                     "explicit",
+                    "provider_url",
                     "queued",
                     "requested_by",
                     "score"

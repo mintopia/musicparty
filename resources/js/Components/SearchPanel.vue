@@ -2,6 +2,7 @@
 import {router, useForm} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, ref} from 'vue';
 import Icon from './Icon.vue';
+import TrackLink from './TrackLink.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatDuration} from '../lib/format';
 
@@ -97,9 +98,9 @@ const hasResults = computed(() => Array.isArray(props.results));
             <ul data-testid="search-results" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
                 <li v-for="track in results" :key="track.provider_track_id" data-testid="search-result" class="px-3 py-3 md:px-5 md:py-4">
                     <div class="flex items-center gap-3 md:gap-4">
-                        <TrackThumb :src="track.artwork_url" />
+                        <TrackLink :href="track.provider_url"><TrackThumb :src="track.artwork_url" /></TrackLink>
                         <div class="min-w-0 flex-1">
-                            <div class="truncate text-sm text-primary">{{ track.title }}</div>
+                            <div class="truncate text-sm text-primary"><TrackLink :href="track.provider_url">{{ track.title }}</TrackLink></div>
                             <div class="truncate text-sm text-muted">{{ track.artists.join(', ') }}</div>
                             <div v-if="track.queued" data-testid="requested-by" class="truncate text-sm text-muted">Requested by {{ track.requested_by }}</div>
                             <div v-else class="truncate text-xs text-muted">{{ track.album }}</div>

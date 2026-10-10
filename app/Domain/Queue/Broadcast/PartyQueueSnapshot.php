@@ -22,7 +22,7 @@ class PartyQueueSnapshot
         $requests = ($this->rank)($party, TrackRequest::query()
             ->where('party_id', $party->id)
             ->whereIn('status', [RequestStatus::Playing, RequestStatus::UpNext, RequestStatus::Queued])
-            ->with('requester.user')
+            ->with('requester.user', 'party')
             ->with(['play' => fn ($query) => $query->withRatingSummary()]))->requests;
 
         $nowPlaying = $requests->first(fn (TrackRequest $request): bool => $request->status === RequestStatus::Playing);

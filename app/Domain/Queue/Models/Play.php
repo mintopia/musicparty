@@ -89,6 +89,7 @@ class Play extends Model
     {
         $query->with([
             'requester.user',
+            'party',
             'request' => fn ($request) => $request->withCount('votes')->withSum('votes as score', 'value'),
         ]);
     }

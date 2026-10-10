@@ -82,7 +82,7 @@ class VoteOnRequest
 
         return TrackRequest::query()
             ->whereKey($request->id)
-            ->with('requester.user')
+            ->with('requester.user', 'party')
             ->withSum('votes as score', 'value')
             ->withSum(['votes as my_vote' => fn ($query) => $query->where('party_member_id', $member->id)], 'value')
             ->firstOrFail();
