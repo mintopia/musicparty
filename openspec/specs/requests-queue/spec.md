@@ -44,7 +44,7 @@ A logged-in, non-Banned Member SHALL be able to request a Track from the Party's
 - **THEN** the Request is refused by the explicit filter
 
 ### Requirement: Request rules
-The system SHALL evaluate each new Request against the Party's rules and refuse it with a specific reason when any rule fails. The rules are: Requests accepted; maximum Requests per Member (VIP and Host exempt); minimum and maximum Track length; explicit filter; Blocklist; no-repeat interval; the Track is not already Up Next; and no similar Track already in the Queue. Requests SHALL be refused at the first failing rule and the refusal reason SHALL be shown to the requester.
+The system SHALL evaluate each new Request against the Party's rules and refuse it with a specific reason when any rule fails. The rules are: Requests accepted; maximum Requests per Member (VIP and Host exempt); minimum and maximum Track length; explicit filter; Blocklist; no-repeat interval, counting the Playing Track as played; the Track is not already Up Next; and no similar Track already in the Queue. Requests SHALL be refused at the first failing rule and the refusal reason SHALL be shown to the requester.
 
 #### Scenario: Per-Member limit
 - **WHEN** a Guest at their maximum number of active Requests requests another Track
@@ -65,6 +65,10 @@ The system SHALL evaluate each new Request against the Party's rules and refuse 
 #### Scenario: No-repeat interval
 - **WHEN** a Member requests a Track that was Played within the no-repeat interval
 - **THEN** the Request is refused citing when it was last played
+
+#### Scenario: Track playing now
+- **WHEN** a Member requests the Track that is Playing and the Party has a no-repeat interval
+- **THEN** the Request is refused under the no-repeat rule
 
 #### Scenario: Already Up Next
 - **WHEN** a Member requests the Track currently locked as Up Next
@@ -90,7 +94,7 @@ When a Member requests a Track that is already Queued or Pending in the Party, t
 - **THEN** no Vote is recorded
 
 ### Requirement: Blocklist
-Each Party SHALL have a Blocklist whose entries match Tracks by name, track identifier, artist name, artist identifier, album name, album identifier or ISRC. An entry MAY use a regular expression for name matches, MAY be disabled and MAY carry notes. A Request matching any enabled entry SHALL be refused. The Host and Moderators SHALL be able to manage the Blocklist. Blocklist changes SHALL be recorded in the Party Log.
+Each Party SHALL have a Blocklist whose entries match Tracks by name, track identifier, artist name, artist identifier, album name, album identifier or ISRC. An entry MAY use a regular expression for name matches, MAY be disabled and MAY carry notes. A Request matching any enabled entry SHALL be refused. A regular expression that fails while being evaluated SHALL be treated as a match (the Request is refused) and the failure SHALL be logged and recorded in the Party Log. The Host and Moderators SHALL be able to manage the Blocklist. Blocklist changes SHALL be recorded in the Party Log. Checking many Tracks against the Blocklist SHALL load the Blocklist once, not once per Track.
 
 #### Scenario: Blocked artist
 - **WHEN** a Member requests a Track by an artist on the Blocklist
@@ -111,6 +115,14 @@ Each Party SHALL have a Blocklist whose entries match Tracks by name, track iden
 #### Scenario: Invalid regular expression
 - **WHEN** a Host saves a Blocklist entry with an invalid regular expression
 - **THEN** the system rejects the entry with a validation error
+
+#### Scenario: Regular expression fails at runtime
+- **WHEN** a saved regular expression hits the backtracking limit while checking a Track
+- **THEN** the Track is treated as blocked and the Party Log records the failing entry
+
+#### Scenario: Fallback top-up against a large playlist
+- **WHEN** the Queue is topped up from a 500-Track Fallback Playlist
+- **THEN** the Blocklist is read from the database once for the whole top-up
 
 ### Requirement: Holding Requests as Pending
 A Party MAY be configured so that Requests, or Requests held by a Request Rule, are Pending until approved. The Host and Moderators SHALL be able to approve a Pending Request, which becomes Queued, or reject it, which becomes Rejected. The requester SHALL be notified of the outcome. Pending Requests SHALL NOT be eligible for selection and SHALL NOT appear in the public Queue.
@@ -178,11 +190,23 @@ A Member SHALL be able to cast one Vote, up or down, per Request, and to change 
 - **THEN** the Vote is refused, the score does not change and nothing is broadcast
 
 ### Requirement: Score
-A Request's score SHALL equal the sum of its Votes (up as +1, down as -1) plus adjustments applied by Score Modifiers. Scores SHALL be visible to Members and update in real time.
+A Request's Score SHALL equal the sum of its Votes (up as +1, down as -1) plus adjustments applied by Score Modifiers. The Score shown to Members SHALL be the same value the Queue is ordered by and selection uses. The Queue SHALL be shown ordered by Score, then by oldest request time. Scores SHALL be visible to Members and update in real time. Under weighted selection, the Queue SHALL still be shown ordered by Score, and the page SHALL say that the next Track is drawn at random in proportion to Score, so the top Request may not play next.
 
 #### Scenario: Score computation
 - **WHEN** a Request has 5 upvotes, 2 downvotes and a Score Modifier adjustment of +3
-- **THEN** its score is 6
+- **THEN** its Score is 6
+
+#### Scenario: Displayed order matches deterministic selection
+- **WHEN** a Score Modifier lifts a Request with fewer Votes above another, under deterministic selection
+- **THEN** the Queue shows the lifted Request first with its adjusted Score, and it is the one selected
+
+#### Scenario: Weighted selection
+- **WHEN** the Party uses weighted selection
+- **THEN** the Queue is shown ordered by Score with a note that selection is random in proportion to Score
+
+#### Scenario: Same everywhere
+- **WHEN** the same Queue is read from the Party page, the API and the public channel
+- **THEN** each Request has the same Score and position in all three
 
 ### Requirement: Ratings
 A Member SHALL be able to like or dislike a Play, once per Play, and to change or retract the rating. Rating the currently Playing Track SHALL rate its Play, so there is a single record of ratings for each Play. Banned Members MUST NOT rate, and ratings MUST NOT be accepted in an Ended Party. Ratings SHALL be included in Live Stats and the Party Export.
@@ -229,3 +253,10 @@ While a Party is Live, the system SHALL keep the Queue topped up to a configured
 #### Scenario: Not topped up when not Live
 - **WHEN** a Party is Paused or Ended
 - **THEN** no Fallback Requests are added
+
+### Requirement: One active Track per Party
+A Party SHALL have at most one Up Next Request and at most one Playing Request at any time, enforced by the database as well as by locking.
+
+#### Scenario: Concurrent promotion
+- **WHEN** two processes try to make different Requests Up Next for the same Party at once
+- **THEN** one succeeds and the other fails without changing any Request

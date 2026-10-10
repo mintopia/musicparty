@@ -3,11 +3,12 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Admin\IntegrationAbility;
-use App\Models\IntegrationToken;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Admin\Models\Integration;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Closure;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Gate;
 use Symfony\Component\HttpFoundation\Response;
 
@@ -15,15 +16,15 @@ class AuthorizePartyExport
 {
     public function handle(Request $request, Closure $next): Response
     {
-        $token = $request->user('integration');
+        $principal = Auth::guard('sanctum')->user();
 
-        if ($token instanceof IntegrationToken) {
-            abort_unless($token->can(IntegrationAbility::Export->value), 403);
+        if ($principal instanceof Integration) {
+            abort_unless($principal->tokenCan(IntegrationAbility::Export->value), 403);
 
             return $next($request);
         }
 
-        $user = $request->user('sanctum');
+        $user = $principal;
         $party = $request->route('party');
 
         abort_unless($user instanceof User, 401);

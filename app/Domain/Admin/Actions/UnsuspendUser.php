@@ -2,11 +2,12 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\User;
+use App\Domain\Identity\Actions\SetUserSuspended;
+use App\Domain\Identity\Models\User;
 
 class UnsuspendUser
 {
-    public function __construct(private readonly RecordAdminAudit $audit) {}
+    public function __construct(private readonly RecordAdminAudit $audit, private readonly SetUserSuspended $setSuspended) {}
 
     public function handle(User $admin, User $user): User
     {
@@ -14,7 +15,7 @@ class UnsuspendUser
             return $user;
         }
 
-        $user->forceFill(['suspended' => false])->save();
+        ($this->setSuspended)($user, false);
         $this->audit->handle($admin, 'user.unsuspended', $user);
 
         return $user;

@@ -6,13 +6,16 @@ use App\Domain\Mod\Data\Decoration;
 use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
-use App\Models\Play;
-use App\Models\TrackRequest;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class ResolveDecorations
 {
+    private const int FAILURE_LOG_WINDOW_SECONDS = 60;
+
     /** @var array<int, Party> */
     private array $parties = [];
 
@@ -62,6 +65,10 @@ class ResolveDecorations
 
     private function logFailure(Party $party, EnabledMod $enabled, TrackRequest|Play $subject, Throwable $exception): void
     {
+        if (! Cache::add("mod-decoration-failed:{$party->id}:{$enabled->mod->id()}", true, self::FAILURE_LOG_WINDOW_SECONDS)) {
+            return;
+        }
+
         ($this->record)($party, 'mod.decoration_failed', subject: $subject->title, details: [
             'mod' => $enabled->mod->name(),
             'mod_id' => $enabled->mod->id(),

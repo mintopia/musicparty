@@ -2,12 +2,12 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Http\Middleware\EnsurePlayerToken;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\NewAccessToken;
 
@@ -26,7 +26,7 @@ readonly class IssuePlayerToken
         ($this->authorisesHost)($actor, $party);
 
         return DB::transaction(function () use ($actor, $party, $name): NewAccessToken {
-            $token = $party->createToken($name, [EnsurePlayerToken::ABILITY]);
+            $token = $party->createToken($name, [EnsurePlayerToken::ABILITY], now()->addDays(config()->integer('musicparty.tokens.player_ttl_days')));
 
             ($this->record)($party, 'player_token.issued', $actor, $name, ['token_id' => $token->accessToken->getKey()]);
 

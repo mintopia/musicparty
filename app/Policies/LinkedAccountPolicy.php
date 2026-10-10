@@ -2,8 +2,8 @@
 
 namespace App\Policies;
 
-use App\Models\LinkedAccount;
-use App\Models\User;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\User;
 
 class LinkedAccountPolicy
 {

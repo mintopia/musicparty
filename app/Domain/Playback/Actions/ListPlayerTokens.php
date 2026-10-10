@@ -2,10 +2,10 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Support\Collection;
 use Laravel\Sanctum\PersonalAccessToken;
 

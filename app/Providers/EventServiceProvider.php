@@ -2,23 +2,25 @@
 
 namespace App\Providers;
 
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
+use App\Domain\Party\Events\PartyLogEntryRecorded;
+use App\Domain\Party\Events\PartyStateChanged;
+use App\Domain\Party\Listeners\BroadcastPartyLogEntry;
+use App\Domain\Party\Listeners\BroadcastPartyState;
+use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
-use App\Listeners\HandlePlayerClientEvent;
-use App\Listeners\MessageLoggedListener;
-use App\Models\Setting;
-use App\Models\User;
 use App\Observers\SettingObserver;
 use App\Observers\UserObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
-use Illuminate\Log\Events\MessageLogged;
 use Laravel\Reverb\Events\MessageReceived;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
 use SocialiteProviders\LaravelPassport\LaravelPassportExtendSocialite;
@@ -50,14 +52,13 @@ class EventServiceProvider extends ServiceProvider
             LaravelPassportExtendSocialite::class.'@handle',
             SpotifyExtendSocialite::class.'@handle',
         ],
+        PartyLogEntryRecorded::class => [BroadcastPartyLogEntry::class],
+        PartyStateChanged::class => [BroadcastPartyState::class],
         RequestCreated::class => [RefreshStatsOnPartyActivity::class],
         VoteCast::class => [RefreshStatsOnPartyActivity::class],
         TrackEnded::class => [RefreshStatsOnPartyActivity::class],
         TrackStarted::class => [AppendStartedTrackToHistory::class],
         RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
-        MessageLogged::class => [
-            MessageLoggedListener::class,
-        ],
         MessageReceived::class => [
             HandlePlayerClientEvent::class,
         ],

@@ -1,0 +1,131 @@
+<?php
+
+namespace App\Domain\Identity\Models;
+
+use App\Domain\Admin\Models\ProviderSetting;
+use App\Domain\Identity\Contracts\SocialProviderContract;
+use App\Support\Concerns\ToString;
+use Database\Factories\SocialProviderFactory;
+use Illuminate\Database\Eloquent\Attributes\UseFactory;
+use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Http\RedirectResponse;
+
+/**
+ * @property-read Collection<int, ProviderSetting> $settings
+ *
+ * @mixin IdeHelperSocialProvider
+ */
+#[UseFactory(SocialProviderFactory::class)]
+class SocialProvider extends Model
+{
+    /** @use HasFactory<SocialProviderFactory> */
+    use HasFactory;
+
+    use ToString;
+
+    protected $casts = [
+        'enabled' => 'boolean',
+        'auth_enabled' => 'boolean',
+    ];
+
+    /**
+     * @var array<string, mixed>
+     */
+    protected array $_settings = [];
+
+    /**
+     * @return HasMany<LinkedAccount, $this>
+     */
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(LinkedAccount::class);
+    }
+
+    public function redirect(?string $redirectUrl = null): RedirectResponse
+    {
+        return $this->getProvider($redirectUrl)->redirect();
+    }
+
+    public function getProvider(?string $redirectUrl = null): SocialProviderContract
+    {
+        return new $this->provider_class($this, $redirectUrl);
+    }
+
+    /**
+     * @return mixed
+     */
+    public function user(?string $redirectUrl = null)
+    {
+        return $this->getProvider($redirectUrl)->user();
+    }
+
+    /**
+     * @return array<string, \stdClass>
+     */
+    public function configMapping(): array
+    {
+        return $this->getProvider()->configMapping();
+    }
+
+    public function isConfigured(): bool
+    {
+        $hasRequired = false;
+
+        foreach ($this->settings as $setting) {
+            if (! $setting->isRequired()) {
+                continue;
+            }
+
+            $hasRequired = true;
+
+            if (blank($setting->value)) {
+                return false;
+            }
+        }
+
+        return $hasRequired;
+    }
+
+    public function isAvailableForLogin(): bool
+    {
+        return $this->enabled && $this->auth_enabled && $this->isConfigured();
+    }
+
+    public function offersLogin(): bool
+    {
+        return $this->supports_auth && $this->isAvailableForLogin();
+    }
+
+    protected function toStringName(): string
+    {
+        return $this->code;
+    }
+
+    /**
+     * @return MorphMany<ProviderSetting, $this>
+     */
+    public function settings(): MorphMany
+    {
+        return $this->morphMany(ProviderSetting::class, 'provider');
+    }
+
+    public function getSetting(string $code): mixed
+    {
+        if (isset($this->_settings[$code])) {
+            return $this->_settings[$code];
+        }
+        $setting = $this->settings()->whereCode($code)->first();
+        if (! $setting) {
+            $this->_settings[$code] = null;
+
+            return null;
+        }
+        $this->_settings[$code] = $setting->value;
+
+        return $setting->value;
+    }
+}

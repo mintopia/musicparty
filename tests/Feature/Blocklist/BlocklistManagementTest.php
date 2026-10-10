@@ -1,13 +1,15 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Queue\BlocklistMatchType;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -25,7 +27,11 @@ function blocklistActor(Party $party, string $role, bool $banned = false): Party
     return ($banned ? $member->banned() : $member)->create();
 }
 
-function blocklistCall(?PartyMember $actor, string $operation, BlocklistEntry $entry, array $payload = [])
+/**
+ * @param  array<string, mixed>  $payload
+ * @return TestResponse<Response>
+ */
+function blocklistCall(?PartyMember $actor, string $operation, BlocklistEntry $entry, array $payload = []): TestResponse
 {
     $actor ??= PartyMember::factory()->create();
     Sanctum::actingAs($actor->user);

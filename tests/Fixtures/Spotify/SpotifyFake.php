@@ -2,7 +2,7 @@
 
 namespace Tests\Fixtures\Spotify;
 
-use App\Models\LinkedAccount;
+use App\Domain\Identity\Models\LinkedAccount;
 use Database\Factories\LinkedAccountFactory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -85,10 +85,7 @@ final class SpotifyFake
         DB::purge('sqlite');
         Artisan::call('migrate', [
             '--force' => true,
-            '--path' => [
-                'database/migrations/2023_12_05_220820_create_linked_accounts_table.php',
-                'database/migrations/2026_10_09_100000_add_needs_relink_to_linked_accounts.php',
-            ],
+            '--path' => 'database/migrations/2026_10_10_100000_create_v3_baseline_schema.php',
         ]);
     }
 

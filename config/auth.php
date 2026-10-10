@@ -1,6 +1,6 @@
 <?php
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 
 return [
 
@@ -41,10 +41,6 @@ return [
         'web' => [
             'driver' => 'session',
             'provider' => 'users',
-        ],
-
-        'integration' => [
-            'driver' => 'integration',
         ],
     ],
 

@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
-use App\Models\BlocklistEntry;
+use App\Domain\Party\Models\BlocklistEntry;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 

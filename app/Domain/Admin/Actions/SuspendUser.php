@@ -2,12 +2,15 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\User;
+use App\Domain\Identity\Actions\SetUserSuspended;
+use App\Domain\Identity\Models\User;
+use App\Support\Realtime\Contracts\RealtimeConnections;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
 class SuspendUser
 {
-    public function __construct(private readonly RecordAdminAudit $audit) {}
+    public function __construct(private readonly RecordAdminAudit $audit, private readonly SetUserSuspended $setSuspended, private readonly RealtimeConnections $connections) {}
 
     public function handle(User $admin, User $user): User
     {
@@ -19,9 +22,10 @@ class SuspendUser
             return $user;
         }
 
-        $user->forceFill(['suspended' => true])->save();
+        ($this->setSuspended)($user, true);
         $user->tokens()->delete();
         $this->audit->handle($admin, 'user.suspended', $user);
+        DB::afterCommit(fn () => $this->connections->terminateUser($user->id));
 
         return $user;
     }

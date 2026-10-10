@@ -2,7 +2,11 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListMemberVotes;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Actions\RejectRequest;
@@ -11,21 +15,21 @@ use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
+use App\Domain\Queue\Exceptions\ProviderRateLimitedException;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\SearchRateLimitedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SearchTracksRequest;
 use App\Http\Requests\CastVoteRequest;
+use App\Http\Requests\MemberVotesRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
+use App\Http\Resources\V1\MemberVotesResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -67,6 +71,15 @@ class PartyRequestController extends Controller
     {
         try {
             return QueueEntryResource::collection($listQueue($party, $this->member($request, $party)));
+        } catch (RequestRefusedException $exception) {
+            return $this->refusal($exception);
+        }
+    }
+
+    public function memberVotes(MemberVotesRequest $request, ListMemberVotes $listMemberVotes, Party $party): MemberVotesResource|JsonResponse
+    {
+        try {
+            return new MemberVotesResource($listMemberVotes($party, $this->member($request, $party)));
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }
@@ -155,7 +168,7 @@ class PartyRequestController extends Controller
             $payload['retry_at'] = $exception->retryAt->toIso8601String();
         }
 
-        $headers = $exception instanceof SearchRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
+        $headers = $exception instanceof SearchRateLimitedException || $exception instanceof ProviderRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
 
         return response()->json($payload, $exception->status(), $headers);
     }

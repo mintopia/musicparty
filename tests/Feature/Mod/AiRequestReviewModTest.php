@@ -1,20 +1,20 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\AiReview\AiRequestReviewer;
 use App\Domain\Mod\AiReview\AiRequestReviewMod;
+use App\Domain\Mod\Jobs\ReviewRequestWithAi;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\ModSettings;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
+use App\Domain\Playback\Jobs\StartPlayback;
 use App\Domain\Queue\Actions\RequestTrack;
+use App\Domain\Queue\Broadcast\PendingRequestResolvedEvent;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\PendingRequestResolvedEvent;
-use App\Jobs\ReviewRequestWithAi;
-use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Event;
@@ -27,11 +27,17 @@ use Tests\Fixtures\Mods\RejectingRuleMod;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return array<string, mixed>
+ */
 function aiScore(float $level): array
 {
     return ['suitability' => new ScoreAnswer($level, [], ['a', 'b', 'c'], 0.9)];
 }
 
+/**
+ * @param  array<string, mixed>  $settings
+ */
 function enableAiReview(Party $party, array $settings = []): void
 {
     $mod = app(ModRegistry::class)->find(AiRequestReviewMod::ID);
@@ -242,4 +248,20 @@ it('does nothing when the Mod was disabled before the job ran', function () {
 
     expect($request->fresh()->status)->toBe(RequestStatus::Pending);
     Classification::assertNothingClassified();
+});
+
+it('uses each Party driver without mutating the ai config', function () {
+    Classification::fake([aiScore(0.0), aiScore(0.0)]);
+    $other = Party::factory()->live()->create(['hold_requests' => false]);
+    $otherRequest = TrackRequest::factory()->for($other)->for(PartyMember::factory()->for($other)->create(), 'requester')->status(RequestStatus::Pending)->create();
+    enableAiReview($this->party, ['driver' => 'openai']);
+    enableAiReview($other, ['driver' => 'jev']);
+    $before = config('ai');
+
+    ($this->review)(($this->pending)());
+    app(AiRequestReviewer::class)->review($other, $otherRequest->id);
+
+    Classification::assertClassified(fn (ClassificationPrompt $prompt) => str_contains($prompt->provider::class, 'OpenAi'));
+    Classification::assertClassified(fn (ClassificationPrompt $prompt) => str_contains($prompt->provider::class, 'TypeSafe'));
+    expect(config('ai'))->toBe($before);
 });

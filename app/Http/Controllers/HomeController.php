@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Admin\SiteSettings;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

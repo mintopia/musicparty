@@ -40,6 +40,14 @@ it('defaults the queue to redis', function (): void {
     expect(loadConfigWithout('queue.php', ['QUEUE_CONNECTION'])['default'])->toBe('redis');
 });
 
+it('defaults the cache store to redis', function (): void {
+    expect(loadConfigWithout('cache.php', ['CACHE_STORE'])['default'])->toBe('redis');
+});
+
+it('defaults the session driver to redis', function (): void {
+    expect(loadConfigWithout('session.php', ['SESSION_DRIVER'])['driver'])->toBe('redis');
+});
+
 it('publishes to the compose reverb service when REVERB_HOST, PORT and SCHEME are unset', function (): void {
     $config = loadConfigWithout('broadcasting.php', ['REVERB_HOST', 'REVERB_PORT', 'REVERB_SCHEME']);
 
@@ -57,6 +65,9 @@ it('keeps only the required settings in .env.example', function (): void {
         ->not->toContain('ABLY')
         ->not->toContain('BROADCAST_DRIVER')
         ->not->toContain('QUEUE_CONNECTION')
+        ->not->toContain('CACHE_STORE')
+        ->not->toContain('CACHE_DRIVER')
+        ->not->toContain('SESSION_DRIVER')
         ->toContain('REVERB_APP_ID=')
         ->toContain('SPOTIFY_CLIENT_ID=');
 });

@@ -2,7 +2,15 @@ name: CI
 
 on:
   push:
+    paths-ignore:
+      - 'docs/**'
+      - 'openspec/**'
+      - 'tests/**'
+      - '*.md'
   pull_request:
+
+permissions:
+  contents: read
 
 concurrency:
   group: ci-${{ github.ref }}
@@ -12,14 +20,14 @@ jobs:
   static:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           coverage: none
           tools: composer:v2
           extensions: opentelemetry
-      - uses: actions/cache@v4
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}
@@ -28,16 +36,18 @@ jobs:
         run: vendor/bin/pint --test
       - name: PHPStan
         run: vendor/bin/phpstan analyse --memory-limit=1G --no-progress
+      - name: PHPStan baseline has no missing types
+        run: '! grep -q missingType phpstan-baseline.neon'
       - name: Rector
         run: vendor/bin/rector process --dry-run --no-progress-bar
 
   frontend:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
+          node-version: '24'
           cache: npm
       - run: npm ci --no-audit --no-fund
       - name: Vitest
@@ -48,10 +58,10 @@ jobs:
   specs:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
-          node-version: '22'
+          node-version: '24'
       - name: Lint OpenAPI
         run: npx --yes @redocly/cli@2.62.1 lint openapi/openapi.json
       - name: Validate AsyncAPI
@@ -59,47 +69,15 @@ jobs:
 
   tests:
     runs-on: ubuntu-latest
-    services:
-      db:
-        image: mariadb:11
-        env:
-          MARIADB_ROOT_PASSWORD: root
-          MARIADB_DATABASE: musicparty
-          MARIADB_USER: musicparty
-          MARIADB_PASSWORD: musicparty
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd="healthcheck.sh --connect --innodb_initialized"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-      redis:
-        image: redis:7
-        ports:
-          - 6379:6379
-        options: >-
-          --health-cmd="redis-cli ping"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-    env:
-      DB_CONNECTION: mysql
-      DB_HOST: 127.0.0.1
-      DB_PORT: 3306
-      DB_DATABASE: musicparty
-      DB_USERNAME: root
-      DB_PASSWORD: root
-      REDIS_HOST: 127.0.0.1
     steps:
-      - uses: actions/checkout@v4
-      - uses: shivammathur/setup-php@v2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: shivammathur/setup-php@eb7c497e18156a6bbabfef1d3a82760b9eda3962 # 2.40.0
         with:
           php-version: '8.4'
           coverage: xdebug
           tools: composer:v2
-          extensions: opentelemetry, redis
-      - uses: actions/cache@v4
+          extensions: opentelemetry
+      - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
         with:
           path: ~/.composer/cache
           key: composer-${{ hashFiles('composer.lock') }}

@@ -1,17 +1,23 @@
 <?php
 
 use App\Domain\Party\Actions\GeneratePartyCode;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  list<string>  $candidates
+ */
 function codeGenerator(array $candidates): GeneratePartyCode
 {
     return new class($candidates) extends GeneratePartyCode
     {
         public int $calls = 0;
 
+        /**
+         * @param  list<string>  $candidates
+         */
         public function __construct(private array $candidates) {}
 
         protected function candidate(): string

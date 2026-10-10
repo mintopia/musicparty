@@ -4,6 +4,9 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return array<string, mixed>
+ */
 function pusherConfigFrom(string $html): array
 {
     preg_match('/window\.pusherConfig = (\{.*?\});/', $html, $matches);

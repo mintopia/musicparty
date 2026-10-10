@@ -2,9 +2,9 @@
 
 namespace App\Policies;
 
-use App\Domain\Party\PartyRole;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 
 class PartyPolicy
 {
@@ -29,7 +29,7 @@ class PartyPolicy
      */
     public function create(User $user): bool
     {
-        return $user->hasRole('create-party') || $user->hasRole('admin');
+        return $user->hasCompletedSignup() && ($user->hasRole('create-party') || $user->hasRole('admin'));
     }
 
     /**
@@ -65,7 +65,7 @@ class PartyPolicy
         $member = $party->memberFor($user);
 
         return $member !== null && ! $member->banned
-            && in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
+            && $member->role->isStaff();
     }
 
     public function viewMembers(User $user, Party $party): bool
@@ -79,7 +79,20 @@ class PartyPolicy
     {
         $member = $party->memberFor($user);
 
-        return $member !== null && ! $member->banned && $member->role === PartyRole::Host;
+        return $member !== null && ! $member->banned && $member->role->isHost();
+    }
+
+    public function host(User $user, Party $party): bool
+    {
+        return $user->id === $party->user_id;
+    }
+
+    public function moderateMember(User $user, Party $party, PartyMember $target): bool
+    {
+        $member = $party->memberFor($user);
+
+        return $this->moderate($user, $party)
+            && ! ($member?->role->isModerator() && $target->role->isModerator());
     }
 
     public function moderate(User $user, Party $party): bool

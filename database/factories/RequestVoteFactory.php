@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

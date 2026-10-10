@@ -4,8 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Party\Actions\ShowPartyTv;
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\Actions\RenderPartyThemeCss;
-use App\Models\Party;
 use Inertia\Inertia;
 use Inertia\Response;
 

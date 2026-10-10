@@ -5,9 +5,9 @@ namespace App\Domain\Mod\AiReview;
 use App\Domain\Mod\Contracts\Mod;
 use App\Domain\Mod\Data\ModContext;
 use App\Domain\Mod\Data\SettingDefinition;
+use App\Domain\Mod\Jobs\ReviewRequestWithAi;
 use App\Domain\Mod\SettingKind;
 use App\Domain\Queue\Events\RequestCreated;
-use App\Jobs\ReviewRequestWithAi;
 use Illuminate\Support\Facades\Cache;
 
 class AiRequestReviewMod implements Mod

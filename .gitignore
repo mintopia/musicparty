@@ -26,5 +26,7 @@ frankenphp-worker.php
 /openobserve
 
 /cookies.json
+/collector.yml
 
 /.claude/worktrees/
+/docker/dbdata

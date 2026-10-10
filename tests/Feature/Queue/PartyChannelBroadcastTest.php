@@ -1,14 +1,14 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
+use App\Domain\Queue\Broadcast\QueueUpdatedEvent;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\QueueUpdatedEvent;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
@@ -65,7 +65,7 @@ it('has a stable payload shape', function () {
     expect(array_keys($snapshot))->toBe(['version', 'code', 'now_playing', 'up_next', 'queue'])
         ->and($snapshot['now_playing'])->toBeNull()
         ->and($snapshot['up_next'])->toBeNull()
-        ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'requested_by', 'decorations'])
+        ->and(array_keys($snapshot['queue'][0]))->toBe(['id', 'track', 'status', 'score', 'likes', 'dislikes', 'play_id', 'requested_by', 'decorations'])
         ->and(array_keys($snapshot['queue'][0]['track']))->toBe(['title', 'artists', 'album', 'artwork_url', 'duration_ms', 'explicit']);
 });
 

@@ -87,6 +87,7 @@ return [
         'redis:default' => 60,
         'redis:player' => 30,
         'redis:polling' => 60,
+        'redis:ticks' => 30,
         'redis:broadcast' => 30,
     ],
 
@@ -178,6 +179,10 @@ return [
     | in all environments. These supervisors and settings handle all your
     | queued jobs and will be provisioned by Horizon during deployment.
     |
+    | Every supervisor "timeout" must stay below the Horizon container's
+    | stop_grace_period (75s in example/docker-compose.yml), so a deploy
+    | lets running jobs finish before Docker sends SIGKILL.
+    |
     */
 
     'defaults' => [
@@ -191,6 +196,19 @@ return [
             'memory' => 128,
             'tries' => 1,
             'timeout' => 60,
+            'nice' => 0,
+        ],
+
+        'supervisor-ticks' => [
+            'connection' => 'redis',
+            'queue' => ['ticks'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 30,
             'nice' => 0,
         ],
 
@@ -215,7 +233,8 @@ return [
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 128,
-            'tries' => 1,
+            'tries' => 3,
+            'backoff' => [1, 5, 15],
             'timeout' => 60,
             'nice' => 0,
         ],
@@ -241,7 +260,8 @@ return [
             'maxTime' => 0,
             'maxJobs' => 0,
             'memory' => 128,
-            'tries' => 1,
+            'tries' => 3,
+            'backoff' => [1, 5, 15],
             'timeout' => 60,
             'nice' => 0,
         ],
@@ -251,6 +271,9 @@ return [
         'production' => [
             'supervisor-player' => [
                 'maxProcesses' => 4,
+            ],
+            'supervisor-ticks' => [
+                'maxProcesses' => 2,
             ],
             'supervisor-polling' => [
                 'maxProcesses' => 2,
@@ -266,8 +289,32 @@ return [
             ],
         ],
 
+        '*' => [
+            'supervisor-player' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-ticks' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-polling' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-broadcast' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-ai' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-default' => [
+                'maxProcesses' => 1,
+            ],
+        ],
+
         'local' => [
             'supervisor-player' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-ticks' => [
                 'maxProcesses' => 1,
             ],
             'supervisor-polling' => [

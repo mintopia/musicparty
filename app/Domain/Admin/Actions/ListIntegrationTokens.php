@@ -2,16 +2,16 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\IntegrationToken;
+use App\Domain\Admin\Models\Integration;
 use Illuminate\Database\Eloquent\Collection;
 
 class ListIntegrationTokens
 {
     /**
-     * @return Collection<int, IntegrationToken>
+     * @return Collection<int, Integration>
      */
     public function handle(): Collection
     {
-        return IntegrationToken::query()->orderByDesc('id')->get();
+        return Integration::query()->with('tokens')->orderByDesc('id')->get();
     }
 }

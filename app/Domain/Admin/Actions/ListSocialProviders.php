@@ -3,7 +3,7 @@
 namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\ProviderCatalogue;
-use App\Models\SocialProvider;
+use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Support\Collection;
 
 class ListSocialProviders

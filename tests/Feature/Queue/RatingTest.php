@@ -1,15 +1,15 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Http\Resources\V1\QueueEntryResource;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Schema;
@@ -78,7 +78,7 @@ it('does not rebroadcast when the rated play is not the playing track', function
     $this->putJson(playingRatingUrl($play), ['value' => 'up'])->assertOk();
     $this->putJson(playingRatingUrl($standalone), ['value' => 'up'])->assertOk();
 
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(BroadcastPartyQueue::class);
 });
 
 it('returns not found for the removed request rating urls', function () {

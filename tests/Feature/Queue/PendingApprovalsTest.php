@@ -1,24 +1,26 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Broadcast\PartyLogEntryAddedEvent;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Queue\Actions\ListQueue;
+use App\Domain\Queue\Broadcast\PendingRequestAddedEvent;
+use App\Domain\Queue\Broadcast\PendingRequestResolvedEvent;
+use App\Domain\Queue\Broadcast\QueueUpdatedEvent;
+use App\Domain\Queue\Broadcast\RequestDecidedEvent;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\PartyLogEntryAddedEvent;
-use App\Events\Party\PendingRequestAddedEvent;
-use App\Events\Party\PendingRequestResolvedEvent;
-use App\Events\Party\QueueUpdatedEvent;
-use App\Events\Party\RequestDecidedEvent;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -44,7 +46,10 @@ function asMember(PartyMember $member): void
     Sanctum::actingAs($member->user);
 }
 
-function requestTrack(PartyMember $member)
+/**
+ * @return TestResponse<Response>
+ */
+function requestTrack(PartyMember $member): TestResponse
 {
     asMember($member);
 

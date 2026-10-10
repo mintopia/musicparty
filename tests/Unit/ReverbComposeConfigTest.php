@@ -2,25 +2,38 @@
 
 declare(strict_types=1);
 
-dataset('compose files', [
-    'dev' => ['docker-compose.yaml'],
-    'example' => ['example/docker-compose.yml'],
-]);
+use Tests\Support\DeployConfig;
 
-it('starts Reverb on its configured server port without debug', function (string $file) {
-    $contents = file_get_contents(dirname(__DIR__, 2).'/'.$file);
+dataset('compose files', ['docker-compose.yaml', 'example/docker-compose.yml']);
 
-    expect($contents)
-        ->toContain('"reverb:start", "--host=0.0.0.0"')
-        ->not->toContain('--debug')
-        ->not->toContain('--port');
-})->with('compose files');
+it('starts Reverb on its configured server port without debug', function () {
+    $argv = DeployConfig::compose('docker-compose.yaml')->entrypoint('reverb');
+
+    expect($argv)->toContain('reverb:start')->toContain('--host=0.0.0.0')
+        ->and(array_filter($argv, fn (string $arg): bool => str_starts_with($arg, '--debug') || str_starts_with($arg, '--port')))->toBeEmpty();
+});
 
 it('loads the dev Reverb service environment from .env', function () {
-    expect(file_get_contents(dirname(__DIR__, 2).'/docker-compose.yaml'))
-        ->toMatch('/reverb:.*?env_file: \.env\s+entrypoint:/s');
+    expect(DeployConfig::compose('docker-compose.yaml')->envFiles('reverb'))->toContain('.env');
 });
 
 it('has no VITE Reverb variables in the env files', function (string $file) {
-    expect(file_get_contents(dirname(__DIR__, 2).'/'.$file))->not->toContain('VITE_REVERB');
+    $vite = array_filter(array_keys(DeployConfig::env($file)), fn (string $key): bool => str_starts_with($key, 'VITE_REVERB'));
+
+    expect($vite)->toBeEmpty();
 })->with(['example/.env.example', 'docker/production/production.env', '.env.example']);
+
+it('raises the open file limit for the Reverb service', function (string $file) {
+    $nofile = DeployConfig::compose($file)->service('reverb')['ulimits']['nofile'] ?? [];
+
+    expect($nofile)->toBe(['soft' => 65535, 'hard' => 65535]);
+})->with('compose files');
+
+it('installs the uv extension in the production and develop images', function (string $dockerfile) {
+    $runs = implode("\n", array_column(
+        array_filter(DeployConfig::dockerfile($dockerfile), fn (array $entry): bool => $entry['instruction'] === 'RUN'),
+        'arguments',
+    ));
+
+    expect($runs)->toMatch('/install-php-extensions\b[^&]*\buv\b/');
+})->with(['docker/production/Dockerfile', 'docker/develop/Dockerfile']);

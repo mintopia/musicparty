@@ -2,17 +2,18 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Broadcast\MemberVoteChangedEvent;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 
 class VoteOnRequest
@@ -76,6 +77,7 @@ class VoteOnRequest
         if ($changed) {
             BroadcastPartyQueue::dispatch($party->code);
             VoteCast::dispatch($party, $request, $member, $direction);
+            MemberVoteChangedEvent::dispatch($party->code, $member->id, $request->id, $direction?->weight() ?? 0);
         }
 
         return TrackRequest::query()

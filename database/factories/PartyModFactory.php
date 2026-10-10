@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Party;
-use App\Models\PartyMod;
+use App\Domain\Mod\Models\PartyMod;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

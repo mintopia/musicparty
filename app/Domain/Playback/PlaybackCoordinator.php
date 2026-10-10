@@ -3,17 +3,23 @@
 namespace App\Domain\Playback;
 
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
+use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Queue\Actions\AdvanceQueue;
+use App\Domain\Queue\Actions\ClearUpNextEnqueued;
+use App\Domain\Queue\Actions\ConfirmUpNextEnqueued;
+use App\Domain\Queue\Actions\MarkUpNextEnqueued;
+use App\Domain\Queue\Actions\MarkUpNextEnqueueUnconfirmed;
 use App\Domain\Queue\Actions\SelectUpNext;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
@@ -26,6 +32,10 @@ class PlaybackCoordinator
         private readonly AdvanceQueue $advanceQueue,
         private readonly RecordPartyLogEntry $record,
         private readonly EnqueueBackoff $backoff,
+        private readonly MarkUpNextEnqueued $markEnqueued,
+        private readonly ClearUpNextEnqueued $clearEnqueued,
+        private readonly MarkUpNextEnqueueUnconfirmed $markUnconfirmed,
+        private readonly ConfirmUpNextEnqueued $confirmEnqueued,
     ) {}
 
     public function startIfIdle(Party $party): void
@@ -56,6 +66,7 @@ class PlaybackCoordinator
         BroadcastPartyQueue::dispatch($party->code);
 
         if ($result->unexpectedTrack) {
+            $this->releaseUnconfirmed($party);
             $this->stopPlayback($party, 'unexpected_track');
 
             return;
@@ -77,6 +88,7 @@ class PlaybackCoordinator
         $result = ($this->advanceQueue)($party, null);
 
         if ($result->playing === null) {
+            $this->releaseUnconfirmed($party);
             BroadcastPartyQueue::dispatch($party->code);
             $this->selectAndSend($party);
         }
@@ -89,6 +101,8 @@ class PlaybackCoordinator
         if ($party === null) {
             return;
         }
+
+        $this->resolveUnconfirmed($party);
 
         if ($this->requestWithStatus($party, RequestStatus::UpNext) !== null) {
             $this->sendUpNext($party);
@@ -144,7 +158,7 @@ class PlaybackCoordinator
                 return null;
             }
 
-            $request->forceFill(['enqueued_at' => now()])->save();
+            ($this->markEnqueued)($request);
 
             return $request;
         });
@@ -155,14 +169,64 @@ class PlaybackCoordinator
 
         try {
             $player->enqueue($party->music_provider, $request->provider_track_id);
+        } catch (PlayerRateLimitedException) {
+            ($this->clearEnqueued)($request);
+        } catch (PlayerEnqueueUnconfirmedException) {
+            $this->markUnconfirmed($party, $request);
         } catch (Throwable $exception) {
             $this->recordEnqueueFailure($party, $request);
-            $request->forceFill(['enqueued_at' => null])->save();
+            ($this->clearEnqueued)($request);
 
             if (! $exception instanceof PlayerDisconnectedException) {
                 report($exception);
             }
         }
+    }
+
+    private function markUnconfirmed(Party $party, TrackRequest $request): void
+    {
+        if (($this->markUnconfirmed)($request)) {
+            ($this->record)($party, 'player.enqueue_unconfirmed', subject: $request->title, systemActor: 'player');
+        }
+    }
+
+    private function resolveUnconfirmed(Party $party): void
+    {
+        $request = $this->unconfirmedRequest($party);
+        $queued = $this->players->for($party)?->state()->queuedTrackIds;
+
+        if ($request === null || $queued === null) {
+            return;
+        }
+
+        if (in_array($request->provider_track_id, $queued, true)) {
+            ($this->confirmEnqueued)($request);
+
+            return;
+        }
+
+        $this->releaseUnconfirmed($party);
+    }
+
+    private function releaseUnconfirmed(Party $party): void
+    {
+        $request = $this->unconfirmedRequest($party);
+
+        if ($request === null) {
+            return;
+        }
+
+        ($this->clearEnqueued)($request);
+        $this->recordEnqueueFailure($party, $request);
+    }
+
+    private function unconfirmedRequest(Party $party): ?TrackRequest
+    {
+        return TrackRequest::query()
+            ->where('party_id', $party->id)
+            ->where('status', RequestStatus::UpNext)
+            ->where('enqueue_unconfirmed', true)
+            ->first();
     }
 
     private function recordEnqueueFailure(Party $party, TrackRequest $request): void

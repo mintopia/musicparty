@@ -1,17 +1,17 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Contracts\Console\Kernel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;

@@ -2,7 +2,7 @@
 
 namespace App\Http\Resources\V1;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -20,7 +20,7 @@ class MeResource extends JsonResource
             'id' => $this->id,
             'nickname' => $this->nickname,
             'avatar' => $this->avatarUrl(),
-            'signup_complete' => ! $this->first_login && $this->terms_agreed_at !== null,
+            'signup_complete' => $this->hasCompletedSignup(),
         ];
     }
 }

@@ -2,13 +2,14 @@
 
 namespace App\Domain\Identity\Actions;
 
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
-use App\Services\SocialProviders\AbstractSocialProvider;
-use App\Services\SocialProviders\DiscordProvider;
-use App\Services\SocialProviders\SpotifyProvider;
-use App\Services\SocialProviders\SteamProvider;
-use App\Services\SocialProviders\TwitchProvider;
+use App\Domain\Admin\Actions\SaveProviderSetting;
+use App\Domain\Admin\Models\ProviderSetting;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\SocialProviders\AbstractSocialProvider;
+use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SteamProvider;
+use App\Domain\Identity\SocialProviders\TwitchProvider;
 use Illuminate\Support\Facades\DB;
 
 class SeedSocialProviders
@@ -50,7 +51,7 @@ class SeedSocialProviders
 
             if (blank($setting->value) && filled($configured)) {
                 $setting->value = $configured;
-                $setting->save();
+                app(SaveProviderSetting::class)($setting);
             }
 
             if ($setting->isRequired() && blank($setting->value)) {

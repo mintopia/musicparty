@@ -3,8 +3,8 @@
 namespace App\Domain\Identity\Actions;
 
 use App\Domain\Identity\Exceptions\LoginRefusedException;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 
 class CompleteSocialLogin
 {

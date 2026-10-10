@@ -1,12 +1,12 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModRegistry;
 use App\Domain\Mod\PartyMods;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\PartyMod;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\DB;

@@ -2,7 +2,7 @@
 
 namespace App\Domain\Admin\Actions;
 
-use App\Models\User;
+use App\Domain\Identity\Models\User;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class ListUsers
@@ -12,11 +12,11 @@ class ListUsers
      */
     public function handle(?string $search = null, int $perPage = 25): LengthAwarePaginator
     {
-        $term = $search === null ? null : addcslashes($search, '%_\\');
+        $term = $search === null ? null : str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $search);
 
         return User::query()
             ->with('roles')
-            ->when($term !== null && $term !== '', fn ($query) => $query->where('nickname', 'like', "%{$term}%"))
+            ->when($term !== null && $term !== '', fn ($query) => $query->whereRaw("nickname like ? escape '!'", ["%{$term}%"]))
             ->orderBy('nickname')
             ->orderBy('id')
             ->paginate($perPage)

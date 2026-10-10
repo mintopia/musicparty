@@ -45,6 +45,7 @@ const applyThemeCss = () => {
     }
 };
 
+const liveState = ref(props.party.state);
 const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
 const startedAtMs = ref(props.startedAt ? Date.parse(props.startedAt) : null);
@@ -80,11 +81,14 @@ onMounted(() => {
         now.value = Date.now();
     }, 1000);
     const channel = window.Echo?.channel(channelName);
-    channel?.listen('.ThemeUpdated', (payload) => {
+    channel?.listen('.theme.updated', (payload) => {
         theme.value = payload;
         applyThemeCss();
     });
-    channel?.listen('Party.QueueUpdatedEvent', (payload) => {
+    channel?.listen('.party.state_changed', (payload) => {
+        liveState.value = payload.state;
+    });
+    channel?.listen('.queue.updated', (payload) => {
         if (payload.now_playing?.id !== nowPlaying.value?.id) {
             startedAtMs.value = payload.now_playing ? Date.now() : null;
         }
@@ -122,6 +126,7 @@ onBeforeUnmount(() => {
         <header class="relative flex items-start justify-between px-4 pt-4 text-2xl font-semibold">
             <img v-if="logoUrl" :src="logoUrl" alt="" data-testid="tv-logo" class="max-h-16 max-w-48 object-contain" />
             <span data-testid="tv-party-name">{{ party.name }}</span>
+            <span v-if="liveState !== 'live'" data-testid="tv-party-state" class="rounded border border-white/40 px-2 py-0.5 text-base font-medium capitalize">{{ liveState }}</span>
             <span data-testid="tv-party-code" class="tracking-wider">{{ party.code }}</span>
         </header>
 

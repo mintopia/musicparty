@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Party;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\Actions\GetPartyTheme;
 use App\Domain\Theming\Actions\ResetPartyTheme;
 use App\Domain\Theming\Actions\UpdatePartyTheme;
@@ -9,7 +10,6 @@ use App\Domain\Theming\ContrastWarnings;
 use App\Domain\Theming\ThemeTokens;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Party\UpdatePartyThemeRequest;
-use App\Models\Party;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;

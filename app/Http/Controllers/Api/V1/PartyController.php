@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Actions\JoinParty;
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\GoLiveParty;
-use App\Domain\Party\Actions\JoinParty;
 use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Http\Controllers\Controller;
@@ -18,8 +20,6 @@ use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PartyResource;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -56,7 +56,7 @@ class PartyController extends Controller
         return new PartyResource($party);
     }
 
-    public function show(Party $party)
+    public function show(Party $party): PartyResource
     {
         return new PartyResource($party);
     }

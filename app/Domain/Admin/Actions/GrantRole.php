@@ -3,8 +3,8 @@
 namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\AdminRole;
-use App\Models\Role;
-use App\Models\User;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\User;
 use Illuminate\Validation\ValidationException;
 
 class GrantRole
@@ -22,6 +22,7 @@ class GrantRole
 
         $model = Role::query()->firstOrCreate(['code' => $adminRole->value], ['name' => $adminRole->label()]);
         $user->roles()->syncWithoutDetaching([$model->id]);
+        $user->forgetRoleCache();
         $this->audit->handle($admin, 'role.granted', $user, ['role' => $adminRole->value]);
 
         return $user;

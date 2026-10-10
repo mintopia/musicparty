@@ -1,13 +1,14 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Jobs\PollPlayback;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -18,6 +19,9 @@ beforeEach(function () {
     $this->token = $this->party->createToken('Stage', ['player:connect'])->plainTextToken;
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function pollWebhook(Party $party, ?string $token): TestResponse
 {
     $request = $token === null ? test() : test()->withToken($token);

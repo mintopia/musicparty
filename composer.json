@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.4",
+        "dedoc/scramble": "^0.13.47",
         "guzzlehttp/guzzle": "^7.10",
         "inertiajs/inertia-laravel": "^3.5",
         "laravel/ai": "^1.2",
@@ -23,13 +24,11 @@
         "open-telemetry/sdk": "^1.15",
         "open-telemetry/transport-grpc": "^1.2",
         "pusher/pusher-php-server": "^7.3",
-        "ramsey/uuid": "^4.9",
         "socialiteproviders/discord": "^4.2",
         "socialiteproviders/laravelpassport": "^4.3",
         "socialiteproviders/spotify": "^4.1",
         "socialiteproviders/steam": "^4.4",
         "socialiteproviders/twitch": "^5.4",
-        "spatie/eloquent-sortable": "^5.0",
         "spatie/laravel-prometheus": "^1.7"
     },
     "require-dev": {
@@ -44,7 +43,8 @@
         "nunomaduro/collision": "^8.9",
         "pestphp/pest": "^5.3",
         "phpunit/phpunit": "^13.4",
-        "rector/rector": "^2.7"
+        "rector/rector": "^2.7",
+        "symfony/yaml": "^8.1"
     },
     "autoload": {
         "psr-4": {
@@ -86,7 +86,9 @@
     },
     "extra": {
         "laravel": {
-            "dont-discover": []
+            "dont-discover": [
+                "barryvdh/laravel-debugbar"
+            ]
         }
     },
     "config": {

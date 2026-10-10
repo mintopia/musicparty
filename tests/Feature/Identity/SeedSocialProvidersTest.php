@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
+use App\Domain\Admin\Models\ProviderSetting;
+use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 

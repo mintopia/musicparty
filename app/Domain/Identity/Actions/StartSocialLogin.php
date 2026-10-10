@@ -3,7 +3,7 @@
 namespace App\Domain\Identity\Actions;
 
 use App\Domain\Identity\Exceptions\LoginRefusedException;
-use App\Models\SocialProvider;
+use App\Domain\Identity\Models\SocialProvider;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 class StartSocialLogin

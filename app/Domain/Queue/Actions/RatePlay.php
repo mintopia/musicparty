@@ -2,16 +2,17 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Broadcast\MemberRatingChangedEvent;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\TrackRequest;
 use Illuminate\Support\Facades\DB;
 
 class RatePlay
@@ -21,7 +22,7 @@ class RatePlay
      */
     public function __invoke(PartyMember $member, Play $play, ?VoteDirection $direction): Play
     {
-        $changed = DB::transaction(function () use ($member, $play, $direction): bool {
+        [$memberChanged, $queueChanged] = DB::transaction(function () use ($member, $play, $direction): array {
             $party = Party::query()->whereKey($play->party_id)->sharedLock()->firstOrFail();
 
             if ($party->state === PartyState::Ended) {
@@ -42,11 +43,11 @@ class RatePlay
             if ($direction === null) {
                 $existing?->delete();
 
-                return $existing !== null && $this->isPlaying($play);
+                return [$existing !== null, $existing !== null && $this->isPlaying($play)];
             }
 
             if ($existing?->value === $direction->weight()) {
-                return false;
+                return [false, false];
             }
 
             Rating::query()->updateOrCreate(
@@ -54,11 +55,17 @@ class RatePlay
                 ['value' => $direction->weight()],
             );
 
-            return $this->isPlaying($play);
+            return [true, $this->isPlaying($play)];
         });
 
-        if ($changed) {
-            BroadcastPartyQueue::dispatch((string) Party::query()->whereKey($play->party_id)->value('code'));
+        $code = (string) Party::query()->whereKey($play->party_id)->value('code');
+
+        if ($queueChanged) {
+            BroadcastPartyQueue::dispatch($code);
+        }
+
+        if ($memberChanged) {
+            MemberRatingChangedEvent::dispatch($code, $member->id, $play->id, $direction?->weight() ?? 0);
         }
 
         return Play::query()

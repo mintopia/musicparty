@@ -1,16 +1,19 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @return array{Party, User}
+ */
 function partyWithMember(string $role = 'guest'): array
 {
     $party = Party::factory()->create(['code' => 'ABCD']);

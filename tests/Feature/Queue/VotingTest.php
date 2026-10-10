@@ -1,16 +1,18 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Jobs\BroadcastPartyQueue;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -28,7 +30,10 @@ function voteUrl(TrackRequest $track, string $code = 'ABCD'): string
     return "/api/v1/parties/{$code}/requests/{$track->id}/vote";
 }
 
-function castVote(TrackRequest $track, string $value)
+/**
+ * @return TestResponse<Response>
+ */
+function castVote(TrackRequest $track, string $value): TestResponse
 {
     return test()->putJson(voteUrl($track), ['value' => $value]);
 }

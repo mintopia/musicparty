@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\AdminAuditEntry;
-use App\Models\User;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Identity\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -11,6 +11,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AdminAuditEntryFactory extends Factory
 {
+    protected $model = AdminAuditEntry::class;
+
     /**
      * Define the model's default state.
      *

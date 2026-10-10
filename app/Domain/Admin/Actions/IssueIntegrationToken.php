@@ -3,9 +3,9 @@
 namespace App\Domain\Admin\Actions;
 
 use App\Domain\Admin\IntegrationAbility;
-use App\Models\IntegrationToken;
-use App\Models\User;
-use Illuminate\Support\Str;
+use App\Domain\Admin\Models\Integration;
+use App\Domain\Identity\Models\User;
+use Carbon\CarbonInterface;
 
 class IssueIntegrationToken
 {
@@ -13,7 +13,7 @@ class IssueIntegrationToken
 
     /**
      * @param  list<string>  $abilities
-     * @return array{token: IntegrationToken, plainText: string}
+     * @return array{token: Integration, plainText: string}
      */
     public function handle(User $admin, string $name, array $abilities): array
     {
@@ -23,21 +23,26 @@ class IssueIntegrationToken
             ->values()
             ->all();
 
-        $plainText = 'mpi_'.Str::random(40);
-
-        $token = IntegrationToken::query()->create([
+        $integration = Integration::query()->create([
             'name' => $name,
-            'token_hash' => IntegrationToken::hashFor($plainText),
-            'abilities' => $abilities,
-            'created_by' => $admin->id,
+            'issued_by' => $admin->id,
         ]);
 
+        $plainText = $integration->createToken($name, $abilities, $this->expiry())->plainTextToken;
+
         $this->audit->handle($admin, 'integration_token.issued', null, [
-            'token_id' => $token->id,
+            'token_id' => $integration->id,
             'name' => $name,
             'abilities' => implode(',', $abilities),
         ]);
 
-        return ['token' => $token, 'plainText' => $plainText];
+        return ['token' => $integration->load('tokens'), 'plainText' => $plainText];
+    }
+
+    private function expiry(): ?CarbonInterface
+    {
+        $days = config('musicparty.tokens.integration_ttl_days');
+
+        return $days === null ? null : now()->addDays((int) $days);
     }
 }

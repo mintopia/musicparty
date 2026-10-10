@@ -7,6 +7,7 @@ use App\Http\Middleware\AuthorizePartyExport;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsurePlayerToken;
+use App\Http\Middleware\EnsureSignupComplete;
 use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\MetricsCollector;
@@ -92,6 +93,7 @@ class Kernel extends HttpKernel
     protected $middlewareAliases = [
         'auth' => Authenticate::class,
         'player.token' => EnsurePlayerToken::class,
+        'signup.complete' => EnsureSignupComplete::class,
         'user.principal' => RejectPlayerTokens::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'auth.session' => AuthenticateSession::class,

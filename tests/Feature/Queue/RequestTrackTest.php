@@ -1,21 +1,23 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Jobs\StartPlayback;
 use App\Domain\Queue\Actions\ListQueue;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Jobs\BroadcastPartyQueue;
-use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -27,7 +29,10 @@ beforeEach(function () {
     $this->member = PartyMember::factory()->for($this->party)->for($this->user)->create();
 });
 
-function apiRequest(User $user, string $trackId = 'track-1', string $code = 'ABCD')
+/**
+ * @return TestResponse<Response>
+ */
+function apiRequest(User $user, string $trackId = 'track-1', string $code = 'ABCD'): TestResponse
 {
     Sanctum::actingAs($user);
 

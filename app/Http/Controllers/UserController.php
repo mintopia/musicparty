@@ -6,7 +6,7 @@ use App\Domain\Identity\Actions\CompleteSocialLogin;
 use App\Domain\Identity\Actions\ListLoginProviders;
 use App\Domain\Identity\Actions\StartSocialLogin;
 use App\Domain\Identity\Exceptions\LoginRefusedException;
-use App\Models\SocialProvider;
+use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;

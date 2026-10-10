@@ -2,13 +2,14 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Data\QueueAdvance;
 use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\Play;
-use App\Models\TrackRequest;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 readonly class AdvanceQueue
@@ -17,6 +18,17 @@ readonly class AdvanceQueue
      * Applies a Player track change, or with a null track the Player stopping: Playing becomes Played, Up Next becomes Playing and is recorded as a Play.
      */
     public function __invoke(Party $party, ?string $providerTrackId): QueueAdvance
+    {
+        try {
+            return $this->advance($party, $providerTrackId);
+        } catch (UniqueConstraintViolationException) {
+            $playing = TrackRequest::query()->where('party_id', $party->id)->where('status', RequestStatus::Playing)->first();
+
+            return new QueueAdvance($playing, duplicate: true);
+        }
+    }
+
+    private function advance(Party $party, ?string $providerTrackId): QueueAdvance
     {
         return DB::transaction(function () use ($party, $providerTrackId): QueueAdvance {
             Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
@@ -43,7 +55,7 @@ readonly class AdvanceQueue
                 return new QueueAdvance(null, unexpectedTrack: $providerTrackId !== null);
             }
 
-            $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now()])->save();
+            $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now(), 'enqueue_unconfirmed' => false])->save();
             $this->recordPlay($upNext);
             DB::afterCommit(fn () => TrackStarted::dispatch($party, $upNext));
 

@@ -4,16 +4,16 @@ namespace App\Domain\Music\Actions;
 
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 class AppendPlayToHistory
 {
-    public function __invoke(Party $party, string $providerTrackId, MusicProvider $provider): void
+    public function __invoke(Party $party, string $providerTrackId, MusicProvider $provider, ?int $playId = null): void
     {
         if ($party->history_playlist_id === null) {
             return;
         }
 
-        AppendToHistoryPlaylist::dispatch($party->id, $providerTrackId, $provider->id());
+        AppendToHistoryPlaylist::dispatch($party->id, $providerTrackId, $provider->id(), $playId);
     }
 }

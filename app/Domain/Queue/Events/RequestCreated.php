@@ -3,8 +3,8 @@
 namespace App\Domain\Queue\Events;
 
 use App\Domain\Mod\Contracts\PartyScopedEvent;
-use App\Models\Party;
-use App\Models\TrackRequest;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\TrackRequest;
 use Illuminate\Foundation\Events\Dispatchable;
 
 class RequestCreated implements PartyScopedEvent

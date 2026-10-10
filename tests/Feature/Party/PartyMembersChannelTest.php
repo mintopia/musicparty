@@ -1,10 +1,12 @@
 <?php
 
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Broadcast;
+use Illuminate\Testing\TestResponse;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -20,7 +22,10 @@ beforeEach(function () {
     $this->party = Party::factory()->create(['code' => 'ABCD']);
 });
 
-function authorisePresence(?User $user, string $code = 'ABCD')
+/**
+ * @return TestResponse<Response>
+ */
+function authorisePresence(?User $user, string $code = 'ABCD'): TestResponse
 {
     $test = $user === null ? test() : test()->actingAs($user);
 

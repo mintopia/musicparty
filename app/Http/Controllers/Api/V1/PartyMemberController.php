@@ -2,16 +2,16 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Domain\Party\Actions\BanMember;
-use App\Domain\Party\Actions\ChangeMemberRole;
-use App\Domain\Party\Actions\ListPartyMembers;
-use App\Domain\Party\Actions\UnbanMember;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Actions\BanMember;
+use App\Domain\Membership\Actions\ChangeMemberRole;
+use App\Domain\Membership\Actions\ListPartyMembers;
+use App\Domain\Membership\Actions\UnbanMember;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Resources\V1\PartyMemberResource;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 

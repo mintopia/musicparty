@@ -2,6 +2,7 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Actions\EvaluateRequestRules;
 use App\Domain\Mod\Actions\RecordRuleDecision;
 use App\Domain\Mod\Data\EnabledMod;
@@ -11,23 +12,21 @@ use App\Domain\Mod\RuleOutcome;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
-use App\Domain\Party\PartyRole;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Jobs\StartPlayback;
 use App\Domain\Queue\Blocklist;
+use App\Domain\Queue\Broadcast\PendingRequestAddedEvent;
+use App\Domain\Queue\Broadcast\RequestDecidedEvent;
+use App\Domain\Queue\Broadcast\RequestRejectedEvent;
 use App\Domain\Queue\Data\RequestOutcome;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\PendingRequestAddedEvent;
-use App\Events\Party\RequestDecidedEvent;
-use App\Events\Party\RequestRejectedEvent;
-use App\Jobs\BroadcastPartyQueue;
-use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
@@ -61,9 +60,13 @@ class RequestTrack
 
             $track = $this->fetchTrack($party->music_provider, $providerTrackId);
 
-            $outcome = DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
-                return $this->place($party, $member, $track, $decision);
-            });
+            $outcome = $this->blocklist->deferringFailureRecords(
+                function () use ($party, $member, $track, &$decision): RequestOutcome {
+                    return DB::transaction(function () use ($party, $member, $track, &$decision): RequestOutcome {
+                        return $this->place($party, $member, $track, $decision);
+                    });
+                },
+            );
         } catch (RequestRefusedException $refusal) {
             if ($decision !== null) {
                 ($this->recordModDecision)($party, $decision, $track);
@@ -166,7 +169,7 @@ class RequestTrack
     {
         $track = $this->fetchTrack($party->music_provider, $spec->providerTrackId);
 
-        return DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
+        return $this->blocklist->deferringFailureRecords(fn (): ?TrackRequest => DB::transaction(function () use ($party, $spec, $track): ?TrackRequest {
             $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->state !== PartyState::Live) {
@@ -184,7 +187,7 @@ class RequestTrack
             }
 
             return $this->createRequest($locked, null, $track, RequestStatus::Queued);
-        });
+        }));
     }
 
     private function createRequest(Party $party, ?PartyMember $member, TrackData $track, RequestStatus $status): TrackRequest
@@ -206,7 +209,7 @@ class RequestTrack
 
     private function holds(Party $party, PartyMember $member): bool
     {
-        return $party->hold_requests && ! in_array($member->role, [PartyRole::Host, PartyRole::Moderator], true);
+        return $party->hold_requests && ! $member->role->isStaff();
     }
 
     /**
@@ -226,7 +229,7 @@ class RequestTrack
 
     private function enforceRules(Party $party, ?PartyMember $member, TrackData $track): void
     {
-        $exempt = $member === null || in_array($member->role, [PartyRole::Host, PartyRole::Vip], true);
+        $exempt = $member === null || $member->role->isExemptFromRequestLimit();
 
         if (! $exempt && $party->max_requests !== null) {
             $active = TrackRequest::query()
@@ -260,7 +263,7 @@ class RequestTrack
 
         if ($party->no_repeat_interval) {
             $played = $this->matchingQuery($party, $track)
-                ->where('status', RequestStatus::Played)
+                ->whereIn('status', [RequestStatus::Playing, RequestStatus::Played])
                 ->where('updated_at', '>=', now()->subSeconds($party->no_repeat_interval))
                 ->latest('updated_at')
                 ->first();

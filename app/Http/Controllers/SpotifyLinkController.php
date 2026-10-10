@@ -7,7 +7,7 @@ use App\Domain\Music\Actions\LinkHostAccount;
 use App\Domain\Music\Data\HostAccountLinkData;
 use App\Domain\Music\Exceptions\AccountAlreadyLinkedException;
 use App\Domain\Music\Exceptions\NotHostException;
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Laravel\Socialite\Facades\Socialite;

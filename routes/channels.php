@@ -11,10 +11,11 @@
 |
 */
 
-use App\Domain\Party\PartyRole;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use App\Http\Middleware\EnsurePlayerToken;
-use App\Models\Party;
-use App\Models\User;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Support\Facades\Broadcast;
 
 Broadcast::channel('party.{code}.members', function (User $user, string $code): array|false {
@@ -50,6 +51,15 @@ Broadcast::channel('party.{code}.browser-player', function (User $user, string $
 Broadcast::channel('player.{code}', function (mixed $principal, string $code): bool {
     $party = Party::findByCode($code);
 
-    return $principal instanceof Party && $party !== null && $principal->is($party)
+    $authorised = $principal instanceof Party && $party !== null && $principal->is($party)
         && $principal->tokenCan(EnsurePlayerToken::ABILITY);
+
+    $tokenId = $authorised ? $principal->currentAccessToken()->getKey() : null;
+    $socketId = request()->input('socket_id');
+
+    if ($tokenId !== null && is_string($socketId) && $socketId !== '') {
+        app(PlayerConnections::class)->register($socketId, $code, (int) $tokenId);
+    }
+
+    return $authorised;
 }, ['guards' => ['sanctum']]);

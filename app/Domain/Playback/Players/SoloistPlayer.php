@@ -4,6 +4,9 @@ namespace App\Domain\Playback\Players;
 
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Broadcast\PlayerCommandEvent;
+use App\Domain\Playback\Contracts\BindsToParty;
 use App\Domain\Playback\Contracts\HandlesPlayerFrames;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
@@ -15,14 +18,13 @@ use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\PlayerHealth;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Player\PlayerCommandEvent;
-use App\Models\Party;
-use App\Models\TrackRequest;
+use App\Support\Realtime\PlayerConnections;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 
-class SoloistPlayer implements HandlesPlayerFrames, Player
+class SoloistPlayer implements BindsToParty, HandlesPlayerFrames, Player
 {
     public const string KIND = 'soloist';
 
@@ -76,7 +78,7 @@ class SoloistPlayer implements HandlesPlayerFrames, Player
             return PlaybackState::stopped();
         }
 
-        $track = isset($stored['track']) ? new TrackReference(SpotifyMusicProvider::ID, (string) $stored['track']) : null;
+        $track = isset($stored['track']) ? new TrackReference(is_string($stored['provider'] ?? null) ? $stored['provider'] : (string) $this->party()?->music_provider, (string) $stored['track']) : null;
 
         return new PlaybackState(
             PlaybackStatus::from((string) $stored['status']),
@@ -84,6 +86,7 @@ class SoloistPlayer implements HandlesPlayerFrames, Player
             (int) ($stored['position_ms'] ?? 0),
             isset($stored['updated_at']) ? CarbonImmutable::parse((string) $stored['updated_at']) : null,
             isset($stored['duration_ms']) ? (int) $stored['duration_ms'] : null,
+            $this->list('upcoming'),
         );
     }
 
@@ -344,6 +347,7 @@ class SoloistPlayer implements HandlesPlayerFrames, Player
 
         $this->put('state', [
             'status' => $status->value,
+            'provider' => $this->party()?->music_provider,
             'track' => $track,
             'position_ms' => $positionMs,
             'duration_ms' => $item['duration_ms'] ?? null,
@@ -482,7 +486,7 @@ class SoloistPlayer implements HandlesPlayerFrames, Player
      */
     private function dispatchFrame(array $frame): void
     {
-        if ($this->partyCode !== null) {
+        if ($this->partyCode !== null && app(PlayerConnections::class)->hasValidConnection($this->partyCode)) {
             PlayerCommandEvent::dispatch($this->partyCode, $frame);
         }
     }

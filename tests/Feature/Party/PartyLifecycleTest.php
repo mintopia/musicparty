@@ -1,17 +1,17 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PartyState;
-use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\User;
+use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Queue\Models\Play;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -49,6 +49,9 @@ function bindEnoughTracks(int $count = 20): void
     bindPlaylist(array_map(fn (int $n): TrackData => fakeTrack($n), range(1, $count)));
 }
 
+/**
+ * @return array{Party, User}
+ */
 function lifecycleParty(string $state = 'paused', string $role = 'host', bool $playlist = true): array
 {
     $party = Party::factory()->create([
@@ -66,6 +69,9 @@ function recordPlay(Party $party, string $providerTrackId, DateTimeInterface $pl
     Play::factory()->for($party)->create(['provider_track_id' => $providerTrackId, 'played_at' => $playedAt]);
 }
 
+/**
+ * @return array{int, int, bool}
+ */
 function gateCheck(Party $party): array
 {
     $check = app(FallbackPlaylistGate::class)->check($party->fresh());

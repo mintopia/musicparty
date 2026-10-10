@@ -2,7 +2,7 @@
 
 namespace App\Domain\Mod\Data;
 
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 final readonly class ModContext
 {

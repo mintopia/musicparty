@@ -4,11 +4,12 @@ use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Data\PlayerCommand;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Models\Party;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music', 'Unit/Domain/Playback');
@@ -23,6 +24,7 @@ function playbackTrack(int $n, int $durationMs = 180000, bool $explicit = false)
 
 /**
  * @param  list<TrackData>  $playlist
+ * @param  array<string, mixed>  $attributes
  */
 function livePlaybackParty(array $playlist = [], array $attributes = []): Party
 {
@@ -51,4 +53,16 @@ function enqueuedTrackIds(FakePlayer $player): array
         fn (PlayerCommand $command): ?string => $command->providerTrackId,
         array_filter($player->commands(), fn (PlayerCommand $command): bool => $command->type === 'enqueue'),
     ));
+}
+
+function countQueries(Closure $callback): int
+{
+    DB::flushQueryLog();
+    DB::enableQueryLog();
+    $callback();
+    $count = count(DB::getQueryLog());
+    DB::disableQueryLog();
+    DB::flushQueryLog();
+
+    return $count;
 }

@@ -2,8 +2,8 @@
 
 namespace Database\Factories;
 
-use App\Models\Party;
-use App\Models\Play;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\Play;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

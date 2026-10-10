@@ -1,23 +1,25 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Actions\BanMember;
+use App\Domain\Membership\Actions\UnbanMember;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Testing\FakeMusicProvider;
-use App\Domain\Party\Actions\BanMember;
-use App\Domain\Party\Actions\UnbanMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Jobs\StartPlayback;
 use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
-use App\Jobs\StartPlayback;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -35,7 +37,10 @@ function playFor(Party $party): Play
     return Play::factory()->create(['party_id' => $party->id]);
 }
 
-function rateRequest(User $user, Play $play, string $value = 'up')
+/**
+ * @return TestResponse<Response>
+ */
+function rateRequest(User $user, Play $play, string $value = 'up'): TestResponse
 {
     Sanctum::actingAs($user);
 

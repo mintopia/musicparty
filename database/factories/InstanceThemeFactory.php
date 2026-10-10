@@ -2,7 +2,7 @@
 
 namespace Database\Factories;
 
-use App\Models\InstanceTheme;
+use App\Domain\Theming\Models\InstanceTheme;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

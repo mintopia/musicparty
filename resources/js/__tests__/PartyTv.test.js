@@ -98,13 +98,13 @@ describe('TV screen', () => {
         const w = mount(Tv, {props: props()});
         const next = entry({id: 9, track: {title: 'Fresh', artists: ['X'], album: null, artwork_url: null, duration_ms: 1000, explicit: false}});
 
-        listeners['Party.QueueUpdatedEvent']({now_playing: next, up_next: null});
+        listeners['.queue.updated']({now_playing: next, up_next: null});
         await w.vm.$nextTick();
         expect(w.get('[data-testid=tv-now-playing-title]').text()).toBe('Fresh');
         expect(w.find('[data-testid=tv-up-next-empty]').exists()).toBe(true);
 
         const earlier = entry({id: 3, track: {title: 'Earlier', artists: ['Y'], album: null, artwork_url: null, duration_ms: 1000, explicit: false}});
-        listeners['Party.QueueUpdatedEvent']({now_playing: earlier, up_next: null});
+        listeners['.queue.updated']({now_playing: earlier, up_next: null});
         await w.vm.$nextTick();
         expect(w.get('[data-testid=tv-now-playing-title]').text()).toBe('Earlier');
     });
@@ -136,7 +136,7 @@ describe('TV screen', () => {
 
         it('updates live on ThemeUpdated and cleans up on unmount', async () => {
             const w = mount(Tv, {props: props({theme: theme()})});
-            listeners['.ThemeUpdated'](theme({light: {primary: '#ff0000'}, logo_url: null, background_url: null, tv_layout: 'queue-focus'}));
+            listeners['.theme.updated'](theme({light: {primary: '#ff0000'}, logo_url: null, background_url: null, tv_layout: 'queue-focus'}));
             await w.vm.$nextTick();
             expect(document.getElementById('party-theme-live').textContent).toContain('--color-primary:#ff0000;');
             expect(w.find('[data-testid=tv-logo]').exists()).toBe(false);
@@ -155,5 +155,18 @@ describe('TV screen', () => {
         w.unmount();
         window.dispatchEvent(new Event('realtime:resync'));
         expect(reload).toHaveBeenCalledTimes(1);
+    });
+});
+
+describe('TV screen party state', () => {
+    it('applies party.state_changed without a reload', async () => {
+        const w = mount(Tv, {props: props()});
+        expect(w.find('[data-testid=tv-party-state]').exists()).toBe(false);
+        listeners['.party.state_changed']({state: 'paused'});
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=tv-party-state]').text()).toBe('paused');
+        listeners['.party.state_changed']({state: 'live'});
+        await w.vm.$nextTick();
+        expect(w.find('[data-testid=tv-party-state]').exists()).toBe(false);
     });
 });

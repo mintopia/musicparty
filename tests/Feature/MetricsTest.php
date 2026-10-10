@@ -1,27 +1,15 @@
 <?php
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Validation\ValidationException;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    config(['database.redis.options.prefix' => 'metrics_test_'.getmypid().'_']);
-    app()->forgetInstance('redis');
-    Redis::clearResolvedInstance('redis');
-
     Route::get('/metrics-test/ok', fn () => 'ok');
     Route::get('/metrics-test/boom', fn () => throw new RuntimeException('boom'));
     Route::get('/metrics-test/invalid', fn () => throw ValidationException::withMessages(['a' => ['bad']]));
-});
-
-afterEach(function (): void {
-    $prefix = (string) config('database.redis.options.prefix');
-    foreach (Redis::keys('metrics.*') as $key) {
-        Redis::del(substr($key, strlen($prefix)));
-    }
 });
 
 function scrape(): string

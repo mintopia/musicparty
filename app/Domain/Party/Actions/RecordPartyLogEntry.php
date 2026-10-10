@@ -2,10 +2,10 @@
 
 namespace App\Domain\Party\Actions;
 
-use App\Events\Party\PartyLogEntryAddedEvent;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Events\PartyLogEntryRecorded;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 
 readonly class RecordPartyLogEntry
 {
@@ -29,7 +29,7 @@ readonly class RecordPartyLogEntry
             'details' => $details,
         ]);
 
-        PartyLogEntryAddedEvent::dispatch($party->code, $entry->id, $action, $subject);
+        PartyLogEntryRecorded::dispatch($party->code, $entry->id, $action, $subject);
 
         return $entry;
     }

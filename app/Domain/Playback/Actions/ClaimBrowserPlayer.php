@@ -2,9 +2,9 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
-use App\Models\Party;
 
 readonly class ClaimBrowserPlayer
 {

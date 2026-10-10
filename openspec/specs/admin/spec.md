@@ -40,7 +40,7 @@ Admins SHALL be able to list and search users, suspend and unsuspend a user, and
 - **THEN** the change is recorded with the acting admin and time
 
 ### Requirement: Act as Host
-An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving Host powers in that Party. Entering and leaving the mode MUST be recorded in that Party's Party Log, the same log the Host and Moderators read, and actions taken in it SHALL be attributable to the admin acting as Host. Admins MUST NOT have Host powers in a Party outside this mode.
+An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving Host powers in that Party. The mode SHALL end automatically after a configured time. Entering and leaving the mode, including automatic expiry, MUST be recorded in that Party's Party Log, the same log the Host and Moderators read, and actions taken in it SHALL be attributable to the admin acting as Host. Admins MUST NOT have Host powers in a Party outside this mode.
 
 #### Scenario: Enter mode
 - **WHEN** an admin enters act-as-Host mode for a Party
@@ -53,6 +53,10 @@ An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving
 #### Scenario: Leave mode
 - **WHEN** the admin leaves the mode
 - **THEN** a Party Log entry records the end and Host powers are removed
+
+#### Scenario: Mode expires
+- **WHEN** the configured time passes without the admin leaving
+- **THEN** Host powers are removed and a Party Log entry records the expiry
 
 #### Scenario: Visible to the Host
 - **WHEN** the Host opens the Party Log after an admin has acted as Host
@@ -126,11 +130,11 @@ Admins SHALL see a catalogue of all registered Mods with name, description and w
 - **THEN** Parties that had it enabled no longer run it and Hosts cannot enable it
 
 ### Requirement: Operational dashboards
-Horizon and Pulse SHALL be reachable only behind the admin gate. Telescope SHALL NOT be installed.
+Horizon and Pulse SHALL be reachable only behind the admin gate. Horizon's metrics snapshot SHALL be taken on a schedule so its graphs have data, and Horizon SHALL run its supervisors in every environment, not only production and local. Telescope SHALL NOT be installed. The development debug toolbar SHALL NOT be installed in the production image.
 
 #### Scenario: Admin opens Horizon
 - **WHEN** an admin opens the Horizon dashboard
-- **THEN** it is displayed
+- **THEN** it is displayed, with throughput and runtime graphs populated
 
 #### Scenario: Non-admin opens Pulse
 - **WHEN** a non-admin requests the Pulse dashboard
@@ -140,6 +144,10 @@ Horizon and Pulse SHALL be reachable only behind the admin gate. Telescope SHALL
 - **WHEN** anyone requests the Telescope path
 - **THEN** the system returns not found
 
+#### Scenario: Staging environment
+- **WHEN** the application runs with an environment name other than production or local
+- **THEN** Horizon starts its supervisors and processes every queue
+
 ### Requirement: Admin auditability
 Admin actions that change users, roles, credentials, settings, themes, tokens or Mod availability SHALL be recorded with the acting admin and timestamp, with secrets excluded.
 
@@ -148,10 +156,11 @@ Admin actions that change users, roles, credentials, settings, themes, tokens or
 - **THEN** an audit record notes who and when, without the secret value
 
 ### Requirement: Prometheus metrics
-The system SHALL expose metrics in the Prometheus text format at a configurable path. Access SHALL be denied by default: only a scraper presenting the configured bearer token, or connecting from a configured IP range, SHALL be served. The metrics SHALL include:
+The system SHALL expose metrics in the Prometheus text format at a configurable path. Access SHALL be denied by default: only a scraper presenting the configured bearer token, or connecting from a configured IP range, SHALL be served. The client address used for the IP check SHALL come from the configured trusted proxies only. The metrics SHALL include:
 - HTTP requests counted by method and by response status
 - uncaught exceptions
 - the Horizon queue and supervisor metrics
+- dropped Player frames by reason
 - the Party count by state
 - for each Live or Paused Party: Members, Queue length, total time played, and the ranked top Tracks, top requesters, most upvoted and most downvoted Requests as shown in Live Stats
 
@@ -167,6 +176,10 @@ Party-scoped series SHALL be labelled by party code and SHALL NOT be emitted for
 
 #### Scenario: Wrong token or address
 - **WHEN** a client presents a wrong token from an address outside the allowed range
+- **THEN** access is refused
+
+#### Scenario: Spoofed forwarding header
+- **WHEN** trusted proxies are restricted to the reverse proxy's address and a client connecting directly sends an allowed address in X-Forwarded-For
 - **THEN** access is refused
 
 #### Scenario: Request and error counts

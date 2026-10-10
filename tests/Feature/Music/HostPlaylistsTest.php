@@ -1,24 +1,25 @@
 <?php
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
 use App\Domain\Music\Actions\AppendPlayToHistory;
 use App\Domain\Music\Actions\AuthorisesHost;
-use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
+use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\SocialProvider;
-use App\Models\TrackRequest;
-use App\Models\User;
-use App\Services\SocialProviders\SpotifyProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
 use Illuminate\Support\Facades\DB;
@@ -33,16 +34,19 @@ uses(RefreshDatabase::class);
 function makeUser(): User
 {
     $user = new User;
-    $user->forceFill(['nickname' => fake()->unique()->userName()]);
+    $user->forceFill(['nickname' => fake()->unique()->userName(), 'first_login' => false, 'terms_agreed_at' => now()]);
     $user->save();
 
     return $user;
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function makeHostedParty(User $host, array $attributes = []): Party
 {
     $party = new Party;
-    $party->forceFill(array_merge(['code' => fake()->unique()->lexify('????????'), 'name' => 'Test Party', 'user_id' => $host->id], $attributes));
+    $party->forceFill(array_merge(['code' => strtoupper(fake()->unique()->lexify('????????')), 'name' => 'Test Party', 'user_id' => $host->id, 'music_provider' => 'fake'], $attributes));
     Party::withoutEvents(fn () => $party->save());
 
     return $party;
@@ -59,6 +63,9 @@ function spotifyProvider(string $code = 'spotify'): SocialProvider
     return $provider;
 }
 
+/**
+ * @return array{User, LinkedAccount}
+ */
 function hostWithAccount(): array
 {
     $host = makeUser();
@@ -70,7 +77,7 @@ function hostWithAccount(): array
 beforeEach(function () {
     Party::flushEventListeners();
     $this->fake = FakeMusicProvider::withDefaultCatalogue();
-    $this->app->instance(MusicProvider::class, $this->fake);
+    $this->app->instance(FakeMusicProvider::class, $this->fake);
 });
 
 it('lists the host playlists without tokens', function () {
@@ -131,7 +138,7 @@ it('rejects playlists that do not belong to the host', function () {
 it('rejects a history playlist when the provider cannot write', function () {
     [$host] = hostWithAccount();
     $party = makeHostedParty($host);
-    $this->app->instance(MusicProvider::class, new FakeMusicProvider(playlists: [new PlaylistData('playlist-1', 'Mix')], capabilities: []));
+    $this->app->instance(FakeMusicProvider::class, new FakeMusicProvider(playlists: [new PlaylistData('playlist-1', 'Mix')], capabilities: []));
     Sanctum::actingAs($host);
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => null, 'history_playlist_id' => 'playlist-1'])
@@ -274,7 +281,7 @@ it('retries a temporary failure without throwing into playback', function () {
         }
     };
 
-    $job->handle($this->fake, app(AuthorisesHost::class));
+    $job->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
 
     expect($this->fake->appendedTo('playlist-1'))->toBe([])
         ->and($job->releasedFor)->toBe(42);
@@ -294,7 +301,7 @@ it('logs a final failure without tokens and does not throw', function () {
         }
     };
 
-    $job->handle($this->fake, app(AuthorisesHost::class));
+    $job->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
 
     Log::shouldHaveReceived('warning')->once()->withArgs(fn (string $message, array $context): bool => ! str_contains(json_encode($context), $account->access_token));
 });
@@ -313,7 +320,6 @@ it('tops the queue up from the playlist chosen through the picker', function () 
     $party = makeHostedParty($host, ['state' => PartyState::Live, 'music_provider' => 'fake']);
     $tracks = array_map(playbackTrack(...), range(1, 8));
     $fake = new FakeMusicProvider($tracks, [new PlaylistData('playlist-1', 'Fallback Mix')], ['playlist-1' => $tracks]);
-    $this->app->instance(MusicProvider::class, $fake);
     $this->app->instance(FakeMusicProvider::class, $fake);
     Sanctum::actingAs($host);
 
@@ -361,4 +367,17 @@ it('writes a party log entry and does not throw when the provider fails on advan
 
     expect($advance->playing)->not->toBeNull()
         ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'playlist.history_append_failed')->exists())->toBeTrue();
+});
+
+it('appends one Play to the history playlist once however often the job runs', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    $play = Play::factory()->for($party)->create(['provider_track_id' => 'track-1']);
+
+    foreach ([1, 2] as $_) {
+        new AppendToHistoryPlaylist($party->id, 'track-1', 'fake', $play->id)->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
+    }
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
+        ->and($play->fresh()->history_appended_at)->not->toBeNull();
 });

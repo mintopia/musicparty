@@ -2,7 +2,7 @@
 
 namespace App\Domain\Queue\Data;
 
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\TrackRequest;
 
 final readonly class QueueAdvance
 {

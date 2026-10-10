@@ -1,26 +1,31 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\Play;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 
 uses(RefreshDatabase::class);
 
 beforeEach(fn () => CarbonImmutable::setTestNow('2026-01-01 12:00:00'));
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @return array<int, mixed>
+ */
 function queuedTrackIds(Party $party): array
 {
     return TrackRequest::query()->where('party_id', $party->id)->where('status', RequestStatus::Queued)->pluck('provider_track_id')->sort()->values()->all();
@@ -105,6 +110,9 @@ it('shuffles the playlist rather than always taking the head', function () {
     expect(queuedTrackIds($party))->not->toBe(['p1', 'p2', 'p3', 'p4', 'p5']);
 });
 
+/**
+ * @return array<mixed>
+ */
 function fallbackLog(Party $party): array
 {
     return PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'like', 'fallback.%')->orderBy('id')->pluck('action')->all();
@@ -162,4 +170,16 @@ it('resumes playback when the Host changes the playlist of an exhausted live par
     app(UpdatePartySettings::class)($host, $party, ['fallback_playlist_id' => 'pl2']);
 
     expect(enqueuedTrackIds($player))->not->toBeEmpty();
+});
+
+it('reads the blocklist once for a 500-track fallback top-up', function () {
+    $party = livePlaybackParty(array_map(playbackTrack(...), range(1, 500)));
+    BlocklistEntry::factory()->for($party)->create();
+
+    DB::enableQueryLog();
+    app(TopUpFallbackRequests::class)($party);
+    $blocklistReads = collect(DB::getQueryLog())->filter(fn (array $query): bool => str_contains($query['query'], 'from "blocklist_entries"'))->count();
+    DB::disableQueryLog();
+
+    expect($blocklistReads)->toBe(1);
 });

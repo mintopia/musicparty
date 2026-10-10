@@ -1,25 +1,26 @@
 <?php
 
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
+use App\Domain\Playback\Broadcast\PlayerCommandEvent;
+use App\Domain\Playback\Jobs\ProcessPlayerFrame;
+use App\Domain\Playback\Listeners\HandlePlayerClientEvent;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
-use App\Events\Player\PlayerCommandEvent;
-use App\Jobs\ProcessPlayerFrame;
-use App\Listeners\HandlePlayerClientEvent;
-use App\Models\Party;
+use App\Support\Metrics\CounterStore;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\RateLimiter;
-use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection;
-use Laravel\Reverb\Contracts\WebSocketConnection;
 use Laravel\Reverb\Events\MessageReceived;
 use Laravel\Reverb\Protocols\Pusher\Channels\Channel;
 use Laravel\Reverb\Protocols\Pusher\Channels\ChannelConnection;
 use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
-use Ratchet\RFC6455\Messaging\Frame;
 use Tests\Fixtures\Playback\FrameHandlingPlayer;
+use Tests\Fixtures\Playback\StubReverbConnection;
 
 uses(RefreshDatabase::class);
 
@@ -28,33 +29,19 @@ beforeEach(function () {
     RateLimiter::clear('player-frames:ABC123');
     config(['musicparty.player_frames.max_bytes' => 8192, 'musicparty.player_frames.max_per_minute' => 3]);
     Queue::fake();
+    $this->party = Party::factory()->create(['code' => 'ABC123', 'music_provider' => 'fake', 'player_kind' => 'fake']);
+    $this->token = $this->party->createToken('Stage', ['player:connect'])->accessToken;
+    app(PlayerConnections::class)->register('stub', 'ABC123', $this->token->getKey());
 });
 
-function stubReverbConnection(): Connection
+function stubReverbConnection(): StubReverbConnection
 {
-    return new class(Mockery::mock(WebSocketConnection::class), Mockery::mock(Application::class), null) extends Connection
-    {
-        public function identifier(): string
-        {
-            return 'stub';
-        }
-
-        public function id(): string
-        {
-            return 'stub';
-        }
-
-        public function send(string $message): void {}
-
-        public function control(string $type = Frame::OP_PING): void {}
-
-        public function terminate(): void {}
-    };
+    return new StubReverbConnection;
 }
 
-function receive(string $message, bool $subscribed = true): void
+function receive(string $message, bool $subscribed = true, ?Connection $connection = null): void
 {
-    $connection = stubReverbConnection();
+    $connection ??= stubReverbConnection();
     $channel = Mockery::mock(Channel::class);
     $channel->shouldReceive('find')->with($connection)->andReturn($subscribed ? Mockery::mock(ChannelConnection::class) : null);
     $manager = Mockery::mock(ChannelManager::class);
@@ -64,6 +51,9 @@ function receive(string $message, bool $subscribed = true): void
     app(HandlePlayerClientEvent::class)->handle(new MessageReceived($connection, $message));
 }
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function clientFrame(array $overrides = []): string
 {
     return json_encode($overrides + ['event' => 'client-state', 'channel' => 'private-player.abc123', 'data' => ['status' => 'playing']]);
@@ -134,6 +124,17 @@ it('discards and counts unusable frames', function (string $message) {
     'missing data' => [fn () => json_encode(['event' => 'client-x', 'channel' => 'private-player.ABC123'])],
 ]);
 
+it('rejects an oversized raw frame before decoding it', function (string $message) {
+    receive($message);
+
+    Queue::assertNothingPushed();
+    expect(discarded())->toBe(1);
+})->with([
+    'undecodable oversize' => [fn () => '{'.str_repeat('x', 9000)],
+    'oversize valid frame on the player channel' => [fn () => clientFrame(['data' => ['blob' => str_repeat('x', 9000)]])],
+    'oversize on a foreign channel' => [fn () => clientFrame(['channel' => 'private-party.X.moderators', 'data' => ['blob' => str_repeat('x', 9000)]])],
+]);
+
 it('discards frames over the per party rate limit', function () {
     foreach (range(1, 5) as $i) {
         receive(clientFrame());
@@ -147,6 +148,7 @@ it('rate limits each party separately', function () {
     foreach (range(1, 4) as $i) {
         receive(clientFrame());
     }
+    app(PlayerConnections::class)->register('stub', 'OTHER1', $this->token->getKey());
     receive(clientFrame(['channel' => 'private-player.OTHER1']));
 
     Queue::assertPushed(ProcessPlayerFrame::class, 4);
@@ -284,6 +286,48 @@ describe('ProcessPlayerFrame', function () {
         expect($this->player->frames)->toBe([['type' => 'track_changed']])->and(discarded())->toBe(1);
     });
 
+    it('counts an expired frame under the expired reason and logs it to the Party', function () {
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'lost']);
+        ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
+        Cache::forget('player-frame:'.$this->party->code.':1');
+
+        ($this->drain)();
+
+        $counters = app(CounterStore::class);
+        expect($counters->get('metrics.player_frames_dropped.expired'))->toBe(1)
+            ->and($counters->get('metrics.player_frames_dropped.out_of_order'))->toBe(0)
+            ->and(data_get(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details, 'reason'))->toBe('expired');
+    });
+
+    it('counts a frame that arrives behind the applied cursor as out of order and does not buffer it', function () {
+        Cache::forever('player-frame-applied:'.$this->party->code, 3);
+        Cache::put('player-frame-latest:'.$this->party->code, 2);
+
+        $sequence = ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'late']);
+
+        expect($sequence)->toBe(3)
+            ->and(Cache::has('player-frame:'.$this->party->code.':3'))->toBeFalse()
+            ->and(app(CounterStore::class)->get('metrics.player_frames_dropped.out_of_order'))->toBe(1)
+            ->and(data_get(PartyLogEntry::query()->where('action', 'player.frames_dropped')->sole()->details, 'reason'))->toBe('out_of_order');
+        Queue::assertNotPushed(ProcessPlayerFrame::class);
+    });
+
+    it('writes one Party Log entry for ten drops in a minute and another after the window', function () {
+        foreach (range(1, 10) as $i) {
+            Cache::forever('player-frame-applied:'.$this->party->code, $i);
+            ProcessPlayerFrame::enqueue($this->party->code, ['n' => $i]);
+        }
+
+        expect(app(CounterStore::class)->get('metrics.player_frames_dropped.out_of_order'))->toBe(10)
+            ->and(PartyLogEntry::query()->where('action', 'player.frames_dropped')->count())->toBe(1);
+
+        $this->travel(61)->seconds();
+        Cache::forever('player-frame-applied:'.$this->party->code, 11);
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 11]);
+
+        expect(PartyLogEntry::query()->where('action', 'player.frames_dropped')->count())->toBe(2);
+    });
+
     it('leaves a sequence whose frame is not stored yet for the next drain instead of skipping it', function () {
         Cache::add('player-frame-latest:'.$this->party->code, 0);
         Cache::increment('player-frame-latest:'.$this->party->code);
@@ -332,4 +376,42 @@ it('broadcasts player commands on the private player channel', function () {
         ->and($event->broadcastOn()[0]->name)->toBe('private-player.ABC123')
         ->and($event->broadcastAs())->toBe('player.command')
         ->and($event->broadcastWith())->toBe(['cmd' => 'pause']);
+});
+
+it('applies a frame from a socket whose token is valid', function () {
+    $connection = stubReverbConnection();
+
+    receive(clientFrame(), connection: $connection);
+
+    Queue::assertPushed(ProcessPlayerFrame::class);
+    expect($connection->disconnects)->toBe(0);
+});
+
+it('drops the frame and disconnects when the token is revoked, expired or the socket unknown', function (string $case) {
+    match ($case) {
+        'revoked' => $this->token->delete(),
+        'expired' => $this->token->forceFill(['expires_at' => now()->subMinute()])->save(),
+        default => null,
+    };
+    $connection = stubReverbConnection();
+    $message = clientFrame();
+
+    if ($case === 'unknown') {
+        Cache::flush();
+    }
+
+    receive($message, connection: $connection);
+
+    Queue::assertNothingPushed();
+    expect($connection->disconnects)->toBe(1)->and(discarded())->toBe(1);
+})->with(['revoked', 'expired', 'unknown']);
+
+it('refuses a socket registered for a different party', function () {
+    app(PlayerConnections::class)->register('stub', 'OTHER1', $this->token->getKey());
+    $connection = stubReverbConnection();
+
+    receive(clientFrame(), connection: $connection);
+
+    Queue::assertNothingPushed();
+    expect($connection->disconnects)->toBe(1);
 });

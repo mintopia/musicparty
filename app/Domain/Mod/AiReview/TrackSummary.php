@@ -2,7 +2,7 @@
 
 namespace App\Domain\Mod\AiReview;
 
-use App\Models\TrackRequest;
+use App\Domain\Queue\Models\TrackRequest;
 
 final readonly class TrackSummary
 {

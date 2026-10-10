@@ -3,12 +3,58 @@
 namespace App\Domain\Queue;
 
 use App\Domain\Music\Data\TrackData;
-use App\Models\BlocklistEntry;
-use App\Models\Party;
+use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 
-readonly class Blocklist
+class Blocklist
 {
+    private const int FAILURE_LOG_WINDOW_SECONDS = 60;
+
+    /** @var array<int, array{entry: BlocklistEntry, error: string}> */
+    private array $failures = [];
+
+    public function __construct(private readonly RecordPartyLogEntry $record) {}
+
+    private bool $deferring = false;
+
+    /**
+     * Runs a callback whose transaction may roll back, recording pattern failures afterwards so the rollback cannot discard them.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public function deferringFailureRecords(callable $callback): mixed
+    {
+        $this->deferring = true;
+
+        try {
+            return $callback();
+        } finally {
+            $this->deferring = false;
+            $this->recordFailures();
+        }
+    }
+
+    private function recordFailures(): void
+    {
+        $failures = $this->failures;
+        $this->failures = [];
+
+        foreach ($failures as ['entry' => $entry, 'error' => $error]) {
+            $party = $entry->party;
+
+            if ($party !== null) {
+                ($this->record)($party, 'blocklist.pattern_failed', subject: (string) $entry->id, details: ['error' => $error], systemActor: 'blocklist');
+            }
+        }
+    }
+
     public function firstMatch(Party $party, TrackData $track): ?BlocklistEntry
     {
         return $this->firstMatchIn($this->enabledEntries($party), $track);
@@ -59,7 +105,7 @@ readonly class Blocklist
     {
         foreach ($candidates as $candidate) {
             $matched = $entry->is_regex
-                ? @preg_match(self::delimit($entry->value), $candidate) === 1
+                ? $this->regexMatches($entry, $candidate)
                 : mb_strtolower($entry->value) === mb_strtolower($candidate);
 
             if ($matched) {
@@ -68,6 +114,32 @@ readonly class Blocklist
         }
 
         return false;
+    }
+
+    private function regexMatches(BlocklistEntry $entry, string $candidate): bool
+    {
+        $result = @preg_match(self::delimit($entry->value), $candidate);
+
+        if ($result !== false) {
+            return $result === 1;
+        }
+
+        $error = preg_last_error_msg();
+
+        Log::warning('Blocklist pattern failed to evaluate; treating the Track as blocked', [
+            'blocklist_entry_id' => $entry->id,
+            'error' => $error,
+        ]);
+
+        if (Cache::add("blocklist-pattern-failed:{$entry->id}", true, self::FAILURE_LOG_WINDOW_SECONDS)) {
+            $this->failures[$entry->id] = ['entry' => $entry, 'error' => $error];
+
+            if (! $this->deferring) {
+                $this->recordFailures();
+            }
+        }
+
+        return true;
     }
 
     private static function delimit(string $pattern): string

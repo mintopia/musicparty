@@ -32,6 +32,10 @@ services:
       - db
     env_file: .env
     entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
+    ulimits:
+      nofile:
+        soft: 65535
+        hard: 65535
     healthcheck:
       disable: true
 
@@ -66,18 +70,18 @@ services:
       disable: true
 
   db:
-    image: mariadb:10.5-focal
+    image: mariadb:11.8
     restart: unless-stopped
     environment:
-      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD}"
-      MYSQL_DATABASE: "${DB_DATABASE}"
-      MYSQL_USER: "${DB_USERNAME}"
-      MYSQL_PASSWORD: "${DB_PASSWORD}"
+      MARIADB_ROOT_PASSWORD: "${DB_ROOT_PASSWORD:-root}"
+      MARIADB_DATABASE: "${DB_DATABASE:-musicparty}"
+      MARIADB_USER: "${DB_USERNAME:-musicparty}"
+      MARIADB_PASSWORD: "${DB_PASSWORD:-musicparty}"
     volumes:
-      - dbdata:/var/lib/mysql
+      - ./docker/dbdata:/var/lib/mysql
 
   redis:
-    image: redis:6.2.6
+    image: redis:8
     restart: unless-stopped
 
   composer:
@@ -105,7 +109,7 @@ services:
 
   vite:
     profiles: [ "vite" ]
-    image: node:23
+    image: node:24
     entrypoint: [ "npm" ]
     command: [ "run", "dev" ]
     working_dir: /app
@@ -113,12 +117,18 @@ services:
       - ./:/app
     ports:
       - 5173:5173
+    healthcheck:
+      test: [ "CMD", "node", "-e", "fetch('http://localhost:5173/').then(() => process.exit(0), () => process.exit(1))" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
 
   npm:
     profiles: [ "npm" ]
-    image: node:23
+    image: node:24
     entrypoint: [ "npm" ]
-    command: [ "" ]
+    command: [ "--version" ]
     working_dir: /app
     volumes:
       - ./:/app
@@ -150,6 +160,3 @@ services:
       - db
     healthcheck:
       disable: true
-volumes:
-  dbdata:
-    driver: local

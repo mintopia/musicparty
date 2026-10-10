@@ -2,16 +2,20 @@
 
 namespace App\Domain\Identity\Actions;
 
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Exceptions\LoginRefusedException;
-use App\Models\LinkedAccount;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Two\User as TwoUser;
 
 class ResolveSocialUser
 {
+    public function __construct(private readonly SiteSettings $settings) {}
+
     /**
      * @throws LoginRefusedException
      */
@@ -21,12 +25,21 @@ class ResolveSocialUser
             throw LoginRefusedException::providerUnavailable($provider->code);
         }
 
-        return DB::transaction(function () use ($provider, $remote): User {
-            $account = LinkedAccount::query()
-                ->where('social_provider_id', $provider->id)
-                ->where('external_id', (string) $remote->getId())
-                ->first();
+        try {
+            return $this->resolve($provider, $remote);
+        } catch (UniqueConstraintViolationException) {
+            return $this->resolve($provider, $remote);
+        }
+    }
 
+    private function resolve(SocialProvider $provider, SocialiteUser $remote): User
+    {
+        $account = LinkedAccount::query()
+            ->where('social_provider_id', $provider->id)
+            ->where('external_id', (string) $remote->getId())
+            ->first();
+
+        return DB::transaction(function () use ($provider, $remote, $account): User {
             $user = $account === null ? null : User::query()->find($account->user_id);
 
             if ($user?->suspended) {
@@ -37,6 +50,7 @@ class ResolveSocialUser
                 $user = new User;
                 $user->nickname = $remote->getNickname() ?: ($remote->getName() ?: 'Player');
                 $user->first_login = true;
+                $user->terms_agreed_at = $this->settings->get('terms_url') === null ? now() : null;
                 $user->save();
             }
 

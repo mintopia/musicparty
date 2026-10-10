@@ -1,16 +1,16 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\AdvanceQueue;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Events\Party\StatsUpdatedEvent;
-use App\Jobs\RefreshPartyStatsJob;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\PartyStat;
-use App\Models\Play;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
+use App\Domain\Stats\Broadcast\StatsUpdatedEvent;
+use App\Domain\Stats\Jobs\RefreshPartyStatsJob;
+use App\Domain\Stats\Models\PartyStat;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
@@ -27,6 +27,9 @@ beforeEach(function () {
     $this->bob = PartyMember::factory()->for($this->party)->create();
 });
 
+/**
+ * @return array<string, mixed>
+ */
 function statsFor(): array
 {
     Sanctum::actingAs(test()->alice->user);
@@ -39,6 +42,9 @@ function runStatsJob(): void
     app()->call([new RefreshPartyStatsJob(test()->party->id), 'handle']);
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function playedRequest(PartyMember $member, array $attributes = []): TrackRequest
 {
     $request = TrackRequest::factory()->create([

@@ -1,6 +1,7 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, provide, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
@@ -19,6 +20,7 @@ const props = defineProps({
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
     ratablePlay: {type: Object, default: null},
+    memberVotes: {type: Object, default: null},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
     history: {type: Object, default: null},
@@ -29,35 +31,115 @@ const props = defineProps({
     enabled_mods: {type: Array, default: () => []},
 });
 
+usePartyPresence(props.party.code);
+
 provide('enabledMods', computed(() => props.enabled_mods));
 
 const channelName = `party.${props.party.code}`;
+const memberChannelName = `${channelName}.member.${props.membership.id}`;
+const KNOWN_PAYLOAD_VERSION = 1;
 
-const RELOAD_DEBOUNCE_MS = 500;
-const RELOAD_JITTER_MS = 1500;
-let reloadTimer = null;
+const votesByRequest = () => ({
+    ...Object.fromEntries(props.queue.filter((entry) => entry.my_vote !== undefined).map((entry) => [entry.id, entry.my_vote])),
+    ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
+});
+const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
-const scheduleReload = () => {
-    clearTimeout(reloadTimer);
-    reloadTimer = setTimeout(() => {
-        reloadTimer = null;
-        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
-    }, RELOAD_DEBOUNCE_MS + Math.random() * RELOAD_JITTER_MS);
+const liveState = ref(props.party.state);
+const toasts = ref([]);
+let toastId = 0;
+const pushToast = (message) => {
+    const id = ++toastId;
+    toasts.value = [...toasts.value, {id, message}];
+    setTimeout(() => {
+        toasts.value = toasts.value.filter((toast) => toast.id !== id);
+    }, 6000);
+};
+const banned = ref(props.membership.banned);
+
+const liveNowPlaying = ref(props.nowPlaying);
+const liveUpNext = ref(props.upNext);
+const liveQueue = ref(props.queue);
+const liveRatablePlay = ref(props.ratablePlay);
+const myVotes = ref(votesByRequest());
+const myRatings = ref(ratingsByPlay());
+
+watch(
+    () => [props.nowPlaying, props.upNext, props.queue, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
+    () => {
+        liveState.value = props.party.state;
+        banned.value = props.membership.banned;
+        liveNowPlaying.value = props.nowPlaying;
+        liveUpNext.value = props.upNext;
+        liveQueue.value = props.queue;
+        liveRatablePlay.value = props.ratablePlay;
+        myVotes.value = votesByRequest();
+        myRatings.value = ratingsByPlay();
+    },
+);
+
+const shownQueue = computed(() => liveQueue.value.map((entry) => ({...entry, my_vote: myVotes.value[entry.id] ?? 0})));
+const shownRatablePlay = computed(() => {
+    const play = liveRatablePlay.value;
+
+    return play === null ? null : {...play, my_rating: myRatings.value[play.id] ?? play.my_rating};
+});
+
+const resync = () => {
+    router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
+};
+
+const applyQueueUpdate = (payload) => {
+    if (payload.version > KNOWN_PAYLOAD_VERSION) {
+        resync();
+
+        return;
+    }
+    liveNowPlaying.value = payload.now_playing;
+    liveUpNext.value = payload.up_next;
+    liveQueue.value = payload.queue;
+    const playing = payload.now_playing;
+    liveRatablePlay.value = playing?.play_id
+        ? {id: playing.play_id, track: playing.track, likes: playing.likes, dislikes: playing.dislikes, my_rating: 0}
+        : null;
 };
 
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', scheduleReload);
-    window.addEventListener(RESYNC_EVENT, scheduleReload);
+    window.Echo?.channel(channelName)
+        .listen('.queue.updated', applyQueueUpdate)
+        .listen('.party.state_changed', (payload) => {
+            liveState.value = payload.state;
+        });
+    window.Echo?.private(memberChannelName)
+        .listen('.member.vote_changed', (payload) => {
+            myVotes.value = {...myVotes.value, [payload.request_id]: payload.value};
+        })
+        .listen('.member.rating_changed', (payload) => {
+            myRatings.value = {...myRatings.value, [payload.play_id]: payload.value};
+        })
+        .listen('.request.rejected', (payload) => {
+            pushToast(payload.reason ? `Your request was rejected: ${payload.reason}` : 'Your request was rejected.');
+        })
+        .listen('.request.decided', (payload) => {
+            if (payload.status === 'queued') {
+                pushToast('Your request was approved.');
+            }
+        })
+        .listen('.member.banned', () => {
+            banned.value = true;
+            pushToast('You have been banned from this party.');
+        });
+    window.addEventListener(RESYNC_EVENT, resync);
 });
 
 onBeforeUnmount(() => {
-    window.removeEventListener(RESYNC_EVENT, scheduleReload);
-    clearTimeout(reloadTimer);
+    window.removeEventListener(RESYNC_EVENT, resync);
     window.Echo?.leave(channelName);
+    window.Echo?.leave(memberChannelName);
 });
 
 const canViewLog = computed(
-    () => !props.membership.banned && ['host', 'moderator'].includes(props.membership.role),
+    () => !banned.value && ['host', 'moderator'].includes(props.membership.role),
 );
 
 const page = usePage();
@@ -94,22 +176,25 @@ const stateClass = computed(
             live: 'bg-accent text-white',
             paused: 'border border-border text-muted',
             ended: 'bg-danger text-white',
-        })[props.party.state] ?? 'border border-border text-muted',
+        })[liveState.value] ?? 'border border-border text-muted',
 );
 
 const readOnlyMessage = computed(() =>
-    props.membership.banned ? 'You have been banned from this party.' : 'This party has ended.',
+    banned.value ? 'You have been banned from this party.' : 'This party has ended.',
 );
 
-const ratingLocked = computed(() => props.membership.banned || props.party.state === 'ended');
+const ratingLocked = computed(() => banned.value || liveState.value === 'ended');
 </script>
 
 <template>
     <Head :title="party.name" />
+    <div v-if="toasts.length > 0" class="fixed right-4 top-4 z-50 flex flex-col gap-2" data-testid="toasts">
+        <p v-for="toast in toasts" :key="toast.id" role="status" data-testid="toast" class="rounded border border-border bg-surface px-4 py-3 text-sm shadow">{{ toast.message }}</p>
+    </div>
     <NowPlayingBanner
         v-if="section === 'queue' || section === 'history'"
-        :now-playing="nowPlaying"
-        :ratable-play="ratablePlay"
+        :now-playing="liveNowPlaying"
+        :ratable-play="shownRatablePlay"
         :party-code="party.code"
         :read-only="ratingLocked"
     />
@@ -121,7 +206,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     data-testid="party-state"
                     class="rounded px-2 py-0.5 text-xs font-medium capitalize"
                     :class="stateClass"
-                >{{ party.state }}</span>
+                >{{ liveState }}</span>
             </div>
             <div class="flex items-center gap-3">
                 <span data-testid="party-code" class="text-4xl font-semibold tracking-widest">{{ party.code }}</span>
@@ -139,7 +224,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
         <div v-if="canManage" class="flex flex-col gap-2" data-testid="lifecycle-controls">
             <div class="flex flex-wrap gap-2">
                 <button
-                    v-if="party.state === 'paused'"
+                    v-if="liveState === 'paused'"
                     type="button"
                     data-testid="go-live"
                     :disabled="transitioning"
@@ -147,7 +232,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('live')"
                 >Go Live</button>
                 <button
-                    v-if="party.state === 'live'"
+                    v-if="liveState === 'live'"
                     type="button"
                     data-testid="pause-party"
                     :disabled="transitioning"
@@ -155,7 +240,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('pause')"
                 >Pause</button>
                 <button
-                    v-if="party.state !== 'ended'"
+                    v-if="liveState !== 'ended'"
                     type="button"
                     data-testid="end-party"
                     :disabled="transitioning"
@@ -163,7 +248,7 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                     @click="transition('end')"
                 >End</button>
                 <button
-                    v-if="party.state === 'ended'"
+                    v-if="liveState === 'ended'"
                     type="button"
                     data-testid="reopen-party"
                     :disabled="transitioning"
@@ -237,9 +322,9 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
                 </template>
             </dl>
             <template v-else-if="section === 'queue'">
-                <UpNextCard :up-next="upNext" class="mb-6" />
+                <UpNextCard :up-next="liveUpNext" class="mb-6" />
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Queue</h2>
-                <QueueList :queue="queue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
+                <QueueList :queue="shownQueue" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>

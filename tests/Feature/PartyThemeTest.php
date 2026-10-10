@@ -1,20 +1,20 @@
 <?php
 
 use App\Domain\Admin\Actions\GrantRole;
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Admin\Models\Setting;
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Theming\Actions\GetPartyTheme;
 use App\Domain\Theming\Actions\RenderPartyThemeCss;
 use App\Domain\Theming\Actions\ResetPartyTheme;
 use App\Domain\Theming\Actions\UpdatePartyTheme;
+use App\Domain\Theming\Broadcast\ThemeUpdatedEvent;
+use App\Domain\Theming\Models\InstanceTheme;
 use App\Domain\Theming\ThemeTokens;
 use App\Enums\SettingType;
-use App\Events\Party\ThemeUpdatedEvent;
-use App\Models\AdminHostSession;
-use App\Models\InstanceTheme;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Setting;
-use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -25,6 +25,9 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function quietParty(array $attributes = []): Party
 {
     return Party::withoutEvents(fn (): Party => Party::factory()->create($attributes));
@@ -43,11 +46,18 @@ function partyMemberWithRole(Party $party, string $role): User
     return ($state === null ? $factory : $factory->{$state}())->create()->user;
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function createParty(array $attributes = []): Party
 {
     return quietParty($attributes);
 }
 
+/**
+ * @param  array<string, mixed>  $theme
+ * @return array{Party, User}
+ */
 function hostedParty(array $theme = []): array
 {
     $party = createParty($theme === [] ? [] : ['theme' => $theme]);
@@ -361,7 +371,7 @@ it('broadcasts the effective theme on the public party channel', function (): vo
     $party = createParty(['theme' => ['light' => ['primary' => '#abcdef']]]);
     $event = new ThemeUpdatedEvent($party->code);
 
-    expect($event->broadcastAs())->toBe('ThemeUpdated')
+    expect($event->broadcastAs())->toBe('theme.updated')
         ->and($event->broadcastOn()[0]->name)->toBe("party.{$party->code}")
         ->and($event->broadcastWith()['light']['primary'])->toBe('#abcdef');
 });

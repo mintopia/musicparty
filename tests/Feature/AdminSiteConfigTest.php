@@ -1,12 +1,12 @@
 <?php
 
 use App\Domain\Admin\Actions\GrantRole;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
-use App\Models\AdminAuditEntry;
-use App\Models\Party;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
-use App\Models\User;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +44,7 @@ function configureDiscord(User $admin, bool $enabled = true): void
     ])->assertRedirect();
 }
 
-it('lists the four providers masked on read', function (): void {
+it('lists the five providers masked on read', function (): void {
     $admin = makeSiteAdmin();
     configureDiscord($admin);
 
@@ -52,7 +52,7 @@ it('lists the four providers masked on read', function (): void {
 
     $response->assertInertia(fn (Assert $page) => $page
         ->component('Admin/Providers')
-        ->has('providers', 4)
+        ->has('providers', 5)
         ->where('providers.0.code', 'discord')
         ->where('providers.0.enabled', true)
         ->where('providers.0.fields.0.value', 'abc123')
@@ -222,7 +222,7 @@ it('behaves the same through the api as the web for providers', function (): voi
         ->assertJsonPath('data.enabled', true)
         ->assertJsonPath('data.fields.1.value', ProviderCatalogue::MASK);
 
-    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(4, 'data')->assertJsonMissing(['value' => 'api-secret']);
+    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(5, 'data')->assertJsonMissing(['value' => 'api-secret']);
     expect(AdminAuditEntry::query()->where('action', 'provider.credential_changed')->count())->toBe(2);
 
     $this->putJson('/api/v1/admin/providers/discord', ['enabled' => 'maybe'])->assertJsonValidationErrors('enabled');

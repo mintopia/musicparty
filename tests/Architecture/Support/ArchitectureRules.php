@@ -2,22 +2,29 @@
 
 namespace Tests\Architecture\Support;
 
-use App\Jobs\ProcessPlayerFrame;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\ProviderSetting;
-use App\Models\Rating;
-use App\Models\RequestVote;
-use App\Models\Role;
-use App\Models\Setting;
-use App\Models\SocialProvider;
-use App\Models\TrackRequest;
-use App\Models\User;
-use App\Observers\SettingObserver;
-use App\Observers\UserObserver;
+use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Admin\Models\Integration;
+use App\Domain\Admin\Models\ProviderSetting;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Models\AccessToken;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Models\PartyMod;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
+use App\Domain\Playback\Jobs\ProcessPlayerFrame;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
+use App\Domain\Stats\Models\PartyStat;
+use App\Domain\Theming\Models\InstanceTheme;
+use App\Support\Realtime\PlayerConnections;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Database\Eloquent\Model;
@@ -52,7 +59,36 @@ class ArchitectureRules
         'update',
         'delete',
         'forceDelete',
+        'forceFill',
+        'increment',
+        'decrement',
+        'touch',
+        'push',
+        'restore',
+        'insertOrIgnore',
+        'insertGetId',
+        'updateOrInsert',
+        'truncate',
     ];
+
+    /**
+     * @param  array<int, string>  $members
+     * @return array<string, array{members: array<int, string>, models: array<int, string>}>
+     */
+    public static function contextsWithMembers(string $context, array $members): array
+    {
+        $result = [];
+
+        foreach (self::contexts() as $name => $definition) {
+            if ($name === $context) {
+                $definition['members'] = [...$definition['members'], ...$members];
+            }
+
+            $result[$name] = $definition;
+        }
+
+        return $result;
+    }
 
     /**
      * @return array<string, array{members: array<int, string>, models: array<int, string>}>
@@ -60,32 +96,68 @@ class ArchitectureRules
     public static function contexts(): array
     {
         return [
+            'admin' => [
+                'members' => [
+                    'App\\Domain\\Admin\\',
+                ],
+                'models' => [
+                    Setting::class,
+                    ProviderSetting::class,
+                    Role::class,
+                    AdminAuditEntry::class,
+                    AdminHostSession::class,
+                    Integration::class,
+                ],
+            ],
             'identity' => [
                 'members' => [
                     'App\\Domain\\Identity\\',
-                    'App\\Services\\SocialProviders\\',
-                    UserObserver::class,
-                    SettingObserver::class,
-                    'App\\Events\\User\\',
                 ],
                 'models' => [
                     User::class,
+                    AccessToken::class,
                     LinkedAccount::class,
                     SocialProvider::class,
-                    ProviderSetting::class,
-                    Setting::class,
+                ],
+            ],
+            'membership' => [
+                'members' => [
+                    'App\\Domain\\Membership\\',
+                ],
+                'models' => [
+                    PartyMember::class,
+                ],
+            ],
+            'mod' => [
+                'members' => [
+                    'App\\Domain\\Mod\\',
+                ],
+                'models' => [
+                    PartyMod::class,
+                ],
+            ],
+            'music' => [
+                'members' => [
+                    'App\\Domain\\Music\\',
+                ],
+                'models' => [
                 ],
             ],
             'party' => [
                 'members' => [
                     'App\\Domain\\Party\\',
-                    'App\\Events\\Party\\',
                 ],
                 'models' => [
                     Party::class,
-                    PartyMember::class,
                     PartyLogEntry::class,
-                    Role::class,
+                    BlocklistEntry::class,
+                ],
+            ],
+            'playback' => [
+                'members' => [
+                    'App\\Domain\\Playback\\',
+                ],
+                'models' => [
                 ],
             ],
             'queue' => [
@@ -97,6 +169,22 @@ class ArchitectureRules
                     RequestVote::class,
                     Play::class,
                     Rating::class,
+                ],
+            ],
+            'stats' => [
+                'members' => [
+                    'App\\Domain\\Stats\\',
+                ],
+                'models' => [
+                    PartyStat::class,
+                ],
+            ],
+            'theming' => [
+                'members' => [
+                    'App\\Domain\\Theming\\',
+                ],
+                'models' => [
+                    InstanceTheme::class,
                 ],
             ],
         ];
@@ -140,6 +228,7 @@ class ArchitectureRules
         'Illuminate\\',
         'Laravel\\Reverb\\',
         ProcessPlayerFrame::class,
+        PlayerConnections::class,
     ];
 
     /**
@@ -181,7 +270,7 @@ class ArchitectureRules
                 }
             }
 
-            if (preg_match('/\\\\?App\\\\(Domain|Models|Actions)\\\\/', preg_replace('/^use\\s.*$/m', '', $source) ?? '', $match)) {
+            if (preg_match('/\\\\?App\\\\(Domain|Models|Actions)\\\\/', preg_replace('/^(?:use|namespace)\\s.*$/m', '', $source) ?? '', $match)) {
                 $found[] = $match[0];
             }
 
@@ -207,6 +296,18 @@ class ArchitectureRules
                 && ($reflection->implementsInterface(ShouldBroadcast::class)
                     || $reflection->implementsInterface(ShouldBroadcastNow::class));
         }));
+    }
+
+    /**
+     * @param  array<int, class-string>  $classes
+     * @return array<int, class-string>
+     */
+    public static function missingBroadcastAs(array $classes): array
+    {
+        return array_values(array_filter(
+            self::broadcastEvents($classes),
+            static fn (string $class): bool => ! new ReflectionClass($class)->hasMethod('broadcastAs'),
+        ));
     }
 
     /**
@@ -303,13 +404,7 @@ class ArchitectureRules
     public static function crossContextWriteViolations(array $classes, ?array $contexts = null): array
     {
         $contexts ??= self::contexts();
-        $owner = [];
-
-        foreach ($contexts as $name => $definition) {
-            foreach ($definition['models'] as $model) {
-                $owner[$model] = $name;
-            }
-        }
+        $owner = self::modelOwners($contexts);
 
         $violations = [];
 
@@ -354,9 +449,26 @@ class ArchitectureRules
 
     /**
      * @param  array<string, array{members: array<int, string>, models: array<int, string>}>  $contexts
+     * @return array<string, string>
+     */
+    public static function modelOwners(array $contexts): array
+    {
+        $owner = [];
+
+        foreach ($contexts as $name => $definition) {
+            foreach ($definition['models'] as $model) {
+                $owner[$model] = $name;
+            }
+        }
+
+        return $owner;
+    }
+
+    /**
+     * @param  array<string, array{members: array<int, string>, models: array<int, string>}>  $contexts
      * @param  array<string, string>  $owner
      */
-    private static function contextOf(string $class, array $contexts, array $owner): ?string
+    public static function contextOf(string $class, array $contexts, array $owner): ?string
     {
         if (isset($owner[$class])) {
             return $owner[$class];
@@ -384,6 +496,7 @@ class ArchitectureRules
     }
 
     /**
+     * @param  ReflectionClass<object>  $reflection
      * @return array<int, string>
      */
     private static function allTraits(ReflectionClass $reflection): array
@@ -422,13 +535,24 @@ class ArchitectureRules
     }
 
     /**
+     * @return array<int, class-string>
+     */
+    private static function modelClasses(): array
+    {
+        return array_values(array_filter(
+            self::appClasses(),
+            static fn (string $class): bool => str_contains($class, '\\Models\\') && is_subclass_of($class, Model::class),
+        ));
+    }
+
+    /**
      * @return array<int, ReflectionMethod>
      */
     private static function supportingMethods(string $name): array
     {
         $methods = [];
 
-        foreach (self::classesIn(self::appPath('Models'), 'App\\Models') as $model) {
+        foreach (self::modelClasses() as $model) {
             $reflection = new ReflectionClass($model);
 
             if ($reflection->hasMethod($name) && $reflection->getMethod($name)->getDeclaringClass()->getName() === $model) {
@@ -448,5 +572,22 @@ class ArchitectureRules
         preg_match_all('/\[\s*[\'"]([A-Za-z0-9_\-.]+)[\'"]\s*\]\s*=/', $source, $assign);
 
         return array_merge($arrow[1], $assign[1]);
+    }
+
+    /**
+     * @param  array<int, class-string>  $classes
+     * @return array<int, class-string>
+     */
+    public static function partyRoleAuthorisationViolations(array $classes): array
+    {
+        $pattern = '/(===|!==)\s*\$?[\w>:-]*PartyRole::|PartyRole::\w+\s*(===|!==)|in_array\([^;]*PartyRole::|match\s*\([^)]*->role\)/';
+
+        return array_values(array_filter($classes, static function (string $class) use ($pattern): bool {
+            $file = new ReflectionClass($class)->getFileName();
+
+            return str_contains($class, '\\Actions\\')
+                && $file !== false
+                && preg_match($pattern, (string) file_get_contents($file)) === 1;
+        }));
     }
 }

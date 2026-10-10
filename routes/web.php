@@ -20,7 +20,7 @@ use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::post('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
 
@@ -28,9 +28,10 @@ Route::get('/', [HomeController::class, 'home'])->name('home');
 
 Route::get('parties/{party}/tv', [PartyTvController::class, 'show'])
     ->where('party', '[A-Za-z]{4}')
+    ->middleware('throttle:party-public')
     ->name('parties.tv');
 
-Route::middleware('auth')->group(function () {
+Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::get('signup', [SignupController::class, 'show'])->name('login.signup');
     Route::post('signup', [SignupController::class, 'store'])->name('login.signup.store');
 

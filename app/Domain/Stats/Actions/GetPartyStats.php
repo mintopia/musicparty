@@ -2,8 +2,8 @@
 
 namespace App\Domain\Stats\Actions;
 
-use App\Models\Party;
-use App\Models\PartyStat;
+use App\Domain\Party\Models\Party;
+use App\Domain\Stats\Models\PartyStat;
 
 readonly class GetPartyStats
 {

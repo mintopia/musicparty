@@ -2,26 +2,29 @@
 
 namespace App\Domain\Playback\Players;
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
-use App\Domain\Party\PairingCatalogue;
+use App\Domain\Party\Models\Party;
+use App\Domain\Playback\Contracts\BindsToParty;
+use App\Domain\Playback\Contracts\PlaybackClient;
 use App\Domain\Playback\Contracts\Player;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
+use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 
-class PollingPlayer implements Player
+class PollingPlayer implements BindsToParty, Player
 {
     public const string KIND = 'polling';
 
@@ -30,7 +33,7 @@ class PollingPlayer implements Player
     private ?string $partyCode = null;
 
     public function __construct(
-        private readonly PairingCatalogue $catalogue,
+        private readonly PlaybackClient $client,
         private readonly AuthorisesHost $hosts,
     ) {}
 
@@ -98,7 +101,7 @@ class PollingPlayer implements Player
      */
     public function fetchState(Party $party, LinkedAccount $account): PlaybackState
     {
-        return $this->catalogue->provider($party->music_provider)->currentPlayback((string) $account->getKey());
+        return $this->client->currentPlayback((string) $account->getKey());
     }
 
     public function remember(PlaybackState $state): void
@@ -141,8 +144,14 @@ class PollingPlayer implements Player
         }
 
         try {
-            $this->catalogue->provider($party->music_provider)->queueTrack($providerTrackId, (string) $account->getKey());
-        } catch (ProviderTemporaryFailure|ProviderUnavailableException $failure) {
+            $this->client->queueTrack($providerTrackId, (string) $account->getKey());
+        } catch (ProviderTemporaryFailure $failure) {
+            throw match (true) {
+                $failure->retryAfterSeconds !== null => new PlayerRateLimitedException($failure->retryAfterSeconds),
+                $failure->outcomeUnknown => new PlayerEnqueueUnconfirmedException($failure->getMessage()),
+                default => new PlayerDisconnectedException($failure->getMessage()),
+            };
+        } catch (ProviderUnavailableException $failure) {
             throw new PlayerDisconnectedException($failure->getMessage());
         }
     }

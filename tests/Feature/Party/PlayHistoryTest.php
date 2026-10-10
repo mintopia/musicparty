@@ -1,15 +1,15 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackCoordinator;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -25,6 +25,9 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function playIn(Party $party, array $attributes = []): Play
 {
     return Play::factory()->for($party)->create($attributes);

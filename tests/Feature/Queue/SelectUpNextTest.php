@@ -1,15 +1,15 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Queue\Actions\SelectUpNext;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\SelectionMode;
 use App\Domain\Queue\Testing\SeededRandomizer;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -22,6 +22,9 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function queuedWithScore(Party $party, int $score, array $attributes = []): TrackRequest
 {
     $request = TrackRequest::factory()->for($party)->create($attributes);
@@ -131,6 +134,9 @@ function weightedParty(int $seed = 1): Party
     return Party::factory()->live()->create(['selection_mode' => SelectionMode::Weighted]);
 }
 
+/**
+ * @return array<int, int>
+ */
 function pickRepeatedly(Party $party, int $rounds): array
 {
     $counts = [];

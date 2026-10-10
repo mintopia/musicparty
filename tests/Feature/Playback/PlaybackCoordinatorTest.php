@@ -1,24 +1,26 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\GoLiveParty;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Playback\EnqueueBackoff;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
 use App\Domain\Playback\FeedMode;
+use App\Domain\Playback\Jobs\StartPlayback;
+use App\Domain\Playback\Jobs\TickParty;
+use App\Domain\Playback\Jobs\TickPlayback;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SelectUpNext;
+use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Jobs\BroadcastPartyQueue;
-use App\Jobs\StartPlayback;
-use App\Jobs\TickPlayback;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,6 +35,9 @@ beforeEach(function () {
 
 afterEach(fn () => CarbonImmutable::setTestNow());
 
+/**
+ * @return array<string, string>
+ */
 function requestStatuses(Party $party): array
 {
     return TrackRequest::query()->where('party_id', $party->id)->orderBy('id')->get()
@@ -328,14 +333,18 @@ it('triggers playback when a party goes live and when a first request arrives', 
     Bus::assertDispatchedTimes(StartPlayback::class, 2);
 });
 
-it('ticks only live parties from the scheduled job and survives one failing party', function () {
+it('ticks only live parties from the dispatched party jobs', function () {
     $live = livePlaybackParty();
     $player = useFakePlayer($live, FeedMode::Ahead);
     TrackRequest::factory()->for($live)->create(['provider_track_id' => 'r1']);
     $paused = Party::factory()->create();
     TrackRequest::factory()->for($paused)->create();
 
-    (new TickPlayback)->handle(app(PlaybackCoordinator::class));
+    Bus::fake([BroadcastPartyQueue::class, TickParty::class]);
+
+    (new TickPlayback)->handle();
+    Bus::assertDispatchedTimes(TickParty::class, 1);
+    new TickParty($live->code)->handle(app(PlaybackCoordinator::class));
 
     expect($player->state()->currentTrack->providerTrackId)->toBe('r1')
         ->and(TrackRequest::query()->where('party_id', $paused->id)->first()->status)->toBe(RequestStatus::Queued);
@@ -345,5 +354,95 @@ it('schedules the playback tick', function () {
     $events = collect(app(Schedule::class)->events())
         ->filter(fn ($event): bool => str_contains((string) $event->description, TickPlayback::class) || str_contains($event->command ?? '', 'TickPlayback'));
 
-    expect($events)->not->toBeEmpty();
+    expect($events)->not->toBeEmpty()
+        ->and($events->first()?->withoutOverlapping)->toBeTrue();
+});
+
+it('keeps the claim on an ambiguous enqueue the Player received, so the Track is enqueued once and plays once', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $coordinator = app(PlaybackCoordinator::class);
+    $coordinator->startIfIdle($party);
+    $second = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2']);
+    $player->failEnqueueWith(new PlayerEnqueueUnconfirmedException, delivered: true);
+
+    $coordinator->tick($party);
+
+    expect($second->fresh()->enqueued_at)->not->toBeNull()
+        ->and($second->fresh()->enqueue_unconfirmed)->toBeTrue()
+        ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'player.enqueue_unconfirmed')->count())->toBe(1);
+
+    $this->travel(60)->seconds();
+    $coordinator->tick($party);
+    $coordinator->tick($party);
+
+    expect($second->fresh()->enqueue_unconfirmed)->toBeFalse()
+        ->and(enqueuedTrackIds($player))->toBe(['r1', 'r2']);
+
+    $player->advance();
+
+    expect(requestStatuses($party)['r2'])->toBe('playing')
+        ->and(Play::query()->where('track_request_id', $second->id)->count())->toBe(1)
+        ->and(enqueuedTrackIds($player))->toBe(['r1', 'r2']);
+});
+
+it('releases an ambiguous enqueue the Player never queued and retries it under the backoff', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $coordinator = app(PlaybackCoordinator::class);
+    $coordinator->startIfIdle($party);
+    $second = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2']);
+    $player->failEnqueueWith(new PlayerEnqueueUnconfirmedException);
+    $coordinator->tick($party);
+    $player->failEnqueueWith(null);
+
+    expect($second->fresh()->enqueue_unconfirmed)->toBeTrue();
+
+    $coordinator->tick($party);
+
+    expect($second->fresh()->enqueued_at)->toBeNull()
+        ->and($second->fresh()->enqueue_unconfirmed)->toBeFalse()
+        ->and(enqueuedTrackIds($player))->toBe(['r1']);
+
+    $this->travel(6)->seconds();
+    $coordinator->tick($party);
+
+    expect(enqueuedTrackIds($player))->toBe(['r1', 'r2']);
+});
+
+it('retries a disconnected enqueue under the backoff without marking it unconfirmed', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $coordinator = app(PlaybackCoordinator::class);
+    $coordinator->startIfIdle($party);
+    $second = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2']);
+    $player->failEnqueueWith(new PlayerDisconnectedException);
+    $coordinator->tick($party);
+    $player->failEnqueueWith(null);
+
+    expect($second->fresh()->enqueued_at)->toBeNull()->and($second->fresh()->enqueue_unconfirmed)->toBeFalse();
+
+    $coordinator->tick($party);
+    expect(enqueuedTrackIds($player))->toBe(['r1']);
+
+    $this->travel(6)->seconds();
+    $coordinator->tick($party);
+
+    expect(enqueuedTrackIds($player))->toBe(['r1', 'r2']);
+});
+
+it('releases an unconfirmed enqueue when the Player stops without starting it', function () {
+    $party = livePlaybackParty();
+    $player = useFakePlayer($party, FeedMode::Ahead)->forParty($party);
+    TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r1']);
+    $second = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'r2']);
+    $coordinator = app(PlaybackCoordinator::class);
+    $coordinator->startIfIdle($party);
+    $second->forceFill(['enqueued_at' => now(), 'enqueue_unconfirmed' => true])->save();
+    $coordinator->playbackEnded($party);
+
+    expect($second->fresh()->enqueued_at)->toBeNull()->and($second->fresh()->enqueue_unconfirmed)->toBeFalse();
 });

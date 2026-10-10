@@ -1,7 +1,7 @@
 <?php
 
-use App\Models\Party;
-use App\Models\PartyMember;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -42,7 +42,7 @@ it('schedules only the v3 jobs and sanctum prune', function () {
         ->map(fn ($event) => $event->description ?: $event->command)
         ->all();
 
-    expect($descriptions)->toHaveCount(4)
+    expect($descriptions)->toHaveCount(6)
         ->and(implode(' ', $descriptions))->toContain('sanctum:prune-expired')
         ->and(implode(' ', $descriptions))->not->toContain('party:');
 });

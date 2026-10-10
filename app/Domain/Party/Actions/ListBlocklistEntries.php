@@ -2,8 +2,8 @@
 
 namespace App\Domain\Party\Actions;
 
-use App\Models\BlocklistEntry;
-use App\Models\Party;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class ListBlocklistEntries

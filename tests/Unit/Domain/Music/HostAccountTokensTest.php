@@ -1,10 +1,10 @@
 <?php
 
-use App\Domain\Music\Accounts\HostAccountTokens;
+use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Models\LinkedAccount;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;

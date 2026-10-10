@@ -4,7 +4,6 @@ use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Playback\Players\PollingPlayer;
 use App\Domain\Playback\Players\SoloistPlayer;
-use App\Domain\Playback\Testing\FakePlayer;
 
 return [
     'site_disk' => env('MUSICPARTY_SITE_DISK', 'public'),
@@ -22,6 +21,12 @@ return [
     'playback' => [
         'enqueue_backoff' => [5, 15, 30, 60, 120, 300],
     ],
+    'tokens' => [
+        'player_ttl_days' => (int) env('MUSICPARTY_PLAYER_TOKEN_TTL_DAYS', 30),
+        'integration_ttl_days' => env('MUSICPARTY_INTEGRATION_TOKEN_TTL_DAYS') === null ? null : (int) env('MUSICPARTY_INTEGRATION_TOKEN_TTL_DAYS'),
+    ],
+    'act_as_host_ttl_minutes' => (int) env('MUSICPARTY_ACT_AS_HOST_TTL_MINUTES', 120),
+    'public_routes_per_minute' => (int) env('MUSICPARTY_PUBLIC_ROUTES_PER_MINUTE', 60),
     'search_rate_limit' => [
         'burst' => (int) env('MUSICPARTY_SEARCH_BURST', 30),
         'per_second' => (float) env('MUSICPARTY_SEARCH_PER_SECOND', 1),
@@ -35,7 +40,6 @@ return [
         'max_per_minute' => (int) env('MUSICPARTY_PLAYER_FRAME_MAX_PER_MINUTE', 120),
     ],
     'players' => [
-        'fake' => ['label' => 'Fake player', 'class' => FakePlayer::class],
         'polling' => ['label' => 'Polling player', 'class' => PollingPlayer::class],
         'browser' => ['label' => 'Browser player', 'class' => BrowserPlayer::class],
         'soloist' => ['label' => 'Soloist player', 'class' => SoloistPlayer::class],

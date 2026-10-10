@@ -1,5 +1,5 @@
 <script setup>
-import {Link, usePage} from '@inertiajs/vue3';
+import {Link, router, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Icon from './Icon.vue';
 
@@ -69,7 +69,9 @@ const itemClass = (active) => [
                 <Icon name="user" />Admin
             </Link>
             <Link href="/profile" :class="itemClass(isActive('/profile'))"><Icon name="user" />Profile</Link>
-            <Link href="/logout" :class="itemClass(false)"><Icon name="logout" />Logout</Link>
+            <button type="button" data-testid="logout" :class="itemClass(false)" @click="router.post('/logout')">
+                <Icon name="logout" />Logout
+            </button>
         </template>
         <Link v-else href="/login" :class="itemClass(isActive('/login'))"><Icon name="user" />Login</Link>
     </nav>

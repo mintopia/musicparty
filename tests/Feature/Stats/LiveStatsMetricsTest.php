@@ -1,12 +1,12 @@
 <?php
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Stats\Actions\GetPartyStats;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\RequestVote;
-use App\Models\TrackRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 
@@ -44,6 +44,9 @@ function metricsPlayed(PartyMember $member, string $title, int $durationMs = 180
     return $request;
 }
 
+/**
+ * @param  array<string, mixed>  $state
+ */
 function scriptedMetricsParty(string $code, array $state = []): Party
 {
     $party = Party::factory()->live()->create(['code' => $code, ...$state]);

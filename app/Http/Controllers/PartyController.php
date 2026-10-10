@@ -2,24 +2,28 @@
 
 namespace App\Http\Controllers;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Actions\BanMember;
+use App\Domain\Membership\Actions\ChangeMemberRole;
+use App\Domain\Membership\Actions\JoinParty;
+use App\Domain\Membership\Actions\ListPartyMembers;
+use App\Domain\Membership\Actions\UnbanMember;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\EnabledMods;
-use App\Domain\Party\Actions\BanMember;
-use App\Domain\Party\Actions\ChangeMemberRole;
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\GoLiveParty;
-use App\Domain\Party\Actions\JoinParty;
 use App\Domain\Party\Actions\ListPartyLog;
-use App\Domain\Party\Actions\ListPartyMembers;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
-use App\Domain\Party\Actions\UnbanMember;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Domain\Queue\Actions\ApproveRequest;
+use App\Domain\Queue\Actions\ListMemberVotes;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
@@ -32,6 +36,8 @@ use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\VoteDirection;
 use App\Domain\Stats\Actions\GetPartyStats;
@@ -50,11 +56,6 @@ use App\Http\Resources\V1\PartyMemberResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -101,6 +102,7 @@ class PartyController extends Controller
         ListPlayHistoryRequest $request,
         ListQueue $listQueue,
         ListPlayHistory $listHistory,
+        ListMemberVotes $listMemberVotes,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
         ThrottleSearch $throttleSearch,
@@ -137,8 +139,10 @@ class PartyController extends Controller
                 'musicProvider' => $party->music_provider,
                 'playerKind' => $party->player_kind,
                 'downvotes' => (bool) $party->downvotes,
+                'selection_mode' => $party->selection_mode->value,
             ],
             'membership' => [
+                'id' => $member->id,
                 'role' => $member->role->value,
                 'banned' => $member->banned,
             ],
@@ -148,6 +152,7 @@ class PartyController extends Controller
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => $playback['now_playing'],
             'ratablePlay' => $this->ratablePlay($request, $party, $member),
+            'memberVotes' => $listMemberVotes($party, $member),
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
             'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,

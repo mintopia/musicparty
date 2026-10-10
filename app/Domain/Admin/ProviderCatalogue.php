@@ -2,10 +2,11 @@
 
 namespace App\Domain\Admin;
 
-use App\Services\SocialProviders\DiscordProvider;
-use App\Services\SocialProviders\SpotifyProvider;
-use App\Services\SocialProviders\SteamProvider;
-use App\Services\SocialProviders\TwitchProvider;
+use App\Domain\Identity\SocialProviders\DiscordProvider;
+use App\Domain\Identity\SocialProviders\LaravelPassportProvider;
+use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SteamProvider;
+use App\Domain\Identity\SocialProviders\TwitchProvider;
 
 final class ProviderCatalogue
 {
@@ -26,6 +27,9 @@ final class ProviderCatalogue
             'twitch' => ['name' => 'Twitch', 'class' => TwitchProvider::class, 'fields' => $oauthFields],
             'steam' => ['name' => 'Steam', 'class' => SteamProvider::class, 'fields' => [
                 'client_secret' => ['name' => 'API Key', 'secret' => true],
+            ]],
+            'laravelpassport' => ['name' => 'Laravel Passport', 'class' => LaravelPassportProvider::class, 'fields' => $oauthFields + [
+                'host' => ['name' => 'Passport Host', 'secret' => false],
             ]],
             'spotify' => ['name' => 'Spotify', 'class' => SpotifyProvider::class, 'fields' => $oauthFields],
         ];

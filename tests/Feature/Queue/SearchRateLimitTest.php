@@ -1,14 +1,15 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Testing\FakeMusicProvider;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Testing\TestResponse;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -24,6 +25,9 @@ afterEach(function () {
     Carbon::setTestNow();
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function apiSearch(): TestResponse
 {
     return test()->getJson('/api/v1/parties/ABCD/search?q=song');

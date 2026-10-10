@@ -2,13 +2,13 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\Concerns\ModeratesRequests;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Support\Facades\DB;
 
 readonly class RejectRequest
@@ -27,7 +27,7 @@ readonly class RejectRequest
         $request = DB::transaction(function () use ($actor, $party, $request, $reason): TrackRequest {
             $member = $this->activeMember($actor, $party);
 
-            if (! $this->isModerator($member)) {
+            if (! $this->isModerator($actor, $party)) {
                 throw RequestRefusedException::notAllowed();
             }
 

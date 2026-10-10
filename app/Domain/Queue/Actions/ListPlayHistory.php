@@ -2,10 +2,10 @@
 
 namespace App\Domain\Queue\Actions;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\PlayHistoryType;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -38,18 +38,18 @@ class ListPlayHistory
     {
         $contains = fn (?string $term, bool $jsonEncoded = false): ?string => $term === null || trim($term) === ''
             ? null
-            : '%'.addcslashes($jsonEncoded ? trim((string) json_encode(trim($term)), '"') : trim($term), '\\%_').'%';
+            : '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $jsonEncoded ? trim((string) json_encode(trim($term)), '"') : trim($term)).'%';
 
         if (($name = $contains($filters['name'] ?? null)) !== null) {
-            $query->where('title', 'like', $name);
+            $query->whereRaw("title like ? escape '!'", [$name]);
         }
 
         if (($album = $contains($filters['album'] ?? null)) !== null) {
-            $query->where('album', 'like', $album);
+            $query->whereRaw("album like ? escape '!'", [$album]);
         }
 
         if (($artist = $contains($filters['artist'] ?? null, true)) !== null) {
-            $query->whereRaw('LOWER(artists) like ?', [mb_strtolower($artist)]);
+            $query->whereRaw("LOWER(artists) like ? escape '!'", [mb_strtolower($artist)]);
         }
 
         match (PlayHistoryType::tryFrom((string) ($filters['type'] ?? ''))) {

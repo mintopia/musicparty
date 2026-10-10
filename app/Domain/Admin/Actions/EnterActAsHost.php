@@ -2,10 +2,10 @@
 
 namespace App\Domain\Admin\Actions;
 
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
-use App\Models\AdminHostSession;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Auth\Access\AuthorizationException;
 
 class EnterActAsHost
@@ -19,9 +19,13 @@ class EnterActAsHost
         }
 
         $admin->getConnection()->transaction(function () use ($admin, $party): void {
-            $session = AdminHostSession::query()->firstOrCreate(['user_id' => $admin->id, 'party_id' => $party->id]);
+            $session = AdminHostSession::query()->firstOrNew(['user_id' => $admin->id, 'party_id' => $party->id]);
+            $isNew = ! $session->exists || $session->expires_at?->isPast() === true;
 
-            if ($session->wasRecentlyCreated) {
+            $session->expires_at = now()->addMinutes(config()->integer('musicparty.act_as_host_ttl_minutes'));
+            $session->save();
+
+            if ($isNew) {
                 ($this->log)($party, 'act_as_host.entered', $admin, details: ['acting_as_host' => true]);
             }
         });

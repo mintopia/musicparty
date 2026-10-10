@@ -2,7 +2,25 @@ includes:
     - vendor/larastan/larastan/extension.neon
     - phpstan-baseline.neon
 
+services:
+    -
+        class: Tests\Architecture\PHPStan\CrossContextWriteRule
+        arguments:
+            contexts: Tests\Architecture\Support\ArchitectureRules::contexts()
+        tags:
+            - phpstan.rules.rule
+
 parameters:
     level: 8
+    parseModelCastsMethod: true
     paths:
         - app
+        - tests
+    ignoreErrors:
+        -
+            identifiers:
+                - property.notFound
+                - method.notFound
+            message: '#Pest\\(PendingCalls\\TestCall|Mixins\\Expectation)#'
+            paths:
+                - tests/*

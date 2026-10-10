@@ -5,6 +5,8 @@ namespace App\Domain\Playback\Contracts;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
+use App\Domain\Playback\Exceptions\PlayerEnqueueUnconfirmedException;
+use App\Domain\Playback\Exceptions\PlayerRateLimitedException;
 use App\Domain\Playback\Exceptions\UnsupportedControl;
 use App\Domain\Playback\FeedMode;
 
@@ -27,6 +29,8 @@ interface Player
 
     /**
      * @throws PlayerDisconnectedException
+     * @throws PlayerEnqueueUnconfirmedException
+     * @throws PlayerRateLimitedException
      */
     public function enqueue(string $providerId, string $providerTrackId): void;
 

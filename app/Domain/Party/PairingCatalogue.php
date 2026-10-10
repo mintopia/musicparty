@@ -4,6 +4,7 @@ namespace App\Domain\Party;
 
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Playback\Contracts\Player;
+use App\Domain\Playback\PlayerFactory;
 
 readonly class PairingCatalogue
 {
@@ -45,8 +46,7 @@ readonly class PairingCatalogue
 
     public function player(string $kind): Player
     {
-        /** @var Player */
-        return app($this->entries('players')[$kind]['class']);
+        return app(PlayerFactory::class)->make($kind);
     }
 
     /**

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
-use App\Models\Party;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -13,6 +13,8 @@ use Illuminate\Support\Str;
  */
 class PartyFactory extends Factory
 {
+    protected $model = Party::class;
+
     /**
      * @return array<string, mixed>
      */

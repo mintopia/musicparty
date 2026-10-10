@@ -1,13 +1,43 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link} from '@inertiajs/vue3';
-import {computed} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
     entries: {type: Object, required: true},
 });
 
-const rows = computed(() => props.entries?.data ?? []);
+usePartyPresence(props.party.code);
+
+const liveRows = ref(props.entries?.data ?? []);
+watch(() => props.entries, () => {
+    liveRows.value = props.entries?.data ?? [];
+});
+const rows = computed(() => liveRows.value);
+
+const moderatorChannelName = `party.${props.party.code}.moderators`;
+
+onMounted(() => {
+    window.Echo?.private(moderatorChannelName).listen('.party_log.entry_added', (payload) => {
+        if (liveRows.value.some((entry) => entry.id === payload.id)) {
+            return;
+        }
+        liveRows.value = [{
+            id: payload.id,
+            action: payload.action,
+            subject: payload.subject ?? null,
+            details: null,
+            actor: null,
+            actor_kind: null,
+            created_at: new Date().toISOString(),
+        }, ...liveRows.value];
+    });
+});
+
+onBeforeUnmount(() => {
+    window.Echo?.leave(moderatorChannelName);
+});
 const prevUrl = computed(() => props.entries?.links?.prev ?? null);
 const nextUrl = computed(() => props.entries?.links?.next ?? null);
 
@@ -51,6 +81,8 @@ const describe = (entry) => {
             return 'An admin started acting as Host';
         case 'act_as_host.left':
             return 'An admin stopped acting as Host';
+        case 'act_as_host.expired':
+            return 'An admin\'s time acting as Host expired';
         default:
             return entry.action;
     }

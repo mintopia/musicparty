@@ -30,6 +30,7 @@ class RouteServiceProvider extends ServiceProvider
             Limit::perMinute(20)->by('user:'.($request->user()?->id ?: $request->ip())),
             Limit::perMinute(100)->by('ip:'.$request->ip()),
         ]);
+        RateLimiter::for('party-public', fn (Request $request) => Limit::perMinute((int) config('musicparty.public_routes_per_minute'))->by('ip:'.$request->ip()));
         RateLimiter::for('party-requests', fn (Request $request) => Limit::perMinute(10)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('party-votes', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
 

@@ -2,12 +2,12 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
-use App\Models\Party;
 use Carbon\CarbonImmutable;
 
 readonly class ReportBrowserPlayerState

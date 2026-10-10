@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
-use App\Domain\Party\PartyRole;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\User;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -13,6 +13,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PartyMemberFactory extends Factory
 {
+    protected $model = PartyMember::class;
+
     /**
      * @return array<string, mixed>
      */

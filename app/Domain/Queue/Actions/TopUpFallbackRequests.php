@@ -8,13 +8,16 @@ use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\FallbackPlaylistGate;
+use App\Domain\Party\Models\BlocklistEntry;
+use App\Domain\Party\Models\Party;
+use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Blocklist;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyLogEntry;
-use App\Models\Play;
-use App\Models\TrackRequest;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
 
@@ -25,6 +28,7 @@ readonly class TopUpFallbackRequests
         private FallbackPlaylistGate $gate,
         private RecordPartyLogEntry $record,
         private AuthorisesHost $host,
+        private Blocklist $blocklist,
     ) {}
 
     /**
@@ -47,7 +51,9 @@ readonly class TopUpFallbackRequests
 
         $pool = Arr::shuffle($pool);
 
-        $result = DB::transaction(function () use ($party, $pool, $minimum): ?array {
+        $entries = $this->blocklist->enabledEntries($party);
+
+        $result = DB::transaction(function () use ($party, $pool, $minimum, $entries): ?array {
             $locked = Party::query()->whereKey($party->id)->lockForUpdate()->firstOrFail();
 
             if ($locked->state !== PartyState::Live) {
@@ -59,14 +65,14 @@ readonly class TopUpFallbackRequests
             $recent = $this->recentTrackIds($locked);
             $reallowed = false;
 
-            $created = $this->fill($locked, $pool, $needed, $active + $recent);
+            $created = $this->fill($locked, $pool, $needed, $active + $recent, $entries);
 
             if ($created === 0 && $this->queuedCount($locked) === 0) {
-                $created = $this->fill($locked, $pool, $needed, $active);
+                $created = $this->fill($locked, $pool, $needed, $active, $entries);
                 $reallowed = $created > 0;
             }
 
-            $remaining = $this->eligibleCount($locked, $pool, $active + $recent);
+            $remaining = $this->eligibleCount($locked, $pool, $active + $recent, $entries);
 
             return ['created' => $created, 'reallowed' => $reallowed, 'remaining' => $remaining, 'empty' => $this->queuedCount($locked) === 0];
         });
@@ -83,8 +89,9 @@ readonly class TopUpFallbackRequests
     /**
      * @param  array<int, TrackData>  $pool
      * @param  array<string, true>  $blocked
+     * @param  Collection<int, BlocklistEntry>  $entries
      */
-    private function fill(Party $party, array $pool, int $needed, array $blocked): int
+    private function fill(Party $party, array $pool, int $needed, array $blocked, Collection $entries): int
     {
         $created = 0;
 
@@ -93,7 +100,7 @@ readonly class TopUpFallbackRequests
                 break;
             }
 
-            if (isset($blocked[$track->providerTrackId]) || ! $this->gate->passesRules($party, $track)) {
+            if (isset($blocked[$track->providerTrackId]) || ! $this->gate->passesRules($party, $track, $entries)) {
                 continue;
             }
 
@@ -108,12 +115,13 @@ readonly class TopUpFallbackRequests
     /**
      * @param  array<int, TrackData>  $pool
      * @param  array<string, true>  $blocked
+     * @param  Collection<int, BlocklistEntry>  $entries
      */
-    private function eligibleCount(Party $party, array $pool, array $blocked): int
+    private function eligibleCount(Party $party, array $pool, array $blocked, Collection $entries): int
     {
         return count(array_filter(
             $pool,
-            fn (TrackData $track): bool => ! isset($blocked[$track->providerTrackId]) && $this->gate->passesRules($party, $track),
+            fn (TrackData $track): bool => ! isset($blocked[$track->providerTrackId]) && $this->gate->passesRules($party, $track, $entries),
         ));
     }
 

@@ -2,9 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\AdminHostSession;
-use App\Models\Party;
-use App\Models\User;
+use App\Domain\Admin\Models\AdminHostSession;
+use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class AdminHostSessionFactory extends Factory
 {
+    protected $model = AdminHostSession::class;
+
     /**
      * Define the model's default state.
      *
@@ -22,6 +24,7 @@ class AdminHostSessionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'party_id' => Party::factory(),
+            'expires_at' => now()->addMinutes(config()->integer('musicparty.act_as_host_ttl_minutes')),
         ];
     }
 }

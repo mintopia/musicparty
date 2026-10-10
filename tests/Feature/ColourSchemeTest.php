@@ -1,8 +1,8 @@
 <?php
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Theming\Actions\SetColourScheme;
 use App\Domain\Theming\ColourScheme;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;

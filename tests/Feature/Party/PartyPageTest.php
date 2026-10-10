@@ -1,12 +1,12 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Http\Resources\V1\QueueEntryResource;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -27,9 +27,12 @@ it('renders the party page with exact props', function () {
                 'state' => 'live',
                 'musicProvider' => 'fake',
                 'playerKind' => 'fake',
+                'selection_mode' => 'deterministic',
                 'downvotes' => true,
             ])
-            ->where('membership', ['role' => 'moderator', 'banned' => false])
+            ->where('membership.role', 'moderator')
+            ->where('membership.banned', false)
+            ->has('membership.id')
             ->where('section', 'queue')
             ->where('readOnly', false)
             ->where('nowPlaying', null)

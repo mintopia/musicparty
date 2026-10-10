@@ -2,7 +2,7 @@
 
 namespace App\Domain\Mod\Contracts;
 
-use App\Models\Party;
+use App\Domain\Party\Models\Party;
 
 interface PartyScopedEvent
 {

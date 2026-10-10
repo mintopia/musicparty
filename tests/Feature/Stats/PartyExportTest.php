@@ -1,22 +1,25 @@
 <?php
 
+use App\Domain\Admin\Actions\RevokeIntegrationToken;
+use App\Domain\Admin\Models\Integration;
+use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\ReopenParty;
+use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Queue\Models\Play;
+use App\Domain\Queue\Models\Rating;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\IntegrationToken;
-use App\Models\LinkedAccount;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\Play;
-use App\Models\Rating;
-use App\Models\RequestVote;
-use App\Models\Role;
-use App\Models\TrackRequest;
-use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpFoundation\Response;
 
 uses(RefreshDatabase::class);
 
@@ -34,6 +37,9 @@ beforeEach(function () {
     $this->alice = PartyMember::factory()->for($this->party)->for(User::factory()->create(['nickname' => 'Alice']))->create();
 });
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function exportRequest(Party $party, PartyMember $requester, string $title, int $second, array $attributes = []): TrackRequest
 {
     return TrackRequest::factory()->create([
@@ -84,19 +90,26 @@ function seedExportData(): Play
     return $play;
 }
 
-function exportAs(User $user)
+/**
+ * @return TestResponse<Response>
+ */
+function exportAs(User $user): TestResponse
 {
     Sanctum::actingAs($user);
 
     return test()->getJson('/api/v1/parties/EXPT/export');
 }
 
-function exportWithToken(array $abilities)
+/**
+ * @param  list<string>  $abilities
+ * @return TestResponse<Response>
+ */
+function exportWithToken(array $abilities): TestResponse
 {
-    IntegrationToken::factory()->withPlainText('mpi_export_token')->withAbilities($abilities)->create();
+    $plain = Integration::factory()->create()->createToken('export', $abilities)->plainTextToken;
     app('auth')->forgetGuards();
 
-    return test()->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer mpi_export_token']);
+    return test()->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer '.$plain]);
 }
 
 function shapeOf(mixed $value): mixed
@@ -228,9 +241,12 @@ describe('access', function () {
     });
 
     it('refuses revoked integration tokens', function () {
-        IntegrationToken::factory()->withPlainText('mpi_revoked')->withAbilities(['export'])->revoked()->create();
+        $integration = Integration::factory()->create();
+        $plain = $integration->createToken('export', ['export'])->plainTextToken;
+        app(RevokeIntegrationToken::class)->handle(User::factory()->create(), $integration);
+        app('auth')->forgetGuards();
 
-        $this->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer mpi_revoked'])->assertUnauthorized();
+        $this->getJson('/api/v1/parties/EXPT/export', ['Authorization' => 'Bearer '.$plain])->assertUnauthorized();
     });
 
     it('refuses anonymous callers', function () {

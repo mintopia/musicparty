@@ -1,8 +1,9 @@
 <?php
 
-use App\Domain\Music\Accounts\HostAccountTokens;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
@@ -14,9 +15,12 @@ beforeEach(function () {
     config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
     Cache::flush();
     Http::preventStrayRequests();
-    $this->provider = new SpotifyMusicProvider(new HostAccountTokens);
+    $this->provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
 });
 
+/**
+ * @param  array<string, mixed>  $api
+ */
 function fakeSpotify(array $api): void
 {
     Http::fake(['accounts.spotify.com/*' => Http::response(SpotifyFake::fixture('token'))] + $api);
@@ -171,7 +175,7 @@ it('defaults the retry-after when the header is missing', function () {
     try {
         $this->provider->search('x', 1, 0);
     } catch (ProviderTemporaryFailure $e) {
-        expect($e->retryAfterSeconds)->toBe(30);
+        expect($e->retryAfterSeconds)->toBe(5);
     }
 });
 

@@ -2,10 +2,10 @@
 
 namespace Database\Factories;
 
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Party\Models\Party;
+use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
-use App\Models\Party;
-use App\Models\PartyMember;
-use App\Models\TrackRequest;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**

@@ -2,10 +2,10 @@
 
 namespace App\Domain\Playback\Actions;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
+use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
-use App\Models\Party;
-use App\Models\User;
 
 readonly class ReleaseBrowserPlayer
 {

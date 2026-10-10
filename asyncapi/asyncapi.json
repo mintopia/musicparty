@@ -9,6 +9,9 @@
                 },
                 "Party.ThemeUpdatedEvent": {
                     "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
+                },
+                "Party.PartyStateChangedEvent": {
+                    "$ref": "#/components/messages/Party.PartyStateChangedEvent"
                 }
             },
             "parameters": {
@@ -39,13 +42,22 @@
         },
         "partyMember": {
             "address": "private-party.{code}.member.{memberId}",
-            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices and Request decision notices (pending, approved, rejected, removed).",
+            "description": "Private per-Member channel (Echo name party.{code}.member.{memberId}). Authorisable only by that Member's own user while not banned; carries Request rejection notices Request decision notices (pending, approved, rejected, removed), and the Member's own Vote and Rating changes, and the Ban notice sent just before the connection is terminated.",
             "messages": {
                 "Party.RequestRejectedEvent": {
                     "$ref": "#/components/messages/Party.RequestRejectedEvent"
                 },
                 "Party.RequestDecidedEvent": {
                     "$ref": "#/components/messages/Party.RequestDecidedEvent"
+                },
+                "Party.MemberVoteChangedEvent": {
+                    "$ref": "#/components/messages/Party.MemberVoteChangedEvent"
+                },
+                "Party.MemberRatingChangedEvent": {
+                    "$ref": "#/components/messages/Party.MemberRatingChangedEvent"
+                },
+                "Party.MemberBannedEvent": {
+                    "$ref": "#/components/messages/Party.MemberBannedEvent"
                 }
             },
             "parameters": {
@@ -113,7 +125,7 @@
         "messages": {
             "Party.QueueUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\QueueUpdatedEvent",
+                "name": "queue.updated",
                 "payload": {
                     "type": "object",
                     "additionalProperties": false,
@@ -148,6 +160,7 @@
                                         "score",
                                         "likes",
                                         "dislikes",
+                                        "play_id",
                                         "requested_by",
                                         "decorations"
                                     ],
@@ -212,6 +225,12 @@
                                         },
                                         "dislikes": {
                                             "type": "integer"
+                                        },
+                                        "play_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
                                         },
                                         "requested_by": {
                                             "type": "object",
@@ -319,6 +338,7 @@
                                         "score",
                                         "likes",
                                         "dislikes",
+                                        "play_id",
                                         "requested_by",
                                         "decorations"
                                     ],
@@ -383,6 +403,12 @@
                                         },
                                         "dislikes": {
                                             "type": "integer"
+                                        },
+                                        "play_id": {
+                                            "type": [
+                                                "integer",
+                                                "null"
+                                            ]
                                         },
                                         "requested_by": {
                                             "type": "object",
@@ -487,6 +513,7 @@
                                     "score",
                                     "likes",
                                     "dislikes",
+                                    "play_id",
                                     "requested_by",
                                     "decorations"
                                 ],
@@ -551,6 +578,12 @@
                                     },
                                     "dislikes": {
                                         "type": "integer"
+                                    },
+                                    "play_id": {
+                                        "type": [
+                                            "integer",
+                                            "null"
+                                        ]
                                     },
                                     "requested_by": {
                                         "type": "object",
@@ -645,7 +678,7 @@
                     }
                 },
                 "title": "Party.QueueUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\QueueUpdatedEvent",
                 "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
             },
             "Presence.MemberAdded": {
@@ -726,7 +759,7 @@
             },
             "Party.RequestRejectedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\RequestRejectedEvent",
+                "name": "request.rejected",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -746,11 +779,11 @@
                     "type": "object"
                 },
                 "title": "Party.RequestRejectedEvent",
-                "x-event-class": "App\\Events\\Party\\RequestRejectedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\RequestRejectedEvent"
             },
             "Party.PendingRequestAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PendingRequestAddedEvent",
+                "name": "pending_request.added",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -783,11 +816,11 @@
                     "type": "object"
                 },
                 "title": "Party.PendingRequestAddedEvent",
-                "x-event-class": "App\\Events\\Party\\PendingRequestAddedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\PendingRequestAddedEvent"
             },
             "Party.PendingRequestResolvedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PendingRequestResolvedEvent",
+                "name": "pending_request.resolved",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -807,11 +840,11 @@
                     "type": "object"
                 },
                 "title": "Party.PendingRequestResolvedEvent",
-                "x-event-class": "App\\Events\\Party\\PendingRequestResolvedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\PendingRequestResolvedEvent"
             },
             "Party.PartyLogEntryAddedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\PartyLogEntryAddedEvent",
+                "name": "party_log.entry_added",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -839,11 +872,11 @@
                     "type": "object"
                 },
                 "title": "Party.PartyLogEntryAddedEvent",
-                "x-event-class": "App\\Events\\Party\\PartyLogEntryAddedEvent"
+                "x-event-class": "App\\Domain\\Party\\Broadcast\\PartyLogEntryAddedEvent"
             },
             "Party.RequestDecidedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\RequestDecidedEvent",
+                "name": "request.decided",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -871,19 +904,18 @@
                     "type": "object"
                 },
                 "title": "Party.RequestDecidedEvent",
-                "x-event-class": "App\\Events\\Party\\RequestDecidedEvent"
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\RequestDecidedEvent"
             },
             "Player.PlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Player\\PlayerCommandEvent",
+                "name": "player.command",
                 "payload": {
                     "additionalProperties": true,
                     "description": "Soloist-native frame object, passed through unchanged",
                     "type": "object"
                 },
-                "summary": "Event name player.command",
                 "title": "Player.PlayerCommandEvent",
-                "x-event-class": "App\\Events\\Player\\PlayerCommandEvent"
+                "x-event-class": "App\\Domain\\Playback\\Broadcast\\PlayerCommandEvent"
             },
             "Player.ClientFrame": {
                 "contentType": "application/json",
@@ -898,17 +930,17 @@
             },
             "Party.ThemeUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "ThemeUpdated",
+                "name": "theme.updated",
                 "payload": {
                     "additionalProperties": true,
                     "type": "object"
                 },
                 "title": "Party.ThemeUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\ThemeUpdatedEvent"
+                "x-event-class": "App\\Domain\\Theming\\Broadcast\\ThemeUpdatedEvent"
             },
             "Party.StatsUpdatedEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Party\\StatsUpdatedEvent",
+                "name": "stats.updated",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -955,11 +987,11 @@
                     "type": "object"
                 },
                 "title": "Party.StatsUpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\StatsUpdatedEvent"
+                "x-event-class": "App\\Domain\\Stats\\Broadcast\\StatsUpdatedEvent"
             },
             "Player.BrowserPlayerCommandEvent": {
                 "contentType": "application/json",
-                "name": "App\\Events\\Player\\BrowserPlayerCommandEvent",
+                "name": "browser-player.command",
                 "payload": {
                     "additionalProperties": false,
                     "properties": {
@@ -983,9 +1015,99 @@
                     ],
                     "type": "object"
                 },
-                "summary": "Event name browser-player.command",
                 "title": "Player.BrowserPlayerCommandEvent",
-                "x-event-class": "App\\Events\\Player\\BrowserPlayerCommandEvent"
+                "x-event-class": "App\\Domain\\Playback\\Broadcast\\BrowserPlayerCommandEvent"
+            },
+            "Party.MemberVoteChangedEvent": {
+                "contentType": "application/json",
+                "name": "member.vote_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "request_id": {
+                            "description": "Id of the Request voted on",
+                            "type": "integer"
+                        },
+                        "value": {
+                            "description": "The Member's own value: 1, -1 or 0 when retracted",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "request_id",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberVoteChangedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\MemberVoteChangedEvent"
+            },
+            "Party.MemberRatingChangedEvent": {
+                "contentType": "application/json",
+                "name": "member.rating_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "play_id": {
+                            "description": "Id of the Play rated",
+                            "type": "integer"
+                        },
+                        "value": {
+                            "description": "The Member's own value: 1, -1 or 0 when retracted",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "play_id",
+                        "value"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberRatingChangedEvent",
+                "x-event-class": "App\\Domain\\Queue\\Broadcast\\MemberRatingChangedEvent"
+            },
+            "Party.PartyStateChangedEvent": {
+                "contentType": "application/json",
+                "name": "party.state_changed",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "state": {
+                            "description": "New Party state",
+                            "enum": [
+                                "live",
+                                "paused",
+                                "ended"
+                            ],
+                            "type": "string"
+                        }
+                    },
+                    "required": [
+                        "state"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.PartyStateChangedEvent",
+                "x-event-class": "App\\Domain\\Party\\Broadcast\\PartyStateChangedEvent"
+            },
+            "Party.MemberBannedEvent": {
+                "contentType": "application/json",
+                "name": "member.banned",
+                "payload": {
+                    "additionalProperties": false,
+                    "properties": {
+                        "member_id": {
+                            "description": "Id of the banned Member",
+                            "type": "integer"
+                        }
+                    },
+                    "required": [
+                        "member_id"
+                    ],
+                    "type": "object"
+                },
+                "title": "Party.MemberBannedEvent",
+                "x-event-class": "App\\Domain\\Membership\\Broadcast\\MemberBannedEvent"
             }
         }
     },
@@ -1006,6 +1128,9 @@
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
+                },
+                {
+                    "$ref": "#/channels/party/messages/Party.PartyStateChangedEvent"
                 }
             ]
         },
@@ -1095,6 +1220,39 @@
             "messages": [
                 {
                     "$ref": "#/channels/partyBrowserPlayer/messages/Player.BrowserPlayerCommandEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberVoteChanged": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberVoteChangedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberRatingChanged": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberRatingChangedEvent"
+                }
+            ]
+        },
+        "publishPartyMemberMemberBanned": {
+            "action": "send",
+            "channel": {
+                "$ref": "#/channels/partyMember"
+            },
+            "messages": [
+                {
+                    "$ref": "#/channels/partyMember/messages/Party.MemberBannedEvent"
                 }
             ]
         }

@@ -40,14 +40,24 @@ enableAutoUnmount(afterEach);
 let listeners;
 let echo;
 
+const subscription = () => {
+    const channel = {
+        listen: vi.fn((event, cb) => {
+            listeners[event] = cb;
+
+            return channel;
+        }),
+    };
+
+    return channel;
+};
+
 beforeEach(() => {
     listeners = {};
     echo = {
-        channel: vi.fn(() => ({
-            listen: vi.fn((event, cb) => {
-                listeners[event] = cb;
-            }),
-        })),
+        channel: vi.fn(() => subscription()),
+        private: vi.fn(() => subscription()),
+        join: vi.fn(() => subscription()),
         leave: vi.fn(),
     };
     window.Echo = echo;
@@ -59,6 +69,15 @@ beforeEach(() => {
 
 afterEach(() => {
     delete window.Echo;
+});
+
+describe('Party page presence', () => {
+    it('joins the members presence channel and leaves on unmount', () => {
+        const w = mount(Show, {props: baseProps()});
+        expect(echo.join).toHaveBeenCalledWith('party.FRI123.members');
+        w.unmount();
+        expect(echo.leave).toHaveBeenCalledWith('party.FRI123.members');
+    });
 });
 
 describe('Party page now playing and Up Next', () => {
@@ -96,79 +115,78 @@ describe('Party page now playing and Up Next', () => {
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
 
-    describe('QueueUpdatedEvent reloads', () => {
-        beforeEach(() => {
-            vi.useFakeTimers();
+    describe('realtime state', () => {
+        const payload = (over = {}) => ({
+            version: 1,
+            code: 'FRI123',
+            now_playing: null,
+            up_next: null,
+            queue: [],
+            ...over,
         });
 
-        afterEach(() => {
-            vi.useRealTimers();
+        it('applies a Queue event to the list without a router call', async () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', track: {...entry().track, title: 'Old'}})]})});
+            listeners['.queue.updated'](payload({queue: [entry({id: 6, status: 'queued', track: {...entry().track, title: 'Fresh'}})]}));
+            await w.vm.$nextTick();
+            const items = w.findAll('[data-testid=queue-item]');
+            expect(items).toHaveLength(1);
+            expect(items[0].text()).toContain('Fresh');
+            expect(reload).not.toHaveBeenCalled();
+        });
+
+        it('keeps the Member upvote highlight across a Queue event', async () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', my_vote: 1})]})});
+            expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('true');
+            listeners['.queue.updated'](payload({queue: [entry({id: 5, status: 'queued', score: 4})]}));
+            await w.vm.$nextTick();
+            expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('true');
+        });
+
+        it('updates the highlight from a member vote event', async () => {
+            const w = mount(Show, {props: baseProps({membership: {id: 9, role: 'member', banned: false}, queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
+            expect(echo.private).toHaveBeenCalledWith('party.FRI123.member.9');
+            listeners['.member.vote_changed']({request_id: 5, value: 1});
+            await w.vm.$nextTick();
+            expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('true');
+            listeners['.member.vote_changed']({request_id: 5, value: 0});
+            await w.vm.$nextTick();
+            expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('false');
+        });
+
+        it('shows the Member rating from page props and member events', async () => {
+            const ratable = {id: 7, track: entry().track, likes: 2, dislikes: 0, my_rating: 0};
+            const w = mount(Show, {props: baseProps({ratablePlay: ratable, memberVotes: {votes: [], ratings: [{play_id: 7, value: 1}]}})});
+            expect(w.get('[data-testid=rate-like]').attributes('aria-pressed')).toBe('true');
+            listeners['.member.rating_changed']({play_id: 7, value: -1});
+            await w.vm.$nextTick();
+            expect(w.get('[data-testid=rate-dislike]').attributes('aria-pressed')).toBe('true');
+        });
+
+        it('follows the now playing Track for rating', async () => {
+            const w = mount(Show, {props: baseProps({ratablePlay: {id: 7, track: entry().track, likes: 0, dislikes: 0, my_rating: 0}})});
+            listeners['.queue.updated'](payload({now_playing: entry({id: 8, play_id: 12, likes: 3, dislikes: 1})}));
+            listeners['.member.rating_changed']({play_id: 12, value: 1});
+            await w.vm.$nextTick();
+            expect(w.get('[data-testid=rating-count]').text()).toBe('3');
+            expect(w.get('[data-testid=rate-like]').attributes('aria-pressed')).toBe('true');
         });
 
         it('reloads once on realtime:resync and stops after unmount', () => {
             const w = mount(Show, {props: baseProps()});
             window.dispatchEvent(new Event('realtime:resync'));
-            vi.advanceTimersByTime(2000);
             expect(reload).toHaveBeenCalledTimes(1);
+            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
             w.unmount();
             window.dispatchEvent(new Event('realtime:resync'));
-            vi.advanceTimersByTime(2000);
             expect(reload).toHaveBeenCalledTimes(1);
-        });
-
-        it('coalesces 10 events in 2 seconds into one async reload inside the jitter window', () => {
-            const w = mount(Show, {props: baseProps()});
-            expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
-            for (let i = 0; i < 10; i++) {
-                listeners['Party.QueueUpdatedEvent']();
-                vi.advanceTimersByTime(200);
-            }
-            expect(reload).not.toHaveBeenCalled();
-            vi.advanceTimersByTime(499);
-            expect(reload).not.toHaveBeenCalled();
-            vi.advanceTimersByTime(1501);
-            expect(reload).toHaveBeenCalledTimes(1);
-            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
-            vi.advanceTimersByTime(10000);
-            expect(reload).toHaveBeenCalledTimes(1);
-            w.unmount();
             expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
         });
 
-        it('waits at least the trailing debounce and adds jitter', () => {
-            const random = vi.spyOn(Math, 'random').mockReturnValue(0);
-            const w = mount(Show, {props: baseProps()});
-            listeners['Party.QueueUpdatedEvent']();
-            vi.advanceTimersByTime(499);
-            expect(reload).not.toHaveBeenCalled();
-            vi.advanceTimersByTime(1);
+        it('reloads when the payload version is newer than the client knows', () => {
+            mount(Show, {props: baseProps()});
+            listeners['.queue.updated'](payload({version: 2}));
             expect(reload).toHaveBeenCalledTimes(1);
-            random.mockReturnValue(0.999);
-            listeners['Party.QueueUpdatedEvent']();
-            vi.advanceTimersByTime(1990);
-            expect(reload).toHaveBeenCalledTimes(1);
-            vi.advanceTimersByTime(10);
-            expect(reload).toHaveBeenCalledTimes(2);
-            random.mockRestore();
-            w.unmount();
-        });
-
-        it('does not cancel an in-flight vote because the reload is async', () => {
-            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
-            w.get('[data-testid=vote-up]').trigger('click');
-            expect(put).toHaveBeenCalledTimes(1);
-            listeners['Party.QueueUpdatedEvent']();
-            vi.advanceTimersByTime(2000);
-            expect(reload.mock.calls[0][0].async).toBe(true);
-            w.unmount();
-        });
-
-        it('drops a pending reload on unmount', () => {
-            const w = mount(Show, {props: baseProps()});
-            listeners['Party.QueueUpdatedEvent']();
-            w.unmount();
-            vi.advanceTimersByTime(5000);
-            expect(reload).not.toHaveBeenCalled();
         });
     });
 });
@@ -265,5 +283,32 @@ describe('playback controls', () => {
         const w = mount(Show, {props: baseProps({canManage: true})});
         await w.find('[data-testid="playback-play"]').trigger('click');
         expect(w.find('[data-testid="playback-error"]').text()).toContain('disconnected');
+    });
+});
+
+describe('Party Show realtime state and toasts', () => {
+    it('applies party.state_changed without reload', async () => {
+        const w = mount(Show, {props: baseProps()});
+        listeners['.party.state_changed']({state: 'ended'});
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=party-state]').text()).toBe('ended');
+        expect(reload).not.toHaveBeenCalled();
+    });
+
+    it('toasts for rejected, approved and banned, but not for other decisions', async () => {
+        const w = mount(Show, {props: baseProps()});
+        listeners['.request.rejected']({provider_track_id: 'x', reason: 'Too loud'});
+        listeners['.request.decided']({request_id: 1, status: 'rejected', reason: null});
+        await w.vm.$nextTick();
+        expect(w.findAll('[data-testid=toast]')).toHaveLength(1);
+        expect(w.get('[data-testid=toast]').text()).toContain('Too loud');
+
+        listeners['.request.decided']({request_id: 1, status: 'queued', reason: null});
+        listeners['.member.banned']({member_id: 5});
+        await w.vm.$nextTick();
+        const texts = w.findAll('[data-testid=toast]').map((t) => t.text());
+        expect(texts).toHaveLength(3);
+        expect(texts[1]).toContain('approved');
+        expect(texts[2]).toContain('banned');
     });
 });

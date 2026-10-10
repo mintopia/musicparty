@@ -1,11 +1,42 @@
 <script setup>
+import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
     canModerate: {type: Boolean, required: true},
     requests: {type: Array, required: true},
+});
+
+usePartyPresence(props.party.code);
+
+const liveRequests = ref(props.requests);
+watch(() => props.requests, () => {
+    liveRequests.value = props.requests;
+});
+
+const moderatorChannelName = `party.${props.party.code}.moderators`;
+
+onMounted(() => {
+    window.Echo?.private(moderatorChannelName)
+        .listen('.pending_request.added', (payload) => {
+            if (liveRequests.value.some((item) => item.id === payload.request_id)) {
+                return;
+            }
+            liveRequests.value = [...liveRequests.value, {
+                id: payload.request_id,
+                track: {title: payload.title, artists: payload.artists ?? []},
+                requested_by: {id: payload.requested_by_member_id, name: 'a member'},
+            }];
+        })
+        .listen('.pending_request.resolved', (payload) => {
+            liveRequests.value = liveRequests.value.filter((item) => item.id !== payload.request_id);
+        });
+});
+
+onBeforeUnmount(() => {
+    window.Echo?.leave(moderatorChannelName);
 });
 
 const page = usePage();
@@ -30,10 +61,10 @@ const remove = (id) => router.delete(`${base.value}/${id}`, {preserveScroll: tru
         </header>
 
         <p v-if="successMessage" role="status" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
-        <p v-if="requests.length === 0" data-testid="pending-empty" class="text-sm text-muted">Nothing is waiting for approval.</p>
+        <p v-if="liveRequests.length === 0" data-testid="pending-empty" class="text-sm text-muted">Nothing is waiting for approval.</p>
 
         <ul class="flex flex-col gap-3">
-            <li v-for="item in requests" :key="item.id" :data-testid="`pending-${item.id}`" class="flex flex-col gap-2 rounded border border-border bg-surface px-5 py-4">
+            <li v-for="item in liveRequests" :key="item.id" :data-testid="`pending-${item.id}`" class="flex flex-col gap-2 rounded border border-border bg-surface px-5 py-4">
                 <div>
                     <p class="font-medium">{{ item.track.title }}</p>
                     <p class="text-sm text-muted">{{ item.track.artists.join(', ') }} - requested by {{ item.requested_by.name }}</p>
