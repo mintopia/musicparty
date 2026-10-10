@@ -8,7 +8,6 @@ use App\Providers\HorizonServiceProvider;
 use App\Providers\ModServiceProvider;
 use App\Providers\PrometheusServiceProvider;
 use App\Providers\RouteServiceProvider;
-use App\Providers\TelescopeServiceProvider;
 use Illuminate\Support\Facades\Facade;
 use Illuminate\Support\ServiceProvider;
 
@@ -186,7 +185,6 @@ return [
         HorizonServiceProvider::class,
         ModServiceProvider::class,
         RouteServiceProvider::class,
-        TelescopeServiceProvider::class,
         SocialiteProviders\Manager\ServiceProvider::class,
     ])->toArray(),
 

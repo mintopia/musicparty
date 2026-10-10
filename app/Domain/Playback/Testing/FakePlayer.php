@@ -13,12 +13,15 @@ use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PlaybackStatus;
 use Carbon\CarbonImmutable;
 use Closure;
+use Throwable;
 
 class FakePlayer implements Player
 {
     private PlaybackState $state;
 
     private bool $connected = true;
+
+    private ?Throwable $enqueueFailure = null;
 
     /** @var list<TrackReference> */
     private array $queue = [];
@@ -142,8 +145,17 @@ class FakePlayer implements Player
         return $this->commands;
     }
 
+    public function failEnqueueWith(?Throwable $failure): void
+    {
+        $this->enqueueFailure = $failure;
+    }
+
     public function enqueue(string $providerId, string $providerTrackId): void
     {
+        if ($this->enqueueFailure !== null) {
+            throw $this->enqueueFailure;
+        }
+
         $this->record('enqueue', $providerTrackId);
         $this->queue[] = new TrackReference($providerId, $providerTrackId);
 

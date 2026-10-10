@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Support\Carbon;
 
 /**
@@ -20,9 +21,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon $updated_at
  * @property Carbon|null $decided_at
  * @property string|null $rejection_reason
- * @property int|null $likes
- * @property int|null $dislikes
- * @property int|null $my_rating
  * @property int|null $upvotes
  * @property int|null $downvotes
  * @property int|null $party_member_id
@@ -82,10 +80,10 @@ class TrackRequest extends Model
     }
 
     /**
-     * @return HasMany<PlayRating, $this>
+     * @return HasOne<Play, $this>
      */
-    public function ratings(): HasMany
+    public function play(): HasOne
     {
-        return $this->hasMany(PlayRating::class);
+        return $this->hasOne(Play::class);
     }
 }

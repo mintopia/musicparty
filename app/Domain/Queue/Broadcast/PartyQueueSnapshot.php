@@ -7,7 +7,6 @@ use App\Domain\Queue\RequestStatus;
 use App\Models\Party;
 use App\Models\TrackRequest;
 use App\Models\User;
-use Illuminate\Support\Facades\Cache;
 
 class PartyQueueSnapshot
 {
@@ -16,7 +15,7 @@ class PartyQueueSnapshot
     public function __construct(private readonly ResolveDecorations $decorations) {}
 
     /**
-     * @return array{version: int, sequence: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
+     * @return array{version: int, code: string, now_playing: array<string, mixed>|null, up_next: array<string, mixed>|null, queue: list<array<string, mixed>>}
      */
     public function build(Party $party): array
     {
@@ -25,10 +24,7 @@ class PartyQueueSnapshot
             ->whereIn('status', [RequestStatus::Playing, RequestStatus::UpNext, RequestStatus::Queued])
             ->with('requester.user')
             ->withSum('votes as score', 'value')
-            ->withCount([
-                'ratings as likes' => fn ($query) => $query->where('value', '>', 0),
-                'ratings as dislikes' => fn ($query) => $query->where('value', '<', 0),
-            ])
+            ->with(['play' => fn ($query) => $query->withRatingSummary()])
             ->orderByRaw('COALESCE(score, 0) desc')
             ->orderBy('created_at')
             ->orderBy('id')
@@ -39,7 +35,6 @@ class PartyQueueSnapshot
 
         return [
             'version' => self::VERSION,
-            'sequence' => $this->nextSequence($party),
             'code' => $party->code,
             'now_playing' => $nowPlaying === null ? null : $this->entry($nowPlaying),
             'up_next' => $upNext === null ? null : $this->entry($upNext),
@@ -48,14 +43,6 @@ class PartyQueueSnapshot
                 ->map(fn (TrackRequest $request): array => $this->entry($request))
                 ->all()),
         ];
-    }
-
-    private function nextSequence(Party $party): int
-    {
-        $key = "party-queue-sequence:{$party->id}";
-        Cache::add($key, 0, now()->addDay());
-
-        return (int) Cache::increment($key);
     }
 
     /**
@@ -77,8 +64,8 @@ class PartyQueueSnapshot
             ],
             'status' => $request->status->value,
             'score' => (int) $request->score,
-            'likes' => (int) $request->likes,
-            'dislikes' => (int) $request->dislikes,
+            'likes' => (int) $request->play?->likes,
+            'dislikes' => (int) $request->play?->dislikes,
             'requested_by' => ['name' => $requester instanceof User ? $requester->nickname : null],
             'decorations' => ($this->decorations)($request),
         ];

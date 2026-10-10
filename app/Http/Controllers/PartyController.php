@@ -23,12 +23,12 @@ use App\Domain\Queue\Actions\ApproveRequest;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\ListQueue;
-use App\Domain\Queue\Actions\RateNowPlaying;
 use App\Domain\Queue\Actions\RatePlay;
 use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
@@ -40,7 +40,6 @@ use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
 use App\Http\Requests\ListPlayHistoryRequest;
-use App\Http\Requests\RateNowPlayingRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
@@ -54,7 +53,6 @@ use App\Http\Resources\V1\SearchHitResource;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Play;
-use App\Models\PlayRating;
 use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -101,16 +99,21 @@ class PartyController extends Controller
 
     public function show(
         ListPlayHistoryRequest $request,
-        JoinParty $joinParty,
         ListQueue $listQueue,
         ListPlayHistory $listHistory,
         PartyQueueSnapshot $snapshot,
         SearchPartyProvider $search,
+        ThrottleSearch $throttleSearch,
         EnabledMods $enabledMods,
         Party $party,
         string $section = 'queue',
-    ): Response {
-        $member = $joinParty($this->currentUser($request), $party);
+    ): Response|RedirectResponse {
+        $member = $party->memberFor($this->currentUser($request));
+
+        if ($member === null) {
+            return redirect()->route('home', ['code' => $party->code]);
+        }
+
         $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
         $results = null;
@@ -118,6 +121,7 @@ class PartyController extends Controller
 
         if ($query !== '') {
             try {
+                $throttleSearch($this->currentUser($request));
                 $results = SearchHitResource::collection($search($party, $query))->resolve($request);
             } catch (RequestRefusedException $exception) {
                 $results = [];
@@ -143,7 +147,6 @@ class PartyController extends Controller
             'canManageBlocklist' => $this->currentUser($request)->can('moderate', $party),
             'readOnly' => $party->state === PartyState::Ended || $member->banned,
             'nowPlaying' => $playback['now_playing'],
-            'myRating' => $this->myRating($playback['now_playing'], $member),
             'ratablePlay' => $this->ratablePlay($request, $party, $member),
             'upNext' => $playback['up_next'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
@@ -425,44 +428,6 @@ class PartyController extends Controller
         }
 
         return back();
-    }
-
-    public function storeNowPlayingRating(RateNowPlayingRequest $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): RedirectResponse
-    {
-        return $this->applyNowPlayingRating($request, $rate, $party, $trackRequest, $request->direction());
-    }
-
-    public function destroyNowPlayingRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): RedirectResponse
-    {
-        return $this->applyNowPlayingRating($request, $rate, $party, $trackRequest, null);
-    }
-
-    private function applyNowPlayingRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): RedirectResponse
-    {
-        abort_unless($trackRequest->party_id === $party->id, 404);
-
-        try {
-            $rate($party, $party->memberFor($this->currentUser($request)) ?? throw RequestRefusedException::notAMember(), $trackRequest, $direction);
-        } catch (RequestRefusedException $exception) {
-            return back()->withErrors(['rating' => $exception->getMessage()]);
-        }
-
-        return back();
-    }
-
-    /**
-     * @param  array<string, mixed>|null  $nowPlaying
-     */
-    private function myRating(?array $nowPlaying, PartyMember $member): int
-    {
-        if ($nowPlaying === null) {
-            return 0;
-        }
-
-        return (int) PlayRating::query()
-            ->where('track_request_id', $nowPlaying['id'])
-            ->where('party_member_id', $member->id)
-            ->value('value');
     }
 
     /**

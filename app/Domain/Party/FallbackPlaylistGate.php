@@ -4,10 +4,11 @@ namespace App\Domain\Party;
 
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Data\TrackData;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Queue\Blocklist;
 use App\Models\BlocklistEntry;
 use App\Models\Party;
-use App\Models\PlayedSong;
+use App\Models\Play;
 use Illuminate\Database\Eloquent\Collection;
 
 readonly class FallbackPlaylistGate
@@ -23,6 +24,8 @@ readonly class FallbackPlaylistGate
         if ($playlistId === null || $playlistId === '') {
             return new FallbackPlaylistCheck(0, self::REQUIRED_PLAYABLE_TRACKS);
         }
+
+        SpotifyMusicProvider::forgetPlaylistTracks($playlistId);
 
         $recentlyPlayed = $this->recentlyPlayedTrackIds($party);
         $tracks = $this->catalogue->provider($party->music_provider)->playlistTracks($playlistId, $this->host->hostAccountIdFor($party));
@@ -69,11 +72,10 @@ readonly class FallbackPlaylistGate
             return [];
         }
 
-        $ids = PlayedSong::query()
-            ->join('songs', 'songs.id', '=', 'played_songs.song_id')
-            ->where('played_songs.party_id', $party->id)
-            ->where('played_songs.played_at', '>=', now()->subSeconds($party->no_repeat_interval))
-            ->pluck('songs.spotify_id');
+        $ids = Play::query()
+            ->where('party_id', $party->id)
+            ->where('played_at', '>=', now()->subSeconds($party->no_repeat_interval))
+            ->pluck('provider_track_id');
 
         return array_fill_keys($ids->all(), true);
     }

@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Domain\Stats\Actions\BuildLiveStatsMetrics;
+use App\Http\Middleware\MetricsCollector;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Prometheus\Collectors\Horizon\CurrentMasterSupervisorCollector;
@@ -15,49 +17,80 @@ use Spatie\Prometheus\Facades\Prometheus;
 
 class PrometheusServiceProvider extends ServiceProvider
 {
-    public function register()
+    public function register(): void
     {
-        // HTTP Metrics
-        Prometheus::addGauge('HTTP Requests')
-            ->helpText('The number of handled HTTP requests')
-            ->value(fn () => Redis::get('metrics.http.requests') ?? 0);
+        Prometheus::addCounter('HTTP Requests', fn (): int => (int) Redis::get('metrics.http.requests'), 'http_requests_total')
+            ->helpText('The number of handled HTTP requests');
 
-        Prometheus::addGauge('HTTP Methods')
+        Prometheus::addCounter('HTTP Methods', fn (): array => $this->methodCounts(), 'http_requests_by_method_total')
             ->helpText('The numbers of each HTTP method used')
-            ->label('method')
-            ->value(fn () => $this->getMultipleFromRedis('metrics.http.method'));
+            ->label('method');
 
-        Prometheus::addGauge('HTTP Status Codes')
+        Prometheus::addCounter('HTTP Status Codes', fn (): array => $this->statusCounts(), 'http_responses_by_status_total')
             ->helpText('The numbers of each HTTP status code returned')
-            ->label('code')
-            ->value(fn () => $this->getMultipleFromRedis('metrics.http.status'));
+            ->label('code');
 
-        Prometheus::addGauge('Uncaught Exceptions')
-            ->helpText('The number of uncaught exceptions')
-            ->value(fn () => Redis::get('metrics.exceptions') ?? 0);
+        Prometheus::addCounter('Uncaught Exceptions', fn (): int => (int) Redis::get('metrics.exceptions'), 'uncaught_exceptions_total')
+            ->helpText('The number of uncaught exceptions');
+
+        $this->app->scoped(BuildLiveStatsMetrics::class);
+
+        $gauges = [
+            ['Parties', 'parties', 'The number of Parties in each state', ['state']],
+            ['Party Members', 'party_members', 'Members of a Live or Paused Party, excluding Banned ones', ['party']],
+            ['Party Queue Length', 'party_queue_length', 'Queued Requests in a Live or Paused Party', ['party']],
+            ['Party Time Played', 'party_time_played_seconds', 'Seconds of music played in a Live or Paused Party', ['party']],
+            ['Party Top Track Plays', 'party_top_track_plays', 'Plays of the top Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+            ['Party Top Requester Plays', 'party_top_requester_plays', 'Plays of the top requesters in a Live or Paused Party', ['party', 'rank', 'member']],
+            ['Party Most Upvoted Score', 'party_most_upvoted_score', 'Score of the most upvoted Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+            ['Party Most Downvoted Score', 'party_most_downvoted_score', 'Score of the most downvoted Tracks in a Live or Paused Party', ['party', 'rank', 'track']],
+        ];
+
+        foreach ($gauges as [$label, $name, $help, $labels]) {
+            Prometheus::addGauge($label, fn (): array => app(BuildLiveStatsMetrics::class)->series($name), $name)
+                ->helpText($help)
+                ->labels($labels);
+        }
     }
 
-    protected function getMultipleFromRedis(string $prefix): array
+    public function boot(): void
     {
-        $keys = Redis::keys("{$prefix}.*");
-        $lookup = [];
-        $names = [];
-        foreach ($keys as $key) {
-            $parts = explode('.', $key);
-            $name = end($parts);
-            $names[] = $name;
-            $lookup[] = "{$prefix}.{$name}";
-        }
-        if (! $lookup) {
+        $this->registerHorizonCollectors();
+    }
+
+    /**
+     * @return array<int, array{0: int, 1: array<int, string>}>
+     */
+    protected function methodCounts(): array
+    {
+        return $this->countsFor('metrics.http.method', [...MetricsCollector::METHODS, MetricsCollector::OTHER_METHOD]);
+    }
+
+    /**
+     * @return array<int, array{0: int, 1: array<int, string>}>
+     */
+    protected function statusCounts(): array
+    {
+        $codes = array_map(strval(...), Redis::smembers(MetricsCollector::STATUS_CODES_KEY));
+        sort($codes);
+
+        return $this->countsFor('metrics.http.status', $codes);
+    }
+
+    /**
+     * @param  array<int, string>  $names
+     * @return array<int, array{0: int, 1: array<int, string>}>
+     */
+    protected function countsFor(string $prefix, array $names): array
+    {
+        if ($names === []) {
             return [];
         }
-        $values = Redis::mget($lookup);
+
+        $values = Redis::mget(array_map(fn (string $name): string => "{$prefix}.{$name}", $names));
         $result = [];
         foreach ($names as $index => $name) {
-            $value = $values[$index] ?? 0;
-            $result[] = [
-                $value, [$name],
-            ];
+            $result[] = [(int) ($values[$index] ?? 0), [$name]];
         }
 
         return $result;

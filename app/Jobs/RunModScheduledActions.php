@@ -19,7 +19,7 @@ class RunModScheduledActions implements ShouldQueue
 
     public function __construct()
     {
-        $this->onQueue('partyupdates');
+        $this->onQueue('default');
     }
 
     public function handle(RunScheduledActions $run): void

@@ -1,5 +1,6 @@
 <script setup>
-import {Head} from '@inertiajs/vue3';
+import {Head, router} from '@inertiajs/vue3';
+import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
 import Icon from '../../Components/Icon.vue';
 import Decorations from '../../Components/Decorations.vue';
@@ -13,7 +14,6 @@ const props = defineProps({
     party: {type: Object, required: true},
     nowPlaying: {type: Object, default: null},
     upNext: {type: Object, default: null},
-    sequence: {type: Number, default: 0},
     startedAt: {type: String, default: null},
     theme: {type: Object, default: null},
     enabled_mods: {type: Array, default: () => []},
@@ -49,7 +49,6 @@ const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
 const startedAtMs = ref(props.startedAt ? Date.parse(props.startedAt) : null);
 const now = ref(Date.now());
-let lastSequence = props.sequence;
 let ticker = null;
 
 const durationMs = computed(() => nowPlaying.value?.track.duration_ms ?? 0);
@@ -63,8 +62,21 @@ const progressPercent = computed(() => (durationMs.value > 0 ? (elapsedMs.value 
 const backdropUrl = computed(() => nowPlaying.value?.track.artwork_url ?? upNext.value?.track.artwork_url ?? null);
 const channelName = `party.${props.party.code}`;
 
+const resync = () => {
+    router.reload({
+        only: ['nowPlaying', 'upNext', 'startedAt'],
+        async: true,
+        onSuccess: () => {
+            nowPlaying.value = props.nowPlaying;
+            upNext.value = props.upNext;
+            startedAtMs.value = props.startedAt ? Date.parse(props.startedAt) : null;
+        },
+    });
+};
+
 onMounted(() => {
-    ticker = setInterval(() => {
+    window.addEventListener(RESYNC_EVENT, resync);
+    ticker =setInterval(() => {
         now.value = Date.now();
     }, 1000);
     const channel = window.Echo?.channel(channelName);
@@ -73,10 +85,6 @@ onMounted(() => {
         applyThemeCss();
     });
     channel?.listen('Party.QueueUpdatedEvent', (payload) => {
-        if (payload.sequence <= lastSequence) {
-            return;
-        }
-        lastSequence = payload.sequence;
         if (payload.now_playing?.id !== nowPlaying.value?.id) {
             startedAtMs.value = payload.now_playing ? Date.now() : null;
         }
@@ -86,6 +94,7 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener(RESYNC_EVENT, resync);
     clearInterval(ticker);
     themeStyle.value?.remove();
     window.Echo?.leave(channelName);

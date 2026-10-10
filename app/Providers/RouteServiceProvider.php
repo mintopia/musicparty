@@ -26,14 +26,17 @@ class RouteServiceProvider extends ServiceProvider
     {
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
 
+        RateLimiter::for('party-join', fn (Request $request) => [
+            Limit::perMinute(20)->by('user:'.($request->user()?->id ?: $request->ip())),
+            Limit::perMinute(100)->by('ip:'.$request->ip()),
+        ]);
+        RateLimiter::for('party-requests', fn (Request $request) => Limit::perMinute(10)->by($request->user()?->id ?: $request->ip()));
+        RateLimiter::for('party-votes', fn (Request $request) => Limit::perMinute(60)->by($request->user()?->id ?: $request->ip()));
+
         $this->routes(function () {
             Route::middleware('api')
                 ->prefix('api')
                 ->group(base_path('routes/api.php'));
-
-            Route::middleware('webhooks')
-                ->prefix('webhooks')
-                ->group(base_path('routes/webhooks.php'));
 
             Route::middleware('web')
                 ->group(base_path('routes/web.php'));

@@ -14,7 +14,6 @@ class DashboardController extends Controller
             'links' => [
                 'horizon' => url('/horizon'),
                 'pulse' => url('/pulse'),
-                'telescope' => config('telescope.enabled') ? url('/telescope') : null,
             ],
         ]);
     }

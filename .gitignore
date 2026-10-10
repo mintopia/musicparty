@@ -24,3 +24,5 @@ frankenphp
 frankenphp-worker.php
 /otel-collector-config.yml
 /openobserve
+
+/cookies.json

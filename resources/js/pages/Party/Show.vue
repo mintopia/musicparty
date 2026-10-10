@@ -1,6 +1,7 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
 import {computed, provide, onBeforeUnmount, onMounted, ref} from 'vue';
+import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import Icon from '../../Components/Icon.vue';
 import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
@@ -17,7 +18,6 @@ const props = defineProps({
     canManageBlocklist: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
     nowPlaying: {type: Object, default: null},
-    myRating: {type: Number, default: 0},
     ratablePlay: {type: Object, default: null},
     upNext: {type: Object, default: null},
     queue: {type: Array, default: () => []},
@@ -33,13 +33,26 @@ provide('enabledMods', computed(() => props.enabled_mods));
 
 const channelName = `party.${props.party.code}`;
 
+const RELOAD_DEBOUNCE_MS = 500;
+const RELOAD_JITTER_MS = 1500;
+let reloadTimer = null;
+
+const scheduleReload = () => {
+    clearTimeout(reloadTimer);
+    reloadTimer = setTimeout(() => {
+        reloadTimer = null;
+        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
+    }, RELOAD_DEBOUNCE_MS + Math.random() * RELOAD_JITTER_MS);
+};
+
 onMounted(() => {
-    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', () => {
-        router.reload({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
-    });
+    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', scheduleReload);
+    window.addEventListener(RESYNC_EVENT, scheduleReload);
 });
 
 onBeforeUnmount(() => {
+    window.removeEventListener(RESYNC_EVENT, scheduleReload);
+    clearTimeout(reloadTimer);
     window.Echo?.leave(channelName);
 });
 
@@ -97,7 +110,6 @@ const ratingLocked = computed(() => props.membership.banned || props.party.state
         v-if="section === 'queue' || section === 'history'"
         :now-playing="nowPlaying"
         :ratable-play="ratablePlay"
-        :my-rating="myRating"
         :party-code="party.code"
         :read-only="ratingLocked"
     />

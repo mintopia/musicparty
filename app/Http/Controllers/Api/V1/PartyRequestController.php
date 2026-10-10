@@ -5,19 +5,19 @@ namespace App\Http\Controllers\Api\V1;
 use App\Domain\Queue\Actions\ApproveRequest;
 use App\Domain\Queue\Actions\ListPendingRequests;
 use App\Domain\Queue\Actions\ListQueue;
-use App\Domain\Queue\Actions\RateNowPlaying;
 use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
+use App\Domain\Queue\Exceptions\SearchRateLimitedException;
 use App\Domain\Queue\Exceptions\VoteRefusedException;
 use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\SearchTracksRequest;
 use App\Http\Requests\CastVoteRequest;
-use App\Http\Requests\RateNowPlayingRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Resources\V1\QueueEntryResource;
@@ -32,10 +32,11 @@ use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyRequestController extends Controller
 {
-    public function search(SearchTracksRequest $request, SearchPartyProvider $search, Party $party): AnonymousResourceCollection|JsonResponse
+    public function search(SearchTracksRequest $request, SearchPartyProvider $search, ThrottleSearch $throttle, Party $party): AnonymousResourceCollection|JsonResponse
     {
         try {
             $this->member($request, $party);
+            $throttle($this->currentUser($request));
 
             return SearchHitResource::collection($search($party, $request->string('q')->toString()));
         } catch (RequestRefusedException $exception) {
@@ -116,27 +117,6 @@ class PartyRequestController extends Controller
         }
     }
 
-    public function rate(RateNowPlayingRequest $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
-    {
-        return $this->applyRating($request, $rate, $party, $trackRequest, $request->direction());
-    }
-
-    public function retractRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest): QueueEntryResource|JsonResponse
-    {
-        return $this->applyRating($request, $rate, $party, $trackRequest, null);
-    }
-
-    private function applyRating(Request $request, RateNowPlaying $rate, Party $party, TrackRequest $trackRequest, ?VoteDirection $direction): QueueEntryResource|JsonResponse
-    {
-        abort_unless($trackRequest->party_id === $party->id, 404);
-
-        try {
-            return new QueueEntryResource($rate($party, $this->member($request, $party), $trackRequest, $direction));
-        } catch (RequestRefusedException $exception) {
-            return $this->refusal($exception);
-        }
-    }
-
     /**
      * @param  callable(): TrackRequest  $decision
      */
@@ -175,6 +155,8 @@ class PartyRequestController extends Controller
             $payload['retry_at'] = $exception->retryAt->toIso8601String();
         }
 
-        return response()->json($payload, $exception->status());
+        $headers = $exception instanceof SearchRateLimitedException ? ['Retry-After' => $exception->retryAfterSeconds] : [];
+
+        return response()->json($payload, $exception->status(), $headers);
     }
 }

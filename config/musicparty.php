@@ -7,9 +7,6 @@ use App\Domain\Playback\Players\SoloistPlayer;
 use App\Domain\Playback\Testing\FakePlayer;
 
 return [
-    'allow_overlapping_updates' => env('MUSICPARTY_ALLOW_OVERLAPPING_UPDATES', true),
-    'webhook_dispatch_after_request' => env('MUSICPARTY_WEBHOOK_DISPATCH_AFTER_REQUEST', true),
-    'webhook_should_queue' => env('MUSICPARTY_WEBHOOK_SHOULD_QUEUE', true),
     'site_disk' => env('MUSICPARTY_SITE_DISK', 'public'),
     'fallback_minimum_queue' => (int) env('MUSICPARTY_FALLBACK_MINIMUM_QUEUE', 5),
     'just_in_time_lead_seconds' => (int) env('MUSICPARTY_JIT_LEAD_SECONDS', 15),
@@ -21,6 +18,13 @@ return [
         'normal_delay_seconds' => (int) env('MUSICPARTY_POLL_NORMAL_DELAY', 10),
         'idle_delay_seconds' => (int) env('MUSICPARTY_POLL_IDLE_DELAY', 60),
         'backoff_cap_seconds' => (int) env('MUSICPARTY_POLL_BACKOFF_CAP', 300),
+    ],
+    'playback' => [
+        'enqueue_backoff' => [5, 15, 30, 60, 120, 300],
+    ],
+    'search_rate_limit' => [
+        'burst' => (int) env('MUSICPARTY_SEARCH_BURST', 30),
+        'per_second' => (float) env('MUSICPARTY_SEARCH_PER_SECOND', 1),
     ],
     'soloist' => [
         'stale_after_seconds' => (int) env('MUSICPARTY_SOLOIST_STALE_AFTER', 30),

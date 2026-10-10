@@ -20,7 +20,7 @@ class CheckSoloistHealth implements ShouldQueue
 
     public function __construct()
     {
-        $this->onQueue('partyupdates');
+        $this->onQueue('player');
     }
 
     public function handle(PartyPlayers $players): void

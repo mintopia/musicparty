@@ -5,11 +5,18 @@ use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
+use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Jobs\AppendToHistoryPlaylist;
 use App\Domain\Music\Testing\FakeMusicProvider;
+use App\Domain\Party\PartyState;
+use App\Domain\Queue\Actions\AdvanceQueue;
+use App\Domain\Queue\Actions\TopUpFallbackRequests;
+use App\Domain\Queue\RequestStatus;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyLogEntry;
 use App\Models\SocialProvider;
+use App\Models\TrackRequest;
 use App\Models\User;
 use App\Services\SocialProviders\SpotifyProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -101,12 +108,11 @@ it('persists selected playlists and clears them with null', function () {
         ->assertOk()
         ->assertExactJson(['data' => ['fallback_playlist_id' => 'playlist-1', 'history_playlist_id' => 'playlist-1']]);
 
-    expect($party->fresh()->backup_playlist_id)->toBe('playlist-1')
-        ->and($party->fresh()->backup_playlist_name)->toBe('Fallback Mix');
+    expect($party->fresh()->fallback_playlist_id)->toBe('playlist-1');
 
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => null, 'history_playlist_id' => null])->assertOk();
 
-    expect($party->fresh()->backup_playlist_id)->toBeNull()
+    expect($party->fresh()->fallback_playlist_id)->toBeNull()
         ->and($party->fresh()->history_playlist_id)->toBeNull();
 });
 
@@ -119,7 +125,7 @@ it('rejects playlists that do not belong to the host', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['fallback_playlist_id', 'history_playlist_id']);
 
-    expect($party->fresh()->backup_playlist_id)->toBeNull();
+    expect($party->fresh()->fallback_playlist_id)->toBeNull();
 });
 
 it('rejects a history playlist when the provider cannot write', function () {
@@ -253,13 +259,25 @@ it('retries a temporary failure without throwing into playback', function () {
     $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
     $this->fake->rateLimitNext(42);
 
-    $job = Mockery::mock(AppendToHistoryPlaylist::class, [$party->id, 'track-1', 'fake'])->makePartial();
-    $job->shouldReceive('attempts')->andReturn(1);
-    $job->shouldReceive('release')->once()->with(42);
+    $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
+    {
+        public ?int $releasedFor = null;
+
+        public function attempts(): int
+        {
+            return 1;
+        }
+
+        public function release($delay = 0): void
+        {
+            $this->releasedFor = $delay;
+        }
+    };
 
     $job->handle($this->fake, app(AuthorisesHost::class));
 
-    expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+    expect($this->fake->appendedTo('playlist-1'))->toBe([])
+        ->and($job->releasedFor)->toBe(42);
 });
 
 it('logs a final failure without tokens and does not throw', function () {
@@ -268,8 +286,13 @@ it('logs a final failure without tokens and does not throw', function () {
     $this->fake->failNextWith(new ProviderTemporaryFailure('down'));
     Log::spy();
 
-    $job = Mockery::mock(AppendToHistoryPlaylist::class, [$party->id, 'track-1', 'fake'])->makePartial();
-    $job->shouldReceive('attempts')->andReturn(5);
+    $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
+    {
+        public function attempts(): int
+        {
+            return 5;
+        }
+    };
 
     $job->handle($this->fake, app(AuthorisesHost::class));
 
@@ -283,4 +306,59 @@ it('skips silently when the host has no linked account', function () {
     app(AppendPlayToHistory::class)($party, 'track-1', $this->fake);
 
     expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+});
+
+it('tops the queue up from the playlist chosen through the picker', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['state' => PartyState::Live, 'music_provider' => 'fake']);
+    $tracks = array_map(playbackTrack(...), range(1, 8));
+    $fake = new FakeMusicProvider($tracks, [new PlaylistData('playlist-1', 'Fallback Mix')], ['playlist-1' => $tracks]);
+    $this->app->instance(MusicProvider::class, $fake);
+    $this->app->instance(FakeMusicProvider::class, $fake);
+    Sanctum::actingAs($host);
+
+    $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => 'playlist-1', 'history_playlist_id' => null])->assertOk();
+
+    expect(app(TopUpFallbackRequests::class)($party->fresh()))->toBe(5)
+        ->and(TrackRequest::query()->where('party_id', $party->id)->whereNull('party_member_id')->count())->toBe(5);
+});
+
+function startTrackedRequest(Party $party): TrackRequest
+{
+    $request = TrackRequest::factory()->for($party)->create(['provider_track_id' => 'track-1', 'status' => RequestStatus::UpNext]);
+    Party::flushEventListeners();
+
+    return $request;
+}
+
+it('appends the started track to the history playlist when the queue advances', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    startTrackedRequest($party);
+
+    app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1']);
+});
+
+it('appends nothing when no history playlist is set', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host);
+    startTrackedRequest($party);
+
+    app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe([]);
+});
+
+it('writes a party log entry and does not throw when the provider fails on advance', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    startTrackedRequest($party);
+    $this->fake->failNextWith(new ProviderUnavailableException('down'));
+
+    $advance = app(AdvanceQueue::class)($party, 'track-1');
+
+    expect($advance->playing)->not->toBeNull()
+        ->and(PartyLogEntry::query()->where('party_id', $party->id)->where('action', 'playlist.history_append_failed')->exists())->toBeTrue();
 });

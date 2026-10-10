@@ -17,7 +17,7 @@ class StartPlayback implements ShouldQueue
 
     public function __construct(public string $partyCode)
     {
-        $this->onQueue('partyupdates');
+        $this->onQueue('player');
     }
 
     public function handle(PlaybackCoordinator $coordinator): void

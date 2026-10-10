@@ -1,17 +1,20 @@
 <?php
 
+use App\Domain\Playback\Actions\ClaimBrowserPlayer;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\PlaybackCoordinator;
 use App\Domain\Playback\PlaybackStatus;
 use App\Domain\Playback\Players\BrowserPlayer;
+use App\Domain\Queue\RequestStatus;
 use App\Events\Player\BrowserPlayerCommandEvent;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
 use App\Models\SocialProvider;
+use App\Models\TrackRequest;
 use App\Models\User;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -96,6 +99,8 @@ it('withholds the token when the account needs relinking', function () {
 });
 
 it('never puts the token on the party page or in broadcasts', function () {
+    PartyMember::factory()->for($this->party)->for($this->host)->create();
+
     $this->withoutVite()->actingAs($this->host)->get(route('parties.show', $this->party))
         ->assertOk()
         ->assertDontSee('secret-host-token', false);
@@ -273,4 +278,39 @@ it('does not let a report steal the role from another tab', function () {
     $this->actingAs($this->host)->postJson(route('parties.player.claim', $this->party), ['tab_id' => 'tab-a'])->assertOk();
 
     $this->postJson(route('parties.player.report', $this->party), ['tab_id' => 'tab-b', 'status' => 'paused', 'track_id' => null, 'position_ms' => 0])->assertStatus(409);
+});
+
+it('retries a failed enqueue at once when a tab claims the player', function () {
+    Event::fake([BrowserPlayerCommandEvent::class]);
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::UpNext]);
+    $coordinator = app(PlaybackCoordinator::class);
+
+    $coordinator->tick($this->party);
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->toBeNull();
+
+    app(ClaimBrowserPlayer::class)($this->party, 'tab-a');
+    $coordinator->tick($this->party);
+
+    expect($request->fresh()->enqueued_at)->not->toBeNull();
+});
+
+it('yields exactly one holder when two tabs claim at once', function () {
+    $player = browserPlayerFor($this->party);
+
+    $results = [$player->claim('tab-a'), $player->claim('tab-b')];
+
+    expect($results)->toBe([true, false])
+        ->and($player->holds('tab-a'))->toBeTrue()
+        ->and($player->holds('tab-b'))->toBeFalse();
+});
+
+it('keeps the first holder when the second claim races past the empty check', function () {
+    $player = browserPlayerFor($this->party);
+    Cache::add("playback.browser.{$this->party->code}.claim", 'tab-a', 180);
+
+    expect($player->claim('tab-b'))->toBeFalse()
+        ->and($player->claim('tab-a'))->toBeTrue()
+        ->and($player->holds('tab-a'))->toBeTrue();
 });

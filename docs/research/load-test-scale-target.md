@@ -47,9 +47,9 @@ Throughput levels off at about 500 jobs/s because the single Reverb loop becomes
 
 Applied in `config/horizon.php`:
 
-- `supervisor-1` (`default`, `partyupdates`): production `maxProcesses` 10 -> 4. Four workers cover the measured plateau with room for bursts; more only add load on Reverb.
+- `supervisor-broadcast` (`broadcast`): production `maxProcesses` 10 -> 4. Four workers cover the measured plateau with room for bursts; more only add load on Reverb.
 - New `supervisor-ai` (`mods-ai`, `simple` balance): production 2, local 1. Slow AI review no longer shares a worker pool with broadcasts, so it cannot starve them (D11).
-- D11's separate `player`, `polling` and `broadcast` queues do not exist in the code yet, so no supervisors were added for them; add them when those jobs land.
+- `player`, `polling` and `default` each have their own supervisor too (production 4, 2 and 2; local 1).
 
 ## Caveats
 

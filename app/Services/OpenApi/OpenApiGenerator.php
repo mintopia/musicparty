@@ -154,7 +154,7 @@ class OpenApiGenerator
                     ];
                 }
             } else {
-                $body = ['type' => 'object', 'properties' => $schema['properties']];
+                $body = ['type' => 'object', 'properties' => $schema['properties'] === [] ? new \stdClass : $schema['properties']];
                 if ($schema['required'] !== []) {
                     $body['required'] = $schema['required'];
                 }
@@ -173,8 +173,20 @@ class OpenApiGenerator
             $operation['responses']['422'] = ['description' => $refusal];
         }
 
+        if ($route->getName() === 'api.v1.parties.search') {
+            $operation['responses']['429'] = [
+                'description' => 'Too many searches. The per-user search allowance (a burst of 30, refilling at 1 per second, shared across the web and API) is used up; retry after the number of seconds in the Retry-After header.',
+                'headers' => ['Retry-After' => ['description' => 'Seconds until another search is allowed.', 'schema' => ['type' => 'integer']]],
+            ];
+        }
+
         if ($this->requiresSanctum($route)) {
             $operation['security'] = [['sanctumBearer' => []], ['sanctumCookie' => []]];
+            $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
+        }
+
+        if ($this->hasMiddleware($route, 'auth:integration')) {
+            $operation['security'] = [['integrationBearer' => []]];
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
         }
 
@@ -189,6 +201,8 @@ class OpenApiGenerator
             $operation['responses']['401'] = ['description' => 'Unauthenticated.'];
             $operation['responses']['403'] = ['description' => 'Forbidden. Only the Party Host, instance admins and Integration Tokens with the export ability may export.'];
         }
+
+        $operation['security'] ??= [];
 
         if ($this->hasMiddleware($route, 'Authorize') || $this->hasMiddleware($route, 'can:') || $this->hasMiddleware($route, 'player.token')) {
             $operation['responses']['403'] = ['description' => 'Forbidden.'];

@@ -47,6 +47,6 @@ class HandlePlayerClientEvent
             return;
         }
 
-        ProcessPlayerFrame::dispatch($code, $frame);
+        ProcessPlayerFrame::enqueue($code, $frame);
     }
 }

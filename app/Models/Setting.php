@@ -22,8 +22,6 @@ class Setting extends Model implements Sortable
     use SortableTrait;
     use ToString;
 
-    protected static array $cached = [];
-
     protected $casts = [
         'value' => SettingValue::class,
         'type' => SettingType::class,
@@ -31,32 +29,19 @@ class Setting extends Model implements Sortable
 
     public static function fetch(string $code, $default = null)
     {
-        if (isset(static::$cached[$code])) {
-            return static::$cached[$code];
-        }
         $key = "settings.{$code}";
-        if ($setting = Cache::get($key)) {
-            if ($setting->value === null) {
+        if ($cached = Cache::get($key)) {
+            if ($cached->value === null) {
                 return $default;
             }
-            if ($setting->encrypted) {
-                static::$cached[$code] = $setting->value;
 
-                return Crypt::decrypt($setting->value);
-            }
-            static::$cached[$code] = $setting->value;
-
-            return $setting->value;
+            return $cached->encrypted ? Crypt::decrypt($cached->value) : $cached->value;
         }
         $setting = Setting::whereCode($code)->first();
         if ($setting === null) {
-            Cache::put($key, $setting);
-            static::$cached[$code] = null;
-
             return $default;
         }
         Cache::put($key, $setting->getValue());
-        static::$cached[$code] = $setting->value;
 
         return $setting->value ?? $default;
     }
@@ -64,7 +49,6 @@ class Setting extends Model implements Sortable
     public function clearCache(): void
     {
         Log::debug("Clearing settings.{$this->code} from cache");
-        unset(static::$cached[$this->code]);
         Cache::forget("settings.{$this->code}");
     }
 

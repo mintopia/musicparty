@@ -1,4 +1,4 @@
-import {mount} from '@vue/test-utils';
+import {enableAutoUnmount, mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 
 const reload = vi.fn();
@@ -34,6 +34,8 @@ const baseProps = (over = {}) => ({
     queue: [],
     ...over,
 });
+
+enableAutoUnmount(afterEach);
 
 let listeners;
 let echo;
@@ -94,13 +96,80 @@ describe('Party page now playing and Up Next', () => {
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
 
-    it('reloads now playing and up next live on QueueUpdatedEvent', () => {
-        const w = mount(Show, {props: baseProps()});
-        expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
-        listeners['Party.QueueUpdatedEvent']();
-        expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'myRating'], preserveScroll: true});
-        w.unmount();
-        expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
+    describe('QueueUpdatedEvent reloads', () => {
+        beforeEach(() => {
+            vi.useFakeTimers();
+        });
+
+        afterEach(() => {
+            vi.useRealTimers();
+        });
+
+        it('reloads once on realtime:resync and stops after unmount', () => {
+            const w = mount(Show, {props: baseProps()});
+            window.dispatchEvent(new Event('realtime:resync'));
+            vi.advanceTimersByTime(2000);
+            expect(reload).toHaveBeenCalledTimes(1);
+            w.unmount();
+            window.dispatchEvent(new Event('realtime:resync'));
+            vi.advanceTimersByTime(2000);
+            expect(reload).toHaveBeenCalledTimes(1);
+        });
+
+        it('coalesces 10 events in 2 seconds into one async reload inside the jitter window', () => {
+            const w = mount(Show, {props: baseProps()});
+            expect(echo.channel).toHaveBeenCalledWith('party.FRI123');
+            for (let i = 0; i < 10; i++) {
+                listeners['Party.QueueUpdatedEvent']();
+                vi.advanceTimersByTime(200);
+            }
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(499);
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1501);
+            expect(reload).toHaveBeenCalledTimes(1);
+            expect(reload).toHaveBeenCalledWith({only: ['queue', 'nowPlaying', 'upNext', 'ratablePlay'], preserveScroll: true, async: true});
+            vi.advanceTimersByTime(10000);
+            expect(reload).toHaveBeenCalledTimes(1);
+            w.unmount();
+            expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
+        });
+
+        it('waits at least the trailing debounce and adds jitter', () => {
+            const random = vi.spyOn(Math, 'random').mockReturnValue(0);
+            const w = mount(Show, {props: baseProps()});
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(499);
+            expect(reload).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1);
+            expect(reload).toHaveBeenCalledTimes(1);
+            random.mockReturnValue(0.999);
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(1990);
+            expect(reload).toHaveBeenCalledTimes(1);
+            vi.advanceTimersByTime(10);
+            expect(reload).toHaveBeenCalledTimes(2);
+            random.mockRestore();
+            w.unmount();
+        });
+
+        it('does not cancel an in-flight vote because the reload is async', () => {
+            const w = mount(Show, {props: baseProps({queue: [entry({id: 5, status: 'queued', my_vote: 0})]})});
+            w.get('[data-testid=vote-up]').trigger('click');
+            expect(put).toHaveBeenCalledTimes(1);
+            listeners['Party.QueueUpdatedEvent']();
+            vi.advanceTimersByTime(2000);
+            expect(reload.mock.calls[0][0].async).toBe(true);
+            w.unmount();
+        });
+
+        it('drops a pending reload on unmount', () => {
+            const w = mount(Show, {props: baseProps()});
+            listeners['Party.QueueUpdatedEvent']();
+            w.unmount();
+            vi.advanceTimersByTime(5000);
+            expect(reload).not.toHaveBeenCalled();
+        });
     });
 });
 
@@ -135,31 +204,38 @@ describe('MiniNowPlaying', () => {
 });
 
 describe('rating', () => {
-    const rated = () => entry({likes: 3, dislikes: 1});
+    const play = (over = {}) => ({id: 7, track: {title: 'T', artists: ['A'], album: null, artwork_url: null, duration_ms: 1, explicit: false}, likes: 3, dislikes: 1, my_rating: 0, ...over});
 
-    it.each([
-        ['MiniNowPlaying', MiniNowPlaying],
-        ['Show', Show],
-    ])('likes, switches and retracts on %s', async (_name, component) => {
-        const props = component === Show ? baseProps({nowPlaying: rated(), myRating: 0}) : {nowPlaying: rated(), partyCode: 'FRI123', myRating: 0};
-        const w = mount(component, {props});
+    it('likes, switches and retracts from MiniNowPlaying against the Play rating route', async () => {
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry(), partyCode: 'FRI123', ratablePlay: play()}});
         expect(w.find('[data-testid="rating-count"]').text()).toBe('2');
 
         await w.find('[data-testid="rating-like"]').trigger('click');
-        expect(put).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', {value: 'up'}, expect.any(Object));
+        expect(put).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', {value: 'up'}, expect.any(Object));
 
-        await w.setProps({myRating: 1});
+        await w.setProps({ratablePlay: play({my_rating: 1})});
         await w.find('[data-testid="rating-like"]').trigger('click');
-        expect(destroy).toHaveBeenCalledWith('/parties/FRI123/requests/1/rating', expect.any(Object));
+        expect(destroy).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', expect.any(Object));
 
         await w.find('[data-testid="rating-dislike"]').trigger('click');
-        expect(put).toHaveBeenLastCalledWith('/parties/FRI123/requests/1/rating', {value: 'down'}, expect.any(Object));
+        expect(put).toHaveBeenLastCalledWith('/parties/FRI123/plays/7/rating', {value: 'down'}, expect.any(Object));
+    });
+
+    it('rates the Play from the Show banner', async () => {
+        const w = mount(Show, {props: baseProps({ratablePlay: play()})});
+
+        await w.get('[data-testid=rate-like]').trigger('click');
+        expect(put).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', {value: 'up'}, expect.any(Object));
+    });
+
+    it('hides the mini rating without a ratable play', () => {
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: entry(), ratablePlay: null}}).find('[data-testid="rating"]').exists()).toBe(false);
     });
 
     it('hides the buttons when read only or nothing is playing', () => {
-        expect(mount(MiniNowPlaying, {props: {nowPlaying: rated(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: entry(), ratablePlay: play(), readOnly: true}}).find('[data-testid="rating"]').exists()).toBe(false);
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).find('[data-testid="rating"]').exists()).toBe(false);
-        expect(mount(Show, {props: baseProps({readOnly: true})}).find('[data-testid="rating"]').exists()).toBe(false);
+        expect(mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'Friday Night LAN', state: 'ended', downvotes: true}})}).find('[data-testid="rating"]').exists()).toBe(false);
     });
 });
 

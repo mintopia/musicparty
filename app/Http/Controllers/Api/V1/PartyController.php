@@ -13,7 +13,6 @@ use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Playback\Actions\ControlPlayback;
 use App\Domain\Playback\Exceptions\PlaybackControlRefusedException;
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Api\V1\PartyControlRequest;
 use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyRequest;
@@ -132,20 +131,5 @@ class PartyController extends Controller
         }
 
         return response()->json(['data' => ['control' => $request->control()->value, 'value' => $request->value()]]);
-    }
-
-    public function control(PartyControlRequest $request, Party $party)
-    {
-        $this->authorize('update', $party);
-        match ($request->input('action')) {
-            'play' => $party->play($request->deviceId ?? null),
-            'pause' => $party->pause(),
-            'next' => $party->nextTrack(),
-            'previous' => $party->previousTrack(),
-        };
-
-        $party->updateState();
-
-        return new PartyResource($party);
     }
 }

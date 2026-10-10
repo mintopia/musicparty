@@ -40,7 +40,7 @@ Admins SHALL be able to list and search users, suspend and unsuspend a user, and
 - **THEN** the change is recorded with the acting admin and time
 
 ### Requirement: Act as Host
-An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving Host powers in that Party. Entering and leaving the mode MUST be recorded in that Party's Party Log, and actions taken in it SHALL be attributable to the admin acting as Host. Admins MUST NOT have Host powers in a Party outside this mode.
+An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving Host powers in that Party. Entering and leaving the mode MUST be recorded in that Party's Party Log, the same log the Host and Moderators read, and actions taken in it SHALL be attributable to the admin acting as Host. Admins MUST NOT have Host powers in a Party outside this mode.
 
 #### Scenario: Enter mode
 - **WHEN** an admin enters act-as-Host mode for a Party
@@ -53,6 +53,10 @@ An admin SHALL be able to enter an explicit act-as-Host mode for a Party, giving
 #### Scenario: Leave mode
 - **WHEN** the admin leaves the mode
 - **THEN** a Party Log entry records the end and Host powers are removed
+
+#### Scenario: Visible to the Host
+- **WHEN** the Host opens the Party Log after an admin has acted as Host
+- **THEN** the start and end entries are listed and flagged as act-as-Host
 
 ### Requirement: Social provider credentials
 Admins SHALL be able to configure login for the social providers Discord, Twitch, Steam and Spotify: enable or disable each and set its credentials. Stored secrets MUST be encrypted at rest and MUST NOT be displayed back in full after saving. Only enabled, configured providers SHALL be offered on the login page.
@@ -122,7 +126,7 @@ Admins SHALL see a catalogue of all registered Mods with name, description and w
 - **THEN** Parties that had it enabled no longer run it and Hosts cannot enable it
 
 ### Requirement: Operational dashboards
-Horizon, Pulse and Telescope SHALL be reachable only behind the admin gate. Telescope SHALL be off unless enabled by configuration.
+Horizon and Pulse SHALL be reachable only behind the admin gate. Telescope SHALL NOT be installed.
 
 #### Scenario: Admin opens Horizon
 - **WHEN** an admin opens the Horizon dashboard
@@ -132,9 +136,47 @@ Horizon, Pulse and Telescope SHALL be reachable only behind the admin gate. Tele
 - **WHEN** a non-admin requests the Pulse dashboard
 - **THEN** access is refused
 
+#### Scenario: Telescope absent
+- **WHEN** anyone requests the Telescope path
+- **THEN** the system returns not found
+
 ### Requirement: Admin auditability
 Admin actions that change users, roles, credentials, settings, themes, tokens or Mod availability SHALL be recorded with the acting admin and timestamp, with secrets excluded.
 
 #### Scenario: Credential change logged
 - **WHEN** an admin changes a social provider secret
 - **THEN** an audit record notes who and when, without the secret value
+
+### Requirement: Prometheus metrics
+The system SHALL expose metrics in the Prometheus text format at a configurable path. Access SHALL be denied by default: only a scraper presenting the configured bearer token, or connecting from a configured IP range, SHALL be served. The metrics SHALL include:
+- HTTP requests counted by method and by response status
+- uncaught exceptions
+- the Horizon queue and supervisor metrics
+- the Party count by state
+- for each Live or Paused Party: Members, Queue length, total time played, and the ranked top Tracks, top requesters, most upvoted and most downvoted Requests as shown in Live Stats
+
+Party-scoped series SHALL be labelled by party code and SHALL NOT be emitted for Ended Parties. A scrape SHALL read precomputed Live Stats rather than recompute them.
+
+#### Scenario: Unconfigured access
+- **WHEN** neither a metrics token nor an allowed IP range is configured and anyone requests the metrics path
+- **THEN** access is refused
+
+#### Scenario: Authorised scrape
+- **WHEN** a scraper presents the configured bearer token
+- **THEN** the metrics are returned
+
+#### Scenario: Wrong token or address
+- **WHEN** a client presents a wrong token from an address outside the allowed range
+- **THEN** access is refused
+
+#### Scenario: Request and error counts
+- **WHEN** the application serves a successful page, a not-found response and a request that throws an unhandled exception
+- **THEN** the request counters for those methods and statuses and the uncaught-exception counter each increase
+
+#### Scenario: Live Stats exported
+- **WHEN** a Live Party has played Tracks and received Votes
+- **THEN** the metrics show that Party's time played, top Tracks, top requesters, most upvoted and most downvoted Requests with the same values as its Live Stats
+
+#### Scenario: Ended Party not exported
+- **WHEN** a Party is Ended
+- **THEN** no party-labelled series are emitted for it and it is counted only under the Ended state

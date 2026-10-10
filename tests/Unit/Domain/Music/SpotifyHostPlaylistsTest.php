@@ -47,6 +47,33 @@ it('maps playlist tracks skipping null, local and episode items', function () {
         ->and($tracks[0]->isrc)->toBe('ISRC0000001');
 });
 
+it('fetches a playlist once across repeated calls and again after the entry is forgotten', function () {
+    SpotifyFake::hostApi();
+    $trackFetches = fn (): int => Http::recorded()->filter(fn (array $pair): bool => str_contains($pair[0]->url(), '/playlists/pl-1/tracks'))->count();
+
+    foreach (range(1, 10) as $_) {
+        $this->provider->playlistTracks('pl-1', $this->host);
+    }
+
+    expect($trackFetches())->toBe(1);
+
+    SpotifyMusicProvider::forgetPlaylistTracks('pl-1');
+    $this->provider->playlistTracks('pl-1', $this->host);
+    $this->provider->playlistTracks('pl-1', $this->host);
+
+    expect($trackFetches())->toBe(2);
+});
+
+it('refetches a playlist after the cache window passes', function () {
+    SpotifyFake::hostApi();
+
+    $this->provider->playlistTracks('pl-1', $this->host);
+    $this->travel(301)->seconds();
+    $this->provider->playlistTracks('pl-1', $this->host);
+
+    expect(Http::recorded()->filter(fn (array $pair): bool => str_contains($pair[0]->url(), '/playlists/pl-1/tracks'))->count())->toBe(2);
+});
+
 it('appends in chunks of 100 as spotify uris', function () {
     SpotifyFake::hostApi(['api.spotify.com/v1/playlists/*/tracks*' => Http::response(['snapshot_id' => 'x'], 201)]);
     $ids = array_map(fn (int $i): string => "t{$i}", range(1, 250));

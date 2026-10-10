@@ -12,6 +12,8 @@ class QueueUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     /**
      * @param  array<string, mixed>  $snapshot
      */

@@ -1,7 +1,6 @@
 <?php
 
 use Illuminate\Support\Str;
-use Laravel\Telescope\Jobs\ProcessPendingUpdates;
 
 return [
 
@@ -86,6 +85,9 @@ return [
 
     'waits' => [
         'redis:default' => 60,
+        'redis:player' => 30,
+        'redis:polling' => 60,
+        'redis:broadcast' => 30,
     ],
 
     /*
@@ -119,9 +121,7 @@ return [
     |
     */
 
-    'silenced' => [
-        ProcessPendingUpdates::class,
-    ],
+    'silenced' => [],
 
     /*
     |--------------------------------------------------------------------------
@@ -181,11 +181,36 @@ return [
     */
 
     'defaults' => [
-        'supervisor-1' => [
+        'supervisor-player' => [
             'connection' => 'redis',
-            'queue' => ['default', 'partyupdates'],
-            'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
+            'queue' => ['player'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+
+        'supervisor-polling' => [
+            'connection' => 'redis',
+            'queue' => ['polling'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
+
+        'supervisor-broadcast' => [
+            'connection' => 'redis',
+            'queue' => ['broadcast'],
+            'balance' => 'simple',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -207,25 +232,54 @@ return [
             'timeout' => 60,
             'nice' => 0,
         ],
+
+        'supervisor-default' => [
+            'connection' => 'redis',
+            'queue' => ['default'],
+            'balance' => 'simple',
+            'maxProcesses' => 1,
+            'maxTime' => 0,
+            'maxJobs' => 0,
+            'memory' => 128,
+            'tries' => 1,
+            'timeout' => 60,
+            'nice' => 0,
+        ],
     ],
 
     'environments' => [
         'production' => [
-            'supervisor-1' => [
+            'supervisor-player' => [
                 'maxProcesses' => 4,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+            ],
+            'supervisor-polling' => [
+                'maxProcesses' => 2,
+            ],
+            'supervisor-broadcast' => [
+                'maxProcesses' => 4,
             ],
             'supervisor-ai' => [
+                'maxProcesses' => 2,
+            ],
+            'supervisor-default' => [
                 'maxProcesses' => 2,
             ],
         ],
 
         'local' => [
-            'supervisor-1' => [
-                'maxProcesses' => 3,
+            'supervisor-player' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-polling' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-broadcast' => [
+                'maxProcesses' => 1,
             ],
             'supervisor-ai' => [
+                'maxProcesses' => 1,
+            ],
+            'supervisor-default' => [
                 'maxProcesses' => 1,
             ],
         ],

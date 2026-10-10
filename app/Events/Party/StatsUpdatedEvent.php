@@ -12,6 +12,8 @@ class StatsUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     /**
      * @param  array<string, mixed>  $stats
      */

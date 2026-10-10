@@ -2,27 +2,19 @@
 
 namespace App\Providers;
 
+use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
 use App\Domain\Queue\Events\RequestCreated;
 use App\Domain\Queue\Events\RequestDecisionRecorded;
 use App\Domain\Queue\Events\TrackEnded;
+use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\Events\VoteCast;
 use App\Domain\Stats\Listeners\RefreshStatsOnPartyActivity;
 use App\Listeners\HandlePlayerClientEvent;
 use App\Listeners\MessageLoggedListener;
-use App\Models\Party;
 use App\Models\Setting;
-use App\Models\SongRating;
-use App\Models\Theme;
-use App\Models\UpcomingSong;
 use App\Models\User;
-use App\Models\Vote;
-use App\Observers\PartyObserver;
 use App\Observers\SettingObserver;
-use App\Observers\SongRatingObserver;
-use App\Observers\ThemeObserver;
-use App\Observers\UpcomingSongObserver;
 use App\Observers\UserObserver;
-use App\Observers\VoteObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
@@ -40,11 +32,6 @@ class EventServiceProvider extends ServiceProvider
     protected $observers = [
         User::class => UserObserver::class,
         Setting::class => SettingObserver::class,
-        Theme::class => ThemeObserver::class,
-        Party::class => PartyObserver::class,
-        Vote::class => VoteObserver::class,
-        UpcomingSong::class => UpcomingSongObserver::class,
-        SongRating::class => SongRatingObserver::class,
     ];
 
     /**
@@ -66,6 +53,7 @@ class EventServiceProvider extends ServiceProvider
         RequestCreated::class => [RefreshStatsOnPartyActivity::class],
         VoteCast::class => [RefreshStatsOnPartyActivity::class],
         TrackEnded::class => [RefreshStatsOnPartyActivity::class],
+        TrackStarted::class => [AppendStartedTrackToHistory::class],
         RequestDecisionRecorded::class => [RefreshStatsOnPartyActivity::class],
         MessageLogged::class => [
             MessageLoggedListener::class,

@@ -30,7 +30,8 @@ services:
     depends_on:
       - redis
       - db
-    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug", "--port=80" ]
+    env_file: .env
+    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
     healthcheck:
       disable: true
 
@@ -133,28 +134,6 @@ services:
     depends_on:
       - redis
       - db
-    healthcheck:
-      disable: true
-
-  phpcs:
-    profiles: [ "phpcs" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcs" ]
-    volumes:
-      - ./:/app/
-    healthcheck:
-      disable: true
-
-  phpcbf:
-    profiles: [ "phpcbf" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcbf" ]
-    volumes:
-      - ./:/app/
     healthcheck:
       disable: true
 

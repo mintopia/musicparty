@@ -21,6 +21,9 @@ class FakeMusicProvider implements MusicProvider
     /** @var array<string, list<string>> */
     private array $appended = [];
 
+    /** @var (callable(string): void)|null */
+    private $getTrackHook;
+
     private ?PlaybackState $playback = null;
 
     /** @var list<string> */
@@ -62,6 +65,16 @@ class FakeMusicProvider implements MusicProvider
     public function id(): string
     {
         return $this->id;
+    }
+
+    /**
+     * @param  callable(string): void  $callback
+     */
+    public function onGetTrack(callable $callback): self
+    {
+        $this->getTrackHook = $callback;
+
+        return $this;
     }
 
     public function failNextWith(Throwable $failure): self
@@ -124,6 +137,10 @@ class FakeMusicProvider implements MusicProvider
     public function getTrack(string $providerTrackId): ?TrackData
     {
         $this->throwInjectedFailure();
+
+        if ($this->getTrackHook !== null) {
+            ($this->getTrackHook)($providerTrackId);
+        }
 
         foreach ($this->tracks as $track) {
             if ($track->providerTrackId === $providerTrackId) {

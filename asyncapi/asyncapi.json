@@ -7,9 +7,6 @@
                 "Party.QueueUpdatedEvent": {
                     "$ref": "#/components/messages/Party.QueueUpdatedEvent"
                 },
-                "Party.UpdatedEvent": {
-                    "$ref": "#/components/messages/Party.UpdatedEvent"
-                },
                 "Party.ThemeUpdatedEvent": {
                     "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
                 }
@@ -17,35 +14,6 @@
             "parameters": {
                 "code": {
                     "description": "Party code"
-                }
-            }
-        },
-        "privateParty": {
-            "address": "private-party.{code}",
-            "messages": {
-                "UpcomingSong.RemovedEvent": {
-                    "$ref": "#/components/messages/UpcomingSong.RemovedEvent"
-                },
-                "UpcomingSong.UpdatedEvent": {
-                    "$ref": "#/components/messages/UpcomingSong.UpdatedEvent"
-                }
-            },
-            "parameters": {
-                "code": {
-                    "description": "Party code"
-                }
-            }
-        },
-        "spotifyToken": {
-            "address": "spotifytoken.{userId}",
-            "messages": {
-                "User.SpotifyAccessTokenUpdatedEvent": {
-                    "$ref": "#/components/messages/User.SpotifyAccessTokenUpdatedEvent"
-                }
-            },
-            "parameters": {
-                "userId": {
-                    "description": "User id"
                 }
             }
         },
@@ -151,7 +119,6 @@
                     "additionalProperties": false,
                     "required": [
                         "version",
-                        "sequence",
                         "code",
                         "now_playing",
                         "up_next",
@@ -161,10 +128,6 @@
                         "version": {
                             "type": "integer",
                             "description": "Payload schema version"
-                        },
-                        "sequence": {
-                            "type": "integer",
-                            "description": "Monotonic per-party sequence; ignore snapshots older than the last seen"
                         },
                         "code": {
                             "type": "string",
@@ -685,46 +648,6 @@
                 "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
                 "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
             },
-            "Party.UpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\Party\\UpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "Party.UpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\UpdatedEvent"
-            },
-            "UpcomingSong.RemovedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\UpcomingSong\\RemovedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "UpcomingSong.RemovedEvent",
-                "x-event-class": "App\\Events\\UpcomingSong\\RemovedEvent"
-            },
-            "UpcomingSong.UpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\UpcomingSong\\UpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "UpcomingSong.UpdatedEvent",
-                "x-event-class": "App\\Events\\UpcomingSong\\UpdatedEvent"
-            },
-            "User.SpotifyAccessTokenUpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "User.SpotifyAccessTokenUpdatedEvent",
-                "x-event-class": "App\\Events\\User\\SpotifyAccessTokenUpdatedEvent"
-            },
             "Presence.MemberAdded": {
                 "contentType": "application/json",
                 "name": "pusher:member_added",
@@ -1079,38 +1002,10 @@
             },
             "messages": [
                 {
-                    "$ref": "#/channels/party/messages/Party.UpdatedEvent"
-                },
-                {
                     "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
                 },
                 {
                     "$ref": "#/channels/party/messages/Party.ThemeUpdatedEvent"
-                }
-            ]
-        },
-        "publishPrivatePartyUpcomingSong": {
-            "action": "send",
-            "channel": {
-                "$ref": "#/channels/privateParty"
-            },
-            "messages": [
-                {
-                    "$ref": "#/channels/privateParty/messages/UpcomingSong.RemovedEvent"
-                },
-                {
-                    "$ref": "#/channels/privateParty/messages/UpcomingSong.UpdatedEvent"
-                }
-            ]
-        },
-        "publishSpotifyToken": {
-            "action": "send",
-            "channel": {
-                "$ref": "#/channels/spotifyToken"
-            },
-            "messages": [
-                {
-                    "$ref": "#/channels/spotifyToken/messages/User.SpotifyAccessTokenUpdatedEvent"
                 }
             ]
         },

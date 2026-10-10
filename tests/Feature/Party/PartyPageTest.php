@@ -1,6 +1,5 @@
 <?php
 
-use App\Domain\Party\PartyRole;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\RequestStatus;
 use App\Http\Resources\V1\QueueEntryResource;
@@ -39,8 +38,10 @@ it('renders the party page with exact props', function () {
 
 it('serves each section', function (string $section) {
     $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+    PartyMember::factory()->for($party)->for($user)->create();
 
-    $this->withoutVite()->actingAs(User::factory()->create())->get("/parties/ABCD/{$section}")
+    $this->withoutVite()->actingAs($user)->get("/parties/ABCD/{$section}")
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page->where('section', $section));
 })->with(['queue', 'search', 'history', 'party']);
@@ -57,23 +58,33 @@ it('redirects guests to login', function () {
     $this->get('/parties/ABCD')->assertRedirect(route('login'));
 });
 
-it('auto-joins a non-member as a guest', function () {
+it('redirects a non-member to the join form without joining', function () {
     $party = Party::factory()->create(['code' => 'ABCD']);
     $user = User::factory()->create();
 
-    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertOk();
-    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertOk();
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertRedirect(route('home', ['code' => 'ABCD']));
 
-    expect(PartyMember::query()->where('party_id', $party->id)->count())->toBe(1)
-        ->and($party->memberFor($user)->role)->toBe(PartyRole::Guest);
+    expect($party->memberFor($user))->toBeNull();
+});
+
+it('prefills the join form from the code', function () {
+    $this->withoutVite()->actingAs(User::factory()->create())->get('/?code=abcd')
+        ->assertInertia(fn (Assert $page): Assert => $page->component('Home')->where('prefillCode', 'ABCD'));
+});
+
+it('still shows the page to a member', function () {
+    $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+    PartyMember::factory()->for($party)->for($user)->create();
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertOk();
 });
 
 it('marks the page read-only for ended parties and banned members', function (string $scenario) {
     $party = $scenario === 'ended' ? Party::factory()->ended()->create() : Party::factory()->create();
     $user = User::factory()->create();
-    if ($scenario === 'banned') {
-        PartyMember::factory()->for($party)->for($user)->banned()->create();
-    }
+    $member = PartyMember::factory()->for($party)->for($user);
+    ($scenario === 'banned' ? $member->banned() : $member)->create();
 
     $this->withoutVite()->actingAs($user)->get(route('parties.show', ['party' => $party->code]))
         ->assertInertia(fn (Assert $page): Assert => $page->where('readOnly', true)
@@ -83,8 +94,7 @@ it('marks the page read-only for ended parties and banned members', function (st
 it('shares joined parties with the shell', function () {
     $party = Party::factory()->create(['code' => 'ABCD', 'name' => 'Friday LAN']);
     $user = User::factory()->create();
-
-    $this->withoutVite()->actingAs($user)->get('/parties/ABCD');
+    PartyMember::factory()->for($party)->for($user)->create();
 
     $this->withoutVite()->actingAs($user->fresh())->get(route('home'))
         ->assertInertia(fn (Assert $page): Assert => $page->where('parties', [['code' => 'ABCD', 'name' => 'Friday LAN']]));

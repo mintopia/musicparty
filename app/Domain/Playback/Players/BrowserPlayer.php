@@ -79,9 +79,11 @@ class BrowserPlayer implements Player
 
     public function claim(string $tabId): bool
     {
-        $holder = $this->holder();
+        if ($this->partyCode !== null && Cache::add($this->claimKey(), $tabId, self::CLAIM_TTL_SECONDS)) {
+            return true;
+        }
 
-        if ($holder !== null && $holder !== $tabId) {
+        if ($this->holder() !== $tabId) {
             return false;
         }
 

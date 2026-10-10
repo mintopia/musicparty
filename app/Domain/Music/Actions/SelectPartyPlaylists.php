@@ -5,6 +5,7 @@ namespace App\Domain\Music\Actions;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Validation\ValidationException;
@@ -41,8 +42,11 @@ class SelectPartyPlaylists
             throw ValidationException::withMessages($errors);
         }
 
-        $party->backup_playlist_id = $fallbackPlaylistId;
-        $party->backup_playlist_name = $fallbackPlaylistId !== null ? $known[$fallbackPlaylistId] : null;
+        foreach (array_filter([$party->fallback_playlist_id, $fallbackPlaylistId]) as $playlistId) {
+            SpotifyMusicProvider::forgetPlaylistTracks($playlistId);
+        }
+
+        $party->fallback_playlist_id = $fallbackPlaylistId;
         $party->history_playlist_id = $historyPlaylistId;
         $party->save();
 

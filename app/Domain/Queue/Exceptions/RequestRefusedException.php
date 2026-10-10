@@ -29,6 +29,8 @@ class RequestRefusedException extends RuntimeException
 
     public const NOT_ALLOWED = 403;
 
+    public const SEARCH_RATE_LIMITED = 429;
+
     public static function notAMember(): self
     {
         return new self('Join the party to request tracks.', self::NOT_A_MEMBER);
@@ -57,6 +59,11 @@ class RequestRefusedException extends RuntimeException
     public static function partyEnded(): self
     {
         return new self('This party has ended, so ratings are closed.', self::PARTY_ENDED);
+    }
+
+    public static function partyEndedVotingClosed(): self
+    {
+        return new self('This party has ended, so voting is closed.', self::PARTY_ENDED);
     }
 
     public static function requestsDisabled(): self

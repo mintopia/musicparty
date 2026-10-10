@@ -8,20 +8,16 @@ use App\Domain\Admin\Actions\SuspendUser;
 use App\Models\AdminAuditEntry;
 use App\Models\AdminHostSession;
 use App\Models\Party;
-use App\Models\PartyLog;
+use App\Models\PartyLogEntry;
+use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
-use App\Providers\TelescopeServiceProvider;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
-use Laravel\Telescope\Http\Middleware\Authorize;
-use Laravel\Telescope\Telescope;
-use Symfony\Component\HttpKernel\Exception\HttpException;
 
 uses(RefreshDatabase::class);
 
@@ -107,32 +103,14 @@ it('keeps horizon and pulse behind the admin gate', function (string $uri): void
     $this->actingAs(makeAdmin())->get($uri)->assertSuccessful();
 })->with(['/horizon', '/pulse']);
 
-it('allows only admins through the horizon, pulse and telescope gates', function (string $ability): void {
+it('allows only admins through the horizon and pulse gates', function (string $ability): void {
     expect(Gate::forUser(makeAdmin())->allows($ability))->toBeTrue()
         ->and(Gate::forUser(User::factory()->create())->allows($ability))->toBeFalse()
         ->and(Gate::forUser(makeUserWithRole('create-party'))->allows($ability))->toBeFalse();
-})->with(['viewHorizon', 'viewPulse', 'viewTelescope']);
+})->with(['viewHorizon', 'viewPulse']);
 
-it('refuses non-admins at the telescope authorisation middleware', function (): void {
-    config(['telescope.enabled' => true]);
-    $provider = app()->getProvider(TelescopeServiceProvider::class);
-    (fn () => $this->authorization())->call($provider);
-    $middleware = new Authorize;
-    $next = fn () => response('ok');
-    $as = function (User $user) use ($middleware, $next) {
-        $this->actingAs($user);
-
-        return $middleware->handle(Request::create('/telescope'), $next);
-    };
-
-    expect(fn () => $as(User::factory()->create()))->toThrow(HttpException::class)
-        ->and($as(makeAdmin())->getContent())->toBe('ok');
-});
-
-afterEach(fn () => Telescope::auth(fn (): bool => app()->environment('local')));
-
-it('turns telescope off by default', function (): void {
-    expect(file_get_contents(config_path('telescope.php')))->toContain("env('TELESCOPE_ENABLED', false)");
+it('serves no telescope route', function (): void {
+    $this->actingAs(makeAdmin())->get('/telescope')->assertNotFound();
 });
 
 it('shows the dashboard links to admins', function (): void {
@@ -141,12 +119,7 @@ it('shows the dashboard links to admins', function (): void {
             ->component('Admin/Dashboard')
             ->where('links.horizon', url('/horizon'))
             ->where('links.pulse', url('/pulse'))
-            ->where('links.telescope', null));
-
-    config(['telescope.enabled' => true]);
-
-    $this->withoutVite()->actingAs(makeAdmin())->get(route('admin.index'))
-        ->assertInertia(fn (Assert $page): Assert => $page->where('links.telescope', url('/telescope')));
+            ->missing('links.telescope'));
 });
 
 it('shares is_admin true for admins', function (): void {
@@ -355,8 +328,11 @@ it('enters and leaves act-as-host over the web writing the party log', function 
 
     $this->actingAs($admin)->delete(route('admin.parties.act-as-host.leave', $party))->assertRedirect();
     expect($admin->isActingAsHostIn($party))->toBeFalse()
-        ->and(PartyLog::query()->orderBy('id')->get()->map(fn ($e) => [$e->action, $e->acting_as_host, $e->user_id, $e->party_id])->all())
-        ->toBe([['act_as_host.entered', true, $admin->id, $party->id], ['act_as_host.left', true, $admin->id, $party->id]]);
+        ->and(PartyLogEntry::query()->orderBy('id')->get()->map(fn ($e) => [$e->action, $e->details, $e->user_id, $e->party_id])->all())
+        ->toBe([
+            ['act_as_host.entered', ['acting_as_host' => true], $admin->id, $party->id],
+            ['act_as_host.left', ['acting_as_host' => true], $admin->id, $party->id],
+        ]);
 });
 
 it('enters and leaves act-as-host over the api', function (): void {
@@ -367,7 +343,25 @@ it('enters and leaves act-as-host over the api', function (): void {
     $this->postJson("/api/v1/admin/parties/{$party->id}/act-as-host")->assertOk()->assertJsonPath('data.acting_as_host', true);
     $this->deleteJson("/api/v1/admin/parties/{$party->id}/act-as-host")->assertOk()->assertJsonPath('data.acting_as_host', false);
 
-    expect(PartyLog::query()->count())->toBe(2);
+    expect(PartyLogEntry::query()->count())->toBe(2);
+});
+
+it('shows act-as-host entering and leaving in the host party log', function (): void {
+    $admin = makeAdmin();
+    $party = makeParty(['code' => 'ABCD']);
+    $host = User::factory()->create();
+    PartyMember::factory()->for($party)->for($host)->host()->create();
+
+    app(EnterActAsHost::class)->handle($admin, $party);
+    app(LeaveActAsHost::class)->handle($admin, $party);
+
+    Sanctum::actingAs($host);
+    $this->getJson('/api/v1/parties/ABCD/log')->assertOk()
+        ->assertJsonCount(2, 'data')
+        ->assertJsonFragment(['action' => 'act_as_host.entered'])
+        ->assertJsonFragment(['action' => 'act_as_host.left'])
+        ->assertJsonPath('data.0.details.acting_as_host', true)
+        ->assertJsonPath('data.1.details.acting_as_host', true);
 });
 
 it('does not duplicate or log no-op act-as-host transitions', function (): void {
@@ -378,7 +372,7 @@ it('does not duplicate or log no-op act-as-host transitions', function (): void 
     app(EnterActAsHost::class)->handle($admin, $party);
     app(EnterActAsHost::class)->handle($admin, $party);
 
-    expect(PartyLog::query()->count())->toBe(1)->and(AdminHostSession::query()->count())->toBe(1);
+    expect(PartyLogEntry::query()->count())->toBe(1)->and(AdminHostSession::query()->count())->toBe(1);
 });
 
 it('gives no host powers to a non-admin or a demoted admin', function (): void {

@@ -10,10 +10,10 @@ use App\Jobs\StartPlayback;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
+use App\Models\Play;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Bus;
-use Illuminate\Support\Facades\DB;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
 
@@ -63,13 +63,7 @@ function lifecycleParty(string $state = 'paused', string $role = 'host', bool $p
 
 function recordPlay(Party $party, string $providerTrackId, DateTimeInterface $playedAt): void
 {
-    $album = DB::table('albums')->insertGetId(['name' => 'Al', 'spotify_id' => 'al', 'image_url' => '', 'created_at' => now(), 'updated_at' => now()]);
-    $song = DB::table('songs')->insertGetId([
-        'spotify_id' => $providerTrackId, 'name' => 'S', 'length' => 180000, 'album_id' => $album, 'created_at' => now(), 'updated_at' => now(),
-    ]);
-    DB::table('played_songs')->insert([
-        'song_id' => $song, 'party_id' => $party->id, 'played_at' => $playedAt, 'created_at' => now(), 'updated_at' => now(),
-    ]);
+    Play::factory()->for($party)->create(['provider_track_id' => $providerTrackId, 'played_at' => $playedAt]);
 }
 
 function gateCheck(Party $party): array
@@ -174,7 +168,7 @@ it('reopening keeps the party history', function () {
 
     $this->actingAs($host)->post(route('parties.reopen', 'ABCD'))->assertRedirect();
 
-    expect($party->fresh()->state)->toBe(PartyState::Paused)->and(DB::table('played_songs')->where('party_id', $party->id)->count())->toBe(1);
+    expect($party->fresh()->state)->toBe(PartyState::Paused)->and(Play::query()->where('party_id', $party->id)->count())->toBe(1);
 });
 
 it('passes the gate with exactly 20 playable Tracks and fails with 19', function () {
