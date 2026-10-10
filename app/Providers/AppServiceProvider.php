@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Identity\Models\AccessToken;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
@@ -17,6 +18,7 @@ use Fruitcake\LaravelDebugbar\ServiceProvider as DebugbarServiceProvider;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use Laravel\Sanctum\Sanctum;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -41,6 +43,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        Sanctum::usePersonalAccessTokenModel(AccessToken::class);
+
         Relation::morphMap([
             'App\\Models\\User' => User::class,
             'App\\Models\\Party' => Party::class,

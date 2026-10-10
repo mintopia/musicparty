@@ -20,7 +20,7 @@ class PartyController extends Controller
         $admin = $request->user() ?? throw new AuthenticationException;
 
         $parties = Party::query()
-            ->withExists(['adminHostSessions as acting_as_host' => fn ($query) => $query->where('user_id', $admin->id)])
+            ->withExists(['adminHostSessions as acting_as_host' => fn ($query) => $query->active()->where('user_id', $admin->id)])
             ->orderBy('name')
             ->orderBy('id')
             ->get();

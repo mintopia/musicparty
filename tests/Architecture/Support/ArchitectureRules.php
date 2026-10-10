@@ -8,6 +8,7 @@ use App\Domain\Admin\Models\Integration;
 use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\Models\Role;
 use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Models\AccessToken;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
@@ -94,6 +95,7 @@ class ArchitectureRules
                 ],
                 'models' => [
                     User::class,
+                    AccessToken::class,
                     LinkedAccount::class,
                     SocialProvider::class,
                 ],

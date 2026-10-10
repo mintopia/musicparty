@@ -24,6 +24,7 @@ class AdminHostSessionFactory extends Factory
         return [
             'user_id' => User::factory(),
             'party_id' => Party::factory(),
+            'expires_at' => now()->addMinutes(config()->integer('musicparty.act_as_host_ttl_minutes')),
         ];
     }
 }
