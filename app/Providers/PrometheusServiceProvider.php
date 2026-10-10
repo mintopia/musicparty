@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Domain\Playback\Actions\RecordDroppedPlayerFrame;
 use App\Domain\Stats\Actions\BuildLiveStatsMetrics;
 use App\Http\Middleware\MetricsCollector;
 use App\Support\Metrics\CounterStore;
@@ -35,6 +36,10 @@ class PrometheusServiceProvider extends ServiceProvider
 
         Prometheus::addCounter('Uncaught Exceptions', fn (): int => app(CounterStore::class)->get('metrics.exceptions'), 'uncaught_exceptions_total')
             ->helpText('The number of uncaught exceptions');
+
+        Prometheus::addCounter('Player Frames Dropped', fn (): array => $this->countsFor(RecordDroppedPlayerFrame::COUNTER_PREFIX, RecordDroppedPlayerFrame::REASONS), 'player_frames_dropped_total')
+            ->helpText('The number of Player frames dropped from the ordered buffer')
+            ->label('reason');
 
         $this->app->scoped(BuildLiveStatsMetrics::class);
 
