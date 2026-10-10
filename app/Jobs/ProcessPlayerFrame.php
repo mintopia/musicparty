@@ -19,8 +19,6 @@ class ProcessPlayerFrame implements ShouldQueue
 
     public const DISCARDED_COUNTER = 'player-frames.discarded';
 
-    private const STATE_TTL_SECONDS = 86400;
-
     private const FRAME_TTL_SECONDS = 300;
 
     private const LOCK_SECONDS = 30;
@@ -36,7 +34,7 @@ class ProcessPlayerFrame implements ShouldQueue
     public static function enqueue(string $partyCode, array $frame): int
     {
         $counterKey = self::key('latest', $partyCode);
-        Cache::add($counterKey, 0, self::STATE_TTL_SECONDS);
+        Cache::add($counterKey, 0);
         $sequence = (int) Cache::increment($counterKey);
 
         Cache::put(self::frameKey($partyCode, $sequence), $frame, self::FRAME_TTL_SECONDS);
@@ -71,13 +69,14 @@ class ProcessPlayerFrame implements ShouldQueue
 
         while (($sequence = $this->nextSequence()) !== null) {
             $frame = Cache::pull(self::frameKey($this->partyCode, $sequence));
-            Cache::put(self::key('applied', $this->partyCode), $sequence, self::STATE_TTL_SECONDS);
 
-            if (! is_array($frame)) {
-                continue;
+            if ($frame === null && ! $this->hasFrameAfter($sequence)) {
+                return;
             }
 
-            if (! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($frame)) {
+            Cache::forever(self::key('applied', $this->partyCode), $sequence);
+
+            if (! is_array($frame) || ! $player instanceof HandlesPlayerFrames || ! $player->handleFrame($frame)) {
                 Cache::add(self::DISCARDED_COUNTER, 0);
                 Cache::increment(self::DISCARDED_COUNTER);
             }
@@ -86,14 +85,34 @@ class ProcessPlayerFrame implements ShouldQueue
 
     private function nextSequence(): ?int
     {
-        $next = (int) Cache::get(self::key('applied', $this->partyCode), 0) + 1;
+        $latest = (int) Cache::get(self::key('latest', $this->partyCode), 0);
+        $applied = (int) Cache::get(self::key('applied', $this->partyCode), 0);
 
-        return $next <= (int) Cache::get(self::key('latest', $this->partyCode), 0) ? $next : null;
+        if ($applied > $latest) {
+            Cache::forever(self::key('applied', $this->partyCode), $applied = 0);
+        }
+
+        return $applied + 1 <= $latest ? $applied + 1 : null;
+    }
+
+    private function hasFrameAfter(int $sequence): bool
+    {
+        $latest = (int) Cache::get(self::key('latest', $this->partyCode), 0);
+
+        for ($next = $sequence + 1; $next <= $latest; $next++) {
+            if (Cache::has(self::frameKey($this->partyCode, $next))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     private function hasPendingFrames(): bool
     {
-        return $this->nextSequence() !== null;
+        $next = $this->nextSequence();
+
+        return $next !== null && Cache::has(self::frameKey($this->partyCode, $next));
     }
 
     private static function key(string $name, string $partyCode): string

@@ -248,14 +248,37 @@ describe('ProcessPlayerFrame', function () {
         expect($this->player->frames)->toBe([['type' => 'track_changed']]);
     });
 
-    it('skips a sequence whose frame expired and still applies later ones', function () {
+    it('skips and counts a sequence whose frame expired once a later frame exists', function () {
         ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'lost']);
         ProcessPlayerFrame::enqueue($this->party->code, ['type' => 'track_changed']);
         Cache::forget('player-frame:'.$this->party->code.':1');
 
         ($this->drain)();
 
-        expect($this->player->frames)->toBe([['type' => 'track_changed']]);
+        expect($this->player->frames)->toBe([['type' => 'track_changed']])->and(discarded())->toBe(1);
+    });
+
+    it('leaves a sequence whose frame is not stored yet for the next drain instead of skipping it', function () {
+        Cache::add('player-frame-latest:'.$this->party->code, 0);
+        Cache::increment('player-frame-latest:'.$this->party->code);
+
+        ($this->drain)();
+        Cache::put('player-frame:'.$this->party->code.':1', ['type' => 'track_changed'], 300);
+        ($this->drain)();
+
+        expect($this->player->frames)->toBe([['type' => 'track_changed']])->and(discarded())->toBe(0);
+    });
+
+    it('keeps applying frames after the sequence counter expires and restarts', function () {
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 1]);
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 2]);
+        ($this->drain)();
+        Cache::forget('player-frame-latest:'.$this->party->code);
+
+        ProcessPlayerFrame::enqueue($this->party->code, ['n' => 3]);
+        ($this->drain)();
+
+        expect(array_column($this->player->frames, 'n'))->toBe([1, 2, 3]);
     });
 
     it('keeps parties separate', function () {
