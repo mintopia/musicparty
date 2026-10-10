@@ -161,48 +161,250 @@ AsyncAPI tests. Run `vendor/bin/pint` to fix formatting.
 
 ## Production deployment
 
+### Requirements
+
+- A Linux host with Docker and Compose v2 (`docker compose`), and a hostname with TLS terminated by a reverse proxy you run.
+- About 2 GB of memory for the whole stack at small scale. See [Resource limits](#resource-limits) for per-service figures.
+- Outbound HTTPS to the Music Provider and login providers.
+- OAuth2 applications for the login providers and Spotify (see [Login providers and Spotify](#login-providers-and-spotify)).
+
 Images are published to `ghcr.io/mintopia/musicparty` by `.github/workflows/publish-docker-images.yml` for `linux/amd64`
 and `linux/arm64`. Tags: `latest` (master branch), `develop` (develop branch), `feature-v3-rewrite` (the v3 integration
-branch) and a version tag for each `vX.Y.Z` release.
+branch) and a version tag for each `vX.Y.Z` release. `example/docker-compose.yml` uses the `feature-v3-rewrite` tag until
+v3 is released; change it to `latest` or a version tag once there is one.
 
-`example/docker-compose.yml` uses the `feature-v3-rewrite` tag until v3 is released; change it to `latest` or a version tag once there is one. It runs the web app, Horizon, the scheduler, Reverb, Redis and MariaDB from the image.
+One image serves every role. Each service in `example/docker-compose.yml` passes the role as its command: `web`,
+`horizon`, `scheduler`, `reverb` or `migrate` ([ADR-0023](docs/adr/0023-container-runtime-model.md)). Never override the
+entrypoint.
 
-1. Copy `example/docker-compose.yml` somewhere, create `.env` and a `.env.mariadb` (`MYSQL_ROOT_PASSWORD`,
-   `MYSQL_DATABASE`, `MYSQL_USER`, `MYSQL_PASSWORD`), and `mkdir logs uploads`.
-2. In `.env` set `APP_URL`, `APP_KEY` (run `docker compose run --rm artisan key:generate --show` after creating `.env` with an empty `APP_KEY=`), the `DB_*` values to
-   match MariaDB, and the provider credentials. The image already sets production defaults for drivers, Redis and Reverb.
-3. Set the public Reverb address that browsers will use: `REVERB_PUBLIC_HOST` to your hostname,
-   `REVERB_PUBLIC_PORT=443` and `REVERB_PUBLIC_SCHEME=https`. Leave `REVERB_HOST/PORT/SCHEME` as the internal address
-   (`reverb`, `8080`, `http`). They default from `APP_URL` when unset. Change the default `REVERB_APP_KEY` and `REVERB_APP_SECRET`.
-4. Start it:
+### First deploy
 
-```bash
-docker compose up -d --wait redis database
-docker compose run --rm artisan migrate --force
-docker compose run --rm artisan db:seed --force
-docker compose up -d
+1. Copy `example/docker-compose.yml` to an empty directory on the host and create the bind-mount directories next to it.
+   Persistent data uses bind mounts only, never named volumes:
+
+   ```bash
+   mkdir -p database redis logs storage/app
+   ```
+
+2. Choose the user the app runs as. The entrypoint starts as root, creates a user from `PUID` and `PGID` (default
+   1000), takes ownership of `storage` and `bootstrap/cache` inside the container, then drops to that user. Nothing runs
+   as root afterwards. The bind-mounted `logs` and `storage/app` directories must be writable by that user, so either
+   set `PUID`/`PGID` in `.env` to the owner of the directories (`id -u` and `id -g`), or `chown` them to 1000:1000.
+   MariaDB and Redis manage the ownership of `database` and `redis` themselves.
+
+3. Create `.env.mariadb` for the database container:
+
+   ```dotenv
+   MARIADB_ROOT_PASSWORD=change-me-root
+   MARIADB_DATABASE=musicparty
+   MARIADB_USER=musicparty
+   MARIADB_PASSWORD=change-me
+   ```
+
+4. Create `.env` with at least the settings below. The image already bakes in production defaults for drivers (Redis for
+   cache, session and queue), Redis and the internal Reverb address, so do not repeat them.
+
+   ```dotenv
+   APP_URL=https://musicparty.example.com
+   APP_KEY=
+   PUID=1000
+   PGID=1000
+
+   DB_DATABASE=musicparty
+   DB_USERNAME=musicparty
+   DB_PASSWORD=change-me
+
+   REVERB_APP_KEY=generate-a-random-key
+   REVERB_APP_SECRET=generate-a-random-secret
+   REVERB_PUBLIC_HOST=musicparty.example.com
+   REVERB_PUBLIC_PORT=443
+   REVERB_PUBLIC_SCHEME=https
+   ```
+
+   `DB_PASSWORD` must match `MARIADB_PASSWORD`. Generate `APP_KEY` with
+   `docker compose run --rm artisan key:generate --show` and paste the result in (the command needs the `APP_KEY=` line
+   to exist, even if empty). `REVERB_APP_KEY` and `REVERB_APP_SECRET` have insecure defaults baked into the image, so
+   always set your own. `REVERB_HOST`, `REVERB_PORT` and `REVERB_SCHEME` are the internal address the app publishes to
+   (`reverb`, `8080`, `http`); leave them alone. `REVERB_PUBLIC_*` is what browsers connect to, so it must be the public
+   hostname, port 443 and `https` behind your proxy. Add the provider credentials, or set them later in the admin area
+   (see [Login providers and Spotify](#login-providers-and-spotify)).
+
+5. Start the stack and wait for it to become healthy:
+
+   ```bash
+   docker compose up -d --wait
+   ```
+
+   Compose runs the one-shot `migrate` service first (`php artisan migrate --force --isolated`). Web, Horizon and the
+   scheduler wait for it to finish successfully, and MariaDB and Redis must be healthy before anything starts. If
+   `migrate` fails, nothing else starts: read its output with `docker compose logs migrate`. To seed login providers
+   from the environment, run `docker compose run --rm artisan providers:seed`.
+
+6. Put the reverse proxy in front (next section), log in once, and [grant the first admin](#first-admin).
+
+### Ports
+
+Nothing is published to the host by the example Compose file. Inside the Compose network:
+
+| Service | Port | Purpose |
+|---|---|---|
+| `web` | 8080 | The app, with a `/api/v1/ping` healthcheck |
+| `reverb` | 8080 | WebSocket connections (`/app`) and Reverb's HTTP API (`/apps`) |
+| `web` | 9180 | Caddy server metrics. Never publish it |
+| `database` | 3306 | MariaDB |
+| `redis` | 6379 | Redis |
+
+Caddy's admin API listens on `localhost:2019` inside the web container only. It is not reachable from other containers
+and must never be published. All ports are unprivileged, so the containers never need `NET_BIND_SERVICE`.
+
+### Reverse proxy
+
+The reverse proxy is yours to run; the repository ships no Traefik or other proxy file. It must:
+
+- Terminate TLS for your `APP_URL` hostname.
+- Forward `/app` and `/app/*` (WebSocket connections) and `/apps` and `/apps/*` (Reverb's HTTP API) to `reverb` on port
+  8080, with WebSocket upgrades allowed and no short idle timeout on them.
+- Forward everything else to `web` on port 8080.
+- Set `X-Forwarded-For`, `X-Forwarded-Proto` and `X-Forwarded-Host` (Caddy does this by default).
+
+If the proxy runs on the same host, publish the two ports on the loopback interface only, by adding this to
+`docker-compose.override.yaml`:
+
+```yaml
+services:
+  web:
+    ports:
+      - "127.0.0.1:8080:8080"
+  reverb:
+    ports:
+      - "127.0.0.1:8081:8080"
 ```
 
-Put a reverse proxy in front. `musicparty` listens on port 80 and `reverb` on port 8080 (`REVERB_SERVER_PORT`). Forward
-`/app` (WebSocket connections) and `/apps` (Reverb's HTTP API) to Reverb and everything else to the app, for example
-with Caddy:
+Then a Caddyfile that forwards the Reverb paths looks like this:
 
 ```
 musicparty.example.com {
   @reverb path /app /app/* /apps /apps/*
-  reverse_proxy @reverb musicparty-reverb-1:8080
-  reverse_proxy musicparty-musicparty-1
+  reverse_proxy @reverb 127.0.0.1:8081
+  reverse_proxy 127.0.0.1:8080
 }
 ```
 
-### Operations
+If Caddy runs in the same Compose project instead, use the service names and ports: `reverb:8080` and `web:8080`.
+Because the internal port numbers changed in v3, update your proxy targets when upgrading from an earlier build.
 
-- Back up the MariaDB data directory (or run `mysqldump`) and the `uploads` directory, which holds uploaded theme
-  assets. Restore by loading the dump into a fresh database and putting `uploads` back.
-- To upgrade, pull the new image, run `docker compose run --rm artisan migrate --force`, then `docker compose up -d`.
-  Migrations are forward-only, so roll back by restoring the backup and the previous image tag.
-- Queued jobs can run for up to 60 seconds, so give Horizon a stop grace period of at least that long
-  (`stop_grace_period: 90s` on the `horizon` service) so a restart does not kill jobs part-way.
+### Trusted proxies
+
+`TRUSTED_PROXIES` is a comma-separated list of proxy addresses or CIDRs (for example `10.0.0.0/8,192.0.2.7`) whose
+`X-Forwarded-*` headers the app honours. It defaults to `*`, which trusts any proxy. With the default, the client address
+is taken from `X-Forwarded-For` whoever sends it, so the metrics IP allow-list (`PROMETHEUS_ALLOWED_IPS`) and IP-keyed
+rate limits are only as strong as your network guarantee that clients reach the app only through the proxy. A client that
+can reach `web` directly can send any `X-Forwarded-For` it likes, which lets it pass the allow-list and dodge IP rate
+limits. Where you know the proxy's address, set `TRUSTED_PROXIES` to it. With the loopback publishing above and a Docker
+bridge network, requests arrive from the bridge gateway address (commonly `172.16.0.0/12`); check
+`docker network inspect` and use the value you see. Prefer the bearer token (`PROMETHEUS_TOKEN`) over the IP allow-list
+for metrics access.
+
+### Resource limits
+
+The example Compose file sets no resource limits. Add them per service in `docker-compose.override.yaml` using
+`mem_limit`, `cpus` and `pids_limit`. These starting values come from the load test in
+[docs/research/load-test-scale-target.md](docs/research/load-test-scale-target.md) (25 Live Parties of 500 Members, about
+1,000 connections); measure with `docker stats` and adjust.
+
+```yaml
+services:
+  web:
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 512
+  horizon:
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 512
+  scheduler:
+    mem_limit: 256m
+    cpus: 0.5
+    pids_limit: 128
+  reverb:
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 256
+  migrate:
+    mem_limit: 512m
+    cpus: 1
+    pids_limit: 128
+  database:
+    mem_limit: 1g
+    cpus: 2
+    pids_limit: 512
+  redis:
+    mem_limit: 256m
+    cpus: 1
+    pids_limit: 128
+```
+
+A single Reverb process tops out just under 1,000 connections. For more, run a second Reverb service (Redis scaling, `REVERB_SCALING_ENABLED`,
+is on by default) and have the proxy split `/app` between them. Keep the `nofile` ulimit of 65535 that
+the example sets on `reverb`. Do not set `pids_limit` so low that Horizon cannot start its workers.
+
+### Backup and restore
+
+Back up the database, the `storage/app` directory (uploaded theme assets) and your `.env` files. Redis holds cache,
+sessions, queue and counters; it runs with an append-only file in `./redis`, so a restart keeps its data, but nothing in it
+is the source of truth, so you can lose it without losing Parties, Requests or Members.
+
+Back up with `mariadb-dump` from inside the database container:
+
+```bash
+docker compose exec -T database sh -c 'mariadb-dump --single-transaction --routines --user=root --password="$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"' | gzip > musicparty-$(date +%F).sql.gz
+tar czf musicparty-storage-$(date +%F).tar.gz storage/app
+```
+
+Restore into an empty database:
+
+```bash
+docker compose stop web horizon scheduler reverb
+docker compose up -d --wait database
+gunzip -c musicparty-2026-01-01.sql.gz | docker compose exec -T database sh -c 'mariadb --user=root --password="$MARIADB_ROOT_PASSWORD" "$MARIADB_DATABASE"'
+tar xzf musicparty-storage-2026-01-01.tar.gz
+docker compose up -d --wait
+```
+
+To restore onto a fresh host, copy `.env`, `.env.mariadb` and the compose file, create the directories, and load the dump
+before the first `docker compose up`, with only the `database` service started.
+
+### Upgrading
+
+Always take a backup first. Migrations are forward-only, so you roll back by restoring the backup and the previous image
+tag. To upgrade, pull the new image and recreate the stack; the `migrate` service runs on every `up`:
+
+```bash
+docker compose pull
+docker compose up -d --wait
+```
+
+Horizon needs a stop grace period of at least 75 seconds and the example sets it, so a restart does not kill jobs
+part-way. Keep it if you write your own Compose file.
+
+**From v2.** v3 is a rewrite and runs on a fresh stack.
+
+1. Back up the v2 database and uploads.
+2. Deploy v3 following [First deploy](#first-deploy), pointing `DB_*` at the existing database. The `migrate` service
+   converts the schema automatically on first start.
+3. Re-enter the social provider credentials under `/admin/providers` (or run `providers:seed`), because they are now stored
+   in the database, and re-register the redirect URLs listed above.
+4. Reissue every Integration Token from the admin area. Old tokens do not carry over.
+5. Update your proxy to forward `/app` and `/apps` to Reverb.
+
+**From an earlier v3 build.**
+
+1. Back up, then pull the new image.
+2. Update your Compose file from `example/docker-compose.yml`: web, Horizon and Reverb now listen on unprivileged ports
+   (8080), roles are passed as the command, and `migrate` is a one-shot service. Update proxy targets to the new ports,
+   and set `PUID`/`PGID` so the bind-mounted directories are writable.
+3. Reissue Integration Tokens, and Player Tokens for Soloist Players.
+4. Run `docker compose up -d --wait`.
 
 ## Configuration
 
@@ -238,13 +440,22 @@ Prometheus metrics are served by `spatie/laravel-prometheus` at `PROMETHEUS_PATH
 returns 403 unless the scraper sends `PROMETHEUS_TOKEN` as a bearer token or connects from an address in
 `PROMETHEUS_ALLOWED_IPS`, so set one of them before pointing a scraper at it ([ADR-0009](docs/adr/0009-prometheus-exporter-via-spatie-laravel-prometheus.md)).
 
-### Trusted proxies
+A Prometheus scrape job for the endpoint through your proxy:
 
-`TRUSTED_PROXIES` is a comma-separated list of proxy addresses or CIDRs (for example `10.0.0.0/8,192.0.2.7`) whose
-`X-Forwarded-*` headers the app honours. It defaults to `*`, which trusts any proxy. With the default, the client address
-is taken from `X-Forwarded-For` whoever sends it, so the metrics IP allow-list (`PROMETHEUS_ALLOWED_IPS`) and IP-keyed
-rate limits are only as strong as your network guarantee that clients reach the app only through the proxy. Where you
-know the proxy's address, set `TRUSTED_PROXIES` to it.
+```yaml
+scrape_configs:
+  - job_name: musicparty
+    scheme: https
+    metrics_path: /prometheus
+    authorization:
+      credentials: the-value-of-PROMETHEUS_TOKEN
+    static_configs:
+      - targets: ["musicparty.example.com"]
+```
+
+Pulse (`/pulse`) and Horizon (`/horizon`) are dashboards for admins. Set `PULSE_ENABLED=false` on the `reverb` service, because a slow database stalls Reverb's single event loop. Caddy's own server metrics are on port 9180 inside the
+`web` container and are not published; scrape them from another container on the Compose network if you need them.
+Trusted proxy handling affects the IP allow-list: see [Trusted proxies](#trusted-proxies).
 
 ## Documentation
 
