@@ -27,6 +27,8 @@ class FakePlayer implements BindsToParty, Player
 
     private ?Throwable $enqueueFailure = null;
 
+    private bool $enqueueFailureDelivers = false;
+
     /** @var list<TrackReference> */
     private array $queue = [];
 
@@ -106,7 +108,14 @@ class FakePlayer implements BindsToParty, Player
 
     public function state(): PlaybackState
     {
-        return $this->state;
+        return new PlaybackState(
+            $this->state->status,
+            $this->state->currentTrack,
+            $this->state->positionMs,
+            $this->state->updatedAt,
+            $this->state->durationMs,
+            array_map(fn (TrackReference $track): string => $track->providerTrackId, $this->queue),
+        );
     }
 
     /**
@@ -175,22 +184,30 @@ class FakePlayer implements BindsToParty, Player
         return $this->commands;
     }
 
-    public function failEnqueueWith(?Throwable $failure): void
+    public function failEnqueueWith(?Throwable $failure, bool $delivered = false): void
     {
         $this->enqueueFailure = $failure;
+        $this->enqueueFailureDelivers = $delivered;
     }
 
     public function enqueue(string $providerId, string $providerTrackId): void
     {
-        if ($this->enqueueFailure !== null) {
-            throw $this->enqueueFailure;
+        $failure = $this->enqueueFailure;
+
+        if ($failure !== null && ! $this->enqueueFailureDelivers) {
+            throw $failure;
         }
 
+        $this->enqueueFailure = null;
         $this->record('enqueue', $providerTrackId);
         $this->queue[] = new TrackReference($providerId, $providerTrackId);
 
         if ($this->state->currentTrack === null) {
             $this->advance();
+        }
+
+        if ($failure !== null) {
+            throw $failure;
         }
     }
 

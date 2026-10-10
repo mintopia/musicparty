@@ -55,7 +55,7 @@ readonly class AdvanceQueue
                 return new QueueAdvance(null, unexpectedTrack: $providerTrackId !== null);
             }
 
-            $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now()])->save();
+            $upNext->forceFill(['status' => RequestStatus::Playing, 'started_at' => now(), 'enqueue_unconfirmed' => false])->save();
             $this->recordPlay($upNext);
             DB::afterCommit(fn () => TrackStarted::dispatch($party, $upNext));
 

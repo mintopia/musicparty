@@ -17,6 +17,7 @@ use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
 use App\Domain\Queue\Actions\AdvanceQueue;
 use App\Domain\Queue\Actions\TopUpFallbackRequests;
+use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -258,6 +259,19 @@ it('appends the played track to the history playlist through the provider', func
     app(AppendPlayToHistory::class)($party, 'track-2', $this->fake);
 
     expect($this->fake->appendedTo('playlist-1'))->toBe(['track-2']);
+});
+
+it('appends one Play to the history playlist once however often the job runs', function () {
+    [$host] = hostWithAccount();
+    $party = makeHostedParty($host, ['history_playlist_id' => 'playlist-1']);
+    $play = Play::factory()->for($party)->create(['provider_track_id' => 'track-1']);
+
+    foreach ([1, 2] as $_) {
+        new AppendToHistoryPlaylist($party->id, 'track-1', 'fake', $play->id)->handle(app(PairingCatalogue::class), app(AuthorisesHost::class));
+    }
+
+    expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
+        ->and($play->fresh()->history_appended_at)->not->toBeNull();
 });
 
 it('retries a temporary failure without throwing into playback', function () {

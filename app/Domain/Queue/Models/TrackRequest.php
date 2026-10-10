@@ -32,6 +32,7 @@ use Illuminate\Support\Carbon;
  * @property CarbonImmutable|null $not_before
  * @property CarbonImmutable|null $up_next_at
  * @property CarbonImmutable|null $enqueued_at
+ * @property bool $enqueue_unconfirmed
  * @property CarbonImmutable|null $started_at
  * @property string|null $selection_mode
  * @property int|null $selection_score
@@ -54,6 +55,7 @@ class TrackRequest extends Model
             'not_before' => 'immutable_datetime',
             'up_next_at' => 'immutable_datetime',
             'enqueued_at' => 'immutable_datetime',
+            'enqueue_unconfirmed' => 'boolean',
             'started_at' => 'immutable_datetime',
             'selection_score' => 'integer',
         ];

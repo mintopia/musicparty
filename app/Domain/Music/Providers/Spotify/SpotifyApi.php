@@ -48,8 +48,8 @@ class SpotifyApi
             }
 
             return $response;
-        } catch (ConnectionException) {
-            throw new ProviderTemporaryFailure('Spotify could not be reached.');
+        } catch (ConnectionException $failure) {
+            throw new ProviderTemporaryFailure('Spotify could not be reached.', outcomeUnknown: ! $this->neverConnected($failure));
         }
     }
 
@@ -70,7 +70,7 @@ class SpotifyApi
         }
 
         if ($status >= 400) {
-            throw new ProviderTemporaryFailure("Spotify responded with status {$status}.");
+            throw new ProviderTemporaryFailure("Spotify responded with status {$status}.", outcomeUnknown: $status >= 500);
         }
     }
 
@@ -125,6 +125,11 @@ class SpotifyApi
     public function market(): ?string
     {
         return $this->configured('market');
+    }
+
+    private function neverConnected(ConnectionException $failure): bool
+    {
+        return preg_match('/cURL error (6|7)\b|refused|could not resolve/i', $failure->getMessage()) === 1;
     }
 
     private function hostAccount(string $hostAccountId): LinkedAccount

@@ -562,7 +562,7 @@ class ArchitectureRules
         $pattern = '/(===|!==)\s*\$?[\w>:-]*PartyRole::|PartyRole::\w+\s*(===|!==)|in_array\([^;]*PartyRole::|match\s*\([^)]*->role\)/';
 
         return array_values(array_filter($classes, static function (string $class) use ($pattern): bool {
-            $file = (new ReflectionClass($class))->getFileName();
+            $file = new ReflectionClass($class)->getFileName();
 
             return str_contains($class, '\\Actions\\')
                 && $file !== false

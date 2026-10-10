@@ -8,7 +8,7 @@ readonly class ClearUpNextEnqueued
 {
     public function __invoke(TrackRequest $request): TrackRequest
     {
-        $request->forceFill(['enqueued_at' => null])->save();
+        $request->forceFill(['enqueued_at' => null, 'enqueue_unconfirmed' => false])->save();
 
         return $request;
     }
