@@ -7,9 +7,6 @@
                 "Party.QueueUpdatedEvent": {
                     "$ref": "#/components/messages/Party.QueueUpdatedEvent"
                 },
-                "Party.UpdatedEvent": {
-                    "$ref": "#/components/messages/Party.UpdatedEvent"
-                },
                 "Party.ThemeUpdatedEvent": {
                     "$ref": "#/components/messages/Party.ThemeUpdatedEvent"
                 }
@@ -656,36 +653,6 @@
                 "x-event-class": "App\\Events\\Party\\QueueUpdatedEvent",
                 "summary": "Coalesced snapshot of now playing, Up Next and the Queue; at most one per party per second. Contains no member IDs or secrets."
             },
-            "Party.UpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\Party\\UpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "Party.UpdatedEvent",
-                "x-event-class": "App\\Events\\Party\\UpdatedEvent"
-            },
-            "UpcomingSong.RemovedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\UpcomingSong\\RemovedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "UpcomingSong.RemovedEvent",
-                "x-event-class": "App\\Events\\UpcomingSong\\RemovedEvent"
-            },
-            "UpcomingSong.UpdatedEvent": {
-                "contentType": "application/json",
-                "name": "App\\Events\\UpcomingSong\\UpdatedEvent",
-                "payload": {
-                    "additionalProperties": true,
-                    "type": "object"
-                },
-                "title": "UpcomingSong.UpdatedEvent",
-                "x-event-class": "App\\Events\\UpcomingSong\\UpdatedEvent"
-            },
             "Presence.MemberAdded": {
                 "contentType": "application/json",
                 "name": "pusher:member_added",
@@ -1039,9 +1006,6 @@
                 "$ref": "#/channels/party"
             },
             "messages": [
-                {
-                    "$ref": "#/channels/party/messages/Party.UpdatedEvent"
-                },
                 {
                     "$ref": "#/channels/party/messages/Party.QueueUpdatedEvent"
                 },

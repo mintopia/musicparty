@@ -7,8 +7,6 @@ use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\SystemRandomizer;
-use App\Services\PlayedSongAugmentService;
-use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
 
@@ -19,8 +17,6 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(UpcomingSongAugmentService::class);
-        $this->app->bind(PlayedSongAugmentService::class);
         $this->app->bind(MusicProvider::class, SpotifyMusicProvider::class);
         $this->app->singleton(PartyPlayers::class);
         $this->app->bind(Randomizer::class, SystemRandomizer::class);
