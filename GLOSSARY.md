@@ -47,6 +47,10 @@ _Avoid_: User (in a Party context)
 **Ban**:
 A Member's barred status in a Party, preventing them from requesting, voting or rating; it is a status, not a role.
 
+**TV screen**:
+A Party's read-only display of now playing, Up Next and the Queue, addressed by party code and open to anyone without logging in.
+_Avoid_: Kiosk, display mode
+
 **Party Log**:
 A Party's audit trail of moderation, settings, Player and Mod actions, visible to its Host and Moderators.
 _Avoid_: Audit log, history
@@ -79,6 +83,10 @@ _Avoid_: Next song, queued
 **Vote**:
 A Member's upvote or downvote on a Request.
 _Avoid_: Upvote (as the general term)
+
+**Score**:
+A Request's Vote total plus any Score Modifier adjustments; the one value shown to Members and used to order the Queue and to select Up Next.
+_Avoid_: Effective score, raw score (as separate shown values)
 
 **Fallback Playlist**:
 The Provider playlist used to top up a Party's Queue when it runs low; Requests made from it have no requester.
@@ -151,3 +159,9 @@ A Party's overrides of a subset of the Instance Theme's design tokens.
 **Colour Scheme**:
 A user's light, dark or system preference, applied on top of whichever theme is in effect.
 _Avoid_: Dark mode, theme
+
+### Running an instance
+
+**Operator**:
+The person who deploys and runs a Music Party instance from the published image, and owns its reverse proxy, backups and telemetry collector.
+_Avoid_: Self-hoster, sysadmin
