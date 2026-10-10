@@ -12,11 +12,11 @@ class QueueUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     /**
      * @param  array<string, mixed>  $snapshot
      */
-    public string $broadcastQueue = 'broadcast';
-
     public function __construct(protected string $partyCode, protected array $snapshot) {}
 
     /**

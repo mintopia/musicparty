@@ -12,11 +12,11 @@ class StatsUpdatedEvent implements ShouldBroadcast
     use Dispatchable;
     use InteractsWithSockets;
 
+    public string $broadcastQueue = 'broadcast';
+
     /**
      * @param  array<string, mixed>  $stats
      */
-    public string $broadcastQueue = 'broadcast';
-
     public function __construct(protected string $partyCode, protected array $stats) {}
 
     /**
