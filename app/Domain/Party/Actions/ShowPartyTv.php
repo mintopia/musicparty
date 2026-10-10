@@ -3,15 +3,16 @@
 namespace App\Domain\Party\Actions;
 
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
+use App\Domain\Theming\Actions\GetPartyTheme;
 use App\Models\Party;
 use App\Models\Play;
 
 readonly class ShowPartyTv
 {
-    public function __construct(private PartyQueueSnapshot $snapshot) {}
+    public function __construct(private PartyQueueSnapshot $snapshot, private GetPartyTheme $getPartyTheme) {}
 
     /**
-     * @return array{party: array{code: string, name: string, state: string, joinUrl: string}, nowPlaying: array<string, mixed>|null, upNext: array<string, mixed>|null, sequence: int, startedAt: string|null}
+     * @return array{party: array{code: string, name: string, state: string, joinUrl: string}, nowPlaying: array<string, mixed>|null, upNext: array<string, mixed>|null, sequence: int, startedAt: string|null, theme: array<string, mixed>}
      */
     public function __invoke(Party $party): array
     {
@@ -33,6 +34,7 @@ readonly class ShowPartyTv
             'upNext' => $playback['up_next'],
             'sequence' => $playback['sequence'],
             'startedAt' => $startedAt?->toIso8601String(),
+            'theme' => $this->getPartyTheme->handle($party),
         ];
     }
 }

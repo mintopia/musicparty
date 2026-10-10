@@ -108,4 +108,36 @@ describe('TV screen', () => {
         w.unmount();
         expect(echo.leave).toHaveBeenCalledWith('party.FRI1');
     });
+
+    describe('party theme', () => {
+        const theme = (over = {}) => ({
+            light: {primary: '#abcdef'},
+            dark: {primary: '#123456'},
+            font: 'inter',
+            logo_url: '/logo.png',
+            logo_dark_url: '/logo-dark.png',
+            background_url: '/bg.png',
+            tv_layout: 'compact',
+            ...over,
+        });
+
+        it('shows logo, background and layout class from the theme', () => {
+            const w = mount(Tv, {props: props({theme: theme()})});
+            expect(w.get('[data-testid=tv-logo]').attributes('src')).toBe('/logo.png');
+            expect(w.get('[data-testid=tv-theme-background]').attributes('style')).toContain('/bg.png');
+            expect(w.get('[data-testid=tv-screen]').classes()).toContain('tv-layout-compact');
+        });
+
+        it('updates live on ThemeUpdated and cleans up on unmount', async () => {
+            const w = mount(Tv, {props: props({theme: theme()})});
+            listeners['.ThemeUpdated'](theme({light: {primary: '#ff0000'}, logo_url: null, background_url: null, tv_layout: 'queue-focus'}));
+            await w.vm.$nextTick();
+            expect(document.getElementById('party-theme-live').textContent).toContain('--color-primary:#ff0000;');
+            expect(w.find('[data-testid=tv-logo]').exists()).toBe(false);
+            expect(w.find('[data-testid=tv-theme-background]').exists()).toBe(false);
+            expect(w.get('[data-testid=tv-screen]').classes()).toContain('tv-layout-queue-focus');
+            w.unmount();
+            expect(document.getElementById('party-theme-live')).toBeNull();
+        });
+    });
 });

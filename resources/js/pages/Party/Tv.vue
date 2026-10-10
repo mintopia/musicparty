@@ -15,10 +15,35 @@ const props = defineProps({
     upNext: {type: Object, default: null},
     sequence: {type: Number, default: 0},
     startedAt: {type: String, default: null},
+    theme: {type: Object, default: null},
     enabled_mods: {type: Array, default: () => []},
 });
 
 provide('enabledMods', computed(() => props.enabled_mods));
+
+const theme = ref(props.theme);
+const themeStyle = ref(null);
+const darkMode = () => document.documentElement.classList.contains('dark');
+const logoUrl = computed(() => (darkMode() ? theme.value?.logo_dark_url : theme.value?.logo_url) ?? theme.value?.logo_url ?? null);
+const backgroundUrl = computed(() => theme.value?.background_url ?? null);
+const layoutClass = computed(() => `tv-layout-${theme.value?.tv_layout ?? 'default'}`);
+const fontStacks = {
+    inter: "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif",
+    system: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+    serif: "Georgia, 'Times New Roman', Times, serif",
+    mono: "ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace",
+};
+const declarations = (colours) => Object.entries(colours ?? {}).map(([key, value]) => `--color-${key.replace(/_/g, '-')}:${value};`).join('');
+const applyThemeCss = () => {
+    if (!theme.value) {
+        return;
+    }
+    themeStyle.value ??= Object.assign(document.createElement('style'), {id: 'party-theme-live'});
+    themeStyle.value.textContent = `:root{${declarations(theme.value.light)}${fontStacks[theme.value.font] ? `--font-sans:${fontStacks[theme.value.font]};` : ''}}.dark{${declarations(theme.value.dark)}}`;
+    if (!themeStyle.value.isConnected) {
+        document.head.appendChild(themeStyle.value);
+    }
+};
 
 const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
@@ -42,7 +67,12 @@ onMounted(() => {
     ticker = setInterval(() => {
         now.value = Date.now();
     }, 1000);
-    window.Echo?.channel(channelName).listen('Party.QueueUpdatedEvent', (payload) => {
+    const channel = window.Echo?.channel(channelName);
+    channel?.listen('.ThemeUpdated', (payload) => {
+        theme.value = payload;
+        applyThemeCss();
+    });
+    channel?.listen('Party.QueueUpdatedEvent', (payload) => {
         if (payload.sequence <= lastSequence) {
             return;
         }
@@ -57,13 +87,21 @@ onMounted(() => {
 
 onBeforeUnmount(() => {
     clearInterval(ticker);
+    themeStyle.value?.remove();
     window.Echo?.leave(channelName);
 });
 </script>
 
 <template>
     <Head :title="`${party.name} TV`" />
-    <main class="relative min-h-screen overflow-hidden bg-black text-white" data-testid="tv-screen">
+    <main :class="['relative min-h-screen overflow-hidden bg-black text-white', layoutClass]" data-testid="tv-screen">
+        <div
+            v-if="backgroundUrl"
+            data-testid="tv-theme-background"
+            aria-hidden="true"
+            class="absolute inset-0 bg-cover bg-center"
+            :style="{backgroundImage: `url(${backgroundUrl})`}"
+        ></div>
         <div
             v-if="backdropUrl"
             data-testid="tv-backdrop"
@@ -73,6 +111,7 @@ onBeforeUnmount(() => {
         ></div>
         <div v-else data-testid="tv-backdrop" aria-hidden="true" class="absolute inset-0 bg-gradient-to-br from-white/5 to-black"></div>
         <header class="relative flex items-start justify-between px-4 pt-4 text-2xl font-semibold">
+            <img v-if="logoUrl" :src="logoUrl" alt="" data-testid="tv-logo" class="max-h-16 max-w-48 object-contain" />
             <span data-testid="tv-party-name">{{ party.name }}</span>
             <span data-testid="tv-party-code" class="tracking-wider">{{ party.code }}</span>
         </header>
@@ -96,7 +135,7 @@ onBeforeUnmount(() => {
                         <div class="flex items-center gap-2"><Icon name="heart" /><span data-testid="tv-now-playing-score">{{ nowPlaying.score }}</span></div>
                         <div class="mt-auto">
                             <div class="h-1 w-full bg-white/80" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" data-testid="tv-progress">
-                                <div class="h-full bg-blue-600" :style="{width: `${progressPercent}%`}" data-testid="tv-progress-fill"></div>
+                                <div class="h-full bg-blue-600" :style="{width: `${progressPercent}%`, backgroundColor: 'var(--color-primary, #2563eb)'}" data-testid="tv-progress-fill"></div>
                             </div>
                             <div class="mt-1 flex justify-between tabular-nums">
                                 <span data-testid="tv-elapsed">{{ formatDuration(elapsedMs) }}</span>
@@ -127,3 +166,10 @@ onBeforeUnmount(() => {
         <QrCode class="absolute z-10 bottom-5 left-5" :value="party.joinUrl" :size="100" />
     </main>
 </template>
+
+<style>
+.tv-layout-compact h1 { font-size: 1.5rem; }
+.tv-layout-compact h2 { font-size: 1rem; }
+.tv-layout-fullscreen-art [data-testid="tv-backdrop"] { opacity: 0.6; filter: none; transform: none; }
+.tv-layout-queue-focus h2 { font-size: 1.875rem; }
+</style>

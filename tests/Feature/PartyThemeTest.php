@@ -13,7 +13,6 @@ use App\Models\AdminHostSession;
 use App\Models\InstanceTheme;
 use App\Models\Party;
 use App\Models\PartyMember;
-use App\Models\PartyMemberRole;
 use App\Models\Setting;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -33,17 +32,20 @@ function quietParty(array $attributes = []): Party
 
 function partyMemberWithRole(Party $party, string $role): User
 {
-    $user = User::factory()->create();
-    $roleModel = PartyMemberRole::query()->firstOrCreate(['code' => $role], ['name' => ucfirst($role)]);
-    $member = new PartyMember;
-    $member->forceFill(['user_id' => $user->id, 'party_id' => $party->id, 'role_id' => $roleModel->id])->save();
+    $state = match ($role) {
+        'owner', 'host' => 'host',
+        'moderator' => 'moderator',
+        'vip' => 'vip',
+        default => null,
+    };
+    $factory = PartyMember::factory()->for($party);
 
-    return $user;
+    return ($state === null ? $factory : $factory->{$state}())->create()->user;
 }
 
 function createParty(array $attributes = []): Party
 {
-    return Party::withoutEvents(fn (): Party => createParty($attributes));
+    return quietParty($attributes);
 }
 
 function hostedParty(array $theme = []): array
@@ -91,7 +93,7 @@ it('ignores hostile stored overrides and unknown layouts', function (): void {
 });
 
 it('falls back to the instance logo until the party uploads one', function (): void {
-    Setting::query()->forceFill(['code' => 'logo-light', 'name' => 'x', 'encrypted' => false, 'hidden' => false, 'validation' => '', 'type' => SettingType::stString, 'value' => 'site/logo.png'])->save();
+    (new Setting)->forceFill(['code' => 'logo-light', 'name' => 'x', 'encrypted' => false, 'hidden' => false, 'validation' => '', 'type' => SettingType::stString, 'value' => 'site/logo.png'])->save();
     [$party, $host] = hostedParty();
 
     expect(app(GetPartyTheme::class)->handle($party)['logo_url'])->toContain('site/logo.png');
@@ -337,8 +339,9 @@ it('shows the tv page anonymously with the party theme and no admin data', funct
     $response = $this->withoutVite()->get("/parties/{$party->code}/tv");
 
     $response->assertOk()->assertInertia(fn (Assert $page): Assert => $page
-        ->component('Tv')
-        ->where('party', ['code' => $party->code, 'name' => $party->name])
+        ->component('Party/Tv')
+        ->where('party.code', $party->code)
+        ->where('party.name', $party->name)
         ->where('theme.tv_layout', 'fullscreen-art')
         ->where('theme.light.primary', '#abcdef'));
     expect($response->getContent())->toContain('--color-primary:#abcdef;');

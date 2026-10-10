@@ -27,7 +27,7 @@ class GetPartyTheme
         }
 
         $logo = $this->partyUrl($party->theme_logo_path);
-        $layout = is_string($party->tv_layout) && array_key_exists($party->tv_layout, ThemeTokens::TV_LAYOUTS)
+        $layout = array_key_exists($party->tv_layout, ThemeTokens::TV_LAYOUTS)
             ? $party->tv_layout
             : ThemeTokens::DEFAULT_TV_LAYOUT;
 
