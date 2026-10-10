@@ -81,8 +81,7 @@ REVERB_PUBLIC_PORT=8080
 REVERB_PUBLIC_SCHEME=http
 ```
 
-For hot reloading, run `docker compose --profile vite up vite` instead of `npm run build`. `docker-compose.override.traefik.yml` is a development example that only routes the app to a local Traefik. It has no TLS
-and does not route Reverb, so it is not a production setup.
+For hot reloading, run `docker compose --profile vite up vite` instead of `npm run build`.
 
 Other helpers: `docker compose run --rm shell` opens a shell, and `docker compose run --rm artisan <command>` runs
 Artisan.
