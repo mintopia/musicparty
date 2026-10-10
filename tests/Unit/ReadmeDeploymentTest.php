@@ -36,7 +36,7 @@ it('sets resource limits for every shipped Compose service', function () {
     $services = array_keys(DeployConfig::compose('example/docker-compose.yml')->toArray()['services']);
 
     foreach (array_diff($services, ['artisan']) as $service) {
-        expect(readme())->toMatch('/^  '.preg_quote($service, '/').':\R    mem_limit:/m');
+        expect(readme())->toMatch('/^  '.preg_quote((string) $service, '/').':\R    mem_limit:/m');
     }
 });
 
