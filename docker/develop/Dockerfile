@@ -5,8 +5,9 @@ RUN apk add --update nodejs npm && \
     install-php-extensions xdebug && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
 
-COPY --from=composer:latest /usr/bin/composer /usr/local/bin/
+COPY --from=composer:2 /usr/bin/composer /usr/local/bin/
 
+COPY docker/php/opcache.dev.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/Caddyfile /
 ENV XDEBUG_MODE=off
 
