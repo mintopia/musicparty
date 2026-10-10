@@ -50,6 +50,10 @@ class VoteOnRequest
             if ($direction === null) {
                 $existing?->delete();
 
+                if ($existing !== null) {
+                    $this->markScoreChanged($request);
+                }
+
                 return $existing !== null;
             }
 
@@ -71,6 +75,8 @@ class VoteOnRequest
                 $existing->forceFill(['value' => $direction->weight()])->save();
             }
 
+            $this->markScoreChanged($request);
+
             return true;
         });
 
@@ -86,6 +92,11 @@ class VoteOnRequest
             ->withSum('votes as score', 'value')
             ->withSum(['votes as my_vote' => fn ($query) => $query->where('party_member_id', $member->id)], 'value')
             ->firstOrFail();
+    }
+
+    private function markScoreChanged(TrackRequest $request): void
+    {
+        $request->forceFill(['score_changed_at' => now()])->save();
     }
 
     private function guardVotable(TrackRequest $request): void

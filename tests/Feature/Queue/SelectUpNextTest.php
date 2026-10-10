@@ -4,12 +4,14 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
 use App\Domain\Queue\Actions\SelectUpNext;
+use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\Randomizer;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Queue\SelectionMode;
 use App\Domain\Queue\Testing\SeededRandomizer;
+use App\Domain\Queue\VoteDirection;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -227,4 +229,63 @@ it('logs the weighted mode and score of the chosen request', function () {
 
     $entry = PartyLogEntry::query()->where('action', 'queue.selected')->sole();
     expect($entry->details)->toMatchArray(['request_id' => $request->id, 'mode' => 'weighted', 'score' => 4]);
+});
+
+it('breaks score ties by when the score was reached, not request time', function () {
+    $requestedFirstScoredLater = queuedWithScore($this->party, 2, [
+        'created_at' => now()->subMinutes(10),
+        'score_changed_at' => now()->subMinute(),
+    ]);
+    $requestedLaterScoredFirst = queuedWithScore($this->party, 2, [
+        'created_at' => now()->subMinutes(5),
+        'score_changed_at' => now()->subMinutes(4),
+    ]);
+
+    expect(app(SelectUpNext::class)($this->party)?->id)->toBe($requestedLaterScoredFirst->id)
+        ->and($requestedFirstScoredLater->fresh()?->status)->toBe(RequestStatus::Queued);
+});
+
+it('breaks remaining ties by requester id, with system requests last', function () {
+    $stamp = now()->subMinute();
+    $fallback = TrackRequest::factory()->for($this->party)->fallback()->create(['score_changed_at' => $stamp, 'created_at' => $stamp->copy()->subHour()]);
+    $lowerMember = queuedWithScore($this->party, 0, ['score_changed_at' => $stamp, 'created_at' => $stamp->copy()->addMinute()]);
+    $higherMember = queuedWithScore($this->party, 0, ['score_changed_at' => $stamp, 'created_at' => $stamp->copy()->subMinute()]);
+
+    expect(app(SelectUpNext::class)($this->party)?->id)->toBe($lowerMember->id);
+
+    $lowerMember->update(['status' => RequestStatus::Played]);
+    expect(app(SelectUpNext::class)($this->party)?->id)->toBe($higherMember->id)
+        ->and($fallback->fresh()?->status)->toBe(RequestStatus::Queued);
+});
+
+it('initialises score_changed_at to created_at on creation', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHour()]);
+
+    expect($request->score_changed_at?->equalTo($request->created_at))->toBeTrue();
+});
+
+it('moves score_changed_at on vote create, change and retract', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHour()]);
+    $member = PartyMember::factory()->for($this->party)->create();
+    $vote = app(VoteOnRequest::class);
+
+    foreach ([VoteDirection::Up, VoteDirection::Down, null] as $direction) {
+        CarbonImmutable::setTestNow(now()->addMinute());
+        $vote($this->party, $member, $request, $direction);
+        expect($request->fresh()->score_changed_at?->equalTo(now()))->toBeTrue();
+    }
+});
+
+it('leaves score_changed_at alone when a vote is a no-op', function () {
+    $request = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHour()]);
+    $member = PartyMember::factory()->for($this->party)->create();
+    $vote = app(VoteOnRequest::class);
+    $vote($this->party, $member, $request, VoteDirection::Up);
+
+    CarbonImmutable::setTestNow(now()->addMinute());
+    $vote($this->party, $member, $request, VoteDirection::Up);
+    $vote($this->party, $member, $request, null);
+    $vote($this->party, $member, $request, null);
+
+    expect($request->fresh()->score_changed_at?->equalTo(now()))->toBeTrue();
 });

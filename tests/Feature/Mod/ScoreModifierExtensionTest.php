@@ -79,8 +79,8 @@ it('sums adjustments from several Mods', function () {
         ->and(PartyLogEntry::query()->where('action', 'mod.score_adjusted')->count())->toBe(2);
 });
 
-it('keeps the created_at tie-breaker between equal effective scores', function () {
-    $this->leader->forceFill(['created_at' => now()->subHour()])->save();
+it('keeps the score_changed_at tie-breaker between equal effective scores', function () {
+    $this->leader->forceFill(['score_changed_at' => now()->subHour()])->save();
     ModFixtures::enable($this->party, new ScoreBoostMod(memberId: $this->trusted->id, boost: 1));
 
     expect(app(SelectUpNext::class)($this->party)->is($this->leader))->toBeTrue();

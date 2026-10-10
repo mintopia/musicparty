@@ -6,7 +6,7 @@ Synced from the archived v3-rewrite change.
 ## Requirements
 
 ### Requirement: Selection modes
-Each Party SHALL have a selection mode, set by the Host: deterministic or weighted. Under deterministic selection the system SHALL choose the eligible Queued Request with the highest score, breaking ties by oldest request time. Under weighted selection the system SHALL choose randomly from eligible Queued Requests with probability proportional to their positive score, with Requests of zero or negative score eligible only when no Request has a positive score.
+Each Party SHALL have a selection mode, set by the Host: deterministic or weighted. Under deterministic selection the system SHALL choose the eligible Queued Request with the highest score, breaking ties by the earliest time each Request reached its current score, then by requester (lowest member id first, system Requests last), then by oldest request time. Under weighted selection the system SHALL choose randomly from eligible Queued Requests with probability proportional to their positive score, with Requests of zero or negative score eligible only when no Request has a positive score.
 
 #### Scenario: Deterministic highest score
 - **WHEN** selection runs in deterministic mode with Requests scoring 3, 5 and 1
@@ -14,7 +14,19 @@ Each Party SHALL have a selection mode, set by the Host: deterministic or weight
 
 #### Scenario: Deterministic tie
 - **WHEN** two eligible Requests share the highest score
-- **THEN** the older Request is chosen
+- **THEN** the Request that reached that score earliest is chosen
+
+#### Scenario: Tie broken by score change time
+- **WHEN** two eligible Requests share the highest score and the newer Request reached that score before the older one
+- **THEN** the newer Request is chosen
+
+#### Scenario: Vote changes reset tie position
+- **WHEN** a vote on a Request is cast, changed or retracted
+- **THEN** the Request's score-changed time is updated to now
+
+#### Scenario: Tie broken by requester
+- **WHEN** two eligible Requests share the highest score and the same score-changed time
+- **THEN** the Request from the lower member id is chosen, and a system Request loses to a member Request
 
 #### Scenario: Weighted proportions
 - **WHEN** selection runs repeatedly in weighted mode over Requests scoring 9 and 1

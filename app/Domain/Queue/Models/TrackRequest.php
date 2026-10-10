@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property CarbonImmutable|null $started_at
  * @property string|null $selection_mode
  * @property int|null $selection_score
+ * @property CarbonImmutable|null $score_changed_at
  */
 #[Unguarded]
 #[UseFactory(TrackRequestFactory::class)]
@@ -43,6 +44,13 @@ class TrackRequest extends Model
 {
     /** @use HasFactory<TrackRequestFactory> */
     use HasFactory;
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $request): void {
+            $request->score_changed_at ??= CarbonImmutable::instance($request->created_at ?? $request->freshTimestamp());
+        });
+    }
 
     protected function casts(): array
     {
@@ -58,6 +66,7 @@ class TrackRequest extends Model
             'enqueue_unconfirmed' => 'boolean',
             'started_at' => 'immutable_datetime',
             'selection_score' => 'integer',
+            'score_changed_at' => 'immutable_datetime',
         ];
     }
 
