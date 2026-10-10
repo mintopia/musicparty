@@ -21,9 +21,6 @@ use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PartyStatsController;
 use App\Http\Controllers\Api\V1\PartyThemeController;
 use App\Http\Controllers\Api\V1\PingController;
-use App\Http\Controllers\Api\V1\SongRatingController;
-use App\Http\Controllers\Api\V1\UpcomingSongController;
-use App\Http\Controllers\Api\V1\VoteController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -84,7 +81,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
         Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|seek|volume')->name('parties.playback');
-        Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
         Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
         Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');
@@ -94,9 +90,6 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('parties/{party}/theme', [PartyThemeController::class, 'update'])->name('parties.theme.update');
         Route::post('parties/{party}/theme', [PartyThemeController::class, 'update'])->name('parties.theme.upload');
         Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])->name('parties.theme.destroy');
-        Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
-        Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();
-        Route::apiResource('parties.playedsongs.rate', SongRatingController::class)->only(['store'])->scoped();
     });
     Route::middleware(['auth:sanctum', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('tokens', [AdminIntegrationTokenController::class, 'index'])->name('tokens.index');

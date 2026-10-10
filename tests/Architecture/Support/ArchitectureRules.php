@@ -7,7 +7,6 @@ use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyLogEntry;
 use App\Models\PartyMember;
-use App\Models\PartyModeration;
 use App\Models\Play;
 use App\Models\PlayRating;
 use App\Models\ProviderSetting;
@@ -16,12 +15,9 @@ use App\Models\RequestVote;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SocialProvider;
-use App\Models\Theme;
 use App\Models\TrackRequest;
 use App\Models\User;
-use App\Observers\PartyObserver;
 use App\Observers\SettingObserver;
-use App\Observers\ThemeObserver;
 use App\Observers\UserObserver;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
@@ -84,18 +80,13 @@ class ArchitectureRules
             'party' => [
                 'members' => [
                     'App\\Domain\\Party\\',
-                    PartyObserver::class,
-                    ThemeObserver::class,
                     'App\\Events\\Party\\',
-                    'App\\Events\\UpcomingSong\\',
                 ],
                 'models' => [
                     Party::class,
                     PartyMember::class,
-                    PartyModeration::class,
                     PartyLogEntry::class,
                     Role::class,
-                    Theme::class,
                 ],
             ],
             'queue' => [

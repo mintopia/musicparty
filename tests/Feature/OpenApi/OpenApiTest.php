@@ -48,16 +48,16 @@ it('reports drift when the generated output differs from a stale spec', function
 it('documents sanctum security on authenticated routes only', function () {
     $paths = committedOpenApi()['paths'];
 
-    expect($paths['/api/v1/parties/{party}/control']['post']['security'])->toBe([['sanctumBearer' => []], ['sanctumCookie' => []]])
+    expect($paths['/api/v1/parties/{party}/player']['put']['security'])->toBe([['sanctumBearer' => []], ['sanctumCookie' => []]])
         ->and($paths['/api/v1/ping']['get']['security'])->toBe([])
         ->and($paths['/api/v1/integration/ping']['get']['security'])->toBe([['integrationBearer' => []]]);
 });
 
 it('derives a request body from the form request', function () {
-    $body = committedOpenApi()['paths']['/api/v1/parties/{party}/control']['post']['requestBody']['content']['application/json']['schema'];
+    $body = committedOpenApi()['paths']['/api/v1/parties/{party}/player']['put']['requestBody']['content']['application/json']['schema'];
 
-    expect($body['required'])->toBe(['action'])
-        ->and($body['properties']['action']['enum'])->toBe(['play', 'pause', 'next', 'previous']);
+    expect($body['required'])->toBe(['player_kind'])
+        ->and($body['properties']['player_kind']['type'])->toBe('string');
 });
 
 it('documents the create party request body', function () {

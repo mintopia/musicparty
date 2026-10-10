@@ -8,9 +8,7 @@ use App\Domain\Party\Exceptions\InvalidPartyTransition;
 use App\Domain\Party\Exceptions\MembershipActionRefused;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use SpotifyWebAPI\SpotifyWebAPIException;
 use Symfony\Component\HttpKernel\Exception\AccessDeniedHttpException;
 use Throwable;
 
@@ -32,12 +30,6 @@ class Handler extends ExceptionHandler
      */
     public function register(): void
     {
-        $this->reportable(function (SpotifyWebAPIException $e) {
-            if ($e->isRateLimited()) {
-                Log::critical('Spotify Rate Limit Hit');
-            }
-        });
-
         $this->map(fn (IncompatibleProviderException $e): ValidationException => ValidationException::withMessages([
             'player_kind' => [$e->getMessage()],
         ]));
