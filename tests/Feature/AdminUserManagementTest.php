@@ -7,7 +7,10 @@ use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
 use App\Support\Realtime\Contracts\RealtimeConnections;
+use Database\Seeders\RolesSeeder;
+use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -323,7 +326,7 @@ it('forbids non-admins from starting impersonation', function (): void {
 });
 
 it('gives the first user a single admin role row and shows it once', function (): void {
-    $this->seed(Database\Seeders\RolesSeeder::class);
+    $this->seed(RolesSeeder::class);
     $admin = User::factory()->withRole('admin')->create();
 
     expect($admin->roles()->count())->toBe(1);
@@ -336,6 +339,6 @@ it('rejects a duplicate role assignment at the database level', function (): voi
     $admin = adminUser();
     $roleId = $admin->roles()->firstOrFail()->id;
 
-    expect(fn () => Illuminate\Support\Facades\DB::table('role_user')->insert(['user_id' => $admin->id, 'role_id' => $roleId]))
-        ->toThrow(Illuminate\Database\QueryException::class);
+    expect(fn () => DB::table('role_user')->insert(['user_id' => $admin->id, 'role_id' => $roleId]))
+        ->toThrow(QueryException::class);
 });
