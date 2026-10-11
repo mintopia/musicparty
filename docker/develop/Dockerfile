@@ -11,4 +11,5 @@ COPY docker/php/opcache.dev.ini /usr/local/etc/php/conf.d/opcache.ini
 COPY docker/Caddyfile /
 ENV XDEBUG_MODE=off
 
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--port=80", "--caddyfile=/Caddyfile"]
+EXPOSE 8080
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--port=8080", "--caddyfile=/Caddyfile"]

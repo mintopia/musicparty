@@ -56,7 +56,7 @@ automatically) to reach the app and Reverb from your browser:
 services:
   musicparty:
     ports:
-      - "8000:80"
+      - "8000:8080"
   reverb:
     ports:
       - "8080:8080"
