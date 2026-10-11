@@ -23,7 +23,7 @@ const submit = () => form.patch('/profile');
 
 <template>
     <Head title="Edit Profile" />
-    <form @submit.prevent="submit">
+    <form class="mx-auto md:w-1/2" @submit.prevent="submit">
         <Card>
             <FormField label="Nickname" for="nickname" required :error="form.errors.nickname">
                 <input
@@ -37,7 +37,7 @@ const submit = () => form.patch('/profile');
                 <p class="mt-1 text-xs text-muted">Your preferred nickname</p>
             </FormField>
             <template #footer>
-                <ButtonLink href="/profile" variant="secondary" data-action="cancel">Cancel</ButtonLink>
+                <ButtonLink href="/profile" variant="link" data-action="cancel">Cancel</ButtonLink>
                 <Button type="submit" :disabled="form.processing" data-action="save">Save</Button>
             </template>
         </Card>

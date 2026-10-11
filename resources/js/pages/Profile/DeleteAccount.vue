@@ -30,7 +30,7 @@ const submit = () => form.delete(`/profile/accounts/${props.account.id}`);
 
 <template>
     <Head title="Remove linked account" />
-    <form @submit.prevent="submit">
+    <form class="mx-auto md:w-1/2" @submit.prevent="submit">
         <Card status="danger">
             <template #header>Remove linked account</template>
             <p class="mb-4 text-sm">You will no longer be able to use this account. This cannot be undone.</p>

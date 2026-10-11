@@ -3,6 +3,7 @@ import {Head, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import Icon from '../Components/Icon.vue';
 import coverUrl from '../../img/cover.jpg';
+import {providerBrands, providerIcons} from '../lib/providerBrands.js';
 
 defineOptions({layout: (h, page) => page});
 
@@ -14,20 +15,12 @@ const props = defineProps({
 const page = usePage();
 const cover = computed(() => page.props.site?.cover_image_url ?? coverUrl);
 
-const brands = {
-    discord: 'bg-[#5865f2]',
-    steam: 'bg-[#00adee]',
-    twitch: 'bg-[#9146ff]',
-    google: 'bg-[#4285f4]',
-    facebook: 'bg-[#1877f2]',
-};
-const knownIcons = ['discord', 'steam', 'twitch', 'google', 'facebook'];
 
 const items = computed(() =>
     (Array.isArray(props.providers) ? props.providers : []).map((provider) => ({
         ...provider,
-        classes: brands[provider.code] ?? 'bg-primary',
-        icon: knownIcons.includes(provider.code) ? provider.code : 'login',
+        classes: providerBrands[provider.code] ?? 'bg-primary',
+        icon: providerIcons.includes(provider.code) ? provider.code : 'login',
     })),
 );
 
