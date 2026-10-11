@@ -1,34 +1,54 @@
 <script setup>
-import {Head} from '@inertiajs/vue3';
+import {Head, Link} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import AdminLayout from '../../Layouts/AdminLayout.vue';
+import Icon from '../../Components/Icon.vue';
+import Card from '../../Components/ui/Card.vue';
+import {usePageMeta} from '../../composables/usePageMeta.js';
 
 defineOptions({layout: AdminLayout});
 
-const props = defineProps({links: {type: Object, required: true}});
+const props = defineProps({stats: {type: Object, required: true}});
+
+usePageMeta({title: 'Dashboard', crumbs: [{label: 'Home', href: '/'}, {label: 'Admin', href: '/admin'}, {label: 'Dashboard'}]});
 
 const cards = computed(() => [
-    {key: 'horizon', label: 'Horizon', description: 'Queue workers and jobs'},
-    {key: 'pulse', label: 'Pulse', description: 'Application performance'},
-].map((card) => ({...card, href: props.links[card.key] ?? null})));
+    {
+        key: 'users',
+        href: '/admin/users',
+        icon: 'users',
+        tile: 'bg-primary',
+        total: props.stats.users.total,
+        label: 'Users',
+        subline: `${props.stats.users.lastWeek} in the last week`,
+    },
+    {
+        key: 'parties',
+        href: '/admin/parties',
+        icon: 'playlist',
+        tile: 'bg-accent',
+        total: props.stats.parties.total,
+        label: 'Parties',
+        subline: `${props.stats.parties.live} live`,
+    },
+]);
 </script>
 
 <template>
     <Head title="Admin" />
-    <h1 class="text-xl font-semibold">Admin dashboard</h1>
-    <ul class="mt-4 grid gap-4 sm:grid-cols-2">
-        <li
-            v-for="card in cards"
-            :key="card.key"
-            :data-testid="`card-${card.key}`"
-            class="rounded border border-border bg-surface p-4"
-        >
-            <h2 class="font-medium">{{ card.label }}</h2>
-            <p class="mt-1 text-sm text-muted">{{ card.description }}</p>
-            <a v-if="card.href" :href="card.href" class="mt-3 inline-block text-sm text-primary underline">
-                Open {{ card.label }}
-            </a>
-            <span v-else class="mt-3 inline-block text-sm text-muted" aria-disabled="true">Unavailable</span>
-        </li>
-    </ul>
+    <div class="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        <Link v-for="card in cards" :key="card.key" :href="card.href" :data-testid="`card-${card.key}`" class="block">
+            <Card>
+                <div class="flex items-center gap-4">
+                    <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded text-white" :class="card.tile">
+                        <Icon :name="card.icon" class="!h-6 !w-6" />
+                    </span>
+                    <div>
+                        <p class="font-bold">{{ card.total }} {{ card.label }}</p>
+                        <p class="text-sm text-muted">{{ card.subline }}</p>
+                    </div>
+                </div>
+            </Card>
+        </Link>
+    </div>
 </template>

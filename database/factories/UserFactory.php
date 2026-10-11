@@ -35,7 +35,7 @@ class UserFactory extends Factory
     {
         return $this->afterCreating(function (User $user) use ($code): void {
             $role = Role::query()->where('code', $code)->first() ?? Role::query()->forceCreate(['code' => $code, 'name' => $code]);
-            $user->roles()->attach($role);
+            $user->roles()->syncWithoutDetaching([$role->id]);
         });
     }
 

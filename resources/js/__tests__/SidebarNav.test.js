@@ -26,3 +26,47 @@ describe('SidebarNav', () => {
         expect(post).toHaveBeenCalledWith('/logout');
     });
 });
+
+describe('SidebarNav admin group', () => {
+    it('lists children and shared admin links, collapsible', async () => {
+        page.url = '/admin/users';
+        page.props = {
+            appName: 'MP',
+            auth: {user: {is_admin: true}},
+            parties: [],
+            adminLinks: [{label: 'Pulse', href: '/pulse'}, {label: 'Horizon', href: '/horizon'}],
+        };
+        const wrapper = mount(SidebarNav);
+        const labels = wrapper.findAll('a').map((a) => a.text());
+
+        expect(labels).toEqual(expect.arrayContaining(['Dashboard', 'Users', 'Parties', 'Settings', 'Tokens', 'Pulse', 'Horizon']));
+        expect(labels).not.toContain('Telescope');
+        expect(wrapper.find('a[href="/pulse"]').exists()).toBe(true);
+
+        await wrapper.find('[data-testid="admin-group"]').trigger('click');
+        expect(wrapper.find('a[href="/admin/users"]').exists()).toBe(false);
+    });
+
+    it('starts collapsed outside admin pages', () => {
+        page.url = '/';
+        page.props = {appName: 'MP', auth: {user: {is_admin: true}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/admin/users"]').exists()).toBe(false);
+    });
+
+    it('marks settings active on theme pages', () => {
+        page.url = '/admin/theme';
+        page.props = {appName: 'MP', auth: {user: {is_admin: true}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/admin/settings"]').attributes('aria-current')).toBe('page');
+    });
+});
+
+describe('SidebarNav create party', () => {
+    it('shows Create Party only to users allowed to create parties', () => {
+        page.url = '/';
+        page.props = {appName: 'MP', auth: {user: {is_admin: false, can_create_party: true}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/parties/create"]').text()).toBe('Create Party');
+
+        page.props = {appName: 'MP', auth: {user: {is_admin: false, can_create_party: false}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/parties/create"]').exists()).toBe(false);
+    });
+});

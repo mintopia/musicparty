@@ -22,6 +22,9 @@ class AdminSocialProviderResource extends JsonResource
             'code' => $this->code,
             'name' => $this->name,
             'enabled' => (bool) $this->enabled,
+            'supports_auth' => (bool) $this->supports_auth,
+            'auth_enabled' => (bool) $this->auth_enabled,
+            'return_urls' => [route('login.return', $this->code)],
             'configured' => $this->isConfigured(),
             'fields' => $this->settings->map(fn (ProviderSetting $setting): array => [
                 'code' => $setting->code,

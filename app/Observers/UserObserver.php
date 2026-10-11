@@ -15,9 +15,9 @@ class UserObserver
         $count = User::count();
 
         // Assign the admin role to the first user
-        if ($count === 1) {
-            $role = Role::whereCode('admin')->first();
-            $user->roles()->attach($role);
+        $role = $count === 1 ? Role::whereCode('admin')->first() : null;
+        if ($role) {
+            $user->roles()->syncWithoutDetaching([$role->id]);
             $user->save();
         }
     }

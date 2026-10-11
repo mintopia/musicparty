@@ -8,6 +8,8 @@ use App\Domain\Admin\Actions\SuspendUser;
 use App\Domain\Admin\Models\AdminAuditEntry;
 use App\Domain\Admin\Models\AdminHostSession;
 use App\Domain\Admin\Models\Role;
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
@@ -40,7 +42,18 @@ function makeParty(array $attributes = []): Party
 
 function resolveAdminUri(string $uri): string
 {
-    return strtr($uri, ['{user}' => (string) User::factory()->create()->id, '{party}' => (string) makeParty()->id]);
+    $user = User::factory()->create();
+    $replacements = ['{user}' => (string) $user->id, '{party}' => (string) makeParty()->id];
+
+    if (str_contains($uri, '{account}')) {
+        $replacements['{account}'] = (string) LinkedAccount::factory()->create(['user_id' => $user->id])->id;
+    }
+
+    if (str_contains($uri, '{provider}')) {
+        $replacements['{provider}'] = (string) SocialProvider::factory()->create(['code' => 'p'.uniqid()])->id;
+    }
+
+    return strtr($uri, $replacements);
 }
 
 function makeUserWithRole(string $role): User
@@ -55,6 +68,16 @@ $webRoutes = [
     'dashboard' => ['get', '/admin'],
     'users' => ['get', '/admin/users'],
     'parties' => ['get', '/admin/parties'],
+    'user show' => ['get', '/admin/users/{user}'],
+    'user edit' => ['get', '/admin/users/{user}/edit'],
+    'user update' => ['patch', '/admin/users/{user}'],
+    'user delete page' => ['get', '/admin/users/{user}/delete'],
+    'user destroy' => ['delete', '/admin/users/{user}'],
+    'impersonate' => ['post', '/admin/users/{user}/impersonate'],
+    'account delete page' => ['get', '/admin/users/{user}/accounts/{account}/delete'],
+    'account destroy' => ['delete', '/admin/users/{user}/accounts/{account}'],
+    'provider edit' => ['get', '/admin/providers/{provider}/edit'],
+    'provider update' => ['put', '/admin/providers/{provider}'],
     'suspend' => ['post', '/admin/users/{user}/suspend'],
     'unsuspend' => ['delete', '/admin/users/{user}/suspend'],
     'grant' => ['post', '/admin/users/{user}/roles'],
@@ -113,13 +136,13 @@ it('serves no telescope route', function (): void {
     $this->actingAs(makeAdmin())->get('/telescope')->assertNotFound();
 });
 
-it('shows the dashboard links to admins', function (): void {
+it('shows the dashboard stats to admins', function (): void {
     $this->withoutVite()->actingAs(makeAdmin())->get(route('admin.index'))
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Admin/Dashboard')
-            ->where('links.horizon', url('/horizon'))
-            ->where('links.pulse', url('/pulse'))
-            ->missing('links.telescope'));
+            ->has('stats.users.total')
+            ->has('stats.parties.live')
+            ->missing('links'));
 });
 
 it('shares is_admin true for admins', function (): void {
@@ -153,7 +176,7 @@ it('lists and searches users with pagination', function (): void {
             ->where('filters.search', 'zelda'));
 
     $this->withoutVite()->actingAs($admin)->get(route('admin.users.index'))
-        ->assertInertia(fn (Assert $page): Assert => $page->has('users.data', 25)->has('users.links')->where('filters.search', null));
+        ->assertInertia(fn (Assert $page): Assert => $page->has('users.data', 20)->has('users.links')->where('filters.search', null)->where('filters.id', null)->where('filters.nickname', null));
 
     $this->actingAs($admin)->get(route('admin.users.index', ['search' => '%']))
         ->assertInertia(fn (Assert $page): Assert => $page->has('users.data', 0));

@@ -15,9 +15,10 @@ class SiteSettings
         'logo_light' => ['code' => 'logo-light', 'label' => 'Site Logo (Light Version)'],
         'logo_dark' => ['code' => 'logo-dark', 'label' => 'Site Logo (Dark Version)'],
         'favicon' => ['code' => 'favicon', 'label' => 'Favicon'],
+        'cover_image' => ['code' => 'cover-image', 'label' => 'Login Cover Image'],
     ];
 
-    public const FILE_FIELDS = ['logo_light', 'logo_dark', 'favicon'];
+    public const FILE_FIELDS = ['logo_light', 'logo_dark', 'favicon', 'cover_image'];
 
     public static function disk(): string
     {
@@ -44,7 +45,7 @@ class SiteSettings
     }
 
     /**
-     * @return array{name: string, logo_light_url: ?string, logo_dark_url: ?string, favicon_url: ?string, terms_url: ?string, privacy_url: ?string, default_party: ?string}
+     * @return array{name: string, logo_light_url: ?string, logo_dark_url: ?string, favicon_url: ?string, cover_image_url: ?string, terms_url: ?string, privacy_url: ?string, default_party: ?string}
      */
     public function toArray(): array
     {
@@ -53,6 +54,7 @@ class SiteSettings
             'logo_light_url' => $this->fileUrl('logo_light'),
             'logo_dark_url' => $this->fileUrl('logo_dark'),
             'favicon_url' => $this->fileUrl('favicon'),
+            'cover_image_url' => $this->fileUrl('cover_image'),
             'terms_url' => $this->get('terms_url'),
             'privacy_url' => $this->get('privacy_url'),
             'default_party' => $this->get('default_party'),

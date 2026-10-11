@@ -33,3 +33,24 @@ export const formatTotal = (ms) => {
     const minutes = Math.round((ms ?? 0) / 60000);
     return minutes >= 60 ? `${Math.floor(minutes / 60)}h ${minutes % 60}m` : `${minutes}m`;
 };
+
+export const relativeTime = (iso, now = Date.now()) => {
+    const then = new Date(iso).getTime();
+    if (!iso || Number.isNaN(then)) {
+        return '';
+    }
+    const seconds = Math.max(0, Math.round((now - then) / 1000));
+    const units = [[31536000, 'year'], [2592000, 'month'], [604800, 'week'], [86400, 'day'], [3600, 'hour'], [60, 'minute']];
+    for (const [size, unit] of units) {
+        if (seconds >= size) {
+            const count = Math.floor(seconds / size);
+            return `${count} ${unit}${count === 1 ? '' : 's'} ago`;
+        }
+    }
+    return 'just now';
+};
+
+export const absoluteTime = (iso) => {
+    const date = new Date(iso);
+    return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
+};

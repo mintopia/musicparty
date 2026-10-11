@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Admin\DashboardController;
+use App\Http\Controllers\Admin\ImpersonationController as AdminImpersonationController;
 use App\Http\Controllers\Admin\IntegrationTokenController as AdminIntegrationTokenController;
+use App\Http\Controllers\Admin\LinkedAccountController as AdminLinkedAccountController;
 use App\Http\Controllers\Admin\PartyController as AdminPartyController;
 use App\Http\Controllers\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
@@ -184,6 +186,16 @@ Route::middleware('guest')->group(function () {
 Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/', [DashboardController::class, 'index'])->name('index');
     Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+    Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+    Route::get('users/{user}/edit', [AdminUserController::class, 'edit'])->name('users.edit');
+    Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+    Route::get('users/{user}/delete', [AdminUserController::class, 'delete'])->name('users.delete');
+    Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+    Route::post('users/{user}/impersonate', [AdminImpersonationController::class, 'start'])->name('users.impersonate');
+    Route::scopeBindings()->group(function () {
+        Route::get('users/{user}/accounts/{account}/delete', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete');
+        Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy');
+    });
     Route::post('users/{user}/suspend', [AdminUserController::class, 'suspend'])->name('users.suspend');
     Route::delete('users/{user}/suspend', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
     Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');
@@ -192,6 +204,7 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::post('tokens', [AdminIntegrationTokenController::class, 'store'])->name('tokens.store');
     Route::delete('tokens/{token}', [AdminIntegrationTokenController::class, 'destroy'])->name('tokens.destroy');
     Route::get('providers', [AdminProviderController::class, 'index'])->name('providers.index');
+    Route::get('providers/{provider}/edit', [AdminProviderController::class, 'edit'])->name('providers.edit');
     Route::put('providers/{provider}', [AdminProviderController::class, 'update'])->name('providers.update');
     Route::get('settings', [AdminSettingsController::class, 'show'])->name('settings.show');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
@@ -202,6 +215,8 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::put('theme', [AdminThemeController::class, 'update'])->name('theme.update');
     Route::delete('theme', [AdminThemeController::class, 'destroy'])->name('theme.destroy');
 });
+
+Route::middleware('auth')->delete('admin/impersonate', [AdminImpersonationController::class, 'stop'])->name('admin.impersonate.stop');
 
 Route::middleware('auth')->group(function () {
     Route::get('parties/{party}/spotify/link', [SpotifyLinkController::class, 'redirect'])->name('spotify.link');

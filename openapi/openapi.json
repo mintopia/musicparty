@@ -4669,6 +4669,9 @@
                     "favicon_url": {
                         "type": "null"
                     },
+                    "cover_image_url": {
+                        "type": "null"
+                    },
                     "terms_url": {
                         "type": [
                             "string",
@@ -4693,6 +4696,7 @@
                     "logo_light_url",
                     "logo_dark_url",
                     "favicon_url",
+                    "cover_image_url",
                     "terms_url",
                     "privacy_url",
                     "default_party"
@@ -4710,6 +4714,22 @@
                     },
                     "enabled": {
                         "type": "boolean"
+                    },
+                    "supports_auth": {
+                        "type": "boolean"
+                    },
+                    "auth_enabled": {
+                        "type": "boolean"
+                    },
+                    "return_urls": {
+                        "type": "array",
+                        "prefixItems": [
+                            {
+                                "type": "string"
+                            }
+                        ],
+                        "minItems": 1,
+                        "maxItems": 1
                     },
                     "configured": {
                         "type": "boolean"
@@ -4768,6 +4788,9 @@
                     "code",
                     "name",
                     "enabled",
+                    "supports_auth",
+                    "auth_enabled",
+                    "return_urls",
                     "configured",
                     "fields"
                 ],
@@ -4788,13 +4811,27 @@
                     "roles": {
                         "type": "array",
                         "items": {}
+                    },
+                    "last_login": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
                     "id",
                     "nickname",
                     "suspended",
-                    "roles"
+                    "roles",
+                    "last_login",
+                    "created_at"
                 ],
                 "title": "AdminUserResource"
             },
