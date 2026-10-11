@@ -18,6 +18,21 @@ const toggle = (code) => {
     manuallyOpened.value = {...manuallyOpened.value, [code]: !isOpen(code)};
 };
 
+const adminLinks = computed(() => page.props.adminLinks ?? []);
+const adminItems = [
+    {label: 'Dashboard', href: '/admin', exact: true},
+    {label: 'Users', href: '/admin/users'},
+    {label: 'Parties', href: '/admin/parties'},
+    {label: 'Settings', href: '/admin/settings', also: ['/admin/theme', '/admin/providers']},
+    {label: 'Tokens', href: '/admin/tokens'},
+];
+const adminOpened = ref(null);
+const isAdminPath = computed(() => path.value === '/admin' || path.value.startsWith('/admin/'));
+const adminOpen = computed(() => adminOpened.value ?? isAdminPath.value);
+const isAdminItemActive = (item) => (item.exact
+    ? path.value === item.href
+    : [item.href, ...(item.also ?? [])].some((prefix) => path.value.startsWith(prefix)));
+
 const itemClass = (active) => [
     'flex w-full items-center gap-2.5 border-l-[3px] px-4 py-2 text-sm hover:text-sidebar-active',
     active ? 'border-primary text-sidebar-active' : 'border-transparent',
@@ -65,9 +80,34 @@ const itemClass = (active) => [
                 </div>
             </div>
 
-            <Link v-if="user.is_admin" href="/admin" :class="itemClass(path.startsWith('/admin'))">
-                <Icon name="user" />Admin
-            </Link>
+            <div v-if="user.is_admin">
+                <button
+                    type="button"
+                    data-testid="admin-group"
+                    :class="itemClass(isAdminPath)"
+                    :aria-expanded="adminOpen"
+                    @click="adminOpened = !adminOpen"
+                >
+                    <Icon name="settings" />
+                    <span class="flex-1 text-left">Admin</span>
+                    <Icon name="chevron" class="!h-4 !w-4" />
+                </button>
+                <div v-if="adminOpen" class="flex flex-col">
+                    <Link
+                        v-for="item in adminItems"
+                        :key="item.href"
+                        :href="item.href"
+                        :class="[itemClass(isAdminItemActive(item)), '!pl-11']"
+                        :aria-current="isAdminItemActive(item) ? 'page' : undefined"
+                    >{{ item.label }}</Link>
+                    <a
+                        v-for="link in adminLinks"
+                        :key="link.href"
+                        :href="link.href"
+                        :class="[itemClass(false), '!pl-11']"
+                    >{{ link.label }}</a>
+                </div>
+            </div>
             <Link href="/profile" :class="itemClass(isActive('/profile'))"><Icon name="user" />Profile</Link>
             <button type="button" data-testid="logout" :class="itemClass(false)" @click="router.post('/logout')">
                 <Icon name="logout" />Logout

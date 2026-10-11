@@ -113,13 +113,13 @@ it('serves no telescope route', function (): void {
     $this->actingAs(makeAdmin())->get('/telescope')->assertNotFound();
 });
 
-it('shows the dashboard links to admins', function (): void {
+it('shows the dashboard stats to admins', function (): void {
     $this->withoutVite()->actingAs(makeAdmin())->get(route('admin.index'))
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Admin/Dashboard')
-            ->where('links.horizon', url('/horizon'))
-            ->where('links.pulse', url('/pulse'))
-            ->missing('links.telescope'));
+            ->has('stats.users.total')
+            ->has('stats.parties.live')
+            ->missing('links'));
 });
 
 it('shares is_admin true for admins', function (): void {

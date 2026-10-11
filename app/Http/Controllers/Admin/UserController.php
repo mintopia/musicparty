@@ -57,4 +57,29 @@ class UserController extends Controller
 
         return back();
     }
+
+    public function show(User $user): Response
+    {
+        abort(501);
+    }
+
+    public function edit(User $user): Response
+    {
+        abort(501);
+    }
+
+    public function update(Request $request, User $user): RedirectResponse
+    {
+        abort(501);
+    }
+
+    public function delete(User $user): Response
+    {
+        abort(501);
+    }
+
+    public function destroy(Request $request, User $user): RedirectResponse
+    {
+        abort(501);
+    }
 }

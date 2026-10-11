@@ -2,6 +2,9 @@
 import {Head, router, usePage} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
 import AdminLayout from '../../Layouts/AdminLayout.vue';
+import Button from '../../Components/ui/Button.vue';
+import Card from '../../Components/ui/Card.vue';
+import {usePageMeta} from '../../composables/usePageMeta.js';
 import {contrastWarnings, describeWarning} from '../../theme/contrast.js';
 
 defineOptions({layout: AdminLayout});
@@ -12,6 +15,16 @@ const props = defineProps({
     fonts: {type: Array, default: () => []},
     tokens: {type: Array, default: () => []},
     warnings: {type: Array, default: () => []},
+});
+
+usePageMeta({
+    title: 'Theme',
+    crumbs: [
+        {label: 'Home', href: '/'},
+        {label: 'Admin', href: '/admin'},
+        {label: 'Settings', href: '/admin/settings'},
+        {label: 'Theme'},
+    ],
 });
 
 const page = usePage();
@@ -69,9 +82,7 @@ const reset = () => {
 
 <template>
     <Head title="Theme" />
-    <h1 class="text-xl font-semibold">Theme</h1>
-
-    <div role="status" data-testid="warnings" class="mt-4 text-sm">
+    <div role="status" data-testid="warnings" class="mb-4 text-sm">
         <ul v-if="liveWarnings.length" class="rounded border border-danger bg-surface p-3">
             <li v-for="warning in liveWarnings" :key="`${warning.scheme}-${warning.pair}`" data-warning>
                 {{ describeWarning(warning) }}
@@ -79,13 +90,16 @@ const reset = () => {
         </ul>
     </div>
 
-    <form class="mt-4 space-y-6" @submit.prevent="save">
+    <form @submit.prevent="save">
+        <Card>
+            <template #header>Colours and font</template>
+            <div class="space-y-6">
         <div>
-            <label for="theme-font" class="block text-sm">Font</label>
+            <label for="theme-font" class="block text-sm font-medium">Font</label>
             <select
                 id="theme-font"
                 v-model="draft.font"
-                class="mt-1 rounded border border-border bg-surface px-3 py-2 text-sm"
+                class="mt-1 rounded border border-border bg-background px-3 py-2 text-sm"
             >
                 <option v-for="font in fonts" :key="font.value" :value="font.value">{{ font.label }}</option>
             </select>
@@ -111,7 +125,7 @@ const reset = () => {
                             data-hex
                             :value="draft[scheme.code][token.key]"
                             :aria-invalid="errors[`${scheme.code}.${token.key}`] ? 'true' : undefined"
-                            class="w-28 rounded border border-border bg-surface px-2 py-1 font-mono text-sm"
+                            class="w-28 rounded border border-border bg-background px-2 py-1 font-mono text-sm"
                             @input="setColour(scheme.code, token.key, $event.target.value)"
                         />
                     </div>
@@ -124,19 +138,17 @@ const reset = () => {
             </fieldset>
         </div>
 
-        <div class="flex gap-2">
-            <button type="submit" data-action="save" class="rounded bg-primary px-3 py-2 text-sm text-white">Save</button>
-            <button
-                type="button"
-                data-action="reset"
-                class="rounded border border-border px-3 py-2 text-sm"
-                @click="reset"
-            >Reset to defaults</button>
-        </div>
+            </div>
+            <template #footer>
+                <Button variant="secondary" data-action="reset" @click="reset">Reset to defaults</Button>
+                <Button type="submit" data-action="save">Save</Button>
+            </template>
+        </Card>
     </form>
 
-    <h2 class="mt-8 text-lg font-semibold">Preview</h2>
-    <div class="mt-3 grid gap-4 lg:grid-cols-2">
+    <Card class="mt-4">
+    <template #header>Preview</template>
+    <div class="grid gap-4 lg:grid-cols-2">
         <div
             v-for="scheme in schemes"
             :key="scheme.code"
@@ -160,4 +172,5 @@ const reset = () => {
             </div>
         </div>
     </div>
+</Card>
 </template>

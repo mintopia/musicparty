@@ -31,6 +31,18 @@ class HandleInertiaRequests extends Middleware
                     'is_admin' => $request->user()->hasRole('admin'),
                 ] : null,
             ],
+            'flash' => fn (): array => collect(['success', 'error', 'info', 'warning'])
+                ->mapWithKeys(fn (string $key): array => [$key => $request->session()->get($key)])
+                ->all(),
+            'impersonating' => fn (): ?array => $request->user() && $request->session()->has('impersonator_id')
+                ? ['name' => $request->user()->nickname, 'stopUrl' => route('admin.impersonate.stop', absolute: false)]
+                : null,
+            'adminLinks' => fn (): array => $request->user()?->hasRole('admin')
+                ? [
+                    ['label' => 'Pulse', 'href' => url('/pulse')],
+                    ['label' => 'Horizon', 'href' => url('/horizon')],
+                ]
+                : [],
             'parties' => fn (): array => $request->user()
                 ? $request->user()->memberParties->map(fn ($party): array => [
                     'code' => $party->code,

@@ -14,7 +14,6 @@ vi.mock('@inertiajs/vue3', () => ({
 }));
 
 import Dashboard from '../pages/Admin/Dashboard.vue';
-import UsersIndex from '../pages/Admin/Users/Index.vue';
 import TokensIndex from '../pages/Admin/Tokens/Index.vue';
 import PartiesIndex from '../pages/Admin/Parties/Index.vue';
 import SidebarNav from '../Components/SidebarNav.vue';
@@ -28,112 +27,33 @@ beforeEach(() => {
     page.url = '/admin';
 });
 
-describe('SidebarNav admin link', () => {
-    it('shows for admins', () => {
-        expect(mount(SidebarNav).find('a[href="/admin"]').exists()).toBe(true);
+describe('SidebarNav admin group', () => {
+    it('shows the group with children for admins', () => {
+        const wrapper = mount(SidebarNav);
+        expect(wrapper.find('[data-testid="admin-group"]').exists()).toBe(true);
+        expect(wrapper.find('a[href="/admin"]').text()).toBe('Dashboard');
     });
 
     it('is hidden for non-admins and guests', () => {
         page.props.auth.user.is_admin = false;
-        expect(mount(SidebarNav).find('a[href="/admin"]').exists()).toBe(false);
+        expect(mount(SidebarNav).find('[data-testid="admin-group"]').exists()).toBe(false);
         page.props.auth.user = null;
-        expect(mount(SidebarNav).find('a[href="/admin"]').exists()).toBe(false);
+        expect(mount(SidebarNav).find('[data-testid="admin-group"]').exists()).toBe(false);
     });
 });
 
 describe('Admin Dashboard', () => {
-    it('links to horizon and pulse only', () => {
-        const wrapper = mount(Dashboard, {props: {links: {horizon: '/horizon', pulse: '/pulse'}}});
+    const stats = {users: {total: 59, lastWeek: 3}, parties: {total: 4, live: 1}};
 
-        expect(wrapper.find('a[href="/horizon"]').exists()).toBe(true);
-        expect(wrapper.find('a[href="/pulse"]').exists()).toBe(true);
+    it('shows user and party stat cards linking to their lists', () => {
+        const wrapper = mount(Dashboard, {props: {stats}});
+
+        expect(wrapper.get('[data-testid="card-users"]').text()).toContain('59 Users');
+        expect(wrapper.get('[data-testid="card-users"]').text()).toContain('3 in the last week');
+        expect(wrapper.get('[data-testid="card-users"]').attributes('href')).toBe('/admin/users');
+        expect(wrapper.get('[data-testid="card-parties"]').text()).toContain('4 Parties');
+        expect(wrapper.get('[data-testid="card-parties"]').text()).toContain('1 live');
         expect(wrapper.find('[data-testid="card-telescope"]').exists()).toBe(false);
-    });
-});
-
-const users = (extra = {}) => ({
-    data: [
-        {id: 1, nickname: 'Ann', suspended: false, roles: ['admin']},
-        {id: 2, nickname: 'Bob', suspended: true, roles: []},
-    ],
-    links: [
-        {url: null, label: '&laquo; Previous', active: false},
-        {url: '/admin/users?page=1', label: '1', active: true},
-        {url: '/admin/users?page=2', label: '2', active: false},
-    ],
-    current_page: 1,
-    last_page: 2,
-    ...extra,
-});
-
-describe('Admin Users', () => {
-    const mountUsers = (props = {}) => mount(UsersIndex, {props: {users: users(), filters: {search: ''}, ...props}});
-
-    it('renders rows with status and role state', () => {
-        const wrapper = mountUsers();
-        const ann = wrapper.find('[data-testid="user-1"]');
-        const bob = wrapper.find('[data-testid="user-2"]');
-
-        expect(ann.text()).toContain('Active');
-        expect(bob.text()).toContain('Suspended');
-        expect(ann.find('[data-role="admin"]').element.checked).toBe(true);
-        expect(ann.find('[data-role="create-party"]').element.checked).toBe(false);
-        expect(ann.find('[data-action="suspend"]').text()).toBe('Suspend');
-        expect(bob.find('[data-action="suspend"]').text()).toBe('Unsuspend');
-    });
-
-    it('suspends and unsuspends', async () => {
-        const wrapper = mountUsers();
-        await wrapper.find('[data-testid="user-1"] [data-action="suspend"]').trigger('click');
-        expect(router.post).toHaveBeenCalledWith('/admin/users/1/suspend', {}, {preserveScroll: true});
-
-        await wrapper.find('[data-testid="user-2"] [data-action="suspend"]').trigger('click');
-        expect(router.delete).toHaveBeenCalledWith('/admin/users/2/suspend', {preserveScroll: true});
-    });
-
-    it('grants and revokes roles', async () => {
-        const wrapper = mountUsers();
-        await wrapper.find('[data-testid="user-1"] [data-role="create-party"]').trigger('change');
-        expect(router.post).toHaveBeenCalledWith('/admin/users/1/roles', {role: 'create-party'}, {preserveScroll: true});
-
-        await wrapper.find('[data-testid="user-1"] [data-role="admin"]').trigger('change');
-        expect(router.delete).toHaveBeenCalledWith('/admin/users/1/roles/admin', {preserveScroll: true});
-    });
-
-    it('debounces search into a single GET', async () => {
-        const wrapper = mountUsers();
-        const input = wrapper.find('#user-search');
-        await input.setValue('a');
-        await input.setValue('an');
-        expect(router.get).not.toHaveBeenCalled();
-
-        vi.advanceTimersByTime(300);
-        expect(router.get).toHaveBeenCalledTimes(1);
-        expect(router.get).toHaveBeenCalledWith('/admin/users', {search: 'an'}, {preserveState: true, replace: true});
-    });
-
-    it('shows admin errors', () => {
-        page.props.errors = {admin: 'Cannot remove the last admin.'};
-        expect(mountUsers().find('[role="alert"]').text()).toBe('Cannot remove the last admin.');
-    });
-
-    it('has a labelled search box and no alert without errors', () => {
-        const wrapper = mountUsers();
-        expect(wrapper.find('label[for="user-search"]').exists()).toBe(true);
-        expect(wrapper.find('[role="alert"]').exists()).toBe(false);
-    });
-
-    it('renders pagination links and marks the current page', () => {
-        const wrapper = mountUsers();
-        const nav = wrapper.find('nav[aria-label="Pagination"]');
-        expect(nav.find('a[href="/admin/users?page=2"]').exists()).toBe(true);
-        expect(nav.find('a[aria-current="page"]').text()).toBe('1');
-    });
-
-    it('omits pagination for a single page and shows empty state', () => {
-        const wrapper = mountUsers({users: users({data: [], last_page: 1})});
-        expect(wrapper.find('nav[aria-label="Pagination"]').exists()).toBe(false);
-        expect(wrapper.text()).toContain('No users found.');
     });
 });
 

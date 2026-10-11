@@ -21,6 +21,11 @@ class ProviderController extends Controller
         ]);
     }
 
+    public function edit(string $provider): Response
+    {
+        abort(501);
+    }
+
     public function update(UpdateProviderRequest $request, string $provider, UpdateSocialProvider $updateProvider): RedirectResponse
     {
         $updateProvider->handle(
