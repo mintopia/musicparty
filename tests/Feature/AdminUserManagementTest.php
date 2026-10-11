@@ -321,3 +321,21 @@ it('logs out when the impersonating admin is no longer an admin', function (): v
 it('forbids non-admins from starting impersonation', function (): void {
     $this->actingAs(User::factory()->create())->post(route('admin.users.impersonate', User::factory()->create()))->assertForbidden();
 });
+
+it('gives the first user a single admin role row and shows it once', function (): void {
+    $this->seed(Database\Seeders\RolesSeeder::class);
+    $admin = User::factory()->withRole('admin')->create();
+
+    expect($admin->roles()->count())->toBe(1);
+
+    $this->actingAs($admin)->get(route('admin.users.show', $admin))
+        ->assertInertia(fn (Assert $page): Assert => $page->has('user.roles', 1));
+});
+
+it('rejects a duplicate role assignment at the database level', function (): void {
+    $admin = adminUser();
+    $roleId = $admin->roles()->firstOrFail()->id;
+
+    expect(fn () => Illuminate\Support\Facades\DB::table('role_user')->insert(['user_id' => $admin->id, 'role_id' => $roleId]))
+        ->toThrow(Illuminate\Database\QueryException::class);
+});

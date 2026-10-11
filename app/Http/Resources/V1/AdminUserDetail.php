@@ -26,7 +26,7 @@ class AdminUserDetail
             'agreed_terms' => $user->terms_agreed_at !== null,
             'last_login' => $user->last_login?->toIso8601String(),
             'created_at' => $user->created_at?->toIso8601String(),
-            'roles' => $user->roles->pluck('code')->values()->map(fn (string $code): array => [
+            'roles' => $user->roles->pluck('code')->unique()->values()->map(fn (string $code): array => [
                 'code' => $code,
                 'label' => AdminRole::tryFrom($code)?->label() ?? $code,
             ])->all(),

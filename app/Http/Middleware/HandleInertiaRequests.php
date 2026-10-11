@@ -29,6 +29,7 @@ class HandleInertiaRequests extends Middleware
                     'avatarUrl' => $request->user()->avatarUrl(),
                     'email' => $request->user()->getEmail(),
                     'is_admin' => $request->user()->hasRole('admin'),
+                    'can_create_party' => $request->user()->can('create', \App\Domain\Party\Models\Party::class),
                 ] : null,
             ],
             'flash' => fn (): array => collect(['success', 'error', 'info', 'warning'])

@@ -108,6 +108,9 @@ const itemClass = (active) => [
                     >{{ link.label }}</a>
                 </div>
             </div>
+            <Link v-if="user.can_create_party" href="/parties/create" :class="itemClass(isActive('/parties/create'))">
+                <Icon name="playlist-add" />Create Party
+            </Link>
             <Link href="/profile" :class="itemClass(isActive('/profile'))"><Icon name="user" />Profile</Link>
             <button type="button" data-testid="logout" :class="itemClass(false)" @click="router.post('/logout')">
                 <Icon name="logout" />Logout

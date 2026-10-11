@@ -71,12 +71,12 @@ const columns = [
             </template>
         </DataGrid>
         <template #footer>
-            <div class="flex w-full flex-wrap items-center justify-between gap-2">
-                <ButtonLink :href="`/admin/users/${user.id}/delete`" variant="outline-danger" data-action="delete">
+            <div class="flex w-full flex-wrap items-center gap-2">
+                <ButtonLink :href="`/admin/users/${user.id}/delete`" variant="outline-danger" class="ml-auto" data-action="delete">
                     <template #icon><Icon name="trash" /></template>
                     Delete
                 </ButtonLink>
-                <div class="flex items-center gap-2">
+                <div class="ml-auto flex items-center gap-2">
                     <Button variant="secondary" :disabled="!canImpersonate" data-action="impersonate" @click="impersonate">
                         <template #icon><Icon name="spy" /></template>
                         Impersonate

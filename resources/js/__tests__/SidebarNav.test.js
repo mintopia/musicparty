@@ -59,3 +59,14 @@ describe('SidebarNav admin group', () => {
         expect(mount(SidebarNav).find('a[href="/admin/settings"]').attributes('aria-current')).toBe('page');
     });
 });
+
+describe('SidebarNav create party', () => {
+    it('shows Create Party only to users allowed to create parties', () => {
+        page.url = '/';
+        page.props = {appName: 'MP', auth: {user: {is_admin: false, can_create_party: true}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/parties/create"]').text()).toBe('Create Party');
+
+        page.props = {appName: 'MP', auth: {user: {is_admin: false, can_create_party: false}}, parties: []};
+        expect(mount(SidebarNav).find('a[href="/parties/create"]').exists()).toBe(false);
+    });
+});
