@@ -79,7 +79,7 @@ it('toggles authentication independently of enabled and audits it', function ():
     expect($provider->enabled)->toBeTrue()->and($provider->auth_enabled)->toBeFalse();
 
     $this->actingAs($admin)->put('/admin/providers/discord', ['auth_enabled' => true])->assertRedirect();
-    expect($provider->fresh()->auth_enabled)->toBeTrue()
+    expect($provider->refresh()->auth_enabled)->toBeTrue()
         ->and(AdminAuditEntry::query()->where('action', 'provider.auth_disabled')->count())->toBe(1)
         ->and(AdminAuditEntry::query()->where('action', 'provider.auth_enabled')->count())->toBe(2);
 });

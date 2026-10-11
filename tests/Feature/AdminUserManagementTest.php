@@ -35,7 +35,7 @@ function partyFor(array $attributes): Party
 function linkAccount(?User $user = null, array $attributes = []): LinkedAccount
 {
     return LinkedAccount::factory()->create([
-        'user_id' => $user?->id ?? User::factory()->create()->id,
+        'user_id' => $user instanceof User ? $user->id : User::factory()->create()->id,
         'social_provider_id' => SocialProvider::factory()->create(['code' => 'p'.uniqid()])->id,
         ...$attributes,
     ]);
@@ -200,8 +200,8 @@ it('deletes a user after typed confirmation, cascading and auditing', function (
     expect(User::query()->find($user->id))->toBeNull()
         ->and($party->fresh())->toBeNull()
         ->and(LinkedAccount::query()->where('user_id', $user->id)->exists())->toBeFalse();
-    $entry = AdminAuditEntry::query()->where('action', 'user.deleted')->first();
-    expect($entry)->not->toBeNull()->and($entry->subject_user_id)->toBeNull()->and($entry->meta['nickname'])->toBe($user->nickname);
+    $entry = AdminAuditEntry::query()->where('action', 'user.deleted')->firstOrFail();
+    expect($entry->subject_user_id)->toBeNull()->and($entry->meta['nickname'] ?? null)->toBe($user->nickname);
 });
 
 it('requires the exact confirmation word to delete', function (?string $confirm): void {

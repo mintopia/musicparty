@@ -2,6 +2,7 @@
 
 use App\Domain\Admin\Actions\GrantRole;
 use App\Domain\Admin\Models\AdminAuditEntry;
+use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
@@ -68,22 +69,10 @@ it('shares the impersonation banner data while impersonating', function (): void
             ->where('impersonating.stopUrl', '/admin/impersonate'));
 });
 
-it('stubs the routes owned by later work packages', function (string $method, string $uri): void {
-    $user = User::factory()->create();
-
-    $this->actingAs(dashboardAdmin())->{$method}(strtr($uri, ['{user}' => (string) $user->id]))->assertStatus(501);
-})->with([
-    'show' => ['get', '/admin/users/{user}'],
-    'edit' => ['get', '/admin/users/{user}/edit'],
-    'delete page' => ['get', '/admin/users/{user}/delete'],
-    'impersonate' => ['post', '/admin/users/{user}/impersonate'],
-    'stop impersonating' => ['delete', '/admin/impersonate'],
-    'provider edit' => ['get', '/admin/providers/discord/edit'],
-]);
-
 it('keeps the new admin routes behind the admin gate', function (string $method, string $uri): void {
     $user = User::factory()->create();
-    $uri = strtr($uri, ['{user}' => (string) $user->id]);
+    $account = LinkedAccount::factory()->create(['user_id' => $user->id]);
+    $uri = strtr($uri, ['{user}' => (string) $user->id, '/accounts/1' => '/accounts/'.$account->id]);
 
     $this->{$method}($uri)->assertRedirect(route('login'));
     $this->actingAs($user->fresh())->{$method}($uri)->assertForbidden();
