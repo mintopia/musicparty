@@ -57,7 +57,7 @@ it('exposes no port below 1024', function (string $dockerfile) {
 })->with(['docker/production/Dockerfile', 'docker/develop/Dockerfile']);
 
 it('serves the web role on 8080', function () {
-    expect(file_get_contents(dirname(__DIR__, 2).'/docker/production/entrypoint.sh'))->toContain('--port=8080')
+    expect(file_get_contents(dirname(__DIR__, 2).'/docker/production/entrypoint.sh'))->toContain('--host=0.0.0.0')->toContain('--port=8080')
         ->and(array_column(dockerfileInstructions('docker/production/Dockerfile', 'EXPOSE'), 'arguments'))->toContain('8080');
 });
 
@@ -123,6 +123,6 @@ it('pins composer 2 in the dev image', function () {
 });
 
 it('serves the dev image on 8080', function () {
-    expect(implode(' ', array_column(dockerfileInstructions('docker/develop/Dockerfile', 'ENTRYPOINT'), 'arguments')))->toContain('--port=8080')
+    expect(implode(' ', array_column(dockerfileInstructions('docker/develop/Dockerfile', 'ENTRYPOINT'), 'arguments')))->toContain('--host=0.0.0.0')->toContain('--port=8080')
         ->and(array_column(dockerfileInstructions('docker/develop/Dockerfile', 'EXPOSE'), 'arguments'))->toContain('8080');
 });
