@@ -12,4 +12,4 @@ COPY docker/Caddyfile /
 ENV XDEBUG_MODE=off
 
 EXPOSE 8080
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--port=8080", "--caddyfile=/Caddyfile"]
+ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--host=0.0.0.0", "--port=8080", "--caddyfile=/Caddyfile"]
