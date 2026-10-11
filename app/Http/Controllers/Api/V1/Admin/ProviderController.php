@@ -24,6 +24,7 @@ class ProviderController extends Controller
             $provider,
             $request->has('enabled') ? $request->boolean('enabled') : null,
             $request->validated('settings') ?? [],
+            $request->has('auth_enabled') ? $request->boolean('auth_enabled') : null,
         ));
     }
 }

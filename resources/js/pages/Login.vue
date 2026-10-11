@@ -1,5 +1,5 @@
 <script setup>
-import {Head} from '@inertiajs/vue3';
+import {Head, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import Icon from '../Components/Icon.vue';
 import coverUrl from '../../img/cover.jpg';
@@ -10,6 +10,9 @@ const props = defineProps({
     providers: {type: Array, default: () => []},
     error: {type: String, default: null},
 });
+
+const page = usePage();
+const cover = computed(() => page.props.site?.cover_image_url ?? coverUrl);
 
 const brands = {
     discord: 'bg-[#5865f2]',
@@ -76,7 +79,7 @@ const year = new Date().getFullYear();
             </footer>
         </section>
         <img
-            :src="coverUrl"
+            :src="cover"
             alt=""
             aria-hidden="true"
             class="hidden h-screen flex-1 object-cover md:block"

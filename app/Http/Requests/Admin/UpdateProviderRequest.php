@@ -19,6 +19,7 @@ class UpdateProviderRequest extends FormRequest
     {
         return [
             'enabled' => ['sometimes', 'boolean'],
+            'auth_enabled' => ['sometimes', 'boolean'],
             'settings' => ['sometimes', 'array'],
             'settings.*' => ['nullable', 'string', 'max:500'],
         ];
@@ -31,6 +32,7 @@ class UpdateProviderRequest extends FormRequest
     {
         return [
             'enabled.boolean' => 'Enabled must be true or false.',
+            'auth_enabled.boolean' => 'Authentication enabled must be true or false.',
             'settings.array' => 'The credentials must be a list of fields.',
             'settings.*.string' => 'Each credential must be text.',
             'settings.*.max' => 'A credential may not be longer than 500 characters.',

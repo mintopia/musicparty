@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
-use App\Domain\Admin\Actions\ListSocialProviders;
+use App\Domain\Admin\Actions\EnsureSocialProvider;
 use App\Domain\Admin\Actions\UpdateSocialProvider;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\UpdateProviderRequest;
@@ -14,16 +14,16 @@ use Inertia\Response;
 
 class ProviderController extends Controller
 {
-    public function index(ListSocialProviders $listProviders): Response
+    public function index(): RedirectResponse
     {
-        return Inertia::render('Admin/Providers', [
-            'providers' => AdminSocialProviderResource::collection($listProviders->handle())->resolve(),
-        ]);
+        return redirect()->route('admin.settings.show');
     }
 
-    public function edit(string $provider): Response
+    public function edit(string $provider, EnsureSocialProvider $ensureProvider): Response
     {
-        abort(501);
+        return Inertia::render('Admin/Providers/Edit', [
+            'provider' => new AdminSocialProviderResource($ensureProvider->handle($provider))->resolve(),
+        ]);
     }
 
     public function update(UpdateProviderRequest $request, string $provider, UpdateSocialProvider $updateProvider): RedirectResponse
@@ -33,8 +33,9 @@ class ProviderController extends Controller
             $provider,
             $request->has('enabled') ? $request->boolean('enabled') : null,
             $request->validated('settings') ?? [],
+            $request->has('auth_enabled') ? $request->boolean('auth_enabled') : null,
         );
 
-        return back();
+        return redirect()->route('admin.settings.show')->with('success', 'Provider saved.');
     }
 }

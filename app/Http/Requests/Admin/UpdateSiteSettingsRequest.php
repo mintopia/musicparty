@@ -25,6 +25,7 @@ class UpdateSiteSettingsRequest extends FormRequest
             'logo_light' => ['sometimes', 'nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'logo_dark' => ['sometimes', 'nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:2048'],
             'favicon' => ['sometimes', 'nullable', 'file', 'mimes:png,ico', 'max:512'],
+            'cover_image' => ['sometimes', 'nullable', 'file', 'mimes:png,jpg,jpeg,webp', 'max:5120'],
         ];
     }
 
@@ -46,6 +47,8 @@ class UpdateSiteSettingsRequest extends FormRequest
             'logo_dark.max' => 'The dark logo may not be larger than 2 MB.',
             'favicon.mimes' => 'The favicon must be a PNG or ICO image.',
             'favicon.max' => 'The favicon may not be larger than 512 KB.',
+            'cover_image.mimes' => 'The cover image must be a PNG, JPG or WebP image.',
+            'cover_image.max' => 'The cover image may not be larger than 5 MB.',
         ];
     }
 }

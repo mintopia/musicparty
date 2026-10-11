@@ -44,20 +44,58 @@ function configureDiscord(User $admin, bool $enabled = true): void
     ])->assertRedirect();
 }
 
-it('lists the seven providers masked on read', function (): void {
+it('redirects the old providers page to settings', function (): void {
+    $this->actingAs(makeSiteAdmin())->get('/admin/providers')->assertRedirect('/admin/settings');
+});
+
+it('shows the provider edit page with masked credentials', function (): void {
     $admin = makeSiteAdmin();
     configureDiscord($admin);
 
-    $response = $this->actingAs($admin)->get('/admin/providers');
+    $response = $this->actingAs($admin)->get('/admin/providers/discord/edit');
 
     $response->assertInertia(fn (Assert $page) => $page
-        ->component('Admin/Providers')
-        ->has('providers', 7)
-        ->where('providers.0.code', 'discord')
-        ->where('providers.0.enabled', true)
-        ->where('providers.0.fields.0.value', 'abc123')
-        ->where('providers.0.fields.1.value', ProviderCatalogue::MASK));
+        ->component('Admin/Providers/Edit')
+        ->where('provider.code', 'discord')
+        ->where('provider.enabled', true)
+        ->where('provider.supports_auth', true)
+        ->where('provider.auth_enabled', true)
+        ->where('provider.return_urls', [route('login.return', 'discord')])
+        ->where('provider.fields.0.value', 'abc123')
+        ->where('provider.fields.1.value', ProviderCatalogue::MASK));
     expect($response->getContent())->not->toContain('super-secret-value');
+});
+
+it('returns not found when editing an unknown provider', function (): void {
+    $this->actingAs(makeSiteAdmin())->get('/admin/providers/myspace/edit')->assertNotFound();
+});
+
+it('toggles authentication independently of enabled and audits it', function (): void {
+    $admin = makeSiteAdmin();
+    configureDiscord($admin);
+
+    $this->actingAs($admin)->put('/admin/providers/discord', ['enabled' => true, 'auth_enabled' => false])->assertRedirect('/admin/settings');
+    $provider = SocialProvider::query()->whereCode('discord')->firstOrFail();
+    expect($provider->enabled)->toBeTrue()->and($provider->auth_enabled)->toBeFalse();
+
+    $this->actingAs($admin)->put('/admin/providers/discord', ['auth_enabled' => true])->assertRedirect();
+    expect($provider->fresh()->auth_enabled)->toBeTrue()
+        ->and(AdminAuditEntry::query()->where('action', 'provider.auth_disabled')->count())->toBe(1)
+        ->and(AdminAuditEntry::query()->where('action', 'provider.auth_enabled')->count())->toBe(2);
+});
+
+it('refuses to enable authentication on a provider that is not configured or enabled', function (): void {
+    $admin = makeSiteAdmin();
+
+    $this->actingAs($admin)->put('/admin/providers/spotify', ['auth_enabled' => true])->assertSessionHasErrors('auth_enabled');
+    expect(SocialProvider::query()->whereCode('spotify')->value('auth_enabled'))->toBeFalse();
+
+    $this->actingAs($admin)->put('/admin/providers/discord', ['settings' => ['client_id' => 'a', 'client_secret' => 'b']]);
+    $this->actingAs($admin)->put('/admin/providers/discord', ['auth_enabled' => true])->assertSessionHasErrors('auth_enabled');
+});
+
+it('rejects a non-boolean auth_enabled', function (): void {
+    $this->actingAs(makeSiteAdmin())->put('/admin/providers/discord', ['auth_enabled' => 'maybe'])->assertSessionHasErrors('auth_enabled');
 });
 
 it('offers an enabled configured provider on the login page and nothing else', function (): void {
@@ -204,6 +242,7 @@ it('refuses non-admins and redirects guests on the new web routes', function (st
     $this->actingAs(User::factory()->create())->{$method}($uri)->assertForbidden();
 })->with([
     ['get', '/admin/providers'],
+    ['get', '/admin/providers/discord/edit'],
     ['put', '/admin/providers/discord'],
     ['get', '/admin/settings'],
     ['post', '/admin/settings'],
@@ -244,4 +283,15 @@ it('behaves the same through the api as the web for site settings', function ():
     $this->getJson('/api/v1/admin/settings')->assertOk()->assertJsonPath('data.name', 'API Party');
 
     expect(AdminAuditEntry::query()->sole()->meta)->toBe(['fields' => 'name,favicon']);
+});
+
+it('stores a login cover image and exposes it to the login page', function (): void {
+    $admin = makeSiteAdmin();
+
+    $this->actingAs($admin)->post('/admin/settings', ['cover_image' => UploadedFile::fake()->create('cover.pdf', 10, 'application/pdf')])->assertSessionHasErrors('cover_image');
+    $this->actingAs($admin)->post('/admin/settings', ['cover_image' => UploadedFile::fake()->image('cover.jpg')])->assertRedirect();
+    signOut();
+
+    $this->get('/login')->assertInertia(fn (Assert $page) => $page->whereNot('site.cover_image_url', null));
+    expect(Storage::disk('public')->allFiles('site'))->toHaveCount(1);
 });
