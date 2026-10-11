@@ -15,6 +15,9 @@ uses(RefreshDatabase::class);
 
 beforeEach(fn () => $this->withoutVite());
 
+/**
+ * @param  array<string, mixed>  $overrides
+ */
 function profileProvider(string $code = 'discord', array $overrides = []): SocialProvider
 {
     config(["services.{$code}.client_id" => 'client-id', "services.{$code}.client_secret" => 'client-secret']);
@@ -42,6 +45,9 @@ function profileDriver(): MockInterface
     return $driver;
 }
 
+/**
+ * @param  array<string, mixed>  $account
+ */
 function profileUserWith(SocialProvider $provider, array $account = []): User
 {
     $user = User::factory()->create(['nickname' => 'partygoer']);
@@ -78,7 +84,7 @@ it('shows the profile with linked accounts and linkable providers', function () 
             ->has('accounts', 1)
             ->where('accounts.0.provider_code', 'discord')
             ->where('accounts.0.can_delete', false)
-            ->where('available_links', fn ($links) => collect($links)->pluck('code')->doesntContain('discord')));
+            ->where('available_links', fn ($links) => ! in_array('discord', array_column((array) $links, 'code'), true)));
 });
 
 it('does not offer disabled or unconfigured providers for linking', function () {

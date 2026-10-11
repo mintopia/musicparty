@@ -223,15 +223,19 @@ it('keeps audit entries authored by a deleted admin and records who deleted them
         ->assertRedirect(route('admin.users.index'));
 
     $authored = AdminAuditEntry::query()->findOrFail($authoredId);
+    assert($authored instanceof AdminAuditEntry);
     $deleted = AdminAuditEntry::query()->where('action', 'user.deleted')->firstOrFail();
+    $deletedMeta = (array) $deleted->meta;
     expect($authored->admin_id)->toBeNull()
         ->and($authored->admin_name)->toBe($other->nickname)
         ->and($deleted->admin_name)->toBe($this->admin->nickname)
-        ->and($deleted->meta['user_id'])->toBe($other->id);
+        ->and($deletedMeta['user_id'])->toBe($other->id);
 
     $this->actingAs($this->admin)->delete(route('admin.users.destroy', $victim), ['confirm' => 'delete']);
-    expect(AdminAuditEntry::query()->findOrFail($authoredId)->subject_user_id)->toBeNull()
-        ->and(AdminAuditEntry::query()->findOrFail($authoredId)->subject_name)->toBe($victim->nickname);
+    $reloaded = AdminAuditEntry::query()->findOrFail($authoredId);
+    assert($reloaded instanceof AdminAuditEntry);
+    expect($reloaded->subject_user_id)->toBeNull()
+        ->and($reloaded->subject_name)->toBe($victim->nickname);
 });
 
 it('requires the exact confirmation word to delete', function (?string $confirm): void {
