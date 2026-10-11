@@ -58,6 +58,9 @@ it('updates identity models', function () {
     app(SetUserColourScheme::class)($user, ColourScheme::Dark);
     app(UpdateLinkedAccount::class)($account, ['needs_relink' => true]);
     $provider->forceFill(['enabled' => false, 'auth_enabled' => false])->save();
+    $setting = new ProviderSetting;
+    $setting->provider()->associate($provider);
+    $setting->forceFill(['code' => 'client_id', 'name' => 'Client ID', 'type' => SettingType::stString, 'validation' => 'required', 'value' => 'x'])->save();
     app(SetSocialProviderEnabled::class)($provider, true);
 
     expect($user->fresh()->suspended)->toBeTrue()
