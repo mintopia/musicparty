@@ -60,7 +60,7 @@ it('shows the provider edit page with masked credentials', function (): void {
         ->where('provider.enabled', true)
         ->where('provider.supports_auth', true)
         ->where('provider.auth_enabled', true)
-        ->where('provider.return_urls', [route('login.return', 'discord')])
+        ->where('provider.return_urls', [route('login.return', 'discord'), route('profile.accounts.return', 'discord')])
         ->where('provider.fields.0.value', 'abc123')
         ->where('provider.fields.1.value', ProviderCatalogue::MASK));
     expect($response->getContent())->not->toContain('super-secret-value');
