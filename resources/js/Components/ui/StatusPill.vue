@@ -9,7 +9,7 @@ const classes = {
 </script>
 
 <template>
-    <span class="inline-block rounded-full px-2.5 py-0.5 text-xs font-medium" :class="classes[variant] ?? classes.muted">
+    <span class="inline-block rounded-full px-3 py-0.5 text-sm font-medium" :class="classes[variant] ?? classes.muted">
         <slot />
     </span>
 </template>

@@ -9,8 +9,8 @@ defineProps({
 </script>
 
 <template>
-    <div class="mb-4">
-        <label :for="$props.for" class="mb-1 block text-sm font-medium">
+    <div class="mb-5">
+        <label :for="$props.for" class="mb-2 block text-sm font-medium">
             {{ label }}<span v-if="required" class="ml-0.5 text-danger" aria-hidden="true">*</span>
         </label>
         <slot />

@@ -46,7 +46,7 @@ const setEnabled = (value) => {
 <template>
     <Head :title="`Edit ${provider.name}`" />
 
-    <form class="mx-auto max-w-3xl" @submit.prevent="submit">
+    <form class="mx-auto max-w-[620px]" @submit.prevent="submit">
         <Card>
             <FormField
                 v-for="field in provider.fields"
@@ -65,7 +65,7 @@ const setEnabled = (value) => {
                 />
             </FormField>
 
-            <div class="flex flex-col gap-3">
+            <div class="flex flex-col gap-4">
                 <Toggle :model-value="form.enabled" label="Enabled" @update:model-value="setEnabled" />
                 <p v-if="form.errors.enabled" role="alert" class="text-sm text-danger">{{ form.errors.enabled }}</p>
                 <Toggle

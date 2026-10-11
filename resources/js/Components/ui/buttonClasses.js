@@ -1,4 +1,4 @@
-const base = 'inline-flex items-center justify-center gap-2 rounded border px-3 py-1.5 text-sm font-medium transition-colors';
+const base = 'inline-flex items-center justify-center gap-2 rounded border px-4 py-2 text-sm font-medium transition-colors';
 
 const variants = {
     primary: 'border-primary bg-primary text-white hover:opacity-90',

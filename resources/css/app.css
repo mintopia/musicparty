@@ -1,8 +1,17 @@
 @import 'tailwindcss';
 @import './theme.css';
 
+@font-face {
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 100 900;
+    font-display: swap;
+    src: url('../fonts/inter-latin.woff2') format('woff2');
+}
+
 @layer base {
     body {
         @apply bg-background text-text font-sans antialiased;
+        font-feature-settings: 'cv03', 'cv04', 'cv11';
     }
 }
