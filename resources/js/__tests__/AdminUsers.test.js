@@ -8,7 +8,6 @@ const router = vi.hoisted(() => ({get: vi.fn(), post: vi.fn(), delete: vi.fn()})
 vi.mock('@inertiajs/vue3', () => ({
     usePage: () => page,
     router,
-    useForm: (data) => ({...data, post: vi.fn(), reset: vi.fn()}),
     Head: {render: () => null},
     Link: {props: ['href'], render() { return h('a', {href: this.href}, this.$slots.default?.()); }},
 }));
@@ -16,96 +15,70 @@ vi.mock('@inertiajs/vue3', () => ({
 import UsersIndex from '../pages/Admin/Users/Index.vue';
 
 beforeEach(() => {
-    vi.useFakeTimers();
     router.get.mockReset();
-    router.post.mockReset();
-    router.delete.mockReset();
-    page.props = {appName: 'MP', auth: {user: {id: 1, is_admin: true}}, parties: [], errors: {}};
+    page.props = {appName: 'MP', auth: {user: {id: 1, is_admin: true}}, errors: {}};
     page.url = '/admin/users';
 });
 
 const users = (extra = {}) => ({
     data: [
-        {id: 1, nickname: 'Ann', suspended: false, roles: ['admin']},
-        {id: 2, nickname: 'Bob', suspended: true, roles: []},
+        {id: 1, nickname: 'Ann', suspended: false, roles: ['admin'], last_login: null, created_at: '2024-01-01T00:00:00Z'},
+        {id: 2, nickname: 'Bob', suspended: true, roles: [], last_login: '2025-01-01T00:00:00Z', created_at: '2024-01-02T00:00:00Z'},
     ],
     links: [
         {url: null, label: '&laquo; Previous', active: false},
         {url: '/admin/users?page=1', label: '1', active: true},
         {url: '/admin/users?page=2', label: '2', active: false},
+        {url: '/admin/users?page=2', label: 'Next &raquo;', active: false},
     ],
-    current_page: 1,
-    last_page: 2,
+    meta: {from: 1, to: 2, total: 22, last_page: 2, links: [
+        {url: null, label: '&laquo; Previous', active: false},
+        {url: '/admin/users?page=1', label: '1', active: true},
+        {url: '/admin/users?page=2', label: '2', active: false},
+        {url: '/admin/users?page=2', label: 'Next &raquo;', active: false},
+    ]},
     ...extra,
 });
 
-describe('Admin Users', () => {
-    const mountUsers = (props = {}) => mount(UsersIndex, {props: {users: users(), filters: {search: ''}, ...props}});
+describe('Admin Users index', () => {
+    const mountUsers = (props = {}) => mount(UsersIndex, {props: {users: users(), filters: {}, ...props}});
 
-    it('renders rows with status and role state', () => {
+    it('renders rows linking to the user page', () => {
         const wrapper = mountUsers();
         const ann = wrapper.find('[data-testid="user-1"]');
-        const bob = wrapper.find('[data-testid="user-2"]');
 
-        expect(ann.text()).toContain('Active');
-        expect(bob.text()).toContain('Suspended');
-        expect(ann.find('[data-role="admin"]').element.checked).toBe(true);
-        expect(ann.find('[data-role="create-party"]').element.checked).toBe(false);
-        expect(ann.find('[data-action="suspend"]').text()).toBe('Suspend');
-        expect(bob.find('[data-action="suspend"]').text()).toBe('Unsuspend');
+        expect(ann.find('a[href="/admin/users/1"]').text()).toBe('Ann');
+        expect(wrapper.find('[data-testid="user-2"]').text()).toContain('Bob');
+        expect(wrapper.find('[data-testid="user-1"]').text()).toContain('Never');
     });
 
-    it('suspends and unsuspends', async () => {
+    it('has sortable id, nickname, last login and created headers', () => {
+        const sorts = mountUsers().findAll('[data-sort]').map((link) => link.attributes('data-sort'));
+
+        expect(sorts).toEqual(['id', 'nickname', 'last_login', 'created_at']);
+    });
+
+    it('searches by id and nickname via GET', async () => {
+        const wrapper = mountUsers({filters: {nickname: 'an'}});
+        expect(wrapper.find('#search-nickname').element.value).toBe('an');
+
+        await wrapper.find('#search-id').setValue('7');
+        await wrapper.find('form').trigger('submit');
+
+        expect(router.get).toHaveBeenCalledWith('/admin/users', {id: '7', nickname: 'an'}, {preserveState: true});
+    });
+
+    it('shows the entries summary and pagination', () => {
         const wrapper = mountUsers();
-        await wrapper.find('[data-testid="user-1"] [data-action="suspend"]').trigger('click');
-        expect(router.post).toHaveBeenCalledWith('/admin/users/1/suspend', {}, {preserveScroll: true});
 
-        await wrapper.find('[data-testid="user-2"] [data-action="suspend"]').trigger('click');
-        expect(router.delete).toHaveBeenCalledWith('/admin/users/2/suspend', {preserveScroll: true});
+        expect(wrapper.find('[data-testid="pagination-summary"]').text()).toBe('Showing 1 to 2 of 22 entries');
+        expect(wrapper.find('nav[aria-label="Pagination"] a[href="/admin/users?page=2"]').exists()).toBe(true);
     });
 
-    it('grants and revokes roles', async () => {
-        const wrapper = mountUsers();
-        await wrapper.find('[data-testid="user-1"] [data-role="create-party"]').trigger('change');
-        expect(router.post).toHaveBeenCalledWith('/admin/users/1/roles', {role: 'create-party'}, {preserveScroll: true});
+    it('shows the empty state without pagination', () => {
+        const wrapper = mountUsers({users: users({data: [], meta: {from: null, to: null, total: 0, last_page: 1, links: []}})});
 
-        await wrapper.find('[data-testid="user-1"] [data-role="admin"]').trigger('change');
-        expect(router.delete).toHaveBeenCalledWith('/admin/users/1/roles/admin', {preserveScroll: true});
-    });
-
-    it('debounces search into a single GET', async () => {
-        const wrapper = mountUsers();
-        const input = wrapper.find('#user-search');
-        await input.setValue('a');
-        await input.setValue('an');
-        expect(router.get).not.toHaveBeenCalled();
-
-        vi.advanceTimersByTime(300);
-        expect(router.get).toHaveBeenCalledTimes(1);
-        expect(router.get).toHaveBeenCalledWith('/admin/users', {search: 'an'}, {preserveState: true, replace: true});
-    });
-
-    it('shows admin errors', () => {
-        page.props.errors = {admin: 'Cannot remove the last admin.'};
-        expect(mountUsers().find('[role="alert"]').text()).toBe('Cannot remove the last admin.');
-    });
-
-    it('has a labelled search box and no alert without errors', () => {
-        const wrapper = mountUsers();
-        expect(wrapper.find('label[for="user-search"]').exists()).toBe(true);
-        expect(wrapper.find('[role="alert"]').exists()).toBe(false);
-    });
-
-    it('renders pagination links and marks the current page', () => {
-        const wrapper = mountUsers();
-        const nav = wrapper.find('nav[aria-label="Pagination"]');
-        expect(nav.find('a[href="/admin/users?page=2"]').exists()).toBe(true);
-        expect(nav.find('a[aria-current="page"]').text()).toBe('1');
-    });
-
-    it('omits pagination for a single page and shows empty state', () => {
-        const wrapper = mountUsers({users: users({data: [], last_page: 1})});
-        expect(wrapper.find('nav[aria-label="Pagination"]').exists()).toBe(false);
         expect(wrapper.text()).toContain('No users found.');
+        expect(wrapper.find('nav[aria-label="Pagination"]').exists()).toBe(false);
     });
 });

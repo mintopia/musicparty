@@ -21,6 +21,8 @@ class AdminUserResource extends JsonResource
             'nickname' => $this->nickname,
             'suspended' => (bool) $this->suspended,
             'roles' => $this->roles->pluck('code')->values()->all(),
+            'last_login' => $this->last_login?->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
         ];
     }
 }
