@@ -28,7 +28,7 @@ class DeleteUser
             }
 
             $userId = $user->id;
-            $this->audit->handle($admin, 'user.deleted', $user, ['nickname' => $user->nickname]);
+            $this->audit->handle($admin, 'user.deleted', $user, ['user_id' => $user->id, 'nickname' => $user->nickname]);
             ($this->deleteUser)($user);
             DB::afterCommit(fn () => $this->connections->terminateUser($userId));
         });

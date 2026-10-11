@@ -237,6 +237,21 @@ it('requires the default party to exist and redirects visitors to it', function 
     $this->get('/')->assertSuccessful();
 });
 
+it('shares the default party code only while it exists, keeping the code bypass', function (): void {
+    $admin = makeSiteAdmin();
+    $party = Party::withoutEvents(fn (): Party => Party::factory()->create());
+
+    $this->actingAs($admin)->get('/')->assertInertia(fn ($page) => $page->where('defaultParty', null));
+
+    $this->actingAs($admin)->post('/admin/settings', ['default_party' => $party->code])->assertRedirect();
+    $this->actingAs($admin)->get('/?code=ABCD')->assertSuccessful()
+        ->assertInertia(fn ($page) => $page->component('Home')->where('defaultParty', $party->code));
+    $this->actingAs($admin)->get('/admin')->assertInertia(fn ($page) => $page->where('defaultParty', $party->code));
+
+    $party->delete();
+    $this->actingAs($admin)->get('/admin')->assertInertia(fn ($page) => $page->where('defaultParty', null));
+})->group('default-party');
+
 it('refuses non-admins and redirects guests on the new web routes', function (string $method, string $uri): void {
     $this->{$method}($uri)->assertRedirect(route('login'));
     $this->actingAs(User::factory()->create())->{$method}($uri)->assertForbidden();

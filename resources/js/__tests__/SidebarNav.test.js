@@ -27,6 +27,18 @@ describe('SidebarNav', () => {
     });
 });
 
+describe('SidebarNav home item', () => {
+    it('shows Home without a default party', () => {
+        expect(mount(SidebarNav).findAll('a').map((a) => a.text())).toContain('Home');
+    });
+
+    it('hides Home when a default party is set', () => {
+        page.props = {...page.props, defaultParty: 'ABCD'};
+
+        expect(mount(SidebarNav).findAll('a').map((a) => a.text())).not.toContain('Home');
+    });
+});
+
 describe('SidebarNav admin group', () => {
     it('lists children and shared admin links, collapsible', async () => {
         page.url = '/admin/users';

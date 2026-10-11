@@ -14,8 +14,10 @@ class RecordAdminAudit
     {
         return AdminAuditEntry::query()->create([
             'admin_id' => $admin->id,
+            'admin_name' => $admin->nickname,
             'action' => $action,
             'subject_user_id' => $subject?->id,
+            'subject_name' => $subject?->nickname,
             'meta' => $meta,
         ]);
     }

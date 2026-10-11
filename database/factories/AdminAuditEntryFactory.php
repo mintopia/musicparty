@@ -22,8 +22,10 @@ class AdminAuditEntryFactory extends Factory
     {
         return [
             'admin_id' => User::factory(),
+            'admin_name' => fake()->userName(),
             'action' => 'user.suspended',
             'subject_user_id' => null,
+            'subject_name' => null,
             'meta' => null,
         ];
     }
