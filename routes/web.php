@@ -18,6 +18,8 @@ use App\Http\Controllers\PartyBlocklistController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyModController;
 use App\Http\Controllers\PartyTvController;
+use App\Http\Controllers\Profile\LinkedAccountController as ProfileLinkedAccountController;
+use App\Http\Controllers\Profile\ProfileController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
@@ -221,4 +223,16 @@ Route::middleware('auth')->delete('admin/impersonate', [AdminImpersonationContro
 Route::middleware('auth')->group(function () {
     Route::get('parties/{party}/spotify/link', [SpotifyLinkController::class, 'redirect'])->name('spotify.link');
     Route::get('spotify/link/return', [SpotifyLinkController::class, 'callback'])->name('spotify.link.return');
+});
+
+Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {
+    Route::get('/', [ProfileController::class, 'show'])->name('show');
+    Route::get('edit', [ProfileController::class, 'edit'])->name('edit');
+    Route::patch('/', [ProfileController::class, 'update'])->name('update');
+    Route::get('accounts/{socialprovider:code}/link', [ProfileLinkedAccountController::class, 'create'])->name('accounts.link');
+    Route::get('accounts/{socialprovider:code}/return', [ProfileLinkedAccountController::class, 'store'])->name('accounts.return');
+    Route::middleware('can:update,linkedaccount')->group(function () {
+        Route::get('accounts/{linkedaccount}/delete', [ProfileLinkedAccountController::class, 'delete'])->name('accounts.delete');
+        Route::delete('accounts/{linkedaccount}', [ProfileLinkedAccountController::class, 'destroy'])->name('accounts.destroy');
+    });
 });

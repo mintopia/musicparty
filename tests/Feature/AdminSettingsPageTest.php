@@ -27,7 +27,7 @@ it('renders settings with providers, theme summary and cover image', function ()
         ->has('settings.cover_image_url')
         ->has('providers', 7)
         ->where('providers.0.code', 'discord')
-        ->where('providers.0.return_urls', [route('login.return', 'discord')])
+        ->where('providers.0.return_urls', [route('login.return', 'discord'), route('profile.accounts.return', 'discord')])
         ->has('theme.light.primary')
         ->has('theme.dark.primary')
         ->where('theme.font', fn (string $font): bool => $font !== ''));

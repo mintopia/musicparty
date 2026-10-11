@@ -95,6 +95,11 @@ class SocialProvider extends Model
         return $this->enabled && $this->auth_enabled && $this->isConfigured();
     }
 
+    public function isAvailableForLinking(): bool
+    {
+        return $this->enabled && $this->isConfigured();
+    }
+
     public function offersLogin(): bool
     {
         return $this->supports_auth && $this->isAvailableForLogin();

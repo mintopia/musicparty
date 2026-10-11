@@ -7,6 +7,7 @@ const page = usePage();
 const appName = computed(() => page.props.appName);
 const user = computed(() => page.props.auth.user);
 const parties = computed(() => page.props.parties);
+const hasDefaultParty = computed(() => Boolean(page.props.defaultParty));
 const path = computed(() => page.url.split('?')[0]);
 
 const isActive = (href) => path.value === href;
@@ -44,7 +45,7 @@ const itemClass = (active) => [
         {{ appName }}
     </div>
     <nav class="flex flex-col py-2" aria-label="Primary">
-        <Link href="/" :class="itemClass(isActive('/'))" :aria-current="isActive('/') ? 'page' : undefined">
+        <Link v-if="!hasDefaultParty" href="/" :class="itemClass(isActive('/'))" :aria-current="isActive('/') ? 'page' : undefined">
             <Icon name="home" />Home
         </Link>
 

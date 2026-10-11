@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Admin\Actions\DeleteUser;
+use App\Domain\Admin\Actions\RecordAdminAudit;
 use App\Domain\Admin\Models\AdminAuditEntry;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
@@ -204,7 +205,37 @@ it('deletes a user after typed confirmation, cascading and auditing', function (
         ->and($party->fresh())->toBeNull()
         ->and(LinkedAccount::query()->where('user_id', $user->id)->exists())->toBeFalse();
     $entry = AdminAuditEntry::query()->where('action', 'user.deleted')->firstOrFail();
-    expect($entry->subject_user_id)->toBeNull()->and($entry->meta['nickname'] ?? null)->toBe($user->nickname);
+    expect($entry->subject_user_id)->toBeNull()
+        ->and($entry->subject_name)->toBe($user->nickname)
+        ->and($entry->admin_id)->toBe($this->admin->id)
+        ->and($entry->admin_name)->toBe($this->admin->nickname)
+        ->and($entry->meta['nickname'] ?? null)->toBe($user->nickname)
+        ->and($entry->meta['user_id'] ?? null)->toBe($user->id);
+});
+
+it('keeps audit entries authored by a deleted admin and records who deleted them', function (): void {
+    $other = User::factory()->withRole('admin')->create();
+    $victim = User::factory()->create();
+    app(RecordAdminAudit::class)->handle($other, 'user.suspended', $victim);
+    $authoredId = AdminAuditEntry::query()->where('admin_id', $other->id)->value('id');
+
+    $this->actingAs($this->admin)->delete(route('admin.users.destroy', $other), ['confirm' => 'delete'])
+        ->assertRedirect(route('admin.users.index'));
+
+    $authored = AdminAuditEntry::query()->findOrFail($authoredId);
+    assert($authored instanceof AdminAuditEntry);
+    $deleted = AdminAuditEntry::query()->where('action', 'user.deleted')->firstOrFail();
+    $deletedMeta = (array) $deleted->meta;
+    expect($authored->admin_id)->toBeNull()
+        ->and($authored->admin_name)->toBe($other->nickname)
+        ->and($deleted->admin_name)->toBe($this->admin->nickname)
+        ->and($deletedMeta['user_id'])->toBe($other->id);
+
+    $this->actingAs($this->admin)->delete(route('admin.users.destroy', $victim), ['confirm' => 'delete']);
+    $reloaded = AdminAuditEntry::query()->findOrFail($authoredId);
+    assert($reloaded instanceof AdminAuditEntry);
+    expect($reloaded->subject_user_id)->toBeNull()
+        ->and($reloaded->subject_name)->toBe($victim->nickname);
 });
 
 it('requires the exact confirmation word to delete', function (?string $confirm): void {

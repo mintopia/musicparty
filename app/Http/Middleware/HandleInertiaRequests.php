@@ -22,6 +22,7 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'appName' => $site->name(),
             'site' => $site->toArray(),
+            'defaultParty' => fn (): ?string => ($code = $site->get('default_party')) !== null && Party::query()->where('code', $code)->exists() ? $code : null,
             'colourScheme' => $request->user()?->colour_scheme?->value,
             'auth' => [
                 'user' => $request->user() ? [
