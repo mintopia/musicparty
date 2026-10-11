@@ -8,7 +8,6 @@ use App\Domain\Identity\Actions\SetSocialProviderEnabled;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Validation\ValidationException;
 
 class UpdateSocialProvider
 {
@@ -38,9 +37,6 @@ class UpdateSocialProvider
             $provider->load('settings');
 
             if ($enabled !== null && $enabled !== (bool) $provider->enabled) {
-                if ($enabled && ! $provider->isConfigured()) {
-                    throw ValidationException::withMessages(['enabled' => 'Set the credentials before enabling this provider.']);
-                }
                 ($this->setEnabled)($provider, $enabled);
                 $this->audit->handle($admin, $enabled ? 'provider.enabled' : 'provider.disabled', null, ['provider' => $code]);
             }
