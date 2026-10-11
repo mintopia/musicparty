@@ -121,3 +121,8 @@ it('pins composer 2 in the dev image', function () {
 
     expect($copies)->toContain('composer:2')->not->toContain('composer:latest');
 });
+
+it('serves the dev image on 8080', function () {
+    expect(implode(' ', array_column(dockerfileInstructions('docker/develop/Dockerfile', 'ENTRYPOINT'), 'arguments')))->toContain('--port=8080')
+        ->and(array_column(dockerfileInstructions('docker/develop/Dockerfile', 'EXPOSE'), 'arguments'))->toContain('8080');
+});
