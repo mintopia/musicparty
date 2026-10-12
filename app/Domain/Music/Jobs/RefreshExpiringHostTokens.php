@@ -35,8 +35,10 @@ class RefreshExpiringHostTokens implements ShouldQueue
                 foreach ($accounts as $account) {
                     try {
                         $tokens->accessToken($account);
-                    } catch (HostAccountNeedsRelink|ProviderUnavailableException|ProviderTemporaryFailure) {
+                    } catch (HostAccountNeedsRelink) {
                         continue;
+                    } catch (ProviderUnavailableException|ProviderTemporaryFailure $exception) {
+                        report($exception);
                     }
                 }
             });
