@@ -12,14 +12,6 @@ enum BlocklistMatchType: string
     case AlbumId = 'album_id';
     case Isrc = 'isrc';
 
-    public function supportsRegex(): bool
-    {
-        return match ($this) {
-            self::TrackName, self::ArtistName, self::AlbumName => true,
-            default => false,
-        };
-    }
-
     public function label(): string
     {
         return match ($this) {

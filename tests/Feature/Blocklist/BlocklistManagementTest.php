@@ -98,6 +98,29 @@ it('updates an entry recording old and new values', function () {
         ->and($log->details['new']['is_enabled'])->toBeFalse();
 });
 
+it('records a changed type and notes in the edit log', function () {
+    blocklistCall(blocklistActor($this->party, 'host'), 'update', $this->entry, ['match_type' => 'isrc', 'value' => 'USRC1', 'notes' => 'dupe'])->assertOk();
+
+    $log = PartyLogEntry::query()->where('action', 'blocklist.entry_updated')->sole();
+    expect($log->details['old']['match_type'])->toBe('track_name')
+        ->and($log->details['new']['match_type'])->toBe('isrc')
+        ->and($log->details['old']['notes'])->toBeNull()
+        ->and($log->details['new']['notes'])->toBe('dupe');
+});
+
+it('prefills the form from type, value and name query parameters', function () {
+    $this->actingAs(blocklistActor($this->party, 'host')->user)
+        ->get(route('parties.blocklist', ['party' => 'ABCD', 'type' => 'isrc', 'value' => 'USRC1', 'name' => 'Some Song']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('prefill', ['match_type' => 'isrc', 'value' => 'USRC1', 'notes' => 'Some Song']));
+});
+
+it('ignores an unknown prefill type', function () {
+    $this->actingAs(blocklistActor($this->party, 'host')->user)
+        ->get(route('parties.blocklist', ['party' => 'ABCD', 'type' => 'genre']))
+        ->assertInertia(fn (Assert $page) => $page->where('prefill.match_type', null));
+});
+
 it('logs nothing when an update changes nothing', function () {
     blocklistCall(blocklistActor($this->party, 'host'), 'update', $this->entry, ['value' => 'Old Value'])->assertOk();
 
@@ -133,10 +156,10 @@ it('rejects an invalid regular expression', function (string $operation) {
     expect(PartyLogEntry::query()->count())->toBe(0);
 })->with(['store', 'update']);
 
-it('rejects a regular expression on an id or ISRC entry', function (string $type) {
-    blocklistCall(blocklistActor($this->party, 'host'), 'store', $this->entry, ['match_type' => $type, 'value' => '.*', 'is_regex' => true])
-        ->assertUnprocessable()
-        ->assertJsonValidationErrors('is_regex');
+it('accepts a regular expression on an id or ISRC entry', function (string $type) {
+    blocklistCall(blocklistActor($this->party, 'host'), 'store', $this->entry, ['match_type' => $type, 'value' => '^abc.*', 'is_regex' => true])
+        ->assertCreated()
+        ->assertJsonPath('data.is_regex', true);
 })->with(['track_id', 'artist_id', 'album_id', 'isrc']);
 
 it('rejects missing or unknown fields', function (array $payload, string $field) {
@@ -173,8 +196,7 @@ it('renders the blocklist page with entries, match types and abilities', functio
                 ->where('is_enabled', true)
                 ->where('notes', null))
             ->has('matchTypes', 7)
-            ->where('matchTypes.0', ['value' => 'track_name', 'label' => 'Track name', 'supportsRegex' => true])
-            ->where('matchTypes.1.supportsRegex', false)
+            ->where('matchTypes.0', ['value' => 'track_name', 'label' => 'Track name'])
             ->where('abilities.canManage', true));
 });
 

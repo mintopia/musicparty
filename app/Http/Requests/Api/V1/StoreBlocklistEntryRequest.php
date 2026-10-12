@@ -57,12 +57,6 @@ class StoreBlocklistEntryRequest extends FormRequest
                     return;
                 }
 
-                if (! $this->matchType()->supportsRegex()) {
-                    $validator->errors()->add('is_regex', 'Only name matches can use a regular expression.');
-
-                    return;
-                }
-
                 if (! Blocklist::isValidPattern($this->string('value')->toString())) {
                     $validator->errors()->add('value', 'That regular expression is not valid.');
                 }

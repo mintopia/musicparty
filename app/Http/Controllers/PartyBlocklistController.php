@@ -31,8 +31,12 @@ class PartyBlocklistController extends Controller
             'matchTypes' => array_map(fn (BlocklistMatchType $type): array => [
                 'value' => $type->value,
                 'label' => $type->label(),
-                'supportsRegex' => $type->supportsRegex(),
             ], BlocklistMatchType::cases()),
+            'prefill' => [
+                'match_type' => $this->prefillType($request),
+                'value' => $request->string('value')->limit(500, '')->toString(),
+                'notes' => $request->string('name')->limit(1000, '')->toString(),
+            ],
             'abilities' => [
                 'canManage' => $request->user()?->can('moderate', $party) ?? false,
             ],
@@ -83,6 +87,11 @@ class PartyBlocklistController extends Controller
         $warning = $removeEntry($this->currentUser($request), $party, $entry);
 
         return $this->withWarning(back()->with('success', "{$entry->value} was removed from the blocklist"), $warning);
+    }
+
+    private function prefillType(Request $request): ?string
+    {
+        return BlocklistMatchType::tryFrom($request->string('type')->toString())?->value;
     }
 
     private function withWarning(RedirectResponse $redirect, ?FallbackPlaylistCheck $warning): RedirectResponse
