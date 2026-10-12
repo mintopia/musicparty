@@ -17,7 +17,7 @@ beforeEach(function () {
     $this->target = PartyMember::factory()->for($this->party)->create();
 });
 
-function castVote(PartyMember $member, string $title, string $createdAt, int $value = 1): RequestVote
+function castMemberVote(PartyMember $member, string $title, string $createdAt, int $value = 1): RequestVote
 {
     $request = TrackRequest::factory()->for($member->party)->create(['title' => $title]);
 
@@ -44,8 +44,8 @@ it('shows a member detail to a moderator over the api', function () {
 });
 
 it('lists votes newest first with the api payload shape', function () {
-    castVote($this->target, 'Old', '2026-01-01 10:00:00');
-    castVote($this->target, 'New', '2026-03-01 10:00:00', -1);
+    castMemberVote($this->target, 'Old', '2026-01-01 10:00:00');
+    castMemberVote($this->target, 'New', '2026-03-01 10:00:00', -1);
     Sanctum::actingAs($this->moderator->user);
 
     $this->getJson("/api/v1/parties/ABCD/members/{$this->target->id}/votes")
@@ -57,13 +57,14 @@ it('lists votes newest first with the api payload shape', function () {
 });
 
 it('searches votes by track title and artist and escapes wildcards', function () {
-    castVote($this->target, 'Blue Monday', '2026-01-01 10:00:00');
-    castVote($this->target, '100% Pure', '2026-01-02 10:00:00');
-    $byArtist = castVote($this->target, 'Other', '2026-01-03 10:00:00');
+    castMemberVote($this->target, 'Blue Monday', '2026-01-01 10:00:00');
+    castMemberVote($this->target, '100% Pure', '2026-01-02 10:00:00');
+    $byArtist = castMemberVote($this->target, 'Other', '2026-01-03 10:00:00');
+    assert($byArtist->request !== null);
     $byArtist->request->update(['artists' => ['Daft Punk']]);
     Sanctum::actingAs($this->moderator->user);
 
-    $titles = fn (string $query): array => collect($this->getJson("/api/v1/parties/ABCD/members/{$this->target->id}/votes?search={$query}")->assertOk()->json('data'))->pluck('title')->all();
+    $titles = fn (string $query): array => array_column($this->getJson("/api/v1/parties/ABCD/members/{$this->target->id}/votes?search={$query}")->assertOk()->json('data'), 'title');
 
     expect($titles('monday'))->toBe(['Blue Monday'])
         ->and($titles('Daft'))->toBe(['Other'])
@@ -73,7 +74,7 @@ it('searches votes by track title and artist and escapes wildcards', function ()
 
 it('pages votes', function () {
     foreach (range(1, 5) as $i) {
-        castVote($this->target, "Song {$i}", "2026-01-0{$i} 10:00:00");
+        castMemberVote($this->target, "Song {$i}", "2026-01-0{$i} 10:00:00");
     }
     Sanctum::actingAs($this->moderator->user);
 
@@ -88,8 +89,8 @@ it('pages votes', function () {
 });
 
 it('only lists votes cast by that member', function () {
-    castVote($this->target, 'Mine', '2026-01-01 10:00:00');
-    castVote($this->moderator, 'Theirs', '2026-01-02 10:00:00');
+    castMemberVote($this->target, 'Mine', '2026-01-01 10:00:00');
+    castMemberVote($this->moderator, 'Theirs', '2026-01-02 10:00:00');
     Sanctum::actingAs($this->moderator->user);
 
     $this->getJson("/api/v1/parties/ABCD/members/{$this->target->id}/votes")
@@ -123,7 +124,7 @@ it('refuses guests, vips and anonymous callers', function () {
 
 it('renders the member page for a moderator with exact props', function () {
     TrackRequest::factory()->for($this->party)->create(['party_member_id' => $this->target->id, 'title' => 'Asked']);
-    castVote($this->target, 'Voted', '2026-01-01 10:00:00');
+    castMemberVote($this->target, 'Voted', '2026-01-01 10:00:00');
 
     $this->actingAs($this->moderator->user)->get("/parties/ABCD/members/{$this->target->id}?search=Vot")
         ->assertOk()

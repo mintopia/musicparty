@@ -394,7 +394,7 @@ class PartyController extends Controller
 
         return Inertia::render('Party/Member', [
             'party' => ['code' => $party->code, 'name' => $party->name],
-            'member' => (new PartyMemberRowResource($member->loadMissing('user.accounts')))->resolve($request),
+            'member' => new PartyMemberRowResource($member->loadMissing('user.accounts'))->resolve($request),
             'requests' => MemberRequestResource::collection($listRequests($member))->resolve($request),
             'votes' => MemberVoteResource::collection($listVotes($member, $request->search(), $request->perPage())),
             'filters' => ['search' => $request->search()],
@@ -408,7 +408,7 @@ class PartyController extends Controller
     public function song(Request $request, ShowSong $showSong, Party $party, TrackRequest $trackRequest): Response
     {
         try {
-            $song = (new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest)))->resolve($request);
+            $song = new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest))->resolve($request);
         } catch (RequestRefusedException $exception) {
             abort($exception->status(), $exception->getMessage());
         }
@@ -422,7 +422,7 @@ class PartyController extends Controller
     public function playSong(Request $request, ShowSong $showSong, Party $party, Play $play): Response
     {
         try {
-            $song = (new SongDetailResource($showSong->play($this->currentUser($request), $party, $play)))->resolve($request);
+            $song = new SongDetailResource($showSong->play($this->currentUser($request), $party, $play))->resolve($request);
         } catch (RequestRefusedException $exception) {
             abort($exception->status(), $exception->getMessage());
         }

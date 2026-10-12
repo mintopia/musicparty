@@ -117,7 +117,9 @@ const fieldClass =
 
             <p v-if="needsControlLink" role="alert" class="text-sm text-danger" data-testid="control-link-needed">
                 This player needs a linked Spotify account.
-                <Link v-if="spotify_link_url" :href="spotify_link_url" data-testid="spotify-link" class="text-primary hover:underline">Link Spotify account</Link>
+            </p>
+            <p v-if="spotify_link_url" class="text-sm">
+                <Link :href="spotify_link_url" data-testid="spotify-link" class="text-primary hover:underline">Link Spotify account</Link>
             </p>
 
             <fieldset class="flex flex-col gap-3 border-t border-border pt-4">

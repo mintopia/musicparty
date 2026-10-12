@@ -73,6 +73,9 @@ describe('admin user update', function () {
         $this->admin->roles()->attach(Role::query()->firstOrCreate(['code' => 'admin'], ['name' => 'Admin']));
     });
 
+    /**
+     * @return array<string, mixed>
+     */
     function adminPayload(string $nickname): array
     {
         return ['nickname' => $nickname, 'roles' => [], 'agreed_terms' => true, 'completed_signup' => true, 'suspended' => false];

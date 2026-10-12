@@ -5,6 +5,7 @@ namespace App\Domain\Mod\Whamageddon\Models;
 use App\Domain\Party\Models\Party;
 use Carbon\CarbonImmutable;
 use Database\Factories\WhamageddonStateFactory;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,12 +21,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Unguarded]
 #[UseFactory(WhamageddonStateFactory::class)]
+#[Table(name: 'mod_whamageddon_states')]
 class WhamageddonState extends Model
 {
     /** @use HasFactory<WhamageddonStateFactory> */
     use HasFactory;
-
-    protected $table = 'mod_whamageddon_states';
 
     protected $attributes = [
         'accumulated_bonus' => 0,

@@ -154,7 +154,7 @@ it('filters the history by name, artist, album and type', function () {
     $a = playIn($this->party, ['title' => 'Rewind the Night', 'artists' => ['The Lowlands'], 'album' => 'Static Years', 'track_request_id' => $request->id, 'played_at' => now()->subMinutes(3)]);
     $b = playIn($this->party, ['title' => 'Glass Cathedral', 'artists' => ['Velvet Echo', 'Guest'], 'album' => 'Echoes', 'played_at' => now()->subMinutes(2)]);
 
-    $ids = fn (string $query): array => collect($this->getJson("/api/v1/parties/ABCD/history?{$query}")->assertOk()->json('data'))->pluck('id')->all();
+    $ids = fn (string $query): array => array_column($this->getJson("/api/v1/parties/ABCD/history?{$query}")->assertOk()->json('data'), 'id');
 
     expect($ids('name=rewind'))->toBe([$a->id])
         ->and($ids('artist=guest'))->toBe([$b->id])
@@ -488,10 +488,15 @@ it('creates the play when a request starts playing and not again when it finishe
         ->and(Play::query()->where('track_request_id', $first->track_request_id)->count())->toBe(1);
 });
 
+/**
+ * @return list<string>
+ */
 function historyIds(string $query = ''): array
 {
-    return collect(test()->getJson('/api/v1/parties/ABCD/history?'.$query)->assertOk()->json('data'))
-        ->map(fn (array $row): string => $row['kind'].':'.$row['id'])->all();
+    /** @var list<array{kind: string, id: int|string}> $rows */
+    $rows = test()->getJson('/api/v1/parties/ABCD/history?'.$query)->assertOk()->json('data');
+
+    return array_map(fn (array $row): string => $row['kind'].':'.$row['id'], $rows);
 }
 
 it('sorts the history by each column in both directions', function (string $sort, array $expected) {

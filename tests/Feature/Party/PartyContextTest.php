@@ -9,6 +9,7 @@ use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\RequestStatus;
 use App\Domain\Theming\Actions\RenderPartyThemeCss;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Inertia\Testing\AssertableInertia as Assert;
 
 uses(RefreshDatabase::class);
@@ -89,7 +90,7 @@ it('builds the menu through policies', function (string $role, array $keys) {
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->all() === $keys));
+            ->where('partyContext.menu', fn (Collection $menu): bool => $menu->pluck('key')->all() === $keys));
 })->with([
     'host' => ['host', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log', 'mods', 'theme', 'player-tokens', 'settings']],
     'moderator' => ['moderator', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log']],
@@ -113,7 +114,7 @@ it('lists web player for the host only on a browser player party', function () {
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->contains('web-player')));
+            ->where('partyContext.menu', fn (Collection $menu): bool => $menu->pluck('key')->contains('web-player')));
 });
 
 it('links the TV mode entry to the party tv page', function () {

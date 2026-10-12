@@ -37,10 +37,13 @@ class PartyMemberController extends Controller
         ));
     }
 
+    /**
+     * @response array{data: array{requests: MemberRequestResource[]}}
+     */
     public function show(ListMemberVotesRequest $request, ListMemberRequests $listRequests, Party $party, PartyMember $member): JsonResource
     {
         return new JsonResource([
-            ...(new PartyMemberResource($member->loadMissing('user.accounts')))->resolve($request),
+            ...new PartyMemberResource($member->loadMissing('user.accounts'))->resolve($request),
             'requests' => MemberRequestResource::collection($listRequests($member))->resolve($request),
         ]);
     }

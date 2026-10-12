@@ -171,7 +171,7 @@ it('runs a constant number of queries for the filtered members list', function (
 
     expectConstantQueries(
         $this->party,
-        fn (int $n) => PartyMember::factory()->for($this->party)->count($n)->create(),
+        fn (int $n) => PartyMember::factory()->for($this->party)->count($n)->state(fn (): array => ['user_id' => User::factory()->state(fn (): array => ['nickname' => 'alpha '.fake()->unique()->numberBetween(1000, 999999)])])->create(),
         fn () => $json ? $this->getJson($url)->assertOk() : $this->withoutVite()->get($url)->assertOk(),
     );
 })->with([

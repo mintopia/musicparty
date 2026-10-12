@@ -218,6 +218,14 @@ describe('Party page songs section', () => {
         expect(w.findAll('h2').map((h) => h.text())).toContain('Songs');
         expect(w.find('[data-testid=now-playing]').exists()).toBe(false);
     });
+
+    it('widens the content container for history only', () => {
+        const history = mount(Show, {props: baseProps({section: 'history', history: {data: [], meta: {}}, ratablePlay: play})});
+        const queue = mount(Show, {props: baseProps()});
+
+        expect(history.get('h2').element.closest('div.mx-auto').classList).toContain('max-w-6xl');
+        expect(queue.get('div.mx-auto').classes()).toContain('max-w-3xl');
+    });
 });
 
 describe('MiniNowPlaying', () => {

@@ -157,7 +157,7 @@ const hasResults = computed(() => Array.isArray(props.results));
                             <div v-if="track.queued" data-testid="requested-by" class="truncate text-sm text-muted">Requested by {{ track.requested_by }}</div>
                             <div v-else class="truncate text-xs text-muted">{{ track.album }}</div>
                             <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                                <span data-testid="popularity-stars" role="img" :aria-label="`${starCount(track)} of 5 stars`" :data-stars="starCount(track)" class="flex items-center text-primary">
+                                <span data-testid="popularity-stars" role="img" :aria-label="`${starCount(track)} of 5 stars`" :data-stars="starCount(track)" class="flex items-center text-amber-500">
                                     <Icon v-for="n in 5" :key="n" name="star" :filled="n <= starCount(track)" class="!h-4 !w-4" :class="n <= starCount(track) ? '' : 'text-muted'" />
                                 </span>
                                 <a v-if="track.provider_url" :href="track.provider_url" target="_blank" rel="noopener" data-testid="view-on-spotify" class="text-xs text-primary hover:underline">View on Spotify</a>

@@ -28,6 +28,7 @@
     "mod.settings_updated": "Changed Mod {subject} settings: {changes}",
     "mod.system_request_created": "A Mod added {subject|a request}",
     "mod.system_request_refused": "A Mod's request {subject|} was refused",
+    "mod.trust_scores_calculated": "Trust Score recalculated member scores",
     "mod.whamageddon_bonus_added": "Whamageddon added a bonus request {subject|}",
     "party.created": "Party created",
     "party.ended": "Party ended",

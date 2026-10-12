@@ -45,11 +45,17 @@ function trustBonus(Party $party, TrackRequest $request): int
     return app(ApplyScoreModifiers::class)($party, [$request])[$request->id][TrustScoreMod::ID]['value'] ?? 0;
 }
 
+/**
+ * @return array<int|string, mixed>
+ */
 function trustScores(Party $party): array
 {
     return TrustScore::query()->where('party_id', $party->id)->pluck('score', 'party_member_id')->all();
 }
 
+/**
+ * @param  array<string, mixed>  $settings
+ */
 function trustEnable(Party $party, array $settings = []): void
 {
     ModFixtures::enable($party, app(TrustScoreMod::class), $settings);
@@ -102,8 +108,11 @@ it('logs every hourly run in the Party Log', function () {
 
     $entry = PartyLogEntry::query()->where('party_id', $this->party->id)->where('action', 'mod.trust_scores_calculated')->sole();
 
+    $details = $entry->details;
+    assert(is_array($details));
+
     expect($entry->system_actor)->toBe('mod:trust-score')
-        ->and($entry->details['members'])->toBe(3)
+        ->and($details['members'])->toBe(3)
         ->and(trustScores($this->party))->toHaveCount(3);
 });
 

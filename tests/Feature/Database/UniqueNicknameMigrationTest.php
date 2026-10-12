@@ -46,9 +46,11 @@ it('renames case-insensitive duplicate nicknames keeping the lowest id and audit
         ->and(DB::table('users')->where('id', $kept)->value('nickname_key'))->toBe('alex');
 
     $unique = collect(Schema::getIndexes('users'))->first(fn (array $index): bool => $index['columns'] === ['nickname_key']);
+    assert($unique !== null);
     expect($unique['unique'])->toBeTrue();
 
     $entry = DB::table('admin_audit_entries')->where('subject_user_id', $renamed)->first();
+    assert($entry !== null);
     expect($entry->action)->toBe('user.nickname_deduplicated')
         ->and($entry->admin_id)->toBeNull()
         ->and(json_decode($entry->meta, true))->toBe(['old' => 'alex', 'new' => 'alex 2'])

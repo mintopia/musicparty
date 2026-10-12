@@ -51,7 +51,13 @@ class WhamageddonScheduledAction implements ScheduledAction
     {
         $state = $this->tracker->stateFor($context->party);
         $play = $request->play;
-        $playedAt = $state->last_played_at ?? CarbonImmutable::instance($play === null ? $request->updated_at : $play->played_at);
+        $anchor = $request->updated_at;
+
+        if ($play !== null) {
+            $anchor = $play->played_at;
+        }
+
+        $playedAt = $state->last_played_at ?? CarbonImmutable::instance($anchor);
 
         if ($state->last_played_at === null) {
             $state->forceFill(['last_played_at' => $playedAt])->save();

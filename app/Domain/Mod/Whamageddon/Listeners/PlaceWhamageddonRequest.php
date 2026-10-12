@@ -39,7 +39,7 @@ readonly class PlaceWhamageddonRequest
         }
 
         $party = $event->party;
-        $trackId = (new WhamageddonSettings($enabled->context->settings))->trackId();
+        $trackId = new WhamageddonSettings($enabled->context->settings)->trackId();
 
         try {
             $request = $this->requestTrack->placeSystemRequest($party, $enabled, new SystemRequestSpec($trackId));

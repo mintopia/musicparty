@@ -21,7 +21,7 @@ class HistoryEntryResource extends JsonResource
     public function toArray(Request $request): array
     {
         if ($this->resource instanceof Play) {
-            return [...(new PlayResource($this->resource))->toArray($request), 'kind' => 'play', 'request_id' => $this->resource->track_request_id];
+            return [...new PlayResource($this->resource)->toArray($request), 'kind' => 'play', 'request_id' => $this->resource->track_request_id];
         }
 
         $trackRequest = $this->resource;

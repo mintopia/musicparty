@@ -31,11 +31,17 @@ beforeEach(function () {
     Sanctum::actingAs($this->user);
 });
 
+/**
+ * @return array<string, mixed>
+ */
 function searchHit(string $trackId): array
 {
+    /** @var array<int, array<string, mixed>> $hits */
     $hits = test()->getJson('/api/v1/parties/ABCD/search?q=a')->assertOk()->json('data');
+    $hit = collect($hits)->firstWhere('provider_track_id', $trackId);
+    assert(is_array($hit));
 
-    return collect($hits)->firstWhere('provider_track_id', $trackId);
+    return $hit;
 }
 
 it('marks every result eligible when no rule blocks it', function () {
@@ -109,6 +115,7 @@ it('refuses every result when requests are closed to the member', function (stri
         'banned' => $this->member->forceFill(['banned' => true])->save(),
         'disabled' => $this->party->forceFill(['allow_requests' => false])->save(),
         'ended' => $this->party->forceFill(['state' => PartyState::Ended])->save(),
+        default => throw new InvalidArgumentException($state),
     };
 
     expect(searchHit('track-1')['eligible'])->toBeFalse()

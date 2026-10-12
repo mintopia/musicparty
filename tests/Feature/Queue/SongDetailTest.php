@@ -107,7 +107,7 @@ it('finds other appearances by track id and by isrc', function () {
     TrackRequest::factory()->for(Party::factory()->live()->create(['code' => 'WXYZ']))->create(['provider_track_id' => 'trk-1']);
     Sanctum::actingAs(songDetailMemberUser($this->party));
 
-    $ids = collect($this->getJson(songDetailApiUrl($this->party, $this->song))->assertOk()->json('data.appearances'))->pluck('id')->all();
+    $ids = collect((array) $this->getJson(songDetailApiUrl($this->party, $this->song))->assertOk()->json('data.appearances'))->pluck('id')->all();
 
     expect($ids)->toEqualCanonicalizing([$byTrack->id, $byIsrc->id]);
 });
@@ -271,12 +271,12 @@ it('lists fallback plays among appearances without duplicating requests that hav
     Play::factory()->create(['party_id' => Party::factory()->live()->create(['code' => 'WXYZ'])->id, 'provider_track_id' => 'trk-1']);
     Sanctum::actingAs(songDetailMemberUser($this->party));
 
-    $fromRequest = collect($this->getJson(songDetailApiUrl($this->party, $this->song))->assertOk()->json('data.appearances'));
+    $fromRequest = collect((array) $this->getJson(songDetailApiUrl($this->party, $this->song))->assertOk()->json('data.appearances'));
     expect($fromRequest->map(fn (array $a): string => $a['kind'].$a['id'])->all())->toEqualCanonicalizing(['request'.$byIsrc->id, 'play'.$fallback->id])
         ->and($fromRequest->firstWhere('kind', 'play')['url'])->toBe("/parties/ABCD/plays/{$fallback->id}")
         ->and($fromRequest->firstWhere('kind', 'request')['url'])->toBe("/parties/ABCD/songs/{$byIsrc->id}");
 
-    $fromFallback = collect($this->getJson(playDetailApiUrl($this->party, $fallback))->assertOk()->json('data.appearances'));
+    $fromFallback = collect((array) $this->getJson(playDetailApiUrl($this->party, $fallback))->assertOk()->json('data.appearances'));
     expect($fromFallback->map(fn (array $a): string => $a['kind'].$a['id'])->all())->toEqualCanonicalizing(['request'.$this->song->id])
         ->and($isrcPlay->id)->not->toBe($trackPlay->id);
 });

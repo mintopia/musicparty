@@ -39,7 +39,7 @@ function operationUrl(string $operation, PartyMember $target, string $prefix = '
  */
 function callOperation(PartyMember $actor, string $operation, PartyMember $target): TestResponse
 {
-    Sanctum::actingAs($actor->user);
+    Sanctum::actingAs($actor->user()->firstOrFail());
 
     return match (true) {
         str_starts_with($operation, 'role:') => test()->putJson(operationUrl($operation, $target), ['role' => substr($operation, 5)]),
@@ -108,8 +108,8 @@ it('keeps exactly one host when the host role is requested through the API or we
     }
 
     expect($this->party->members()->where('role', PartyRole::Host)->pluck('id')->all())->toBe([$host->id])
-        ->and($guest->fresh()->role)->toBe(PartyRole::Guest)
-        ->and($moderator->fresh()->role)->toBe(PartyRole::Moderator)
+        ->and($guest->refresh()->role)->toBe(PartyRole::Guest)
+        ->and($moderator->refresh()->role)->toBe(PartyRole::Moderator)
         ->and(PartyLogEntry::query()->count())->toBe(0);
 });
 
@@ -182,7 +182,7 @@ it('lists members for moderators with joined time and refuses plain members', fu
     $banned = seatMember($this->party, 'guest', true);
     $moderator = seatMember($this->party, 'moderator');
 
-    Sanctum::actingAs($host->user);
+    Sanctum::actingAs($host->user()->firstOrFail());
     $this->getJson('/api/v1/parties/ABCD/members')->assertOk()
         ->assertJsonCount(4, 'data')
         ->assertJsonPath('data.0.role', 'host')
@@ -190,16 +190,19 @@ it('lists members for moderators with joined time and refuses plain members', fu
         ->assertJsonPath('meta.total', 4)
         ->assertJsonStructure(['data' => [['id', 'nickname', 'avatar', 'role', 'banned', 'is_you', 'joined_at']]]);
 
-    Sanctum::actingAs($moderator->user);
+    Sanctum::actingAs($moderator->user()->firstOrFail());
     $this->getJson('/api/v1/parties/ABCD/members')->assertOk()->assertJsonCount(4, 'data');
 
-    Sanctum::actingAs($guest->user);
+    Sanctum::actingAs($guest->user()->firstOrFail());
     $this->getJson('/api/v1/parties/ABCD/members')->assertForbidden();
 
-    Sanctum::actingAs($banned->user);
+    Sanctum::actingAs($banned->user()->firstOrFail());
     $this->getJson('/api/v1/parties/ABCD/members')->assertForbidden();
 });
 
+/**
+ * @return TestResponse<Response>
+ */
 function membersList(string $query = ''): TestResponse
 {
     return test()->getJson('/api/v1/parties/ABCD/members'.$query);
@@ -216,6 +219,7 @@ function seatNamed(Party $party, string $nickname, string $role = 'guest', array
 }
 
 /**
+ * @param  TestResponse<Response>  $response
  * @return list<string>
  */
 function nicknames(TestResponse $response): array
@@ -231,7 +235,7 @@ describe('members list filters, sort and paging', function () {
         $this->alpha = seatNamed($this->party, 'Alpha', 'guest', ['created_at' => now()->subDays(3)]);
         $this->delta = seatNamed($this->party, 'Delta_x', 'guest', ['created_at' => now()->subDays(2)]);
         $this->banned = seatNamed($this->party, 'Zulu', 'guest', ['banned' => true, 'created_at' => now()->subDays(6)]);
-        Sanctum::actingAs($this->host->user);
+        Sanctum::actingAs($this->host->user()->firstOrFail());
     });
 
     it('defaults to role order then nickname', function () {
@@ -388,7 +392,7 @@ it('changes roles and bans through the web routes with the same outcome as the A
     $this->actingAs($host->user)->from('/parties/ABCD/members')
         ->put("/parties/ABCD/members/{$guest->id}/role", ['role' => 'moderator'])
         ->assertRedirect('/parties/ABCD/members')->assertSessionHas('success');
-    expect($guest->fresh()->role)->toBe(PartyRole::Moderator);
+    expect($guest->refresh()->role)->toBe(PartyRole::Moderator);
 
     $this->actingAs($host->user)->put("/parties/ABCD/members/{$guest->id}/ban")->assertRedirect()->assertSessionHas('success');
     expect($guest->fresh()->banned)->toBeTrue();

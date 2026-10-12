@@ -160,8 +160,8 @@ const cellClass = 'md:table-cell md:px-3 lg:px-4 md:py-3 md:align-middle before:
                             <button type="button" data-testid="sort-name" :class="sortClass" @click="sortBy('name')">Song<Icon v-if="isSorted('name')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                             <button type="button" data-testid="sort-artist" :class="[sortClass, 'ml-3 !text-[10px] !text-muted']" @click="sortBy('artist')">Artist<Icon v-if="isSorted('artist')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
-                        <th scope="col" :class="[headClass, 'w-16 text-center']">Votes</th>
-                        <th scope="col" :aria-sort="ariaSort('score')" :class="[headClass, 'w-16 text-center']">
+                        <th scope="col" :class="[headClass, 'w-20 text-center']">Votes</th>
+                        <th scope="col" :aria-sort="ariaSort('score')" :class="[headClass, 'w-20 text-center']">
                             <button type="button" data-testid="sort-score" :class="sortClass" @click="sortBy('score')">Score<Icon v-if="isSorted('score')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
                         <th scope="col" :aria-sort="ariaSort('requested')" :class="[headClass, 'w-32 text-left']">

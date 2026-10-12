@@ -325,18 +325,6 @@ parameters:
 			path: tests/Feature/Blocklist/BlocklistManagementTest.php
 
 		-
-			message: '#^Offset ''new'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: tests/Feature/Blocklist/BlocklistManagementTest.php
-
-		-
-			message: '#^Offset ''old'' might not exist on array\<string, mixed\>\|null\.$#'
-			identifier: offsetAccess.notFound
-			count: 3
-			path: tests/Feature/Blocklist/BlocklistManagementTest.php
-
-		-
 			message: '#^Call to an undefined method Mockery\\MockInterface\:\:forceFill\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -595,12 +583,6 @@ parameters:
 			path: tests/Feature/Music/HostPlaylistsTest.php
 
 		-
-			message: '#^Property App\\Domain\\Music\\Jobs\\AppendToHistoryPlaylist@anonymous/tests/Feature/Music/HostPlaylistsTest\.php\:269\:\:\$releasedFor \(int\|null\) does not accept DateInterval\|DateTimeInterface\|int\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: tests/Feature/Music/HostPlaylistsTest.php
-
-		-
 			message: '#^Cannot access property \$role on App\\Domain\\Membership\\Models\\PartyMember\|null\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -643,21 +625,9 @@ parameters:
 			path: tests/Feature/Party/MembershipTest.php
 
 		-
-			message: '#^Cannot access property \$role on App\\Domain\\Membership\\Models\\PartyMember\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: tests/Feature/Party/MembershipTest.php
-
-		-
 			message: '#^Cannot call method only\(\) on App\\Domain\\Membership\\Models\\PartyMember\|null\.$#'
 			identifier: method.nonObject
 			count: 1
-			path: tests/Feature/Party/MembershipTest.php
-
-		-
-			message: '#^Parameter \#1 \$user of static method Laravel\\Sanctum\\Sanctum\<Laravel\\Sanctum\\PersonalAccessToken\>\:\:actingAs\(\) expects Illuminate\\Contracts\\Auth\\Authenticatable\|Laravel\\Sanctum\\HasApiTokens, App\\Domain\\Identity\\Models\\User\|null given\.$#'
-			identifier: argument.type
-			count: 4
 			path: tests/Feature/Party/MembershipTest.php
 
 		-
@@ -741,18 +711,6 @@ parameters:
 		-
 			message: '#^Parameter \#1 \$date of method Carbon\\CarbonImmutable\:\:equalTo\(\) expects DateTimeInterface\|string, Carbon\\CarbonImmutable\|null given\.$#'
 			identifier: argument.type
-			count: 1
-			path: tests/Feature/Party/PlayHistoryTest.php
-
-		-
-			message: '#^Unable to resolve the template type TKey in call to function collect$#'
-			identifier: argument.templateType
-			count: 1
-			path: tests/Feature/Party/PlayHistoryTest.php
-
-		-
-			message: '#^Unable to resolve the template type TValue in call to function collect$#'
-			identifier: argument.templateType
 			count: 1
 			path: tests/Feature/Party/PlayHistoryTest.php
 

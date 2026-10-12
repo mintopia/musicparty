@@ -135,11 +135,11 @@ it('lets the host change each restriction setting and logs old and new', functio
 
 it('refuses restriction changes from moderators', function (string $key, mixed $value) {
     [$party, $user] = settingsParty('moderator');
-    $before = $party->fresh()->getAttribute($key);
+    $before = $party->refresh()->getAttribute($key);
 
     $this->actingAs($user)->patch(route('parties.update', ['party' => 'ABCD']), [$key => $value])->assertForbidden();
 
-    expect($party->fresh()->getAttribute($key))->toEqual($before);
+    expect($party->refresh()->getAttribute($key))->toEqual($before);
 })->with([
     'name' => ['name', 'Hijacked'],
     'downvotes' => ['downvotes', false],

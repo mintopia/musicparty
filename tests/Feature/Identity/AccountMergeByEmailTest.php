@@ -12,6 +12,9 @@ use Illuminate\Support\Facades\Log;
 
 uses(RefreshDatabase::class);
 
+/**
+ * @param  array<string, mixed>  $userState
+ */
 function existingUserWithTwitchEmail(string $email = 'Rave@Example.test', array $userState = []): User
 {
     $user = User::factory()->create(['nickname' => 'established', ...$userState]);
@@ -116,7 +119,7 @@ it('creates a new user when the provider returns no email', function () {
     seedDiscord();
     existingUserWithTwitchEmail();
     $remote = remoteUser();
-    $remote->email = null;
+    $remote->map(['email' => null]);
     mockDriver()->shouldReceive('user')->once()->andReturn($remote);
 
     $this->get(route('login.return', 'discord'));

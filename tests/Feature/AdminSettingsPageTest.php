@@ -21,7 +21,10 @@ function settingsPageAdmin(): User
 
 it('lists the Spotify Search provider in settings', function (): void {
     $this->actingAs(settingsPageAdmin())->get('/admin/settings')->assertInertia(fn (Assert $page) => $page
-        ->where('providers', fn ($providers): bool => collect($providers)->pluck('code')->contains('spotifysearch')));
+        ->where('providers', function ($providers): bool {
+            /** @var iterable<int, array<string, mixed>> $providers */
+            return collect($providers)->pluck('code')->contains('spotifysearch');
+        }));
 });
 
 it('renders settings with providers, theme summary and cover image', function (): void {

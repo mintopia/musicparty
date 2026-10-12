@@ -23,7 +23,7 @@ it('gives members nobody trusts a score of zero and normalises the maximum to on
     $scores = (new PageRank)([1, 2, 3], [1 => [2 => 1.0]], 1);
 
     expect($scores[3])->toBe(0.0)
-        ->and(max($scores))->toEqualWithDelta(1.0, 1e-12);
+        ->and(max([0.0, ...$scores]))->toEqualWithDelta(1.0, 1e-12);
 });
 
 it('ignores self edges and unknown nodes, and returns nothing without the anchor', function () {

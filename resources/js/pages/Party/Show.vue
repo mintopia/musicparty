@@ -220,7 +220,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
         <span>Your Spotify Search account needs re-linking. Guest search is using your playback account instead.</span>
         <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Re-link Spotify Search</Link>
     </div>
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
+    <div :class="[section === 'history' ? 'max-w-6xl md:px-4' : 'max-w-3xl md:px-0']" class="mx-auto flex w-full flex-col gap-4 px-4 pb-6 pt-6 md:gap-6">
         <header v-if="section === 'party'" data-testid="party-card" class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
                 <h1 class="text-xl font-semibold">{{ party.name }}</h1>

@@ -69,7 +69,7 @@ class ListPlayHistory
             ->keyBy('id');
 
         return $page->setCollection($rows->map(
-            fn (object $row): Play|TrackRequest|null => $row->kind === 'play' ? $loadedPlays->get($row->id) : $loadedRequests->get($row->id),
+            fn (object $row): Play|TrackRequest|null => data_get($row, 'kind') === 'play' ? $loadedPlays->get(data_get($row, 'id')) : $loadedRequests->get(data_get($row, 'id')),
         )->filter()->values());
     }
 
@@ -110,8 +110,8 @@ class ListPlayHistory
     }
 
     /**
-     * @param  BaseBuilder  $query
      * @param  array<string, mixed>  $filters
+     * @param  'plays'|'track_requests'  $table
      */
     private function filter(QueryBuilder $query, array $filters, string $table): void
     {

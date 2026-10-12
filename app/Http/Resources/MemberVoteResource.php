@@ -21,8 +21,8 @@ class MemberVoteResource extends JsonResource
             'value' => $this->value,
             'votedAt' => $this->created_at?->toJSON(),
             'requestId' => $this->track_request_id,
-            'title' => $this->request->title,
-            'artists' => $this->request->artists,
+            'title' => $this->request?->title,
+            'artists' => $this->request?->artists,
         ];
     }
 }
