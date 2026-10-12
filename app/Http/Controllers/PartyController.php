@@ -73,7 +73,7 @@ use Inertia\Response;
 
 class PartyController extends Controller
 {
-    public function create(Request $request, PairingCatalogue $catalogue): Response
+    public function create(Request $request, PairingCatalogue $catalogue, SpotifyControlLinkStatus $controlLink): Response
     {
         $this->authorize('create', Party::class);
 
@@ -81,6 +81,7 @@ class PartyController extends Controller
             'providers' => $catalogue->providers(),
             'players' => $catalogue->players(),
             'spotify_link_url' => route('spotify.index', ['return' => route('parties.create', absolute: false)]),
+            'control_link_usable' => $controlLink->isUsable($this->currentUser($request)),
         ]);
     }
 
@@ -91,6 +92,7 @@ class PartyController extends Controller
             $request->string('name')->trim()->toString(),
             $request->string('music_provider')->toString(),
             $request->string('player_kind')->toString(),
+            $request->safe()->only(['downvotes', 'downvotes_per_hour', 'selection_mode', 'allow_requests', 'max_requests', 'hold_requests']),
         );
 
         return redirect()->route('parties.show', ['party' => $party->code])->with('success', 'Party created');

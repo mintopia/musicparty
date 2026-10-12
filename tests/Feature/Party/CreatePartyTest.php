@@ -1,11 +1,18 @@
 <?php
 
+use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Membership\PartyRole;
+use App\Domain\Music\Actions\SpotifySearchLinkStatus;
+use App\Domain\Music\Providers\Spotify\SearchCredentials;
+use App\Domain\Music\Providers\Spotify\SpotifyScopes;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Testing\FakePlayer;
+use App\Domain\Queue\SelectionMode;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
@@ -119,10 +126,10 @@ it('serves the create page with the pairing catalogue', function () {
             ->component('Party/Create')
             ->where('providers', [['id' => 'fake', 'label' => 'Fake (development)']])
             ->where('players', [
-                ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake']],
-                ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify']],
-                ['kind' => 'browser', 'label' => 'Browser player', 'compatibleProviders' => ['spotify']],
-                ['kind' => 'soloist', 'label' => 'Soloist player', 'compatibleProviders' => ['spotify']],
+                ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake'], 'requiresControlLink' => false],
+                ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify'], 'requiresControlLink' => true],
+                ['kind' => 'browser', 'label' => 'Browser player', 'compatibleProviders' => ['spotify'], 'requiresControlLink' => true],
+                ['kind' => 'soloist', 'label' => 'Soloist player', 'compatibleProviders' => ['spotify'], 'requiresControlLink' => false],
             ]));
 });
 
@@ -136,3 +143,129 @@ it('tells the home page whether the user can create a party', function (bool $al
     $this->withoutVite()->actingAs($user)->get(route('home'))
         ->assertInertia(fn (Assert $page): Assert => $page->where('canCreateParty', $allowed));
 })->with([true, false]);
+
+function registerControlLinkPlayer(): void
+{
+    config(['musicparty.players.linked' => ['label' => 'Linked player', 'class' => 'test.linked']]);
+    app()->bind('test.linked', fn (): FakePlayer => new FakePlayer(kind: 'linked', requiresHostAccount: true));
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function linkSpotifyControl(User $user, array $overrides = []): void
+{
+    $provider = SocialProvider::query()->where('code', 'spotify')->first()
+        ?? SocialProvider::factory()->create(['code' => 'spotify']);
+
+    LinkedAccount::factory()->create(array_merge([
+        'user_id' => $user->id,
+        'social_provider_id' => $provider->id,
+        'scopes' => implode(' ', SpotifyScopes::control()),
+    ], $overrides));
+}
+
+it('refuses a player that needs a control link when none is linked', function () {
+    registerControlLinkPlayer();
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['player_kind' => 'linked']))
+        ->assertSessionHasErrors('player_kind');
+
+    expect(Party::query()->count())->toBe(0);
+});
+
+it('refuses a player that needs a control link when the link needs relinking', function () {
+    registerControlLinkPlayer();
+    $user = User::factory()->withRole('create-party')->create();
+    linkSpotifyControl($user, ['needs_relink' => true]);
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['player_kind' => 'linked']))
+        ->assertSessionHasErrors('player_kind');
+});
+
+it('creates a party with a control link present', function () {
+    registerControlLinkPlayer();
+    $user = User::factory()->withRole('create-party')->create();
+    linkSpotifyControl($user);
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['player_kind' => 'linked']))
+        ->assertSessionHasNoErrors();
+
+    expect(Party::query()->count())->toBe(1);
+});
+
+it('does not require a control link for a player that needs no host account', function () {
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload())->assertSessionHasNoErrors();
+
+    expect(Party::query()->count())->toBe(1);
+});
+
+it('creates a party with Spotify Search enabled and no Search link', function () {
+    registerControlLinkPlayer();
+    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
+    SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => true]);
+    expect(app(SearchCredentials::class)->searchProviderEnabled())->toBeTrue();
+    $user = User::factory()->withRole('create-party')->create();
+    linkSpotifyControl($user);
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['player_kind' => 'linked']))
+        ->assertSessionHasNoErrors();
+
+    expect(Party::query()->count())->toBe(1)
+        ->and(app(SpotifySearchLinkStatus::class)->enabled())->toBeTrue();
+});
+
+it('creates a Soloist party on Spotify without any link', function () {
+    config(['musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class]]);
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['music_provider' => 'spotify', 'player_kind' => 'soloist']))
+        ->assertSessionHasNoErrors();
+
+    expect(Party::query()->firstOrFail()->player_kind)->toBe('soloist');
+});
+
+it('applies the submitted settings at creation', function () {
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload([
+        'downvotes' => false,
+        'downvotes_per_hour' => 5,
+        'selection_mode' => 'weighted',
+        'allow_requests' => true,
+        'max_requests' => 3,
+        'hold_requests' => true,
+    ]))->assertSessionHasNoErrors();
+
+    $party = Party::query()->firstOrFail();
+    expect($party->downvotes)->toBeFalse()
+        ->and($party->downvotes_per_hour)->toBe(5)
+        ->and($party->selection_mode)->toBe(SelectionMode::Weighted)
+        ->and($party->allow_requests)->toBeTrue()
+        ->and($party->max_requests)->toBe(3)
+        ->and($party->hold_requests)->toBeTrue();
+});
+
+it('rejects invalid settings', function (array $overrides, string $field) {
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload($overrides))->assertSessionHasErrors($field);
+})->with([
+    'selection mode' => [['selection_mode' => 'bogus'], 'selection_mode'],
+    'max requests' => [['max_requests' => 0], 'max_requests'],
+    'downvotes per hour' => [['downvotes_per_hour' => -1], 'downvotes_per_hour'],
+]);
+
+it('exposes control-link requirements on the create page', function () {
+    registerControlLinkPlayer();
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->get(route('parties.create'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('control_link_usable', false)
+            ->where('players.4.kind', 'linked')
+            ->where('players.4.requiresControlLink', true));
+});
