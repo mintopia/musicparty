@@ -9,7 +9,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('parties', function (Blueprint $table): void {
-            $table->boolean('freeze_when_paused')->default(false);
+            $table->boolean('freeze_when_paused')->default(true);
         });
     }
 

@@ -4,7 +4,6 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
-use BackedEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
@@ -129,7 +128,7 @@ it('lets the host change each restriction setting and logs old and new', functio
     'downvotes_per_hour' => ['downvotes_per_hour', null, 3],
     'selection_mode' => ['selection_mode', 'deterministic', 'weighted'],
     'hold_requests' => ['hold_requests', false, true],
-    'freeze_when_paused' => ['freeze_when_paused', false, true],
+    'freeze_when_paused' => ['freeze_when_paused', true, false],
 ]);
 
 it('refuses restriction changes from moderators', function (string $key, mixed $value) {

@@ -38,6 +38,7 @@ class Party extends Model
         'allow_requests' => true,
         'explicit' => true,
         'downvotes' => true,
+        'freeze_when_paused' => true,
         'state' => 'paused',
         'selection_mode' => 'deterministic',
         'tv_layout' => 'default',

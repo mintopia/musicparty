@@ -56,6 +56,11 @@ class RequestRefusedException extends RuntimeException
         return new self('This party is not live, so requests are closed.', self::PARTY_NOT_LIVE);
     }
 
+    public static function requestsFrozen(): self
+    {
+        return new self('Requests are frozen while this party is paused.', self::PARTY_NOT_LIVE);
+    }
+
     public static function partyEnded(): self
     {
         return new self('This party has ended, so ratings are closed.', self::PARTY_ENDED);
