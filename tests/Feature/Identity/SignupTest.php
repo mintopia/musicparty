@@ -63,7 +63,7 @@ it('rejects invalid signup input', function (array $payload, string $field) {
         ->and($user->fresh()->terms_agreed_at)->toBeNull();
 })->with([
     'missing nickname' => [['terms' => '1'], 'nickname'],
-    'short nickname' => [['nickname' => 'a', 'terms' => '1'], 'nickname'],
+    'blank nickname' => [['nickname' => '   ', 'terms' => '1'], 'nickname'],
     'long nickname' => [['nickname' => str_repeat('a', 33), 'terms' => '1'], 'nickname'],
     'terms not accepted' => [['nickname' => 'valid'], 'terms'],
     'terms declined' => [['nickname' => 'valid', 'terms' => '0'], 'terms'],

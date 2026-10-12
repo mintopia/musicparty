@@ -48,7 +48,7 @@ class ResolveSocialUser
 
             if ($user === null) {
                 $user = new User;
-                $user->nickname = $remote->getNickname() ?: ($remote->getName() ?: 'Player');
+                $user->nickname = $this->availableNickname($remote->getNickname() ?: ($remote->getName() ?: 'Player'));
                 $user->first_login = true;
                 $user->terms_agreed_at = $this->settings->get('terms_url') === null ? now() : null;
                 $user->save();
@@ -70,5 +70,19 @@ class ResolveSocialUser
 
             return $user;
         });
+    }
+
+    private function availableNickname(string $preferred): string
+    {
+        $base = trim($preferred) === '' ? 'Player' : trim($preferred);
+        $candidate = mb_substr($base, 0, 32);
+        $suffixNumber = 2;
+
+        while (User::query()->where('nickname_key', User::nicknameKey($candidate))->exists()) {
+            $suffix = ' '.$suffixNumber++;
+            $candidate = rtrim(mb_substr($base, 0, 32 - mb_strlen($suffix))).$suffix;
+        }
+
+        return $candidate;
     }
 }

@@ -35,10 +35,11 @@ const submit = () => form.post(props.submitUrl);
                             type="text"
                             name="nickname"
                             autocomplete="nickname"
-                            maxlength="64"
+                            maxlength="32"
                             class="min-h-12 w-full rounded border border-border bg-background px-3 text-base text-text focus:border-primary focus:outline-none md:min-h-10 md:text-sm"
                             :class="{'border-danger': form.errors.nickname}"
                         />
+                        <p class="mt-1 text-xs text-muted">1–32 characters. Must be unique, ignoring case.</p>
                         <p v-if="form.errors.nickname" data-testid="nickname-error" class="mt-1 text-sm text-danger">
                             {{ form.errors.nickname }}
                         </p>
