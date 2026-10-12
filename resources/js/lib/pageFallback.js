@@ -2,7 +2,6 @@ const titles = {
     Home: 'Home',
     Login: 'Login',
     Signup: 'Sign up',
-    'Party/Show': 'Queue',
     'Party/Create': 'Create Party',
     'Party/Blocklist': 'Blocklist',
     'Party/BrowserPlayer': 'Web Player',
@@ -15,6 +14,8 @@ const titles = {
     'Party/Theme': 'Theme',
     'Party/Tv': 'TV Mode',
 };
+
+const sectionTitles = {queue: 'Queue', search: 'Search', history: 'History', party: 'Party'};
 
 const humanise = (name) => name.replace(/([a-z])([A-Z])/g, '$1 $2');
 const home = {label: 'Home', href: '/'};
@@ -33,7 +34,9 @@ export const pageFallback = (component, props = {}) => {
     }
 
     if (name.startsWith('Party/')) {
-        const title = titles[name] ?? humanise(name.split('/').pop());
+        const title = name === 'Party/Show'
+            ? (sectionTitles[props.section] ?? 'Queue')
+            : (titles[name] ?? 'Party');
         const party = props.party;
         const crumbs = [home];
         if (party?.name) {
@@ -43,6 +46,6 @@ export const pageFallback = (component, props = {}) => {
         return {title, crumbs};
     }
 
-    const title = titles[name] ?? humanise(name.split('/').pop() || 'Home');
+    const title = titles[name] ?? 'Home';
     return {title, crumbs: title === 'Home' ? [{label: 'Home'}] : [home, {label: title}]};
 };
