@@ -46,7 +46,7 @@ it('restarts the track with a seek to zero from 3 seconds in', function () {
 
     $last = array_last($this->player->commands());
     expect([$last->type, $last->value])->toBe(['seek', 0])
-        ->and(collect($this->player->commands())->pluck('type')->all())->not->toContain('previous')
+        ->and(array_map(fn ($command) => $command->type, $this->player->commands()))->not->toContain('previous')
         ->and(Play::query()->count())->toBe(2);
 });
 

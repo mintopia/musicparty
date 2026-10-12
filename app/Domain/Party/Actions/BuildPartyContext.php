@@ -52,7 +52,7 @@ readonly class BuildPartyContext
     }
 
     /**
-     * @return array{play: bool, pause: bool, skip: bool}
+     * @return array{play: bool, pause: bool, skip: bool, previous: bool}
      */
     private function capabilities(Party $party): array
     {
