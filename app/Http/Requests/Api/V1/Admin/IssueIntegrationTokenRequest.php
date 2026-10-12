@@ -36,7 +36,7 @@ class IssueIntegrationTokenRequest extends FormRequest
             'name.max' => 'The name may not be longer than 100 characters.',
             'abilities.required' => 'Choose at least one ability.',
             'abilities.min' => 'Choose at least one ability.',
-            'abilities.*.enum' => 'Abilities must be read or export.',
+            'abilities.*.enum' => 'Abilities must be read, export or admin.',
         ];
     }
 }

@@ -91,6 +91,17 @@ $webRoutes = [
 
 $apiRoutes = [
     'users' => ['getJson', '/api/v1/admin/users'],
+    'user show' => ['getJson', '/api/v1/admin/users/{user}'],
+    'user update' => ['patchJson', '/api/v1/admin/users/{user}'],
+    'user delete' => ['deleteJson', '/api/v1/admin/users/{user}'],
+    'linked account delete' => ['deleteJson', '/api/v1/admin/users/{user}/linked-accounts/{account}'],
+    'mods' => ['getJson', '/api/v1/admin/mods'],
+    'providers' => ['getJson', '/api/v1/admin/providers'],
+    'provider update' => ['putJson', '/api/v1/admin/providers/{provider}'],
+    'settings' => ['getJson', '/api/v1/admin/settings'],
+    'settings update' => ['postJson', '/api/v1/admin/settings'],
+    'tokens' => ['getJson', '/api/v1/admin/tokens'],
+    'token issue' => ['postJson', '/api/v1/admin/tokens'],
     'suspend' => ['postJson', '/api/v1/admin/users/{user}/suspension'],
     'unsuspend' => ['deleteJson', '/api/v1/admin/users/{user}/suspension'],
     'grant' => ['postJson', '/api/v1/admin/users/{user}/roles'],
