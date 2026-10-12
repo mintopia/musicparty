@@ -120,7 +120,7 @@ const buttonClass = (active, activeColor) => [
 <template>
     <p v-if="queue.length === 0" data-testid="queue-empty" class="text-sm text-muted">The queue is empty. Search for a track to request one.</p>
     <ul v-else data-testid="queue-list" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
-        <li v-for="item in visibleQueue" :key="item.id" data-testid="queue-item" class="px-3 py-3 md:px-5 md:py-4">
+        <li v-for="item in visibleQueue" :key="item.id" data-testid="queue-item" class="px-3 py-5 md:px-5">
             <div class="flex items-center gap-3 md:gap-4">
                 <TrackLink :href="item.track.provider_url"><TrackThumb :src="item.track.artwork_url" /></TrackLink>
                 <div class="min-w-0 flex-1">
@@ -135,13 +135,13 @@ const buttonClass = (active, activeColor) => [
                     <button
                         type="button"
                         data-testid="vote-up"
-                        :aria-label="`Upvote ${item.track.title}`"
+                        :aria-label="`${downvotesEnabled ? 'Upvote' : 'Like'} ${item.track.title}`"
                         :aria-pressed="item.my_vote === 1"
                         :disabled="isLocked(item)"
                         :class="buttonClass(item.my_vote === 1, 'text-accent')"
                         @click="vote(item, 'up')"
                     >
-                        <Icon name="arrowUp" />
+                        <Icon :name="downvotesEnabled ? 'arrowUp' : 'heart'" :filled="item.my_vote === 1" />
                     </button>
                     <span
                         data-testid="queue-score"
@@ -158,7 +158,7 @@ const buttonClass = (active, activeColor) => [
                         :class="buttonClass(item.my_vote === -1, 'text-danger')"
                         @click="vote(item, 'down')"
                     >
-                        <Icon name="arrowDown" />
+                        <Icon name="arrowDown" :filled="item.my_vote === -1" />
                     </button>
                     <button
                         v-if="canRemove(item)"
@@ -175,7 +175,7 @@ const buttonClass = (active, activeColor) => [
                 </div>
             </div>
             <ModSlot name="queue-item" :item="item" />
-            <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-sm text-danger">{{ errors[item.id] }}</p>
+            <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-center text-sm text-danger">{{ errors[item.id] }}</p>
         </li>
         <li v-if="hasMore" ref="sentinel" data-testid="queue-sentinel" aria-hidden="true" class="h-px"></li>
     </ul>
