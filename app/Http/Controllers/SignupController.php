@@ -32,7 +32,7 @@ class SignupController extends Controller
     {
         $completeSignup($this->currentUser($request), $request->string('nickname')->trim()->toString());
 
-        return redirect()->intended(route('home'))->with('success', 'Welcome to Music Party');
+        return redirect()->intended(route('home'))->with('success', 'Your account has been created');
     }
 
     private function currentUser(Request $request): User

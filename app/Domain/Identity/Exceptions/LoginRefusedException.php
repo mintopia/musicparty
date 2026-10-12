@@ -13,6 +13,6 @@ class LoginRefusedException extends RuntimeException
 
     public static function suspended(): self
     {
-        return new self('Your account has been suspended.');
+        return new self('Your account has been suspended');
     }
 }
