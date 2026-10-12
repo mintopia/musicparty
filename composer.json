@@ -38,6 +38,7 @@
         "barryvdh/laravel-debugbar": "^3.9",
         "barryvdh/laravel-ide-helper": "^3.0",
         "fakerphp/faker": "^1.9.1",
+        "larastan/larastan": "^3.13",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",
         "mockery/mockery": "^1.4.4",
@@ -64,6 +65,7 @@
     },
     "scripts": {
         "lint": "pint --test",
+        "analyse": "phpstan analyse --memory-limit=1G --no-progress",
         "test": "@php artisan test --parallel --processes=4",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
