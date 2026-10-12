@@ -21,6 +21,7 @@ use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PartyStatsController;
 use App\Http\Controllers\Api\V1\PartyThemeController;
 use App\Http\Controllers\Api\V1\PingController;
+use App\Http\Controllers\Api\V1\SpotifyLinkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -66,6 +67,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('parties/{party}/mods/{mod}', [PartyModController::class, 'enable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.enable');
         Route::delete('parties/{party}/mods/{mod}', [PartyModController::class, 'disable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.disable');
         Route::put('parties/{party}/mods/{mod}/settings', [PartyModController::class, 'update'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.settings');
+        Route::get('spotify/link', [SpotifyLinkController::class, 'show'])->name('spotify.link.show');
+        Route::delete('spotify/link/control', [SpotifyLinkController::class, 'destroy'])->name('spotify.link.destroy');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->middleware('throttle:party-requests')->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');

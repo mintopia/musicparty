@@ -31,6 +31,8 @@ const props = defineProps({
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
     enabled_mods: {type: Array, default: () => []},
+    spotify_link_needed: {type: Boolean, default: false},
+    spotify_link_url: {type: String, default: null},
 });
 
 usePartyPresence(props.party.code);
@@ -201,6 +203,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
     <Head :title="party.name" />
     <div v-if="toasts.length > 0" class="fixed right-4 top-4 z-50 flex flex-col gap-2" data-testid="toasts">
         <p v-for="toast in toasts" :key="toast.id" role="status" data-testid="toast" class="rounded border border-border bg-surface px-4 py-3 text-sm shadow">{{ toast.message }}</p>
+    </div>
+    <div v-if="spotify_link_needed" role="alert" data-testid="spotify-link-warning" class="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
+        <span>Playback needs a linked Spotify account.</span>
+        <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Link Spotify</Link>
     </div>
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
