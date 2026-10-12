@@ -4,6 +4,7 @@ import {computed, reactive, ref} from 'vue';
 import AdminLayout from '../../Layouts/AdminLayout.vue';
 import Button from '../../Components/ui/Button.vue';
 import Card from '../../Components/ui/Card.vue';
+import SelectField from '../../Components/ui/SelectField.vue';
 import {usePageMeta} from '../../composables/usePageMeta.js';
 import {contrastWarnings, describeWarning} from '../../theme/contrast.js';
 
@@ -96,13 +97,7 @@ const reset = () => {
             <div class="space-y-6">
         <div>
             <label for="theme-font" class="block text-sm font-medium">Font</label>
-            <select
-                id="theme-font"
-                v-model="draft.font"
-                class="mt-1 rounded border border-border bg-background px-3 py-2 text-sm"
-            >
-                <option v-for="font in fonts" :key="font.value" :value="font.value">{{ font.label }}</option>
-            </select>
+            <SelectField id="theme-font" v-model="draft.font" :options="fonts" class="mt-1" />
             <p v-if="errors.font" role="alert" class="mt-1 text-sm text-danger">{{ errors.font }}</p>
         </div>
 

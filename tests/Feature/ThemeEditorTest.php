@@ -123,3 +123,18 @@ it('refuses guests', function (): void {
     $this->putJson('/api/v1/admin/theme', [])->assertUnauthorized();
     $this->deleteJson('/api/v1/admin/theme')->assertUnauthorized();
 });
+
+it('has no theme library: only show, update and reset routes', function (): void {
+    $themeRoutes = collect(app('router')->getRoutes()->getRoutes())
+        ->filter(fn ($route): bool => str_starts_with($route->uri(), 'admin/theme'))
+        ->map(fn ($route): string => implode('|', array_diff($route->methods(), ['HEAD'])).' '.$route->uri())
+        ->values()
+        ->all();
+
+    expect($themeRoutes)->toEqualCanonicalizing(['GET admin/theme', 'PUT admin/theme', 'DELETE admin/theme']);
+
+    $this->withoutVite()->actingAs(adminForTheme())->get('/admin/theme')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->missing('themes')
+            ->missing('activeTheme'));
+});
