@@ -1,14 +1,14 @@
 <script setup>
 import {iconPaths} from '../lib/icons';
 
-defineProps({name: {type: String, required: true}});
+defineProps({name: {type: String, required: true}, filled: {type: Boolean, default: false}});
 </script>
 
 <template>
     <svg
         xmlns="http://www.w3.org/2000/svg"
         viewBox="0 0 24 24"
-        fill="none"
+        :fill="filled ? 'currentColor' : 'none'"
         stroke="currentColor"
         stroke-width="1.5"
         stroke-linecap="round"

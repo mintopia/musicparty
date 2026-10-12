@@ -65,6 +65,13 @@ const liveUpNext = ref(props.upNext);
 const liveQueue = ref(props.queue);
 const liveStartedAt = ref(props.startedAt);
 const liveMode = ref(props.party.selection_mode);
+const queueSearch = ref('');
+const submitQueueSearch = () => {
+    const q = queueSearch.value.trim();
+    if (q !== '') {
+        router.get(`/parties/${props.party.code}/search`, {q});
+    }
+};
 const now = ref(Date.now());
 let clock = null;
 let publicChannel = null;
@@ -330,7 +337,17 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             </dl>
             <template v-else-if="section === 'queue'">
                 <UpNextCard :up-next="liveUpNext" :plays-at="eta.upNextAt" :now="now" class="mb-6" />
-                <h2 class="mb-1 text-base font-bold md:text-lg">Queue</h2>
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h2 data-testid="queue-heading" class="text-base font-bold md:text-lg">{{ liveMode === 'weighted' ? 'Upcoming Songs' : 'Queue' }}</h2>
+                    <form data-testid="queue-search-form" class="flex gap-2" @submit.prevent="submitQueueSearch">
+                        <div class="relative">
+                            <input v-model="queueSearch" type="search" data-testid="queue-search-input" placeholder="Search..." aria-label="Search for a track" class="min-h-11 w-48 rounded border border-border bg-surface py-0 pl-3 pr-10 text-sm md:w-64" />
+                            <Icon name="musicSearch" data-testid="queue-search-icon" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
+                        </div>
+                        <button type="submit" data-testid="queue-search-submit" class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white">Search</button>
+                    </form>
+                </div>
+                <p v-if="liveMode === 'weighted'" data-testid="queue-weighted-hint" class="mb-1 text-sm text-muted">The more upvotes a track has, the more likely it is to play.</p>
                 <p v-if="eta.totalMs > 0" data-testid="queue-total" class="mb-3 text-sm text-muted md:mb-4">Total {{ formatTotal(eta.totalMs) }}</p>
                 <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" :can-moderate="isStaff" />
             </template>
