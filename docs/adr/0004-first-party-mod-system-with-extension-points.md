@@ -1,5 +1,7 @@
 # First-party Mod system with fixed extension points
 
+> **Amended** by ADR-0030. Trust score and Whamageddon are in scope and ship as first-party Mods using these extension points.
+
 v2's Mods framework was a thin scaffold with a single Mod (Whamageddon), and it hooked in through cron tick events. We are designing the v3 Mod system up front, because trust scores, Whamageddon and AI Request review are all planned as Mods. Mods are first-party classes in this repository, registered through a service provider. Each has per-Party enablement and typed settings. There is no loading of third-party code at runtime.
 
 Mods may act only through these fixed extension points:
