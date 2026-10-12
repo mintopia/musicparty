@@ -2,6 +2,14 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Contracts\CheapRequestRule;
+use App\Domain\Mod\Contracts\Mod;
+use App\Domain\Mod\Contracts\RequestRule;
+use App\Domain\Mod\Data\EnabledMod;
+use App\Domain\Mod\Data\ModContext;
+use App\Domain\Mod\Data\RuleVerdict;
+use App\Domain\Mod\EnabledMods;
+use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
@@ -106,3 +114,35 @@ it('refuses every result when requests are closed to the member', function (stri
     expect(searchHit('track-1')['eligible'])->toBeFalse()
         ->and(searchHit('track-3')['eligible'])->toBeFalse();
 })->with(['banned', 'disabled', 'ended']);
+
+it('runs cheap mod rules and never a non-cheap one such as AI review', function () {
+    $cheap = new class implements CheapRequestRule
+    {
+        public function judge(ModContext $context, PartyMember $member, TrackData $track): RuleVerdict
+        {
+            return $track->providerTrackId === 'track-1' ? RuleVerdict::reject('Too cheerful.') : RuleVerdict::accept();
+        }
+    };
+    $expensive = new class implements RequestRule
+    {
+        public int $calls = 0;
+
+        public function judge(ModContext $context, PartyMember $member, TrackData $track): RuleVerdict
+        {
+            $this->calls++;
+
+            return RuleVerdict::reject('AI says no.');
+        }
+    };
+    $mod = Mockery::mock(Mod::class);
+    $mod->shouldReceive('requestRules')->andReturn([$expensive, $cheap]);
+    $mod->shouldReceive('name')->andReturn('Mood');
+    $this->mock(EnabledMods::class)->shouldReceive('for')->andReturn([new EnabledMod($mod, new ModContext('mood', $this->party, []))]);
+
+    $first = searchHit('track-1');
+
+    expect($first['eligible'])->toBeFalse()
+        ->and($first['reason'])->toContain('Too cheerful.')
+        ->and(searchHit('track-3')['eligible'])->toBeTrue()
+        ->and($expensive->calls)->toBe(0);
+});
