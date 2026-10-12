@@ -6125,6 +6125,9 @@
                     "freeze_when_paused": {
                         "type": "boolean"
                     },
+                    "show_qrcode": {
+                        "type": "boolean"
+                    },
                     "downvotes": {
                         "type": "boolean"
                     },
@@ -6157,6 +6160,7 @@
                     "no_repeat_interval",
                     "hold_requests",
                     "freeze_when_paused",
+                    "show_qrcode",
                     "downvotes",
                     "downvotes_per_hour",
                     "selection_mode",
@@ -6793,6 +6797,9 @@
                         "type": "boolean"
                     },
                     "freeze_when_paused": {
+                        "type": "boolean"
+                    },
+                    "show_qrcode": {
                         "type": "boolean"
                     },
                     "downvotes": {

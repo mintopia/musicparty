@@ -154,7 +154,7 @@ it('fails when a payload field changes without the spec', function () {
     {
         public function broadcastWith(): array
         {
-            return ['state' => 'live', 'extra' => true];
+            return ['state' => 'live', 'show_qrcode' => true, 'extra' => true];
         }
     };
 

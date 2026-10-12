@@ -241,6 +241,7 @@ class PartyController extends Controller
                 'downvotes_per_hour' => $party->downvotes_per_hour,
                 'selection_mode' => $party->selection_mode->value,
                 'freeze_when_paused' => (bool) $party->freeze_when_paused,
+                'show_qrcode' => (bool) $party->show_qrcode,
             ],
             'mods_url' => route('parties.mods', $party, false),
             'theme_url' => route('parties.theme.show', $party, false),
@@ -288,7 +289,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode', 'freeze_when_paused']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode', 'freeze_when_paused', 'show_qrcode']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('success', 'Settings saved');

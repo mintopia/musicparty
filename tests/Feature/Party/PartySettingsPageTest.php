@@ -105,7 +105,7 @@ it('exposes the restriction settings and mods link on the settings page', functi
     $this->actingAs($host)->get(route('parties.settings', ['party' => 'ABCD']))
         ->assertInertia(fn (Assert $page) => $page
             ->has('settings', fn (Assert $s) => $s
-                ->has('downvotes')->has('downvotes_per_hour')->has('selection_mode')->has('freeze_when_paused')
+                ->has('downvotes')->has('downvotes_per_hour')->has('selection_mode')->has('freeze_when_paused')->has('show_qrcode')
                 ->etc())
             ->where('mods_url', route('parties.mods', ['party' => 'ABCD'], false))
             ->where('theme_url', route('parties.theme.show', ['party' => 'ABCD'], false)));
@@ -130,6 +130,7 @@ it('lets the host change each restriction setting and logs old and new', functio
     'selection_mode' => ['selection_mode', 'deterministic', 'weighted'],
     'hold_requests' => ['hold_requests', false, true],
     'freeze_when_paused' => ['freeze_when_paused', true, false],
+    'show_qrcode' => ['show_qrcode', true, false],
 ]);
 
 it('refuses restriction changes from moderators', function (string $key, mixed $value) {
@@ -143,4 +144,5 @@ it('refuses restriction changes from moderators', function (string $key, mixed $
     'name' => ['name', 'Hijacked'],
     'downvotes' => ['downvotes', false],
     'freeze_when_paused' => ['freeze_when_paused', true],
+    'show_qrcode' => ['show_qrcode', true],
 ]);
