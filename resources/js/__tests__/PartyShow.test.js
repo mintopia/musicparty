@@ -261,50 +261,23 @@ describe('rating', () => {
     });
 });
 
-describe('playback controls', () => {
-    it('shows the controls only to a manager and posts each control', async () => {
-        expect(mount(Show, {props: baseProps()}).find('[data-testid="playback-controls"]').exists()).toBe(false);
-
-        const w = mount(Show, {props: baseProps({canManage: true})});
-        await w.find('[data-testid="playback-play"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/play', {}, expect.any(Object));
-        await w.find('[data-testid="playback-pause"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/pause', {}, expect.any(Object));
-        await w.find('[data-testid="playback-skip"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/skip', {}, expect.any(Object));
-
-        await w.find('[data-testid="playback-seek-input"]').setValue('12');
-        await w.find('[data-testid="playback-seek"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/seek', {position_ms: 12000}, expect.any(Object));
-
-        await w.find('[data-testid="playback-volume-input"]').setValue('80');
-        await w.find('[data-testid="playback-volume-input"]').trigger('change');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/volume', {level: 80}, expect.any(Object));
+describe('party card', () => {
+    it.each(['queue', 'search', 'history'])('is absent on the %s section', (section) => {
+        const w = mount(Show, {props: baseProps({section}), global: {stubs: {SearchPanel: true}}});
+        expect(w.find('[data-testid="party-card"]').exists()).toBe(false);
+        expect(w.find('[data-testid="party-code"]').exists()).toBe(false);
     });
 
-    it('disables the controls for a browser player', () => {
-        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'browser'}})});
-        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeDefined();
-        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(true);
-    });
-
-    it('enables the controls for a polling player', () => {
-        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'polling'}})});
-        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeUndefined();
-        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(false);
-    });
-
-    it('shows a refusal returned by the server', async () => {
-        post.mockImplementationOnce((_url, _data, options) => options.onError({playback: 'The Player is disconnected, so playback cannot be controlled.'}));
-        const w = mount(Show, {props: baseProps({canManage: true})});
-        await w.find('[data-testid="playback-play"]').trigger('click');
-        expect(w.find('[data-testid="playback-error"]').text()).toContain('disconnected');
+    it('is present on the party section', () => {
+        const w = mount(Show, {props: baseProps({section: 'party'})});
+        expect(w.find('[data-testid="party-card"]').exists()).toBe(true);
+        expect(w.find('[data-testid="party-code"]').text()).toBe('FRI123');
     });
 });
 
 describe('Party Show realtime state and toasts', () => {
     it('applies party.state_changed without reload', async () => {
-        const w = mount(Show, {props: baseProps()});
+        const w = mount(Show, {props: baseProps({section: 'party'})});
         listeners['.party.state_changed']({state: 'ended'});
         await w.vm.$nextTick();
         expect(w.get('[data-testid=party-state]').text()).toBe('ended');

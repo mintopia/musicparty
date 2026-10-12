@@ -115,7 +115,26 @@ describe('PartyLayout', () => {
         await w.vm.$nextTick();
         vi.advanceTimersByTime(5000);
         await w.vm.$nextTick();
-        expect(w.get('[data-testid=now-playing-elapsed]').text()).toBe('0:50');
+        expect(w.get('[data-testid=now-playing-elapsed]').text()).toBe('0:53');
+
+        listeners['.queue.updated']({version: 1, now_playing: playing('Dance Floor Gravity', {position_ms: 53000}), started_at: null, up_next: null, queue: []});
+        await w.vm.$nextTick();
+        vi.advanceTimersByTime(3000);
+        await w.vm.$nextTick();
+        expect(w.get('[data-testid=now-playing-elapsed]').text()).toBe('0:53');
+    });
+
+    it('shows playback controls to hosts only and not when ended', () => {
+        setContext(playing('A'), 'live', {capabilities: {play: true, pause: true, skip: false}});
+        const host = mountLog();
+        expect(host.get('[data-testid=playback-toggle]').attributes('disabled')).toBeUndefined();
+        expect(host.get('[data-testid=playback-skip]').attributes('disabled')).toBeDefined();
+
+        setContext(playing('A'), 'live', {role: 'member'});
+        expect(mountLog().find('[data-testid=playback-controls]').exists()).toBe(false);
+
+        setContext(playing('A'), 'ended');
+        expect(mountLog().find('[data-testid=playback-controls]').exists()).toBe(false);
     });
 
     it('leaves the Party channel on unmount', () => {

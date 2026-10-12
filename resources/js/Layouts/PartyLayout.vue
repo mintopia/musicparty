@@ -23,7 +23,8 @@ watch(context, (next) => {
 
 const code = computed(() => context.value?.party?.code ?? null);
 const memberId = computed(() => page.props.membership?.id ?? null);
-const paused = computed(() => liveState.value === 'paused' || liveNowPlaying.value?.paused === true);
+const paused = computed(() => liveState.value === null ? liveNowPlaying.value?.paused === true : liveState.value === 'paused');
+const canControl = computed(() => context.value?.role === 'host' && !readOnly.value);
 const readOnly = computed(() => liveState.value === 'ended' || page.props.readOnly === true);
 
 const ratablePlay = computed(() => {
@@ -97,6 +98,8 @@ onBeforeUnmount(unsubscribe);
                     :read-only="readOnly"
                     :position-ms="liveNowPlaying ? (liveNowPlaying.position_ms ?? 0) : null"
                     :paused="paused"
+                    :can-control="canControl"
+                    :capabilities="context.capabilities ?? {}"
                 />
             </header>
             <slot v-bind="slotProps" />

@@ -10,7 +10,6 @@ import UpNextCard from '../../Components/UpNextCard.vue';
 import PlayedHistory from '../../Components/PlayedHistory.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
-import PlaybackControls from '../../Components/PlaybackControls.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -208,7 +207,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
         <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Link Spotify</Link>
     </div>
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
-        <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
+        <header v-if="section === 'party'" data-testid="party-card" class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
                 <h1 class="text-xl font-semibold">{{ party.name }}</h1>
                 <span
@@ -268,7 +267,6 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
 
-        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" :supported="party.playerKind !== 'browser'" />
         <Link
             v-if="canManage && party.playerKind === 'browser'"
             :href="`/parties/${party.code}/player`"
