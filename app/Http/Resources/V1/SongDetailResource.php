@@ -5,9 +5,11 @@ namespace App\Http\Resources\V1;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Queue\Data\SongDetail;
+use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\Rating;
 use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
+use App\Domain\Queue\RequestStatus;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -21,44 +23,70 @@ class SongDetailResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        $song = $this->resource->request;
-        $party = $song->party;
-        $requester = $song->requester;
+        $trackRequest = $this->resource->request;
+        $play = $this->resource->play;
+        $subject = $trackRequest ?? $play;
+        $party = $subject?->party;
+        $requester = $trackRequest?->requester;
+        $playedAt = $play?->played_at->toIso8601String();
 
         return [
-            'id' => $song->id,
-            'title' => $song->title,
-            'artists' => $song->artists,
-            'album' => $song->album,
-            'artwork_url' => $song->artwork_url,
-            'duration_ms' => $song->duration_ms,
-            'explicit' => $song->explicit,
-            'provider_track_id' => $song->provider_track_id,
-            'isrc' => $song->isrc,
-            'status' => $song->status->value,
-            'requested_at' => $song->created_at?->toIso8601String(),
-            'sent_at' => $song->enqueued_at?->toIso8601String(),
-            'spotify_url' => app(PairingCatalogue::class)->trackUrl($party?->music_provider, $song->provider_track_id),
+            'kind' => $trackRequest === null ? 'play' : 'request',
+            'id' => $subject?->id,
+            'play_id' => $play?->id,
+            'title' => $subject?->title,
+            'artists' => $subject?->artists,
+            'album' => $subject?->album,
+            'artwork_url' => $subject?->artwork_url,
+            'duration_ms' => $subject?->duration_ms,
+            'explicit' => $subject?->explicit,
+            'provider_track_id' => $subject?->provider_track_id,
+            'isrc' => $trackRequest?->isrc,
+            'status' => $trackRequest === null ? RequestStatus::Played->value : $trackRequest->status->value,
+            'requested_at' => ($trackRequest === null ? $play?->played_at : $trackRequest->created_at)?->toIso8601String(),
+            'sent_at' => $trackRequest === null ? $playedAt : $trackRequest->enqueued_at?->toIso8601String(),
+            'played_at' => $playedAt,
+            'spotify_url' => app(PairingCatalogue::class)->trackUrl($party?->music_provider, (string) $subject?->provider_track_id),
             'requester' => $requester === null ? null : $this->member($requester),
-            'votes' => $song->votes->map(fn (RequestVote $vote): array => [
+            'votes' => ($trackRequest === null ? collect() : $trackRequest->votes)->map(fn (RequestVote $vote): array => [
                 'member' => $this->member($vote->member),
                 'direction' => $vote->value > 0 ? 'up' : 'down',
                 'voted_at' => $vote->created_at?->toIso8601String(),
             ])->values()->all(),
-            'ratings' => $song->play?->memberRatings->map(fn (Rating $rating): array => [
+            'ratings' => $play?->memberRatings->map(fn (Rating $rating): array => [
                 'member' => $this->member($rating->member),
                 'direction' => $rating->value > 0 ? 'up' : 'down',
                 'rated_at' => $rating->created_at?->toIso8601String(),
             ])->values()->all() ?? [],
-            'appearances' => $this->resource->appearances->map(fn (TrackRequest $appearance): array => [
-                'id' => $appearance->id,
-                'requested_at' => $appearance->created_at?->toIso8601String(),
-                'sent_at' => $appearance->enqueued_at?->toIso8601String(),
-            ])->values()->all(),
+            'appearances' => $this->resource->appearances->map(fn (TrackRequest|Play $appearance): array => $this->appearance($appearance, (string) $party?->code))->values()->all(),
             'can_moderate' => $this->resource->canModerate,
             'moderate_url' => $this->resource->canModerate && $party !== null
-                ? route('parties.blocklist', ['party' => $party->code]).'?'.http_build_query(['type' => 'track_id', 'value' => $song->provider_track_id, 'name' => $song->title])
+                ? route('parties.blocklist', ['party' => $party->code]).'?'.http_build_query(['type' => 'track_id', 'value' => $subject->provider_track_id, 'name' => $subject->title])
                 : null,
+        ];
+    }
+
+    /**
+     * @return array{kind: string, id: int, url: string, requested_at: string|null, sent_at: string|null}
+     */
+    private function appearance(TrackRequest|Play $appearance, string $code): array
+    {
+        if ($appearance instanceof Play) {
+            return [
+                'kind' => 'play',
+                'id' => $appearance->id,
+                'url' => route('parties.plays.show', ['party' => $code, 'play' => $appearance->id], false),
+                'requested_at' => $appearance->played_at->toIso8601String(),
+                'sent_at' => $appearance->played_at->toIso8601String(),
+            ];
+        }
+
+        return [
+            'kind' => 'request',
+            'id' => $appearance->id,
+            'url' => route('parties.songs.show', ['party' => $code, 'trackRequest' => $appearance->id], false),
+            'requested_at' => $appearance->created_at?->toIso8601String(),
+            'sent_at' => $appearance->enqueued_at?->toIso8601String(),
         ];
     }
 

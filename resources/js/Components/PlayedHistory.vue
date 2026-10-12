@@ -90,7 +90,13 @@ const sortBy = (key) => {
 const ariaSort = (key) => (applied.value.sort === key ? (applied.value.direction === 'asc' ? 'ascending' : 'descending') : 'none');
 const isSorted = (key) => applied.value.sort === key;
 const caretName = computed(() => (applied.value.direction === 'asc' ? 'caretUp' : 'caretDown'));
-const songHref = (row) => (row.request_id === null || row.request_id === undefined ? null : `/parties/${props.partyCode}/songs/${row.request_id}`);
+const songHref = (row) => {
+    if (row.request_id !== null && row.request_id !== undefined) {
+        return `/parties/${props.partyCode}/songs/${row.request_id}`;
+    }
+
+    return row.kind === 'play' ? `/parties/${props.partyCode}/plays/${row.id}` : null;
+};
 
 const inputClass = 'h-10 w-full rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted/70 focus:border-primary focus:outline-none dark:bg-background';
 const sortClass = 'inline-flex whitespace-nowrap items-center gap-1 uppercase hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary';

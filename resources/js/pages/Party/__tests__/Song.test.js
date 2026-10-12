@@ -12,7 +12,9 @@ import Song from '../Song.vue';
 
 const member = (name) => ({id: 1, name});
 const song = (overrides = {}) => ({
+    kind: 'request',
     id: 5,
+    play_id: null,
     title: 'Rewind the Night',
     artists: ['The Lowlands', 'Kit'],
     album: 'Night Album',
@@ -57,6 +59,13 @@ describe('Party Song', () => {
         expect(spotify.attributes('target')).toBe('_blank');
     });
 
+    it('renders a fallback play with its played time as sent', () => {
+        const w = mountSong({kind: 'play', requester: null, status: 'played', play_id: 5, sent_at: '2026-10-09T11:00:00+00:00'});
+        expect(w.get('[data-testid="song-requester"]').text()).toBe('Fallback Track');
+        expect(w.find('[data-testid="song-sent"]').exists()).toBe(true);
+        expect(w.get('[data-testid="song-vote-count"]').text()).toBe('0');
+    });
+
     it('renders empty states', () => {
         const w = mountSong();
         expect(w.get('[data-testid="votes-empty"]').text()).toBe('There have been no votes');
@@ -69,16 +78,22 @@ describe('Party Song', () => {
             sent_at: '2026-10-09T12:00:00+00:00',
             votes: [{member: member('Sam'), direction: 'up', voted_at: '2026-10-09T11:05:00+00:00'}, {member: member('Bo'), direction: 'down', voted_at: '2026-10-09T11:06:00+00:00'}],
             ratings: [{member: member('Sam'), direction: 'down', rated_at: '2026-10-09T12:30:00+00:00'}],
-            appearances: [{id: 9, requested_at: '2026-10-01T10:00:00+00:00', sent_at: null}],
+            appearances: [
+                {kind: 'request', id: 9, url: '/parties/ABCD/songs/9', requested_at: '2026-10-01T10:00:00+00:00', sent_at: null},
+                {kind: 'play', id: 12, url: '/parties/ABCD/plays/12', requested_at: '2026-10-02T10:00:00+00:00', sent_at: '2026-10-02T10:00:00+00:00'},
+            ],
         });
         const votes = w.findAll('[data-testid="vote-row"]');
         expect(votes).toHaveLength(2);
         expect(votes[0].attributes('data-direction') ?? votes[0].find('td[data-direction]').attributes('data-direction')).toBe('up');
         expect(votes[1].find('td[data-direction]').attributes('data-direction')).toBe('down');
         expect(w.findAll('[data-testid="rating-row"]')).toHaveLength(1);
-        const row = w.get('[data-testid="appearance-row"]');
-        expect(row.get('a').attributes('href')).toBe('/parties/ABCD/songs/9');
-        expect(row.text()).toContain('Not Sent to Spotify');
+        const rows = w.findAll('[data-testid="appearance-row"]');
+        expect(rows[0].get('a').attributes('href')).toBe('/parties/ABCD/songs/9');
+        expect(rows[0].text()).toContain('Not Sent to Spotify');
+        expect(rows[1].get('a').attributes('href')).toBe('/parties/ABCD/plays/12');
+        expect(w.get('[data-testid="song-vote-count"]').text()).toBe('2');
+        expect(w.get('[data-testid="song-score"]').text()).toBe('0');
         expect(w.find('[data-testid="votes-empty"]').exists()).toBe(false);
         expect(w.find('[data-testid="song-not-sent"]').exists()).toBe(false);
     });

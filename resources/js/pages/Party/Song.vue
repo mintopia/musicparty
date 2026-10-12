@@ -1,4 +1,5 @@
 <script setup>
+import {computed} from 'vue';
 import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link} from '@inertiajs/vue3';
 import Icon from '../../Components/Icon.vue';
@@ -12,7 +13,7 @@ const props = defineProps({
 
 usePartyPresence(props.party.code);
 
-const appearanceUrl = (id) => `/parties/${props.party.code}/songs/${id}`;
+const score = computed(() => props.song.votes.reduce((total, vote) => total + (vote.direction === 'up' ? 1 : -1), 0));
 
 const cardClass = 'rounded border border-border bg-surface';
 const tableClass = 'w-full text-left text-sm';
@@ -49,6 +50,14 @@ const buttonClass = 'flex min-h-11 items-center gap-2 rounded border px-3 text-s
                     <div>
                         <dt :class="titleClass">Duration</dt>
                         <dd data-testid="song-duration">{{ formatDuration(song.duration_ms) }}</dd>
+                    </div>
+                    <div>
+                        <dt :class="titleClass">Votes</dt>
+                        <dd data-testid="song-vote-count">{{ song.votes.length }}</dd>
+                    </div>
+                    <div>
+                        <dt :class="titleClass">Score</dt>
+                        <dd data-testid="song-score">{{ score }}</dd>
                     </div>
                     <div>
                         <dt :class="titleClass">Requested</dt>
@@ -123,9 +132,9 @@ const buttonClass = 'flex min-h-11 items-center gap-2 rounded border px-3 text-s
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="appearance in song.appearances" :key="appearance.id" data-testid="appearance-row">
+                            <tr v-for="appearance in song.appearances" :key="`${appearance.kind}-${appearance.id}`" data-testid="appearance-row">
                                 <td :class="cellClass">
-                                    <Link :href="appearanceUrl(appearance.id)" :title="absoluteTime(appearance.requested_at)" class="text-primary hover:underline">{{ relativeTime(appearance.requested_at) }}</Link>
+                                    <Link :href="appearance.url" :title="absoluteTime(appearance.requested_at)" class="text-primary hover:underline">{{ relativeTime(appearance.requested_at) }}</Link>
                                 </td>
                                 <td :class="cellClass">
                                     <span v-if="appearance.sent_at" :title="absoluteTime(appearance.sent_at)">{{ relativeTime(appearance.sent_at) }}</span>

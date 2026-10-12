@@ -395,6 +395,20 @@ class PartyController extends Controller
         ]);
     }
 
+    public function playSong(Request $request, ShowSong $showSong, Party $party, Play $play): Response
+    {
+        try {
+            $song = (new SongDetailResource($showSong->play($this->currentUser($request), $party, $play)))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
+        ]);
+    }
+
     public function stats(GetPartyStats $getStats, Party $party): Response
     {
         $this->authorize('viewMembers', $party);
