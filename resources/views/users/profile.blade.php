@@ -37,6 +37,10 @@
                                         <p class="text-secondary">
                                             {{ $account->name }}
                                         </p>
+                                        @if ($account->canDelete())
+                                            <a class="btn btn-sm btn-outline-danger"
+                                               href="{{ route('linkedaccounts.delete', $account->id) }}">Remove</a>
+                                        @endif
                                     </div>
                                 </div>
                             </div>
