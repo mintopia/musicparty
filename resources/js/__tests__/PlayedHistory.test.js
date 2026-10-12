@@ -193,12 +193,12 @@ describe('PlayedHistory', () => {
         expect(w.findAll('th').map((th) => th.attributes('aria-sort'))).toEqual(['none', undefined, 'descending', 'none', 'none']);
     });
 
-    it('links the title to the song page when the request exists', () => {
+    it('links every row to its song or play page', () => {
         const w = mountHistory({history: {data: [play(), play({id: 8, request_id: null})], meta: {from: 1, to: 2, total: 2, links: []}}});
         const titles = w.findAll('[data-testid=history-title]');
 
         expect(titles[0].get('a').attributes('href')).toBe('/parties/ABCD/songs/31');
-        expect(titles[1].find('a').exists()).toBe(false);
+        expect(titles[1].get('a').attributes('href')).toBe('/parties/ABCD/plays/8');
         expect(titles[1].text()).toBe('Rewind the Night');
     });
 

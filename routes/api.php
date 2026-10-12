@@ -76,12 +76,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->middleware('throttle:party-requests')->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');
+        Route::get('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'show'])->whereNumber('trackRequest')->name('parties.requests.show');
         Route::post('parties/{party}/requests/{trackRequest}/approve', [PartyRequestController::class, 'approve'])->whereNumber('trackRequest')->name('parties.requests.approve');
         Route::post('parties/{party}/requests/{trackRequest}/reject', [PartyRequestController::class, 'reject'])->whereNumber('trackRequest')->name('parties.requests.reject');
         Route::delete('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'destroy'])->whereNumber('trackRequest')->name('parties.requests.destroy');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.store');
         Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.destroy');
         Route::get('parties/{party}/history', [PartyPlayController::class, 'history'])->name('parties.history');
+        Route::get('parties/{party}/plays/{play}', [PartyPlayController::class, 'show'])->whereNumber('play')->name('parties.plays.show');
         Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/me/votes', [PartyRequestController::class, 'memberVotes'])->name('parties.me.votes');

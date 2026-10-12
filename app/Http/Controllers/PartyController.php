@@ -44,6 +44,7 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ShowSong;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
@@ -74,6 +75,7 @@ use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
+use App\Http\Resources\V1\SongDetailResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -400,6 +402,34 @@ class PartyController extends Controller
                 'canChangeRoles' => ! $isSelf && $user->can('manageRoles', $party) && $member->role !== PartyRole::Host,
                 'canBan' => ! $isSelf && $user->can('moderateMember', [$party, $member]) && $member->role !== PartyRole::Host,
             ],
+        ]);
+    }
+
+    public function song(Request $request, ShowSong $showSong, Party $party, TrackRequest $trackRequest): Response
+    {
+        try {
+            $song = (new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest)))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
+        ]);
+    }
+
+    public function playSong(Request $request, ShowSong $showSong, Party $party, Play $play): Response
+    {
+        try {
+            $song = (new SongDetailResource($showSong->play($this->currentUser($request), $party, $play)))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
         ]);
     }
 

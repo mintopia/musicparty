@@ -201,6 +201,14 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->whereNumber('token')
         ->name('parties.player-tokens.destroy');
+    Route::get('parties/{party}/songs/{trackRequest}', [PartyController::class, 'song'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('trackRequest')
+        ->name('parties.songs.show');
+    Route::get('parties/{party}/plays/{play}', [PartyController::class, 'playSong'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('play')
+        ->name('parties.plays.show');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')

@@ -7,6 +7,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Actions\ListPlayHistory;
 use App\Domain\Queue\Actions\RatePlay;
+use App\Domain\Queue\Actions\ShowSong;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\VoteDirection;
@@ -15,6 +16,7 @@ use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Resources\V1\HistoryEntryResource;
 use App\Http\Resources\V1\PlayResource;
+use App\Http\Resources\V1\SongDetailResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -25,6 +27,15 @@ class PartyPlayController extends Controller
     {
         try {
             return HistoryEntryResource::collection($listHistory($party, $this->member($request, $party), $request->filters(), $request->filters()['per_page']));
+        } catch (RequestRefusedException $exception) {
+            return response()->json(['message' => $exception->getMessage()], $exception->status());
+        }
+    }
+
+    public function show(Request $request, ShowSong $showSong, Party $party, Play $play): SongDetailResource|JsonResponse
+    {
+        try {
+            return new SongDetailResource($showSong->play($this->currentUser($request), $party, $play));
         } catch (RequestRefusedException $exception) {
             return response()->json(['message' => $exception->getMessage()], $exception->status());
         }
@@ -49,6 +60,14 @@ class PartyPlayController extends Controller
         } catch (RequestRefusedException $exception) {
             return response()->json(['message' => $exception->getMessage()], $exception->status());
         }
+    }
+
+    private function currentUser(Request $request): User
+    {
+        $user = $request->user();
+        assert($user instanceof User);
+
+        return $user;
     }
 
     private function member(Request $request, Party $party): PartyMember

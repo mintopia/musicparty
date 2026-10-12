@@ -1593,11 +1593,90 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PartyRole"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "nickname",
+                                "role",
+                                "joined",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Array of `PartyMemberResource`",
+                        "description": "Paginated set of `PartyMemberResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1608,23 +1687,144 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/PartyMemberResource"
                                             }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
                                         }
                                     },
                                     "required": [
-                                        "data"
+                                        "data",
+                                        "links",
+                                        "meta"
                                     ]
                                 }
                             }
                         }
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
@@ -2138,6 +2338,52 @@
                         }
                     },
                     {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PlayHistorySort"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "enum": [
+                                "10",
+                                "20",
+                                "50",
+                                "100",
+                                null
+                            ]
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "schema": {
@@ -2151,7 +2397,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated set of `PlayResource`",
+                        "description": "Paginated set of `HistoryEntryResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2165,7 +2411,7 @@
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#/components/schemas/PlayResource"
+                                                        "$ref": "#/components/schemas/HistoryEntryResource"
                                                     }
                                                 },
                                                 "links": {
@@ -2304,6 +2550,73 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/plays/{play}": {
+            "get": {
+                "operationId": "v1.parties.plays.show",
+                "summary": "Parties plays show",
+                "tags": [
+                    "PartyPlay"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "play",
+                        "in": "path",
+                        "required": true,
+                        "description": "The play ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SongDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/SongDetailResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -3343,6 +3656,138 @@
                 ]
             }
         },
+        "/v1/parties/{party}/requests/{trackRequest}": {
+            "get": {
+                "operationId": "v1.parties.requests.show",
+                "summary": "Parties requests show",
+                "tags": [
+                    "PartyRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trackRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The track request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SongDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/SongDetailResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "v1.parties.requests.destroy",
+                "summary": "Parties requests destroy",
+                "tags": [
+                    "PartyRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trackRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The track request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`QueueEntryResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/QueueEntryResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
         "/v1/parties/{party}/requests/{trackRequest}/approve": {
             "post": {
                 "operationId": "v1.parties.requests.approve",
@@ -3480,73 +3925,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctumCookie": []
-                    }
-                ]
-            }
-        },
-        "/v1/parties/{party}/requests/{trackRequest}": {
-            "delete": {
-                "operationId": "v1.parties.requests.destroy",
-                "summary": "Parties requests destroy",
-                "tags": [
-                    "PartyRequest"
-                ],
-                "parameters": [
-                    {
-                        "name": "party",
-                        "in": "path",
-                        "required": true,
-                        "description": "The party code",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "trackRequest",
-                        "in": "path",
-                        "required": true,
-                        "description": "The track request ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`QueueEntryResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/QueueEntryResource"
-                                                }
-                                            },
-                                            "required": [
-                                                "data"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -5684,6 +6062,240 @@
                 },
                 "title": "ControlPlaybackRequest"
             },
+            "HistoryEntryResource": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "const": "unsent"
+                            },
+                            "request_id": {
+                                "type": "string"
+                            },
+                            "track": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "artists": {
+                                        "type": "string"
+                                    },
+                                    "album": {
+                                        "type": "string"
+                                    },
+                                    "artwork_url": {
+                                        "type": "string"
+                                    },
+                                    "duration_ms": {
+                                        "type": "string"
+                                    },
+                                    "explicit": {
+                                        "type": "string"
+                                    },
+                                    "provider_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "title",
+                                    "artists",
+                                    "album",
+                                    "artwork_url",
+                                    "duration_ms",
+                                    "explicit",
+                                    "provider_url"
+                                ]
+                            },
+                            "requested_by": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            },
+                            "is_mine": {
+                                "type": "string"
+                            },
+                            "votes": {
+                                "type": "integer"
+                            },
+                            "score": {
+                                "type": "integer"
+                            },
+                            "requested_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "likes": {
+                                "type": "integer"
+                            },
+                            "dislikes": {
+                                "type": "integer"
+                            },
+                            "my_rating": {
+                                "type": "integer"
+                            },
+                            "played_at": {
+                                "type": "null"
+                            },
+                            "decorations": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "kind",
+                            "request_id",
+                            "track",
+                            "requested_by",
+                            "is_mine",
+                            "votes",
+                            "score",
+                            "requested_at",
+                            "likes",
+                            "dislikes",
+                            "my_rating",
+                            "played_at",
+                            "decorations"
+                        ]
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "track": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "artists": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "album": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "artwork_url": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "duration_ms": {
+                                        "type": "integer"
+                                    },
+                                    "explicit": {
+                                        "type": "boolean"
+                                    },
+                                    "provider_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "title",
+                                    "artists",
+                                    "album",
+                                    "artwork_url",
+                                    "duration_ms",
+                                    "explicit",
+                                    "provider_url"
+                                ]
+                            },
+                            "requested_by": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            },
+                            "is_mine": {
+                                "type": "boolean"
+                            },
+                            "votes": {
+                                "type": "integer"
+                            },
+                            "score": {
+                                "type": "integer"
+                            },
+                            "requested_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "likes": {
+                                "type": "integer"
+                            },
+                            "dislikes": {
+                                "type": "integer"
+                            },
+                            "my_rating": {
+                                "type": "integer"
+                            },
+                            "played_at": {
+                                "type": "string"
+                            },
+                            "decorations": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "const": "play"
+                            },
+                            "request_id": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "track",
+                            "requested_by",
+                            "is_mine",
+                            "votes",
+                            "score",
+                            "requested_at",
+                            "likes",
+                            "dislikes",
+                            "my_rating",
+                            "played_at",
+                            "decorations",
+                            "kind",
+                            "request_id"
+                        ]
+                    }
+                ],
+                "title": "HistoryEntryResource"
+            },
             "InstanceThemeResource": {
                 "type": "object",
                 "properties": {
@@ -5994,6 +6606,12 @@
                     },
                     "is_you": {
                         "type": "boolean"
+                    },
+                    "joined_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -6002,7 +6620,8 @@
                     "avatar",
                     "role",
                     "banned",
-                    "is_you"
+                    "is_you",
+                    "joined_at"
                 ],
                 "title": "PartyMemberResource"
             },
@@ -6264,12 +6883,23 @@
                 ],
                 "title": "PingResource"
             },
+            "PlayHistorySort": {
+                "type": "string",
+                "enum": [
+                    "name",
+                    "artist",
+                    "requested",
+                    "played",
+                    "score"
+                ],
+                "title": "PlayHistorySort"
+            },
             "PlayHistoryType": {
                 "type": "string",
                 "enum": [
-                    "sent",
-                    "requested",
-                    "fallback"
+                    "all",
+                    "played",
+                    "unsent"
                 ],
                 "title": "PlayHistoryType"
             },
@@ -6586,6 +7216,308 @@
                     "weighted"
                 ],
                 "title": "SelectionMode"
+            },
+            "SongDetailResource": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "request"
+                        ]
+                    },
+                    "id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "play_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artists": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "album": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artwork_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "duration_ms": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "explicit": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "provider_track_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "isrc": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "requested_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sent_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "played_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "spotify_url": {
+                        "type": "string"
+                    },
+                    "requester": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "votes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "member": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "direction": {
+                                    "type": "string",
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ]
+                                },
+                                "voted_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "member",
+                                "direction",
+                                "voted_at"
+                            ]
+                        }
+                    },
+                    "ratings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "member": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "direction": {
+                                    "type": "string",
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ]
+                                },
+                                "rated_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "member",
+                                "direction",
+                                "rated_at"
+                            ]
+                        }
+                    },
+                    "appearances": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "const": "request"
+                                        },
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "requested_at": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "sent_at": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "kind",
+                                        "id",
+                                        "url",
+                                        "requested_at",
+                                        "sent_at"
+                                    ]
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "const": "play"
+                                        },
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "requested_at": {
+                                            "type": "string"
+                                        },
+                                        "sent_at": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "kind",
+                                        "id",
+                                        "url",
+                                        "requested_at",
+                                        "sent_at"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "can_moderate": {
+                        "type": "boolean"
+                    },
+                    "moderate_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "kind",
+                    "id",
+                    "play_id",
+                    "title",
+                    "artists",
+                    "album",
+                    "artwork_url",
+                    "duration_ms",
+                    "explicit",
+                    "provider_track_id",
+                    "isrc",
+                    "status",
+                    "requested_at",
+                    "sent_at",
+                    "played_at",
+                    "spotify_url",
+                    "requester",
+                    "votes",
+                    "ratings",
+                    "appearances",
+                    "can_moderate",
+                    "moderate_url"
+                ],
+                "title": "SongDetailResource"
             },
             "SpotifyLinkStatusResource": {
                 "type": "object",
