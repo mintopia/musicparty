@@ -3,8 +3,10 @@
 namespace App\Http\Middleware;
 
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Party\Actions\BuildPartyContext;
 use App\Domain\Party\Models\Party;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -17,6 +19,8 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $site = app(SiteSettings::class);
+
+        $party = $this->routeParty($request);
 
         return [
             ...parent::share($request),
@@ -52,6 +56,24 @@ class HandleInertiaRequests extends Middleware
                     'name' => $party->name,
                 ])->values()->all()
                 : [],
+            ...($party === null ? [] : [
+                'partyContext' => fn (): array => app(BuildPartyContext::class)->handle($party, $request->user()),
+            ]),
         ];
+    }
+
+    private function routeParty(Request $request): ?Party
+    {
+        if ($request->routeIs('parties.tv')) {
+            return null;
+        }
+
+        $party = $request->route('party');
+
+        if (is_string($party)) {
+            $party = Party::findByCode($party);
+        }
+
+        return $party instanceof Party && Gate::forUser($request->user())->allows('view', $party) ? $party : null;
     }
 }
