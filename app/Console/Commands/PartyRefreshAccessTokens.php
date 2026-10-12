@@ -27,8 +27,9 @@ class PartyRefreshAccessTokens extends Command
     public function handle()
     {
         $provider = SocialProvider::where('code', 'spotify')->first();
-        if (!$provider) {
+        if (! $provider) {
             $this->output->writeln('No spotify provider found');
+
             return self::SUCCESS;
         }
         $provider->accounts()->where('access_token_expires_at', '<', now()->addMinutes(4))->chunk(50, function ($chunk) {

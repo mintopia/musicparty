@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
+use Random\Randomizer;
 
 /**
  * @mixin IdeHelperParty
@@ -290,12 +291,8 @@ class Party extends Model
 
     public function play(?string $playbackDevice): void
     {
-        if ($playbackDevice === null) {
-            $playbackDevice = $this->recent_device_id;
-        }
-        if ($playbackDevice === null) {
-            $playbackDevice = '';
-        }
+        $playbackDevice ??= $this->recent_device_id;
+        $playbackDevice ??= '';
         Log::debug("{$this}: Spotify API -> play()");
         $trackUri = '';
         if ($this->song) {
@@ -367,7 +364,7 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
-        $state = $this->user->getSpotifyStatus();
+        $this->user->getSpotifyStatus();
         $queue = $this->user->getSpotifyApi()->getMyQueue();
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
@@ -403,6 +400,7 @@ class Party extends Model
          */
 
         if ($this->weighted) {
+            $randomizer = app(Randomizer::class);
             $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
@@ -410,11 +408,12 @@ class Party extends Model
                     $query->whereNull('not_before');
                     $query->orWhere('not_before', '<=', 'NOW()');
                 })
-                ->where('score', '>', 0)->inRandomOrder()->get();
+                ->where('score', '>', 0)->get();
+            $allSongs = collect($randomizer->shuffleArray($allSongs->all()));
 
             for ($i = 0; $i < $toAdd; $i++) {
                 $sum = $allSongs->sum('score');
-                $random = mt_rand(0, $sum);
+                $random = $randomizer->getInt(0, (int) $sum);
                 foreach ($allSongs as $index => $song) {
                     $random -= $song->score;
                     if ($random <= 0) {
@@ -650,7 +649,7 @@ class Party extends Model
         });
 
         $toAdd = min($toAdd, count($tracks));
-        shuffle($tracks);
+        $tracks = app(Randomizer::class)->shuffleArray(array_values($tracks));
 
         for ($i = 0; $i < $toAdd; $i++) {
             $track = $tracks[$i];
@@ -713,9 +712,7 @@ class Party extends Model
             return true;
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
-            return $query->whereIn('code', ['owner']);
-        })->count() > 0;
+        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
     }
 
     public function pushUpdate(): void

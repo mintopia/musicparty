@@ -18,14 +18,13 @@ class UpdatedEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(protected Party $party)
-    {
-    }
+    public function __construct(protected Party $party) {}
 
     public function broadcastWith(): array
     {
         $state = $this->party->getState();
-        return (array)$state;
+
+        return (array) $state;
     }
 
     /**
@@ -33,7 +32,6 @@ class UpdatedEvent implements ShouldBroadcast
      *
      * @return array<int, \Illuminate\Broadcasting\Channel>
      */
-
     public function broadcastOn()
     {
         return [

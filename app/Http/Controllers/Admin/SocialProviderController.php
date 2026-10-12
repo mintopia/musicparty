@@ -30,14 +30,15 @@ class SocialProviderController extends Controller
             }
         }
 
-        $provider->enabled = (bool)$request->input('enabled');
+        $provider->enabled = (bool) $request->input('enabled');
         if ($provider->supports_auth) {
-            $provider->auth_enabled = (bool)$request->input('auth_enabled');
+            $provider->auth_enabled = (bool) $request->input('auth_enabled');
         }
         if ($provider->can_be_renamed) {
             $provider->name = $request->input('name');
         }
         $provider->save();
+
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', "{$provider->name} has been updated");
     }
 }

@@ -21,9 +21,7 @@ class UserController extends Controller
         $ids = $request->user()->accounts->pluck('social_provider_id')->toArray();
         $providers = SocialProvider::whereEnabled(true)
             ->get()
-            ->filter(function ($provider) use ($ids) {
-                return !in_array($provider->id, $ids);
-            });
+            ->filter(fn ($provider) => ! in_array($provider->id, $ids));
 
         return view('users.profile', [
             'availableLinks' => $providers,
@@ -34,14 +32,16 @@ class UserController extends Controller
     {
         Auth::logout();
         $request->session()->regenerate(true);
+
         return response()->redirectToRoute('home')->with('successMessage', 'You have been logged out');
     }
 
     public function login_redirect(SocialProvider $socialprovider)
     {
-        if (!$socialprovider->enabled || !$socialprovider->auth_enabled) {
+        if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
         }
+
         return $socialprovider->redirect();
     }
 
@@ -50,7 +50,7 @@ class UserController extends Controller
         if (Auth::hasUser()) {
             return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
         }
-        if (!$socialprovider->enabled || !$socialprovider->auth_enabled) {
+        if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
         }
         try {
@@ -62,6 +62,7 @@ class UserController extends Controller
                 Auth::login($user);
                 $user->last_login = Carbon::now();
                 $user->save();
+
                 return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
             }
         } catch (SocialProviderException $ex) {
@@ -69,12 +70,14 @@ class UserController extends Controller
         } catch (Exception $ex) {
             Log::error($ex->getMessage());
         }
+
         return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
     }
 
     public function login()
     {
         $providers = SocialProvider::whereAuthEnabled(true)->whereEnabled(true)->get();
+
         return view('users.login', [
             'providers' => $providers,
         ]);
@@ -96,6 +99,7 @@ class UserController extends Controller
         $user->first_login = false;
         $user->terms_agreed_at = Carbon::now();
         $user->save();
+
         return response()->redirectToRoute('home')->with('successMessage', 'Your account has been created');
     }
 
@@ -111,6 +115,7 @@ class UserController extends Controller
         $user = $request->user();
         $user->nickname = $request->input('nickname');
         $user->save();
+
         return response()->redirectToRoute('user.profile')->with('successMessage', 'Your profile has been updated');
     }
 

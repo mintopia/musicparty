@@ -22,6 +22,7 @@ class UpcomingSongResourceCollection extends ResourceCollection
             'data' => $this->map(function (UpcomingSong $item) {
                 $resource = new UpcomingSongResource($item);
                 $resource->augment($this->augmentedData[$item->id] ?? null);
+
                 return $resource;
             }),
         ];

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
@@ -10,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Mod extends Model
 {
+    use HasFactory;
 
     public function settings(): HasMany
     {
@@ -22,11 +24,13 @@ class Mod extends Model
             return $this->_settings[$code];
         }
         $setting = $this->settings()->whereCode($code)->first();
-        if (!$setting) {
+        if (! $setting) {
             $this->_settings[$code] = null;
+
             return null;
         }
         $this->_settings[$code] = $setting->value;
+
         return $setting->value;
     }
 }

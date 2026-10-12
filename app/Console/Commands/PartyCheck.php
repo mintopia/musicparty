@@ -29,14 +29,16 @@ class PartyCheck extends Command
         $code = $this->argument('code');
         if ($code !== null) {
             $party = Party::whereCode($code)->first();
-            if (!$party) {
+            if (! $party) {
                 $this->error("Unable to find party with code {$code}");
+
                 return self::FAILURE;
             }
+
             return $this->processParty($party);
         }
 
-        $parties = Party::whereActive(true)->chunk(50, function ($chunk) {
+        Party::whereActive(true)->chunk(50, function ($chunk) {
             foreach ($chunk as $party) {
                 $this->processParty($party);
             }
@@ -50,6 +52,7 @@ class PartyCheck extends Command
         $this->output->writeln("{$party}: Checking to see if broken");
         $party->fixPlaylist();
         $this->output->writeln("{$party}: Done");
+
         return self::SUCCESS;
     }
 }

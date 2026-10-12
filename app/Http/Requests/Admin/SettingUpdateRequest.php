@@ -29,6 +29,7 @@ class SettingUpdateRequest extends FormRequest
                 $rules[$setting->code] = $setting->validation;
             }
         }
+
         return $rules;
     }
 }

@@ -14,41 +14,41 @@ class SettingsSeeder extends Seeder
     public function run(): void
     {
         $settings = [
-            'name' => (object)[
+            'name' => (object) [
                 'name' => 'Site Name',
                 'default' => 'Music Party',
                 'validation' => 'required|string|max:200|min:2',
             ],
-            'terms' => (object)[
+            'terms' => (object) [
                 'name' => 'Terms and Conditions URL',
                 'validation' => 'sometimes|nullable|string|url:http,https',
             ],
-            'privacypolicy' => (object)[
+            'privacypolicy' => (object) [
                 'name' => 'Privacy Policy URL',
                 'validation' => 'sometimes|nullable|string|url:http,https',
             ],
-            'logo-light' => (object)[
+            'logo-light' => (object) [
                 'name' => 'Site Logo (Light Version)',
                 'validation' => 'sometimes|nullable|string|url:http,https',
                 'description' => 'A light version of the logo for use on dark backgrounds',
             ],
-            'logo-dark' => (object)[
+            'logo-dark' => (object) [
                 'name' => 'Site Logo (Dark Version)',
                 'validation' => 'sometimes|nullable|string|url:http,https',
                 'description' => 'A dark version of the logo for use on light backgrounds',
             ],
-            'cover-image' => (object)[
+            'cover-image' => (object) [
                 'name' => 'Login Cover Image',
                 'validation' => 'sometimes|nullable|string|url:http,https',
                 'description' => 'URL for the large image shown during login and signup',
             ],
-            'favicon' => (object)[
+            'favicon' => (object) [
                 'name' => 'Favicon',
                 'validation' => 'sometimes|nullable|string|url:http,https',
                 'description' => 'URL for a favicon to use',
             ],
 
-            'defaultparty' => (object)[
+            'defaultparty' => (object) [
                 'name' => 'Default Party Code',
                 'validation' => 'sometimes|nullable|string|max:100|min:4',
                 'description' => 'If specified, users will be automatically taken to this party',
@@ -63,8 +63,8 @@ class SettingsSeeder extends Seeder
     protected function updateSetting(string $code, object $data): void
     {
         $setting = Setting::whereCode($code)->first();
-        if (!$setting) {
-            $setting = new Setting();
+        if (! $setting) {
+            $setting = new Setting;
             $setting->code = $code;
             $setting->value = $data->default ?? null;
         }

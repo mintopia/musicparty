@@ -24,11 +24,12 @@ class PartyModerationController extends Controller
         }
 
         $moderations = $query->paginate($perPage)->appends($params);
+
         return view('partymoderation.index', [
             'party' => $party,
             'canManage' => true,
             'moderations' => $moderations,
-            'filters' => (object)$params,
+            'filters' => (object) $params,
             'params' => $params,
         ]);
     }
@@ -39,12 +40,12 @@ class PartyModerationController extends Controller
         if ($request->has('track')) {
             try {
                 $spotifyData = $party->user->getSpotifyApi()->getTrack($request->input('track'));
-            } catch (SpotifyWebAPIException $e) {
+            } catch (SpotifyWebAPIException) {
                 // Do Nothing
             }
         }
 
-        $moderation = new PartyModeration();
+        $moderation = new PartyModeration;
         $moderation->party()->associate($party);
 
         return view('partymoderation.create', [
@@ -52,15 +53,16 @@ class PartyModerationController extends Controller
             'canManage' => true,
             'types' => PartyModerationType::getHumanReadableTypes(),
             'spotifyData' => $spotifyData,
-            'moderation' => $moderation
+            'moderation' => $moderation,
         ]);
     }
 
     public function store(PartyModerationRequest $request, Party $party)
     {
-        $moderation = new PartyModeration();
+        $moderation = new PartyModeration;
         $moderation->party()->associate($party);
         $this->updateObject($moderation, $request);
+
         return response()
             ->redirectToRoute('parties.moderation.index', $party->code)
             ->with('successMessage', 'The filter has been created');
@@ -72,7 +74,7 @@ class PartyModerationController extends Controller
             'party' => $party,
             'canManage' => true,
             'types' => PartyModerationType::getHumanReadableTypes(),
-            'moderation' => $moderation
+            'moderation' => $moderation,
         ]);
     }
 
@@ -82,13 +84,14 @@ class PartyModerationController extends Controller
             'party' => $party,
             'canManage' => true,
             'types' => PartyModerationType::getHumanReadableTypes(),
-            'moderation' => $moderation
+            'moderation' => $moderation,
         ]);
     }
 
     public function update(PartyModerationRequest $request, Party $party, PartyModeration $moderation)
     {
         $this->updateObject($moderation, $request);
+
         return redirect()
             ->route('parties.moderation.index', $party->code)
             ->with('successMessage', 'The filter has been updated');
@@ -96,8 +99,8 @@ class PartyModerationController extends Controller
 
     protected function updateObject(PartyModeration $moderation, PartyModerationRequest $request): void
     {
-        $moderation->enabled = (bool)$request->input('enabled');
-        $moderation->regex = (bool)$request->input('regex');
+        $moderation->enabled = (bool) $request->input('enabled');
+        $moderation->regex = (bool) $request->input('regex');
         foreach (PartyModerationType::cases() as $type) {
             if ($type->name === $request->input('type')) {
                 $moderation->type = $type;
@@ -112,6 +115,7 @@ class PartyModerationController extends Controller
     public function destroy(Party $party, PartyModeration $moderation)
     {
         $moderation->delete();
+
         return response()
             ->redirectToRoute('parties.moderation.index', $party->code)
             ->with('successMessage', 'The filter has been deleted');

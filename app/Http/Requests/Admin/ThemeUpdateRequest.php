@@ -25,7 +25,7 @@ class ThemeUpdateRequest extends FormRequest
             'active' => 'sometimes|bool|nullable',
             'dark_mode' => 'sometimes|bool|nullable',
         ];
-        if (!$this->theme || !$this->theme->readonly) {
+        if (! $this->theme || ! $this->theme->readonly) {
             $rules = array_merge($rules, [
                 'name' => 'required|string|max:100',
                 'css' => 'sometimes|string|nullable',
@@ -33,6 +33,7 @@ class ThemeUpdateRequest extends FormRequest
                 'nav_background' => 'required|hex_color',
             ]);
         }
+
         return $rules;
     }
 }

@@ -54,7 +54,7 @@ class Song extends Model
             return $song;
         }
         $album = Album::fromSpotify($track->album);
-        $song = new Song();
+        $song = new Song;
         $song->spotify_id = $track->id;
         $song->name = $track->name;
         $song->length = $track->duration_ms;
@@ -64,6 +64,7 @@ class Song extends Model
             $artist = Artist::fromSpotify($trackArtist);
             $song->artists()->attach($artist);
         }
+
         return $song;
     }
 
@@ -73,9 +74,7 @@ class Song extends Model
             'spotify_id' => $this->spotify_id,
             'name' => $this->name,
             'album' => $this->album->toApi(),
-            'artists' => $this->artists->map(function (Artist $artist) {
-                return $artist->toApi();
-            })->toArray(),
+            'artists' => $this->artists->map(fn (Artist $artist) => $artist->toApi())->toArray(),
             'length' => $this->length,
         ];
     }

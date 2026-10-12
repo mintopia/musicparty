@@ -14,7 +14,7 @@ class UserController extends Controller
 {
     public function index(Request $request)
     {
-        $filters = (object)[];
+        $filters = (object) [];
         $query = User::query();
 
         if ($request->input('id')) {
@@ -27,7 +27,7 @@ class UserController extends Controller
             $query = $query->where('nickname', 'LIKE', "%{$filters->nickname}%");
         }
 
-        $params = (array)$filters;
+        $params = (array) $filters;
 
         switch ($request->input('order')) {
             case 'nickname':
@@ -55,6 +55,7 @@ class UserController extends Controller
         $params['perPage'] = $request->input('perPage', 20);
 
         $users = $query->paginate($params['perPage'])->appends($params);
+
         return view('admin.users.index', [
             'users' => $users,
             'filters' => $filters,
@@ -81,6 +82,7 @@ class UserController extends Controller
     public function update(UserUpdateRequest $request, User $user)
     {
         $this->updateObject($user, $request);
+
         return response()->redirectToRoute('admin.users.show', $user->id)->with('successMessage', 'The user has been updated');
     }
 
@@ -89,27 +91,26 @@ class UserController extends Controller
         $user->nickname = $request->input('nickname');
 
         if ($request->input('terms', false)) {
-            if ($user->terms_agreed_at === null) {
-                $user->terms_agreed_at = Carbon::now();
-            }
+            $user->terms_agreed_at ??= Carbon::now();
         } else {
             $user->terms_agreed_at = null;
         }
 
-        $user->first_login = !$request->input('first_login', false);
-        $user->suspended = (bool)$request->input('suspended', false);
+        $user->first_login = ! $request->input('first_login', false);
+        $user->suspended = (bool) $request->input('suspended', false);
 
         $wantedRoles = $request->input('roles', []);
         $hasRoles = [];
         foreach ($user->roles as $role) {
-            if (!in_array($role->code, $wantedRoles)) {
+            if (! in_array($role->code, $wantedRoles)) {
                 $user->roles()->detach($role);
+
                 continue;
             }
             $hasRoles[] = $role->code;
         }
         foreach ($wantedRoles as $role) {
-            if (!in_array($role, $hasRoles)) {
+            if (! in_array($role, $hasRoles)) {
                 $role = Role::whereCode($role)->first();
                 $user->roles()->attach($role);
             }
@@ -121,6 +122,7 @@ class UserController extends Controller
     public function destroy(DeleteRequest $request, User $user)
     {
         $user->delete();
+
         return response()->redirectToRoute('admin.users.index')->with('successMessage', 'The user has been deleted');
     }
 
@@ -139,6 +141,7 @@ class UserController extends Controller
         auth('web')->login($user);
         $request->session()->put('originalUserId', $originalUser->id);
         $request->session()->put('impersonating', true);
+
         return response()->redirectToRoute('home');
     }
 }

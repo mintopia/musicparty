@@ -30,14 +30,10 @@ class LinkedAccountController extends Controller
             return response()->redirectToRoute($url)->with('successMessage', "Your {$socialprovider->name} account has been linked");
         } catch (SocialProviderException $ex) {
             throw $ex;
-
-            return response()->redirectToRoute($url)->with('errorMessage', $ex->getMessage());
         } catch (\Exception $ex) {
             throw $ex;
             // Do Nothing
         }
-
-        return response()->redirectToRoute($url)->with('errorMessage', 'Unable to link your accounts');
     }
 
     public function delete(LinkedAccount $linkedaccount)

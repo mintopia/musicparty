@@ -136,28 +136,6 @@ services:
     healthcheck:
       disable: true
 
-  phpcs:
-    profiles: [ "phpcs" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcs" ]
-    volumes:
-      - ./:/app/
-    healthcheck:
-      disable: true
-
-  phpcbf:
-    profiles: [ "phpcbf" ]
-    build:
-      context: .
-      dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "vendor/bin/phpcbf" ]
-    volumes:
-      - ./:/app/
-    healthcheck:
-      disable: true
-
   shell:
     profiles: [ "shell" ]
     build:

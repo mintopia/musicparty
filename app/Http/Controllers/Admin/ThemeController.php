@@ -15,11 +15,12 @@ class ThemeController extends Controller
         if ($default) {
             $theme = clone $default;
         } else {
-            $theme = new Theme();
+            $theme = new Theme;
         }
         $theme->name = null;
         $theme->readonly = false;
         $theme->active = false;
+
         return view('admin.themes.create', [
             'theme' => $theme,
         ]);
@@ -27,8 +28,9 @@ class ThemeController extends Controller
 
     public function store(ThemeUpdateRequest $request)
     {
-        $theme = new Theme();
+        $theme = new Theme;
         $this->updateObject($theme, $request);
+
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
     }
 
@@ -42,6 +44,7 @@ class ThemeController extends Controller
     public function update(ThemeUpdateRequest $request, Theme $theme)
     {
         $this->updateObject($theme, $request);
+
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
     }
 
@@ -50,6 +53,7 @@ class ThemeController extends Controller
         if ($theme->readonly) {
             abort(400);
         }
+
         return view('admin.themes.delete', [
             'theme' => $theme,
         ]);
@@ -61,14 +65,15 @@ class ThemeController extends Controller
             abort(400);
         }
         $theme->delete();
+
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
     }
 
     protected function updateObject(Theme $theme, Request $request)
     {
-        $theme->active = (bool)$request->input('active');
-        $theme->dark_mode = (bool)$request->input('dark_mode');
-        if (!$theme->readonly) {
+        $theme->active = (bool) $request->input('active');
+        $theme->dark_mode = (bool) $request->input('dark_mode');
+        if (! $theme->readonly) {
             $map = [
                 'name',
                 'css',

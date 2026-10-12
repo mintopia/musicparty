@@ -8,6 +8,7 @@ use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use Random\Randomizer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
+        $this->app->bind(Randomizer::class, fn () => new Randomizer);
     }
 
     /**
@@ -25,18 +27,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Blade::directive('setting', function (string $expression, $default = null) {
-            return "<?php echo App\Models\Setting::fetch($expression, $default); ?>";
-        });
+        Blade::directive('setting', fn (string $expression, $default = null) => "<?php echo App\Models\Setting::fetch($expression, $default); ?>");
 
         view()->composer(['layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
-                $currentTheme = Theme::whereActive(true)->first();
-                $darkMode = false;
+            $currentTheme = Theme::whereActive(true)->first();
+            $darkMode = false;
             if ($currentTheme) {
                 $darkMode = $currentTheme->dark_mode;
             }
-                $view->with('currentTheme', $currentTheme);
-                $view->with('darkMode', $darkMode);
+            $view->with('currentTheme', $currentTheme);
+            $view->with('darkMode', $darkMode);
         });
 
         Pulse::user(fn ($user) => [

@@ -73,18 +73,19 @@ class UpcomingSongController extends Controller
         }
 
         $songs = $query->paginate($perPage)->appends($params);
+
         return view('upcomingsongs.index', [
             'party' => $party,
             'canManage' => true,
             'songs' => $songs,
-            'types' => [(object)[
+            'types' => [(object) [
                 'code' => 'queued',
                 'name' => 'Queued',
-            ], (object)[
+            ], (object) [
                 'code' => 'spotify',
                 'name' => 'Sent to Spotify',
             ]],
-            'filters' => (object)$params,
+            'filters' => (object) $params,
             'params' => $params,
         ]);
     }
@@ -103,6 +104,7 @@ class UpcomingSongController extends Controller
         } else {
             $ratings = new LengthAwarePaginator([], 0, $perPage);
         }
+
         return view('upcomingsongs.show', [
             'party' => $party,
             'canManage' => true,

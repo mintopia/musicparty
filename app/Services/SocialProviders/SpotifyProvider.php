@@ -9,8 +9,11 @@ use SocialiteProviders\Spotify\Provider;
 class SpotifyProvider extends AbstractSocialProvider
 {
     protected string $name = 'Spotify';
+
     protected string $code = 'spotify';
+
     protected string $socialiteProviderCode = 'spotify';
+
     protected bool $supportsAuth = true;
 
     protected function getSocialiteProvider()

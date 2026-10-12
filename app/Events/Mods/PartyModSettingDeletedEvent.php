@@ -17,6 +17,7 @@ class PartyModSettingDeletedEvent
     use SerializesModels;
 
     public Party $party;
+
     public ModSetting $setting;
 
     /**
