@@ -20,6 +20,7 @@ use App\Http\Controllers\PartyModController;
 use App\Http\Controllers\PartyTvController;
 use App\Http\Controllers\Profile\LinkedAccountController as ProfileLinkedAccountController;
 use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\SessionKeepAliveController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
@@ -28,6 +29,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
+
+Route::get('session/keep-alive', SessionKeepAliveController::class)->middleware('auth')->name('session.keep-alive');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
 

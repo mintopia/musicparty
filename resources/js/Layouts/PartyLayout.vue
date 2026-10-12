@@ -3,8 +3,11 @@ import AppShell from './AppShell.vue';
 import NowPlayingBanner from '../Components/NowPlayingBanner.vue';
 import {router, usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, ref, watch} from 'vue';
+import {useSessionKeepAlive} from '../composables/useSessionKeepAlive';
 
 const KNOWN_PAYLOAD_VERSION = 1;
+
+useSessionKeepAlive();
 
 const page = usePage();
 const context = computed(() => page.props.partyContext ?? null);
