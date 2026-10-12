@@ -58,6 +58,8 @@ use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -108,13 +110,26 @@ class PartyController extends Controller
         ThrottleSearch $throttleSearch,
         EnabledMods $enabledMods,
         PairingCatalogue $pairingCatalogue,
-        Party $party,
+        JoinParty $joinParty,
+        string $party,
         ?string $section = null,
     ): Response|RedirectResponse {
-        $member = $party->memberFor($this->currentUser($request));
+        $found = Party::findByCode($party);
+
+        if ($found === null) {
+            return redirect()->route('home', ['code' => $party])->withErrors(['code' => 'No party found with that code.']);
+        }
+
+        $party = $found;
+        $user = $this->currentUser($request);
+        $member = $party->memberFor($user);
 
         if ($member === null) {
-            return redirect()->route('home', ['code' => $party->code]);
+            if ($this->joinLimited($request)) {
+                return redirect()->route('home', ['code' => $party->code]);
+            }
+
+            $member = $joinParty($user, $party);
         }
 
         $section ??= $party->state === PartyState::Ended ? 'history' : 'queue';
@@ -442,6 +457,24 @@ class PartyController extends Controller
         }
 
         return back();
+    }
+
+    private function joinLimited(Request $request): bool
+    {
+        $limiter = RateLimiter::limiter('party-join');
+        $limits = Arr::wrap($limiter === null ? [] : $limiter($request));
+
+        foreach ($limits as $limit) {
+            if (RateLimiter::tooManyAttempts($limit->key, $limit->maxAttempts)) {
+                return true;
+            }
+        }
+
+        foreach ($limits as $limit) {
+            RateLimiter::hit($limit->key, $limit->decaySeconds);
+        }
+
+        return false;
     }
 
     /**
