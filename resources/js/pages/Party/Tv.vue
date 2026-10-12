@@ -125,27 +125,27 @@ onBeforeUnmount(() => {
             :style="{backgroundImage: `url(${backdropUrl})`}"
         ></div>
         <div v-else data-testid="tv-backdrop" aria-hidden="true" class="absolute inset-0 bg-gradient-to-br from-white/5 to-black"></div>
-        <header class="relative flex items-start justify-between px-4 pt-4 text-2xl font-semibold">
+        <header class="relative flex flex-wrap items-start justify-between gap-x-4 gap-y-2 px-4 pt-4 text-xl font-semibold md:text-2xl">
             <img v-if="logoUrl" :src="logoUrl" alt="" data-testid="tv-logo" class="max-h-16 max-w-48 object-contain" />
             <span data-testid="tv-party-name">{{ party.name }}</span>
             <span v-if="liveState !== 'live'" data-testid="tv-party-state" class="rounded border border-white/40 px-2 py-0.5 text-base font-medium capitalize">{{ liveState }}</span>
             <span data-testid="tv-party-code" class="tracking-wider">{{ party.code }}</span>
         </header>
 
-        <div class="relative mx-auto flex w-full max-w-[940px] flex-col gap-10 pt-10">
+        <div class="relative mx-auto flex w-full max-w-[940px] flex-col gap-8 px-4 pb-36 pt-6 md:gap-10 md:pb-0 md:pt-10">
             <section data-testid="tv-now-playing" aria-label="Now playing">
-                <div v-if="nowPlaying" class="flex items-start gap-4">
+                <div v-if="nowPlaying" class="flex flex-col items-center gap-4 md:flex-row md:items-start">
                     <img
                         v-if="nowPlaying.track.artwork_url"
                         :src="nowPlaying.track.artwork_url"
                         alt=""
-                        class="h-[300px] w-[300px] shrink-0 object-cover"
+                        class="aspect-square w-full max-w-[300px] shrink-0 object-cover md:h-[300px] md:w-[300px]"
                     />
-                    <div v-else class="h-[300px] w-[300px] shrink-0 bg-white/10" aria-hidden="true"></div>
-                    <div class="flex min-w-0 flex-1 flex-col gap-2 text-2xl">
-                        <h1 data-testid="tv-now-playing-title" class="mb-2 truncate text-3xl font-semibold">{{ nowPlaying.track.title }}</h1>
-                        <div class="flex items-center gap-2"><Icon name="user" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
-                        <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
+                    <div v-else class="aspect-square w-full max-w-[300px] shrink-0 bg-white/10 md:h-[300px] md:w-[300px]" aria-hidden="true"></div>
+                    <div class="flex w-full min-w-0 flex-1 flex-col gap-2 text-xl md:text-2xl">
+                        <h1 data-testid="tv-now-playing-title" class="mb-2 break-words text-2xl font-semibold md:truncate md:text-3xl">{{ nowPlaying.track.title }}</h1>
+                        <div class="flex items-center gap-2"><Icon name="users" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
+                        <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="disc" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span data-testid="tv-now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                         <Decorations :decorations="nowPlaying.decorations" />
                         <div class="flex items-center gap-4">
@@ -170,11 +170,11 @@ onBeforeUnmount(() => {
             <section data-testid="tv-up-next" aria-label="Next">
                 <h2 class="mb-4 text-xl font-semibold">Next</h2>
                 <div v-if="upNext" class="flex items-start gap-4 text-slate-400">
-                    <TrackThumb :src="upNext.track.artwork_url" class="!h-[182px] !w-[182px] !rounded-none" />
-                    <div class="flex min-w-0 flex-col gap-2 text-xl">
-                        <h3 data-testid="tv-up-next-title" class="mb-2 truncate text-3xl font-semibold">{{ upNext.track.title }}</h3>
-                        <div class="flex items-center gap-2"><Icon name="user" /><span class="truncate">{{ upNext.track.artists.join(', ') }}</span></div>
-                        <div v-if="upNext.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ upNext.track.album }}</span></div>
+                    <TrackThumb :src="upNext.track.artwork_url" class="!h-24 !w-24 shrink-0 !rounded-none md:!h-[182px] md:!w-[182px]" />
+                    <div class="flex min-w-0 flex-1 flex-col gap-2 text-base md:text-xl">
+                        <h3 data-testid="tv-up-next-title" class="mb-2 truncate text-xl font-semibold md:text-3xl">{{ upNext.track.title }}</h3>
+                        <div class="flex items-center gap-2"><Icon name="users" /><span class="truncate">{{ upNext.track.artists.join(', ') }}</span></div>
+                        <div v-if="upNext.track.album" class="flex items-center gap-2"><Icon name="disc" /><span class="truncate">{{ upNext.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span>{{ requesterLabel(upNext) }}</span></div>
                         <Decorations :decorations="upNext.decorations" />
                     </div>
