@@ -1,5 +1,7 @@
 # One Spotify rate-limit backoff per instance
 
+> **Amended** by ADR-0028. The backoff is now keyed per Spotify client application rather than one per instance, so the Spotify Search app and the control app back off independently.
+
 Spotify rate-limits by client application, not by Host account, over a rolling window. `SpotifyMusicProvider` keeps one backoff in the shared cache: a 429 stores the `Retry-After` deadline, and every Spotify call (search, playback polling, enqueue, playlist reads) checks it first and fails fast with `ProviderTemporaryFailure` until it passes. ADR-0010 mentions this in passing; nothing decided it.
 
 We considered a backoff per Host account or per kind of call. Both keep calling an API that has already refused the application, which extends the penalty for every Party.
