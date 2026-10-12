@@ -73,7 +73,7 @@ class PartyController extends Controller
         return Inertia::render('Party/Create', [
             'providers' => $catalogue->providers(),
             'players' => $catalogue->players(),
-            'spotify_link_url' => route('spotify.index'),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.create', absolute: false)]),
         ]);
     }
 
@@ -189,7 +189,7 @@ class PartyController extends Controller
             'results' => $results,
             'search_error' => $searchError,
             'enabled_mods' => $enabledMods->idsFor($party),
-            'spotify_link_url' => route('spotify.index'),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.show', $party, false)]),
             'spotify_link_needed' => $party->user_id === $this->currentUser($request)->id
                 && $party->player_kind === 'polling'
                 && ! app(SpotifyControlLinkStatus::class)->isUsable($this->currentUser($request)),
@@ -212,7 +212,7 @@ class PartyController extends Controller
                 'no_repeat_interval' => $party->no_repeat_interval,
             ],
             'enabled_mods' => $enabledMods->idsFor($party),
-            'spotify_link_url' => route('spotify.index'),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.settings', $party, false)]),
         ]);
     }
 

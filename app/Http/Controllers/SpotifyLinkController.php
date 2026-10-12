@@ -33,7 +33,7 @@ class SpotifyLinkController extends Controller
         return Inertia::render('Spotify/Link', [
             'control' => $status($user),
             'can_create_party' => $user->can('create', Party::class),
-            'link_url' => route('spotify.link', ['account' => 'control', 'return' => route('spotify.index', absolute: false)]),
+            'link_url' => route('spotify.link', ['account' => 'control', 'return' => $this->safeReturnPath($request->query('return'))]),
             'unlink_url' => route('spotify.unlink', ['account' => 'control']),
             'create_party_url' => route('parties.create'),
         ]);

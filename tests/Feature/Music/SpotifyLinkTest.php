@@ -185,9 +185,9 @@ it('shares the spotify link url on create and settings and flags a missing link 
     $party = Party::factory()->create(['user_id' => $host->id, 'player_kind' => 'polling']);
     PartyMember::factory()->host()->create(['party_id' => $party->id, 'user_id' => $host->id]);
 
-    $this->actingAs($host)->get(route('parties.create'))->assertInertia(fn ($page) => $page->where('spotify_link_url', route('spotify.index')));
-    $this->get(route('parties.settings', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_url', route('spotify.index')));
-    $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_needed', true));
+    $this->actingAs($host)->get(route('parties.create'))->assertInertia(fn ($page) => $page->where('spotify_link_url', route('spotify.index', ['return' => route('parties.create', absolute: false)])));
+    $this->get(route('parties.settings', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_url', route('spotify.index', ['return' => route('parties.settings', $party->code, false)])));
+    $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_needed', true)->where('spotify_link_url', route('spotify.index', ['return' => route('parties.show', $party->code, false)])));
 
     spotifyLinkLinked($host);
     $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_needed', false));

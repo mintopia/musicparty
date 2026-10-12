@@ -8,14 +8,14 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('linked_accounts', function (Blueprint $table) {
+        Schema::table('linked_accounts', function (Blueprint $table): void {
             $table->text('scopes')->nullable();
         });
     }
 
     public function down(): void
     {
-        Schema::table('linked_accounts', function (Blueprint $table) {
+        Schema::table('linked_accounts', function (Blueprint $table): void {
             $table->dropColumn('scopes');
         });
     }

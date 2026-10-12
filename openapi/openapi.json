@@ -4065,6 +4065,65 @@
                 ]
             }
         },
+        "/v1/spotify/link": {
+            "get": {
+                "operationId": "v1.spotify.link.show",
+                "summary": "Spotify link show",
+                "tags": [
+                    "SpotifyLink"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SpotifyLinkStatusResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SpotifyLinkStatusResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/spotify/link/control": {
+            "delete": {
+                "operationId": "v1.spotify.link.destroy",
+                "summary": "Spotify link destroy",
+                "tags": [
+                    "SpotifyLink"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
         "/v1/admin/theme": {
             "get": {
                 "operationId": "v1.admin.theme.show",
@@ -5852,6 +5911,26 @@
                     "weighted"
                 ],
                 "title": "SelectionMode"
+            },
+            "SpotifyLinkStatusResource": {
+                "type": "object",
+                "properties": {
+                    "linked": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "needs_relink": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "linked",
+                    "name",
+                    "needs_relink"
+                ],
+                "title": "SpotifyLinkStatusResource"
             },
             "StoreBlocklistEntryRequest": {
                 "type": "object",
