@@ -100,4 +100,16 @@ describe('SearchPanel', () => {
         expect(del).toHaveBeenCalledWith('/parties/FRI123/requests/9/vote', expect.any(Object));
         expect(put).not.toHaveBeenCalled();
     });
+
+    it('matches the v2 empty state', () => {
+        const wrapper = render({results: [], searchQuery: 'zzzz'});
+        expect(wrapper.get('[data-testid="search-empty"]').text()).toBe('No results found');
+        expect(wrapper.html()).toMatchSnapshot();
+    });
+
+    it('styles the search input like v2', () => {
+        const wrapper = render();
+        expect(wrapper.get('[data-testid="search-input"]').attributes('placeholder')).toBe('Search…');
+        expect(wrapper.find('[data-testid="search-icon"]').exists()).toBe(true);
+    });
 });

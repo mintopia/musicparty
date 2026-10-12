@@ -1,0 +1,17 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`SearchPanel > matches the v2 empty state 1`] = `
+"<div class="flex flex-col gap-4">
+  <form class="flex gap-2" role="search"><label class="sr-only" for="track-search">Search tracks</label>
+    <div class="relative min-w-0 flex-1"><input id="track-search" type="search" data-testid="search-input" placeholder="Search…" class="min-h-11 w-full rounded border border-border bg-surface py-0 pl-3 pr-10 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="h-5 w-5 shrink-0 pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" data-testid="search-icon">
+        <path d="M3 17a3 3 0 1 0 6 0a3 3 0 0 0 -6 0"></path>
+        <path d="M9 17v-13h10v5"></path>
+        <path d="M9 8h10"></path>
+        <path d="M15 18a3 3 0 1 0 6 0a3 3 0 1 0 -6 0"></path>
+        <path d="M20.2 20.2l1.8 1.8"></path>
+      </svg></div><button type="submit" class="min-h-11 rounded bg-primary px-5 text-sm font-medium text-white hover:opacity-90">Search</button>
+  </form>
+  <h2 class="text-base font-bold md:text-lg">Results</h2>
+  <p data-testid="search-empty" class="text-center text-sm text-muted">No results found</p>
+</div>"
+`;
