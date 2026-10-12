@@ -149,9 +149,8 @@ onBeforeUnmount(() => {
     window.Echo?.leave(memberChannelName);
 });
 
-const canViewLog = computed(
-    () => !banned.value && ['host', 'moderator'].includes(props.membership.role),
-);
+const isStaff = computed(() => !banned.value && ['host', 'moderator'].includes(props.membership.role));
+const canViewLog = isStaff;
 
 const page = usePage();
 const transitionError = computed(() => page.props.errors?.fallback_playlist_id ?? page.props.errors?.state ?? null);
@@ -329,7 +328,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
                 <UpNextCard :up-next="liveUpNext" :plays-at="eta.upNextAt" :now="now" class="mb-6" />
                 <h2 class="mb-1 text-base font-bold md:text-lg">Queue</h2>
                 <p v-if="eta.totalMs > 0" data-testid="queue-total" class="mb-3 text-sm text-muted md:mb-4">Total {{ formatTotal(eta.totalMs) }}</p>
-                <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
+                <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" :can-moderate="isStaff" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
