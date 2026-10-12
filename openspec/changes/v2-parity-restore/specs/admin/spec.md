@@ -17,7 +17,7 @@ Admins SHALL be able to configure the social providers Discord, Twitch, Steam, S
 
 #### Scenario: Spotify Search
 - **WHEN** an admin enables Spotify Search with its own client credentials
-- **THEN** it is not offered on the login page, and Hosts are asked to link a Search account
+- **THEN** it is not offered on the login page, and the Link Spotify Account page offers Hosts an optional Search account
 
 #### Scenario: Secret hidden
 - **WHEN** an admin reopens the provider settings

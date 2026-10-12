@@ -14,4 +14,4 @@ Decision:
 - Each automatic merge writes an admin audit entry and shows the user an info message naming the provider.
 - `linked_accounts` gets an indexed, normalised email lookup column, because the current `email` column is `longText` and cannot be indexed.
 
-Consequences: a provider that reports unverified email as verified, or a provider an attacker controls, can be used to take over an account. We accept that risk on the owner's ruling. Whether admin accounts are excluded from merging is an open question in the `v2-parity-restore` design.md; the recommendation, following the ruling, is no exclusion.
+Consequences: a provider that reports unverified email as verified, or a provider an attacker controls, can be used to take over an account. We accept that risk on the owner's ruling. Admin accounts are merged too; the owner confirmed this on 2026-10-12.

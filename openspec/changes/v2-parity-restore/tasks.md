@@ -6,7 +6,7 @@ Any change to an `/api` route, an API Resource, a channel or a broadcast updates
 
 UI tasks must match the v2 look (design D18). Each one names its references from `docs/design/v2-reference/` and `preview-screenshots/v2-full-*.png`, and attaches v3 screenshots at 1280px and 390px, light and dark.
 
-`[id]` lists the triage finding ids (`feat-*`, `ui-*`, `diff-*` from round 2026-10-10-v2-parity, `dec-*` from 2026-10-11-gap-decisions) and the consolidated gap report work package (`WPn`). Group dependencies are in design.md under "Task group ordering". Where a task depends on an open question in design.md, it implements the recommended answer.
+`[id]` lists the triage finding ids (`feat-*`, `ui-*`, `diff-*` from round 2026-10-10-v2-parity, `dec-*` from 2026-10-11-gap-decisions) and the consolidated gap report work package (`WPn`). Group dependencies are in design.md under "Task group ordering". design.md records the user's answers under "Resolved questions"; the one remaining open question (Soloist's command name) is confirmed at the start of task 6.1.
 
 ## 1. Flash messages
 
@@ -29,11 +29,11 @@ UI tasks must match the v2 look (design D18). Each one names its references from
 - [ ] 2.2 [diff-8] Spotify Search account (design D3, ADR-0028).
   - Add the `spotifysearch` catalogue entry, seeder row and admin provider settings. It is never offered for login.
   - Add the Search card on the Link Spotify Account page, shown only when the provider is enabled.
-  - Add a `SearchCredentials` resolver used by Spotify search: the Host's Search account if usable, else instance client credentials, never the control account.
+  - Add a `SearchCredentials` resolver used by Spotify search: the Host's Search account if usable, else the Host's control account if usable, else instance client credentials. The Search link is optional everywhere.
   - Key the Spotify backoff per client application (amends ADR-0021).
-  - A Search account rejected with `invalid_grant` is marked `needs_relink`, search falls back, and the Host sees a warning.
+  - A Search account rejected with `invalid_grant` is marked `needs_relink`, search falls back to the control account, and the Host sees a warning.
   - Add "Spotify Search account" to GLOSSARY.md.
-  - Verify with `Http::fake` tests: search sends the Search account's bearer token when linked; it uses client credentials when not linked or when the account needs re-linking; a 429 on the Search app does not block a poll made with the control app, and the reverse; `ListLoginProviders` never returns `spotifysearch`; admin provider settings list it.
+  - Verify with `Http::fake` tests: search sends the Search account's bearer token when linked; it uses the control account's token when no Search account is linked or it needs re-linking; it uses client credentials when the Host has neither link; a 429 on the Search app does not block a poll made with the control app, and the reverse; `ListLoginProviders` never returns `spotifysearch`; admin provider settings list it.
 - [ ] 2.3 [feat-48, feat-49, consolidated WP1] Fallback and History Playlist pickers on the settings page (Playback section). Each lists the Host's playlists through the existing playlists Action and accepts a pasted link, URI or id parsed by a `PlaylistReference` value object. Choosing none for History stops appending. The Fallback gate result (playable count against 20) shows inline after saving. Verify with:
   - `PlaylistReference` unit tests (URL with query string, `spotify:playlist:` URI, bare id, garbage rejected)
   - feature tests that saving through the web route changes the same setting the API changes and re-runs the gate
@@ -69,11 +69,11 @@ UI tasks must match the v2 look (design D18). Each one names its references from
 
 ## 4. Identity, signup and login
 
-- [ ] 4.1 [dec-5] Unique nicknames (design D5). Add `users.nickname_key` with the dedupe migration (rename format per open question 8, audit each rename) and the unique index. Add a `UniqueNickname` rule and `max:32` in signup, profile and admin user edit. Set `Signup.vue` and `Profile/Edit.vue` to `maxlength=32`, with a hint on the rules. Verify with:
+- [ ] 4.1 [dec-5] Unique nicknames (design D5). Add `users.nickname_key` with the dedupe migration (rename format per resolved question 8, audit each rename) and the unique index. Add a `UniqueNickname` rule and `max:32` in signup, profile and admin user edit. Set `Signup.vue` and `Profile/Edit.vue` to `maxlength=32`, with a hint on the rules. Verify with:
   - Form Request tests (duplicate in other case refused, own nickname in other case accepted, 33 characters refused)
   - a migration test on a fixture with "Alex" and "alex" (lower id keeps "Alex"; the other becomes "alex 2"; index created)
   - a test that two concurrent signups taking one nickname leave one with a validation error
-- [ ] 4.2 [dec-4] Account merge by email on login (design D4, ADR-0027, open question 1). Add `linked_accounts.email_normalised` with an index and backfill. Add `emailVerified()` per provider. Implement the merge in `ResolveSocialUser`. Add the `SocialAccountAutoLinked` event with an Admin audit listener, and the `info` flash. Verify with tests for:
+- [ ] 4.2 [dec-4] Account merge by email on login (design D4, ADR-0027, resolved question 1: admins are merged too). Add `linked_accounts.email_normalised` with an index and backfill. Add `emailVerified()` per provider. Implement the merge in `ResolveSocialUser`. Add the `SocialAccountAutoLinked` event with an Admin audit listener, and the `info` flash. Verify with tests for:
   - same email, other provider: merged, audited, flashed
   - an explicit unverified flag: not merged
   - two users matching: new user and a warning log
@@ -96,19 +96,20 @@ UI tasks must match the v2 look (design D18). Each one names its references from
   - Mods: link to the Mods page
 
   Each section saves through the same Actions as the API and flashes. The Settings and Theme pages share one card style. Verify with feature tests per section, including that a Moderator is refused and that a Party Log entry records old and new values. Add a Vitest test that the downvotes-per-hour field hides when downvotes are off, and a screenshot comparison with v2 edit.
-- [ ] 5.2 [feat-5, ui-X7] Create Party form with the v2 fields (name, Provider, Player, downvotes, raffle, request rules) and the Spotify prerequisite. It refuses creation when the chosen Player needs a control link that is missing, or when Spotify Search is enabled and the Search link is missing (open question 6), and links to `/spotify?return=/parties/create`. Verify with feature tests for each prerequisite case, settings applied at creation, and the non-Spotify (Soloist) path needing no link, plus a screenshot comparison.
+- [ ] 5.2 [feat-5, ui-X7] Create Party form with the v2 fields (name, Provider, Player, downvotes, raffle, request rules) and the Spotify prerequisite. It refuses creation only when the chosen Player needs a control link that is missing, and links to `/spotify?return=/parties/create`. The Search link is never required, even when Spotify Search is enabled (resolved question 5). Verify with feature tests for each prerequisite case, including creation succeeding with Spotify Search enabled and no Search link, settings applied at creation, and the non-Spotify (Soloist) path needing no link, plus a screenshot comparison.
 - [ ] 5.3 [feat-47, feat-34, dec-8] Add `parties.show_qrcode` (default true) in `UpdatePartyRequest`, the API Resource, the public Party payload (AsyncAPI updated) and the Display section. The TV hides the QR code and join link when it is off, live. Verify with feature tests (default on, toggle logged), an AsyncAPI coverage test, and a Vitest test that a `party.state_changed` payload with `show_qrcode: false` hides the QR code on `Tv.vue`.
 - [ ] 5.4 [feat-41] Player Tokens page (`Party/PlayerTokens.vue`) for the Host: list label, last used and expiry; issue with a label, show the token once with copy; revoke with confirmation. It uses the existing API Actions through web routes. Verify with feature tests (Host only; token shown only in the issue response; revoke disconnects using the existing fake) and a Vitest test that the token is cleared from the page state on navigation.
 
 ## 6. Previous control
 
-- [ ] 6.1 [dec-2] Previous control (design D8, open questions 2 and 3).
+- [ ] 6.1 [dec-2] Previous control (design D8, open question 1, resolved question 3).
+  - First confirm the Soloist protocol in `/home/workspace/musicparty/musicparty-soloist`: find where Soloist handles commands relayed from Music Party (its proxy relays `{type: "command", command: ...}` frames, `src/proxy.ts`) and whether it accepts `skip_prev`, which its own UI sends (`src/web-vue/pages/Landing.vue`, `components/MiniPlayer.vue`). Record the finding in the PR. Use the name Soloist understands; if it handles no relayed previous command, the Soloist Player declares Previous unsupported.
   - Add `Control::Previous`, `Player::previous()`, `previous` in the web and API route constraints, and OpenAPI.
-  - Polling Player: seek 0 when position is at least 3 s, else Spotify previous on the chosen device. Soloist: `previous` command, unsupported if the Soloist reports an unknown command. Browser: unsupported.
-  - The coordinator's replay marker records a `plays.replay` Play for the same Request without advancing the Queue or Up Next.
+  - Polling Player: seek 0 when position is at least 3 s, else Spotify previous on the chosen device. Soloist: the confirmed command. Browser: unsupported.
+  - A replay records nothing: the coordinator's marker points now-playing back at the existing most recent Play, with no new Play, no Queue advance, no Up Next change, no History Playlist append and no no-repeat update.
   - Add the Previous icon in the banner.
 
-  Verify with tests for: restart at 40 s (seek 0, no Play); previous at 1 s (Spotify previous called, replay Play recorded, Up Next unchanged and still handed off after); Soloist command sent; Browser refused; Moderator forbidden; a replay without a marker handled as today. Add a Vitest test that Previous is disabled when the Player does not support it.
+  Verify with tests for: restart at 40 s (seek 0, no Play); previous at 1 s (Spotify previous called; Play count, History, Live Stats, Party Export and the no-repeat check unchanged; a Rating during the replay lands on the existing Play; Up Next unchanged and handed off after); Soloist command sent with the confirmed name; Browser refused; Moderator forbidden; a replay without a marker handled as today. Add a Vitest test that Previous is disabled when the Player does not support it.
 
 ## 7. Queue and moderation
 
@@ -116,7 +117,7 @@ UI tasks must match the v2 look (design D18). Each one names its references from
 - [ ] 7.2 [feat-30, consolidated WP7] Blocklist parity.
   - An edit form for value, type, regex flag and notes, using the existing PUT route. Edits are logged with old and new values.
   - Delete asks for confirmation.
-  - Non-regex values are matched whole with `*` as a wildcard and every other character literal, ignoring case for names and ISRC (open question 7).
+  - Non-regex values are matched whole with `*` as a wildcard and every other character literal, ignoring case for names and ISRC (resolved question 7).
   - Regex is allowed on every match type.
   - Prefill from `?type=&value=&name=` query parameters for the song detail Moderate action.
 
@@ -156,7 +157,7 @@ UI tasks must match the v2 look (design D18). Each one names its references from
 
 ## 10. Mods
 
-- [ ] 10.1 [diff-1] Trust Score Mod (design D9, ADR-0030, open question 4).
+- [ ] 10.1 [diff-1] Trust Score Mod (design D9, ADR-0030, resolved question 4).
   - Add the `mod_trust_scores` table, the hourly Scheduled action and personalised PageRank.
   - Settings: anchor (default Host), window (7 days), weighting (off) and maximum bonus (2).
   - The weighting Score Modifier.
@@ -165,7 +166,7 @@ UI tasks must match the v2 look (design D18). Each one names its references from
   - Add the Mod to GLOSSARY.md.
 
   Verify with PageRank unit tests on hand-computed three- and four-member graphs; a test that the anchor's upvotes raise A over B; a weighting on/off Score test; that a Guest and the public API see no trust; that a run is logged; and the command output.
-- [ ] 10.2 [dec-3, diff-3] Whamageddon Mod (design D10, open question 5).
+- [ ] 10.2 [dec-3, diff-3] Whamageddon Mod (design D10, resolved question 6).
   - Add the `mod_whamageddon_states` table and settings (Track, label, bonus 1, re-add 2 h, quiet hours 02:00 to 10:00, hold from 23:00).
   - Enable adds a system Request with a Decoration badge; disable removes it.
   - The hourly action adds the bonus through a Score Modifier, re-adds after play, and holds and releases through a new `Queue\Actions\SetRequestNotBefore`.

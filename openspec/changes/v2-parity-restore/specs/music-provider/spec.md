@@ -12,11 +12,15 @@ The system SHALL expose Tracks with a provider-independent shape: Provider ident
 - **THEN** the Track is still returned, with those fields empty
 
 ### Requirement: Catalogue search
-The system SHALL let any logged-in Member search the Party's Music Provider catalogue by text, returning Tracks in pages of 20 with a next page while the Provider has more. Search SHALL use the Host's Search account when the Music Provider supports one and it is linked and usable, and the instance-level credential otherwise. Search SHALL NOT use the Host's control account.
+The system SHALL let any logged-in Member search the Party's Music Provider catalogue by text, returning Tracks in pages of 20 with a next page while the Provider has more. Search SHALL use the Host's Search account when the Music Provider supports one and it is linked and usable, else the Host's control account when it is linked and usable, else the instance-level credential.
 
 #### Scenario: Search without a linked account
-- **WHEN** a Member searches and the Host has linked no Search account
+- **WHEN** a Member searches and the Host has linked no Music Provider account
 - **THEN** results are still returned, using the instance credential
+
+#### Scenario: Search with only a control account
+- **WHEN** the Host has linked a Spotify control account but no Search account and a Member searches
+- **THEN** the search is made with the control account's token
 
 #### Scenario: Search with a Search account
 - **WHEN** the Host of a Spotify Party has a usable Spotify Search account and a Member searches
@@ -24,7 +28,7 @@ The system SHALL let any logged-in Member search the Party's Music Provider cata
 
 #### Scenario: Search account needs re-linking
 - **WHEN** the Host's Search account has been rejected by the Music Provider
-- **THEN** search falls back to the instance credential and the Host is told to re-link it
+- **THEN** search falls back to the control account, or the instance credential if there is none, and the Host is told to re-link it
 
 #### Scenario: Next page
 - **WHEN** a Member asks for the second page of results for a query that has more than 20 matches
@@ -39,7 +43,7 @@ The system SHALL let any logged-in Member search the Party's Music Provider cata
 - **THEN** that Music Provider is reported as unavailable and cannot be selected for a Party
 
 ### Requirement: Host account linking
-The system SHALL let only a user who may create or host Parties link a Music Provider account, through an OAuth authorisation started from the Link Spotify Account page. For Spotify there are two links: the control account, which asks for playlist and playback scopes, and, when an admin has enabled the Spotify Search provider, the Search account. After linking the user SHALL return to the page they started from. The Host SHALL be able to unlink either account at any time.
+The system SHALL let only a user who may create or host Parties link a Music Provider account, through an OAuth authorisation started from the Link Spotify Account page. For Spotify there are two links: the control account, which asks for playlist and playback scopes, and, when an admin has enabled the Spotify Search provider, an optional Search account. After linking the user SHALL return to the page they started from. The Host SHALL be able to unlink either account at any time.
 
 #### Scenario: Host links an account
 - **WHEN** a Host completes the Music Provider OAuth flow for the control account
@@ -71,10 +75,10 @@ The system SHALL let only a user who may create or host Parties link a Music Pro
 
 #### Scenario: Unlinking the Search account
 - **WHEN** a Host unlinks their Search account
-- **THEN** its credentials are deleted and search uses the instance credential
+- **THEN** its credentials are deleted and search uses the control account, or the instance credential if there is none
 
 ### Requirement: Spotify Provider
-The system SHALL provide a Spotify Music Provider implementing the contract. It SHALL use the Host's Spotify Search account or instance-level client credentials for search, instance-level client credentials for Track lookup, and the Host's control account for playlists and for Players that need one. Rate-limit backoff SHALL be kept per Spotify client application, so a rate limit on one application does not stop calls made with another.
+The system SHALL provide a Spotify Music Provider implementing the contract. It SHALL search with the Host's Spotify Search account, else the Host's control account, else instance-level client credentials, and use instance-level client credentials for Track lookup, and the Host's control account for playlists and for Players that need one. Rate-limit backoff SHALL be kept per Spotify client application, so a rate limit on one application does not stop calls made with another.
 
 #### Scenario: Spotify search
 - **WHEN** a Member searches a Spotify Party

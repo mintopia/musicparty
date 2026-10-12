@@ -143,6 +143,10 @@ The History page SHALL list the Party's Plays and unsent Requests with filters b
 - **WHEN** a Member sorts History by score, highest first
 - **THEN** the Plays are ordered by score and the order holds across pages
 
+#### Scenario: Replay not listed
+- **WHEN** the Host replays the previous Track with the Previous control
+- **THEN** History lists that Track once, and the no-repeat window still runs from its original Play
+
 #### Scenario: Unsent Requests
 - **WHEN** a Member filters History by unsent
 - **THEN** Requests that were Queued but never played are listed

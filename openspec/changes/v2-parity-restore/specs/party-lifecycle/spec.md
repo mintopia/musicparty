@@ -1,7 +1,7 @@
 ## MODIFIED Requirements
 
 ### Requirement: Party creation
-The system SHALL allow a user holding the create-party instance role to create a Party. The creator SHALL become the Party's Host. A Party SHALL be bound to exactly one Music Provider and paired with one Player that has Compatibility with that Music Provider. The create form SHALL offer the v2 fields: name, Music Provider, Player, downvotes, the raffle selection mode and the request rules. A Spotify Party whose Player needs a linked account, or whose instance has Spotify Search enabled, SHALL require the needed Spotify links first.
+The system SHALL allow a user holding the create-party instance role to create a Party. The creator SHALL become the Party's Host. A Party SHALL be bound to exactly one Music Provider and paired with one Player that has Compatibility with that Music Provider. The create form SHALL offer the v2 fields: name, Music Provider, Player, downvotes, the raffle selection mode and the request rules. A Spotify Party whose Player needs a linked account SHALL require the Spotify control link first. The Spotify Search link SHALL NOT be required.
 
 #### Scenario: Creating a Party
 - **WHEN** a user with the create-party role creates a Party choosing a Music Provider and a compatible Player
@@ -19,9 +19,9 @@ The system SHALL allow a user holding the create-party instance role to create a
 - **WHEN** a user without a linked Spotify control account chooses Spotify with the Polling Player
 - **THEN** the form explains that Spotify must be linked first, links to the Link Spotify Account page, and refuses to create the Party until it is linked
 
-#### Scenario: Search link required when enabled
+#### Scenario: Search link optional
 - **WHEN** an admin has enabled the Spotify Search provider and the user has linked only the control account
-- **THEN** creating a Spotify Party is refused until the Search account is linked
+- **THEN** the Spotify Party is created, and its search uses the control account
 
 #### Scenario: Settings chosen at creation
 - **WHEN** a user creates a Party with downvotes off and the raffle selection mode

@@ -9,10 +9,10 @@ The worst gaps block real use. A Host cannot go Live from the web UI because not
 ## What Changes
 
 - **Host setup and go-live.** A restored "Link Spotify Account" page where the Host links a control account (now with playback scopes) and, when the admin enables it, a Spotify Search account, then returns to where they started. The Host can unlink either. The Party settings page gains Fallback Playlist and History Playlist pickers (Host's playlists or a pasted playlist), the Player kind (v3's form of v2's polling toggle) and, for the Polling Player, a playback device picker. There is no forced playback. feat-55, feat-48, feat-49, feat-40, diff-12, diff-8, dec-6
-- Spotify search uses the Host's Spotify Search account when linked, else the instance client credentials. The Spotify rate-limit backoff is kept per Spotify client application, not per instance (ADR-0028 amends ADR-0021). diff-8
+- Spotify search uses the Host's Spotify Search account when linked, else the Host's control account, else the instance client credentials. The Search link is optional. The Spotify rate-limit backoff is kept per Spotify client application, not per instance (ADR-0028 amends ADR-0021). diff-8
 - **Flash messages.** One flash convention (`success`, `error`, `info`, `warning`) across all controllers and pages, shown on the login page too, with the v2 wording restored. consolidated WP3
 - **Identity.** A new social login whose email matches an existing user's linked account joins that user (ADR-0027). **BREAKING (data)** Nicknames become unique ignoring case, at most 32 characters; a migration renames duplicates first. Signup uses the admin's privacy policy URL, needs consent when either a terms or a privacy URL is set, and matches the v2 page. Login shows the site name and logo. Opening a valid Party link, QR code or the default Party joins the user automatically. dec-4, dec-5, dec-9, consolidated WP4, ui-L1, ui-L3, ui-L4
-- **Now Playing and Party shell.** A v2-faithful Now Playing header (blurred album art, progress bar with elapsed and total time, net rating, icon controls) on every Party page, a working mobile mini-player expand, and the party header shown only where it belongs. A Previous control in the API, Players and UI. feat-2, ui-Q1, ui-Q2, ui-Q3, ui-Q4, ui-Q10, ui-Q11, ui-P5, ui-X9, dec-2
+- **Now Playing and Party shell.** A v2-faithful Now Playing header (blurred album art, progress bar with elapsed and total time, net rating, icon controls) on every Party page, a working mobile mini-player expand, and the party header shown only where it belongs. A Previous control in the API, Players and UI; a replay through Previous is not counted as a Play. feat-2, ui-Q1, ui-Q2, ui-Q3, ui-Q4, ui-Q10, ui-Q11, ui-P5, ui-X9, dec-2
 - **Navigation.** v2's per-Party menu (Queue, Search, History/Songs, Users, Moderation, Pending, Party Log, Settings, Theme, TV Mode, Web Player) with role-aware entries, correct breadcrumbs, and a guard on the Browser Player page. feat-3, ui-H3, diff-16, ui-G1, ui-G7, feat-34, ui-X8
 - **Party settings and creation.** Every Party setting editable on a sectioned v2-style settings page (name, downvotes, downvotes per hour, raffle selection with its hint, request rules, QR toggle), a Player Tokens page, and a Create Party form with the v2 fields and the Spotify link prerequisite. A `show_qrcode` setting (default on) hides the TV QR code. feat-5, feat-6, feat-33, feat-41, feat-42, feat-45, feat-46, feat-47, dec-8, ui-X3, ui-X7
 - **Queue and moderation.** Staff remove any queued Request from the list. Blocklist entries can be edited and deletion asks for confirmation; `*` wildcards and regular expressions also work on identifier and ISRC entries. The Queue shows 20 Requests and loads more on scroll, and duplicate detection stays exact by Track id and ISRC. Inline queue search, filled vote icons, v2 row size, weighted-mode heading and hint, heart icon in upvote-only mode, centred vote errors, session keep-alive, readable Party Log and Pending layouts. feat-9, feat-30, ui-Q5, ui-Q6, ui-Q7, ui-Q9, dec-10, ui-X4, ui-X5, consolidated WP7 and WP10
@@ -51,13 +51,14 @@ The worst gaps block real use. A Host cannot go Live from the web UI because not
 ### Modified Capabilities
 
 - `membership`: login by Laravel Passport, email account merge, auto-join, unique nicknames, consent with a privacy URL, one Host per Party, member list and member detail.
-- `music-provider`: Spotify Search account for catalogue search, paged search, the Link Spotify Account page and its scopes, unlinking, backoff per client application.
-- `players`: Previous control, Polling Player device selection, no forced playback, Player kind change from settings.
-- `party-lifecycle`: Create Party fields and the Spotify prerequisite, every setting on the settings page, the `show_qrcode` setting, Player Token management page.
+- `music-provider`: optional Spotify Search account for catalogue search with control-account fallback, paged search, the Link Spotify Account page and its scopes, unlinking, backoff per client application.
+- `players`: Previous control (replays not counted), Polling Player device selection, no forced playback, Player kind change from settings.
+- `party-lifecycle`: Create Party fields and the Spotify control-link prerequisite, every setting on the settings page, the `show_qrcode` setting, Player Token management page.
 - `requests-queue`: Blocklist wildcards, regex on all match types and editing; staff removal from the list; queue paging; exact duplicate detection; song detail; search results with eligibility and voting; history sorting.
 - `mods`: Trust Score Mod and Whamageddon Mod; "Future Mods are non-goals" narrowed to AI suggestion.
 - `theming`: no theme library; QR toggle on the TV screen.
 - `admin`: Laravel Passport and Spotify Search in provider settings.
+- `stats`: a replay through Previous is not counted.
 - `operations`: operator `party:*` commands, console log mirroring, proactive token refresh.
 
 ## Impact

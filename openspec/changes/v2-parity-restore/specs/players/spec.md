@@ -49,7 +49,7 @@ The Polling Player SHALL support the previous, play, pause, skip, seek and volum
 ## ADDED Requirements
 
 ### Requirement: Previous control
-The Host SHALL be able to send a Previous control through the UI and the API. If the current Track has played for at least 3 seconds, Previous SHALL restart it. Otherwise it SHALL replay the Track of the Party's most recent Play, recorded as a new Play of the same Request without changing Votes or the Queue. The Up Next Request SHALL stay locked and play after the replay.
+The Host SHALL be able to send a Previous control through the UI and the API. If the current Track has played for at least 3 seconds, Previous SHALL restart it. Otherwise it SHALL replay the Track of the Party's most recent Play. A replay SHALL NOT be recorded as a Play and SHALL NOT change Votes, the Queue, History, Stats, the History Playlist or the no-repeat window. The Up Next Request SHALL stay locked and play after the replay.
 
 #### Scenario: Restart
 - **WHEN** the Host presses Previous 40 seconds into a Track
@@ -57,11 +57,15 @@ The Host SHALL be able to send a Previous control through the UI and the API. If
 
 #### Scenario: Back to the last Track
 - **WHEN** the Host presses Previous 1 second into a Track that followed another Play
-- **THEN** the previous Track plays again, a Play is recorded for it, and the Up Next Request is unchanged
+- **THEN** the previous Track plays again, no new Play is recorded, and the Up Next Request is unchanged
+
+#### Scenario: Replay not counted
+- **WHEN** a Track is replayed through Previous
+- **THEN** History lists it once, Live Stats count it once, and the no-repeat window still runs from its original Play
 
 #### Scenario: Soloist Player
 - **WHEN** the Host presses Previous for a Party that uses the Soloist Player
-- **THEN** a previous command is sent to the Soloist
+- **THEN** Soloist's previous-track command is sent to the Soloist
 
 #### Scenario: Not allowed for Moderators
 - **WHEN** a Moderator or Guest sends Previous

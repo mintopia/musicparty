@@ -52,9 +52,9 @@ Unlinking uses the existing behaviour from the music-provider spec: delete the c
 
 A Search link is a `LinkedAccount` under that provider. It uses the same encrypted tokens and `HostAccountTokens` refresh, parameterised by the provider's credentials.
 
-`SpotifyMusicProvider::search` resolves its credential through a small `SearchCredentials` resolver in the Music context. If the Party Host's Search account is usable, it uses that account's bearer token. Otherwise it uses the instance client-credentials token. It never uses the Host's control account, unlike v2's fallback.
+`SpotifyMusicProvider::search` resolves its credential through a small `SearchCredentials` resolver in the Music context. The order is v2's: the Party Host's Search account if it is usable, then the Host's control account if it is usable, then the instance client-credentials token (for Hosts with no Spotify link, such as Soloist Parties). The Search link is optional everywhere, including Create Party, even when an admin has enabled Spotify Search (resolved question 5).
 
-The shared backoff (ADR-0021, amended by ADR-0028) is keyed by a hash of the client id, so the Search application and the control or instance application back off independently. When a Search account refresh fails with `invalid_grant`, the account is marked `needs_relink`, search falls back, and the Host sees a warning on the Party page.
+The shared backoff (ADR-0021, amended by ADR-0028) is keyed by a hash of the client id, so the Search application and the control or instance application back off independently. When a Search account refresh fails with `invalid_grant`, the account is marked `needs_relink`, search falls back to the control account, and the Host sees a warning on the Party page. Without a Search link, guest search shares the control application's quota and backoff, as in v2; linking a Search account is how a Host separates them.
 
 The alternative was to keep instance credentials only, as in the archived proposal. The user overruled it.
 
@@ -120,10 +120,12 @@ The alternative was to pass props per controller. That was rejected because 14 c
 Rule: if `position_ms >= 3000`, restart with `seek(0)`. Otherwise go back to the previous Track:
 
 - The Polling Player calls Spotify `POST /me/player/previous` on the chosen device.
-- The Soloist Player sends a `previous` command (open question 2).
+- The Soloist Player sends Soloist's previous-track command. Soloist's own UI sends `skip_prev` (`musicparty-soloist/src/web-vue/pages/Landing.vue`, `components/MiniPlayer.vue`), and its proxy relays Music Party commands in the same `{type: "command", command: ...}` frame shape (`src/proxy.ts`), so `skip_prev` is the expected name. Task 6.1 starts by confirming where Soloist handles relayed commands and that it accepts `skip_prev` (open question 1).
 - The Browser Player stays unsupported (existing spec).
 
-Before sending, the coordinator stores a short-lived marker in the cache: Party, expected Track, 30 seconds. When the next observed Track change matches the marker's Track, which is the Track of the most recent Play, the coordinator records a new Play for that same Request with `replay = true` and does not advance the Queue, re-lock Up Next or consume the hand-off. Without the marker, an unexpected Track is handled as today. `plays.replay` is a new boolean column. History and Stats count replays as Plays (open question 3).
+A replay does not count as a Play anywhere (resolved question 3). The chosen model is to record nothing: no Play row, no flag, no schema change. Before sending, the coordinator stores a short-lived marker in the cache: Party, the most recent Play's id and Track, 30 seconds. When the next observed Track change matches the marker's Track, the coordinator points the Party's now-playing state back at that existing Play (so Ratings during the replay land on it) and writes nothing else: it does not create a Play, advance the Queue, re-lock Up Next, consume the hand-off, append to the History Playlist or touch the no-repeat time. When the replay ends, the Up Next hand-off proceeds as normal. Without the marker, an unexpected Track is handled as today.
+
+The alternative, recording a Play flagged `replay` and excluding it in History, Stats, Party Export, no-repeat and History Playlist append, was rejected: it needs a column and an exclusion in five places, each a chance to miss one. The interrupted Track's Play was recorded when it started and stays, as for a skip.
 
 ### D9. Trust Score Mod (diff-1, ADR-0030)
 
@@ -131,7 +133,7 @@ The Mod lives in the Mod context with its own table, `mod_trust_scores` (`party_
 
 Its hourly Scheduled action, and `party:calculatetrust`, build a weighted directed graph among the Party's Members. The weight of edge A→B is the sum of A's positive Votes on B's Requests plus A's positive Ratings on Plays of B's Requests, within the window. Trust is then personalised PageRank anchored on the anchor Member: damping 0.85, teleport to the anchor, power iteration until the L1 change is below 1e-6 or 100 iterations. The result is normalised so the highest score is 1.
 
-v2 solved a linear system with NumPHP. That needs a new dependency and can be singular. PageRank is the standard formulation of EigenKarma and always converges (open question 4).
+v2 solved a linear system with NumPHP. That needs a new dependency and can be singular. PageRank is the standard formulation of EigenKarma and always converges (resolved question 4).
 
 Settings:
 
@@ -174,7 +176,7 @@ The hourly Scheduled action behaves as follows:
 
 `not_before` is set through a new Queue Action, `SetRequestNotBefore`, because of the ADR-0012 context rule. The Request carries a Decoration badge with the label and an allow-listed accent. This replaces v2's `css_classes`.
 
-The system Request passes the Blocklist and the Track rules, but not per-Member limits, because it has no requester. A refusal is logged once per run (open question 5).
+The system Request passes the Blocklist and the Track rules, but not per-Member limits, because it has no requester. A refusal is logged once per run (resolved question 6, accepted default).
 
 ### D11. Polling Player device and Player kind from settings (feat-40, diff-12, dec-6, ADR-0032)
 
@@ -289,31 +291,36 @@ Groups 1, 3 and 13 can start at once. After group 1, groups 2 and 4 run in paral
 
 ## Risks / Trade-offs
 
-- [Email merge allows takeover through a provider that does not verify emails and does not say so] → Merge only with a single match, block on an explicit unverified flag, audit every merge, show the user a message. Admin exclusion is open question 1.
+- [Email merge allows takeover through a provider that does not verify emails and does not say so] → Merge only with a single match, block on an explicit unverified flag, audit every merge, show the user a message. Admins are merged too (resolved question 1).
 - [Auto-join on GET can be triggered by a logged-in user's browser prefetch] → The effect is a Guest membership, which is idempotent and harmless. Link unfurlers are anonymous and only reach login.
-- [The Search account adds a second token to refresh, and a second backoff key] → Refresh shares `HostAccountTokens`, and D17 refreshes proactively. Search falls back to instance credentials on any Search account failure.
+- [The Search account adds a second token to refresh, and a second backoff key] → Refresh shares `HostAccountTokens`, and D17 refreshes proactively. Search falls back to the control account, then instance credentials, on any Search account failure.
+- [Without a Search link, guest search spends the control application's quota] → Accepted by the user (search link optional). The Host is shown that linking a Search account separates the quotas.
 - [Nickname dedupe renames users] → Only later duplicates are renamed. Every rename is audited, and the release notes call it out.
 - [A client-side Queue window keeps the full Queue in memory on phones] → It is already the case today (ADR-0018 payloads). The window only reduces DOM nodes.
 - [Eligibility for 20 results per search adds queries] → One batch Action, the Blocklist loaded once, and a query-count test.
-- [Previous replay detection depends on a 30-second marker] → If the Player reports the replay late, it is handled as an unexpected Track, which is today's behaviour. That is acceptable for a rare control.
+- [Previous replay detection depends on a 30-second marker] → If the Player reports the replay late, it is handled as an unexpected Track, which is today's behaviour and may record a Play. That is acceptable for a rare control, and the marker test covers the normal timing.
 - [Mirroring logs in commands could leak secrets to terminal scrollback] → Logs already avoid tokens (music-provider spec). Mirroring is the same content the log file gets.
 
 ## Migration Plan
 
-1. Migrations, all portable, each with a down: `linked_accounts.email_normalised` and `scopes`; `users.nickname_key` with dedupe and the unique index; `parties.show_qrcode` (default true), `playback_device_id`, `playback_device_name`; `plays.replay`; `mod_trust_scores`; `mod_whamageddon_states`; the `spotifysearch` social provider row through the provider seeder.
+1. Migrations, all portable, each with a down: `linked_accounts.email_normalised` and `scopes`; `users.nickname_key` with dedupe and the unique index; `parties.show_qrcode` (default true), `playback_device_id`, `playback_device_name`; `mod_trust_scores`; `mod_whamageddon_states`; the `spotifysearch` social provider row through the provider seeder.
 2. Deploy. Hosts whose control link lacks playback scopes see "Re-link needed for playback" and re-link once.
-3. Admins who want separate search quota create a second Spotify application, enter it under Spotify Search and enable it. Hosts then link a Search account. Until then, search behaves as today.
+3. Admins who want separate search quota create a second Spotify application, enter it under Spotify Search and enable it. Hosts may then link a Search account. Until a Host does, their Party's search uses their control account, else the instance credentials.
 4. Rollback: every migration has a down. The nickname dedupe is not reversed: renamed nicknames stay renamed, which is harmless.
 
 ## Open Questions
 
-Each has a recommended answer that tasks.md implements. If the user decides otherwise before `/to-tickets`, update the named task.
+1. **Which command name does Soloist accept for previous?** Expected `skip_prev` (see D8). Task 6.1 confirms it in `/home/workspace/musicparty/musicparty-soloist` before building. If Soloist does not handle a relayed previous command, the Soloist Player declares Previous unsupported and the UI disables it.
 
-1. **Should auto-merge by email skip accounts with the admin instance role?** Recommended: no. Merge admins too, as the user ruled. Every merge is audited and shown. If the user prefers caution, skip the merge when the matched user is an admin (task 4.2).
-2. **Does the Soloist protocol support `previous`?** Recommended: send `{"command":"previous"}`. If the Soloist reports an unknown command, the Soloist Player marks Previous unsupported for that connection, and the UI disables it (task 6.1). Confirm against the Soloist repository.
-3. **Do replayed Plays count in Stats, History and the no-repeat window?** Recommended: yes. They are real Plays, flagged `replay` for later filtering (task 6.1).
-4. **What trust formula should the Trust Score Mod use?** Recommended: personalised PageRank (D9) instead of v2's linear solve, which needs NumPHP and can be singular (task 10.1).
-5. **Which rules does Whamageddon's system Request follow?** Recommended: the Blocklist, explicit filter and length rules, but no per-Member limits. If refused, log once per run and retry next hour (task 10.2).
-6. **Is the Search link required for Create Party when Spotify Search is enabled?** Recommended: yes, matching v2's both-links gate. When the provider is not enabled, only the control link the Player needs is required (tasks 2.2 and 5.2).
-7. **Should Blocklist wildcard matching be case-sensitive for identifiers?** Recommended: names and ISRCs match ignoring case. Track, artist and album ids are case-sensitive, because Spotify ids are base62 (task 7.2).
-8. **What format should a renamed duplicate nickname use?** Recommended: `"{name} {n}"`, cut to 32 characters (task 4.1).
+## Resolved questions
+
+Answered by the user on 2026-10-12 unless marked "accepted default" (recommendation kept, not raised with the user).
+
+1. **Should auto-merge by email skip admin accounts?** No. Admins are merged too, and every merge is audited and shown (task 4.2).
+2. **Does the Soloist protocol support previous?** Still unconfirmed, so it stays open as question 1 above. Soloist's UI uses `skip_prev`. Task 6.1 confirms first.
+3. **Does a replay through Previous count as a Play?** No. It does not count in History, Stats, Party Export or the no-repeat window. D8 records nothing for a replay (task 6.1).
+4. **What trust formula?** Personalised PageRank (D9, task 10.1).
+5. **Is the Search link required for Create Party?** No. Only the control link the Player needs is required, even when Spotify Search is enabled. Without a Search link, search uses the Host's control account (D3, tasks 2.2 and 5.2).
+6. **Which rules does Whamageddon's system Request follow?** Accepted default: the Blocklist, explicit filter and length rules, but no per-Member limits. If refused, log once per run and retry next hour (task 10.2).
+7. **Is Blocklist wildcard matching case-sensitive for identifiers?** Accepted default: names and ISRCs ignore case. Track, artist and album ids are case-sensitive (task 7.2).
+8. **What format for a renamed duplicate nickname?** Accepted default: `"{name} {n}"`, cut to 32 characters (task 4.1).
