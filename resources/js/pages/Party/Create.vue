@@ -111,48 +111,59 @@ const fieldClass =
                 <Link v-if="spotify_link_url" :href="spotify_link_url" data-testid="spotify-link" class="text-primary hover:underline">Link Spotify account</Link>
             </p>
 
-            <fieldset class="flex flex-col gap-3">
-                <legend class="mb-1 text-sm font-medium">Settings</legend>
+            <fieldset class="flex flex-col gap-3 border-t border-border pt-4">
+                <legend class="mb-1 text-base font-semibold">Settings</legend>
                 <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.downvotes" type="checkbox" />
-                    Allow downvotes
+                    <input v-model="form.downvotes" type="checkbox" class="size-4" />
+                    Allow songs to be downvoted
                 </label>
-                <div v-if="form.downvotes" class="flex flex-col gap-1.5">
-                    <label for="party-downvotes-per-hour" class="text-sm">Downvotes per hour (blank for unlimited)</label>
-                    <input id="party-downvotes-per-hour" v-model.number="form.downvotes_per_hour" type="number" min="0" max="1000" :class="fieldClass" />
-                    <p v-if="form.errors.downvotes_per_hour" role="alert" class="text-sm text-danger">{{ form.errors.downvotes_per_hour }}</p>
-                </div>
-                <div class="flex flex-col gap-1.5">
-                    <label for="party-selection-mode" class="text-sm">Raffle</label>
-                    <select id="party-selection-mode" v-model="form.selection_mode" :class="fieldClass">
-                        <option value="deterministic">Off (highest score first)</option>
-                        <option value="weighted">On (weighted raffle)</option>
-                    </select>
-                </div>
                 <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.allow_requests" type="checkbox" />
-                    Allow requests
+                    <input
+                        :checked="form.selection_mode === 'weighted'"
+                        type="checkbox"
+                        class="size-4"
+                        @change="form.selection_mode = $event.target.checked ? 'weighted' : 'deterministic'"
+                    />
+                    Treat the queue as a raffle
                 </label>
-                <template v-if="form.allow_requests">
-                    <div class="flex flex-col gap-1.5">
-                        <label for="party-max-requests" class="text-sm">Requests per person (blank for unlimited)</label>
-                        <input id="party-max-requests" v-model.number="form.max_requests" type="number" min="1" max="1000" :class="fieldClass" />
-                        <p v-if="form.errors.max_requests" role="alert" class="text-sm text-danger">{{ form.errors.max_requests }}</p>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm">
-                        <input v-model="form.hold_requests" type="checkbox" />
-                        Hold requests for approval
-                    </label>
-                </template>
+                <label class="flex items-center gap-2 text-sm">
+                    <input v-model="form.allow_requests" type="checkbox" class="size-4" />
+                    Allow new songs to be added to the queue
+                </label>
+                <label v-if="form.allow_requests" class="flex items-center gap-2 text-sm">
+                    <input v-model="form.hold_requests" type="checkbox" class="size-4" />
+                    Hold requests for approval
+                </label>
             </fieldset>
 
-            <button
-                type="submit"
-                :disabled="form.processing"
-                class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50"
-            >
-                Create party
-            </button>
+            <fieldset class="flex flex-col gap-3 border-t border-border pt-4">
+                <legend class="mb-1 text-base font-semibold">Restrictions</legend>
+                <div class="grid gap-4 md:grid-cols-2">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="party-downvotes-per-hour" class="text-sm font-medium">Max downvotes</label>
+                        <input id="party-downvotes-per-hour" v-model.number="form.downvotes_per_hour" type="number" min="0" max="1000" placeholder="per hour" :disabled="!form.downvotes" :class="[fieldClass, 'disabled:opacity-50']" />
+                        <small class="text-xs text-muted">The maximum number of times a user can downvote in a 1 hour period</small>
+                        <p v-if="form.errors.downvotes_per_hour" role="alert" class="text-sm text-danger">{{ form.errors.downvotes_per_hour }}</p>
+                    </div>
+                    <div class="flex flex-col gap-1.5">
+                        <label for="party-max-requests" class="text-sm font-medium">Max requests</label>
+                        <input id="party-max-requests" v-model.number="form.max_requests" type="number" min="1" max="1000" :disabled="!form.allow_requests" :class="[fieldClass, 'disabled:opacity-50']" />
+                        <small class="text-xs text-muted">The maximum number of requests that a user can have in the queue</small>
+                        <p v-if="form.errors.max_requests" role="alert" class="text-sm text-danger">{{ form.errors.max_requests }}</p>
+                    </div>
+                </div>
+            </fieldset>
+
+            <div class="flex items-center justify-end gap-3 border-t border-border pt-4">
+                <Link href="/" class="text-sm text-primary hover:underline">Cancel</Link>
+                <button
+                    type="submit"
+                    :disabled="form.processing"
+                    class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white hover:brightness-110 disabled:opacity-50"
+                >
+                    Create party
+                </button>
+            </div>
         </form>
     </div>
 </template>
