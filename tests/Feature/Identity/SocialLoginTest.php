@@ -13,43 +13,10 @@ use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
-use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User as SocialiteUser;
-use Mockery\MockInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 uses(RefreshDatabase::class);
-
-/**
- * @param  array<string, mixed>  $overrides
- */
-function seedDiscord(array $overrides = []): SocialProvider
-{
-    config(['services.discord.client_id' => 'client-id', 'services.discord.client_secret' => 'client-secret']);
-    test()->artisan('providers:seed')->assertSuccessful();
-
-    return tap(SocialProvider::query()->where('code', 'discord')->firstOrFail(), fn (SocialProvider $provider) => $provider->forceFill($overrides)->save());
-}
-
-function remoteUser(string $id = '1001', string $nickname = 'ravebot'): SocialiteUser
-{
-    return (new SocialiteUser)->map([
-        'id' => $id,
-        'nickname' => $nickname,
-        'name' => 'Rave Bot',
-        'email' => 'rave@example.test',
-        'avatar' => 'https://cdn.example.test/a.png',
-    ])->setToken('access-token')->setRefreshToken('refresh-token');
-}
-
-function mockDriver(): MockInterface
-{
-    $driver = Mockery::mock(SocialiteDriver::class);
-    Socialite::shouldReceive('buildProvider')->andReturn($driver);
-
-    return $driver;
-}
 
 it('offers only enabled and configured providers on the login page', function () {
     seedDiscord();
@@ -63,6 +30,17 @@ it('offers only enabled and configured providers on the login page', function ()
             ->where('providers.0.code', 'discord')
             ->where('providers.0.name', 'Discord')
             ->where('providers.0.url', route('login.redirect', 'discord')));
+});
+
+it('never offers the Spotify Search provider for login even when forced on', function () {
+    seedDiscord();
+    config(['services.spotifysearch' => ['client_id' => 'ss-id', 'client_secret' => 'ss-secret']]);
+    test()->artisan('providers:seed')->assertSuccessful();
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true, 'auth_enabled' => true]);
+
+    $this->get(route('login'))->assertInertia(fn ($page) => $page
+        ->has('providers', 1)
+        ->where('providers.0.code', 'discord'));
 });
 
 it('hides a provider with no credentials from the login page', function () {

@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Providers;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -9,8 +10,12 @@ use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Data\TrackData;
+use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
+use App\Domain\Music\Providers\Spotify\SearchCredentials;
+use App\Domain\Music\Providers\Spotify\SearchSource;
 use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\PendingRequest;
@@ -38,24 +43,37 @@ class SpotifyMusicProvider implements MusicProvider
 
     private const int PLAYLIST_CACHE_SECONDS = 300;
 
-    public function __construct(private readonly SpotifyApi $api) {}
+    public function __construct(private readonly SpotifyApi $api, private readonly SearchCredentials $searchCredentials, private readonly HostAccountTokens $hostTokens) {}
 
     public function id(): string
     {
         return self::ID;
     }
 
-    public function search(string $query, int $limit, int $offset): SearchPage
+    public function search(string $query, int $limit, int $offset, ?User $host = null): SearchPage
     {
-        $response = $this->get('/search', array_filter([
+        $parameters = array_filter([
             'q' => $query,
             'type' => 'track',
             'limit' => $limit,
             'offset' => $offset,
             'market' => $this->api->market(),
-        ], fn (mixed $value): bool => $value !== null));
+        ], fn (mixed $value): bool => $value !== null);
 
-        $this->api->guard($response);
+        while (true) {
+            $source = $this->searchSource($host);
+
+            try {
+                $response = $this->get('/search', $parameters, $source);
+                break;
+            } catch (HostAccountNeedsRelink $failure) {
+                if ($source->account === null) {
+                    throw $failure;
+                }
+            }
+        }
+
+        $this->api->guard($response, $source->clientId);
 
         /** @var array<string, mixed> $tracks */
         $tracks = $response->json('tracks') ?? [];
@@ -214,12 +232,28 @@ class SpotifyMusicProvider implements MusicProvider
     /**
      * @param  array<string, mixed>  $query
      */
-    private function get(string $path, array $query): Response
+    private function get(string $path, array $query, ?SearchSource $source = null): Response
     {
-        $this->api->assertConfigured();
-        $this->api->assertNotBackingOff();
+        $source ??= new SearchSource($this->api->clientId());
+        $account = $source->account;
+
+        if ($account === null) {
+            $this->api->assertConfigured();
+        }
+
+        $this->api->assertNotBackingOff($source->clientId);
 
         try {
+            if ($account !== null) {
+                $response = $this->send($path, $query, $this->hostTokens->accessToken($account));
+
+                if ($response->status() === 401) {
+                    $response = $this->send($path, $query, $this->hostTokens->refreshAfterRejection($account));
+                }
+
+                return $response;
+            }
+
             $response = $this->send($path, $query, $this->accessToken());
 
             if ($response->status() === 401) {
@@ -231,6 +265,11 @@ class SpotifyMusicProvider implements MusicProvider
         }
 
         return $response;
+    }
+
+    private function searchSource(?User $host): SearchSource
+    {
+        return $this->searchCredentials->resolve($host);
     }
 
     /**

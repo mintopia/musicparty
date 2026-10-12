@@ -7,6 +7,7 @@ use App\Domain\Identity\SocialProviders\FacebookProvider;
 use App\Domain\Identity\SocialProviders\GoogleProvider;
 use App\Domain\Identity\SocialProviders\LaravelPassportProvider;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SpotifySearchProvider;
 use App\Domain\Identity\SocialProviders\SteamProvider;
 use App\Domain\Identity\SocialProviders\TwitchProvider;
 
@@ -34,6 +35,7 @@ final class ProviderCatalogue
                 'host' => ['name' => 'Passport Host', 'secret' => false],
             ]],
             'spotify' => ['name' => 'Spotify', 'class' => SpotifyProvider::class, 'fields' => $oauthFields],
+            'spotifysearch' => ['name' => 'Spotify Search', 'class' => SpotifySearchProvider::class, 'fields' => $oauthFields],
             'google' => ['name' => 'Google', 'class' => GoogleProvider::class, 'fields' => $oauthFields],
             'facebook' => ['name' => 'Facebook', 'class' => FacebookProvider::class, 'fields' => $oauthFields],
         ];

@@ -192,3 +192,87 @@ it('shares the spotify link url on create and settings and flags a missing link 
     spotifyLinkLinked($host);
     $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_link_needed', false));
 });
+
+function spotifySearchProvider(bool $enabled = true): SocialProvider
+{
+    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
+
+    return SocialProvider::query()->where('code', 'spotifysearch')->first()
+        ?? SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => $enabled]);
+}
+
+it('shows the Search card only when the admin has enabled the Spotify Search provider', function () {
+    $user = User::factory()->withRole('create-party')->create();
+    spotifyLinkLinked($user);
+
+    $this->actingAs($user)->get(route('spotify.index'))->assertInertia(fn ($page) => $page->where('search_enabled', false)->where('search', null));
+
+    spotifySearchProvider(false);
+    $this->get(route('spotify.index'))->assertInertia(fn ($page) => $page->where('search_enabled', false)->where('search', null));
+
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true]);
+    $this->get(route('spotify.index'))->assertInertia(fn ($page) => $page
+        ->where('search_enabled', true)
+        ->where('search', ['linked' => false, 'name' => null, 'needs_relink' => false])
+        ->where('search_link_url', route('spotify.link', ['account' => 'search', 'return' => '/spotify']))
+        ->where('search_unlink_url', route('spotify.unlink', 'search')));
+});
+
+it('refuses to start a Search link while the provider is disabled and never requires it to create a party', function () {
+    $user = User::factory()->withRole('create-party')->create();
+    spotifyLinkLinked($user);
+
+    $this->actingAs($user)->get(route('spotify.link', 'search'))->assertNotFound();
+
+    spotifySearchProvider();
+    $this->get(route('spotify.index'))->assertInertia(fn ($page) => $page->where('can_create_party', true));
+    $location = $this->get(route('spotify.link', 'search'))->assertRedirect()->headers->get('Location');
+    expect($location)->toContain('client_id=search-id')->and(session('spotify_link_account'))->toBe('search');
+});
+
+it('stores the Search account under its own provider without touching the control link', function () {
+    spotifySearchProvider();
+    $user = User::factory()->withRole('create-party')->create();
+    $control = spotifyLinkLinked($user);
+    mockSpotifyLinkCallback();
+
+    $this->actingAs($user)->withSession(['spotify_link_account' => 'search'])
+        ->get(route('spotify.link.return'))->assertRedirect('/spotify');
+
+    $search = LinkedAccount::query()->where('user_id', $user->id)->where('social_provider_id', SocialProvider::query()->where('code', 'spotifysearch')->value('id'))->firstOrFail();
+    expect($search->refresh_token)->toBe('plain-refresh-token')
+        ->and($control->fresh()->access_token)->toBe($control->access_token);
+
+    $this->get(route('spotify.index'))->assertInertia(fn ($page) => $page->where('search', ['linked' => true, 'name' => 'Host Name', 'needs_relink' => false]));
+});
+
+it('unlinks only the Search account and leaves playback running', function () {
+    spotifySearchProvider();
+    $user = User::factory()->withRole('create-party')->create();
+    $control = spotifyLinkLinked($user);
+    LinkedAccount::factory()->for($user)->create(['social_provider_id' => spotifySearchProvider()->id]);
+    $party = Party::factory()->live()->create(['user_id' => $user->id, 'player_kind' => 'polling']);
+
+    $this->actingAs($user)->delete(route('spotify.unlink', 'search'))->assertRedirect(route('spotify.index'));
+
+    expect(LinkedAccount::query()->where('social_provider_id', spotifySearchProvider()->id)->exists())->toBeFalse()
+        ->and($control->fresh()->access_token)->not->toBeNull()
+        ->and($party->fresh()->state)->toBe(PartyState::Live);
+});
+
+it('flags a Search account needing relink to the host on the party page', function () {
+    $host = User::factory()->withRole('create-party')->create();
+    $party = Party::factory()->create(['user_id' => $host->id, 'player_kind' => 'polling']);
+    PartyMember::factory()->host()->create(['party_id' => $party->id, 'user_id' => $host->id]);
+    spotifyLinkLinked($host);
+    $search = LinkedAccount::factory()->for($host)->needingRelink()->create(['social_provider_id' => spotifySearchProvider()->id]);
+
+    $this->actingAs($host)->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_search_relink_needed', true));
+
+    $search->forceFill(['needs_relink' => false])->save();
+    $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_search_relink_needed', false));
+
+    $search->forceFill(['needs_relink' => true])->save();
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => false]);
+    $this->get(route('parties.show', $party->code))->assertInertia(fn ($page) => $page->where('spotify_search_relink_needed', false));
+});

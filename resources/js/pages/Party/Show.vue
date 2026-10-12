@@ -32,6 +32,7 @@ const props = defineProps({
     enabled_mods: {type: Array, default: () => []},
     spotify_link_needed: {type: Boolean, default: false},
     spotify_link_url: {type: String, default: null},
+    spotify_search_relink_needed: {type: Boolean, default: false},
 });
 
 usePartyPresence(props.party.code);
@@ -212,6 +213,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
     <div v-if="spotify_link_needed" role="alert" data-testid="spotify-link-warning" class="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
         <span>Playback needs a linked Spotify account.</span>
         <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Link Spotify</Link>
+    </div>
+    <div v-if="spotify_search_relink_needed" role="alert" data-testid="spotify-search-relink-warning" class="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
+        <span>Your Spotify Search account needs re-linking. Guest search is using your playback account instead.</span>
+        <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Re-link Spotify Search</Link>
     </div>
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header v-if="section === 'party'" data-testid="party-card" class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">

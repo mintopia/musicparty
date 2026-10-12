@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Testing;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -86,7 +87,7 @@ class FakeMusicProvider implements MusicProvider
         return $this->failNextWith(new ProviderTemporaryFailure('The Music Provider is rate limiting requests.', $retryAfterSeconds));
     }
 
-    public function search(string $query, int $limit, int $offset): SearchPage
+    public function search(string $query, int $limit, int $offset, ?User $host = null): SearchPage
     {
         $this->throwInjectedFailure();
 

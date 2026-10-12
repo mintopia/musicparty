@@ -16,6 +16,7 @@ class ListLoginProviders
             ->with('settings')
             ->where('enabled', true)
             ->where('auth_enabled', true)
+            ->where('supports_auth', true)
             ->orderBy('name')
             ->get()
             ->filter(fn (SocialProvider $provider): bool => $provider->isConfigured())

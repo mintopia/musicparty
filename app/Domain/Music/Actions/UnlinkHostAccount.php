@@ -31,6 +31,10 @@ readonly class UnlinkHostAccount
             ($this->updateAccount)($account, ['access_token' => null, 'refresh_token' => null, 'access_token_expires_at' => null, 'scopes' => null]);
         }
 
+        if ($providerCode !== 'spotify') {
+            return;
+        }
+
         Party::query()
             ->where('user_id', $user->id)
             ->where('state', PartyState::Live)
