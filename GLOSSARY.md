@@ -124,6 +124,14 @@ _Avoid_: Search login, second Spotify login
 The means by which Music Party observes and controls what is actually playing for a Party.
 _Avoid_: Device, driver, playback backend
 
+**Registry**:
+The list in `config/musicparty.php` of the Music Providers and Players that exist in code, with their label, class and, for a Music Provider, the social provider credentials it requires. It says what exists, not what is offered; adding an entry is a code change and starts disabled.
+_Avoid_: Catalogue (that is the Music Provider's tracks), provider table
+
+**Available**:
+A Music Provider is Available when an admin has enabled it and every social provider it requires is configured. A Player is Available when an admin has enabled it and it has Compatibility with the chosen Music Provider. Only Available ones are offered for new Parties or a switch; a Party already using one that is later disabled keeps working. The Fake Music Provider is Available only in `local` and `testing`.
+_Avoid_: Active, live
+
 **Compatibility**:
 The declared set of Music Providers a given kind of Player can play; a Party may only pair a Provider with a compatible Player.
 
