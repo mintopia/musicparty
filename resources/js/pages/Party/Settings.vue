@@ -11,6 +11,7 @@ const props = defineProps({
     settings: {type: Object, required: true},
     enabled_mods: {type: Array, default: () => []},
     mods_url: {type: String, default: null},
+    theme_url: {type: String, default: null},
     spotify_link_url: {type: String, default: null},
     playlists: {type: Array, default: () => []},
     fallback_playlist_id: {type: String, default: null},
@@ -36,6 +37,16 @@ const generalForm = useForm({
 
 const saveGeneral = () => {
     generalForm.patch(`/parties/${props.party.code}`, {preserveScroll: true});
+};
+
+const displayForm = useForm({
+    show_qrcode: props.settings.show_qrcode ?? true,
+});
+
+const hasQrCodeSetting = props.settings.show_qrcode !== undefined;
+
+const saveDisplay = () => {
+    displayForm.patch(`/parties/${props.party.code}`, {preserveScroll: true});
 };
 
 const form = useForm({
@@ -263,6 +274,31 @@ const numberFields = [
                 >Save settings</button>
             </div>
         </form>
+        </Card>
+
+        <Card data-testid="display-section">
+            <template #header>Display</template>
+            <form class="flex flex-col gap-4" data-testid="display-form" @submit.prevent="saveDisplay">
+                <label v-if="hasQrCodeSetting" class="flex min-h-11 items-center gap-3 text-sm">
+                    <input v-model="displayForm.show_qrcode" type="checkbox" data-testid="setting-show_qrcode">
+                    <span>Show the QR code and join link on the TV</span>
+                </label>
+                <div class="flex flex-wrap gap-3">
+                    <button
+                        v-if="hasQrCodeSetting"
+                        type="submit"
+                        :disabled="displayForm.processing"
+                        data-testid="display-save"
+                        class="min-h-11 rounded border border-border px-4 text-sm hover:text-primary disabled:opacity-50"
+                    >Save display</button>
+                    <Link
+                        v-if="theme_url"
+                        :href="theme_url"
+                        data-testid="theme-link"
+                        class="inline-flex min-h-11 items-center rounded border border-border px-3 text-sm hover:text-primary"
+                    >Theme and TV layout</Link>
+                </div>
+            </form>
         </Card>
 
         <Card v-if="mods_url" data-testid="mods-section">

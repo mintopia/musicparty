@@ -24,6 +24,7 @@ const mountSettings = (settings = {}) => mount(Settings, {
     props: {
         party: {code: 'FRI1', name: 'Friday'},
         mods_url: '/parties/FRI1/mods',
+        theme_url: '/parties/FRI1/theme',
         settings: {
             allow_requests: true, max_requests: null, min_song_length: null, max_song_length: null,
             explicit: true, hold_requests: false, no_repeat_interval: null,
@@ -50,5 +51,17 @@ describe('Party settings page', () => {
 
         expect(wrapper.find('[data-testid="raffle-hint"]').text()).toBe('Tracks with more upvotes are more likely to be played.');
         expect(wrapper.find('[data-testid="mods-link"]').attributes('href')).toBe('/parties/FRI1/mods');
+    });
+
+    it('shows the Display section with the theme link and the QR code toggle only when the setting exists', () => {
+        const without = mountSettings();
+
+        expect(without.find('[data-testid="display-section"]').exists()).toBe(true);
+        expect(without.find('[data-testid="theme-link"]').attributes('href')).toBe('/parties/FRI1/theme');
+        expect(without.find('[data-testid="setting-show_qrcode"]').exists()).toBe(false);
+
+        const withQr = mountSettings({show_qrcode: true});
+
+        expect(withQr.find('[data-testid="setting-show_qrcode"]').exists()).toBe(true);
     });
 });

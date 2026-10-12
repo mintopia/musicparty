@@ -234,6 +234,7 @@ class PartyController extends Controller
                 'freeze_when_paused' => (bool) $party->freeze_when_paused,
             ],
             'mods_url' => route('parties.mods', $party, false),
+            'theme_url' => route('parties.theme.show', $party, false),
             'playlists' => $playlists,
             'fallback_playlist_id' => $party->fallback_playlist_id,
             'history_playlist_id' => $party->history_playlist_id,

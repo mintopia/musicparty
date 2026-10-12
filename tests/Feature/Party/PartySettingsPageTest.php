@@ -107,7 +107,8 @@ it('exposes the restriction settings and mods link on the settings page', functi
             ->has('settings', fn (Assert $s) => $s
                 ->has('downvotes')->has('downvotes_per_hour')->has('selection_mode')->has('freeze_when_paused')
                 ->etc())
-            ->where('mods_url', route('parties.mods', ['party' => 'ABCD'], false)));
+            ->where('mods_url', route('parties.mods', ['party' => 'ABCD'], false))
+            ->where('theme_url', route('parties.theme.show', ['party' => 'ABCD'], false)));
 });
 
 it('lets the host change each restriction setting and logs old and new', function (string $key, mixed $old, mixed $new) {
