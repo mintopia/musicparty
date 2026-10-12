@@ -4,6 +4,7 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
+use BackedEnum;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Sanctum\Sanctum;
@@ -33,7 +34,7 @@ it('renders the settings page for the host', function () {
             ->where('party.code', 'ABCD')
             ->has('settings', fn (Assert $s) => $s
                 ->has('allow_requests')->has('max_requests')->has('min_song_length')
-                ->has('max_song_length')->has('explicit')->has('no_repeat_interval')->has('hold_requests')));
+                ->has('max_song_length')->has('explicit')->has('no_repeat_interval')->has('hold_requests')->etc()));
 });
 
 it('refuses the settings page to non-hosts', function (string $role) {
@@ -98,3 +99,48 @@ it('accepts the new keys through the API', function () {
         ->and($party->fresh()->max_requests)->toBe(5)
         ->and(PartyLogEntry::query()->where('action', 'party.settings_changed')->count())->toBe(2);
 });
+
+it('exposes the restriction settings and mods link on the settings page', function () {
+    [, $host] = settingsParty('host');
+
+    $this->actingAs($host)->get(route('parties.settings', ['party' => 'ABCD']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('settings', fn (Assert $s) => $s
+                ->has('downvotes')->has('downvotes_per_hour')->has('selection_mode')->has('freeze_when_paused')
+                ->etc())
+            ->where('mods_url', route('parties.mods', ['party' => 'ABCD'], false)));
+});
+
+it('lets the host change each restriction setting and logs old and new', function (string $key, mixed $old, mixed $new) {
+    [$party, $host] = settingsParty('host');
+    $party->forceFill([$key => $old])->save();
+
+    $this->actingAs($host)->patch(route('parties.update', ['party' => 'ABCD']), [$key => $new])->assertRedirect();
+
+    $entry = PartyLogEntry::query()->where('action', 'party.settings_changed')->sole();
+    $stored = $party->fresh()->{$key};
+    expect($stored instanceof BackedEnum ? $stored->value : $stored)->toBe($new)
+        ->and($entry->subject)->toBe($key)
+        ->and($entry->details)->toBe(['old' => $old, 'new' => $new])
+        ->and($entry->user_id)->toBe($host->id);
+})->with([
+    'name' => ['name', 'Old name', 'New name'],
+    'downvotes' => ['downvotes', true, false],
+    'downvotes_per_hour' => ['downvotes_per_hour', null, 3],
+    'selection_mode' => ['selection_mode', 'deterministic', 'weighted'],
+    'hold_requests' => ['hold_requests', false, true],
+    'freeze_when_paused' => ['freeze_when_paused', false, true],
+]);
+
+it('refuses restriction changes from moderators', function (string $key, mixed $value) {
+    [$party, $user] = settingsParty('moderator');
+    $before = $party->fresh()->getAttribute($key);
+
+    $this->actingAs($user)->patch(route('parties.update', ['party' => 'ABCD']), [$key => $value])->assertForbidden();
+
+    expect($party->fresh()->getAttribute($key))->toEqual($before);
+})->with([
+    'name' => ['name', 'Hijacked'],
+    'downvotes' => ['downvotes', false],
+    'freeze_when_paused' => ['freeze_when_paused', true],
+]);

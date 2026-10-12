@@ -3,6 +3,7 @@ import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, router, useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {contrastWarnings, describeWarning} from '../../theme/contrast.js';
+import Card from '../../Components/ui/Card.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -95,7 +96,7 @@ const reset = () => {
         </ul>
     </div>
 
-    <form class="mt-4 space-y-6" @submit.prevent="save">
+    <Card class="mt-4"><form class="space-y-6" @submit.prevent="save">
         <div>
             <label for="theme-font" class="block text-sm">Font</label>
             <select id="theme-font" v-model="form.font" class="mt-1 rounded border border-border bg-surface px-3 py-2 text-sm">
@@ -162,5 +163,5 @@ const reset = () => {
             <button type="submit" data-action="save" :disabled="form.processing" class="rounded bg-primary px-3 py-2 text-sm text-white">Save</button>
             <button type="button" data-action="reset" class="rounded border border-border px-3 py-2 text-sm" @click="reset">Reset to instance theme</button>
         </div>
-    </form>
+    </form></Card>
 </template>

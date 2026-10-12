@@ -57,6 +57,7 @@ it('creates a party through the API', function (string $role) {
         'player_kind' => 'fake',
         'fallback_playlist_id' => null,
         'hold_requests' => false,
+        'freeze_when_paused' => false,
         'explicit' => true,
         'min_song_length' => null,
         'max_song_length' => null,

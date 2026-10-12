@@ -228,7 +228,12 @@ class PartyController extends Controller
                 'explicit' => (bool) $party->explicit,
                 'hold_requests' => (bool) $party->hold_requests,
                 'no_repeat_interval' => $party->no_repeat_interval,
+                'downvotes' => (bool) $party->downvotes,
+                'downvotes_per_hour' => $party->downvotes_per_hour,
+                'selection_mode' => $party->selection_mode->value,
+                'freeze_when_paused' => (bool) $party->freeze_when_paused,
             ],
+            'mods_url' => route('parties.mods', $party, false),
             'playlists' => $playlists,
             'fallback_playlist_id' => $party->fallback_playlist_id,
             'history_playlist_id' => $party->history_playlist_id,
@@ -273,7 +278,7 @@ class PartyController extends Controller
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode', 'freeze_when_paused']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
         $redirect = back()->with('success', 'Settings saved');
