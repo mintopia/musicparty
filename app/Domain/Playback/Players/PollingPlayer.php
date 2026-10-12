@@ -171,6 +171,11 @@ class PollingPlayer implements BindsToParty, Player
         $this->command(fn (PlaybackClient $client, string $account) => $client->next($account));
     }
 
+    public function previous(): void
+    {
+        $this->command(fn (PlaybackClient $client, string $account) => $client->previous($account));
+    }
+
     public function seek(int $positionMs): void
     {
         $this->command(fn (PlaybackClient $client, string $account) => $client->seek($positionMs, $account));

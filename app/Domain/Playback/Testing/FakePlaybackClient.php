@@ -67,6 +67,11 @@ class FakePlaybackClient implements PlaybackClient
         $this->record('next');
     }
 
+    public function previous(string $hostAccountId): void
+    {
+        $this->record('previous');
+    }
+
     public function seek(int $positionMs, string $hostAccountId): void
     {
         $this->record('seek', $positionMs);

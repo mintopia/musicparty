@@ -82,7 +82,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/me/votes', [PartyRequestController::class, 'memberVotes'])->name('parties.me.votes');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
-        Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|seek|volume')->name('parties.playback');
+        Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|previous|seek|volume')->name('parties.playback');
         Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
         Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
         Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');

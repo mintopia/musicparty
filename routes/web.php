@@ -145,7 +145,7 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->name('parties.requests.destroy');
     Route::post('parties/{party}/playback/{control}', [PartyController::class, 'control'])
         ->where('party', '[A-Za-z]{4}')
-        ->where('control', 'play|pause|skip|seek|volume')
+        ->where('control', 'play|pause|skip|previous|seek|volume')
         ->name('parties.playback');
     Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'storeVote'])
         ->where('party', '[A-Za-z]{4}')

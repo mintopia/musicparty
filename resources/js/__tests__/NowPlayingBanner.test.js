@@ -137,7 +137,7 @@ describe('NowPlayingBanner progress', () => {
 });
 
 describe('NowPlayingBanner playback controls', () => {
-    const supported = {play: true, pause: true, skip: true};
+    const supported = {play: true, pause: true, skip: true, previous: true};
 
     it('is absent unless the viewer may control playback', () => {
         expect(mountBanner({capabilities: supported}).find('[data-testid=playback-controls]').exists()).toBe(false);
@@ -156,6 +156,18 @@ describe('NowPlayingBanner playback controls', () => {
 
         await w.get('[data-testid=playback-skip]').trigger('click');
         expect(post).toHaveBeenLastCalledWith('/parties/ABCD/playback/skip', {}, expect.any(Object));
+
+        await w.get('[data-testid=playback-previous]').trigger('click');
+        expect(post).toHaveBeenLastCalledWith('/parties/ABCD/playback/previous', {}, expect.any(Object));
+    });
+
+    it('disables Previous when the Player does not support it', async () => {
+        const w = mountBanner({canControl: true, capabilities: {...supported, previous: false}});
+
+        expect(w.get('[data-testid=playback-previous]').attributes('disabled')).toBeDefined();
+        expect(w.get('[data-testid=playback-skip]').attributes('disabled')).toBeUndefined();
+        await w.get('[data-testid=playback-previous]').trigger('click');
+        expect(post).not.toHaveBeenCalled();
     });
 
     it('disables the controls when the Player does not support them', async () => {

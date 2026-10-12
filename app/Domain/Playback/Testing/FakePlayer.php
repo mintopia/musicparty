@@ -50,7 +50,7 @@ class FakePlayer implements BindsToParty, Player
         private readonly array $compatibleProviders = ['fake'],
         private readonly FeedMode $feedMode = FeedMode::Ahead,
         private readonly bool $requiresHostAccount = false,
-        private readonly array $supportedControls = [Control::Play, Control::Pause, Control::Skip, Control::Seek, Control::Volume],
+        private readonly array $supportedControls = [Control::Play, Control::Pause, Control::Skip, Control::Previous, Control::Seek, Control::Volume],
     ) {
         throw_unless(app()->environment('testing'), LogicException::class, 'The Fake Player is only available in the testing environment.');
 
@@ -262,6 +262,11 @@ class FakePlayer implements BindsToParty, Player
         if ($this->queue !== []) {
             $this->advance();
         }
+    }
+
+    public function previous(): void
+    {
+        $this->control(Control::Previous);
     }
 
     public function seek(int $positionMs): void

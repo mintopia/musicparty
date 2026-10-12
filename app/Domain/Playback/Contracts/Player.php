@@ -56,6 +56,12 @@ interface Player
      * @throws UnsupportedControl
      * @throws PlayerDisconnectedException
      */
+    public function previous(): void;
+
+    /**
+     * @throws UnsupportedControl
+     * @throws PlayerDisconnectedException
+     */
     public function seek(int $positionMs): void;
 
     /**

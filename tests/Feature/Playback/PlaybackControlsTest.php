@@ -43,6 +43,7 @@ function playbackControls(): array
         'play' => ['play', []],
         'pause' => ['pause', []],
         'skip' => ['skip', []],
+        'previous' => ['previous', []],
         'seek' => ['seek', ['position_ms' => 42000]],
         'volume' => ['volume', ['level' => 65]],
     ];

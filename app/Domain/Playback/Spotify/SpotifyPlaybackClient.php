@@ -78,6 +78,11 @@ class SpotifyPlaybackClient implements PlaybackClient
         $this->command(fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL.'/me/player/next'), $hostAccountId);
     }
 
+    public function previous(string $hostAccountId): void
+    {
+        $this->command(fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL.'/me/player/previous'), $hostAccountId);
+    }
+
     public function seek(int $positionMs, string $hostAccountId): void
     {
         $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL."/me/player/seek?position_ms={$positionMs}"), $hostAccountId);
