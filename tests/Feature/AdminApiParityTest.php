@@ -5,6 +5,7 @@ use App\Domain\Admin\Models\AdminAuditEntry;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
+use App\Domain\Party\Models\Party;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
@@ -120,28 +121,73 @@ it('saves passport host and spotify search credentials and the auth flag', funct
     'spotify search' => ['spotifysearch', ['client_id' => 'search-id', 'client_secret' => 'shh']],
 ]);
 
+/**
+ * @param  array<string, mixed>  $payload
+ * @return array{0: string, 1: array<string, mixed>}
+ */
+function parityResolve(string $uri, array $payload): array
+{
+    $user = User::factory()->create();
+    $replacements = ['{user}' => (string) $user->id, '{role}' => 'admin'];
+
+    if (str_contains($uri, '{account}')) {
+        LinkedAccount::factory()->create(['user_id' => $user->id, 'social_provider_id' => SocialProvider::factory()->create(['code' => 'p'.uniqid()])->id]);
+        $replacements['{account}'] = (string) LinkedAccount::factory()->create(['user_id' => $user->id, 'social_provider_id' => SocialProvider::factory()->create(['code' => 'p'.uniqid()])->id])->id;
+    }
+
+    if (str_contains($uri, '{party}')) {
+        $replacements['{party}'] = (string) Party::factory()->create()->id;
+    }
+
+    if (str_contains($uri, '{provider}')) {
+        $replacements['{provider}'] = SocialProvider::factory()->create(['code' => 'spotifysearch'])->code;
+    }
+
+    return [strtr($uri, $replacements), $payload];
+}
+
 dataset('adminEndpoints', [
     'users' => ['getJson', '/api/v1/admin/users', []],
     'show' => ['getJson', '/api/v1/admin/users/{user}', []],
     'update' => ['patchJson', '/api/v1/admin/users/{user}', ['nickname' => 'Via Token']],
+    'delete' => ['deleteJson', '/api/v1/admin/users/{user}', ['confirm' => 'delete']],
+    'linked account delete' => ['deleteJson', '/api/v1/admin/users/{user}/linked-accounts/{account}', []],
+    'suspend' => ['postJson', '/api/v1/admin/users/{user}/suspension', []],
+    'unsuspend' => ['deleteJson', '/api/v1/admin/users/{user}/suspension', []],
+    'grant role' => ['postJson', '/api/v1/admin/users/{user}/roles', ['role' => 'admin']],
+    'revoke role' => ['deleteJson', '/api/v1/admin/users/{user}/roles/{role}', []],
     'mods' => ['getJson', '/api/v1/admin/mods', []],
     'providers' => ['getJson', '/api/v1/admin/providers', []],
+    'provider update' => ['putJson', '/api/v1/admin/providers/{provider}', ['enabled' => true, 'auth_enabled' => false, 'settings' => ['client_id' => 'id', 'client_secret' => 'shh']]],
     'settings' => ['getJson', '/api/v1/admin/settings', []],
+    'settings update' => ['postJson', '/api/v1/admin/settings', ['name' => 'Renamed']],
+    'act as host' => ['postJson', '/api/v1/admin/parties/{party}/act-as-host', []],
+    'leave host' => ['deleteJson', '/api/v1/admin/parties/{party}/act-as-host', []],
     'theme' => ['getJson', '/api/v1/admin/theme', []],
+    'theme save' => ['putJson', '/api/v1/admin/theme', []],
+    'theme reset' => ['deleteJson', '/api/v1/admin/theme', []],
 ]);
 
 it('allows an integration token with the admin ability', function (string $method, string $uri, array $payload): void {
-    $user = User::factory()->create();
+    [$resolved, $body] = parityResolve($uri, $payload);
     $headers = parityBearer(['admin']);
 
-    $this->withHeaders($headers)->{$method}(str_replace('{user}', (string) $user->id, $uri), $payload)->assertSuccessful();
+    expect($this->withHeaders($headers)->{$method}($resolved, $body)->getStatusCode())->toBeLessThan(300);
 })->with('adminEndpoints');
 
 it('refuses an integration token without the admin ability', function (string $method, string $uri, array $payload): void {
-    $user = User::factory()->create();
+    [$resolved, $body] = parityResolve($uri, $payload);
     $headers = parityBearer(['read', 'export']);
 
-    $this->withHeaders($headers)->{$method}(str_replace('{user}', (string) $user->id, $uri), $payload)->assertForbidden();
+    $this->withHeaders($headers)->{$method}($resolved, $body)->assertForbidden();
+})->with('adminEndpoints');
+
+it('refuses non-admin users on every admin endpoint', function (string $method, string $uri, array $payload): void {
+    [$resolved, $body] = parityResolve($uri, $payload);
+    parityAdmin();
+    Sanctum::actingAs(User::factory()->create());
+
+    $this->{$method}($resolved, $body)->assertForbidden();
 })->with('adminEndpoints');
 
 it('attributes admin token actions to the issuing admin', function (): void {
