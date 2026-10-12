@@ -10,6 +10,8 @@ use App\Domain\Membership\Actions\ListPartyMembers;
 use App\Domain\Membership\Actions\UnbanMember;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\EnabledMods;
+use App\Domain\Mod\Trust\Models\TrustScore;
+use App\Domain\Mod\Trust\TrustScoreMod;
 use App\Domain\Music\Actions\ListHostPlaylists;
 use App\Domain\Music\Actions\SelectPartyPlaylists;
 use App\Domain\Music\Actions\SpotifyControlLinkStatus;
@@ -339,9 +341,11 @@ class PartyController extends Controller
         ]);
     }
 
-    public function members(ListPartyMembersRequest $request, ListPartyMembers $listMembers, Party $party): Response
+    public function members(ListPartyMembersRequest $request, ListPartyMembers $listMembers, EnabledMods $enabledMods, Party $party): Response
     {
         $user = $this->currentUser($request);
+        $enabledModIds = $enabledMods->idsFor($party);
+        $canModerate = $user->can('moderate', $party);
 
         $members = PartyMemberRowResource::collection($listMembers(
             $party,
@@ -364,8 +368,12 @@ class PartyController extends Controller
             ],
             'abilities' => [
                 'canChangeRoles' => $user->can('manageRoles', $party),
-                'canBan' => $user->can('moderate', $party),
+                'canBan' => $canModerate,
             ],
+            'enabled_mods' => $enabledModIds,
+            'trust' => $canModerate && in_array(TrustScoreMod::ID, $enabledModIds, true)
+                ? TrustScore::query()->where('party_id', $party->id)->pluck('score', 'party_member_id')->map(fn (float $score): float => round($score, 2))
+                : null,
         ]);
     }
 

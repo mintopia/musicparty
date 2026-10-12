@@ -157,7 +157,7 @@ UI tasks must match the v2 look (design D18). Each one names its references from
 
 ## 10. Mods
 
-- [ ] 10.1 [diff-1] Trust Score Mod (design D9, ADR-0030, resolved question 4).
+- [x] 10.1 [diff-1] Trust Score Mod (design D9, ADR-0030, resolved question 4).
   - Add the `mod_trust_scores` table, the hourly Scheduled action and personalised PageRank.
   - Settings: anchor (default Host), window (7 days), weighting (off) and maximum bonus (2).
   - The weighting Score Modifier.

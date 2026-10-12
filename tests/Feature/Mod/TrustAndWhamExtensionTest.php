@@ -21,7 +21,7 @@ it('supports trust-score and Whamageddon style Mods together with no core change
     $party = Party::factory()->live()->create();
     $trusted = PartyMember::factory()->for($party)->create();
     $plain = PartyMember::factory()->for($party)->create();
-    ModFixtures::enable($party, new ScoreBoostMod('trust-score', $trusted->id, 3));
+    ModFixtures::enable($party, new ScoreBoostMod('trust-style', $trusted->id, 3));
     ModFixtures::enable($party, new SchedulerMod('whamageddon-style', 'track-3', bypassRules: true));
 
     $favoured = TrackRequest::factory()->create(['party_id' => $party->id, 'party_member_id' => $trusted->id]);
