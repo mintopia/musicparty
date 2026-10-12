@@ -10,4 +10,9 @@ class SettingObserver
     {
         $setting->clearCache();
     }
+
+    public function deleted(Setting $setting): void
+    {
+        $setting->clearCache();
+    }
 }

@@ -8006,6 +8006,7 @@
                     "music_provider": {
                         "type": "string",
                         "enum": [
+                            "spotify",
                             "fake"
                         ]
                     },

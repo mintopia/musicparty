@@ -121,12 +121,14 @@ it('validates the create payload', function (array $payload, string $field) {
 ]);
 
 it('serves the create page with the pairing catalogue', function () {
+    configureSpotifyCredentials();
+    setPairingToggle('player.fake.enabled', true);
     $this->withoutVite()->actingAs(User::factory()->withRole('create-party')->create())
         ->get(route('parties.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Party/Create')
-            ->where('providers', [['id' => 'fake', 'label' => 'Fake (development)']])
+            ->where('providers', [['id' => 'spotify', 'label' => 'Spotify'], ['id' => 'fake', 'label' => 'Fake (development)']])
             ->where('players', [
                 ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake'], 'requiresControlLink' => false],
                 ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify'], 'requiresControlLink' => true],
@@ -149,6 +151,7 @@ it('tells the home page whether the user can create a party', function (bool $al
 function registerControlLinkPlayer(): void
 {
     config(['musicparty.players.linked' => ['label' => 'Linked player', 'class' => 'test.linked']]);
+    setPairingToggle('player.linked.enabled', true);
     app()->bind('test.linked', fn (): FakePlayer => new FakePlayer(kind: 'linked', requiresHostAccount: true));
 }
 
@@ -262,6 +265,8 @@ it('rejects invalid settings', function (array $overrides, string $field) {
 ]);
 
 it('exposes control-link requirements on the create page', function () {
+    configureSpotifyCredentials();
+    setPairingToggle('player.fake.enabled', true);
     registerControlLinkPlayer();
     $user = User::factory()->withRole('create-party')->create();
 

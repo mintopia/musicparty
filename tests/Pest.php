@@ -1,7 +1,10 @@
 <?php
 
 use App\Domain\Admin\Actions\EnsureSocialProvider;
+use App\Domain\Admin\Actions\SetMusicProviderEnabled;
+use App\Domain\Admin\Actions\SetPlayerEnabled;
 use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
@@ -95,6 +98,14 @@ function configureSpotifyCredentials(string $app = 'spotify', string $id = 'clie
     app()->forgetScopedInstances();
 
     return $provider->refresh();
+}
+
+function setPairingToggle(string $code, bool $enabled): void
+{
+    $admin = User::factory()->create();
+    [$type, $id] = explode('.', $code, 3);
+    $action = $type === 'player' ? SetPlayerEnabled::class : SetMusicProviderEnabled::class;
+    app($action)->handle($admin, $id, $enabled);
 }
 
 function blankSpotifyCredential(string $code, string $app = 'spotify'): void
