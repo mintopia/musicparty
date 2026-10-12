@@ -475,12 +475,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
 
 		-
-			message: '#^Parameter \#2 \$member of class App\\Services\\RequestCheckService constructor expects App\\Models\\PartyMember, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
-
-		-
 			message: '#^Parameter \#2 \$user of method App\\Services\\UpcomingSongAugmentService\:\:augment\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
 			identifier: argument.type
 			count: 2
@@ -905,12 +899,6 @@ parameters:
 			identifier: property.nonObject
 			count: 1
 			path: app/Http/Middleware/RedirectOnFirstLoginMiddleware.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Requests/PartyMemberUpdateRequest.php
 
 		-
 			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
@@ -1496,12 +1484,6 @@ parameters:
 
 		-
 			message: '#^Method App\\Models\\PartyMember\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMember.php
-
-		-
-			message: '#^Method App\\Models\\PartyMember\:\:role\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/PartyMember.php
@@ -2548,12 +2530,6 @@ parameters:
 			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:match\(\)\.$#'
 			identifier: method.notFound
 			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
 			path: app/Services/RequestCheckService.php
 
 		-

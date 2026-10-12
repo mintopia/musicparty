@@ -18,6 +18,9 @@ class PartyMember extends Model
         return $this->belongsTo(User::class);
     }
 
+    /**
+     * @return BelongsTo<PartyMemberRole, $this>
+     */
     public function role(): BelongsTo
     {
         return $this->belongsTo(PartyMemberRole::class);
