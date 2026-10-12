@@ -124,21 +124,27 @@ const hasResults = computed(() => Array.isArray(props.results));
     <div class="flex flex-col gap-4">
         <form class="flex gap-2" role="search" @submit.prevent="submitSearch">
             <label class="sr-only" for="track-search">Search tracks</label>
-            <input
-                id="track-search"
-                v-model="query"
-                type="search"
-                data-testid="search-input"
-                placeholder="Search for a track"
-                class="min-h-11 min-w-0 flex-1 rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
-                @input="onInput"
-            />
+            <div class="relative min-w-0 flex-1">
+                <input
+                    id="track-search"
+                    v-model="query"
+                    type="search"
+                    data-testid="search-input"
+                    placeholder="Search…"
+                    class="min-h-11 w-full rounded border border-border bg-surface py-0 pl-3 pr-10 text-sm text-text placeholder:text-muted focus:border-primary focus:outline-none"
+                    @input="onInput"
+                />
+                <Icon name="musicSearch" data-testid="search-icon" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
+            </div>
             <button type="submit" class="min-h-11 rounded bg-primary px-5 text-sm font-medium text-white hover:opacity-90">Search</button>
         </form>
 
         <p v-if="searchError" role="alert" data-testid="search-error" class="text-sm text-danger">{{ searchError }}</p>
         <p v-else-if="!hasResults" class="text-sm text-muted">Search for a track to add it to the queue.</p>
-        <p v-else-if="results.length === 0" data-testid="search-empty" class="text-sm text-muted">No tracks found.</p>
+        <template v-else-if="results.length === 0">
+            <h2 class="text-base font-bold md:text-lg">Results</h2>
+            <p data-testid="search-empty" class="text-center text-sm text-muted">No results found</p>
+        </template>
         <template v-else>
             <h2 class="text-base font-bold md:text-lg">Results</h2>
             <ul data-testid="search-results" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
