@@ -7,6 +7,7 @@ use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
@@ -53,6 +54,11 @@ class UpcomingSongController extends Controller
 
     public function store(UpcomingSongAugmentService $augmentService, UpcomingSongRequest $request, Party $party)
     {
+        $member = $party->members()->whereUserId($request->user()->id)->first();
+        if (! $member) {
+            abort(403);
+        }
+
         $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
             $query->whereSpotifyId($request->input('spotify_id'));
         })->first();
@@ -69,10 +75,6 @@ class UpcomingSongController extends Controller
                 ], 422);
             }
 
-            $member = $party->members()->whereUserId($request->user()->id)->first();
-            if (! $member) {
-                abort(403);
-            }
             $checkService = new RequestCheckService($party, $member);
             $checkResponse = $checkService->checkSong($spotifySong);
             if (! $checkResponse->allowed) {
@@ -92,6 +94,13 @@ class UpcomingSongController extends Controller
             $upcoming->user()->associate($request->user());
             $upcoming->song()->associate($song);
             $upcoming->save();
+        }
+        $denial = $this->voteDenialReason($party, $member);
+        if ($denial) {
+            return response()->json([
+                'message' => $denial,
+                'errors' => ['spotify_id' => [$denial]],
+            ], 400);
         }
         $vote = $upcoming->votes()->whereUserId($request->user()->id)->first();
         if (! $vote) {
@@ -117,5 +126,17 @@ class UpcomingSongController extends Controller
         $upcomingsong->delete();
 
         return response()->noContent();
+    }
+
+    protected function voteDenialReason(Party $party, PartyMember $member): ?string
+    {
+        if (! $party->allow_requests) {
+            return 'Party is not accepting requests';
+        }
+        if ($member->role->code === 'banned') {
+            return 'You are not allowed to request any more songs';
+        }
+
+        return null;
     }
 }

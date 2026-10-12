@@ -616,25 +616,36 @@ describe('UpcomingSongController::store', function () {
             ->and($fake->callsTo('getTrack'))->toBeEmpty();
     });
 
-    it('lets a non member vote on an existing waiting request because the member check is skipped (issue #300)', function () {
+    it('forbids a non member voting on an existing waiting request', function () {
         $party = reqParty(['allow_requests' => true]);
         $existing = reqWaiting($party, reqMember($party)->user, 'dup', 'Dup Track');
         FakeSpotify::install();
 
-        reqPost($party, User::factory()->create(), 'dup')->assertSuccessful();
+        reqPost($party, User::factory()->create(), 'dup')->assertForbidden();
 
-        expect($existing->votes()->count())->toBe(1);
+        expect($existing->votes()->count())->toBe(0);
     });
 
-    it('lets a banned member vote on an existing waiting request because the rules are skipped (issue #300)', function () {
+    it('rejects a banned member voting on an existing waiting request', function () {
         $party = reqParty(['allow_requests' => false]);
         $existing = reqWaiting($party, reqMember($party)->user, 'dup', 'Dup Track');
         $banned = reqMember($party, 'banned');
         FakeSpotify::install();
 
-        reqPost($party, $banned->user, 'dup')->assertSuccessful();
+        reqPost($party, $banned->user, 'dup')->assertStatus(400);
 
-        expect($existing->votes()->count())->toBe(1);
+        expect($existing->votes()->count())->toBe(0);
+    });
+
+    it('rejects a banned member voting on an existing waiting request while requests are open', function () {
+        $party = reqParty(['allow_requests' => true]);
+        $existing = reqWaiting($party, reqMember($party)->user, 'dup', 'Dup Track');
+        $banned = reqMember($party, 'banned');
+        FakeSpotify::install();
+
+        reqPost($party, $banned->user, 'dup')->assertStatus(400);
+
+        expect($existing->votes()->count())->toBe(0);
     });
 
     it('does not duplicate a vote when the same member posts twice', function () {
