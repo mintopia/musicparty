@@ -166,7 +166,7 @@ class PartyController extends Controller
         if ($query !== '') {
             try {
                 $throttleSearch($this->currentUser($request));
-                $found = $search($party, $query, $searchPage);
+                $found = $search($party, $query, $searchPage, $member);
                 $results = SearchHitResource::collection($found->hits)->resolve($request);
                 $searchHasMore = $found->hasMore;
             } catch (RequestRefusedException $exception) {

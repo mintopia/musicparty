@@ -3,6 +3,7 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\Models\Party;
@@ -18,9 +19,9 @@ class SearchPartyProvider
 {
     public const LIMIT = 20;
 
-    public function __construct(private readonly PairingCatalogue $catalogue) {}
+    public function __construct(private readonly PairingCatalogue $catalogue, private readonly AssessSearchEligibility $assess) {}
 
-    public function __invoke(Party $party, string $query, int $page = 1): SearchResults
+    public function __invoke(Party $party, string $query, int $page = 1, ?PartyMember $member = null): SearchResults
     {
         $query = trim($query);
         if ($query === '') {
@@ -43,13 +44,16 @@ class SearchPartyProvider
             ->where('status', RequestStatus::Queued)
             ->with('requester.user')
             ->withSum('votes as score', 'value')
+            ->withSum(['votes as my_vote' => fn ($votes) => $votes->where('party_member_id', $member?->id)], 'value')
             ->oldest('id')
             ->get()
             ->unique('provider_track_id')
             ->keyBy('provider_track_id');
 
+        $reasons = $member === null ? [] : ($this->assess)($party, $member, $results->items);
+
         $hits = array_map(
-            function ($track) use ($queued, $provider): SearchHit {
+            function ($track) use ($queued, $provider, $reasons): SearchHit {
                 $request = $queued->get($track->providerTrackId);
                 $requester = $request?->requester?->user;
 
@@ -59,6 +63,9 @@ class SearchPartyProvider
                     $requester instanceof User ? $requester->nickname : null,
                     (int) $request?->score,
                     $provider->trackUrl($track->providerTrackId),
+                    $request === null ? ($reasons[$track->providerTrackId] ?? null) : null,
+                    $request?->id,
+                    (int) $request?->my_vote,
                 );
             },
             $results->items,
