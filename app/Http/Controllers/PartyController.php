@@ -61,6 +61,7 @@ use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyPlaylistsRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\PartyMemberRowResource;
+use App\Http\Resources\V1\HistoryEntryResource;
 use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
@@ -197,7 +198,7 @@ class PartyController extends Controller
             'upNext' => $playback['up_next'],
             'startedAt' => $playback['started_at'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
-            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
+            'history' => $section === 'history' ? HistoryEntryResource::collection($listHistory($party, $member, $request->filters(), $request->filters()['per_page'])) : null,
             'filters' => $request->filters(),
             'search_query' => $query,
             'results' => $results,

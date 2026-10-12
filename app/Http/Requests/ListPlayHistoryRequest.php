@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Queue\Actions\ListPlayHistory;
+use App\Domain\Queue\PlayHistorySort;
 use App\Domain\Queue\PlayHistoryType;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -24,6 +26,9 @@ class ListPlayHistoryRequest extends FormRequest
             'artist' => ['nullable', 'string', 'max:100'],
             'album' => ['nullable', 'string', 'max:100'],
             'type' => ['nullable', 'string', Rule::enum(PlayHistoryType::class)],
+            'sort' => ['nullable', 'string', Rule::enum(PlayHistorySort::class)],
+            'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
+            'per_page' => ['nullable', 'integer', Rule::in(ListPlayHistory::PER_PAGE_OPTIONS)],
             'page' => ['nullable', 'integer', 'min:1'],
         ];
     }
@@ -34,7 +39,10 @@ class ListPlayHistoryRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'type.enum' => 'Choose sent to Spotify, requested or fallback playlist.',
+            'type.enum' => 'Choose all, played or unsent.',
+            'sort.enum' => 'Sort by name, artist, requested, played or score.',
+            'direction.in' => 'Choose ascending or descending.',
+            'per_page.in' => 'Choose 10, 20, 50 or 100 per page.',
             'name.max' => 'Search terms may be at most 100 characters.',
             'artist.max' => 'Search terms may be at most 100 characters.',
             'album.max' => 'Search terms may be at most 100 characters.',
@@ -42,7 +50,7 @@ class ListPlayHistoryRequest extends FormRequest
     }
 
     /**
-     * @return array{name: string, artist: string, album: string, type: string}
+     * @return array{name: string, artist: string, album: string, type: string, sort: string, direction: string, per_page: int}
      */
     public function filters(): array
     {
@@ -50,7 +58,10 @@ class ListPlayHistoryRequest extends FormRequest
             'name' => trim($this->string('name')->toString()),
             'artist' => trim($this->string('artist')->toString()),
             'album' => trim($this->string('album')->toString()),
-            'type' => $this->string('type')->toString() ?: PlayHistoryType::Sent->value,
+            'type' => $this->string('type')->toString() ?: PlayHistoryType::All->value,
+            'sort' => $this->string('sort')->toString() ?: PlayHistorySort::Played->value,
+            'direction' => $this->string('direction')->toString() ?: 'asc',
+            'per_page' => $this->integer('per_page') ?: ListPlayHistory::PER_PAGE,
         ];
     }
 }
