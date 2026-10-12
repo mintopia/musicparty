@@ -91,9 +91,9 @@ it('builds the menu through policies', function (string $role, array $keys) {
         ->assertInertia(fn (Assert $page): Assert => $page
             ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->all() === $keys));
 })->with([
-    'host' => ['host', ['queue', 'search', 'history', 'tv', 'users', 'moderation', 'pending', 'log', 'settings', 'theme', 'player-tokens']],
-    'moderator' => ['moderator', ['queue', 'search', 'history', 'tv', 'users', 'moderation', 'pending', 'log']],
-    'guest' => ['guest', ['queue', 'search', 'history', 'tv']],
+    'host' => ['host', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log', 'mods', 'theme', 'player-tokens', 'settings']],
+    'moderator' => ['moderator', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log']],
+    'guest' => ['guest', ['queue', 'search', 'history', 'stats', 'tv']],
     'banned' => ['banned', []],
 ]);
 
@@ -122,7 +122,7 @@ it('links the TV mode entry to the party tv page', function () {
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.menu.3', ['key' => 'tv', 'label' => 'TV Mode', 'href' => '/parties/ABCD/tv']));
+            ->where('partyContext.menu.4', ['key' => 'tv', 'label' => 'TV Mode', 'href' => '/parties/ABCD/tv']));
 });
 
 it('shares the now playing payload with timing', function () {

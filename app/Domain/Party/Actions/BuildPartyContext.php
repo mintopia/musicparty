@@ -88,15 +88,17 @@ readonly class BuildPartyContext
             ['queue', 'Queue', $base, true],
             ['search', 'Search', $base.'/search', true],
             ['history', 'History', $base.'/history', true],
-            ['tv', 'TV Mode', $base.'/tv', true],
+            ['stats', 'Stats', $base.'/stats', true],
             ['users', 'Users', $base.'/members', $canModerate],
+            ['tv', 'TV Mode', $base.'/tv', true],
+            ['web-player', 'Web Player', $base.'/player', $canManage && $party->player_kind === BrowserPlayer::KIND],
             ['moderation', 'Moderation', $base.'/blocklist', $canModerate],
             ['pending', 'Pending', $base.'/requests/pending', $canModerate],
             ['log', 'Party Log', $base.'/log', $canViewLog],
-            ['settings', 'Settings', $base.'/settings', $canManage],
+            ['mods', 'Mods', $base.'/mods', $canManage],
             ['theme', 'Theme', $base.'/theme', $canManage],
             ['player-tokens', 'Player Tokens', $base.'/player-tokens', $canManage],
-            ['web-player', 'Web Player', $base.'/player', $canManage && $party->player_kind === BrowserPlayer::KIND],
+            ['settings', 'Settings', $base.'/settings', $canManage],
         ];
 
         return array_values(array_map(

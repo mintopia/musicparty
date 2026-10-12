@@ -78,7 +78,7 @@ const itemClass = (active) => [
                         v-for="entry in partyMenu(party.code)"
                         :key="entry.key"
                         :href="entry.href"
-                        :class="[itemClass(isActive(entry.href)), '!pl-11']"
+                        :class="[itemClass(isActive(entry.href)), '!pl-11', isPartyActive(party.code) ? '!border-primary' : '']"
                         :aria-current="isActive(entry.href) ? 'page' : undefined"
                     >{{ entry.label }}</Link>
                 </div>
