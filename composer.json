@@ -64,6 +64,7 @@
     },
     "scripts": {
         "lint": "pint --test",
+        "test": "@php artisan test --parallel --processes=4",
         "post-autoload-dump": [
             "Illuminate\\Foundation\\ComposerScripts::postAutoloadDump",
             "@php artisan package:discover --ansi"
