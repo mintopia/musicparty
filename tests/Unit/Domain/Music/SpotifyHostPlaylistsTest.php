@@ -3,9 +3,6 @@
 use App\Domain\Music\Capability;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Music\Providers\Spotify\HostAccountTokens;
-use App\Domain\Music\Providers\Spotify\SpotifyApi;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -17,7 +14,7 @@ beforeEach(function () {
     Cache::flush();
     $this->account = SpotifyFake::account()->create(['access_token' => 'host-token']);
     $this->host = (string) $this->account->getKey();
-    $this->provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
+    $this->provider = SpotifyFake::provider();
 });
 
 it('supports playlist write', function () {

@@ -31,7 +31,7 @@ class SearchPartyProvider
 
         try {
             $provider = $this->catalogue->provider($party->music_provider);
-            $page = $provider->search($query, self::LIMIT, 0);
+            $page = $provider->search($query, self::LIMIT, 0, $party->user);
         } catch (ProviderTemporaryFailure $failure) {
             throw $failure->retryAfterSeconds === null
                 ? RequestRefusedException::providerUnavailable()

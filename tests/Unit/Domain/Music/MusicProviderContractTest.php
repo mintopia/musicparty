@@ -8,9 +8,6 @@ use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Music\Exceptions\UnsupportedCapability;
-use App\Domain\Music\Providers\Spotify\HostAccountTokens;
-use App\Domain\Music\Providers\Spotify\SpotifyApi;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
@@ -30,7 +27,7 @@ dataset('providers', [
         SpotifyFake::catalogue($control);
 
         return [
-            new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens)),
+            SpotifyFake::provider(),
             fn () => config(['services.spotify.client_id' => null]),
             fn () => $control->next = Http::response('', 503),
             fn (MusicProvider $p, int $seconds) => $control->next = Http::response('', 429, ['Retry-After' => (string) $seconds]),
@@ -178,7 +175,7 @@ it('returns no url for a missing or blank id', function (array $fixture, ?string
 })->with('providers')->with([null, '', '   ']);
 
 it('builds Spotify urls on open.spotify.com', function () {
-    $provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
+    $provider = SpotifyFake::provider();
 
     expect($provider->trackUrl('4uLU6hMCjMI75M1A2tKUQC'))->toBe('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC')
         ->and($provider->playlistUrl('37i9dQZF1DXcBWIGoYBM5M'))->toBe('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M');

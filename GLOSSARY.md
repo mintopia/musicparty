@@ -108,6 +108,10 @@ A Member's like or dislike of a Play.
 A music service that supplies the catalogue, search and track metadata for a Party (e.g. Spotify, later Tidal).
 _Avoid_: Backend, service, source
 
+**Spotify Search account**:
+An optional second Spotify account a Host links under the separate `spotifysearch` application, so guest search draws on its own quota rather than the control account's. Never used for login.
+_Avoid_: Search login, second Spotify login
+
 **Player**:
 The means by which Music Party observes and controls what is actually playing for a Party.
 _Avoid_: Device, driver, playback backend

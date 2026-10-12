@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
 use App\Domain\Music\Data\TrackData;
@@ -10,6 +11,10 @@ use App\Domain\Playback\FeedMode;
 use App\Domain\Playback\PartyPlayers;
 use App\Domain\Playback\Testing\FakePlayer;
 use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
+use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\User as SocialiteUser;
+use Mockery\MockInterface;
 use Tests\TestCase;
 
 pest()->extend(TestCase::class)->in('Feature', 'Unit/Domain/Music', 'Unit/Domain/Playback');
@@ -65,4 +70,34 @@ function countQueries(Closure $callback): int
     DB::flushQueryLog();
 
     return $count;
+}
+
+/**
+ * @param  array<string, mixed>  $overrides
+ */
+function seedDiscord(array $overrides = []): SocialProvider
+{
+    config(['services.discord.client_id' => 'client-id', 'services.discord.client_secret' => 'client-secret']);
+    test()->artisan('providers:seed')->assertSuccessful();
+
+    return tap(SocialProvider::query()->where('code', 'discord')->firstOrFail(), fn (SocialProvider $provider) => $provider->forceFill($overrides)->save());
+}
+
+function remoteUser(string $id = '1001', string $nickname = 'ravebot'): SocialiteUser
+{
+    return (new SocialiteUser)->map([
+        'id' => $id,
+        'nickname' => $nickname,
+        'name' => 'Rave Bot',
+        'email' => 'rave@example.test',
+        'avatar' => 'https://cdn.example.test/a.png',
+    ])->setToken('access-token')->setRefreshToken('refresh-token');
+}
+
+function mockDriver(): MockInterface
+{
+    $driver = Mockery::mock(SocialiteDriver::class);
+    Socialite::shouldReceive('buildProvider')->andReturn($driver);
+
+    return $driver;
 }

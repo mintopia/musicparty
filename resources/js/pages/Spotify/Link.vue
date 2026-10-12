@@ -10,6 +10,10 @@ const props = defineProps({
     link_url: {type: String, required: true},
     unlink_url: {type: String, required: true},
     create_party_url: {type: String, required: true},
+    search: {type: Object, default: null},
+    search_enabled: {type: Boolean, default: false},
+    search_link_url: {type: String, default: null},
+    search_unlink_url: {type: String, default: null},
 });
 
 const canCreate = computed(() => props.can_create_party && props.control.linked && !props.control.needs_relink);
@@ -24,6 +28,13 @@ const unlink = () => {
         return;
     }
     router.delete(props.unlink_url);
+};
+
+const unlinkSearch = () => {
+    if (!window.confirm('Unlink your Spotify Search account?')) {
+        return;
+    }
+    router.delete(props.search_unlink_url);
 };
 
 const buttonClass = 'flex min-h-11 w-full items-center justify-center rounded px-4 text-sm font-medium text-white hover:brightness-110';
@@ -45,6 +56,19 @@ const buttonClass = 'flex min-h-11 w-full items-center justify-center rounded px
                     <button type="button" data-testid="unlink" class="min-h-11 rounded border border-border px-4 text-sm hover:text-primary" @click="unlink">Unlink</button>
                 </template>
                 <a v-else :href="link_url" data-testid="link" :class="[buttonClass, 'gap-2 bg-green-600']"><Icon name="brandSpotify" />Link with Spotify</a>
+            </div>
+
+            <div v-if="search_enabled && search" class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-6" data-testid="search-card">
+                <h2 class="text-center text-base font-semibold">Spotify Search account</h2>
+                <p class="text-center text-sm text-muted">Optional. Guest search uses this account's own Spotify quota instead of your playback account's.</p>
+                <div class="flex justify-center py-4 [&>svg]:h-12 [&>svg]:w-12" :class="search.linked && !search.needs_relink ? 'text-green-500' : 'text-muted'" data-testid="search-icon"><Icon name="musicBolt" /></div>
+                <template v-if="search.linked">
+                    <div class="text-center" data-testid="search-linked-name">{{ search.name }}</div>
+                    <p v-if="search.needs_relink" class="text-center text-sm" data-testid="search-relink-notice">Re-link needed for search</p>
+                    <a v-if="search.needs_relink" :href="search_link_url" data-testid="search-relink" :class="[buttonClass, 'gap-2 bg-green-600']"><Icon name="brandSpotify" />Re-link with Spotify</a>
+                    <button type="button" data-testid="search-unlink" class="min-h-11 rounded border border-border px-4 text-sm hover:text-primary" @click="unlinkSearch">Unlink</button>
+                </template>
+                <a v-else :href="search_link_url" data-testid="search-link" :class="[buttonClass, 'gap-2 bg-green-600']"><Icon name="brandSpotify" />Link with Spotify</a>
             </div>
 
             <Link v-if="canCreate" :href="create_party_url" data-testid="create-party" :class="[buttonClass, 'gap-2 bg-primary']"><Icon name="playlist-add" />Create Party</Link>

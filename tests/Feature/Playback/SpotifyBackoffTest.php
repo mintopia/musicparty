@@ -4,6 +4,7 @@ use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Music\Data\SearchPage;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Models\Party;
@@ -87,10 +88,42 @@ function hostId(Party $party): string
     return (string) LinkedAccount::query()->where('user_id', $party->user_id)->firstOrFail()->getKey();
 }
 
-it('stores one instance-wide deadline from the Retry-After header', function () {
+it('stores one deadline per client application from the Retry-After header', function () {
     trigger429();
 
-    expect(Cache::get('music.spotify.backoff-until'))->toBe(now()->getTimestamp() + 7);
+    expect(Cache::get('music.spotify.backoff.'.hash('sha256', 'id')))->toBe(now()->getTimestamp() + 7)
+        ->and(Cache::get('music.spotify.backoff-until'))->toBeNull();
+});
+
+function linkSearchAccount(Party $party): void
+{
+    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
+    $provider = SocialProvider::factory()->create(['code' => 'spotifysearch', 'supports_auth' => false, 'auth_enabled' => false]);
+    LinkedAccount::factory()->for($party->user)->create(['social_provider_id' => $provider->id]);
+}
+
+it('does not let a 429 on the Search application block a control-application poll', function () {
+    linkSearchAccount($this->partyB);
+    $this->spotify->override = fn (Request $request) => str_contains($request->url(), '/search')
+        ? Http::response('', 429, ['Retry-After' => '7'])
+        : Http::response(SpotifyFake::fixture('playlist-tracks'));
+
+    expect(fn () => app(SpotifyMusicProvider::class)->search('song', 1, 0, $this->partyB->user))->toThrow(ProviderTemporaryFailure::class);
+
+    expect(Cache::get('music.spotify.backoff.'.hash('sha256', 'search-id')))->toBe(now()->getTimestamp() + 7)
+        ->and(Cache::get('music.spotify.backoff.'.hash('sha256', 'id')))->toBeNull()
+        ->and(app(SpotifyMusicProvider::class)->playlistTracks('pl', hostId($this->partyB)))->not->toBeEmpty();
+});
+
+it('does not let a 429 on the control application block a Search-account search', function () {
+    linkSearchAccount($this->partyB);
+    trigger429();
+    $this->spotify->status = 200;
+
+    $page = app(SpotifyMusicProvider::class)->search('song', 1, 0, $this->partyB->user);
+
+    expect($page)->toBeInstanceOf(SearchPage::class)
+        ->and(spotifyApiCalls())->toBe(2);
 });
 
 it('fails a playlist read fast with the remaining wait and no HTTP call', function () {

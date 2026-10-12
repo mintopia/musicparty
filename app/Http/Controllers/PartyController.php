@@ -13,6 +13,7 @@ use App\Domain\Mod\EnabledMods;
 use App\Domain\Music\Actions\ListHostPlaylists;
 use App\Domain\Music\Actions\SelectPartyPlaylists;
 use App\Domain\Music\Actions\SpotifyControlLinkStatus;
+use App\Domain\Music\Actions\SpotifySearchLinkStatus;
 use App\Domain\Music\Exceptions\NotHostException;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\CreateParty;
@@ -199,6 +200,8 @@ class PartyController extends Controller
             'spotify_link_needed' => $party->user_id === $this->currentUser($request)->id
                 && $party->player_kind === 'polling'
                 && ! app(SpotifyControlLinkStatus::class)->isUsable($this->currentUser($request)),
+            'spotify_search_relink_needed' => $party->user_id === $this->currentUser($request)->id
+                && app(SpotifySearchLinkStatus::class)->needsRelinkWarning($this->currentUser($request)),
         ]);
     }
 

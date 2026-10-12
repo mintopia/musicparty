@@ -282,7 +282,7 @@ it('behaves the same through the api as the web for providers', function (): voi
         ->assertJsonPath('data.enabled', true)
         ->assertJsonPath('data.fields.1.value', ProviderCatalogue::MASK);
 
-    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(7, 'data')->assertJsonMissing(['value' => 'api-secret']);
+    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(8, 'data')->assertJsonMissing(['value' => 'api-secret']);
     expect(AdminAuditEntry::query()->where('action', 'provider.credential_changed')->count())->toBe(2);
 
     $this->putJson('/api/v1/admin/providers/discord', ['enabled' => 'maybe'])->assertJsonValidationErrors('enabled');

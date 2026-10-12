@@ -71,6 +71,49 @@ describe('Spotify link page', () => {
     });
 });
 
+describe('Spotify Search card', () => {
+    const search = (over = {}, extra = {}) => mount(SpotifyLink, {props: props({
+        search_enabled: true,
+        search: {linked: false, name: null, needs_relink: false},
+        search_link_url: '/spotify/link/search',
+        search_unlink_url: '/spotify/unlink/search',
+        ...extra,
+        ...over,
+    })});
+
+    it('is hidden unless the admin has enabled the provider', () => {
+        expect(mount(SpotifyLink, {props: props()}).find('[data-testid=search-card]').exists()).toBe(false);
+        expect(mount(SpotifyLink, {props: props({search_enabled: false, search: {linked: false, name: null, needs_relink: false}})}).find('[data-testid=search-card]').exists()).toBe(false);
+    });
+
+    it('offers an optional link that never gates Create Party', () => {
+        const w = search({can_create_party: true, control: {linked: true, name: 'Jess', needs_relink: false}});
+        expect(w.get('[data-testid=search-link]').attributes('href')).toBe('/spotify/link/search');
+        expect(w.get('[data-testid=create-party]').attributes('disabled')).toBeUndefined();
+    });
+
+    it('shows the linked name and unlinks only after confirmation', async () => {
+        destroy.mockClear();
+        const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+        const w = search({search: {linked: true, name: 'Searcher', needs_relink: false}});
+        expect(w.get('[data-testid=search-linked-name]').text()).toBe('Searcher');
+        expect(w.get('[data-testid=search-icon]').classes()).toContain('text-green-500');
+        await w.get('[data-testid=search-unlink]').trigger('click');
+        expect(destroy).not.toHaveBeenCalled();
+        confirm.mockReturnValue(true);
+        await w.get('[data-testid=search-unlink]').trigger('click');
+        expect(destroy).toHaveBeenCalledWith('/spotify/unlink/search');
+        confirm.mockRestore();
+    });
+
+    it('asks for a re-link when the Search account was rejected', () => {
+        const w = search({search: {linked: true, name: 'Searcher', needs_relink: true}});
+        expect(w.get('[data-testid=search-relink-notice]').text()).toContain('Re-link needed for search');
+        expect(w.get('[data-testid=search-relink]').attributes('href')).toBe('/spotify/link/search');
+        expect(w.get('[data-testid=search-icon]').classes()).toContain('text-muted');
+    });
+});
+
 describe('Spotify links elsewhere', () => {
     const show = (over) => mount(Show, {
         props: {party: {code: 'A1', name: 'P', state: 'live', downvotes: true}, membership: {role: 'member', banned: false}, ...over},
@@ -82,6 +125,13 @@ describe('Spotify links elsewhere', () => {
         expect(warn.get('[data-testid=spotify-link-warning]').text()).toContain('Playback needs a linked Spotify account.');
         expect(warn.get('[data-testid=spotify-link-warning] a').attributes('href')).toBe('/spotify');
         expect(show({}).find('[data-testid=spotify-link-warning]').exists()).toBe(false);
+    });
+
+    it('warns the host when the Search account needs re-linking', () => {
+        const warn = show({spotify_search_relink_needed: true, spotify_link_url: '/spotify'});
+        expect(warn.get('[data-testid=spotify-search-relink-warning]').text()).toContain('Spotify Search account needs re-linking');
+        expect(warn.get('[data-testid=spotify-search-relink-warning] a').attributes('href')).toBe('/spotify');
+        expect(show({}).find('[data-testid=spotify-search-relink-warning]').exists()).toBe(false);
     });
 
     it('links to Spotify from settings and create', () => {

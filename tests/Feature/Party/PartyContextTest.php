@@ -46,7 +46,7 @@ dataset('party pages', [
 ]);
 
 it('shares the party context on every party page', function (string $path) {
-    $party = Party::factory()->live()->create(['code' => 'ABCD', 'name' => 'Friday LAN']);
+    $party = Party::factory()->live()->create(['code' => 'ABCD', 'name' => 'Friday LAN', 'player_kind' => 'browser']);
     $user = contextUser($party, 'host');
     $css = app(RenderPartyThemeCss::class)->handle($party);
 

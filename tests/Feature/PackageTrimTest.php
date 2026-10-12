@@ -31,16 +31,18 @@ it('resolves a SocialiteProviders driver for every catalogue entry', function (s
     config(["services.{$code}" => ['client_id' => 'id', 'client_secret' => 'secret', 'redirect' => 'http://localhost/callback', 'host' => 'http://localhost']]);
 
     expect(Socialite::driver($code))->toBeObject();
-})->with(fn (): array => ProviderCatalogue::codes());
+})->with(fn (): array => array_values(array_diff(ProviderCatalogue::codes(), NON_LOGIN_CODES)));
 
 const FIRST_PARTY_SOCIALITE_CODES = ['google', 'facebook'];
+
+const NON_LOGIN_CODES = ['spotifysearch'];
 
 /**
  * @return list<string>
  */
 function communityCatalogueCodes(): array
 {
-    return array_values(array_diff(ProviderCatalogue::codes(), FIRST_PARTY_SOCIALITE_CODES));
+    return array_values(array_diff(ProviderCatalogue::codes(), FIRST_PARTY_SOCIALITE_CODES, NON_LOGIN_CODES));
 }
 
 it('has a catalogue entry for every required socialiteproviders package', function (): void {

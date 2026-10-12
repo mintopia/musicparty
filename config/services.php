@@ -45,11 +45,6 @@ return [
         'client_secret' => env('STEAM_API_KEY'),
     ],
 
-    'spotify' => [
-        'client_id' => env('SPOTIFY_CLIENT_ID'),
-        'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
-    ],
-
     'google' => [
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
@@ -69,5 +64,10 @@ return [
         'client_id' => env('SPOTIFY_CLIENT_ID'),
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),
         'market' => env('SPOTIFY_MARKET', 'US'),
+    ],
+
+    'spotifysearch' => [
+        'client_id' => env('SPOTIFYSEARCH_CLIENT_ID'),
+        'client_secret' => env('SPOTIFYSEARCH_CLIENT_SECRET'),
     ],
 ];

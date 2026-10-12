@@ -2,9 +2,6 @@
 
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
-use App\Domain\Music\Providers\Spotify\HostAccountTokens;
-use App\Domain\Music\Providers\Spotify\SpotifyApi;
-use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Cache;
@@ -15,7 +12,7 @@ beforeEach(function () {
     config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
     Cache::flush();
     Http::preventStrayRequests();
-    $this->provider = new SpotifyMusicProvider(new SpotifyApi(new HostAccountTokens));
+    $this->provider = SpotifyFake::provider();
 });
 
 /**
