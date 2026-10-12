@@ -7,6 +7,8 @@ namespace App\Domain\Party\Actions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
+use App\Domain\Playback\Control;
+use App\Domain\Playback\PartyPlayers;
 use App\Domain\Queue\Actions\RankQueue;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\Presenters\QueueEntryPresenter;
@@ -20,10 +22,11 @@ readonly class BuildPartyContext
         private RankQueue $rank,
         private QueueEntryPresenter $presenter,
         private RenderPartyThemeCss $renderPartyThemeCss,
+        private PartyPlayers $players,
     ) {}
 
     /**
-     * @return array{party: array{code: string, name: string, state: string}, nowPlaying: array<string, mixed>|null, role: string, menu: list<array{key: string, label: string, href: string}>, themeCss: string}
+     * @return array{party: array{code: string, name: string, state: string}, nowPlaying: array<string, mixed>|null, capabilities: array{play: bool, pause: bool, skip: bool}, role: string, menu: list<array{key: string, label: string, href: string}>, themeCss: string}
      */
     public function handle(Party $party, ?User $user): array
     {
@@ -41,9 +44,24 @@ readonly class BuildPartyContext
                 'state' => $party->state->value,
             ],
             'nowPlaying' => $this->nowPlaying($party),
+            'capabilities' => $this->capabilities($party),
             'role' => $this->role($active, $canManage, $member?->role->isModerator() ?? false),
             'menu' => $active ? $this->menu($party, $gate->allows('viewLog', $party), $canModerate, $canManage) : [],
             'themeCss' => $this->renderPartyThemeCss->handle($party),
+        ];
+    }
+
+    /**
+     * @return array{play: bool, pause: bool, skip: bool}
+     */
+    private function capabilities(Party $party): array
+    {
+        $player = $this->players->for($party);
+
+        return [
+            'play' => $player?->supports(Control::Play) ?? false,
+            'pause' => $player?->supports(Control::Pause) ?? false,
+            'skip' => $player?->supports(Control::Skip) ?? false,
         ];
     }
 

@@ -169,3 +169,24 @@ it('keeps the party context query count constant', function () {
 
     expect($count())->toBe($baseline);
 });
+
+it('shares player capabilities for the party player', function (string $kind, bool $supported) {
+    $party = Party::factory()->live()->create(['code' => 'ABCD', 'player_kind' => $kind]);
+    $user = contextUser($party, 'host');
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('partyContext.capabilities', ['play' => $supported, 'pause' => $supported, 'skip' => $supported]));
+})->with([
+    'browser' => ['browser', false],
+    'polling' => ['polling', true],
+]);
+
+it('shares no capabilities when the party has no player', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD', 'player_kind' => null]);
+    $user = contextUser($party, 'host');
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('partyContext.capabilities', ['play' => false, 'pause' => false, 'skip' => false]));
+});
