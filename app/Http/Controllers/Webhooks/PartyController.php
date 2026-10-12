@@ -24,6 +24,7 @@ class PartyController extends Controller
             default:
                 break;
         }
+
         return response()->noContent();
     }
 
@@ -42,6 +43,7 @@ class PartyController extends Controller
             Log::debug("{$party}: Updating party directly from webhook");
             $party->updateState();
         }
+
         return response()->noContent();
     }
 
@@ -49,6 +51,7 @@ class PartyController extends Controller
     {
         Log::debug("{$party}: Received soloist webhook event");
         PartyUpdate::dispatch($party);
+
         return response()->noContent();
     }
 }

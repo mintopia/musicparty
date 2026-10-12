@@ -31,11 +31,12 @@ class Album extends Model
         if ($album) {
             return $album;
         }
-        $album = new Album();
+        $album = new Album;
         $album->spotify_id = $spotifyAlbum->id;
         $album->name = $spotifyAlbum->name;
         $album->image_url = $spotifyAlbum->images[0]->url;
         $album->save();
+
         return $album;
     }
 

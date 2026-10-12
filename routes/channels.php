@@ -19,10 +19,10 @@ Broadcast::channel('party.{party}', function ($user, Party $party) {
     return true;
 });
 
-Broadcast::channel('party.{party}.owner', function($user, Party $party) {
+Broadcast::channel('party.{party}.owner', function ($user, Party $party) {
     return $party->canBeManagedBy($user);
 });
 
-Broadcast::channel('spotifytoken.{userId}', function($user, int $userId) {
-    return (int)$user->id === (int)$userId;
+Broadcast::channel('spotifytoken.{userId}', function ($user, int $userId) {
+    return (int) $user->id === (int) $userId;
 });

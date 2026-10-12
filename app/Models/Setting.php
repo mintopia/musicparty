@@ -41,19 +41,23 @@ class Setting extends Model implements Sortable
             }
             if ($setting->encrypted) {
                 static::$cached[$code] = $setting->value;
+
                 return Crypt::decrypt($setting->value);
             }
             static::$cached[$code] = $setting->value;
+
             return $setting->value;
         }
         $setting = Setting::whereCode($code)->first();
         if ($setting === null) {
             Cache::put($key, $setting);
             static::$cached[$code] = null;
+
             return $default;
         }
         Cache::put($key, $setting->getValue());
         static::$cached[$code] = $setting->value;
+
         return $setting->value ?? $default;
     }
 
@@ -66,7 +70,7 @@ class Setting extends Model implements Sortable
 
     public function getValue()
     {
-        return (object)[
+        return (object) [
             'code' => $this->code,
             'encrypted' => $this->encrypted,
             'value' => $this->encrypted ? Crypt::encrypt($this->value) : $this->value,

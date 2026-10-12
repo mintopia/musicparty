@@ -18,9 +18,7 @@ class PlayYouTubeVideoEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(protected Party $party, protected string $videoId)
-    {
-    }
+    public function __construct(protected Party $party, protected string $videoId) {}
 
     public function broadcastWith(): array
     {

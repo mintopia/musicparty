@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mods\Whamageddon\Commands;
 
 use App\Enums\SettingType;
@@ -13,18 +14,19 @@ class InstallCommand extends Command
     public function handle(): int
     {
         $this->installMod();
+
         return self::SUCCESS;
     }
 
     protected function installMod(): void
     {
         $mod = Mod::whereCode('whamageddon')->first();
-        if (!$mod) {
-            $mod = new Mod();
+        if (! $mod) {
+            $mod = new Mod;
             $mod->code = 'whamageddon';
         }
         $mod->name = 'Whamageddon';
-        $mod->description = "Last Christmas will be added to the queue. Every hour between 10AM and 1AM, 1 upvote will be added. Will the party be able to avoid it?";
+        $mod->description = 'Last Christmas will be added to the queue. Every hour between 10AM and 1AM, 1 upvote will be added. Will the party be able to avoid it?';
         $mod->save();
         $this->addSetting(
             mod: $mod,
@@ -79,11 +81,10 @@ class InstallCommand extends Command
         mixed $default = null,
         bool $private = false,
         bool $encrypted = false,
-    ): ModSetting
-    {
+    ): ModSetting {
         $setting = $mod->settings()->whereCode($code)->first();
-        if (!$setting) {
-            $setting = new ModSetting();
+        if (! $setting) {
+            $setting = new ModSetting;
             $setting->code = $code;
             $setting->mod()->associate($mod);
         }
@@ -97,5 +98,4 @@ class InstallCommand extends Command
 
         return $setting;
     }
-
 }

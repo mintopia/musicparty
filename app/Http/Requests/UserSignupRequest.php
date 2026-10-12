@@ -34,10 +34,12 @@ class UserSignupRequest extends FormRequest
             if ($privacy) {
                 $combined[] = 'Privacy Policy';
             }
+
             return [
-                'terms.accepted' => 'You must agree to the ' . implode(' and ', $combined),
+                'terms.accepted' => 'You must agree to the '.implode(' and ', $combined),
             ];
         }
+
         return [];
     }
 

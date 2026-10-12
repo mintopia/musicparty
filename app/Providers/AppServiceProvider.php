@@ -30,13 +30,13 @@ class AppServiceProvider extends ServiceProvider
         });
 
         view()->composer(['layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
-                $currentTheme = Theme::whereActive(true)->first();
-                $darkMode = false;
+            $currentTheme = Theme::whereActive(true)->first();
+            $darkMode = false;
             if ($currentTheme) {
                 $darkMode = $currentTheme->dark_mode;
             }
-                $view->with('currentTheme', $currentTheme);
-                $view->with('darkMode', $darkMode);
+            $view->with('currentTheme', $currentTheme);
+            $view->with('darkMode', $darkMode);
         });
 
         Pulse::user(fn ($user) => [

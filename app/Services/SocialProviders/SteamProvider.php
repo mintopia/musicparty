@@ -10,14 +10,17 @@ use SocialiteProviders\Steam\Provider;
 class SteamProvider extends AbstractSocialProvider
 {
     protected string $name = 'Steam';
+
     protected string $code = 'steam';
+
     protected string $socialiteProviderCode = 'steam';
+
     protected bool $supportsAuth = true;
 
     public function configMapping(): array
     {
         return [
-            'client_secret' => (object)[
+            'client_secret' => (object) [
                 'name' => 'API Key',
                 'validation' => 'required|string',
                 'encrypted' => true,
@@ -36,6 +39,7 @@ class SteamProvider extends AbstractSocialProvider
                 'allowed_hosts' => $host,
             ]
         );
+
         return Socialite::buildProvider(Provider::class, $config->get())->setConfig($config);
     }
 

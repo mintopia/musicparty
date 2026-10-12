@@ -14,14 +14,14 @@ abstract class AbstractCollectionResource extends ResourceCollection
     public function paginationInformation(Request $request, array $paginated, array $default): array
     {
         return [
-            'pagination' => (object)[
+            'pagination' => (object) [
                 'total' => $default['meta']['total'],
                 'count' => $this->count(),
                 'perPage' => $default['meta']['per_page'],
                 'currentPage' => $default['meta']['current_page'],
                 'totalPages' => $default['meta']['last_page'],
             ],
-            'links' => (object)[
+            'links' => (object) [
                 'self' => $request->getUri(),
                 'first' => $default['links']['first'],
                 'last' => $default['links']['last'],

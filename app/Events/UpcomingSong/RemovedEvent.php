@@ -15,9 +15,7 @@ class RemovedEvent implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(protected Party $party, protected int $id)
-    {
-    }
+    public function __construct(protected Party $party, protected int $id) {}
 
     public function broadcastWith()
     {

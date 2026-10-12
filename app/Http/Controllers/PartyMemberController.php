@@ -59,12 +59,13 @@ class PartyMemberController extends Controller
         }
 
         $members = $query->paginate($perPage)->appends($params);
+
         return view('partymembers.index', [
             'party' => $party,
             'canManage' => true,
             'members' => $members,
             'roles' => PartyMemberRole::all(),
-            'filters' => (object)$params,
+            'filters' => (object) $params,
             'params' => $params,
         ]);
     }
@@ -106,12 +107,12 @@ class PartyMemberController extends Controller
             'canManage' => true,
             'member' => $user,
             'votes' => $votes,
-            'filters' => (object)$params,
+            'filters' => (object) $params,
             'params' => $params,
-            'types' => [(object)[
+            'types' => [(object) [
                 'code' => 'downvote',
                 'name' => 'Downvote',
-            ], (object)[
+            ], (object) [
                 'code' => 'upvote',
                 'name' => 'Upvote',
             ]],
@@ -133,6 +134,7 @@ class PartyMemberController extends Controller
         $role = PartyMemberRole::whereCode($request->input('role'))->first();
         $user->role()->associate($role);
         $user->save();
+
         return response()->redirectToRoute('parties.users.show', [$party->code, $user->id])->with('successMessage', 'The user has been updated');
     }
 }

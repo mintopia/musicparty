@@ -18,7 +18,7 @@ class MeasureRequest
      */
     public function handle(Request $request, Closure $next): Response
     {
-        if (!config('open-telemetry.enabled')) {
+        if (! config('open-telemetry.enabled')) {
             return $next($request);
         }
 
@@ -44,6 +44,7 @@ class MeasureRequest
         $response->headers->set('X-TraceId', $span->span->getContext()->getTraceId());
         $span->span->setAttribute(TraceAttributes::HTTP_RESPONSE_STATUS_CODE, $response->getStatusCode());
         $span->end();
+
         return $response;
     }
 }

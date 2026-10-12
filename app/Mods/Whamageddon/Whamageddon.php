@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mods\Whamageddon;
 
 use App\Models\Party;
@@ -13,25 +14,27 @@ class Whamageddon
     protected const CODE = 'whamageddon';
 
     protected bool $isEnabled = false;
+
     protected Collection $settings;
 
-    public function __construct(protected Party $party)
-    {
-    }
+    public function __construct(protected Party $party) {}
 
     public function hourly(): void
     {
-        if (!$this->party->active) {
+        if (! $this->party->active) {
             Log::info("{$this->party} Whamageddon: Party is not active");
+
             return;
         }
-        if (!$this->party->getModSettingValue(self::CODE, 'enabled')) {
+        if (! $this->party->getModSettingValue(self::CODE, 'enabled')) {
             Log::info("{$this->party} Whamageddon: Whamageddon is not enabled");
+
             return;
         }
         $hour = CarbonImmutable::now()->hour;
         if ($hour >= 2 && $hour < 10) {
             Log::info("{$this->party} Whamageddon: Skipping upvote because it's between 1AM and 9AM");
+
             return;
         }
         $upcoming = $this->getUpcomingSong();
@@ -97,6 +100,7 @@ class Whamageddon
         $trackId = $this->party->getModSettingValue(self::CODE, 'spotify_id');
         if ($trackId === null) {
             Log::warning("{$this->party} Whamageddon: No Spotify track ID to add");
+
             return;
         }
         $upcoming = $this->party->upcoming()
@@ -106,12 +110,13 @@ class Whamageddon
             })->first();
         if ($upcoming === null) {
             $track = $this->party->user->getSpotifyApi()->getTrack($trackId);
-            if (!$track) {
+            if (! $track) {
                 Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} in Spotify");
+
                 return;
             }
             $song = Song::fromSpotify($track);
-            $upcoming = new UpcomingSong();
+            $upcoming = new UpcomingSong;
             $upcoming->song()->associate($song);
             $upcoming->party()->associate($this->party);
         }
@@ -122,8 +127,9 @@ class Whamageddon
             $upcoming->score_adjustment = 1;
         }
         $upcoming->save();
-        if (!$upcoming->save()) {
+        if (! $upcoming->save()) {
             Log::warning("{$this->party} Whamageddon: Unable to save upcoming song");
+
             return;
         }
         Log::info("{$this->party} Whamageddon: Added song to party");
@@ -147,9 +153,10 @@ class Whamageddon
     protected function getUpcomingSong(): ?UpcomingSong
     {
         $upcoming = $this->party->getModSettingValue(self::CODE, 'upcoming_song_id');
-        if ($upcoming === null || !$upcoming) {
+        if ($upcoming === null || ! $upcoming) {
             return null;
         }
+
         return $this->party->upcoming()->whereId($upcoming)->first();
     }
 }

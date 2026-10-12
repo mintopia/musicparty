@@ -26,6 +26,7 @@ class UpcomingSongResource extends JsonResource
         $data['updated_at'] = $this->updated_at->toIso8601String();
         $data['vote'] = $this->augmentedData->vote->value ?? null;
         $data['user'] = $this->user->nickname ?? null;
+
         return $data;
     }
 

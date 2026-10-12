@@ -3,7 +3,6 @@
 namespace App\Observers;
 
 use App\Models\Role;
-use App\Models\Seat;
 use App\Models\User;
 
 class UserObserver
