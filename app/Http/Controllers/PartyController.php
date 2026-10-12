@@ -10,7 +10,11 @@ use App\Domain\Membership\Actions\ListPartyMembers;
 use App\Domain\Membership\Actions\UnbanMember;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\EnabledMods;
+use App\Domain\Music\Actions\ListHostPlaylists;
+use App\Domain\Music\Actions\SelectPartyPlaylists;
 use App\Domain\Music\Actions\SpotifyControlLinkStatus;
+use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\GoLiveParty;
@@ -18,6 +22,7 @@ use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
@@ -51,6 +56,7 @@ use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
+use App\Http\Requests\UpdatePartyPlaylistsRequest;
 use App\Http\Requests\UpdatePartyRequest;
 use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PartyMemberResource;
@@ -196,9 +202,18 @@ class PartyController extends Controller
         ]);
     }
 
-    public function settings(EnabledMods $enabledMods, Party $party): Response
+    public function settings(Request $request, EnabledMods $enabledMods, ListHostPlaylists $listHostPlaylists, PairingCatalogue $catalogue, Party $party): Response
     {
         $this->authorize('update', $party);
+
+        try {
+            $playlists = array_map(
+                fn ($playlist): array => ['id' => $playlist->id, 'name' => $playlist->name, 'track_count' => $playlist->trackCount],
+                $listHostPlaylists($this->currentUser($request), $party, $catalogue->provider($party->music_provider)),
+            );
+        } catch (NotHostException|ProviderTemporaryFailure) {
+            $playlists = [];
+        }
 
         return Inertia::render('Party/Settings', [
             'party' => ['code' => $party->code, 'name' => $party->name],
@@ -211,9 +226,38 @@ class PartyController extends Controller
                 'hold_requests' => (bool) $party->hold_requests,
                 'no_repeat_interval' => $party->no_repeat_interval,
             ],
+            'playlists' => $playlists,
+            'fallback_playlist_id' => $party->fallback_playlist_id,
+            'history_playlist_id' => $party->history_playlist_id,
+            'fallback_check' => $request->session()->get('fallback_check'),
             'enabled_mods' => $enabledMods->idsFor($party),
             'spotify_link_url' => route('spotify.index', ['return' => route('parties.settings', $party, false)]),
         ]);
+    }
+
+    public function updatePlaylists(UpdatePartyPlaylistsRequest $request, SelectPartyPlaylists $selectPlaylists, FallbackPlaylistGate $gate, PairingCatalogue $catalogue, Party $party): RedirectResponse
+    {
+        $this->authorize('update', $party);
+
+        try {
+            $party = $selectPlaylists(
+                $this->currentUser($request),
+                $party,
+                $catalogue->provider($party->music_provider),
+                $request->fallbackPlaylistId(),
+                $request->historyPlaylistId(),
+            );
+        } catch (NotHostException) {
+            abort(403);
+        } catch (ProviderTemporaryFailure $exception) {
+            return back()->withErrors(['fallback_playlist' => $exception->getMessage()]);
+        }
+
+        $check = $gate->check($party);
+
+        return back()
+            ->with('success', 'Playlists saved')
+            ->with('fallback_check', ['playable' => $check->playable, 'required' => $check->required, 'passes' => $check->passes()]);
     }
 
     public function update(UpdatePartyRequest $request, UpdatePartySettings $updateSettings, Party $party): RedirectResponse

@@ -9,6 +9,10 @@ const props = defineProps({
     settings: {type: Object, required: true},
     enabled_mods: {type: Array, default: () => []},
     spotify_link_url: {type: String, default: null},
+    playlists: {type: Array, default: () => []},
+    fallback_playlist_id: {type: String, default: null},
+    history_playlist_id: {type: String, default: null},
+    fallback_check: {type: Object, default: null},
 });
 
 usePartyPresence(props.party.code);
@@ -26,6 +30,20 @@ const form = useForm({
     hold_requests: props.settings.hold_requests,
     no_repeat_interval: props.settings.no_repeat_interval,
 });
+
+const playlistForm = useForm({
+    fallback_playlist: props.fallback_playlist_id ?? '',
+    history_playlist: props.history_playlist_id ?? '',
+});
+
+const savePlaylists = () => {
+    playlistForm.put(`/parties/${props.party.code}/playlists`, {preserveScroll: true});
+};
+
+const playlistFields = [
+    {key: 'fallback_playlist', label: 'Fallback Playlist', hint: 'Played when the queue is empty. Needs at least 20 playable tracks.', none: 'None'},
+    {key: 'history_playlist', label: 'History Playlist', hint: 'Every played track is appended here. Choose none to stop appending.', none: 'None (do not append)'},
+];
 
 const toNumberOrNull = (value) => (value === '' || value === null ? null : Number(value));
 
@@ -69,6 +87,43 @@ const numberFields = [
                     class="inline-flex min-h-11 items-center rounded border border-border px-3 text-sm hover:text-primary"
                 >Link Spotify account</Link>
             </div>
+
+            <form class="flex flex-col gap-4" data-testid="playlists-form" @submit.prevent="savePlaylists">
+                <div v-for="field in playlistFields" :key="field.key" class="flex flex-col gap-1 text-sm">
+                    <label :for="`playlist-${field.key}`" class="font-medium">{{ field.label }}</label>
+                    <select
+                        :id="`playlist-${field.key}`"
+                        v-model="playlistForm[field.key]"
+                        :data-testid="`select-${field.key}`"
+                        class="min-h-11 rounded border border-border bg-surface px-2"
+                    >
+                        <option value="">{{ field.none }}</option>
+                        <option v-for="playlist in playlists" :key="playlist.id" :value="playlist.id">{{ playlist.name }} ({{ playlist.track_count }})</option>
+                    </select>
+                    <input
+                        v-model="playlistForm[field.key]"
+                        type="text"
+                        placeholder="Or paste a playlist link, URI or id"
+                        :data-testid="`paste-${field.key}`"
+                        class="min-h-11 rounded border border-border bg-surface px-2"
+                    >
+                    <span class="text-xs text-muted">{{ field.hint }}</span>
+                    <span v-if="playlistForm.errors[field.key]" role="alert" :data-testid="`error-${field.key}`" class="text-xs text-red-500">{{ playlistForm.errors[field.key] }}</span>
+                </div>
+                <p
+                    v-if="fallback_check"
+                    data-testid="fallback-check"
+                    :class="fallback_check.passes ? 'text-sm text-green-500' : 'text-sm text-red-500'"
+                >{{ fallback_check.playable }} of {{ fallback_check.required }} required playable tracks</p>
+                <div>
+                    <button
+                        type="submit"
+                        :disabled="playlistForm.processing"
+                        data-testid="playlists-save"
+                        class="min-h-11 rounded border border-border px-4 text-sm hover:text-primary disabled:opacity-50"
+                    >Save playlists</button>
+                </div>
+            </form>
         </section>
 
         <form class="flex flex-col gap-4 rounded border border-border bg-surface px-5 py-5" data-testid="settings-form" @submit.prevent="save">
