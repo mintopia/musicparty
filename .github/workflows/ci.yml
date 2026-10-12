@@ -1,0 +1,118 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - feature/v3-rewrite
+      - 'epic/**'
+      - develop
+  pull_request:
+    branches:
+      - feature/v3-rewrite
+      - 'epic/**'
+      - develop
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    name: Tests and coverage
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip
+          coverage: xdebug
+          tools: composer:v2
+
+      - name: Get Composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> "$GITHUB_OUTPUT"
+
+      - uses: actions/cache@v4
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: composer-${{ hashFiles('composer.lock') }}
+          restore-keys: composer-
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Pest (parallel, with coverage)
+        env:
+          XDEBUG_MODE: coverage
+        run: >
+          vendor/bin/pest --parallel --processes=4
+          --coverage
+          --coverage-clover=coverage/clover.xml
+          --coverage-html=coverage/html
+
+      - name: Coverage summary
+        if: always()
+        run: |
+          if [ -f coverage/clover.xml ]; then
+            php -r '
+              $xml = simplexml_load_file("coverage/clover.xml");
+              $m = $xml->project->metrics;
+              $total = (int) $m["statements"];
+              $covered = (int) $m["coveredstatements"];
+              $pct = $total > 0 ? round($covered / $total * 100, 2) : 0;
+              echo "## Coverage\n\nStatements: {$covered} / {$total} ({$pct}%)\n";
+            ' >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+      - name: Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage
+          path: coverage/
+          if-no-files-found: ignore
+
+  pint:
+    name: Pint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress
+
+      - name: Pint
+        run: vendor/bin/pint --test
+
+  build:
+    name: Frontend build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install and build
+        run: |
+          npm ci
+          npm run build
