@@ -29,6 +29,10 @@ class SearchHitResource extends JsonResource
             'queued' => $this->queued,
             'requested_by' => $this->requestedBy,
             'score' => $this->score,
+            'eligible' => $this->ineligibleReason === null,
+            'reason' => $this->ineligibleReason,
+            'queued_request_id' => $this->queuedRequestId,
+            'my_vote' => $this->myVote,
         ];
     }
 }

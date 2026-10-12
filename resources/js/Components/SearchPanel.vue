@@ -76,6 +76,40 @@ const request = (track) => {
     });
 };
 
+const downvotesEnabled = computed(() => props.party.downvotes === true);
+
+const buttonClass = (active, activeClass) => ['flex min-h-11 min-w-11 items-center justify-center rounded disabled:opacity-60', active ? activeClass : 'text-muted hover:text-text'];
+
+const vote = (track, direction) => {
+    if (props.readOnly || pending.value || track.queued_request_id == null) {
+        return;
+    }
+    const value = direction === 'up' ? 1 : -1;
+    const url = `/parties/${props.party.code}/requests/${track.queued_request_id}/vote`;
+    const options = {
+        preserveScroll: true,
+        preserveState: true,
+        onStart: () => {
+            pending.value = track.provider_track_id;
+            errors.value = {};
+        },
+        onError: (e) => {
+            errors.value = {[track.provider_track_id]: e.vote ?? e.value ?? 'Could not record your vote.'};
+        },
+        onFinish: () => {
+            pending.value = null;
+        },
+    };
+
+    if (track.my_vote === value) {
+        router.delete(url, options);
+    } else {
+        router.put(url, {value: direction}, options);
+    }
+};
+
+const isIneligible = (track) => !track.queued && track.eligible === false;
+
 const label = (track) => {
     if (requested.value[track.provider_track_id]) {
         return track.queued ? 'Upvoted' : 'Added';
@@ -124,19 +158,47 @@ const hasResults = computed(() => Array.isArray(props.results));
                             </div>
                         </div>
                         <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(track.duration_ms) }}</span>
-                        <span v-if="track.queued" data-testid="result-score" class="min-w-8 text-center text-sm tabular-nums">{{ track.score }}</span>
+                        <div v-if="track.queued_request_id != null" class="flex items-center">
+                            <button
+                                type="button"
+                                data-testid="vote-up"
+                                :aria-label="`${downvotesEnabled ? 'Upvote' : 'Like'} ${track.title}`"
+                                :aria-pressed="track.my_vote === 1"
+                                :disabled="readOnly || pending !== null"
+                                :class="buttonClass(track.my_vote === 1, 'text-accent')"
+                                @click="vote(track, 'up')"
+                            >
+                                <Icon :name="downvotesEnabled ? 'voteUp' : 'heart'" :filled="track.my_vote === 1" />
+                            </button>
+                            <span data-testid="result-score" class="min-w-8 text-center text-sm tabular-nums" :class="{'text-accent': track.score > 0, 'text-danger': track.score < 0}">{{ track.score }}</span>
+                            <button
+                                v-if="downvotesEnabled"
+                                type="button"
+                                data-testid="vote-down"
+                                :aria-label="`Downvote ${track.title}`"
+                                :aria-pressed="track.my_vote === -1"
+                                :disabled="readOnly || pending !== null"
+                                :class="buttonClass(track.my_vote === -1, 'text-danger')"
+                                @click="vote(track, 'down')"
+                            >
+                                <Icon :name="track.my_vote === -1 ? 'voteDown' : 'voteDownTray'" :filled="track.my_vote === -1" />
+                            </button>
+                        </div>
                         <button
+                            v-else
                             type="button"
                             data-testid="request-button"
-                            :disabled="readOnly || pending !== null || requested[track.provider_track_id]"
+                            :disabled="readOnly || pending !== null || requested[track.provider_track_id] || isIneligible(track)"
+                            :title="isIneligible(track) ? track.reason : undefined"
                             class="flex min-h-11 min-w-11 items-center justify-center gap-2 rounded px-4 text-sm font-medium disabled:opacity-60"
-                            :class="track.queued || requested[track.provider_track_id] ? 'border border-border text-text' : 'bg-primary text-white'"
+                            :class="requested[track.provider_track_id] ? 'border border-border text-text' : 'bg-primary text-white'"
                             @click="request(track)"
                         >
-                            <Icon :name="track.queued || requested[track.provider_track_id] ? 'queue' : 'musicPlus'" />
+                            <Icon :name="requested[track.provider_track_id] ? 'queue' : 'musicPlus'" />
                             <span>{{ label(track) }}</span>
                         </button>
                     </div>
+                    <p v-if="isIneligible(track)" data-testid="ineligible-reason" class="mt-2 text-sm text-muted">{{ track.reason }}</p>
                     <p v-if="errors[track.provider_track_id]" role="alert" data-testid="request-error" class="mt-2 text-sm text-danger">{{ errors[track.provider_track_id] }}</p>
                 </li>
             </ul>

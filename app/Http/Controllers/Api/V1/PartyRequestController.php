@@ -39,10 +39,10 @@ class PartyRequestController extends Controller
     public function search(SearchTracksRequest $request, SearchPartyProvider $search, ThrottleSearch $throttle, Party $party): AnonymousResourceCollection|JsonResponse
     {
         try {
-            $this->member($request, $party);
+            $member = $this->member($request, $party);
             $throttle($this->currentUser($request));
 
-            $results = $search($party, $request->string('q')->toString(), $request->integer('page', 1));
+            $results = $search($party, $request->string('q')->toString(), $request->integer('page', 1), $member);
 
             return SearchHitResource::collection($results->hits)->additional([
                 'meta' => ['page' => $request->integer('page', 1), 'has_more' => $results->hasMore],
