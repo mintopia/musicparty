@@ -3,7 +3,9 @@
 use App\Http\Controllers\Api\V1\Admin\IntegrationTokenController as AdminIntegrationTokenController;
 use App\Http\Controllers\Api\V1\Admin\LinkedAccountController as AdminLinkedAccountController;
 use App\Http\Controllers\Api\V1\Admin\ModController as AdminModController;
+use App\Http\Controllers\Api\V1\Admin\MusicProviderController as AdminMusicProviderController;
 use App\Http\Controllers\Api\V1\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Api\V1\Admin\PlayerController as AdminPlayerController;
 use App\Http\Controllers\Api\V1\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Api\V1\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Api\V1\Admin\ThemeController as AdminThemeController;
@@ -118,6 +120,10 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::delete('users/{user}/roles/{role}', [AdminUserController::class, 'revokeRole'])->name('users.roles.revoke');
         Route::get('providers', [AdminProviderController::class, 'index'])->name('providers.index');
         Route::put('providers/{provider}', [AdminProviderController::class, 'update'])->name('providers.update');
+        Route::get('music-providers', [AdminMusicProviderController::class, 'index'])->name('music-providers.index');
+        Route::put('music-providers/{musicProvider}', [AdminMusicProviderController::class, 'update'])->name('music-providers.update');
+        Route::get('players', [AdminPlayerController::class, 'index'])->name('players.index');
+        Route::put('players/{player}', [AdminPlayerController::class, 'update'])->name('players.update');
         Route::get('settings', [AdminSettingsController::class, 'show'])->name('settings.show');
         Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
         Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
