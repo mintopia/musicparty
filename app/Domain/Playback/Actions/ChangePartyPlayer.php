@@ -39,15 +39,10 @@ readonly class ChangePartyPlayer
 
         $musicProvider ??= $party->music_provider;
 
-        $knownKinds = array_column($this->catalogue->players(), 'kind');
-        $knownProviders = array_column($this->catalogue->providers(), 'id');
+        $keepsCurrentPairing = $playerKind === $party->player_kind && $musicProvider === $party->music_provider;
 
-        if (! in_array($playerKind, $knownKinds, true)) {
-            throw ValidationException::withMessages(['player_kind' => "Unknown player kind '{$playerKind}'."]);
-        }
-
-        if (! in_array($musicProvider, $knownProviders, true)) {
-            throw ValidationException::withMessages(['music_provider' => "Unknown Music Provider '{$musicProvider}'."]);
+        if (! $keepsCurrentPairing) {
+            $this->assertAvailable($playerKind, $musicProvider);
         }
 
         try {
@@ -81,6 +76,28 @@ readonly class ChangePartyPlayer
         PollPlayback::start($party);
 
         return $party;
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    private function assertAvailable(string $playerKind, string $musicProvider): void
+    {
+        $registeredKinds = array_column($this->catalogue->registeredPlayers(), 'kind');
+
+        if (! in_array($playerKind, $registeredKinds, true)) {
+            throw ValidationException::withMessages(['player_kind' => "Unknown player kind '{$playerKind}'."]);
+        }
+
+        if (! $this->catalogue->isProviderAvailable($musicProvider)) {
+            throw ValidationException::withMessages(['music_provider' => "Unknown Music Provider '{$musicProvider}'."]);
+        }
+
+        $enabled = collect($this->catalogue->registeredPlayers())->firstWhere('kind', $playerKind)['enabled'] ?? false;
+
+        if (! $enabled) {
+            throw ValidationException::withMessages(['player_kind' => 'This player has been disabled by an admin.']);
+        }
     }
 
     /**
