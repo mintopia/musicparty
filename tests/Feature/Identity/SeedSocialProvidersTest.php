@@ -59,3 +59,26 @@ it('stores secrets encrypted at rest', function () {
         ->and($discord->getSetting('client_secret'))->toBe('d-secret')
         ->and($discord->getSetting('client_id'))->toBe('d-id');
 });
+
+it('fills empty Spotify Search settings from env and never overwrites them', function () {
+    $this->artisan('providers:seed')->assertSuccessful();
+    $search = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail();
+
+    expect($search->getSetting('client_id'))->toBe('ss-id')
+        ->and($search->getSetting('client_secret'))->toBe('ss-secret');
+
+    $id = $search->settings()->whereCode('client_id')->firstOrFail();
+    $id->value = 'admin-id';
+    $id->save();
+    $secret = $search->settings()->whereCode('client_secret')->firstOrFail();
+    $secret->value = null;
+    $secret->save();
+
+    config(['services.spotifysearch' => ['client_id' => 'env-id', 'client_secret' => 'env-secret']]);
+    $this->artisan('providers:seed')->assertSuccessful();
+
+    $search = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail();
+
+    expect($search->getSetting('client_id'))->toBe('admin-id')
+        ->and($search->getSetting('client_secret'))->toBe('env-secret');
+});
