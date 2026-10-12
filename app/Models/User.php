@@ -174,7 +174,7 @@ class User extends Authenticatable
             // Create new API
             Log::debug("{$this}: Creating new API connection");
             $request = new Request;
-            $this->api = new SpotifyWebAPI([], $this->session, $request);
+            $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
         }
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {

@@ -8,6 +8,7 @@ use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use Random\Randomizer;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -18,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
+        $this->app->bind(Randomizer::class, fn () => new Randomizer);
     }
 
     /**
