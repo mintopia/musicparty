@@ -141,6 +141,20 @@ Each Party has one Player, chosen by its Host in the Party settings.
 
 Soloist stale and disconnect timeouts are `MUSICPARTY_SOLOIST_STALE_AFTER` and `MUSICPARTY_SOLOIST_DISCONNECT_AFTER`.
 
+## Operator commands
+
+Operators can inspect and nudge Parties from the command line. Party codes are case-insensitive, and an unknown code exits non-zero.
+
+| Command | What it does |
+|---|---|
+| `party:check {code?}` | Refreshes the Fallback Playlist cache, re-runs the Fallback Playlist gate check, and prints Player health, Host account status and the playable Fallback Track count. Checks every Live Party without a code. |
+| `party:fallback` | Ticks every Live Party whose last playback tick is over 90 seconds old. |
+| `party:updatestate {code}` | Runs one playback tick now. |
+| `party:pushupdate {code}` | Re-broadcasts the Party's state and Queue. |
+| `party:refreshaccesstokens` | Refreshes Host tokens that are close to expiry. |
+
+While one of these runs, application log lines are also printed to the console: warnings and above normally, info with `-v`, debug with `-vv`. Logging from other commands, workers and the scheduler is never written to standard output.
+
 ## Testing and quality
 
 Run these on the host, or through the `composer` service (`docker compose run --rm composer <script>`):
