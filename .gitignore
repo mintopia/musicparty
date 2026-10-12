@@ -18,9 +18,15 @@ yarn-error.log
 /.idea
 /.vscode
 /docker-compose.override.yml
-
+**/.DS_Store
 **/caddy
 frankenphp
 frankenphp-worker.php
 /otel-collector-config.yml
 /openobserve
+
+/cookies.json
+/collector.yml
+
+/.claude/worktrees/
+/docker/dbdata
