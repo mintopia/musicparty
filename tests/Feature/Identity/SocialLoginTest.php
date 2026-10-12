@@ -1,14 +1,18 @@
 <?php
 
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Actions\ResolveSocialUser;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\SocialProviders\FacebookProvider;
 use App\Domain\Identity\SocialProviders\GoogleProvider;
+use App\Enums\SettingType;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\User as SocialiteUser;
@@ -231,4 +235,16 @@ it('builds Google and Facebook providers from the factory', function (): void {
         ->and($facebook->code)->toBe('facebook')
         ->and($facebook->provider_class)->toBe(FacebookProvider::class)
         ->and($facebook->supports_auth)->toBeTrue();
+});
+
+it('carries the site name and logos on the login page props', function () {
+    foreach (['name' => 'Lan Jam', 'logo-light' => 'site/light.png', 'logo-dark' => 'site/dark.png'] as $code => $value) {
+        (new Setting)->forceFill(['code' => $code, 'name' => $code, 'encrypted' => false, 'hidden' => false, 'validation' => '', 'type' => SettingType::stString, 'value' => $value])->save();
+    }
+
+    $this->get(route('login'))->assertInertia(fn ($page) => $page
+        ->component('Login')
+        ->where('site.name', 'Lan Jam')
+        ->where('site.logo_light_url', Storage::disk(SiteSettings::disk())->url('site/light.png'))
+        ->where('site.logo_dark_url', Storage::disk(SiteSettings::disk())->url('site/dark.png')));
 });
