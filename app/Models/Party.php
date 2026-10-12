@@ -704,8 +704,11 @@ class Party extends Model
         return $tracks;
     }
 
-    public function canBeManagedBy(User $user): bool
+    public function canBeManagedBy(?User $user): bool
     {
+        if ($user === null) {
+            return false;
+        }
         if ($user->id === $this->user_id) {
             return true;
         }

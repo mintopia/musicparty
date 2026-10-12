@@ -62,6 +62,7 @@
                             </a>
                         </li>
                     @endif
+                    @auth
                     @foreach(Auth::user()->partyMembers()->with(['party'])->get() as $member)
                         <li class="nav-item dropdown @if(($activenav ?? null) === "party:{$member->party->code}") active @endif">
                             <a class="nav-link dropdown-toggle @if(($activenav ?? null) === "party:{$member->party->code}") show @endif"
@@ -89,6 +90,7 @@
                             </div>
                         </li>
                     @endforeach
+                    @endauth
                     @can('create', \App\Models\Party::class)
                         <li class="nav-item @if(($activenav ?? null) === 'party.create') active @endif">
                             <a class="nav-link" href="{{ route('parties.create') }}">
@@ -172,6 +174,7 @@
                     </div>
                 </div>
 
+                @auth
                 <div class="nav-item">
                     <a href="{{ route('user.profile') }}" class="nav-link d-flex lh-1 text-reset p-0">
                         <span class="avatar avatar-sm"
@@ -181,6 +184,7 @@
                         </div>
                     </a>
                 </div>
+                @endauth
             </div>
         </header>
         @yield('header')
