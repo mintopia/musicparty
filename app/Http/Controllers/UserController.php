@@ -24,7 +24,7 @@ class UserController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->redirectToRoute('home')->with('successMessage', 'You have been logged out');
+        return response()->redirectToRoute('home')->with('success', 'You have been logged out');
     }
 
     public function login(ListLoginProviders $listLoginProviders): Response
@@ -35,7 +35,7 @@ class UserController extends Controller
                 'name' => $provider->name,
                 'url' => route('login.redirect', $provider->code),
             ])->all(),
-            'error' => session('errorMessage'),
+            'error' => session('error'),
         ]);
     }
 
@@ -44,11 +44,11 @@ class UserController extends Controller
         try {
             return $startSocialLogin($socialprovider);
         } catch (LoginRefusedException $ex) {
-            return response()->redirectToRoute('login')->with('errorMessage', $ex->getMessage());
+            return response()->redirectToRoute('login')->with('error', $ex->getMessage());
         } catch (Throwable $ex) {
             Log::error($ex->getMessage());
 
-            return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
+            return response()->redirectToRoute('login')->with('error', 'Unable to login');
         }
     }
 
@@ -57,11 +57,11 @@ class UserController extends Controller
         try {
             $user = $completeSocialLogin($socialprovider);
         } catch (LoginRefusedException $ex) {
-            return response()->redirectToRoute('login')->with('errorMessage', $ex->getMessage());
+            return response()->redirectToRoute('login')->with('error', $ex->getMessage());
         } catch (Throwable $ex) {
             Log::error($ex->getMessage());
 
-            return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
+            return response()->redirectToRoute('login')->with('error', 'Unable to login');
         }
 
         Auth::login($user);
@@ -71,6 +71,6 @@ class UserController extends Controller
             return response()->redirectToRoute('login.signup');
         }
 
-        return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
+        return response()->redirectToIntended(route('home'))->with('success', 'You have been logged in');
     }
 }

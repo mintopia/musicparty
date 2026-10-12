@@ -188,17 +188,17 @@ it('manages entries through the web routes and redirects back with a message', f
 
     $this->post(route('parties.blocklist.store', 'ABCD'), ['match_type' => 'artist_name', 'value' => 'Bad Band', 'is_regex' => false, 'is_enabled' => true, 'notes' => 'no'])
         ->assertRedirect('/parties/ABCD/blocklist')
-        ->assertSessionHas('successMessage');
+        ->assertSessionHas('success');
     $created = BlocklistEntry::query()->where('value', 'Bad Band')->sole();
 
     $this->put(route('parties.blocklist.update', ['ABCD', $created->id]), ['match_type' => 'artist_name', 'value' => 'Bad Band', 'is_enabled' => false])
         ->assertRedirect('/parties/ABCD/blocklist')
-        ->assertSessionHas('successMessage');
+        ->assertSessionHas('success');
     expect($created->fresh()->is_enabled)->toBeFalse();
 
     $this->delete(route('parties.blocklist.destroy', ['ABCD', $created->id]))
         ->assertRedirect('/parties/ABCD/blocklist')
-        ->assertSessionHas('successMessage');
+        ->assertSessionHas('success');
     expect(BlocklistEntry::query()->whereKey($created->id)->exists())->toBeFalse()
         ->and(PartyLogEntry::query()->where('action', 'like', 'blocklist.%')->count())->toBe(3);
 });

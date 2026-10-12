@@ -249,7 +249,7 @@ it('updates the new settings and logs old and new values', function () {
 
     $this->actingAs($host)->patch(route('parties.update', 'ABCD'), [
         'explicit' => false, 'min_song_length' => 60, 'max_song_length' => 300, 'no_repeat_interval' => 600,
-    ])->assertRedirect()->assertSessionMissing('warningMessage');
+    ])->assertRedirect()->assertSessionMissing('warning');
 
     $party->refresh();
     expect($party->explicit)->toBeFalse()->and($party->min_song_length)->toBe(60)
@@ -265,7 +265,7 @@ it('warns and logs when a rules change leaves the Fallback Playlist short', func
 
     $this->actingAs($host)->patch(route('parties.update', 'ABCD'), ['min_song_length' => 200])
         ->assertRedirect()
-        ->assertSessionHas('warningMessage', 'The Fallback Playlist has only 0 of 20 required playable Tracks.');
+        ->assertSessionHas('warning', 'The Fallback Playlist has only 0 of 20 required playable Tracks.');
 
     $entry = PartyLogEntry::query()->where('action', 'party.fallback_playlist_invalid')->sole();
     expect($entry->details)->toBe(['playable' => 0, 'required' => 20]);

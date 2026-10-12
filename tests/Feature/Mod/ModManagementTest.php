@@ -218,3 +218,11 @@ it('manages mods through the web routes', function () {
     $this->delete('/parties/ABCD/mods/settings-fixture')->assertRedirect();
     expect(PartyMod::query()->sole()->enabled)->toBeFalse();
 });
+
+it('flashes mod changes into the next Inertia response', function () {
+    $this->actingAs(modActor($this->party, 'host'));
+
+    $this->put('/parties/ABCD/mods/settings-fixture')->assertRedirect();
+
+    $this->get('/parties/ABCD/mods')->assertInertia(fn (Assert $page) => $page->where('flash.success', 'Mod enabled'));
+});

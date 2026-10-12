@@ -4,6 +4,7 @@ import TopBar from '../Components/TopBar.vue';
 import AppFooter from '../Components/AppFooter.vue';
 import ImpersonationBanner from '../Components/ImpersonationBanner.vue';
 import MiniNowPlaying from '../Components/MiniNowPlaying.vue';
+import FlashAlerts from '../Components/ui/FlashAlerts.vue';
 import MobileTabBar from '../Components/MobileTabBar.vue';
 import {providePageMeta} from '../composables/usePageMeta.js';
 import {pageFallback} from '../lib/pageFallback.js';
@@ -55,6 +56,7 @@ const effectiveMeta = computed(() => {
             <TopBar :crumbs="effectiveMeta.crumbs" @toggle-sidebar="drawerOpen = !drawerOpen" />
             <ImpersonationBanner />
             <main class="flex-1" :class="party ? 'pb-32 md:pb-0' : ''">
+                <FlashAlerts class="px-6 pt-6" />
                 <slot :meta="effectiveMeta" />
             </main>
             <div :class="party ? 'hidden md:block' : ''"><AppFooter /></div>

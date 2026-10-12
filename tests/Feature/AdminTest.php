@@ -257,7 +257,7 @@ it('logs a suspended session out and redirects to login', function (): void {
     $user = User::factory()->create(['suspended' => true]);
 
     $this->actingAs($user)->get(route('home'))
-        ->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Your account has been suspended');
+        ->assertRedirect(route('login'))->assertSessionHas('error', 'Your account has been suspended');
 
     $this->assertGuest();
 });

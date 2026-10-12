@@ -11,7 +11,6 @@ const props = defineProps({
 const page = usePage();
 const memberError = computed(() => page.props.errors?.member ?? null);
 const roleError = computed(() => page.props.errors?.role ?? null);
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
 
 const assignableRoles = [
     {value: 'moderator', label: 'Moderator'},
@@ -103,7 +102,6 @@ const initial = (member) => member.nickname?.charAt(0).toUpperCase() ?? '?';
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" data-testid="members-success" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
         <p v-if="memberError" role="alert" data-testid="members-error" class="rounded border border-border bg-surface px-5 py-3 text-sm text-red-500">{{ memberError }}</p>
         <p v-if="roleError" role="alert" data-testid="members-role-error" class="rounded border border-border bg-surface px-5 py-3 text-sm text-red-500">{{ roleError }}</p>
 

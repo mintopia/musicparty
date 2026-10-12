@@ -31,6 +31,6 @@ class EnsureUserIsNotSuspended
             return response()->json(['message' => 'Your account has been suspended.'], Response::HTTP_FORBIDDEN);
         }
 
-        return redirect()->route('login')->with('errorMessage', 'Your account has been suspended');
+        return redirect()->route('login')->with('error', 'Your account has been suspended');
     }
 }

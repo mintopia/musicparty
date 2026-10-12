@@ -40,7 +40,6 @@ onBeforeUnmount(() => {
 });
 
 const page = usePage();
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
 const reasons = ref({});
 const base = computed(() => `/parties/${props.party.code}/requests`);
 
@@ -60,7 +59,6 @@ const remove = (id) => router.delete(`${base.value}/${id}`, {preserveScroll: tru
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
         <p v-if="liveRequests.length === 0" data-testid="pending-empty" class="text-sm text-muted">Nothing is waiting for approval.</p>
 
         <ul class="flex flex-col gap-3">

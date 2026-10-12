@@ -38,7 +38,7 @@ beforeEach(function () {
 it('warns and logs when adding an entry drops the Fallback Playlist below 20 playable Tracks', function () {
     $this->post(route('parties.blocklist.store', 'ABCD'), ['match_type' => 'track_name', 'value' => 'Banned'])
         ->assertRedirect()
-        ->assertSessionHas('warningMessage', 'The Fallback Playlist has only 17 of 20 required playable Tracks.');
+        ->assertSessionHas('warning', 'The Fallback Playlist has only 17 of 20 required playable Tracks.');
 
     expect(PartyLogEntry::query()->where('action', 'party.fallback_playlist_invalid')->sole()->details)->toBe(['playable' => 17, 'required' => 20]);
 });
@@ -46,18 +46,18 @@ it('warns and logs when adding an entry drops the Fallback Playlist below 20 pla
 it('stays quiet when enough playable Tracks remain', function () {
     $this->post(route('parties.blocklist.store', 'ABCD'), ['match_type' => 'track_name', 'value' => 'Spare'])
         ->assertRedirect()
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
 
     expect(invalidLogCount())->toBe(0);
 });
 
 it('does not revalidate when a disabled entry is added or no Fallback Playlist is set', function () {
     $this->post(route('parties.blocklist.store', 'ABCD'), ['match_type' => 'track_name', 'value' => 'Banned', 'is_enabled' => false])
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
 
     $this->party->forceFill(['fallback_playlist_id' => null])->save();
     $this->post(route('parties.blocklist.store', 'ABCD'), ['match_type' => 'track_name', 'value' => 'Banned'])
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
 
     expect(invalidLogCount())->toBe(0);
 });
@@ -67,15 +67,15 @@ it('warns when enabling an entry or changing its value, but not when only notes 
     $url = route('parties.blocklist.update', ['ABCD', $entry]);
 
     $this->put($url, ['match_type' => 'track_name', 'value' => 'Nothing', 'is_enabled' => false, 'notes' => 'hi'])
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
     expect(invalidLogCount())->toBe(0);
 
     $this->put($url, ['match_type' => 'track_name', 'value' => 'Banned', 'is_enabled' => true])
-        ->assertSessionHas('warningMessage');
+        ->assertSessionHas('warning');
     expect(invalidLogCount())->toBe(1);
 
     $this->put($url, ['match_type' => 'track_name', 'value' => 'Banned', 'is_enabled' => true, 'notes' => 'again'])
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
     expect(invalidLogCount())->toBe(1);
 });
 
@@ -84,13 +84,13 @@ it('stays quiet when disabling or removing an entry restores the count', functio
     $url = route('parties.blocklist.update', ['ABCD', $entry]);
 
     $this->put($url, ['match_type' => 'track_name', 'value' => 'Banned', 'is_enabled' => false])
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
     expect(invalidLogCount())->toBe(0);
 
     $this->put($url, ['match_type' => 'track_name', 'value' => 'Banned', 'is_enabled' => true])
-        ->assertSessionHas('warningMessage');
+        ->assertSessionHas('warning');
     $this->delete(route('parties.blocklist.destroy', ['ABCD', $entry]))
-        ->assertSessionMissing('warningMessage');
+        ->assertSessionMissing('warning');
 
     expect(invalidLogCount())->toBe(1);
 });
@@ -100,7 +100,7 @@ it('warns when removing an entry still leaves the Fallback Playlist short', func
     $other = BlocklistEntry::factory()->for($this->party)->matching(BlocklistMatchType::TrackName, 'Unrelated')->create();
 
     $this->delete(route('parties.blocklist.destroy', ['ABCD', $other]))
-        ->assertSessionHas('warningMessage', 'The Fallback Playlist has only 17 of 20 required playable Tracks.');
+        ->assertSessionHas('warning', 'The Fallback Playlist has only 17 of 20 required playable Tracks.');
     expect(invalidLogCount())->toBe(1);
 });
 

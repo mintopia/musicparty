@@ -15,8 +15,6 @@ usePartyPresence(props.party.code);
 provide('enabledMods', computed(() => props.enabled_mods));
 
 const page = usePage();
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
-const warningMessage = computed(() => page.props.flash?.warningMessage ?? null);
 
 const form = useForm({
     allow_requests: props.settings.allow_requests,
@@ -61,8 +59,6 @@ const numberFields = [
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" data-testid="settings-success" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
-        <p v-if="warningMessage" role="alert" data-testid="settings-warning" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ warningMessage }}</p>
 
         <form class="flex flex-col gap-4 rounded border border-border bg-surface px-5 py-5" data-testid="settings-form" @submit.prevent="save">
             <h2 class="text-base font-bold">Request rules</h2>
