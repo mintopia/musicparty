@@ -2,7 +2,9 @@
 
 namespace App\Providers;
 
+use App\Domain\Admin\Listeners\RecordAutoLinkedAccountAudit;
 use App\Domain\Admin\Models\Setting;
+use App\Domain\Identity\Events\SocialAccountAutoLinked;
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Listeners\AppendStartedTrackToHistory;
 use App\Domain\Party\Events\PartyLogEntryRecorded;
@@ -54,6 +56,7 @@ class EventServiceProvider extends ServiceProvider
             LaravelPassportExtendSocialite::class.'@handle',
             SpotifyExtendSocialite::class.'@handle',
         ],
+        SocialAccountAutoLinked::class => [RecordAutoLinkedAccountAudit::class],
         PartyLogEntryRecorded::class => [BroadcastPartyLogEntry::class],
         PartyStateChanged::class => [BroadcastPartyState::class],
         RequestCreated::class => [RefreshStatsOnPartyActivity::class, CountPartyActivity::class],

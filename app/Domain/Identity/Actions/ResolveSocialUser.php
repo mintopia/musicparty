@@ -3,12 +3,14 @@
 namespace App\Domain\Identity\Actions;
 
 use App\Domain\Admin\SiteSettings;
+use App\Domain\Identity\Events\SocialAccountAutoLinked;
 use App\Domain\Identity\Exceptions\LoginRefusedException;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Two\User as TwoUser;
 
@@ -41,6 +43,12 @@ class ResolveSocialUser
 
         return DB::transaction(function () use ($provider, $remote, $account): User {
             $user = $account === null ? null : User::query()->find($account->user_id);
+            $autoLinked = false;
+
+            if ($account === null) {
+                $user = $this->matchByEmail($provider, $remote);
+                $autoLinked = $user !== null;
+            }
 
             if ($user?->suspended) {
                 throw LoginRefusedException::suspended();
@@ -68,7 +76,37 @@ class ResolveSocialUser
             $user->last_login = now();
             $user->save();
 
+            if ($autoLinked) {
+                SocialAccountAutoLinked::dispatch($user, $account);
+                session()->flash('info', "Your {$provider->name} account was added to your existing account");
+            }
+
             return $user;
         });
+    }
+
+    private function matchByEmail(SocialProvider $provider, SocialiteUser $remote): ?User
+    {
+        $email = mb_strtolower(trim((string) $remote->getEmail()));
+
+        if ($email === '' || $provider->getProvider()->emailVerified($remote) === false) {
+            return null;
+        }
+
+        $userIds = LinkedAccount::query()
+            ->where('email_normalised', $email)
+            ->distinct()
+            ->pluck('user_id');
+
+        if ($userIds->count() > 1) {
+            Log::warning('Social login email matches more than one user; not merging', [
+                'provider' => $provider->code,
+                'user_ids' => $userIds->all(),
+            ]);
+
+            return null;
+        }
+
+        return $userIds->isEmpty() ? null : User::query()->whereKey($userIds->first())->first();
     }
 }

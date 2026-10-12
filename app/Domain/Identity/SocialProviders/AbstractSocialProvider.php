@@ -13,6 +13,7 @@ use App\Exceptions\SocialProviderException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Laravel\Socialite\AbstractUser;
 use Laravel\Socialite\Contracts\Provider;
 use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
@@ -105,6 +106,18 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $setting->type = $config->type ?? SettingType::stString;
             app(SaveProviderSetting::class)($setting);
         }
+    }
+
+    public function emailVerified(SocialiteUser $remote): ?bool
+    {
+        return null;
+    }
+
+    protected function rawFlag(SocialiteUser $remote, string $key): ?bool
+    {
+        $raw = $remote instanceof AbstractUser ? $remote->user : [];
+
+        return isset($raw[$key]) ? filter_var($raw[$key], FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE) : null;
     }
 
     public function driver(): Provider

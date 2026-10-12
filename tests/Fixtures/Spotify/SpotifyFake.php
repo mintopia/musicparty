@@ -87,6 +87,10 @@ final class SpotifyFake
             '--force' => true,
             '--path' => 'database/migrations/2026_10_10_100000_create_v3_baseline_schema.php',
         ]);
+        Artisan::call('migrate', [
+            '--force' => true,
+            '--path' => 'database/migrations/2026_10_12_100000_add_email_normalised_to_linked_accounts.php',
+        ]);
     }
 
     public static function account(): LinkedAccountFactory
