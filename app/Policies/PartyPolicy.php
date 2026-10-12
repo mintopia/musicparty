@@ -36,7 +36,7 @@ class PartyPolicy
      */
     public function update(User $user, Party $party): bool
     {
-        return $party->canBeManagedBy($user);
+        return $user->hasRole('admin') || $party->canBeManagedBy($user);
     }
 
     public function player(User $user, Party $party): bool
