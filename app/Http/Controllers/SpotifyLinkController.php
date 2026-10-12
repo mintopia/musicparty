@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\ProviderCredentials;
 use App\Domain\Music\Actions\AuthorisesSpotifyLinking;
 use App\Domain\Music\Actions\LinkHostAccount;
 use App\Domain\Music\Actions\SpotifyControlLinkStatus;
@@ -121,11 +122,12 @@ class SpotifyLinkController extends Controller
     private function driver(string $account): AbstractProvider
     {
         $application = $account === 'search' ? SpotifyApi::SEARCH_ID : SpotifyApi::ID;
+        $credentials = app(ProviderCredentials::class);
 
         /** @var AbstractProvider $driver */
         $driver = Socialite::buildProvider(Provider::class, [
-            'client_id' => config("services.{$application}.client_id"),
-            'client_secret' => config("services.{$application}.client_secret"),
+            'client_id' => $credentials->get($application, 'client_id'),
+            'client_secret' => $credentials->get($application, 'client_secret'),
             'redirect' => route('spotify.link.return'),
         ]);
 

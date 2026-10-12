@@ -27,7 +27,7 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     Cache::flush();
     config(['musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class]]);
-    config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret']]);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
     app()->bind(PlaybackClient::class, SpotifyPlaybackClient::class);
     $this->owner = User::factory()->create();
     $this->party = Party::factory()->live()->create([
@@ -37,7 +37,7 @@ beforeEach(function () {
     LinkedAccount::factory()
         ->for($this->owner)
         ->create([
-            'social_provider_id' => SocialProvider::factory()->create(['code' => 'spotify'])->id,
+            'social_provider_id' => SocialProvider::query()->where('code', 'spotify')->firstOrFail()->id,
             'access_token' => 'host-token',
             'scopes' => 'playlist-read-private user-read-playback-state user-modify-playback-state',
         ]);

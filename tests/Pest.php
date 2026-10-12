@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Admin\Actions\EnsureSocialProvider;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Music\Data\AlbumData;
 use App\Domain\Music\Data\ArtistData;
@@ -81,6 +82,26 @@ function seedDiscord(array $overrides = []): SocialProvider
     test()->artisan('providers:seed')->assertSuccessful();
 
     return tap(SocialProvider::query()->where('code', 'discord')->firstOrFail(), fn (SocialProvider $provider) => $provider->forceFill($overrides)->save());
+}
+
+function configureSpotifyCredentials(string $app = 'spotify', string $id = 'client-id', string $secret = 'client-secret'): SocialProvider
+{
+    $provider = app(EnsureSocialProvider::class)->handle($app);
+
+    foreach (['client_id' => $id, 'client_secret' => $secret] as $code => $value) {
+        $provider->settings->firstWhere('code', $code)?->forceFill(['value' => $value])->save();
+    }
+
+    app()->forgetScopedInstances();
+
+    return $provider->refresh();
+}
+
+function blankSpotifyCredential(string $code, string $app = 'spotify'): void
+{
+    app(EnsureSocialProvider::class)->handle($app)->settings->firstWhere('code', $code)?->forceFill(['value' => null])->save();
+
+    app()->forgetScopedInstances();
 }
 
 function remoteUser(string $id = '1001', string $nickname = 'ravebot'): SocialiteUser

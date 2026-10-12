@@ -5,6 +5,7 @@ namespace App\Providers;
 use App\Domain\Identity\Models\AccessToken;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\ProviderCredentials;
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Contracts\PlaybackClient;
 use App\Domain\Playback\PartyPlayers;
@@ -31,6 +32,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(PlaybackClient::class, SpotifyPlaybackClient::class);
         $this->app->scoped(PartyPlayers::class);
+        $this->app->scoped(ProviderCredentials::class);
         $this->app->singleton(PlayerFactory::class);
         $this->app->bind(Bucket::class, LeakyBucket::class);
         $this->app->bind(RealtimeConnections::class, ReverbRealtimeConnections::class);

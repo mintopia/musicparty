@@ -5,6 +5,7 @@ namespace App\Domain\Music\Providers\Spotify;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
+use App\Domain\Identity\ProviderCredentials;
 use App\Domain\Music\Actions\AuthorisesHost;
 
 class SearchCredentials
@@ -14,8 +15,7 @@ class SearchCredentials
     public function searchProviderEnabled(): bool
     {
         return SocialProvider::query()->where('code', SpotifyApi::SEARCH_ID)->where('enabled', true)->exists()
-            && $this->api->clientId(SpotifyApi::SEARCH_ID) !== null
-            && $this->api->clientSecret(SpotifyApi::SEARCH_ID) !== null;
+            && app(ProviderCredentials::class)->isConfigured(SpotifyApi::SEARCH_ID);
     }
 
     public function resolve(?User $host): SearchSource

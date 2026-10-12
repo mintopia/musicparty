@@ -4,6 +4,7 @@ namespace App\Domain\Music\Providers\Spotify;
 
 use App\Domain\Identity\Actions\UpdateLinkedAccount;
 use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\ProviderCredentials;
 use App\Domain\Music\Exceptions\HostAccountNeedsRelink;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
@@ -110,10 +111,10 @@ class HostAccountTokens
     private function requestRefresh(LinkedAccount $account): Response
     {
         $application = $account->provider?->code === SpotifyApi::SEARCH_ID ? SpotifyApi::SEARCH_ID : SpotifyApi::ID;
-        $clientId = config("services.{$application}.client_id");
-        $clientSecret = config("services.{$application}.client_secret");
+        $clientId = app(ProviderCredentials::class)->get($application, 'client_id');
+        $clientSecret = app(ProviderCredentials::class)->get($application, 'client_secret');
 
-        if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
+        if ($clientId === null || $clientSecret === null) {
             throw ProviderUnavailableException::forProvider('spotify');
         }
 

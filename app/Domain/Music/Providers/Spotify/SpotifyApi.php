@@ -3,6 +3,7 @@
 namespace App\Domain\Music\Providers\Spotify;
 
 use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Identity\ProviderCredentials;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use Closure;
@@ -116,17 +117,19 @@ class SpotifyApi
 
     public function clientId(string $application = self::ID): ?string
     {
-        return $this->configured('client_id', $application);
+        return app(ProviderCredentials::class)->get($application, 'client_id');
     }
 
     public function clientSecret(string $application = self::ID): ?string
     {
-        return $this->configured('client_secret', $application);
+        return app(ProviderCredentials::class)->get($application, 'client_secret');
     }
 
     public function market(): ?string
     {
-        return $this->configured('market');
+        $value = config('services.spotify.market');
+
+        return is_string($value) && $value !== '' ? $value : null;
     }
 
     private function neverConnected(ConnectionException $failure): bool
@@ -150,12 +153,5 @@ class SpotifyApi
     private function backoffKey(?string $clientId): string
     {
         return self::BACKOFF_CACHE_PREFIX.hash('sha256', $clientId ?? $this->clientId() ?? '');
-    }
-
-    private function configured(string $key, string $application = self::ID): ?string
-    {
-        $value = config("services.{$application}.{$key}");
-
-        return is_string($value) && $value !== '' ? $value : null;
     }
 }
