@@ -29,9 +29,7 @@ class PartyModSetting extends Model
     protected function getType(): Attribute
     {
         return Attribute::make(
-            get: function (mixed $value, array $attributes) {
-                return $this->setting->type;
-            }
+            get: fn (mixed $value, array $attributes) => $this->setting->type
         );
     }
 

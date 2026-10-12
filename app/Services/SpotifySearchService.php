@@ -77,9 +77,7 @@ class SpotifySearchService
 
     protected function augmentResults(object $results): object
     {
-        $ids = array_map(function ($track) {
-            return $track->id;
-        }, $results->items);
+        $ids = array_map(fn ($track) => $track->id, $results->items);
 
         $augmented = [];
 

@@ -27,9 +27,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Blade::directive('setting', function (string $expression, $default = null) {
-            return "<?php echo App\Models\Setting::fetch($expression, $default); ?>";
-        });
+        Blade::directive('setting', fn (string $expression, $default = null) => "<?php echo App\Models\Setting::fetch($expression, $default); ?>");
 
         view()->composer(['layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
             $currentTheme = Theme::whereActive(true)->first();

@@ -40,7 +40,7 @@ class PartyModerationController extends Controller
         if ($request->has('track')) {
             try {
                 $spotifyData = $party->user->getSpotifyApi()->getTrack($request->input('track'));
-            } catch (SpotifyWebAPIException $e) {
+            } catch (SpotifyWebAPIException) {
                 // Do Nothing
             }
         }

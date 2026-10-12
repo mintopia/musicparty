@@ -48,9 +48,7 @@ class UserUpdateRequest extends FormRequest
             'primary_email_id' => [
                 'sometimes',
                 'integer',
-                Rule::exists('email_addresses', 'id')->where(function (Builder $query) {
-                    return $query->where('user_id', $this->user->id);
-                }),
+                Rule::exists('email_addresses', 'id')->where(fn (Builder $query) => $query->where('user_id', $this->user->id)),
             ],
             'roles' => 'sometimes|array|nullable',
             'roles.*' => 'string|exists:roles,code',

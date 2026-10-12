@@ -91,9 +91,7 @@ class UserController extends Controller
         $user->nickname = $request->input('nickname');
 
         if ($request->input('terms', false)) {
-            if ($user->terms_agreed_at === null) {
-                $user->terms_agreed_at = Carbon::now();
-            }
+            $user->terms_agreed_at ??= Carbon::now();
         } else {
             $user->terms_agreed_at = null;
         }

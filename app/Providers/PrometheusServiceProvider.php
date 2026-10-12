@@ -20,29 +20,21 @@ class PrometheusServiceProvider extends ServiceProvider
         // HTTP Metrics
         Prometheus::addGauge('HTTP Requests')
             ->helpText('The number of handled HTTP requests')
-            ->value(function () {
-                return Redis::get('metrics.http.requests') ?? 0;
-            });
+            ->value(fn () => Redis::get('metrics.http.requests') ?? 0);
 
         Prometheus::addGauge('HTTP Methods')
             ->helpText('The numbers of each HTTP method used')
             ->label('method')
-            ->value(function () {
-                return $this->getMultipleFromRedis('metrics.http.method');
-            });
+            ->value(fn () => $this->getMultipleFromRedis('metrics.http.method'));
 
         Prometheus::addGauge('HTTP Status Codes')
             ->helpText('The numbers of each HTTP status code returned')
             ->label('code')
-            ->value(function () {
-                return $this->getMultipleFromRedis('metrics.http.status');
-            });
+            ->value(fn () => $this->getMultipleFromRedis('metrics.http.status'));
 
         Prometheus::addGauge('Uncaught Exceptions')
             ->helpText('The number of uncaught exceptions')
-            ->value(function () {
-                return Redis::get('metrics.exceptions') ?? 0;
-            });
+            ->value(fn () => Redis::get('metrics.exceptions') ?? 0);
     }
 
     protected function getMultipleFromRedis(string $prefix): array

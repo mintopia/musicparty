@@ -291,12 +291,8 @@ class Party extends Model
 
     public function play(?string $playbackDevice): void
     {
-        if ($playbackDevice === null) {
-            $playbackDevice = $this->recent_device_id;
-        }
-        if ($playbackDevice === null) {
-            $playbackDevice = '';
-        }
+        $playbackDevice ??= $this->recent_device_id;
+        $playbackDevice ??= '';
         Log::debug("{$this}: Spotify API -> play()");
         $trackUri = '';
         if ($this->song) {
@@ -368,7 +364,7 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
-        $state = $this->user->getSpotifyStatus();
+        $this->user->getSpotifyStatus();
         $queue = $this->user->getSpotifyApi()->getMyQueue();
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
@@ -716,9 +712,7 @@ class Party extends Model
             return true;
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', function ($query) {
-            return $query->whereIn('code', ['owner']);
-        })->count() > 0;
+        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
     }
 
     public function pushUpdate(): void
