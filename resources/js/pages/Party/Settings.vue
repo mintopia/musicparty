@@ -8,6 +8,7 @@ const props = defineProps({
     party: {type: Object, required: true},
     settings: {type: Object, required: true},
     enabled_mods: {type: Array, default: () => []},
+    spotify_link_url: {type: String, default: null},
 });
 
 usePartyPresence(props.party.code);
@@ -59,6 +60,16 @@ const numberFields = [
             >Back to {{ party.name }}</Link>
         </header>
 
+        <section class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5" data-testid="playback-section">
+            <h2 class="text-base font-bold">Playback</h2>
+            <div v-if="spotify_link_url">
+                <Link
+                    :href="spotify_link_url"
+                    data-testid="spotify-link"
+                    class="inline-flex min-h-11 items-center rounded border border-border px-3 text-sm hover:text-primary"
+                >Link Spotify account</Link>
+            </div>
+        </section>
 
         <form class="flex flex-col gap-4 rounded border border-border bg-surface px-5 py-5" data-testid="settings-form" @submit.prevent="save">
             <h2 class="text-base font-bold">Request rules</h2>

@@ -1,10 +1,11 @@
 <script setup>
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed, watch} from 'vue';
 
 const props = defineProps({
     providers: {type: Array, default: () => []},
     players: {type: Array, default: () => []},
+    spotify_link_url: {type: String, default: null},
 });
 
 const form = useForm({name: '', music_provider: '', player_kind: ''});
@@ -87,6 +88,8 @@ const fieldClass =
                     {{ form.errors.player_kind }}
                 </p>
             </div>
+
+            <Link v-if="spotify_link_url" :href="spotify_link_url" data-testid="spotify-link" class="text-sm text-primary hover:underline">Link a Spotify account</Link>
 
             <button
                 type="submit"

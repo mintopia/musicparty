@@ -224,8 +224,10 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
 Route::middleware('auth')->delete('admin/impersonate', [AdminImpersonationController::class, 'stop'])->name('admin.impersonate.stop');
 
 Route::middleware('auth')->group(function () {
-    Route::get('parties/{party}/spotify/link', [SpotifyLinkController::class, 'redirect'])->name('spotify.link');
+    Route::get('spotify', [SpotifyLinkController::class, 'index'])->name('spotify.index');
     Route::get('spotify/link/return', [SpotifyLinkController::class, 'callback'])->name('spotify.link.return');
+    Route::get('spotify/link/{account}', [SpotifyLinkController::class, 'redirect'])->where('account', 'control|search')->name('spotify.link');
+    Route::delete('spotify/link/{account}', [SpotifyLinkController::class, 'destroy'])->where('account', 'control|search')->name('spotify.unlink');
 });
 
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {

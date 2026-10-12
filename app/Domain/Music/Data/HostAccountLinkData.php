@@ -12,5 +12,6 @@ final readonly class HostAccountLinkData
         #[SensitiveParameter] public string $accessToken,
         #[SensitiveParameter] public ?string $refreshToken,
         public ?int $expiresIn,
+        public ?string $scopes = null,
     ) {}
 }
