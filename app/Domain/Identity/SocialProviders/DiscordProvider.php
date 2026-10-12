@@ -2,6 +2,7 @@
 
 namespace App\Domain\Identity\SocialProviders;
 
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use SocialiteProviders\Discord\Provider;
 
@@ -14,6 +15,11 @@ class DiscordProvider extends AbstractSocialProvider
     protected string $socialiteProviderCode = 'discord';
 
     protected bool $supportsAuth = true;
+
+    public function emailVerified(SocialiteUser $remote): ?bool
+    {
+        return $this->rawFlag($remote, 'verified');
+    }
 
     protected function getSocialiteProvider(): \Laravel\Socialite\Contracts\Provider
     {

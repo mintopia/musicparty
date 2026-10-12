@@ -25,6 +25,14 @@ class LinkedAccount extends Model
         'refresh_token',
     ];
 
+    protected static function booted(): void
+    {
+        static::saving(function (LinkedAccount $account): void {
+            $normalised = mb_strtolower(trim((string) $account->email));
+            $account->email_normalised = $normalised === '' ? null : mb_substr($normalised, 0, 191);
+        });
+    }
+
     /**
      * @return array<string, string>
      */

@@ -3,6 +3,7 @@
 namespace App\Domain\Identity\SocialProviders;
 
 use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\GoogleProvider as SocialiteGoogleProvider;
 
@@ -15,6 +16,11 @@ class GoogleProvider extends AbstractSocialProvider
     protected string $socialiteProviderCode = 'google';
 
     protected bool $supportsAuth = true;
+
+    public function emailVerified(SocialiteUser $remote): ?bool
+    {
+        return $this->rawFlag($remote, 'email_verified');
+    }
 
     protected function getSocialiteProvider(): Provider
     {

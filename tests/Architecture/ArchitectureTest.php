@@ -116,3 +116,13 @@ it('uses a single flash convention in app code and Vue pages', function () {
 
     expect($violations)->toBe([]);
 });
+
+it('never lets an Identity class write an Admin model', function () {
+    $identityClasses = array_filter(
+        ArchitectureRules::appClasses(),
+        fn (string $class): bool => str_starts_with($class, 'App\\Domain\\Identity\\'),
+    );
+
+    expect($identityClasses)->not->toBeEmpty()
+        ->and(ArchitectureRules::crossContextWriteViolations($identityClasses))->toBe([]);
+});
