@@ -3,8 +3,8 @@
 namespace App\Events\User;
 
 use App\Models\User;
-use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\InteractsWithSockets;
+use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Foundation\Events\Dispatchable;
 use Illuminate\Queue\SerializesModels;
@@ -31,12 +31,12 @@ class SpotifyAccessTokenUpdatedEvent implements ShouldBroadcast
     /**
      * Get the channels the event should broadcast on.
      *
-     * @return array<int, \Illuminate\Broadcasting\Channel>
+     * @return array<int, \Illuminate\Broadcasting\PrivateChannel>
      */
     public function broadcastOn()
     {
         return [
-            new Channel("spotifytoken.{$this->user->id}"),
+            new PrivateChannel("spotifytoken.{$this->user->id}"),
         ];
     }
 }

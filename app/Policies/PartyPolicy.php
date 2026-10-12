@@ -39,6 +39,18 @@ class PartyPolicy
         return $party->canBeManagedBy($user);
     }
 
+    public function player(User $user, Party $party): bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $party->members()
+            ->whereUserId($user->id)
+            ->whereHas('role', fn ($query) => $query->whereCode('owner'))
+            ->exists();
+    }
+
     /**
      * Determine whether the user can delete the model.
      */
