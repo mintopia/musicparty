@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Models\PartyMod;
+use App\Domain\Mod\Whamageddon\Models\WhamageddonState;
 use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\Models\PartyLogEntry;
@@ -134,6 +135,7 @@ class ArchitectureRules
                 ],
                 'models' => [
                     PartyMod::class,
+                    WhamageddonState::class,
                 ],
             ],
             'music' => [

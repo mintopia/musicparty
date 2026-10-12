@@ -126,3 +126,17 @@ it('never lets an Identity class write an Admin model', function () {
     expect($identityClasses)->not->toBeEmpty()
         ->and(ArchitectureRules::crossContextWriteViolations($identityClasses))->toBe([]);
 });
+
+it('never lets a Mod class write a Queue model', function () {
+    $modClasses = array_filter(
+        ArchitectureRules::appClasses(),
+        fn (string $class): bool => str_starts_with($class, 'App\\Domain\\Mod\\'),
+    );
+    $queueWrites = array_filter(
+        ArchitectureRules::crossContextWriteViolations($modClasses),
+        fn (array $found): bool => array_filter($found, fn (string $line): bool => str_contains($line, 'writes queue model')) !== [],
+    );
+
+    expect($modClasses)->not->toBeEmpty()
+        ->and($queueWrites)->toBe([]);
+});
