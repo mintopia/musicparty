@@ -4,6 +4,7 @@ namespace App\Domain\Playback\Testing;
 
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Playback\Contracts\PlaybackClient;
+use App\Domain\Playback\Data\PlaybackDevice;
 use App\Domain\Playback\Data\PlaybackState;
 use Throwable;
 
@@ -18,6 +19,12 @@ class FakePlaybackClient implements PlaybackClient
 
     /** @var list<array{0: string, 1: int|null}> */
     private array $commands = [];
+
+    /** @var list<string|null> */
+    private array $commandDevices = [];
+
+    /** @var list<PlaybackDevice> */
+    private array $devices = [];
 
     public function playbackIs(PlaybackState $state): self
     {
@@ -45,36 +52,61 @@ class FakePlaybackClient implements PlaybackClient
         return $this->playback ?? PlaybackState::stopped();
     }
 
-    public function queueTrack(string $providerTrackId, string $hostAccountId): void
+    public function queueTrack(string $providerTrackId, string $hostAccountId, ?string $deviceId = null): void
     {
         $this->throwInjectedFailure();
 
         $this->queued[] = $providerTrackId;
     }
 
-    public function play(string $hostAccountId): void
+    public function play(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->record('play');
+        $this->record('play', null, $deviceId);
     }
 
-    public function pause(string $hostAccountId): void
+    public function pause(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->record('pause');
+        $this->record('pause', null, $deviceId);
     }
 
-    public function next(string $hostAccountId): void
+    public function next(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->record('next');
+        $this->record('next', null, $deviceId);
     }
 
-    public function seek(int $positionMs, string $hostAccountId): void
+    public function seek(int $positionMs, string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->record('seek', $positionMs);
+        $this->record('seek', $positionMs, $deviceId);
     }
 
-    public function volume(int $percent, string $hostAccountId): void
+    public function volume(int $percent, string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->record('volume', $percent);
+        $this->record('volume', $percent, $deviceId);
+    }
+
+    /**
+     * @param  list<PlaybackDevice>  $devices
+     */
+    public function devicesAre(array $devices): self
+    {
+        $this->devices = $devices;
+
+        return $this;
+    }
+
+    public function devices(string $hostAccountId): array
+    {
+        $this->throwInjectedFailure();
+
+        return $this->devices;
+    }
+
+    /**
+     * @return list<string|null>
+     */
+    public function commandDevices(): array
+    {
+        return $this->commandDevices;
     }
 
     /**
@@ -93,11 +125,12 @@ class FakePlaybackClient implements PlaybackClient
         return $this->queued;
     }
 
-    private function record(string $command, ?int $value = null): void
+    private function record(string $command, ?int $value = null, ?string $deviceId = null): void
     {
         $this->throwInjectedFailure();
 
         $this->commands[] = [$command, $value];
+        $this->commandDevices[] = $deviceId;
     }
 
     private function throwInjectedFailure(): void
