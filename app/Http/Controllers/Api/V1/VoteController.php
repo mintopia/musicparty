@@ -26,9 +26,10 @@ class VoteController extends Controller
                 }
             }
             $resource = new UpcomingSongResource($upcomingsong);
-            $resource->augment((object)[
+            $resource->augment((object) [
                 'vote' => $vote,
             ]);
+
             return $resource;
         } catch (VoteException $ex) {
             abort(400, $ex->getMessage());

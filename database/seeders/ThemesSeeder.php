@@ -3,9 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Theme;
-use App\Services\TicketProviders\InternalTicketProvider;
-use App\Services\TicketProviders\TicketTailorProvider;
-use App\Services\TicketProviders\WooCommerceProvider;
 use Illuminate\Database\Seeder;
 
 class ThemesSeeder extends Seeder
@@ -27,7 +24,7 @@ class ThemesSeeder extends Seeder
         ];
         foreach ($themes as $data) {
             $theme = Theme::whereCode($data['code'])->first();
-            if (!$theme) {
+            if (! $theme) {
                 $theme = new Theme;
                 $theme->code = $data['code'];
             }

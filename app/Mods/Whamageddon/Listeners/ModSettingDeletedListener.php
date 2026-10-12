@@ -5,7 +5,6 @@ namespace App\Mods\Whamageddon\Listeners;
 use App\Events\Mods\PartyModSettingDeletedEvent;
 use App\Models\ModSetting;
 use App\Models\Party;
-use App\Models\PartyModSetting;
 use App\Mods\Whamageddon\Whamageddon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 

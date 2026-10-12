@@ -14,6 +14,7 @@ class ModSettingUpdatedListener implements ShouldQueue
     {
         if ($event->partyModSetting->setting->mod->code !== 'whamageddon') {
             Log::debug("[Whamageddon] Ignoring event from {$event->partyModSetting}");
+
             return;
         }
         $this->handleEnabled($event->partyModSetting, $event->changed);
@@ -23,11 +24,13 @@ class ModSettingUpdatedListener implements ShouldQueue
     {
         if ($setting->setting->code !== 'enabled') {
             Log::debug("[Whamageddon] Setting is {$setting->setting->code}, ignoring");
+
             return;
         }
 
-        if (!array_key_exists('value', $changed)) {
+        if (! array_key_exists('value', $changed)) {
             Log::debug("[Whamageddon] Enabled value wasn't changed, ignoring");
+
             return;
         }
 

@@ -30,6 +30,7 @@ class PartyController extends Controller
         };
 
         $party->updateState();
+
         return new PartyResource($party);
     }
 }

@@ -8,7 +8,6 @@ use App\Http\Requests\Admin\SettingUpdateRequest;
 use App\Models\Setting;
 use App\Models\SocialProvider;
 use App\Models\Theme;
-use App\Models\TicketProvider;
 
 class SettingController extends Controller
 {
@@ -17,6 +16,7 @@ class SettingController extends Controller
         $socialProviders = SocialProvider::get();
         $settings = Setting::whereHidden(false)->ordered()->get();
         $themes = Theme::get();
+
         return view('admin.settings.index', [
             'socialProviders' => $socialProviders,
             'themes' => $themes,
@@ -31,12 +31,13 @@ class SettingController extends Controller
             if ($request->has($setting->code) || $setting->type === SettingType::stBoolean) {
                 $value = $request->input($setting->code);
                 if ($setting->type === SettingType::stBoolean) {
-                    $value = (bool)$value;
+                    $value = (bool) $value;
                 }
                 $setting->value = $value;
                 $setting->save();
             }
         }
+
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'Settings have been updated');
     }
 }

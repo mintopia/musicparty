@@ -21,7 +21,7 @@ class PrometheusServiceProvider extends ServiceProvider
         Prometheus::addGauge('HTTP Requests')
             ->helpText('The number of handled HTTP requests')
             ->value(function () {
-                return Redis::get("metrics.http.requests") ?? 0;
+                return Redis::get('metrics.http.requests') ?? 0;
             });
 
         Prometheus::addGauge('HTTP Methods')
@@ -41,7 +41,7 @@ class PrometheusServiceProvider extends ServiceProvider
         Prometheus::addGauge('Uncaught Exceptions')
             ->helpText('The number of uncaught exceptions')
             ->value(function () {
-                return Redis::get("metrics.exceptions") ?? 0;
+                return Redis::get('metrics.exceptions') ?? 0;
             });
     }
 
@@ -56,7 +56,7 @@ class PrometheusServiceProvider extends ServiceProvider
             $names[] = $name;
             $lookup[] = "{$prefix}.{$name}";
         }
-        if (!$lookup) {
+        if (! $lookup) {
             return [];
         }
         $values = Redis::mget($lookup);
@@ -67,6 +67,7 @@ class PrometheusServiceProvider extends ServiceProvider
                 $value, [$name],
             ];
         }
+
         return $result;
     }
 

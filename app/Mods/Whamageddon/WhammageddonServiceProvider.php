@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Mods\Whamageddon;
 
 use App\Events\Cron\HourTickEvent;
@@ -13,10 +14,8 @@ use Illuminate\Support\ServiceProvider;
 
 class WhammageddonServiceProvider extends ServiceProvider
 {
-    public function register(): void
-    {
+    public function register(): void {}
 
-    }
     public function boot()
     {
         $this->registerCommands();
@@ -25,7 +24,7 @@ class WhammageddonServiceProvider extends ServiceProvider
 
     protected function registerCommands(): void
     {
-        if (!$this->app->runningInConsole()) {
+        if (! $this->app->runningInConsole()) {
             return;
         }
 

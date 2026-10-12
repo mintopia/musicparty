@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('played_songs', function(Blueprint $table) {
+        Schema::table('played_songs', function (Blueprint $table) {
             $table->foreignId('upcoming_song_id')->nullable()->constrained()->nullOnDelete();
         });
     }
@@ -21,7 +21,7 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('played_songs', function(Blueprint $table) {
+        Schema::table('played_songs', function (Blueprint $table) {
             $table->dropConstrainedForeignId('upcoming_song_id');
         });
     }

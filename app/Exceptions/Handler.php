@@ -26,7 +26,7 @@ class Handler extends ExceptionHandler
     {
         $this->reportable(function (SpotifyWebAPIException $e) {
             if ($e->isRateLimited()) {
-                Log::critical("Spotify Rate Limit Hit");
+                Log::critical('Spotify Rate Limit Hit');
             }
         });
     }

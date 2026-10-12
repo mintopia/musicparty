@@ -56,7 +56,7 @@ return [
                 'encrypted' => true,
                 'host' => env('PUSHER_HOST'),
                 'port' => env('PUSHER_PORT'),
-                'scheme' => env('PUSHER_SCHEME')
+                'scheme' => env('PUSHER_SCHEME'),
             ],
         ],
 

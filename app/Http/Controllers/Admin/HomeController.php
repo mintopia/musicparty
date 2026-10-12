@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Event;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -12,11 +11,11 @@ class HomeController extends Controller
 {
     public function dashboard()
     {
-        $stats = (object)[
-            'users' => (object)[
+        $stats = (object) [
+            'users' => (object) [
                 'total' => User::count(),
                 'lastWeek' => User::where('created_at', '>', Carbon::now()->subWeek())->count(),
-            ]
+            ],
         ];
 
         return view('admin.home.dashboard', [
@@ -26,7 +25,7 @@ class HomeController extends Controller
 
     public function unimpersonate(Request $request)
     {
-        if (!$request->session()->get('impersonating')) {
+        if (! $request->session()->get('impersonating')) {
             abort(403);
         }
         $impersonated = $request->user();

@@ -10,7 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  */
 class Mod extends Model
 {
-
     public function settings(): HasMany
     {
         return $this->hasMany(ModSetting::class);
@@ -22,11 +21,13 @@ class Mod extends Model
             return $this->_settings[$code];
         }
         $setting = $this->settings()->whereCode($code)->first();
-        if (!$setting) {
+        if (! $setting) {
             $this->_settings[$code] = null;
+
             return null;
         }
         $this->_settings[$code] = $setting->value;
+
         return $setting->value;
     }
 }

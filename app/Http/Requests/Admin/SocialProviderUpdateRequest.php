@@ -34,6 +34,7 @@ class SocialProviderUpdateRequest extends FormRequest
                 $rules[$setting->code] = $setting->validation;
             }
         }
+
         return $rules;
     }
 }

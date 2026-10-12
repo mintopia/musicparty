@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PartyModSetting extends Model
 {
-
     protected $casts = [
         'value' => SettingValue::class,
     ];
