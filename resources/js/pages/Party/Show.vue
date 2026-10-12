@@ -340,7 +340,10 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
                 <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
                     <h2 data-testid="queue-heading" class="text-base font-bold md:text-lg">{{ liveMode === 'weighted' ? 'Upcoming Songs' : 'Queue' }}</h2>
                     <form data-testid="queue-search-form" class="flex gap-2" @submit.prevent="submitQueueSearch">
-                        <input v-model="queueSearch" type="search" data-testid="queue-search-input" placeholder="Search..." aria-label="Search for a track" class="min-h-11 w-48 rounded border border-border bg-surface px-3 text-sm md:w-64" />
+                        <div class="relative">
+                            <input v-model="queueSearch" type="search" data-testid="queue-search-input" placeholder="Search..." aria-label="Search for a track" class="min-h-11 w-48 rounded border border-border bg-surface py-0 pl-3 pr-10 text-sm md:w-64" />
+                            <Icon name="musicSearch" data-testid="queue-search-icon" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
+                        </div>
                         <button type="submit" data-testid="queue-search-submit" class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white">Search</button>
                     </form>
                 </div>

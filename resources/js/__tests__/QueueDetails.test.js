@@ -60,6 +60,11 @@ describe('Queue search box', () => {
         expect(get).toHaveBeenCalledWith('/parties/FRI123/search', {q: 'queen'});
     });
 
+    it('shows the music-search icon inside the box', () => {
+        const w = mount(Show, {props: showProps()});
+        expect(w.find('[data-testid=queue-search-icon]').exists()).toBe(true);
+    });
+
     it('does nothing for an empty query', async () => {
         const w = mount(Show, {props: showProps()});
         await w.find('[data-testid=queue-search-form]').trigger('submit');
@@ -130,5 +135,6 @@ describe('Vote errors and row sizing', () => {
         const w = mountList([item()]);
         expect(w.find('[data-testid=queue-item]').classes()).toContain('py-5');
         expect(mount(TrackThumb).find('[data-testid=cover-placeholder]').classes()).toContain('h-[60px]');
+        expect(mount(TrackThumb).find('[data-testid=cover-placeholder]').classes()).toContain('from-blue-500');
     });
 });
