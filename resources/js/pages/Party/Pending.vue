@@ -67,13 +67,13 @@ const remove = (id) => router.delete(`${base.value}/${id}`, {preserveScroll: tru
                     <p class="font-medium">{{ item.track.title }}</p>
                     <p class="text-sm text-muted">{{ item.track.artists.join(', ') }} - requested by {{ item.requested_by.name }}</p>
                 </div>
-                <div v-if="canModerate" class="flex flex-wrap items-center gap-2">
-                    <button type="button" class="min-h-11 rounded border border-border px-3 text-sm hover:text-primary" @click="approve(item.id)">Approve</button>
-                    <input v-model="reasons[item.id]" type="text" maxlength="200" placeholder="Reason (optional)" class="min-h-11 rounded border border-border bg-surface px-2 text-sm">
-                    <button type="button" class="min-h-11 rounded border border-border px-3 text-sm hover:text-primary" @click="reject(item.id)">Reject</button>
-                </div>
-                <div>
-                    <button type="button" class="min-h-11 rounded border border-border px-3 text-sm hover:text-primary" @click="remove(item.id)">Remove</button>
+                <div class="flex items-center gap-2">
+                    <template v-if="canModerate">
+                        <button type="button" class="min-h-11 shrink-0 rounded border border-border px-3 text-sm hover:text-primary" @click="approve(item.id)">Approve</button>
+                        <input v-model="reasons[item.id]" type="text" maxlength="200" placeholder="Reason (optional)" class="min-h-11 min-w-0 flex-1 rounded border border-border bg-surface px-2 text-sm">
+                        <button type="button" class="min-h-11 shrink-0 rounded border border-border px-3 text-sm hover:text-primary" @click="reject(item.id)">Reject</button>
+                    </template>
+                    <button type="button" class="min-h-11 shrink-0 rounded border border-border px-3 text-sm hover:text-primary" :class="{'ml-auto': !canModerate}" @click="remove(item.id)">Remove</button>
                 </div>
             </li>
         </ul>
