@@ -5,6 +5,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\PartyState;
 use App\Domain\Queue\BlocklistMatchType;
 use App\Domain\Queue\Models\RequestVote;
 use App\Domain\Queue\Models\TrackRequest;
@@ -87,3 +88,21 @@ it('uses a constant number of queries however many results are queued or blockli
 
     expect(countQueries($search))->toBe($before);
 });
+
+it('gives the reason for a track that is too short', function () {
+    $this->party->forceFill(['min_song_length' => 190])->save();
+
+    expect(searchHit('track-1')['eligible'])->toBeFalse()
+        ->and(searchHit('track-2')['eligible'])->toBeTrue();
+});
+
+it('refuses every result when requests are closed to the member', function (string $state) {
+    match ($state) {
+        'banned' => $this->member->forceFill(['banned' => true])->save(),
+        'disabled' => $this->party->forceFill(['allow_requests' => false])->save(),
+        'ended' => $this->party->forceFill(['state' => PartyState::Ended])->save(),
+    };
+
+    expect(searchHit('track-1')['eligible'])->toBeFalse()
+        ->and(searchHit('track-3')['eligible'])->toBeFalse();
+})->with(['banned', 'disabled', 'ended']);
