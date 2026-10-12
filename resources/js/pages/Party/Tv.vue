@@ -144,8 +144,8 @@ onBeforeUnmount(() => {
                     <div v-else class="aspect-square w-full max-w-[300px] shrink-0 bg-white/10 md:h-[300px] md:w-[300px]" aria-hidden="true"></div>
                     <div class="flex w-full min-w-0 flex-1 flex-col gap-2 text-xl md:text-2xl">
                         <h1 data-testid="tv-now-playing-title" class="mb-2 break-words text-2xl font-semibold md:truncate md:text-3xl">{{ nowPlaying.track.title }}</h1>
-                        <div class="flex items-center gap-2"><Icon name="user" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
-                        <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
+                        <div class="flex items-center gap-2"><Icon name="users" /><span data-testid="tv-now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
+                        <div v-if="nowPlaying.track.album" class="flex items-center gap-2"><Icon name="disc" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span data-testid="tv-now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                         <Decorations :decorations="nowPlaying.decorations" />
                         <div class="flex items-center gap-4">
@@ -173,8 +173,8 @@ onBeforeUnmount(() => {
                     <TrackThumb :src="upNext.track.artwork_url" class="!h-24 !w-24 shrink-0 !rounded-none md:!h-[182px] md:!w-[182px]" />
                     <div class="flex min-w-0 flex-1 flex-col gap-2 text-base md:text-xl">
                         <h3 data-testid="tv-up-next-title" class="mb-2 truncate text-xl font-semibold md:text-3xl">{{ upNext.track.title }}</h3>
-                        <div class="flex items-center gap-2"><Icon name="user" /><span class="truncate">{{ upNext.track.artists.join(', ') }}</span></div>
-                        <div v-if="upNext.track.album" class="flex items-center gap-2"><Icon name="playlist" /><span class="truncate">{{ upNext.track.album }}</span></div>
+                        <div class="flex items-center gap-2"><Icon name="users" /><span class="truncate">{{ upNext.track.artists.join(', ') }}</span></div>
+                        <div v-if="upNext.track.album" class="flex items-center gap-2"><Icon name="disc" /><span class="truncate">{{ upNext.track.album }}</span></div>
                         <div class="flex items-center gap-2"><Icon name="musicPlus" /><span>{{ requesterLabel(upNext) }}</span></div>
                         <Decorations :decorations="upNext.decorations" />
                     </div>
