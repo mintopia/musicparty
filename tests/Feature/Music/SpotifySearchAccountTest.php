@@ -18,13 +18,12 @@ uses(RefreshDatabase::class);
 
 beforeEach(function () {
     Cache::flush();
-    config([
-        'services.spotify' => ['client_id' => 'control-id', 'client_secret' => 'control-secret', 'market' => 'GB'],
-        'services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret'],
-    ]);
+    config(['services.spotify.market' => 'GB']);
+    configureSpotifyCredentials('spotify', 'control-id', 'control-secret');
+    configureSpotifyCredentials('spotifysearch', 'search-id', 'search-secret');
     $this->host = User::factory()->create();
-    $this->controlProvider = SocialProvider::factory()->create(['code' => 'spotify', 'name' => 'Spotify']);
-    $this->searchProvider = SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false]);
+    $this->controlProvider = SocialProvider::query()->where('code', 'spotify')->firstOrFail();
+    $this->searchProvider = tap($this->searchProvider = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail(), fn (SocialProvider $p) => $p->forceFill(['enabled' => true])->save());
     $this->searchHeaders = [];
     SpotifyFake::catalogue();
 });

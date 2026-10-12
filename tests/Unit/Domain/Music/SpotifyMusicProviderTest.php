@@ -9,7 +9,9 @@ use Illuminate\Support\Facades\Http;
 use Tests\Fixtures\Spotify\SpotifyFake;
 
 beforeEach(function () {
-    config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
+    SpotifyFake::useInMemoryDatabase();
+    config(['services.spotify.market' => 'GB']);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
     Cache::flush();
     Http::preventStrayRequests();
     $this->provider = SpotifyFake::provider();
@@ -118,7 +120,9 @@ it('gives up when still unauthorised after a refresh', function () {
 })->throws(ProviderUnavailableException::class);
 
 it('reports unavailable without credentials and makes no requests', function (?string $id, ?string $secret) {
-    config(['services.spotify.client_id' => $id, 'services.spotify.client_secret' => $secret]);
+    configureSpotifyCredentials('spotify', $id ?? 'x', $secret ?? 'x');
+    $id === null && blankSpotifyCredential('client_id');
+    $secret === null && blankSpotifyCredential('client_secret');
     Http::fake();
 
     expect(fn () => $this->provider->search('x', 1, 0))->toThrow(ProviderUnavailableException::class);

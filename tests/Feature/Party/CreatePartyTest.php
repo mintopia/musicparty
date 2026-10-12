@@ -207,8 +207,8 @@ it('does not require a control link for a player that needs no host account', fu
 
 it('creates a party with Spotify Search enabled and no Search link', function () {
     registerControlLinkPlayer();
-    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
-    SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => true]);
+    configureSpotifyCredentials('spotifysearch', 'search-id', 'search-secret');
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true]);
     expect(app(SearchCredentials::class)->searchProviderEnabled())->toBeTrue();
     $user = User::factory()->withRole('create-party')->create();
     linkSpotifyControl($user);

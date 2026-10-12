@@ -209,10 +209,12 @@ it('shares the spotify link url on create and settings and flags a missing link 
 
 function spotifySearchProvider(bool $enabled = true): SocialProvider
 {
-    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
+    configureSpotifyCredentials('spotifysearch', 'search-id', 'search-secret');
 
-    return SocialProvider::query()->where('code', 'spotifysearch')->first()
-        ?? SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => $enabled]);
+    $provider = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail();
+    $provider->forceFill(['enabled' => $enabled])->save();
+
+    return $provider;
 }
 
 it('shows the Search card only when the admin has enabled the Spotify Search provider', function () {

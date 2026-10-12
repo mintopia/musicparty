@@ -10,7 +10,8 @@ use Tests\Fixtures\Spotify\SpotifyFake;
 
 beforeEach(function () {
     SpotifyFake::useInMemoryDatabase();
-    config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB']]);
+    config(['services.spotify.market' => 'GB']);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
     Cache::flush();
     $this->account = SpotifyFake::account()->create(['access_token' => 'host-token']);
     $this->host = (string) $this->account->getKey();

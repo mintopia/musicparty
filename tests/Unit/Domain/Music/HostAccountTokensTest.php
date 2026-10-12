@@ -15,7 +15,7 @@ use Tests\Fixtures\Spotify\SpotifyFake;
 
 beforeEach(function () {
     SpotifyFake::useInMemoryDatabase();
-    config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret']]);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
     Cache::flush();
     Carbon::setTestNow('2026-10-09 12:00:00');
     $this->tokens = new HostAccountTokens;
