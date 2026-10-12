@@ -75,8 +75,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');
 
         Route::middleware('can:update,linkedaccount')->group(function () {
-            Route::get('/profile/accounts/{linkedaccount}/delete', [LinkedAccountController::class, 'store'])->name('linkedaccounts.delete');
-            Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'store'])->name('linkedaccounts.destroy');
+            Route::get('/profile/accounts/{linkedaccount}/delete', [LinkedAccountController::class, 'delete'])->name('linkedaccounts.delete');
+            Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'destroy'])->name('linkedaccounts.destroy');
         });
 
         Route::get('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
