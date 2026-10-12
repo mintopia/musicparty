@@ -14,7 +14,9 @@ const props = defineProps({
 
 const page = usePage();
 const cover = computed(() => page.props.site?.cover_image_url ?? coverUrl);
-
+const siteName = computed(() => page.props.site?.name || 'Music Party');
+const logoOnLight = computed(() => page.props.site?.logo_dark_url ?? page.props.site?.logo_light_url ?? null);
+const logoOnDark = computed(() => page.props.site?.logo_light_url ?? page.props.site?.logo_dark_url ?? null);
 
 const items = computed(() =>
     (Array.isArray(props.providers) ? props.providers : []).map((provider) => ({
@@ -29,10 +31,14 @@ const year = new Date().getFullYear();
 
 <template>
     <Head title="Login" />
-    <div class="flex min-h-screen flex-col bg-background text-text md:flex-row">
-        <section class="flex min-h-screen flex-1 flex-col border-t-2 border-primary md:min-h-0 md:w-[480px] md:max-w-[480px] md:flex-none md:basis-[480px]">
+    <div class="flex min-h-screen w-full max-w-full flex-col overflow-x-hidden bg-background text-text md:flex-row">
+        <section class="flex min-h-screen min-w-0 flex-1 flex-col border-t-2 border-primary md:min-h-0 md:w-[480px] md:max-w-[480px] md:flex-none md:basis-[480px]">
             <div class="flex flex-1 flex-col justify-center px-6 py-10 md:px-8">
-                <h1 class="text-center text-2xl font-semibold md:text-xl">Music Party</h1>
+                <h1 v-if="!logoOnLight && !logoOnDark" class="text-center text-2xl font-semibold md:text-xl">{{ siteName }}</h1>
+                <h1 v-else class="flex justify-center">
+                    <img :src="logoOnLight" :alt="siteName" data-testid="site-logo-light" class="max-h-24 max-w-full object-contain dark:hidden" />
+                    <img :src="logoOnDark" :alt="siteName" data-testid="site-logo-dark" class="hidden max-h-24 max-w-full object-contain dark:block" />
+                </h1>
                 <p class="mt-6 text-center text-base md:mt-8 md:text-sm">Login to join the party!</p>
 
                 <FlashAlerts class="mt-5" />
@@ -59,7 +65,7 @@ const year = new Date().getFullYear();
                 </p>
             </div>
             <footer class="px-4 pb-4 text-sm text-muted">
-                <p>Copyright &copy; {{ year }} Music Party.</p>
+                <p>Copyright &copy; {{ year }} {{ siteName }}.</p>
                 <p>All rights reserved.</p>
             </footer>
         </section>
@@ -67,7 +73,7 @@ const year = new Date().getFullYear();
             :src="cover"
             alt=""
             aria-hidden="true"
-            class="hidden h-screen flex-1 object-cover md:block"
+            class="hidden h-screen min-w-0 flex-1 basis-0 object-cover md:block"
         />
     </div>
 </template>
