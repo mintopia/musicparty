@@ -180,3 +180,11 @@ it('builds Spotify urls on open.spotify.com', function () {
     expect($provider->trackUrl('4uLU6hMCjMI75M1A2tKUQC'))->toBe('https://open.spotify.com/track/4uLU6hMCjMI75M1A2tKUQC')
         ->and($provider->playlistUrl('37i9dQZF1DXcBWIGoYBM5M'))->toBe('https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M');
 });
+
+it('exposes popularity as null or 0 to 100', function (array $fixture) {
+    [$provider] = $fixture;
+
+    foreach ($provider->search('', 10, 0)->items as $track) {
+        expect($track->popularity === null || ($track->popularity >= 0 && $track->popularity <= 100))->toBeTrue();
+    }
+})->with('providers');

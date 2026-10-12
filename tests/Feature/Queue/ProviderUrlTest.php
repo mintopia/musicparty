@@ -2,6 +2,9 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Music\Data\AlbumData;
+use App\Domain\Music\Data\ArtistData;
+use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
@@ -58,4 +61,38 @@ it('exposes provider_url on search results', function () {
     $this->getJson('/api/v1/parties/ABCD/search?q=alpha')->assertOk()
         ->assertJsonPath('data.0.provider_track_id', 'track-1')
         ->assertJsonPath('data.0.provider_url', 'https://fake.test/track/track-1');
+});
+
+function bigCatalogue(): FakeMusicProvider
+{
+    $album = new AlbumData('a', 'A');
+    $artist = new ArtistData('x', 'X');
+    $tracks = array_map(fn (int $i) => new TrackData('fake', "t-$i", "Hit $i", [$artist], $album, 1000, popularity: $i), range(1, 25));
+
+    return new FakeMusicProvider($tracks);
+}
+
+it('pages API search with has_more and popularity', function () {
+    app()->instance(FakeMusicProvider::class, bigCatalogue());
+
+    $this->getJson('/api/v1/parties/ABCD/search?q=hit')->assertOk()
+        ->assertJsonCount(20, 'data')
+        ->assertJsonPath('data.0.popularity', 1)
+        ->assertJsonPath('meta.has_more', true)
+        ->assertJsonPath('meta.page', 1);
+    $this->getJson('/api/v1/parties/ABCD/search?q=hit&page=2')->assertOk()
+        ->assertJsonCount(5, 'data')
+        ->assertJsonPath('data.0.provider_track_id', 't-21')
+        ->assertJsonPath('meta.has_more', false);
+    $this->getJson('/api/v1/parties/ABCD/search?q=hit&page=0')->assertUnprocessable();
+});
+
+it('pages web search with search_page and search_has_more', function () {
+    app()->instance(FakeMusicProvider::class, bigCatalogue());
+
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD?q=hit')
+        ->assertInertia(fn ($p) => $p->has('results', 20)->where('search_page', 1)->where('search_has_more', true)->where('results.0.popularity', 1)->has('results.0.provider_url'));
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD?q=hit&page=2')
+        ->assertInertia(fn ($p) => $p->has('results', 5)->where('search_page', 2)->where('search_has_more', false));
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD?q=hit&page=-3')->assertRedirect();
 });
