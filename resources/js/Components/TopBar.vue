@@ -26,11 +26,11 @@ const user = computed(() => usePage().props.auth.user);
             ><Icon name="menu" /></button>
             <Breadcrumbs :crumbs="crumbs" />
         </div>
-        <div class="flex items-center gap-3 text-sm">
+        <div class="flex shrink-0 items-center gap-3 text-sm">
             <ColourSchemeToggle />
             <div v-if="user" class="flex items-center gap-2">
                 <img :src="user.avatarUrl" alt="" class="h-8 w-8 rounded" />
-                <span>{{ user.name }}</span>
+                <span class="hidden sm:inline">{{ user.name }}</span>
             </div>
         </div>
     </header>
