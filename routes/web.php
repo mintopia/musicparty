@@ -20,7 +20,6 @@ use Illuminate\Support\Facades\Route;
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');
-Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
 Route::get('parties/{party}/youtube/player', [PartyController::class, 'ytplayer'])->name('parties.ytplayer');
 
 // Authenticated routes
@@ -43,6 +42,7 @@ Route::middleware('auth:sanctum')->group(function () {
             ->middleware('can:player,party')
             ->name('parties.player');
         Route::middleware('can:update,party')->group(function () {
+            Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
