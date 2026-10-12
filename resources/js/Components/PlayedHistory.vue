@@ -2,7 +2,7 @@
 import {Link, router} from '@inertiajs/vue3';
 import {computed, reactive, ref} from 'vue';
 import Icon from './Icon.vue';
-import TrackLink from './TrackLink.vue';
+import SelectField from './ui/SelectField.vue';
 import Decorations from './Decorations.vue';
 import TrackThumb from './TrackThumb.vue';
 import {formatPlayedAt} from '../lib/format';
@@ -22,10 +22,12 @@ const rateClass = (active, activeColor) => [
 ];
 
 const typeOptions = [
-    {value: 'sent', label: 'Sent to Spotify'},
-    {value: 'requested', label: 'Requested songs'},
-    {value: 'fallback', label: 'Fallback playlist'},
+    {value: 'all', label: 'All songs'},
+    {value: 'played', label: 'Sent to Spotify'},
+    {value: 'unsent', label: 'Not sent'},
 ];
+const perPageOptions = [10, 20, 50, 100].map((value) => ({value, label: String(value)}));
+const defaults = {type: 'all', sort: 'played', direction: 'asc', per_page: 20};
 
 const rows = computed(() => props.history?.data ?? []);
 const meta = computed(() => props.history?.meta ?? {});
@@ -44,30 +46,61 @@ const pageLinks = computed(() => {
 });
 const showPager = computed(() => pageLinks.value.length > 3);
 
-const form = reactive({
+const applied = computed(() => ({
     name: props.filters.name ?? '',
     artist: props.filters.artist ?? '',
     album: props.filters.album ?? '',
-    type: props.filters.type || 'sent',
+    type: props.filters.type || defaults.type,
+    sort: props.filters.sort || defaults.sort,
+    direction: props.filters.direction || defaults.direction,
+    per_page: Number(props.filters.per_page) || defaults.per_page,
+}));
+const form = reactive({
+    name: applied.value.name,
+    artist: applied.value.artist,
+    album: applied.value.album,
+    type: applied.value.type,
 });
-const filtersActive = computed(() => Boolean(form.name || form.artist || form.album || form.type !== 'sent'));
+const filtersActive = computed(() => Boolean(form.name || form.artist || form.album || form.type !== defaults.type));
 const filtersOpen = ref(filtersActive.value);
 
-const search = () => {
+const visit = (values) => {
     const params = Object.fromEntries(
-        Object.entries(form).filter(([key, value]) => value.trim() !== '' && !(key === 'type' && value === 'sent')),
+        Object.entries(values).filter(([key, value]) => {
+            if (typeof value === 'string' && value.trim() === '') {
+                return false;
+            }
+            return !(key in defaults && value === defaults[key]);
+        }),
     );
     router.get(`/parties/${props.partyCode}/history`, params, {preserveState: true, preserveScroll: true, replace: true});
 };
 
+const search = () => visit({...applied.value, ...form});
+const changePerPage = (per_page) => visit({...applied.value, per_page});
+const changeType = (type) => {
+    form.type = type;
+    visit({...applied.value, type});
+};
+const sortBy = (key) => {
+    const current = applied.value;
+    const direction = current.sort === key ? (current.direction === 'asc' ? 'desc' : 'asc') : 'asc';
+    visit({...current, sort: key, direction});
+};
+const ariaSort = (key) => (applied.value.sort === key ? (applied.value.direction === 'asc' ? 'ascending' : 'descending') : 'none');
+const isSorted = (key) => applied.value.sort === key;
+const caretName = computed(() => (applied.value.direction === 'asc' ? 'caretUp' : 'caretDown'));
+const songHref = (row) => (row.request_id === null || row.request_id === undefined ? null : `/parties/${props.partyCode}/songs/${row.request_id}`);
+
 const inputClass = 'h-10 w-full rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted/70 focus:border-primary focus:outline-none dark:bg-background';
+const sortClass = 'inline-flex items-center gap-1 uppercase hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary';
 const labelClass = 'mb-1.5 block text-sm font-medium';
-const headClass = 'px-5 py-3 text-[11px] font-bold uppercase tracking-wide text-primary';
-const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block before:text-[11px] before:font-bold before:uppercase before:tracking-wide before:text-primary before:content-[attr(data-label)] md:before:hidden';
+const headClass = 'px-3 py-3 lg:px-5 text-[11px] font-bold uppercase tracking-wide text-primary';
+const cellClass = 'md:table-cell md:px-3 lg:px-5 md:py-3 md:align-middle before:block before:text-[11px] before:font-bold before:uppercase before:tracking-wide before:text-primary before:content-[attr(data-label)] md:before:hidden';
 </script>
 
 <template>
-    <div class="grid gap-4 md:grid-cols-[17.5rem_minmax(0,1fr)] md:items-start" data-testid="history-layout">
+    <div class="grid gap-4 md:grid-cols-[16rem_minmax(0,1fr)] md:items-start" data-testid="history-layout">
         <section class="rounded border border-border bg-surface" aria-label="Search history">
             <button
                 type="button"
@@ -96,9 +129,7 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                     </div>
                     <div>
                         <label for="history-type" :class="labelClass">Type</label>
-                        <select id="history-type" v-model="form.type" data-testid="filter-type" :class="inputClass">
-                            <option v-for="option in typeOptions" :key="option.value" :value="option.value">{{ option.label }}</option>
-                        </select>
+                        <SelectField id="history-type" :model-value="form.type" :options="typeOptions" data-testid="filter-type" class="block w-full [&>button]:w-full" @update:model-value="changeType" />
                     </div>
                 </div>
                 <div class="flex justify-end border-t border-border px-4 py-4 md:px-5">
@@ -116,16 +147,23 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
             <p v-if="rows.length === 0" data-testid="history-empty" class="px-5 py-6 text-sm text-muted">
                 {{ filtersActive ? 'No songs match this search.' : 'Nothing has been played yet.' }}
             </p>
-            <table v-else data-testid="history-list" class="block w-full text-sm md:table">
+            <table v-else data-testid="history-list" class="block w-full text-sm md:table md:table-fixed">
                 <thead class="hidden md:table-header-group">
                     <tr class="border-b border-border">
-                        <th scope="col" :class="[headClass, 'text-left !text-muted']">Song</th>
-                        <th scope="col" :class="[headClass, 'text-center']">Votes</th>
-                        <th scope="col" :class="[headClass, 'text-center']">Score</th>
-                        <th scope="col" :class="[headClass, 'text-left']">
-                            <span class="inline-flex items-center gap-1">Requested <Icon name="arrowUp" class="h-3 w-3" aria-hidden="true" /></span>
+                        <th scope="col" :aria-sort="isSorted('artist') ? ariaSort('artist') : ariaSort('name')" :class="[headClass, 'text-left']">
+                            <button type="button" data-testid="sort-name" :class="sortClass" @click="sortBy('name')">Song<Icon v-if="isSorted('name')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
+                            <button type="button" data-testid="sort-artist" :class="[sortClass, 'ml-3 !text-[10px] !text-muted']" @click="sortBy('artist')">Artist<Icon v-if="isSorted('artist')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
-                        <th scope="col" :class="[headClass, 'text-left']">Sent to Spotify</th>
+                        <th scope="col" :class="[headClass, 'w-20 text-center']">Votes</th>
+                        <th scope="col" :aria-sort="ariaSort('score')" :class="[headClass, 'w-20 text-center']">
+                            <button type="button" data-testid="sort-score" :class="sortClass" @click="sortBy('score')">Score<Icon v-if="isSorted('score')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
+                        </th>
+                        <th scope="col" :aria-sort="ariaSort('requested')" :class="[headClass, 'w-36 text-left']">
+                            <button type="button" data-testid="sort-requested" :class="sortClass" @click="sortBy('requested')">Requested<Icon v-if="isSorted('requested')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
+                        </th>
+                        <th scope="col" :aria-sort="ariaSort('played')" :class="[headClass, 'w-36 text-left']">
+                            <button type="button" data-testid="sort-played" :class="sortClass" @click="sortBy('played')">Sent to Spotify<Icon v-if="isSorted('played')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
+                        </th>
                     </tr>
                 </thead>
                 <tbody class="block md:table-row-group">
@@ -134,17 +172,17 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                         :key="play.id"
                         data-testid="history-item"
                         :data-mine="play.is_mine ? 'true' : null"
-                        class="grid grid-cols-2 gap-x-4 gap-y-3 border-b border-border px-4 py-4 data-[mine=true]:bg-primary/10 md:table-row md:px-0 md:py-0"
+                        class="grid grid-cols-2 gap-x-3 gap-y-1 border-b border-border px-3 py-2.5 data-[mine=true]:bg-primary/10 md:table-row md:px-0 md:py-0"
                     >
                         <td data-label="Song" :class="[cellClass, 'col-span-2 !block before:!hidden md:!table-cell']">
                             <div class="flex flex-wrap items-center gap-x-3 gap-y-1 md:flex-nowrap">
-                                <TrackLink :href="play.track.provider_url"><TrackThumb :src="play.track.artwork_url" class="!h-10 !w-10 md:!h-10 md:!w-10" /></TrackLink>
+                                <TrackThumb :src="play.track.artwork_url" class="!h-10 !w-10 shrink-0" />
                                 <div class="min-w-0 flex-1">
-                                    <div class="truncate font-medium text-primary" data-testid="history-title"><TrackLink :href="play.track.provider_url">{{ play.track.title }}</TrackLink></div>
+                                    <div class="truncate font-medium text-primary" data-testid="history-title"><Link v-if="songHref(play)" :href="songHref(play)" data-testid="history-title-link" class="hover:underline">{{ play.track.title }}</Link><template v-else>{{ play.track.title }}</template></div>
                                     <div class="truncate text-muted">{{ play.track.artists.join(', ') }}</div>
                                     <Decorations :decorations="play.decorations" class="mt-1" />
                                 </div>
-                                <div data-testid="history-rating" class="flex shrink-0 items-center gap-1">
+                                <div v-if="play.played_at" data-testid="history-rating" class="flex shrink-0 items-center gap-1">
                                     <button
                                         type="button"
                                         data-testid="rate-dislike"
@@ -172,13 +210,17 @@ const cellClass = 'md:table-cell md:px-5 md:py-3 md:align-middle before:block be
                             <time :datetime="play.requested_at">{{ formatPlayedAt(play.requested_at) }}</time>
                         </td>
                         <td data-label="Sent to Spotify" :class="cellClass">
-                            <time data-testid="history-played-at" :datetime="play.played_at">{{ formatPlayedAt(play.played_at) }}</time>
+                            <time v-if="play.played_at" data-testid="history-played-at" :datetime="play.played_at">{{ formatPlayedAt(play.played_at) }}</time>
+                            <span v-else data-testid="history-not-sent" class="text-muted">Not sent</span>
                         </td>
                     </tr>
                 </tbody>
             </table>
             <div class="flex flex-col gap-3 px-4 py-4 text-sm text-muted md:flex-row md:items-center md:justify-between md:px-5">
-                <p data-testid="history-entries">Showing {{ first }} to {{ last }} of {{ total }} entries</p>
+                <div class="flex flex-wrap items-center gap-3">
+                    <SelectField id="history-per-page" :model-value="applied.per_page" :options="perPageOptions" data-testid="history-per-page" class="[&>button]:min-w-20" aria-label="Entries per page" @update:model-value="changePerPage" />
+                    <p data-testid="history-entries">Showing {{ first }} to {{ last }} of {{ total }} entries</p>
+                </div>
                 <nav v-if="showPager" aria-label="Pagination" data-testid="history-pager" class="flex flex-wrap items-center gap-1">
                     <template v-for="link in pageLinks" :key="link.key">
                         <Link

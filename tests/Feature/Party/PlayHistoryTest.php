@@ -88,8 +88,8 @@ it('returns an empty history', function () {
 it('paginates the history', function () {
     Play::factory()->for($this->party)->count(30)->create();
 
-    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(25, 'data');
-    $this->getJson('/api/v1/parties/ABCD/history?page=2')->assertOk()->assertJsonCount(5, 'data');
+    $this->getJson('/api/v1/parties/ABCD/history')->assertOk()->assertJsonCount(20, 'data');
+    $this->getJson('/api/v1/parties/ABCD/history?page=2')->assertOk()->assertJsonCount(10, 'data');
 });
 
 it('lets a banned member view the history read-only', function () {
@@ -159,10 +159,10 @@ it('filters the history by name, artist, album and type', function () {
     expect($ids('name=rewind'))->toBe([$a->id])
         ->and($ids('artist=guest'))->toBe([$b->id])
         ->and($ids('album=static'))->toBe([$a->id])
-        ->and($ids('type=requested'))->toBe([$a->id])
-        ->and($ids('type=fallback'))->toBe([$b->id])
-        ->and($ids('type=sent'))->toBe([$a->id, $b->id])
-        ->and($ids('name=glass&artist=velvet&album=echo&type=fallback'))->toBe([$b->id])
+        ->and($ids('type=played'))->toBe([$a->id, $b->id])
+        ->and($ids('type=all'))->toBe([$a->id, $b->id])
+        ->and($ids('type=unsent'))->toBe([])
+        ->and($ids('name=glass&artist=velvet&album=echo&type=played'))->toBe([$b->id])
         ->and($ids('name=glass&artist=lowlands'))->toBe([])
         ->and($ids('name=nothing-matches'))->toBe([]);
 });
@@ -182,8 +182,8 @@ it('keeps filters in the pagination links and totals', function () {
     $this->getJson('/api/v1/parties/ABCD/history?name=Same')->assertOk()
         ->assertJsonPath('meta.total', 30)
         ->assertJsonPath('meta.from', 1)
-        ->assertJsonPath('meta.to', 25)
-        ->assertJsonCount(25, 'data');
+        ->assertJsonPath('meta.to', 20)
+        ->assertJsonCount(20, 'data');
     expect($this->getJson('/api/v1/parties/ABCD/history?name=Same')->json('links.next'))->toContain('name=Same');
 });
 
@@ -194,6 +194,9 @@ it('rejects invalid history filters', function (array $query, string $field) {
     'array name' => [['name' => ['x']], 'name'],
     'long artist' => [['artist' => str_repeat('a', 101)], 'artist'],
     'bad page' => [['page' => 0], 'page'],
+    'unknown sort' => [['sort' => 'bogus'], 'sort'],
+    'bad direction' => [['direction' => 'up'], 'direction'],
+    'bad page size' => [['per_page' => 25], 'per_page'],
 ]);
 
 it('keeps filters off other parties', function () {
@@ -206,13 +209,13 @@ it('applies the filters on the party page and echoes them', function () {
     playIn($this->party, ['title' => 'Rewind the Night']);
     playIn($this->party, ['title' => 'Glass Cathedral']);
 
-    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD/history?name=glass&type=fallback')
+    $this->withoutVite()->actingAs($this->user)->get('/parties/ABCD/history?name=glass&type=played')
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
             ->has('history.data', 1)
             ->where('history.data.0.track.title', 'Glass Cathedral')
             ->where('history.meta.total', 1)
-            ->where('filters', ['name' => 'glass', 'artist' => '', 'album' => '', 'type' => 'fallback']));
+            ->where('filters', ['name' => 'glass', 'artist' => '', 'album' => '', 'type' => 'played', 'sort' => 'played', 'direction' => 'asc', 'per_page' => 20]));
 });
 
 it('rejects invalid filters on the party page', function () {
@@ -483,4 +486,92 @@ it('creates the play when a request starts playing and not again when it finishe
 
     expect(Play::query()->where('party_id', $party->id)->orderBy('id')->pluck('title')->all())->toBe(['First', 'Second'])
         ->and(Play::query()->where('track_request_id', $first->track_request_id)->count())->toBe(1);
+});
+
+function historyIds(string $query = ''): array
+{
+    return collect(test()->getJson('/api/v1/parties/ABCD/history?'.$query)->assertOk()->json('data'))
+        ->map(fn (array $row): string => $row['kind'].':'.$row['id'])->all();
+}
+
+it('sorts the history by each column in both directions', function (string $sort, array $expected) {
+    $low = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHours(1)]);
+    $high = TrackRequest::factory()->for($this->party)->create(['created_at' => now()->subHours(3)]);
+    $voters = PartyMember::factory()->for($this->party)->count(2)->create();
+    foreach ($voters as $voter) {
+        RequestVote::factory()->for($high, 'request')->for($voter, 'member')->create(['value' => 1]);
+    }
+    RequestVote::factory()->for($low, 'request')->for($voters[0], 'member')->create(['value' => 1]);
+    $a = playIn($this->party, ['title' => 'Bravo', 'artists' => ['Zed'], 'track_request_id' => $low->id, 'played_at' => now()->subMinutes(30)]);
+    $b = playIn($this->party, ['title' => 'Alpha', 'artists' => ['Yan'], 'track_request_id' => $high->id, 'played_at' => now()->subMinutes(20)]);
+    $c = playIn($this->party, ['title' => 'Charlie', 'artists' => ['Xi'], 'played_at' => now()->subMinutes(10)]);
+    $ids = ['a' => "play:{$a->id}", 'b' => "play:{$b->id}", 'c' => "play:{$c->id}"];
+    $order = array_map(fn (string $key): string => $ids[$key], $expected);
+
+    expect(historyIds("sort={$sort}&direction=asc"))->toBe($order)
+        ->and(historyIds("sort={$sort}&direction=desc"))->toBe(array_reverse($order));
+})->with([
+    'name' => ['name', ['b', 'a', 'c']],
+    'artist' => ['artist', ['c', 'b', 'a']],
+    'requested' => ['requested', ['b', 'a', 'c']],
+    'played' => ['played', ['a', 'b', 'c']],
+    'score' => ['score', ['c', 'a', 'b']],
+]);
+
+it('keeps a sort stable across pages even with ties', function () {
+    Play::factory()->for($this->party)->count(25)->create(['title' => 'Same', 'played_at' => now()->subMinute()]);
+
+    $first = historyIds('sort=name&per_page=10&page=1');
+    $second = historyIds('sort=name&per_page=10&page=2');
+    $third = historyIds('sort=name&per_page=10&page=3');
+    $all = array_merge($first, $second, $third);
+
+    expect($all)->toHaveCount(25)->and(array_unique($all))->toHaveCount(25)
+        ->and($all)->toBe(historyIds('sort=name&per_page=100'));
+});
+
+it('honours the page size options', function (int $size) {
+    Play::factory()->for($this->party)->count(105)->create();
+
+    $this->getJson("/api/v1/parties/ABCD/history?per_page={$size}")->assertOk()->assertJsonCount($size, 'data');
+})->with([10, 20, 50, 100]);
+
+it('lists unsent requests and defaults to all', function () {
+    $queued = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Queued]);
+    $removed = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Removed]);
+    TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Rejected]);
+    $playedRequest = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Played]);
+    $play = playIn($this->party, ['track_request_id' => $playedRequest->id]);
+    TrackRequest::factory()->for(Party::factory()->create())->create(['status' => RequestStatus::Queued]);
+
+    expect(historyIds('type=unsent&sort=requested'))->toEqualCanonicalizing(["unsent:{$queued->id}", "unsent:{$removed->id}"])
+        ->and(historyIds('type=played'))->toBe(["play:{$play->id}"])
+        ->and(historyIds())->toHaveCount(3)->toContain("play:{$play->id}", "unsent:{$queued->id}");
+
+    $this->getJson('/api/v1/parties/ABCD/history?type=unsent')->assertOk()
+        ->assertJsonPath('data.0.played_at', null)
+        ->assertJsonPath('data.0.request_id', fn (int $id): bool => in_array($id, [$queued->id, $removed->id], true));
+});
+
+it('keeps the query count constant for a mixed history', function () {
+    $seed = function (): void {
+        $request = TrackRequest::factory()->for($this->party)->create();
+        playIn($this->party, ['track_request_id' => $request->id, 'party_member_id' => $this->member->id]);
+        TrackRequest::factory()->for($this->party)->create(['party_member_id' => $this->member->id]);
+    };
+    foreach (range(1, 3) as $i) {
+        $seed();
+    }
+
+    DB::enableQueryLog();
+    $this->getJson('/api/v1/parties/ABCD/history?sort=score&direction=desc')->assertOk()->assertJsonCount(6, 'data');
+    $small = count(DB::getQueryLog());
+    foreach (range(1, 5) as $i) {
+        $seed();
+    }
+    DB::flushQueryLog();
+    app()->forgetScopedInstances();
+    $this->getJson('/api/v1/parties/ABCD/history?sort=score&direction=desc')->assertOk()->assertJsonCount(16, 'data');
+
+    expect(count(DB::getQueryLog()))->toBe($small);
 });

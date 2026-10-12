@@ -13,6 +13,7 @@ use App\Domain\Queue\VoteDirection;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
+use App\Http\Resources\V1\HistoryEntryResource;
 use App\Http\Resources\V1\PlayResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +24,7 @@ class PartyPlayController extends Controller
     public function history(ListPlayHistoryRequest $request, ListPlayHistory $listHistory, Party $party): AnonymousResourceCollection|JsonResponse
     {
         try {
-            return PlayResource::collection($listHistory($party, $this->member($request, $party), $request->filters()));
+            return HistoryEntryResource::collection($listHistory($party, $this->member($request, $party), $request->filters(), $request->filters()['per_page']));
         } catch (RequestRefusedException $exception) {
             return response()->json(['message' => $exception->getMessage()], $exception->status());
         }
