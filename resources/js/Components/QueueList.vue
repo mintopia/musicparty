@@ -126,8 +126,7 @@ const buttonClass = (active, activeColor) => [
                 <div class="min-w-0 flex-1">
                     <div class="truncate text-sm"><TrackLink :href="item.track.provider_url">{{ item.track.title }}</TrackLink></div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
-                    <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
-                    <div v-if="startsAt[item.id] !== undefined" data-testid="queue-item-eta" class="truncate text-xs tabular-nums text-muted">Estimated in {{ formatCountdown(startsAt[item.id], now) }} (~{{ formatClock(startsAt[item.id]) }})</div>
+                    <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}<span v-if="startsAt[item.id] !== undefined" data-testid="queue-item-eta" class="tabular-nums"> · Estimated in {{ formatCountdown(startsAt[item.id], now) }} (~{{ formatClock(startsAt[item.id]) }})</span></div>
                     <Decorations :decorations="item.decorations" class="mt-1" />
                 </div>
                 <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(item.track.duration_ms) }}</span>
@@ -141,7 +140,7 @@ const buttonClass = (active, activeColor) => [
                         :class="buttonClass(item.my_vote === 1, 'text-accent')"
                         @click="vote(item, 'up')"
                     >
-                        <Icon :name="downvotesEnabled ? 'arrowUp' : 'heart'" :filled="item.my_vote === 1" />
+                        <Icon :name="downvotesEnabled ? 'voteUp' : 'heart'" :filled="item.my_vote === 1" />
                     </button>
                     <span
                         data-testid="queue-score"
@@ -158,7 +157,7 @@ const buttonClass = (active, activeColor) => [
                         :class="buttonClass(item.my_vote === -1, 'text-danger')"
                         @click="vote(item, 'down')"
                     >
-                        <Icon name="arrowDown" :filled="item.my_vote === -1" />
+                        <Icon :name="item.my_vote === -1 ? 'voteDown' : 'voteDownTray'" :filled="item.my_vote === -1" />
                     </button>
                     <button
                         v-if="canRemove(item)"
@@ -177,6 +176,6 @@ const buttonClass = (active, activeColor) => [
             <ModSlot name="queue-item" :item="item" />
             <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-center text-sm text-danger">{{ errors[item.id] }}</p>
         </li>
-        <li v-if="hasMore" ref="sentinel" data-testid="queue-sentinel" aria-hidden="true" class="h-px"></li>
+        <li v-if="hasMore" ref="sentinel" data-testid="queue-sentinel" class="py-3 text-center text-sm text-muted">Loading upcoming songs...</li>
     </ul>
 </template>

@@ -10,6 +10,7 @@ vi.mock('@inertiajs/vue3', () => ({
     usePage: () => ({props: {errors: {}}}),
 }));
 
+import {iconPaths} from '../lib/icons';
 import Show from '../pages/Party/Show.vue';
 import QueueList from '../Components/QueueList.vue';
 import TrackThumb from '../Components/TrackThumb.vue';
@@ -108,12 +109,32 @@ describe('Vote icons', () => {
     it('shows a heart and no down button when downvotes are disabled', () => {
         const w = mountList([item()], {downvotesEnabled: false});
         expect(w.find('[data-testid=vote-down]').exists()).toBe(false);
-        expect(w.find('[data-testid=vote-up] svg path').attributes('d')).toContain('a5 5 0');
+        expect(w.find('[data-testid=vote-up] svg path').attributes('d')).toBe(iconPaths.heart[0]);
     });
 
     it('fills the heart when the member has voted', () => {
         const w = mountList([item({my_vote: 1})], {downvotesEnabled: false});
         expect(w.find('[data-testid=vote-up] svg').attributes('fill')).toBe('currentColor');
+    });
+});
+
+describe('Vote icon shapes', () => {
+    it('uses a hollow block arrow up and a tray down arrow when unvoted', () => {
+        const w = mountList([item()]);
+        expect(w.find('[data-testid=vote-up] svg path').attributes('d')).toBe(iconPaths.voteUp[0]);
+        expect(w.find('[data-testid=vote-down] svg path').attributes('d')).toBe(iconPaths.voteDownTray[0]);
+    });
+
+    it('switches the down vote to a solid block arrow when downvoted', () => {
+        const w = mountList([item({my_vote: -1})]);
+        expect(w.find('[data-testid=vote-down] svg path').attributes('d')).toBe(iconPaths.voteDown[0]);
+    });
+});
+
+describe('Queue loader', () => {
+    it('shows the loading footer while more rows remain', () => {
+        const queue = Array.from({length: 25}, (_, i) => item({id: i + 1}));
+        expect(mountList(queue).find('[data-testid=queue-sentinel]').text()).toBe('Loading upcoming songs...');
     });
 });
 
