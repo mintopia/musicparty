@@ -6,6 +6,7 @@ use App\Casts\SettingValue;
 use App\Events\Mods\PartyModSettingDeletedEvent;
 use App\Events\Mods\PartyModSettingUpdatedEvent;
 use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -14,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class PartyModSetting extends Model
 {
+    use HasFactory;
+
     protected $casts = [
         'value' => SettingValue::class,
     ];
