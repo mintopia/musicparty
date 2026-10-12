@@ -112,6 +112,9 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->where('mod', '[a-z0-9_-]+')
         ->name('parties.mods.settings');
+    Route::put('parties/{party}/playlists', [PartyController::class, 'updatePlaylists'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.playlists.update');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');
