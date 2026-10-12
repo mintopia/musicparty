@@ -26,7 +26,7 @@ class SettingValue implements CastsAttributes
         if (is_string($value)) {
             try {
                 $unserialized = @unserialize($value);
-                if ($unserialized !== false) {
+                if ($unserialized !== false || $value === 'b:0;') {
                     $value = $unserialized;
                 }
             } catch (\Exception) {

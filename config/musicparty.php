@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Playback\Players\PollingPlayer;
@@ -10,7 +11,8 @@ return [
     'fallback_minimum_queue' => (int) env('MUSICPARTY_FALLBACK_MINIMUM_QUEUE', 5),
     'just_in_time_lead_seconds' => (int) env('MUSICPARTY_JIT_LEAD_SECONDS', 15),
     'music_providers' => [
-        'fake' => ['label' => 'Fake (development)', 'class' => FakeMusicProvider::class],
+        'spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class, 'requires' => ['spotify']],
+        'fake' => ['label' => 'Fake (development)', 'class' => FakeMusicProvider::class, 'requires' => []],
     ],
     'polling' => [
         'min_delay_seconds' => (int) env('MUSICPARTY_POLL_MIN_DELAY', 2),
