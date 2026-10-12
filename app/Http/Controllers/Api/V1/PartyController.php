@@ -41,6 +41,7 @@ class PartyController extends Controller
             $request->string('name')->trim()->toString(),
             $request->string('music_provider')->toString(),
             $request->string('player_kind')->toString(),
+            $request->safe()->only(['downvotes', 'downvotes_per_hour', 'selection_mode', 'allow_requests', 'max_requests', 'hold_requests']),
         );
 
         return new PartyResource($party)->response()->setStatusCode(201);

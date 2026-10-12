@@ -6,9 +6,26 @@ const props = defineProps({
     providers: {type: Array, default: () => []},
     players: {type: Array, default: () => []},
     spotify_link_url: {type: String, default: null},
+    control_link_usable: {type: Boolean, default: true},
 });
 
-const form = useForm({name: '', music_provider: '', player_kind: ''});
+const form = useForm({
+    name: '',
+    music_provider: '',
+    player_kind: '',
+    downvotes: true,
+    downvotes_per_hour: null,
+    selection_mode: 'deterministic',
+    allow_requests: true,
+    max_requests: null,
+    hold_requests: false,
+});
+
+const needsControlLink = computed(
+    () =>
+        !props.control_link_usable &&
+        props.players.some((player) => player.kind === form.player_kind && player.requiresControlLink),
+);
 
 const availablePlayers = computed(() =>
     props.players.filter((player) => player.compatibleProviders.includes(form.music_provider)),
@@ -89,7 +106,45 @@ const fieldClass =
                 </p>
             </div>
 
-            <Link v-if="spotify_link_url" :href="spotify_link_url" data-testid="spotify-link" class="text-sm text-primary hover:underline">Link a Spotify account</Link>
+            <p v-if="needsControlLink" role="alert" class="text-sm text-danger" data-testid="control-link-needed">
+                This player needs a linked Spotify account.
+                <Link v-if="spotify_link_url" :href="spotify_link_url" data-testid="spotify-link" class="text-primary hover:underline">Link Spotify account</Link>
+            </p>
+
+            <fieldset class="flex flex-col gap-3">
+                <legend class="mb-1 text-sm font-medium">Settings</legend>
+                <label class="flex items-center gap-2 text-sm">
+                    <input v-model="form.downvotes" type="checkbox" />
+                    Allow downvotes
+                </label>
+                <div v-if="form.downvotes" class="flex flex-col gap-1.5">
+                    <label for="party-downvotes-per-hour" class="text-sm">Downvotes per hour (blank for unlimited)</label>
+                    <input id="party-downvotes-per-hour" v-model.number="form.downvotes_per_hour" type="number" min="0" max="1000" :class="fieldClass" />
+                    <p v-if="form.errors.downvotes_per_hour" role="alert" class="text-sm text-danger">{{ form.errors.downvotes_per_hour }}</p>
+                </div>
+                <div class="flex flex-col gap-1.5">
+                    <label for="party-selection-mode" class="text-sm">Raffle</label>
+                    <select id="party-selection-mode" v-model="form.selection_mode" :class="fieldClass">
+                        <option value="deterministic">Off (highest score first)</option>
+                        <option value="weighted">On (weighted raffle)</option>
+                    </select>
+                </div>
+                <label class="flex items-center gap-2 text-sm">
+                    <input v-model="form.allow_requests" type="checkbox" />
+                    Allow requests
+                </label>
+                <template v-if="form.allow_requests">
+                    <div class="flex flex-col gap-1.5">
+                        <label for="party-max-requests" class="text-sm">Requests per person (blank for unlimited)</label>
+                        <input id="party-max-requests" v-model.number="form.max_requests" type="number" min="1" max="1000" :class="fieldClass" />
+                        <p v-if="form.errors.max_requests" role="alert" class="text-sm text-danger">{{ form.errors.max_requests }}</p>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm">
+                        <input v-model="form.hold_requests" type="checkbox" />
+                        Hold requests for approval
+                    </label>
+                </template>
+            </fieldset>
 
             <button
                 type="submit"

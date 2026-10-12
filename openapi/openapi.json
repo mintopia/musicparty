@@ -6619,6 +6619,34 @@
                             "browser",
                             "soloist"
                         ]
+                    },
+                    "downvotes": {
+                        "type": "boolean"
+                    },
+                    "downvotes_per_hour": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 1000
+                    },
+                    "selection_mode": {
+                        "$ref": "#/components/schemas/SelectionMode"
+                    },
+                    "allow_requests": {
+                        "type": "boolean"
+                    },
+                    "max_requests": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 1000
+                    },
+                    "hold_requests": {
+                        "type": "boolean"
                     }
                 },
                 "required": [

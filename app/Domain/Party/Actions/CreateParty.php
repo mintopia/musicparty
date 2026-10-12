@@ -22,14 +22,17 @@ readonly class CreateParty
     ) {}
 
     /**
+     * @param  array<string, mixed>  $settings
+     *
      * @throws IncompatibleProviderException
      */
-    public function __invoke(User $host, string $name, string $musicProvider, string $playerKind): Party
+    public function __invoke(User $host, string $name, string $musicProvider, string $playerKind, array $settings = []): Party
     {
         ($this->pairPlayer)($this->catalogue->player($playerKind), $this->catalogue->provider($musicProvider));
 
-        return DB::transaction(function () use ($host, $name, $musicProvider, $playerKind): Party {
+        return DB::transaction(function () use ($host, $name, $musicProvider, $playerKind, $settings): Party {
             $party = Party::query()->forceCreate([
+                ...$settings,
                 'code' => ($this->generateCode)(),
                 'name' => $name,
                 'user_id' => $host->id,
