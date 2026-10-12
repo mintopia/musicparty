@@ -93,9 +93,7 @@ class RequestCheckService
         $next = $this->party->next();
         if ($next && array_key_exists($next->song_id, $indexedSongs)) {
             $index = $indexedSongs[$next->song_id]->spotify_id;
-            if (! isset($output[$index])) {
-                $output[$index] = new RequestCheckResponse(false, 'This song will be played next');
-            }
+            $output[$index] ??= new RequestCheckResponse(false, 'This song will be played next');
         }
 
         // Now we check similar songs

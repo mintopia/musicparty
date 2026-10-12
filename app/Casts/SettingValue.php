@@ -26,7 +26,7 @@ class SettingValue implements CastsAttributes
                 if ($unserialized !== false) {
                     $value = $unserialized;
                 }
-            } catch (\Exception $e) {
+            } catch (\Exception) {
                 // Do nothing, assume it's OK!
             }
         }

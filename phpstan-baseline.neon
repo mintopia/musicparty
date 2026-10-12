@@ -547,12 +547,6 @@ parameters:
 			path: app/Http/Controllers/LinkedAccountController.php
 
 		-
-			message: '#^Unreachable statement \- code above always terminates\.$#'
-			identifier: deadCode.unreachable
-			count: 2
-			path: app/Http/Controllers/LinkedAccountController.php
-
-		-
 			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:setPath\(\)\.$#'
 			identifier: method.notFound
 			count: 1
@@ -1159,6 +1153,12 @@ parameters:
 			path: app/Models/Mod.php
 
 		-
+			message: '#^Class App\\Models\\Mod uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/Mod.php
+
+		-
 			message: '#^Method App\\Models\\Mod\:\:settings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
@@ -1543,6 +1543,12 @@ parameters:
 			path: app/Models/PartyModSetting.php
 
 		-
+			message: '#^Class App\\Models\\PartyModSetting uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
+			count: 1
+			path: app/Models/PartyModSetting.php
+
+		-
 			message: '#^Method App\\Models\\PartyModSetting\:\:getType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Casts\\Attribute does not specify its types\: TGet, TSet$#'
 			identifier: missingType.generics
 			count: 1
@@ -1575,6 +1581,12 @@ parameters:
 		-
 			message: '#^Access to an undefined property object\:\:\$id\.$#'
 			identifier: property.notFound
+			count: 1
+			path: app/Models/PartyModeration.php
+
+		-
+			message: '#^Class App\\Models\\PartyModeration uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
+			identifier: missingType.generics
 			count: 1
 			path: app/Models/PartyModeration.php
 

@@ -38,7 +38,7 @@ class PartyCheck extends Command
             return $this->processParty($party);
         }
 
-        $parties = Party::whereActive(true)->chunk(50, function ($chunk) {
+        Party::whereActive(true)->chunk(50, function ($chunk) {
             foreach ($chunk as $party) {
                 $this->processParty($party);
             }

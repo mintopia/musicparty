@@ -23,9 +23,7 @@ class MeasureRequest
         }
 
         $name = Route::currentRouteName();
-        if ($name === null) {
-            $name = $request->getRequestUri();
-        }
+        $name ??= $request->getRequestUri();
 
         $trace = $request->header('traceparent');
         $state = $request->header('tracestate');
