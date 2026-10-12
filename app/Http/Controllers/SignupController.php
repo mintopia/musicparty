@@ -23,8 +23,9 @@ class SignupController extends Controller
 
         return Inertia::render('Signup', [
             'nickname' => $user->nickname,
+            'avatarUrl' => $user->avatarUrl(),
             'termsUrl' => $settings->get('terms_url'),
-            'privacyUrl' => config('app.privacy_url'),
+            'privacyUrl' => $settings->get('privacy_url'),
         ]);
     }
 
