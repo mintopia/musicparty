@@ -4,6 +4,7 @@ namespace App\Console;
 
 use App\Domain\Admin\Jobs\SweepExpiredActAsHostSessions;
 use App\Domain\Mod\Jobs\RunModScheduledActions;
+use App\Domain\Music\Jobs\RefreshExpiringHostTokens;
 use App\Domain\Playback\Jobs\CheckSoloistHealth;
 use App\Domain\Playback\Jobs\TickPlayback;
 use Illuminate\Console\Scheduling\Schedule;
@@ -18,6 +19,7 @@ class Kernel extends ConsoleKernel
     {
         $schedule->command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
         $schedule->job(new SweepExpiredActAsHostSessions)->everyMinute()->onOneServer();
+        $schedule->job(new RefreshExpiringHostTokens)->everyMinute()->onOneServer();
         $schedule->job(new TickPlayback)->everyFiveSeconds()->withoutOverlapping()->onOneServer();
         $schedule->job(new CheckSoloistHealth)->everyTenSeconds()->onOneServer();
         $schedule->job(new RunModScheduledActions)->everyFiveSeconds()->onOneServer();
