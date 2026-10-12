@@ -19,7 +19,7 @@ class PartyPushUpdate extends PartyCommand
             return self::FAILURE;
         }
 
-        PartyStateChangedEvent::dispatch($party->code, $party->state->value);
+        PartyStateChangedEvent::dispatch($party->code, $party->state->value, (bool) $party->show_qrcode);
         BroadcastPartyQueue::dispatch($party->code);
         $this->info("Pushed state and Queue for Party {$party->code}.");
 

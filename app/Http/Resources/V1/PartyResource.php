@@ -31,6 +31,7 @@ class PartyResource extends JsonResource
             'no_repeat_interval' => $this->no_repeat_interval,
             'hold_requests' => (bool) $this->hold_requests,
             'freeze_when_paused' => (bool) $this->freeze_when_paused,
+            'show_qrcode' => (bool) $this->show_qrcode,
             'downvotes' => (bool) $this->downvotes,
             'downvotes_per_hour' => $this->downvotes_per_hour,
             'selection_mode' => $this->selection_mode->value,

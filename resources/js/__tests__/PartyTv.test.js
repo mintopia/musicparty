@@ -187,3 +187,29 @@ describe('TV screen party state', () => {
         expect(w.find('[data-testid=tv-party-state]').exists()).toBe(false);
     });
 });
+
+describe('TV screen QR code', () => {
+    it('shows the QR code by default', () => {
+        const w = mount(Tv, {props: props()});
+        expect(w.find('[data-testid=qr-code]').exists()).toBe(true);
+        w.unmount();
+    });
+
+    it('hides the QR code when the party prop has show_qrcode false', () => {
+        const base = props();
+        const w = mount(Tv, {props: {...base, party: {...base.party, show_qrcode: false}}});
+        expect(w.find('[data-testid=qr-code]').exists()).toBe(false);
+        w.unmount();
+    });
+
+    it('hides and restores the QR code live from party.state_changed', async () => {
+        const w = mount(Tv, {props: props()});
+        listeners['.party.state_changed']({state: 'live', show_qrcode: false});
+        await w.vm.$nextTick();
+        expect(w.find('[data-testid=qr-code]').exists()).toBe(false);
+        listeners['.party.state_changed']({state: 'live', show_qrcode: true});
+        await w.vm.$nextTick();
+        expect(w.find('[data-testid=qr-code]').exists()).toBe(true);
+        w.unmount();
+    });
+});

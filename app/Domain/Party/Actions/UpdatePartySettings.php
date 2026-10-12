@@ -3,6 +3,7 @@
 namespace App\Domain\Party\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Party\Broadcast\PartyStateChangedEvent;
 use App\Domain\Party\FallbackPlaylistCheck;
 use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\Models\Party;
@@ -38,6 +39,10 @@ readonly class UpdatePartySettings
                 $changed[] = $key;
 
                 ($this->record)($party, 'party.settings_changed', $actor, $key, ['old' => $old, 'new' => $value]);
+            }
+
+            if (in_array('show_qrcode', $changed, true)) {
+                PartyStateChangedEvent::dispatch($party->code, $party->state->value, (bool) $party->show_qrcode);
             }
 
             $affectsGate = array_intersect($changed, self::GATE_SETTINGS) !== [];

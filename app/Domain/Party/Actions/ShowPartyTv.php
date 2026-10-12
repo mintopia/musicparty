@@ -29,6 +29,7 @@ readonly class ShowPartyTv
                 'name' => $party->name,
                 'state' => $party->state->value,
                 'selection_mode' => $party->selection_mode->value,
+                'show_qrcode' => (bool) $party->show_qrcode,
                 'joinUrl' => route('parties.show', ['party' => $party->code]),
             ],
             'nowPlaying' => $playback['now_playing'],

@@ -46,6 +46,7 @@ const applyThemeCss = () => {
 };
 
 const liveState = ref(props.party.state);
+const showQrcode = ref(props.party.show_qrcode ?? true);
 const nowPlaying = ref(props.nowPlaying);
 const upNext = ref(props.upNext);
 const startedAtMs = ref(props.startedAt ? Date.parse(props.startedAt) : null);
@@ -87,6 +88,7 @@ onMounted(() => {
     });
     channel?.listen('.party.state_changed', (payload) => {
         liveState.value = payload.state;
+        showQrcode.value = payload.show_qrcode ?? showQrcode.value;
     });
     channel?.listen('.queue.updated', (payload) => {
         if (payload.now_playing?.id !== nowPlaying.value?.id) {
@@ -181,7 +183,7 @@ onBeforeUnmount(() => {
             </section>
         </div>
 
-        <QrCode class="absolute z-10 bottom-5 left-5" :value="party.joinUrl" :size="100" />
+        <QrCode v-if="showQrcode" class="absolute z-10 bottom-5 left-5" :value="party.joinUrl" :size="100" />
     </main>
 </template>
 
