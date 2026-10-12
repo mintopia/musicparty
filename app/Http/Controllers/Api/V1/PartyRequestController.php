@@ -13,6 +13,7 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ShowSong;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Exceptions\ProviderRateLimitedException;
@@ -30,6 +31,7 @@ use App\Http\Requests\RequestTrackRequest;
 use App\Http\Resources\V1\MemberVotesResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
+use App\Http\Resources\V1\SongDetailResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -84,6 +86,15 @@ class PartyRequestController extends Controller
     {
         try {
             return new MemberVotesResource($listMemberVotes($party, $this->member($request, $party)));
+        } catch (RequestRefusedException $exception) {
+            return $this->refusal($exception);
+        }
+    }
+
+    public function show(Request $request, ShowSong $showSong, Party $party, TrackRequest $trackRequest): SongDetailResource|JsonResponse
+    {
+        try {
+            return new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest));
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }

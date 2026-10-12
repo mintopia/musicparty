@@ -41,6 +41,7 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ShowSong;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
@@ -68,6 +69,7 @@ use App\Http\Resources\V1\PartyLogEntryResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
+use App\Http\Resources\V1\SongDetailResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
@@ -376,6 +378,20 @@ class PartyController extends Controller
             'trust' => $canModerate && in_array(TrustScoreMod::ID, $enabledModIds, true)
                 ? TrustScore::query()->where('party_id', $party->id)->pluck('score', 'party_member_id')->map(fn (float $score): float => round($score, 2))
                 : null,
+        ]);
+    }
+
+    public function song(Request $request, ShowSong $showSong, Party $party, TrackRequest $trackRequest): Response
+    {
+        try {
+            $song = (new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest)))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
         ]);
     }
 
