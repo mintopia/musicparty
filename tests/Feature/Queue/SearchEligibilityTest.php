@@ -5,10 +5,10 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Contracts\CheapRequestRule;
 use App\Domain\Mod\Contracts\Mod;
 use App\Domain\Mod\Contracts\RequestRule;
-use App\Domain\Mod\Data\EnabledMod;
 use App\Domain\Mod\Data\ModContext;
 use App\Domain\Mod\Data\RuleVerdict;
-use App\Domain\Mod\EnabledMods;
+use App\Domain\Mod\ModRegistry;
+use App\Domain\Mod\PartyMods;
 use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\BlocklistEntry;
@@ -137,7 +137,9 @@ it('runs cheap mod rules and never a non-cheap one such as AI review', function 
     $mod = Mockery::mock(Mod::class);
     $mod->shouldReceive('requestRules')->andReturn([$expensive, $cheap]);
     $mod->shouldReceive('name')->andReturn('Mood');
-    $this->mock(EnabledMods::class)->shouldReceive('for')->andReturn([new EnabledMod($mod, new ModContext('mood', $this->party, []))]);
+    $mod->shouldReceive('id')->andReturn('mood');
+    $this->mock(ModRegistry::class)->shouldReceive('find')->with('mood')->andReturn($mod);
+    $this->mock(PartyMods::class)->shouldReceive('enabledFor')->andReturn([new ModContext('mood', $this->party, [])]);
 
     $first = searchHit('track-1');
 
