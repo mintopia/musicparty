@@ -24,6 +24,26 @@ can view the queue, search for tracks, upvote and downvote.
  - When building UI to match a mockup, it MUST match the mockup
  - When work is complete, before merging or finishing, run /no-comments or $no-comments
 
+### Local Deployment for Development
+
+There is a local deployment for development/user verification using .env.
+
+ - Application URL: https://musicparty.sailing-coyote.ws.cloudagent.mintopia.net
+ - Reverb URL: https://musicparty-ws.sailing-coyote.ws.cloudagent.mintopia.net
+
+It is linked with Discord for auth and Spotify for music.
+It is running in docker with Reverb, Horizon, MariaDB, Redis.
+
+## v2 Deployment
+
+There is a v2 deployment for comparison and testing:
+
+ - Application URL: https://musicparty-old.sailing-coyote.ws.cloudagent.mintopia.net
+ - Reverb URL: https://musicparty-old-ws.sailing-coyote.ws.cloudagent.mintopia.net
+ - Checkout: /home/workspace/musicparty/musicparty-v2
+
+It is running in Docker and is linked to Discord for auth and Spotify for music.
+
 ### Testing
 
 While editing, run specific unit tests only. CI will be configured to do full
