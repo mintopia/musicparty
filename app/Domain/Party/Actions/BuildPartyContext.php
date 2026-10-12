@@ -94,6 +94,7 @@ readonly class BuildPartyContext
             ['stats', 'Stats', $base.'/stats', true],
             ['mods', 'Mods', $base.'/mods', $canManage],
             ['theme', 'Theme', $base.'/theme', $canManage],
+            ['player-tokens', 'Player Tokens', $base.'/player-tokens', $canManage],
             ['settings', 'Settings', $base.'/settings', $canManage],
         ];
 

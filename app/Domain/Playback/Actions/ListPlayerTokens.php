@@ -23,6 +23,6 @@ readonly class ListPlayerTokens
         ($this->authorisesHost)($actor, $party);
 
         /** @var Collection<int, PersonalAccessToken> */
-        return $party->tokens()->oldest('id')->get(['id', 'name', 'abilities', 'created_at', 'last_used_at']);
+        return $party->tokens()->oldest('id')->get(['id', 'name', 'abilities', 'created_at', 'last_used_at', 'expires_at']);
     }
 }

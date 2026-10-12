@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BrowserPlayerController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Party\PlayerTokenController as PartyPlayerTokenController;
 use App\Http\Controllers\Party\PlaylistCsvController as PartyPlaylistCsvController;
 use App\Http\Controllers\Party\ThemeController as PartyThemeController;
 use App\Http\Controllers\PartyBlocklistController;
@@ -176,6 +177,16 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.theme.destroy');
+    Route::get('parties/{party}/player-tokens', [PartyPlayerTokenController::class, 'index'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player-tokens.index');
+    Route::post('parties/{party}/player-tokens', [PartyPlayerTokenController::class, 'store'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player-tokens.store');
+    Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerTokenController::class, 'destroy'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('token')
+        ->name('parties.player-tokens.destroy');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')
