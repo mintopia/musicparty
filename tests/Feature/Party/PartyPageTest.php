@@ -208,3 +208,28 @@ it('serialises requester-less requests in the snapshot and the queue resource', 
     expect($snapshot['queue'][0]['requested_by'])->toBe(['name' => null])
         ->and($resource['requested_by'])->toBe(['name' => null]);
 });
+
+it('rate limits unknown-code link visits and stops reporting not found', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 20) as $attempt) {
+        $this->withoutVite()->actingAs($user)->get('/parties/ZZZZ')->assertSessionHasErrors('code');
+    }
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ZZZZ')
+        ->assertRedirect(route('home', ['code' => 'ZZZZ']))
+        ->assertSessionHasNoErrors();
+});
+
+it('shares the join rate limit between the link and the join form', function () {
+    $user = User::factory()->create();
+    $party = Party::factory()->create(['code' => 'ABCD']);
+
+    foreach (range(1, 20) as $attempt) {
+        $this->actingAs($user)->post(route('parties.join'), ['code' => 'ZZZZ']);
+    }
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertRedirect(route('home', ['code' => 'ABCD']));
+
+    expect($party->memberFor($user))->toBeNull();
+});

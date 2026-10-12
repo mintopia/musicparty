@@ -117,7 +117,9 @@ class PartyController extends Controller
         $found = Party::findByCode($party);
 
         if ($found === null) {
-            return redirect()->route('home', ['code' => $party])->withErrors(['code' => 'No party found with that code.']);
+            $redirect = redirect()->route('home', ['code' => $party]);
+
+            return $this->joinLimited($request) ? $redirect : $redirect->withErrors(['code' => 'No party found with that code.']);
         }
 
         $party = $found;
@@ -465,13 +467,13 @@ class PartyController extends Controller
         $limits = Arr::wrap($limiter === null ? [] : $limiter($request));
 
         foreach ($limits as $limit) {
-            if (RateLimiter::tooManyAttempts($limit->key, $limit->maxAttempts)) {
+            if (RateLimiter::tooManyAttempts(md5('party-join'.$limit->key), $limit->maxAttempts)) {
                 return true;
             }
         }
 
         foreach ($limits as $limit) {
-            RateLimiter::hit($limit->key, $limit->decaySeconds);
+            RateLimiter::hit(md5('party-join'.$limit->key), $limit->decaySeconds);
         }
 
         return false;
