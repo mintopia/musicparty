@@ -265,7 +265,7 @@ it('retries a temporary failure without throwing into playback', function () {
 
     $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
     {
-        public ?int $releasedFor = null;
+        public DateInterval|DateTimeInterface|int|null $releasedFor = null;
 
         public function attempts(): int
         {

@@ -28,6 +28,7 @@ class ListPlayHistoryRequest extends FormRequest
             'type' => ['nullable', 'string', Rule::enum(PlayHistoryType::class)],
             'sort' => ['nullable', 'string', Rule::enum(PlayHistorySort::class)],
             'direction' => ['nullable', 'string', Rule::in(['asc', 'desc'])],
+            /** @var 10|20|50|100|null */
             'per_page' => ['nullable', 'integer', Rule::in(ListPlayHistory::PER_PAGE_OPTIONS)],
             'page' => ['nullable', 'integer', 'min:1'],
         ];

@@ -4,6 +4,7 @@ use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Music\Jobs\RefreshExpiringHostTokens;
 use App\Domain\Music\Providers\Spotify\HostAccountTokens;
+use Illuminate\Console\Scheduling\Event;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Carbon;
@@ -40,10 +41,22 @@ function hostTokenRefreshRequests(): int
     return Http::recorded(fn (Request $r): bool => str_contains($r->url(), 'accounts.spotify.com'))->count();
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function hostTokenAccount(array $attributes, bool $needingRelink = false): LinkedAccount
+{
+    $factory = SpotifyFake::account();
+    $account = ($needingRelink ? $factory->needingRelink() : $factory)->create($attributes);
+    assert($account instanceof LinkedAccount);
+
+    return $account;
+}
+
 it('refreshes control and search tokens expiring within five minutes', function () {
     SpotifyFake::hostApi();
-    $control = SpotifyFake::account()->create(['social_provider_id' => hostTokenProviderRow('spotify')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
-    $search = SpotifyFake::account()->create(['social_provider_id' => hostTokenProviderRow('spotifysearch')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    $control = hostTokenAccount(['social_provider_id' => hostTokenProviderRow('spotify')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    $search = hostTokenAccount(['social_provider_id' => hostTokenProviderRow('spotifysearch')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
 
     runHostTokenRefreshJob();
 
@@ -55,9 +68,9 @@ it('refreshes control and search tokens expiring within five minutes', function 
 it('leaves fresh tokens, other providers and accounts needing relink alone', function () {
     SpotifyFake::hostApi();
     $spotify = hostTokenProviderRow('spotify');
-    SpotifyFake::account()->create(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(30)]);
-    SpotifyFake::account()->needingRelink()->create(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(3)]);
-    SpotifyFake::account()->create(['social_provider_id' => hostTokenProviderRow('discord')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    hostTokenAccount(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(30)]);
+    hostTokenAccount(needingRelink: true, attributes: ['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    hostTokenAccount(['social_provider_id' => hostTokenProviderRow('discord')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
 
     runHostTokenRefreshJob();
 
@@ -66,7 +79,7 @@ it('leaves fresh tokens, other providers and accounts needing relink alone', fun
 
 it('refreshes once when an on-demand refresh has already happened', function () {
     SpotifyFake::hostApi();
-    $account = SpotifyFake::account()->create(['social_provider_id' => hostTokenProviderRow('spotify')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    $account = hostTokenAccount(['social_provider_id' => hostTokenProviderRow('spotify')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
     $stale = LinkedAccount::query()->findOrFail($account->id);
 
     (new HostAccountTokens)->accessToken($account);
@@ -83,8 +96,8 @@ it('marks the account needs-relink on invalid_grant and continues', function () 
             ->push(SpotifyFake::fixture('token-refresh')),
     ]);
     $spotify = hostTokenProviderRow('spotify');
-    $bad = SpotifyFake::account()->create(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(2)]);
-    $good = SpotifyFake::account()->create(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    $bad = hostTokenAccount(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(2)]);
+    $good = hostTokenAccount(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(3)]);
 
     runHostTokenRefreshJob();
 
@@ -96,7 +109,8 @@ it('is scheduled every minute on one server', function () {
     $event = collect(app(Schedule::class)->events())
         ->first(fn ($e): bool => str_contains($e->description ?? '', RefreshExpiringHostTokens::class));
 
-    expect($event)->not->toBeNull()
-        ->and($event->expression)->toBe('* * * * *')
+    assert($event instanceof Event);
+
+    expect($event->expression)->toBe('* * * * *')
         ->and($event->onOneServer)->toBeTrue();
 });

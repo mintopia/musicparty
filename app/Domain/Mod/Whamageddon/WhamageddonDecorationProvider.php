@@ -27,7 +27,7 @@ class WhamageddonDecorationProvider implements DecorationProvider
             return [];
         }
 
-        $label = (new WhamageddonSettings($context->settings))->label();
+        $label = new WhamageddonSettings($context->settings)->label();
 
         return [new Decoration(WhamageddonMod::ID, mb_substr($label, 0, Decoration::BADGE_MAX), null, null, DecorationAccent::Danger)];
     }

@@ -107,6 +107,9 @@ describe('PlayedHistory', () => {
         const headers = wrapper.findAll('thead th');
         expect(headers.every((th) => th.classes().includes('whitespace-nowrap'))).toBe(true);
         expect(wrapper.get('[data-testid="history-list"]').classes()).toContain('md:table-fixed');
+        const narrow = headers.filter((th) => th.text() === 'Votes' || th.text() === 'Score');
+        expect(narrow).toHaveLength(2);
+        expect(narrow.every((th) => th.classes().includes('w-20'))).toBe(true);
         expect(wrapper.get('[data-testid="history-title"]').classes()).toContain('truncate');
         expect(wrapper.get('[data-testid="history-title"]').element.parentElement.classList.contains('min-w-0')).toBe(true);
     });

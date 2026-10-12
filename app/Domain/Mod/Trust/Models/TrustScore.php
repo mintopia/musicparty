@@ -6,6 +6,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use Carbon\CarbonImmutable;
 use Database\Factories\TrustScoreFactory;
+use Illuminate\Database\Eloquent\Attributes\Table;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -21,12 +22,11 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 #[Unguarded]
 #[UseFactory(TrustScoreFactory::class)]
+#[Table(name: 'mod_trust_scores')]
 class TrustScore extends Model
 {
     /** @use HasFactory<TrustScoreFactory> */
     use HasFactory;
-
-    protected $table = 'mod_trust_scores';
 
     protected function casts(): array
     {

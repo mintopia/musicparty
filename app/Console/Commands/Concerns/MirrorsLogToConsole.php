@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands\Concerns;
 
+use ArrayObject;
 use Closure;
 use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Support\Facades\Event;
@@ -15,11 +16,11 @@ trait MirrorsLogToConsole
      */
     protected function mirroringLog(Closure $callback): int
     {
-        $active = true;
+        $state = new ArrayObject(['active' => true]);
         $minimum = $this->mirroredLogLevel();
 
-        Event::listen(MessageLogged::class, function (MessageLogged $event) use (&$active, $minimum): void {
-            if ($active && Level::fromName($event->level)->value >= $minimum->value) {
+        Event::listen(MessageLogged::class, function (MessageLogged $event) use ($state, $minimum): void {
+            if ($state['active'] === true && Level::fromName($event->level)->value >= $minimum->value) {
                 $this->output->writeln("[{$event->level}] {$event->message}");
             }
         });
@@ -27,7 +28,7 @@ trait MirrorsLogToConsole
         try {
             return $callback();
         } finally {
-            $active = false;
+            $state['active'] = false;
         }
     }
 

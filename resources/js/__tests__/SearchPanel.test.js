@@ -42,6 +42,8 @@ describe('SearchPanel', () => {
         const wrapper = render({results: [hit({popularity})]});
         const el = wrapper.get('[data-testid="popularity-stars"]');
         expect(el.attributes('aria-label')).toBe(`${stars} of 5 stars`);
+        expect(el.classes()).toContain('text-amber-500');
+        expect(el.classes()).not.toContain('text-primary');
         expect(el.findAll('svg')).toHaveLength(5);
         expect(el.findAll('svg[fill="currentColor"]')).toHaveLength(stars);
     });

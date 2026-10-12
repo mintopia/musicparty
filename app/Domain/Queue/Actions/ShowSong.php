@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class ShowSong
 {
-    private const EAGER_REQUEST = [
+    private const array EAGER_REQUEST = [
         'party',
         'requester.user',
         'votes.member.user',

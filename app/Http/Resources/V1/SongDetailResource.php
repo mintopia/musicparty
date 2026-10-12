@@ -29,6 +29,15 @@ class SongDetailResource extends JsonResource
         $party = $subject?->party;
         $requester = $trackRequest?->requester;
         $playedAt = $play?->played_at->toIso8601String();
+        $status = RequestStatus::Played->value;
+        $requestedAt = $play?->played_at;
+        $votes = collect();
+
+        if ($trackRequest !== null) {
+            $status = $trackRequest->status->value;
+            $requestedAt = $trackRequest->created_at;
+            $votes = $trackRequest->votes;
+        }
 
         return [
             'kind' => $trackRequest === null ? 'play' : 'request',
@@ -42,13 +51,13 @@ class SongDetailResource extends JsonResource
             'explicit' => $subject?->explicit,
             'provider_track_id' => $subject?->provider_track_id,
             'isrc' => $trackRequest?->isrc,
-            'status' => $trackRequest === null ? RequestStatus::Played->value : $trackRequest->status->value,
-            'requested_at' => ($trackRequest === null ? $play?->played_at : $trackRequest->created_at)?->toIso8601String(),
+            'status' => $status,
+            'requested_at' => $requestedAt?->toIso8601String(),
             'sent_at' => $trackRequest === null ? $playedAt : $trackRequest->enqueued_at?->toIso8601String(),
             'played_at' => $playedAt,
             'spotify_url' => app(PairingCatalogue::class)->trackUrl($party?->music_provider, (string) $subject?->provider_track_id),
             'requester' => $requester === null ? null : $this->member($requester),
-            'votes' => ($trackRequest === null ? collect() : $trackRequest->votes)->map(fn (RequestVote $vote): array => [
+            'votes' => $votes->map(fn (RequestVote $vote): array => [
                 'member' => $this->member($vote->member),
                 'direction' => $vote->value > 0 ? 'up' : 'down',
                 'voted_at' => $vote->created_at?->toIso8601String(),

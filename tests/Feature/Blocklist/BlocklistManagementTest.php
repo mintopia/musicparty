@@ -48,6 +48,17 @@ function blocklistCall(?PartyMember $actor, string $operation, BlocklistEntry $e
 
 dataset('operations', ['index', 'store', 'update', 'destroy']);
 
+/**
+ * @return array<string, array<string, mixed>>
+ */
+function blocklistDetails(PartyLogEntry $log): array
+{
+    $details = $log->details;
+    assert(is_array($details));
+
+    return $details;
+}
+
 it('allows the host and moderators to use every blocklist route', function (string $role, string $operation) {
     blocklistCall(blocklistActor($this->party, $role), $operation, $this->entry)->assertSuccessful();
 })->with(['host', 'moderator'])->with('operations');
@@ -79,7 +90,7 @@ it('adds an entry and writes a party log entry', function () {
     $log = PartyLogEntry::query()->where('action', 'blocklist.entry_added')->sole();
     expect($log->user_id)->toBe($host->user_id)
         ->and($log->subject)->toBe('USRC17607839')
-        ->and($log->details['new']['match_type'])->toBe('isrc');
+        ->and(blocklistDetails($log)['new']['match_type'])->toBe('isrc');
 });
 
 it('updates an entry recording old and new values', function () {
@@ -92,20 +103,20 @@ it('updates an entry recording old and new values', function () {
         ->assertJsonPath('data.is_enabled', false);
 
     $log = PartyLogEntry::query()->where('action', 'blocklist.entry_updated')->sole();
-    expect($log->details['old']['value'])->toBe('Old Value')
-        ->and($log->details['new']['value'])->toBe('^old')
-        ->and($log->details['old']['is_enabled'])->toBeTrue()
-        ->and($log->details['new']['is_enabled'])->toBeFalse();
+    expect(blocklistDetails($log)['old']['value'])->toBe('Old Value')
+        ->and(blocklistDetails($log)['new']['value'])->toBe('^old')
+        ->and(blocklistDetails($log)['old']['is_enabled'])->toBeTrue()
+        ->and(blocklistDetails($log)['new']['is_enabled'])->toBeFalse();
 });
 
 it('records a changed type and notes in the edit log', function () {
     blocklistCall(blocklistActor($this->party, 'host'), 'update', $this->entry, ['match_type' => 'isrc', 'value' => 'USRC1', 'notes' => 'dupe'])->assertOk();
 
     $log = PartyLogEntry::query()->where('action', 'blocklist.entry_updated')->sole();
-    expect($log->details['old']['match_type'])->toBe('track_name')
-        ->and($log->details['new']['match_type'])->toBe('isrc')
-        ->and($log->details['old']['notes'])->toBeNull()
-        ->and($log->details['new']['notes'])->toBe('dupe');
+    expect(blocklistDetails($log)['old']['match_type'])->toBe('track_name')
+        ->and(blocklistDetails($log)['new']['match_type'])->toBe('isrc')
+        ->and(blocklistDetails($log)['old']['notes'])->toBeNull()
+        ->and(blocklistDetails($log)['new']['notes'])->toBe('dupe');
 });
 
 it('prefills the form from type, value and name query parameters', function () {
@@ -134,7 +145,7 @@ it('removes an entry and writes a party log entry', function () {
 
     expect(BlocklistEntry::query()->count())->toBe(0);
     $log = PartyLogEntry::query()->where('action', 'blocklist.entry_removed')->sole();
-    expect($log->details['old']['value'])->toBe('Old Value');
+    expect(blocklistDetails($log)['old']['value'])->toBe('Old Value');
 });
 
 it('lists entries in creation order', function () {

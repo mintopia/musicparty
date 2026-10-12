@@ -5,6 +5,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Support\Realtime\PlayerConnections;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -102,5 +103,5 @@ it('adds Player Tokens to the host menu only', function () {
     [, $host] = tokensParty('host');
 
     $this->withoutVite()->actingAs($host)->get(route('parties.player-tokens.index', ['party' => 'ABCD']))
-        ->assertInertia(fn (Assert $page) => $page->where('partyContext.menu', fn ($menu): bool => collect($menu)->contains('key', 'player-tokens')));
+        ->assertInertia(fn (Assert $page) => $page->where('partyContext.menu', fn (Collection $menu): bool => $menu->contains('key', 'player-tokens')));
 });

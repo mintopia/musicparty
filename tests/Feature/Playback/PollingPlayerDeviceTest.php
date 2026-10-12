@@ -76,7 +76,7 @@ it('names the device in a conflict and logs once a minute', function () {
     $this->postJson('/api/v1/parties/DEVC/playback/play')->assertStatus(409);
 
     expect(deviceLogEntries())->toBe(1);
-    $entry = PartyLogEntry::query()->where('action', 'player.device_missing')->first();
+    $entry = PartyLogEntry::query()->where('action', 'player.device_missing')->firstOrFail();
     expect($entry->system_actor)->not->toBeNull()->and($entry->user_id)->toBeNull();
 });
 

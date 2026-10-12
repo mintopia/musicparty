@@ -5,6 +5,7 @@ namespace App\Domain\Playback\Actions;
 use App\Domain\Identity\Models\User;
 use App\Domain\Music\Actions\AuthorisesHost;
 use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Party\Actions\ChangePartyPlaybackDevice;
 use App\Domain\Party\Actions\ChangePartyPlayerSelection;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
 use App\Domain\Party\Models\Party;
@@ -25,6 +26,7 @@ readonly class ChangePartyPlayer
         private RecordPartyLogEntry $record,
         private PartyPlayers $players,
         private ChangePartyPlayerSelection $changeSelection,
+        private ChangePartyPlaybackDevice $changeDevice,
     ) {}
 
     /**
@@ -70,7 +72,7 @@ readonly class ChangePartyPlayer
 
         DB::transaction(function () use ($actor, $party, $from, $to, $device): void {
             ($this->changeSelection)($party, $to['player_kind'], $to['music_provider']);
-            $party->forceFill(['playback_device_id' => $device['id'], 'playback_device_name' => $device['name']])->save();
+            ($this->changeDevice)($party, $device['id'], $device['name']);
 
             ($this->record)($party, 'player.changed', $actor, null, ['from' => $from, 'to' => $to]);
         });

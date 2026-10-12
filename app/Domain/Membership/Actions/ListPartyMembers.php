@@ -10,6 +10,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 readonly class ListPartyMembers
 {
+    private const string ROLE_RANK_SQL = "case party_members.role when 'host' then 0 when 'moderator' then 1 when 'vip' then 2 when 'guest' then 3 else 4 end";
+
     public const SORTABLE = ['nickname', 'role', 'joined'];
 
     public const MAX_PER_PAGE = 100;
@@ -46,13 +48,14 @@ readonly class ListPartyMembers
 
     /**
      * @param  Builder<PartyMember>  $query
+     * @param  'asc'|'desc'  $direction
      */
     private function order(Builder $query, string $sort, string $direction): void
     {
         match ($sort) {
             'nickname' => $query->orderBy('users.nickname', $direction),
             'joined' => $query->orderBy('party_members.created_at', $direction),
-            default => $query->orderByRaw($this->roleRank().' '.$direction),
+            default => $query->orderByRaw($direction === 'desc' ? self::ROLE_RANK_SQL.' desc' : self::ROLE_RANK_SQL.' asc'),
         };
 
         if ($sort !== 'nickname') {
@@ -60,14 +63,5 @@ readonly class ListPartyMembers
         }
 
         $query->orderBy('party_members.id');
-    }
-
-    private function roleRank(): string
-    {
-        $cases = collect(PartyRole::cases())
-            ->map(fn (PartyRole $role, int $rank): string => "when '{$role->value}' then {$rank}")
-            ->implode(' ');
-
-        return "case party_members.role {$cases} else ".count(PartyRole::cases()).' end';
     }
 }

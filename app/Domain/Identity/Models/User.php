@@ -51,7 +51,7 @@ class User extends Authenticatable
     {
         static::saving(function (User $user): void {
             if ($user->isDirty('nickname') || $user->nickname_key === null) {
-                $user->nickname_key = $user->nickname === null ? null : self::nicknameKey($user->nickname);
+                $user->nickname_key = self::nicknameKey($user->nickname);
             }
         });
     }

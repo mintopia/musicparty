@@ -61,8 +61,8 @@ it('saves playlists from a pasted link, re-runs the gate and shows it on the set
         'history_playlist' => 'spotify:playlist:plhistory12345',
     ])->assertRedirect()->assertSessionHas('fallback_check', ['playable' => 25, 'required' => 20, 'passes' => true]);
 
-    expect($party->fresh()->fallback_playlist_id)->toBe('plfallback1234')
-        ->and($party->fresh()->history_playlist_id)->toBe('plhistory12345');
+    expect($party->refresh()->fallback_playlist_id)->toBe('plfallback1234')
+        ->and($party->refresh()->history_playlist_id)->toBe('plhistory12345');
 
     $this->actingAs($host)->get(route('parties.settings', 'ABCD'))->assertInertia(fn (Assert $page) => $page
         ->where('fallback_playlist_id', 'plfallback1234')
@@ -77,7 +77,7 @@ it('stops appending history when none is chosen, matching the api setting', func
 
     $this->actingAs($host)->put(route('parties.playlists.update', 'ABCD'), ['fallback_playlist' => 'plfallback1234', 'history_playlist' => ''])->assertRedirect();
 
-    expect($party->fresh()->history_playlist_id)->toBeNull();
+    expect($party->refresh()->history_playlist_id)->toBeNull();
 
     Sanctum::actingAs($host);
     $this->putJson(route('api.v1.parties.playlists.update', $party), ['fallback_playlist_id' => 'plfallback1234', 'history_playlist_id' => null])
@@ -101,17 +101,17 @@ it('rejects garbage, foreign playlists and non-hosts', function () {
 
     $this->actingAs(User::factory()->create())->put(route('parties.playlists.update', 'ABCD'), ['fallback_playlist' => 'plfallback1234', 'history_playlist' => ''])
         ->assertForbidden();
-    expect($party->fresh()->fallback_playlist_id)->toBeNull();
+    expect($party->refresh()->fallback_playlist_id)->toBeNull();
 });
 
 it('lets the host go live from the web UI after picking a 25 track fallback playlist', function () {
     [$party, $host] = pickerParty(25);
 
     $this->actingAs($host)->post(route('parties.live', 'ABCD'))->assertSessionHasErrors();
-    expect($party->fresh()->state)->toBe(PartyState::Paused);
+    expect($party->refresh()->state)->toBe(PartyState::Paused);
 
     $this->actingAs($host)->put(route('parties.playlists.update', 'ABCD'), ['fallback_playlist' => 'plfallback1234', 'history_playlist' => ''])->assertRedirect();
     $this->actingAs($host)->post(route('parties.live', 'ABCD'))->assertRedirect();
 
-    expect($party->fresh()->state)->toBe(PartyState::Live);
+    expect($party->refresh()->state)->toBe(PartyState::Live);
 });

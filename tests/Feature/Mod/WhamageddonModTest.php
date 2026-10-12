@@ -66,8 +66,21 @@ beforeEach(function () {
     $this->party = Party::factory()->live()->create();
 });
 
+function whamNotBefore(TrackRequest $request): string
+{
+    $notBefore = whamFresh($request)->not_before;
+    assert($notBefore !== null);
+
+    return $notBefore->toDateTimeString();
+}
+
+function whamFresh(TrackRequest $request): TrackRequest
+{
+    return TrackRequest::query()->findOrFail($request->id);
+}
+
 it('parses a Spotify link or id and defaults to the Wham! track', function (array $values, string $expected) {
-    expect((new WhamageddonSettings($values))->trackId())->toBe($expected);
+    expect(new WhamageddonSettings($values)->trackId())->toBe($expected);
 })->with([
     'default' => [[], WhamageddonSettings::DEFAULT_TRACK],
     'link' => [['track' => 'https://open.spotify.com/track/2FRnf9qhLbvw8fu4IBXx78?si=abc'], '2FRnf9qhLbvw8fu4IBXx78'],
@@ -102,7 +115,7 @@ it('adds the hourly bonus outside quiet hours and logs it', function () {
 
     expect(whamScore($this->party, $request))->toBe(2)
         ->and(PartyLogEntry::query()->where('action', 'mod.whamageddon_bonus_added')->count())->toBe(2)
-        ->and(PartyLogEntry::query()->where('action', 'mod.whamageddon_bonus_added')->latest('id')->first()->system_actor)->toBe('mod:whamageddon');
+        ->and(PartyLogEntry::query()->where('action', 'mod.whamageddon_bonus_added')->latest('id')->firstOrFail()->system_actor)->toBe('mod:whamageddon');
 });
 
 it('does not apply the bonus to other Requests', function () {
@@ -122,7 +135,7 @@ it('adds no bonus during quiet hours', function () {
 
     expect(whamScore($this->party, $request))->toBe(0)
         ->and(PartyLogEntry::query()->where('action', 'mod.whamageddon_bonus_added')->count())->toBe(0)
-        ->and($request->fresh()->not_before->toDateTimeString())->toBe(whamAt('10:00')->toDateTimeString());
+        ->and(whamNotBefore($request))->toBe(whamAt('10:00')->toDateTimeString());
 });
 
 it('holds the Request from the evening until quiet hours end and releases it after', function () {
@@ -132,7 +145,7 @@ it('holds the Request from the evening until quiet hours end and releases it aft
 
     whamRunHourly($this->party);
 
-    expect($request->fresh()->not_before->toDateTimeString())->toBe(whamAt('10:00')->addDay()->toDateTimeString())
+    expect(whamNotBefore($request))->toBe(whamAt('10:00')->addDay()->toDateTimeString())
         ->and(app(SelectUpNext::class)($this->party))->toBeNull();
 
     $this->travelTo(whamAt('10:00')->addDay()->subMinute());
@@ -151,7 +164,7 @@ it('clears the hold at the first run after quiet hours end', function () {
     $this->travelTo(whamAt('10:05')->addDay());
     whamRunHourly($this->party);
 
-    expect($request->fresh()->not_before)->toBeNull()
+    expect(whamFresh($request)->not_before)->toBeNull()
         ->and(PartyLogEntry::query()->where('action', 'request.not_before_set')->count())->toBe(2);
 });
 
@@ -171,9 +184,11 @@ it('adds the Track again once the interval has passed since it played', function
     expect(whamRunHourly($this->party))->toBe(1);
 
     $second = whamRequest($this->party);
+    $state = WhamageddonState::query()->sole();
     expect($second->id)->not->toBe($first->id)
         ->and($second->status)->toBe(RequestStatus::Queued)
-        ->and(WhamageddonState::query()->sole())->request_id->toBe($second->id)->accumulated_bonus->toBe(0)
+        ->and($state->request_id)->toBe($second->id)
+        ->and($state->accumulated_bonus)->toBe(0)
         ->and(whamScore($this->party, $second))->toBe(0);
 });
 
@@ -184,7 +199,7 @@ it('removes a Queued Request when disabled and names the Mod in the Party Log', 
     app(DisableMod::class)(User::factory()->create(), $this->party, WhamageddonMod::ID);
 
     $entry = PartyLogEntry::query()->where('action', 'mod.request_removed')->sole();
-    expect($request->fresh()->status)->toBe(RequestStatus::Removed)
+    expect(whamFresh($request)->status)->toBe(RequestStatus::Removed)
         ->and($entry->system_actor)->toBe('mod:whamageddon')
         ->and(WhamageddonState::query()->sole()->request_id)->toBeNull();
 });
@@ -196,7 +211,7 @@ it('leaves a Request that has already played alone when disabled', function () {
 
     app(DisableMod::class)(User::factory()->create(), $this->party, WhamageddonMod::ID);
 
-    expect($request->fresh()->status)->toBe(RequestStatus::Played)
+    expect(whamFresh($request)->status)->toBe(RequestStatus::Played)
         ->and(PartyLogEntry::query()->where('action', 'mod.request_removed')->count())->toBe(0);
 });
 
@@ -208,7 +223,7 @@ it('does nothing while the Party is Paused', function () {
 
     expect(whamRunHourly($this->party->fresh()))->toBe(0)
         ->and(whamScore($this->party, $request))->toBe(0)
-        ->and($request->fresh()->not_before)->toBeNull();
+        ->and(whamFresh($request)->not_before)->toBeNull();
 });
 
 it('logs a Blocklisted Track refusal once per run', function () {

@@ -40,6 +40,9 @@ function spotifyLinkLinked(User $user, ?string $scopes = SPOTIFY_ALL_SCOPES, boo
     ]);
 }
 
+/**
+ * @param  array<int, string>  $approved
+ */
 function mockSpotifyLinkCallback(array $approved = []): void
 {
     $remote = (new SocialiteUser)->map(['id' => 'sp-1', 'name' => 'Host Name', 'nickname' => null, 'email' => null, 'avatar' => null]);
@@ -52,6 +55,17 @@ function mockSpotifyLinkCallback(array $approved = []): void
     $driver->shouldReceive('user')->andReturn($remote);
     $driver->shouldReceive('scopes')->andReturnSelf();
     Socialite::shouldReceive('buildProvider')->andReturn($driver);
+}
+
+/**
+ * @return array<string, mixed>
+ */
+function spotifyLinkLogDetails(int $partyId, string $action): array
+{
+    $details = PartyLogEntry::query()->where('party_id', $partyId)->where('action', $action)->firstOrFail()->details;
+    assert(is_array($details));
+
+    return $details;
 }
 
 it('requests all six scopes when starting the control link', function () {
@@ -152,7 +166,7 @@ it('unlinks and pauses live polling parties with a party log entry', function ()
         ->and($polling->fresh()->state)->toBe(PartyState::Paused)
         ->and($fake->fresh()->state)->toBe(PartyState::Live)
         ->and($theirs->fresh()->state)->toBe(PartyState::Live)
-        ->and(PartyLogEntry::query()->where('party_id', $polling->id)->where('action', 'party.paused')->first()->details['reason'])->toBe('spotify_unlinked')
+        ->and(spotifyLinkLogDetails($polling->id, 'party.paused')['reason'])->toBe('spotify_unlinked')
         ->and(PartyLogEntry::query()->where('party_id', $polling->id)->where('action', 'player.host_account_unlinked')->exists())->toBeTrue();
 
     $this->get(route('home'))->assertInertia(fn ($page) => $page->where('flash.success', 'Spotify account unlinked'));
@@ -241,7 +255,7 @@ it('stores the Search account under its own provider without touching the contro
 
     $search = LinkedAccount::query()->where('user_id', $user->id)->where('social_provider_id', SocialProvider::query()->where('code', 'spotifysearch')->value('id'))->firstOrFail();
     expect($search->refresh_token)->toBe('plain-refresh-token')
-        ->and($control->fresh()->access_token)->toBe($control->access_token);
+        ->and(LinkedAccount::query()->findOrFail($control->id)->access_token)->toBe($control->access_token);
 
     $this->get(route('spotify.index'))->assertInertia(fn ($page) => $page->where('search', ['linked' => true, 'name' => 'Host Name', 'needs_relink' => false]));
 });
@@ -256,7 +270,7 @@ it('unlinks only the Search account and leaves playback running', function () {
     $this->actingAs($user)->delete(route('spotify.unlink', 'search'))->assertRedirect(route('spotify.index'));
 
     expect(LinkedAccount::query()->where('social_provider_id', spotifySearchProvider()->id)->exists())->toBeFalse()
-        ->and($control->fresh()->access_token)->not->toBeNull()
+        ->and(LinkedAccount::query()->findOrFail($control->id)->access_token)->not->toBeNull()
         ->and($party->fresh()->state)->toBe(PartyState::Live);
 });
 
