@@ -60,8 +60,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
         Route::resource('parties', PartyController::class)->except(['destroy']);
+        Route::get('parties/{party}/player', [PartyController::class, 'player'])
+            ->middleware('can:player,party')
+            ->name('parties.player');
         Route::middleware('can:update,party')->group(function() {
-            Route::get('parties/{party}/player', [PartyController::class, 'player'])->name('parties.player');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
