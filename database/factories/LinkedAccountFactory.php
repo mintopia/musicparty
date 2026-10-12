@@ -25,4 +25,9 @@ class LinkedAccountFactory extends Factory
             'email' => fake()->safeEmail(),
         ];
     }
+
+    public function verified(): static
+    {
+        return $this->state(['email_verified_at' => now()]);
+    }
 }
