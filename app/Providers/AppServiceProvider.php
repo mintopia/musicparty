@@ -20,6 +20,9 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->bind(MusicProvider::class, SpotifyMusicProvider::class);
+        if ($this->app->isLocal()) {
+            $this->app->singleton(\App\Domain\Music\Testing\FakeMusicProvider::class, fn () => \Database\Seeders\PreviewSeeder::catalogueProvider());
+        }
         $this->app->scoped(PartyPlayers::class);
         $this->app->bind(Bucket::class, LeakyBucket::class);
         $this->app->bind(Randomizer::class, SystemRandomizer::class);

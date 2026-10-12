@@ -1,0 +1,7 @@
+services:
+  musicparty:
+    ports:
+      - "18080:80"
+  reverb:
+    ports:
+      - "18081:8080"

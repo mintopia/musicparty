@@ -20,6 +20,15 @@ use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
 use Illuminate\Support\Facades\Route;
 
+if (app()->isLocal()) {
+    Route::get('dev-login/{nickname}', function (string $nickname) {
+        \Illuminate\Support\Facades\Auth::login(\App\Models\User::query()->where('nickname', $nickname)->firstOrFail());
+        request()->session()->regenerate();
+
+        return redirect('/');
+    })->name('dev-login');
+}
+
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
