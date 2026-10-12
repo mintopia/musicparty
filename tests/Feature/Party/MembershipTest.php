@@ -95,6 +95,23 @@ it('enforces the permission matrix', function (string $actorRole, bool $actorBan
     }
 })->with('permission matrix');
 
+it('keeps exactly one host when the host role is requested through the API or web', function () {
+    $host = seatMember($this->party, 'host');
+    $guest = seatMember($this->party, 'guest');
+    $moderator = seatMember($this->party, 'moderator');
+
+    foreach ([$guest, $moderator] as $target) {
+        callOperation($host, 'role:host', $target)->assertUnprocessable()->assertJsonValidationErrors('member');
+        $this->actingAs($host->user)->put("/parties/ABCD/members/{$target->id}/role", ['role' => 'host'])
+            ->assertSessionHasErrors('member');
+    }
+
+    expect($this->party->members()->where('role', PartyRole::Host)->pluck('id')->all())->toBe([$host->id])
+        ->and($guest->fresh()->role)->toBe(PartyRole::Guest)
+        ->and($moderator->fresh()->role)->toBe(PartyRole::Moderator)
+        ->and(PartyLogEntry::query()->count())->toBe(0);
+});
+
 it('lets the host ban a moderator while retaining their role and restores abilities on unban', function () {
     $host = seatMember($this->party, 'host');
     $moderator = seatMember($this->party, 'moderator');
