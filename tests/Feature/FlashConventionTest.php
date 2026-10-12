@@ -39,13 +39,21 @@ it('flashes signup completion to the next response', function () {
 
     $this->actingAs($user)->post(route('login.signup.store'), ['nickname' => 'newbie', 'terms' => true])->assertRedirect();
 
-    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page->where('flash.success', 'Welcome to Music Party'));
+    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page->where('flash.success', 'Your account has been created'));
 });
 
 it('flashes logout to the next response', function () {
-    $this->actingAs($this->host)->post(route('logout'))->assertRedirect(route('home'));
+    $this->actingAs($this->host)->post(route('logout'))->assertRedirect(route('login'));
 
-    $this->get(route('home'))->assertInertia(fn (Assert $page) => $page->where('flash.success', 'You have been logged out'));
+    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->component('Login')->where('flash.success', 'You have been logged out'));
+});
+
+it('flashes a suspended login attempt on the login page', function () {
+    $user = User::factory()->suspended()->create();
+
+    $this->actingAs($user)->get(route('home'))->assertRedirect(route('login'));
+
+    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->component('Login')->where('flash.error', 'Your account has been suspended'));
 });
 
 it('flashes a suspended login failure as an error', function () {

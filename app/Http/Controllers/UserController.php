@@ -24,7 +24,7 @@ class UserController extends Controller
         $request->session()->invalidate();
         $request->session()->regenerateToken();
 
-        return response()->redirectToRoute('home')->with('success', 'You have been logged out');
+        return response()->redirectToRoute('login')->with('success', 'You have been logged out');
     }
 
     public function login(ListLoginProviders $listLoginProviders): Response
@@ -35,7 +35,6 @@ class UserController extends Controller
                 'name' => $provider->name,
                 'url' => route('login.redirect', $provider->code),
             ])->all(),
-            'error' => session('error'),
         ]);
     }
 

@@ -164,7 +164,7 @@ it('handles a provider failure gracefully', function () {
 });
 
 it('logs out', function () {
-    $this->actingAs(User::factory()->create())->post(route('logout'))->assertRedirect(route('home'));
+    $this->actingAs(User::factory()->create())->post(route('logout'))->assertRedirect(route('login'));
 
     $this->assertGuest();
 });

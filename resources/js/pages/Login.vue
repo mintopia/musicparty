@@ -2,6 +2,7 @@
 import {Head, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import Icon from '../Components/Icon.vue';
+import FlashAlerts from '../Components/ui/FlashAlerts.vue';
 import coverUrl from '../../img/cover.jpg';
 import {providerBrands, providerIcons} from '../lib/providerBrands.js';
 
@@ -9,7 +10,6 @@ defineOptions({layout: (h, page) => page});
 
 const props = defineProps({
     providers: {type: Array, default: () => []},
-    error: {type: String, default: null},
 });
 
 const page = usePage();
@@ -35,15 +35,7 @@ const year = new Date().getFullYear();
                 <h1 class="text-center text-2xl font-semibold md:text-xl">Music Party</h1>
                 <p class="mt-6 text-center text-base md:mt-8 md:text-sm">Login to join the party!</p>
 
-                <div
-                    v-if="error"
-                    role="alert"
-                    data-testid="login-error"
-                    class="mt-5 flex items-start gap-2 rounded border border-danger bg-surface px-4 py-3 text-sm text-danger"
-                >
-                    <Icon name="alert" />
-                    <span>{{ error }}</span>
-                </div>
+                <FlashAlerts class="mt-5" />
 
                 <ul v-if="items.length" class="mt-5 flex flex-col gap-4 md:gap-4">
                     <li v-for="provider in items" :key="provider.code">
