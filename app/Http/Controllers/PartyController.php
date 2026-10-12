@@ -52,6 +52,7 @@ use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\ListPartyMembersRequest;
 use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RejectRequestRequest;
@@ -59,8 +60,8 @@ use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyPlaylistsRequest;
 use App\Http\Requests\UpdatePartyRequest;
+use App\Http\Resources\PartyMemberRowResource;
 use App\Http\Resources\V1\PartyLogEntryResource;
-use App\Http\Resources\V1\PartyMemberResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
@@ -332,24 +333,29 @@ class PartyController extends Controller
         ]);
     }
 
-    public function members(Request $request, ListPartyMembers $listMembers, Party $party): Response
+    public function members(ListPartyMembersRequest $request, ListPartyMembers $listMembers, Party $party): Response
     {
-        $this->authorize('viewMembers', $party);
         $user = $this->currentUser($request);
 
-        $members = PartyMemberResource::collection($listMembers($party, $user->can('moderate', $party)))
-            ->resolve($request);
+        $members = PartyMemberRowResource::collection($listMembers(
+            $party,
+            true,
+            $request->search(),
+            $request->role(),
+            $request->sort(),
+            $request->direction(),
+            $request->perPage(),
+        ));
 
         return Inertia::render('Party/Members', [
             'party' => ['code' => $party->code, 'name' => $party->name],
-            'members' => array_map(fn (array $member): array => [
-                'id' => $member['id'],
-                'nickname' => $member['nickname'],
-                'avatar' => $member['avatar'],
-                'role' => $member['role'],
-                'banned' => $member['banned'],
-                'isYou' => $member['is_you'],
-            ], $members),
+            'members' => $members,
+            'filters' => [
+                'search' => $request->search(),
+                'role' => $request->role()?->value,
+                'sort' => $request->sort(),
+                'direction' => $request->direction(),
+            ],
             'abilities' => [
                 'canChangeRoles' => $user->can('manageRoles', $party),
                 'canBan' => $user->can('moderate', $party),

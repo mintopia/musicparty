@@ -75,6 +75,11 @@ class PartyPolicy
         return $member !== null && ! $member->banned;
     }
 
+    public function listMembers(User $user, Party $party): bool
+    {
+        return $this->moderate($user, $party);
+    }
+
     public function exportPlaylist(User $user, Party $party): bool
     {
         return $this->viewMembers($user, $party);

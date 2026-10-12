@@ -1,6 +1,7 @@
 <?php
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Actions\ListPartyMembers;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
@@ -175,49 +176,198 @@ it('refuses non-members and unauthenticated callers', function () {
     $this->getJson('/api/v1/parties/ABCD/members')->assertForbidden();
 });
 
-it('lists members with moderation detail for moderators and a trimmed list for others', function () {
+it('lists members for moderators with joined time and refuses plain members', function () {
     $host = seatMember($this->party, 'host');
     $guest = seatMember($this->party, 'guest');
     $banned = seatMember($this->party, 'guest', true);
+    $moderator = seatMember($this->party, 'moderator');
 
     Sanctum::actingAs($host->user);
     $this->getJson('/api/v1/parties/ABCD/members')->assertOk()
-        ->assertJsonCount(3, 'data')
+        ->assertJsonCount(4, 'data')
         ->assertJsonPath('data.0.role', 'host')
         ->assertJsonPath('data.0.is_you', true)
-        ->assertJsonStructure(['data' => [['id', 'nickname', 'avatar', 'role', 'banned', 'is_you']]]);
+        ->assertJsonPath('meta.total', 4)
+        ->assertJsonStructure(['data' => [['id', 'nickname', 'avatar', 'role', 'banned', 'is_you', 'joined_at']]]);
+
+    Sanctum::actingAs($moderator->user);
+    $this->getJson('/api/v1/parties/ABCD/members')->assertOk()->assertJsonCount(4, 'data');
 
     Sanctum::actingAs($guest->user);
-    $this->getJson('/api/v1/parties/ABCD/members')->assertOk()->assertJsonCount(2, 'data');
+    $this->getJson('/api/v1/parties/ABCD/members')->assertForbidden();
 
     Sanctum::actingAs($banned->user);
     $this->getJson('/api/v1/parties/ABCD/members')->assertForbidden();
+});
+
+function membersList(string $query = ''): TestResponse
+{
+    return test()->getJson('/api/v1/parties/ABCD/members'.$query);
+}
+
+/**
+ * @param  array<string, mixed>  $attributes
+ */
+function seatNamed(Party $party, string $nickname, string $role = 'guest', array $attributes = []): PartyMember
+{
+    $member = PartyMember::factory()->for($party)->for(User::factory()->create(['nickname' => $nickname]));
+
+    return ($role === 'guest' ? $member : $member->{$role}())->create($attributes);
+}
+
+/**
+ * @return list<string>
+ */
+function nicknames(TestResponse $response): array
+{
+    return array_column($response->json('data'), 'nickname');
+}
+
+describe('members list filters, sort and paging', function () {
+    beforeEach(function () {
+        $this->host = seatNamed($this->party, 'Hostess', 'host', ['created_at' => now()->subDays(5)]);
+        $this->moderator = seatNamed($this->party, 'Bravo', 'moderator', ['created_at' => now()->subDays(1)]);
+        $this->vip = seatNamed($this->party, 'Charlie', 'vip', ['created_at' => now()->subDays(4)]);
+        $this->alpha = seatNamed($this->party, 'Alpha', 'guest', ['created_at' => now()->subDays(3)]);
+        $this->delta = seatNamed($this->party, 'Delta_x', 'guest', ['created_at' => now()->subDays(2)]);
+        $this->banned = seatNamed($this->party, 'Zulu', 'guest', ['banned' => true, 'created_at' => now()->subDays(6)]);
+        Sanctum::actingAs($this->host->user);
+    });
+
+    it('defaults to role order then nickname', function () {
+        expect(nicknames(membersList()))->toBe(['Hostess', 'Bravo', 'Charlie', 'Alpha', 'Delta_x', 'Zulu']);
+    });
+
+    it('searches nicknames by substring and treats wildcards literally', function () {
+        expect(nicknames(membersList('?search=ALP')))->toBe(['Alpha'])
+            ->and(nicknames(membersList('?search=D_lta')))->toBe([])
+            ->and(nicknames(membersList('?search=_x')))->toBe(['Delta_x'])
+            ->and(nicknames(membersList('?search=%')))->toBe([]);
+    });
+
+    it('filters by role', function (string $role, array $expected) {
+        expect(nicknames(membersList("?role={$role}")))->toBe($expected);
+    })->with([
+        'host' => ['host', ['Hostess']],
+        'moderator' => ['moderator', ['Bravo']],
+        'vip' => ['vip', ['Charlie']],
+        'guest' => ['guest', ['Alpha', 'Delta_x', 'Zulu']],
+    ]);
+
+    it('combines search and role', function () {
+        expect(nicknames(membersList('?role=guest&search=lta')))->toBe(['Delta_x']);
+    });
+
+    it('sorts by nickname', function (string $direction, array $expected) {
+        expect(nicknames(membersList("?sort=nickname&direction={$direction}")))->toBe($expected);
+    })->with([
+        'asc' => ['asc', ['Alpha', 'Bravo', 'Charlie', 'Delta_x', 'Hostess', 'Zulu']],
+        'desc' => ['desc', ['Zulu', 'Hostess', 'Delta_x', 'Charlie', 'Bravo', 'Alpha']],
+    ]);
+
+    it('sorts by role rank', function (string $direction, array $expected) {
+        expect(nicknames(membersList("?sort=role&direction={$direction}")))->toBe($expected);
+    })->with([
+        'asc' => ['asc', ['Hostess', 'Bravo', 'Charlie', 'Alpha', 'Delta_x', 'Zulu']],
+        'desc' => ['desc', ['Alpha', 'Delta_x', 'Zulu', 'Charlie', 'Bravo', 'Hostess']],
+    ]);
+
+    it('sorts by joined time', function (string $direction, array $expected) {
+        expect(nicknames(membersList("?sort=joined&direction={$direction}")))->toBe($expected);
+    })->with([
+        'asc' => ['asc', ['Zulu', 'Hostess', 'Charlie', 'Alpha', 'Delta_x', 'Bravo']],
+        'desc' => ['desc', ['Bravo', 'Delta_x', 'Alpha', 'Charlie', 'Hostess', 'Zulu']],
+    ]);
+
+    it('pages results', function () {
+        $first = membersList('?per_page=4&sort=nickname');
+        $first->assertOk()->assertJsonPath('meta.total', 6)->assertJsonPath('meta.per_page', 4)->assertJsonPath('meta.last_page', 2);
+        expect(nicknames($first))->toBe(['Alpha', 'Bravo', 'Charlie', 'Delta_x'])
+            ->and(nicknames(membersList('?per_page=4&sort=nickname&page=2')))->toBe(['Hostess', 'Zulu']);
+    });
+
+    it('defaults to 25 per page', function () {
+        membersList()->assertJsonPath('meta.per_page', 25);
+    });
+
+    it('breaks ties by nickname', function () {
+        $at = now()->subDays(7);
+        seatNamed($this->party, 'Foxtrot', 'guest', ['created_at' => $at]);
+        seatNamed($this->party, 'Echo', 'guest', ['created_at' => $at]);
+
+        expect(nicknames(membersList('?sort=joined&per_page=2')))->toBe(['Echo', 'Foxtrot'])
+            ->and(nicknames(membersList('?sort=joined&search=o&role=guest')))->toBe(['Echo', 'Foxtrot']);
+    });
+
+    it('hides banned members unless banned are included', function () {
+        $list = fn (bool $includeBanned): array => app(ListPartyMembers::class)($this->party, $includeBanned)->pluck('id')->all();
+
+        expect($list(false))->not->toContain($this->banned->id)
+            ->and($list(true))->toContain($this->banned->id);
+    });
+
+    it('reports the joined time as ISO', function () {
+        membersList('?search=Alpha')->assertJsonPath('data.0.joined_at', $this->alpha->fresh()->created_at->toJSON());
+    });
+
+    it('rejects invalid parameters', function (string $query, string $field) {
+        membersList($query)->assertUnprocessable()->assertJsonValidationErrors($field);
+    })->with([
+        'role' => ['?role=king', 'role'],
+        'sort' => ['?sort=banned', 'sort'],
+        'direction' => ['?direction=sideways', 'direction'],
+        'per_page low' => ['?per_page=0', 'per_page'],
+        'per_page high' => ['?per_page=101', 'per_page'],
+        'per_page text' => ['?per_page=lots', 'per_page'],
+        'page' => ['?page=0', 'page'],
+        'search long' => ['?search='.str_repeat('a', 101), 'search'],
+    ]);
 });
 
 it('renders the Members page with the props contract', function () {
     $host = seatMember($this->party, 'host');
     $banned = seatMember($this->party, 'guest', true);
 
-    $this->actingAs($host->user)->get('/parties/ABCD/members')->assertOk()->assertInertia(fn (Assert $page) => $page
+    $this->actingAs($host->user)->get('/parties/ABCD/members?search=&role=guest&sort=joined&direction=desc')->assertOk()->assertInertia(fn (Assert $page) => $page
         ->component('Party/Members')
         ->where('party', ['code' => 'ABCD', 'name' => $this->party->name])
-        ->has('members', 2)
-        ->where('members.0.role', 'host')
-        ->where('members.0.isYou', true)
-        ->where('members.1.banned', true)
-        ->where('members.1.id', $banned->id)
+        ->has('members.data', 1)
+        ->has('members.meta.total')
+        ->has('members.links')
+        ->where('members.data.0.banned', true)
+        ->where('members.data.0.id', $banned->id)
+        ->where('members.data.0.isYou', false)
+        ->has('members.data.0.joinedAt')
+        ->where('filters', ['search' => null, 'role' => 'guest', 'sort' => 'joined', 'direction' => 'desc'])
         ->where('abilities', ['canChangeRoles' => true, 'canBan' => true]));
 });
 
-it('gives moderators and plain members the right abilities on the Members page', function (string $role, bool $roles, bool $ban) {
+it('defaults the Members page filters', function () {
+    $host = seatMember($this->party, 'host');
+
+    $this->actingAs($host->user)->get('/parties/ABCD/members')->assertOk()->assertInertia(fn (Assert $page) => $page
+        ->has('members.data', 1)
+        ->where('members.data.0.isYou', true)
+        ->where('filters', ['search' => null, 'role' => null, 'sort' => 'role', 'direction' => 'asc']));
+});
+
+it('rejects invalid Members page parameters', function () {
+    $host = seatMember($this->party, 'host');
+
+    $this->actingAs($host->user)->get('/parties/ABCD/members?sort=bogus')->assertSessionHasErrors('sort');
+});
+
+it('gives moderators their abilities and refuses vips and guests on the Members page', function (string $role, bool $allowed) {
     $member = seatMember($this->party, $role);
 
-    $this->actingAs($member->user)->get('/parties/ABCD/members')->assertOk()->assertInertia(fn (Assert $page) => $page
-        ->where('abilities', ['canChangeRoles' => $roles, 'canBan' => $ban]));
+    $response = $this->actingAs($member->user)->get('/parties/ABCD/members');
+    $allowed
+        ? $response->assertOk()->assertInertia(fn (Assert $page) => $page->where('abilities', ['canChangeRoles' => false, 'canBan' => true]))
+        : $response->assertForbidden();
 })->with([
-    'moderator' => ['moderator', false, true],
-    'vip' => ['vip', false, false],
-    'guest' => ['guest', false, false],
+    'moderator' => ['moderator', true],
+    'vip' => ['vip', false],
+    'guest' => ['guest', false],
 ]);
 
 it('refuses the Members page to banned members and non-members', function () {

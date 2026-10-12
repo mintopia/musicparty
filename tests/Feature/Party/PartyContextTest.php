@@ -128,7 +128,7 @@ it('links the TV mode entry to the party tv page', function () {
 it('shares the now playing payload with timing', function () {
     $this->freezeSecond();
     $party = Party::factory()->live()->create(['code' => 'ABCD']);
-    $user = contextUser($party, 'guest');
+    $user = contextUser($party, 'host');
     TrackRequest::factory()->for($party)->fallback()->status(RequestStatus::Playing)
         ->create(['title' => 'Now', 'duration_ms' => 200000, 'started_at' => now()->subSeconds(30)]);
 
@@ -143,7 +143,7 @@ it('shares the now playing payload with timing', function () {
 
 it('marks now playing paused when the party is paused', function () {
     $party = Party::factory()->create(['code' => 'ABCD', 'state' => 'paused']);
-    $user = contextUser($party, 'guest');
+    $user = contextUser($party, 'host');
     TrackRequest::factory()->for($party)->fallback()->status(RequestStatus::Playing)->create(['started_at' => now()]);
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/members')

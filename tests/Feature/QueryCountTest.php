@@ -165,3 +165,16 @@ it('runs a constant number of queries for a live stats refresh', function () {
         fn () => app()->call([new RefreshPartyStatsJob($this->party->id), 'handle']),
     );
 });
+
+it('runs a constant number of queries for the filtered members list', function (string $url, bool $json) {
+    $this->actingAs($this->host->user);
+
+    expectConstantQueries(
+        $this->party,
+        fn (int $n) => PartyMember::factory()->for($this->party)->count($n)->create(),
+        fn () => $json ? $this->getJson($url)->assertOk() : $this->withoutVite()->get($url)->assertOk(),
+    );
+})->with([
+    'api' => ['/api/v1/parties/ABCD/members?search=a&role=guest&sort=joined&direction=desc&per_page=100', true],
+    'web' => ['/parties/ABCD/members?sort=role&direction=desc&per_page=100', false],
+]);
