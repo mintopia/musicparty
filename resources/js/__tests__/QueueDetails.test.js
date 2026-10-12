@@ -44,6 +44,7 @@ afterEach(() => {
 
 beforeEach(() => {
     get.mockClear();
+    put.mockReset();
     const channel = () => {
         const c = {listen: () => c};
         return c;

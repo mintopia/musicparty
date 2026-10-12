@@ -344,7 +344,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
                         <button type="submit" data-testid="queue-search-submit" class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white">Search</button>
                     </form>
                 </div>
-                <p v-if="liveMode === 'weighted'" data-testid="queue-weighted-hint" class="mb-1 text-sm text-muted">The more upvotes a track has, the more likely it is to play next.</p>
+                <p v-if="liveMode === 'weighted'" data-testid="queue-weighted-hint" class="mb-1 text-sm text-muted">The more upvotes a track has, the more likely it is to play.</p>
                 <p v-if="eta.totalMs > 0" data-testid="queue-total" class="mb-3 text-sm text-muted md:mb-4">Total {{ formatTotal(eta.totalMs) }}</p>
                 <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" :can-moderate="isStaff" />
             </template>
