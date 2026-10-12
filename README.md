@@ -88,8 +88,10 @@ Artisan.
 
 ## Login providers and Spotify
 
-Provider credentials live in the database and are edited by an admin under `/admin/providers`. On a fresh install you
-can seed them from environment variables instead:
+Provider credentials live in the database and are edited by an admin under `/admin/providers`. That includes Spotify
+and the optional Spotify Search account (`spotifysearch`): Spotify search, Track lookup, playback and token refresh all
+read the saved values, so a change applies on the next request or job with no restart. On a fresh install you can seed
+the values from environment variables instead:
 
 ```dotenv
 DISCORD_CLIENT_ID=
@@ -99,6 +101,8 @@ TWITCH_CLIENT_SECRET=
 STEAM_API_KEY=
 SPOTIFY_CLIENT_ID=
 SPOTIFY_CLIENT_SECRET=
+SPOTIFYSEARCH_CLIENT_ID=
+SPOTIFYSEARCH_CLIENT_SECRET=
 ```
 
 ```bash
@@ -106,7 +110,15 @@ docker compose run --rm artisan providers:seed
 ```
 
 `providers:seed` creates each provider, fills settings that are still empty from config, and enables a new provider
-only when all of its required settings are present. It never overwrites stored values, so it is safe to re-run.
+only when all of its required settings are present. It never overwrites stored values, so it is safe to re-run. The
+environment variables are a seed only: once a value is stored, changing the environment has no effect, and nothing reads
+them at runtime.
+
+Which Music Providers and Players Parties can use is also set in the admin area, on the Settings page. Each Music
+Provider and Player has an Enable or Disable action. A Music Provider is only offered when it is enabled and its
+credentials are configured, so Spotify appears on Create Party once an admin has saved its credentials and enabled it.
+Disabling one stops new Parties choosing it but never breaks a running Party; the page shows how many Parties use each.
+The Fake Music Provider is offered only when `APP_ENV` is `local` or `testing`.
 
 Register these redirect URLs with each OAuth2 application, replacing the host with your `APP_URL`:
 
@@ -419,6 +431,12 @@ part-way. Keep it if you write your own Compose file.
    and set `PUID`/`PGID` so the bind-mounted directories are writable.
 3. Reissue Integration Tokens, and Player Tokens for Soloist Players.
 4. Run `docker compose up -d --wait`.
+
+**Spotify credentials.** Spotify credentials are now read only from the provider settings stored in the database, and
+Music Providers and Players must be enabled on the admin Settings page (the upgrade enables the existing ones). If your
+Spotify credentials were set only through `SPOTIFY_CLIENT_ID`/`SPOTIFY_CLIENT_SECRET` (and `SPOTIFYSEARCH_*`), run
+`docker compose run --rm artisan providers:seed` once after upgrading, or enter them under `/admin/providers`. Until you
+do, Spotify is unavailable.
 
 ## Configuration
 
