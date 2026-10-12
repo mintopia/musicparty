@@ -12,7 +12,6 @@ const props = defineProps({
 usePartyPresence(props.party.code);
 
 const page = usePage();
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
 const base = `/parties/${props.party.code}/mods`;
 
 const drafts = reactive({});
@@ -66,7 +65,6 @@ const save = (mod) => {
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" data-testid="mods-success" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
         <p v-if="mods.length === 0" data-testid="mods-empty" class="rounded border border-border bg-surface px-5 py-5 text-sm text-muted">No Mods are available.</p>
 
         <section

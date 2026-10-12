@@ -38,7 +38,7 @@ class SpotifyLinkController extends Controller
         $party = is_int($partyId) ? Party::query()->find($partyId) : null;
 
         if (! $party instanceof Party) {
-            return redirect()->route('home')->with('errorMessage', 'The Spotify link request has expired');
+            return redirect()->route('home')->with('error', 'The Spotify link request has expired');
         }
 
         $remote = $this->driver()->user();
@@ -58,10 +58,10 @@ class SpotifyLinkController extends Controller
         } catch (NotHostException $exception) {
             abort(403, $exception->getMessage());
         } catch (AccountAlreadyLinkedException $exception) {
-            return redirect()->route('home')->with('errorMessage', $exception->getMessage());
+            return redirect()->route('home')->with('error', $exception->getMessage());
         }
 
-        return redirect()->route('home')->with('successMessage', 'Spotify account linked');
+        return redirect()->route('home')->with('success', 'Spotify account linked');
     }
 
     private function driver(): AbstractProvider

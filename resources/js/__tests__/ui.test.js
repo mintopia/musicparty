@@ -100,6 +100,13 @@ describe('Alerts', () => {
         expect(wrapper.findAll('[data-variant]').map((a) => a.attributes('data-variant'))).toEqual(['success', 'info']);
     });
 
+    it('renders each of the four kinds once', () => {
+        page.props = {flash: {success: 'a', error: 'b', info: 'c', warning: 'd'}};
+        const wrapper = mount(FlashAlerts);
+        expect(wrapper.findAll('[data-variant]').map((a) => a.attributes('data-variant')).sort()).toEqual(['danger', 'info', 'success', 'warning']);
+        expect(wrapper.findAll('[data-variant]')).toHaveLength(4);
+    });
+
     it('renders nothing without flash', () => {
         page.props = {flash: {}};
         expect(mount(FlashAlerts).find('[data-testid="flash-alerts"]').exists()).toBe(false);

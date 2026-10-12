@@ -220,13 +220,13 @@ it('changes roles and bans through the web routes with the same outcome as the A
 
     $this->actingAs($host->user)->from('/parties/ABCD/members')
         ->put("/parties/ABCD/members/{$guest->id}/role", ['role' => 'moderator'])
-        ->assertRedirect('/parties/ABCD/members')->assertSessionHas('successMessage');
+        ->assertRedirect('/parties/ABCD/members')->assertSessionHas('success');
     expect($guest->fresh()->role)->toBe(PartyRole::Moderator);
 
-    $this->actingAs($host->user)->put("/parties/ABCD/members/{$guest->id}/ban")->assertRedirect()->assertSessionHas('successMessage');
+    $this->actingAs($host->user)->put("/parties/ABCD/members/{$guest->id}/ban")->assertRedirect()->assertSessionHas('success');
     expect($guest->fresh()->banned)->toBeTrue();
 
-    $this->actingAs($host->user)->delete("/parties/ABCD/members/{$guest->id}/ban")->assertRedirect()->assertSessionHas('successMessage');
+    $this->actingAs($host->user)->delete("/parties/ABCD/members/{$guest->id}/ban")->assertRedirect()->assertSessionHas('success');
     expect($guest->fresh()->banned)->toBeFalse()
         ->and(PartyLogEntry::query()->pluck('action')->all())->toBe(['member.role_changed', 'member.banned', 'member.unbanned']);
 });

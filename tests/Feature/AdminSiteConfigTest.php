@@ -117,7 +117,7 @@ it('does not offer a disabled provider and refuses logins through it', function 
 
     $this->get('/login')->assertInertia(fn (Assert $page) => $page->has('providers', 0));
     $this->get('/login/discord')->assertRedirect(route('login'));
-    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Login with discord is not available.');
+    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('error', 'Login with discord is not available.');
 });
 
 it('refuses to enable Google or Facebook without credentials', function (string $code): void {

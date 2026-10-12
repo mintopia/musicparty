@@ -82,7 +82,7 @@ it('refuses the redirect for a disabled provider', function () {
 
     $this->get(route('login.redirect', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage');
+        ->assertSessionHas('error');
 });
 
 it('returns 404 for an unknown provider', function () {
@@ -136,7 +136,7 @@ it('refuses a suspended user', function () {
 
     $this->get(route('login.return', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage', fn (string $message) => str_contains($message, 'suspended'));
+        ->assertSessionHas('error', fn (string $message) => str_contains($message, 'suspended'));
 
     $this->assertGuest();
 });
@@ -145,7 +145,7 @@ it('refuses the callback for a disabled provider', function () {
     seedDiscord(['auth_enabled' => false]);
     Socialite::shouldReceive('buildProvider')->never();
 
-    $this->get(route('login.return', 'discord'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+    $this->get(route('login.return', 'discord'))->assertRedirect(route('login'))->assertSessionHas('error');
 
     $this->assertGuest();
     expect(User::query()->count())->toBe(0);
@@ -157,7 +157,7 @@ it('handles a provider failure gracefully', function () {
 
     $this->get(route('login.return', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage', 'Unable to login');
+        ->assertSessionHas('error', 'Unable to login');
 
     $this->assertGuest();
     expect(User::query()->count())->toBe(0);
@@ -219,7 +219,7 @@ it('refuses Google login when the provider is not configured', function (): void
     $this->artisan('providers:seed')->assertSuccessful();
     Socialite::shouldReceive('buildProvider')->never();
 
-    $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+    $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('error');
 });
 
 it('builds Google and Facebook providers from the factory', function (): void {

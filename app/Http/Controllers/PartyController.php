@@ -82,7 +82,7 @@ class PartyController extends Controller
             $request->string('player_kind')->toString(),
         );
 
-        return redirect()->route('parties.show', ['party' => $party->code])->with('successMessage', 'Party created');
+        return redirect()->route('parties.show', ['party' => $party->code])->with('success', 'Party created');
     }
 
     public function join(JoinPartyRequest $request, JoinParty $joinParty): RedirectResponse
@@ -199,10 +199,10 @@ class PartyController extends Controller
         $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
-        $redirect = back()->with('successMessage', 'Settings saved');
+        $redirect = back()->with('success', 'Settings saved');
         $warning = $result['warning'];
 
-        return $warning === null ? $redirect : $redirect->with('warningMessage', $warning->message());
+        return $warning === null ? $redirect : $redirect->with('warning', $warning->message());
     }
 
     public function live(Request $request, GoLiveParty $goLive, Party $party): RedirectResponse
@@ -210,7 +210,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $goLive($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party is live');
+        return back()->with('success', 'Party is live');
     }
 
     public function pause(Request $request, PauseParty $pauseParty, Party $party): RedirectResponse
@@ -218,7 +218,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $pauseParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party paused');
+        return back()->with('success', 'Party paused');
     }
 
     public function end(Request $request, EndParty $endParty, Party $party): RedirectResponse
@@ -226,7 +226,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $endParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party ended');
+        return back()->with('success', 'Party ended');
     }
 
     public function reopen(Request $request, ReopenParty $reopenParty, Party $party): RedirectResponse
@@ -234,7 +234,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $reopenParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party reopened');
+        return back()->with('success', 'Party reopened');
     }
 
     public function log(Request $request, ListPartyLog $listLog, Party $party): Response
@@ -289,7 +289,7 @@ class PartyController extends Controller
 
         $changed = $changeRole($this->currentUser($request), $party, $member, $request->role());
 
-        return back()->with('successMessage', "{$changed->holder()->nickname} is now {$changed->role->value}");
+        return back()->with('success', "{$changed->holder()->nickname} is now {$changed->role->value}");
     }
 
     public function banMember(Request $request, BanMember $banMember, Party $party, PartyMember $member): RedirectResponse
@@ -299,7 +299,7 @@ class PartyController extends Controller
 
         $banned = $banMember($this->currentUser($request), $party, $member);
 
-        return back()->with('successMessage', "{$banned->holder()->nickname} was banned");
+        return back()->with('success', "{$banned->holder()->nickname} was banned");
     }
 
     public function unbanMember(Request $request, UnbanMember $unbanMember, Party $party, PartyMember $member): RedirectResponse
@@ -309,7 +309,7 @@ class PartyController extends Controller
 
         $unbanned = $unbanMember($this->currentUser($request), $party, $member);
 
-        return back()->with('successMessage', "{$unbanned->holder()->nickname} was unbanned");
+        return back()->with('success', "{$unbanned->holder()->nickname} was unbanned");
     }
 
     public function storeRequest(RequestTrackRequest $request, RequestTrack $requestTrack, Party $party): RedirectResponse
@@ -332,7 +332,7 @@ class PartyController extends Controller
             default => 'Already in the queue and you have already voted for it',
         };
 
-        return back()->with('success', $message)->with('successMessage', $message);
+        return back()->with('success', $message);
     }
 
     public function pendingRequests(Request $request, ListPendingRequests $listPending, Party $party): Response
@@ -384,7 +384,7 @@ class PartyController extends Controller
             return back()->withErrors(['request' => $exception->getMessage()]);
         }
 
-        return back()->with('successMessage', $message);
+        return back()->with('success', $message);
     }
 
     public function storeVote(CastVoteRequest $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse

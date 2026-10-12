@@ -97,3 +97,22 @@ it('keeps no classes under the removed legacy directories', function (string $di
 arch('the Music context does not depend on the Playback context')
     ->expect('App\Domain\Music')
     ->not->toUse('App\Domain\Playback');
+
+it('uses a single flash convention in app code and Vue pages', function () {
+    $root = dirname(__DIR__, 2);
+    $violations = [];
+
+    foreach (['app' => '/\b(successMessage|errorMessage|infoMessage|warningMessage)\b/', 'resources/js' => '/flash\??\.(?!(success|error|info|warning)\b)\w+/'] as $dir => $pattern) {
+        foreach (new RecursiveIteratorIterator(new RecursiveDirectoryIterator("{$root}/{$dir}", FilesystemIterator::SKIP_DOTS)) as $file) {
+            if (! in_array($file->getExtension(), ['php', 'vue', 'js'], true) || str_contains($file->getPathname(), '__tests__')) {
+                continue;
+            }
+
+            if (preg_match($pattern, (string) file_get_contents($file->getPathname()), $match) === 1) {
+                $violations[] = "{$file->getPathname()}: {$match[0]}";
+            }
+        }
+    }
+
+    expect($violations)->toBe([]);
+});

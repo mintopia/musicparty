@@ -381,3 +381,16 @@ it('appends one Play to the history playlist once however often the job runs', f
     expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
         ->and($play->fresh()->history_appended_at)->not->toBeNull();
 });
+
+it('flashes the link outcome into the next Inertia response', function () {
+    spotifyProvider();
+    $host = makeUser();
+    $party = makeHostedParty($host);
+    mockSpotifyCallback();
+
+    $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'));
+    $this->get(route('home'))->assertInertia(fn ($page) => $page->where('flash.success', 'Spotify account linked'));
+
+    $this->get(route('spotify.link.return'));
+    $this->get(route('home'))->assertInertia(fn ($page) => $page->where('flash.error', 'The Spotify link request has expired'));
+});

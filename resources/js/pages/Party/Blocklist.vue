@@ -13,7 +13,6 @@ const props = defineProps({
 usePartyPresence(props.party.code);
 
 const page = usePage();
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
 
 const base = `/parties/${props.party.code}/blocklist`;
 const typeFor = (value) => props.matchTypes.find((type) => type.value === value) ?? null;
@@ -77,7 +76,6 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" data-testid="blocklist-success" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
 
         <section class="rounded border border-border bg-surface px-5 py-5">
             <p v-if="entries.length === 0" data-testid="blocklist-empty" class="text-sm text-muted">No blocklist entries yet.</p>
