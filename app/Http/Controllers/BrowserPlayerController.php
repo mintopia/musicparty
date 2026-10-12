@@ -10,18 +10,25 @@ use App\Domain\Playback\Actions\ReleaseBrowserPlayer;
 use App\Domain\Playback\Actions\ReportBrowserPlayerState;
 use App\Domain\Playback\Exceptions\PlayerDisconnectedException;
 use App\Domain\Playback\PlaybackStatus;
+use App\Domain\Playback\Players\BrowserPlayer;
 use App\Http\Requests\BrowserPlayerTabRequest;
 use App\Http\Requests\ReportBrowserPlayerStateRequest;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class BrowserPlayerController extends Controller
 {
-    public function show(Request $request, FetchBrowserPlayerToken $fetchToken, Party $party): Response
+    public function show(Request $request, FetchBrowserPlayerToken $fetchToken, Party $party): Response|RedirectResponse
     {
         $this->authoriseHost($request, $party);
+
+        if ($party->player_kind !== BrowserPlayer::KIND) {
+            return redirect()->route('parties.show', ['party' => $party->code])
+                ->with('info', 'This Party does not use the Browser Player.');
+        }
 
         ['accessToken' => $accessToken, 'error' => $error] = $fetchToken($this->host($request), $party);
 

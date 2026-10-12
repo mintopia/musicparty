@@ -76,14 +76,6 @@ it('redirects an anonymous visitor away from the player page', function () {
     $this->get(route('parties.player.show', $this->party))->assertRedirect();
 });
 
-it('withholds the token when the party is not using the browser player', function () {
-    $this->party->forceFill(['player_kind' => 'fake'])->save();
-
-    $this->withoutVite()->actingAs($this->host)->get(route('parties.player.show', $this->party))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page): Assert => $page->where('accessToken', null)->where('error', 'This Party is not using the Browser Player.'));
-});
-
 it('withholds the token when no music account is linked', function () {
     $this->account->delete();
 
@@ -313,4 +305,18 @@ it('keeps the first holder when the second claim races past the empty check', fu
     expect($player->claim('tab-b'))->toBeFalse()
         ->and($player->claim('tab-a'))->toBeTrue()
         ->and($player->holds('tab-a'))->toBeTrue();
+});
+
+it('redirects the player page to the party with an info flash when the party is not a browser player party', function () {
+    $this->party->forceFill(['player_kind' => 'polling'])->save();
+
+    $this->withoutVite()->actingAs($this->host)->get(route('parties.player.show', $this->party))
+        ->assertRedirect(route('parties.show', ['party' => $this->party->code]))
+        ->assertSessionHas('info');
+});
+
+it('renders the player page for a browser player party', function () {
+    $this->withoutVite()->actingAs($this->host)->get(route('parties.player.show', $this->party))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page->component('Party/BrowserPlayer'));
 });
