@@ -251,6 +251,19 @@ describe('MiniNowPlaying', () => {
         scrollTo.mockRestore();
     });
 
+    it('keeps the expanded view in step with the mini bar and freezes on pause', async () => {
+        vi.useFakeTimers();
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry({track: {...entry().track, duration_ms: 100000}}), positionMs: 0}});
+        await vi.advanceTimersByTimeAsync(30000);
+        await w.find('[data-testid=mini-expand]').trigger('click');
+        expect(w.find('[data-testid=mini-expanded] [data-testid=now-playing-elapsed]').text()).toBe('0:30');
+
+        await w.setProps({paused: true});
+        await vi.advanceTimersByTimeAsync(20000);
+        expect(w.find('[data-testid=mini-progress]').attributes('aria-valuenow')).toBe('30');
+        vi.useRealTimers();
+    });
+
     it('shows an empty state', () => {
         expect(mount(MiniNowPlaying, {props: {nowPlaying: null}}).text()).toContain('Nothing playing');
     });

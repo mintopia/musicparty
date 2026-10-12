@@ -17,10 +17,22 @@ const props = defineProps({
 
 const startMs = computed(() => props.positionMs ?? props.nowPlaying?.position_ms ?? null);
 const isPaused = computed(() => props.paused || props.nowPlaying?.paused === true);
+const duration = computed(() => props.nowPlaying?.track.duration_ms ?? 0);
+const clampMs = (value) => Math.max(0, duration.value > 0 ? Math.min(duration.value, value) : value);
+const baseMs = ref(startMs.value ?? 0);
 const anchor = ref(Date.now());
 const tick = ref(anchor.value);
 let clock = null;
+watch(isPaused, (nowPaused) => {
+    const now = Date.now();
+    if (nowPaused) {
+        baseMs.value = clampMs(baseMs.value + (now - anchor.value));
+    }
+    anchor.value = now;
+    tick.value = now;
+});
 watch(() => [props.nowPlaying, startMs.value], () => {
+    baseMs.value = startMs.value ?? 0;
     anchor.value = Date.now();
     tick.value = anchor.value;
 });
@@ -31,20 +43,24 @@ onMounted(() => {
 });
 onBeforeUnmount(() => clearInterval(clock));
 
-const progressPercent = computed(() => {
-    const duration = props.nowPlaying?.track.duration_ms ?? 0;
-    if (!props.nowPlaying || startMs.value === null || duration <= 0) {
+const elapsedMs = computed(() => {
+    if (!props.nowPlaying || startMs.value === null) {
         return null;
     }
-    const elapsed = startMs.value + (isPaused.value ? 0 : tick.value - anchor.value);
 
-    return Math.max(0, Math.min(100, (elapsed / duration) * 100));
+    return clampMs(baseMs.value + (isPaused.value ? 0 : tick.value - anchor.value));
 });
+const progressPercent = computed(() => {
+    return duration.value > 0 && elapsedMs.value !== null ? Math.min(100, (elapsedMs.value / duration.value) * 100) : null;
+});
+
+const expandedPositionMs = ref(null);
 
 const expanded = ref(false);
 let savedScroll = 0;
 const expand = () => {
     savedScroll = window.scrollY;
+    expandedPositionMs.value = elapsedMs.value;
     expanded.value = true;
 };
 const collapse = async () => {
@@ -143,7 +159,7 @@ const buttonClass = (active, activeColor) => [
             :ratable-play="ratablePlay"
             :party-code="partyCode"
             :read-only="readOnly"
-            :position-ms="startMs"
+            :position-ms="expandedPositionMs"
             :paused="isPaused"
         />
     </div>
