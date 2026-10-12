@@ -263,7 +263,7 @@ class PartyController extends Controller
             'enabled_mods' => $enabledMods->idsFor($party),
             'spotify_link_url' => route('spotify.index', ['return' => route('parties.settings', $party, false)]),
             'player_kind' => $party->player_kind,
-            'player_kinds' => array_map(fn (array $player): array => ['value' => $player['kind'], 'label' => $player['label']], $catalogue->players()),
+            'player_kinds' => $this->playerKindOptions($catalogue, $party),
             'playback_device' => $party->playback_device_id === null ? null : ['id' => $party->playback_device_id, 'name' => $party->playback_device_name],
             'player_tokens_url' => route('parties.player-tokens.index', $party, false),
             'devices_url' => route('parties.player.devices', $party, false),
@@ -646,5 +646,25 @@ class PartyController extends Controller
         assert($user instanceof User);
 
         return $user;
+    }
+
+    /**
+     * @return list<array{value: string, label: string}>
+     */
+    private function playerKindOptions(PairingCatalogue $catalogue, Party $party): array
+    {
+        $options = array_map(fn (array $player): array => ['value' => $player['kind'], 'label' => $player['label']], $catalogue->players());
+
+        if (in_array($party->player_kind, array_column($options, 'value'), true)) {
+            return $options;
+        }
+
+        foreach ($catalogue->registeredPlayers() as $player) {
+            if ($player['kind'] === $party->player_kind) {
+                $options[] = ['value' => $player['kind'], 'label' => $player['label'].' (disabled)'];
+            }
+        }
+
+        return $options;
     }
 }

@@ -10,6 +10,7 @@ use App\Domain\Party\PartyState;
 use App\Domain\Playback\Actions\PairPlayer;
 use App\Domain\Playback\Exceptions\IncompatibleProviderException;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 readonly class CreateParty
 {
@@ -25,9 +26,20 @@ readonly class CreateParty
      * @param  array<string, mixed>  $settings
      *
      * @throws IncompatibleProviderException
+     * @throws ValidationException
      */
     public function __invoke(User $host, string $name, string $musicProvider, string $playerKind, array $settings = []): Party
     {
+        if (! $this->catalogue->isProviderAvailable($musicProvider)) {
+            throw ValidationException::withMessages(['music_provider' => 'That music provider is not available.']);
+        }
+
+        $playerEnabled = collect($this->catalogue->registeredPlayers())->firstWhere('kind', $playerKind)['enabled'] ?? false;
+
+        if (! $playerEnabled) {
+            throw ValidationException::withMessages(['player_kind' => 'That player is not available.']);
+        }
+
         ($this->pairPlayer)($this->catalogue->player($playerKind), $this->catalogue->provider($musicProvider));
 
         return DB::transaction(function () use ($host, $name, $musicProvider, $playerKind, $settings): Party {

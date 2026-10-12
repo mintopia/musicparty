@@ -20,6 +20,7 @@ use Laravel\Sanctum\Sanctum;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    setPairingToggle('player.fake.enabled', true);
     Bus::fake([StartPlayback::class, BroadcastPartyQueue::class]);
 });
 
