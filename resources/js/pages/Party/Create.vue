@@ -1,6 +1,7 @@
 <script setup>
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed, watch} from 'vue';
+import Toggle from '../../Components/ui/Toggle.vue';
 
 const props = defineProps({
     providers: {type: Array, default: () => []},
@@ -19,6 +20,13 @@ const form = useForm({
     allow_requests: true,
     max_requests: null,
     hold_requests: false,
+});
+
+const raffle = computed({
+    get: () => form.selection_mode === 'weighted',
+    set: (value) => {
+        form.selection_mode = value ? 'weighted' : 'deterministic';
+    },
 });
 
 const needsControlLink = computed(
@@ -64,6 +72,7 @@ const fieldClass =
                     :class="fieldClass"
                     :aria-invalid="form.errors.name ? 'true' : undefined"
                 />
+                <small class="text-xs text-muted">Name for the party</small>
                 <p v-if="form.errors.name" role="alert" class="text-sm text-danger">{{ form.errors.name }}</p>
             </div>
 
@@ -113,27 +122,10 @@ const fieldClass =
 
             <fieldset class="flex flex-col gap-3 border-t border-border pt-4">
                 <legend class="mb-1 text-base font-semibold">Settings</legend>
-                <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.downvotes" type="checkbox" class="size-4" />
-                    Allow songs to be downvoted
-                </label>
-                <label class="flex items-center gap-2 text-sm">
-                    <input
-                        :checked="form.selection_mode === 'weighted'"
-                        type="checkbox"
-                        class="size-4"
-                        @change="form.selection_mode = $event.target.checked ? 'weighted' : 'deterministic'"
-                    />
-                    Treat the queue as a raffle
-                </label>
-                <label class="flex items-center gap-2 text-sm">
-                    <input v-model="form.allow_requests" type="checkbox" class="size-4" />
-                    Allow new songs to be added to the queue
-                </label>
-                <label v-if="form.allow_requests" class="flex items-center gap-2 text-sm">
-                    <input v-model="form.hold_requests" type="checkbox" class="size-4" />
-                    Hold requests for approval
-                </label>
+                <Toggle v-model="form.allow_requests" label="Allow new songs to be added to the queue" />
+                <Toggle v-if="form.allow_requests" v-model="form.hold_requests" label="Hold requests for approval" />
+                <Toggle v-model="form.downvotes" label="Allow songs to be downvoted" />
+                <Toggle v-model="raffle" label="Treat the queue as a raffle" />
             </fieldset>
 
             <fieldset class="flex flex-col gap-3 border-t border-border pt-4">
@@ -141,7 +133,10 @@ const fieldClass =
                 <div class="grid gap-4 md:grid-cols-2">
                     <div class="flex flex-col gap-1.5">
                         <label for="party-downvotes-per-hour" class="text-sm font-medium">Max downvotes</label>
-                        <input id="party-downvotes-per-hour" v-model.number="form.downvotes_per_hour" type="number" min="0" max="1000" placeholder="per hour" :disabled="!form.downvotes" :class="[fieldClass, 'disabled:opacity-50']" />
+                        <div class="flex">
+                            <input id="party-downvotes-per-hour" v-model.number="form.downvotes_per_hour" type="number" min="0" max="1000" :disabled="!form.downvotes" :class="[fieldClass, 'min-w-0 flex-1 rounded-r-none disabled:opacity-50']" />
+                            <span class="flex min-h-11 shrink-0 items-center whitespace-nowrap rounded-r border border-l-0 border-border bg-background px-3 text-sm text-muted">per hour</span>
+                        </div>
                         <small class="text-xs text-muted">The maximum number of times a user can downvote in a 1 hour period</small>
                         <p v-if="form.errors.downvotes_per_hour" role="alert" class="text-sm text-danger">{{ form.errors.downvotes_per_hour }}</p>
                     </div>
