@@ -6,7 +6,6 @@ import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import {estimateQueue} from '../../lib/queueEta';
 import {formatTotal} from '../../lib/format';
 import Icon from '../../Components/Icon.vue';
-import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
 import PlayedHistory from '../../Components/PlayedHistory.vue';
 import QueueList from '../../Components/QueueList.vue';
@@ -47,7 +46,6 @@ const votesByRequest = () => ({
     ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
 });
 const ownedRequestIds = () => props.queue.filter((entry) => entry.is_mine === true).map((entry) => entry.id);
-const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
 const liveState = ref(props.party.state);
 const toasts = ref([]);
@@ -68,13 +66,15 @@ const liveStartedAt = ref(props.startedAt);
 const liveMode = ref(props.party.selection_mode);
 const now = ref(Date.now());
 let clock = null;
-const liveRatablePlay = ref(props.ratablePlay);
+let publicChannel = null;
+const applyStateChange = (payload) => {
+    liveState.value = payload.state;
+};
 const myVotes = ref(votesByRequest());
 const myRequestIds = ref(ownedRequestIds());
-const myRatings = ref(ratingsByPlay());
 
 watch(
-    () => [props.nowPlaying, props.upNext, props.queue, props.startedAt, props.party.selection_mode, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
+    () => [props.nowPlaying, props.upNext, props.queue, props.startedAt, props.party.selection_mode, props.memberVotes, props.party.state, props.membership.banned],
     () => {
         liveState.value = props.party.state;
         banned.value = props.membership.banned;
@@ -83,10 +83,8 @@ watch(
         liveQueue.value = props.queue;
         liveStartedAt.value = props.startedAt;
         liveMode.value = props.party.selection_mode;
-        liveRatablePlay.value = props.ratablePlay;
         myVotes.value = votesByRequest();
         myRequestIds.value = ownedRequestIds();
-        myRatings.value = ratingsByPlay();
     },
 );
 
@@ -99,11 +97,6 @@ const eta = computed(() => estimateQueue({
     mode: liveMode.value,
     now: now.value,
 }));
-const shownRatablePlay = computed(() => {
-    const play = liveRatablePlay.value;
-
-    return play === null ? null : {...play, my_rating: myRatings.value[play.id] ?? play.my_rating};
-});
 
 const resync = () => {
     router.reload({only: ['party', 'queue', 'nowPlaying', 'upNext', 'startedAt', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
@@ -120,27 +113,17 @@ const applyQueueUpdate = (payload) => {
     liveQueue.value = payload.queue;
     liveStartedAt.value = payload.started_at ?? null;
     liveMode.value = payload.selection_mode ?? liveMode.value;
-    const playing = payload.now_playing;
-    liveRatablePlay.value = playing?.play_id
-        ? {id: playing.play_id, track: playing.track, likes: playing.likes, dislikes: playing.dislikes, my_rating: 0}
-        : null;
 };
 
 onMounted(() => {
     clock = setInterval(() => {
         now.value = Date.now();
     }, 1000);
-    window.Echo?.channel(channelName)
-        .listen('.queue.updated', applyQueueUpdate)
-        .listen('.party.state_changed', (payload) => {
-            liveState.value = payload.state;
-        });
+    publicChannel = window.Echo?.channel(channelName);
+    publicChannel?.listen('.queue.updated', applyQueueUpdate).listen('.party.state_changed', applyStateChange);
     window.Echo?.private(memberChannelName)
         .listen('.member.vote_changed', (payload) => {
             myVotes.value = {...myVotes.value, [payload.request_id]: payload.value};
-        })
-        .listen('.member.rating_changed', (payload) => {
-            myRatings.value = {...myRatings.value, [payload.play_id]: payload.value};
         })
         .listen('.request.rejected', (payload) => {
             pushToast(payload.reason ? `Your request was rejected: ${payload.reason}` : 'Your request was rejected.');
@@ -161,7 +144,8 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearInterval(clock);
     window.removeEventListener(RESYNC_EVENT, resync);
-    window.Echo?.leave(channelName);
+    publicChannel?.stopListening?.('.queue.updated', applyQueueUpdate);
+    publicChannel?.stopListening?.('.party.state_changed', applyStateChange);
     window.Echo?.leave(memberChannelName);
 });
 
@@ -218,13 +202,6 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
     <div v-if="toasts.length > 0" class="fixed right-4 top-4 z-50 flex flex-col gap-2" data-testid="toasts">
         <p v-for="toast in toasts" :key="toast.id" role="status" data-testid="toast" class="rounded border border-border bg-surface px-4 py-3 text-sm shadow">{{ toast.message }}</p>
     </div>
-    <NowPlayingBanner
-        v-if="section === 'queue' || section === 'history'"
-        :now-playing="liveNowPlaying"
-        :ratable-play="shownRatablePlay"
-        :party-code="party.code"
-        :read-only="ratingLocked"
-    />
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
         <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">

@@ -5,16 +5,48 @@ import Decorations from './Decorations.vue';
 import ModSlot from './ModSlot.vue';
 import {formatDuration, requesterLabel} from '../lib/format';
 import {useRatePlay} from '../lib/rating';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 const props = defineProps({
     nowPlaying: {type: Object, default: null},
     ratablePlay: {type: Object, default: null},
     partyCode: {type: String, default: ''},
     readOnly: {type: Boolean, default: false},
+    positionMs: {type: Number, default: null},
+    paused: {type: Boolean, default: false},
 });
 
 const {error, rate: ratePlay} = useRatePlay(() => props.partyCode, () => props.readOnly);
 const rate = (direction) => ratePlay(props.ratablePlay, direction);
+
+const anchor = ref(Date.now());
+const tick = ref(Date.now());
+let clock = null;
+watch(() => [props.nowPlaying, props.positionMs, props.paused], () => {
+    anchor.value = Date.now();
+    tick.value = anchor.value;
+});
+onMounted(() => {
+    clock = setInterval(() => {
+        tick.value = Date.now();
+    }, 1000);
+});
+onBeforeUnmount(() => clearInterval(clock));
+
+const elapsedMs = computed(() => {
+    if (props.positionMs === null || !props.nowPlaying) {
+        return null;
+    }
+    const duration = props.nowPlaying.track.duration_ms ?? 0;
+    const advanced = props.paused ? 0 : tick.value - anchor.value;
+
+    return Math.min(duration, props.positionMs + advanced);
+});
+const progressPercent = computed(() => {
+    const duration = props.nowPlaying?.track.duration_ms ?? 0;
+
+    return duration > 0 && elapsedMs.value !== null ? Math.round((elapsedMs.value / duration) * 100) : 0;
+});
 
 const thumbClass = (active, activeColor) => [
     'flex h-8 w-8 items-center justify-center rounded hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:bg-transparent',
@@ -36,7 +68,13 @@ const thumbClass = (active, activeColor) => [
                 <div class="flex items-center gap-2 text-sm"><Icon name="musicPlus" /><span data-testid="now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                 <Decorations :decorations="nowPlaying.decorations" />
                 <ModSlot name="now-playing" :now-playing="nowPlaying" />
-                <div class="mt-2 flex justify-end text-sm tabular-nums">{{ formatDuration(nowPlaying.track.duration_ms) }}</div>
+                <div v-if="elapsedMs !== null" data-testid="now-playing-progress" role="progressbar" :aria-valuenow="progressPercent" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-1 w-full bg-white/20">
+                    <div class="h-full bg-primary" :style="{width: `${progressPercent}%`}"></div>
+                </div>
+                <div class="flex justify-between text-sm tabular-nums">
+                    <span v-if="elapsedMs !== null" data-testid="now-playing-elapsed">{{ formatDuration(elapsedMs) }}</span>
+                    <span class="ml-auto">{{ formatDuration(nowPlaying.track.duration_ms) }}</span>
+                </div>
                 <div v-if="ratablePlay" data-testid="now-playing-rating" class="flex items-center justify-center gap-2">
                     <button
                         type="button"
@@ -61,6 +99,6 @@ const thumbClass = (active, activeColor) => [
                 <p v-if="error" role="alert" data-testid="rating-error" class="text-center text-sm text-danger">{{ error }}</p>
             </div>
         </div>
-        <p v-else data-testid="now-playing-empty" class="mx-auto max-w-3xl px-0 py-8 text-sm text-white/70">Nothing is playing right now.</p>
+        <p v-else data-testid="now-playing-empty" class="mx-auto max-w-3xl px-0 py-8 text-sm text-white/70">There is nothing playing</p>
     </section>
 </template>
