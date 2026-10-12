@@ -31,16 +31,17 @@ describe('Spotify link page', () => {
     it('shows the link button when unlinked and disables Create Party', () => {
         const w = mount(SpotifyLink, {props: props()});
         expect(w.text()).toContain('Link Spotify Account');
+        expect(w.get('[data-testid=control-icon]').classes()).toContain('text-muted');
         expect(w.get('[data-testid=link]').attributes('href')).toBe('/spotify/redirect');
         expect(w.find('[data-testid=unlink]').exists()).toBe(false);
         expect(w.get('[data-testid=create-party]').attributes('disabled')).toBeDefined();
     });
 
-    it('shows the linked name in green and enables Create Party', () => {
+    it('shows a green icon with the linked name and enables Create Party', () => {
         const w = mount(SpotifyLink, {props: props({control: {linked: true, name: 'Jess', needs_relink: false}, can_create_party: true})});
         const name = w.get('[data-testid=linked-name]');
         expect(name.text()).toBe('Jess');
-        expect(name.classes()).toContain('text-green-500');
+        expect(w.get('[data-testid=control-icon]').classes()).toContain('text-green-500');
         const create = w.get('[data-testid=create-party]');
         expect(create.attributes('disabled')).toBeUndefined();
         expect(create.attributes('href')).toBe('/parties/create');
