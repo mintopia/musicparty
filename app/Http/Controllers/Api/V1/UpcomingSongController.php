@@ -55,7 +55,7 @@ class UpcomingSongController extends Controller
     public function store(UpcomingSongAugmentService $augmentService, UpcomingSongRequest $request, Party $party)
     {
         $member = $party->members()->whereUserId($request->user()->id)->first();
-        if (! $member) {
+        if (! $member instanceof PartyMember) {
             abort(403);
         }
 
@@ -133,7 +133,7 @@ class UpcomingSongController extends Controller
         if (! $party->allow_requests) {
             return 'Party is not accepting requests';
         }
-        if ($member->role->code === 'banned') {
+        if ($member->role?->code === 'banned') {
             return 'You are not allowed to request any more songs';
         }
 

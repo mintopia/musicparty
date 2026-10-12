@@ -115,7 +115,7 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
         }
 
-        if ($this->member->role->code === 'banned') {
+        if ($this->member->role?->code === 'banned') {
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
@@ -148,7 +148,7 @@ class RequestCheckService
             return false;
         }
 
-        if ($this->member->role->code === 'vip') {
+        if ($this->member->role?->code === 'vip') {
             return false;
         }
 
