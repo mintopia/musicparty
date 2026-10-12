@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
+use Random\Randomizer;
 
 /**
  * @mixin IdeHelperParty
@@ -403,6 +404,7 @@ class Party extends Model
          */
 
         if ($this->weighted) {
+            $randomizer = app(Randomizer::class);
             $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
@@ -410,11 +412,12 @@ class Party extends Model
                     $query->whereNull('not_before');
                     $query->orWhere('not_before', '<=', 'NOW()');
                 })
-                ->where('score', '>', 0)->inRandomOrder()->get();
+                ->where('score', '>', 0)->get();
+            $allSongs = collect($randomizer->shuffleArray($allSongs->all()));
 
             for ($i = 0; $i < $toAdd; $i++) {
                 $sum = $allSongs->sum('score');
-                $random = mt_rand(0, $sum);
+                $random = $randomizer->getInt(0, (int) $sum);
                 foreach ($allSongs as $index => $song) {
                     $random -= $song->score;
                     if ($random <= 0) {
@@ -650,7 +653,7 @@ class Party extends Model
         });
 
         $toAdd = min($toAdd, count($tracks));
-        shuffle($tracks);
+        $tracks = app(Randomizer::class)->shuffleArray(array_values($tracks));
 
         for ($i = 0; $i < $toAdd; $i++) {
             $track = $tracks[$i];
