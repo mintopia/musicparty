@@ -46,9 +46,7 @@ class RequestTrack
             throw RequestRefusedException::banned();
         }
 
-        if ($party->state !== PartyState::Live) {
-            throw RequestRefusedException::partyNotLive();
-        }
+        $this->assertAcceptingByState($party);
 
         $decision = null;
         $track = null;
@@ -89,11 +87,22 @@ class RequestTrack
 
         $this->announce($party, $member, $outcome);
 
-        if ($outcome->created && $outcome->request->status === RequestStatus::Queued) {
+        if ($outcome->created && $outcome->request->status === RequestStatus::Queued && $party->state === PartyState::Live) {
             StartPlayback::dispatch($party->code);
         }
 
         return $outcome;
+    }
+
+    private function assertAcceptingByState(Party $party): void
+    {
+        if ($party->state === PartyState::Paused && $party->freeze_when_paused) {
+            throw RequestRefusedException::requestsFrozen();
+        }
+
+        if ($party->state === PartyState::Ended) {
+            throw RequestRefusedException::partyNotLive();
+        }
     }
 
     private function announce(Party $party, PartyMember $member, RequestOutcome $outcome): void
@@ -124,9 +133,7 @@ class RequestTrack
             throw RequestRefusedException::banned();
         }
 
-        if ($party->state !== PartyState::Live) {
-            throw RequestRefusedException::partyNotLive();
-        }
+        $this->assertAcceptingByState($party);
 
         if (! $party->allow_requests) {
             throw RequestRefusedException::requestsDisabled();

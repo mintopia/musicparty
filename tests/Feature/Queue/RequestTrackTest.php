@@ -104,7 +104,24 @@ it('refuses requests when the party is not live', function (string $state) {
     apiRequest($this->user)->assertUnprocessable()->assertJsonPath('message', 'This party is not live, so requests are closed.');
 
     expect(TrackRequest::query()->count())->toBe(0);
-})->with(['paused', 'ended']);
+})->with(['ended']);
+
+it('refuses requests while paused when the party freezes requests', function () {
+    $this->party->forceFill(['state' => 'paused', 'freeze_when_paused' => true])->save();
+
+    apiRequest($this->user)->assertUnprocessable()->assertJsonPath('message', 'Requests are frozen while this party is paused.');
+
+    expect(TrackRequest::query()->count())->toBe(0);
+});
+
+it('accepts requests while paused when the party does not freeze requests', function () {
+    $this->party->forceFill(['state' => 'paused', 'freeze_when_paused' => false])->save();
+
+    apiRequest($this->user)->assertSuccessful();
+
+    expect(TrackRequest::query()->count())->toBe(1);
+    Bus::assertNotDispatched(StartPlayback::class);
+});
 
 it('refuses an unknown or unplayable track', function (string $trackId) {
     apiRequest($this->user, $trackId)->assertUnprocessable();

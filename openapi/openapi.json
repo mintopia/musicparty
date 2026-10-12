@@ -6098,6 +6098,9 @@
                     "hold_requests": {
                         "type": "boolean"
                     },
+                    "freeze_when_paused": {
+                        "type": "boolean"
+                    },
                     "downvotes": {
                         "type": "boolean"
                     },
@@ -6129,6 +6132,7 @@
                     "max_song_length",
                     "no_repeat_interval",
                     "hold_requests",
+                    "freeze_when_paused",
                     "downvotes",
                     "downvotes_per_hour",
                     "selection_mode",
@@ -6755,6 +6759,9 @@
                         "minimum": 0
                     },
                     "hold_requests": {
+                        "type": "boolean"
+                    },
+                    "freeze_when_paused": {
                         "type": "boolean"
                     },
                     "downvotes": {
