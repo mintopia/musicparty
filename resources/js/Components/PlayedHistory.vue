@@ -93,10 +93,10 @@ const caretName = computed(() => (applied.value.direction === 'asc' ? 'caretUp' 
 const songHref = (row) => (row.request_id === null || row.request_id === undefined ? null : `/parties/${props.partyCode}/songs/${row.request_id}`);
 
 const inputClass = 'h-10 w-full rounded border border-border bg-surface px-3 text-sm text-text placeholder:text-muted/70 focus:border-primary focus:outline-none dark:bg-background';
-const sortClass = 'inline-flex items-center gap-1 uppercase hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary';
+const sortClass = 'inline-flex whitespace-nowrap items-center gap-1 uppercase hover:underline focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary';
 const labelClass = 'mb-1.5 block text-sm font-medium';
-const headClass = 'px-3 py-3 lg:px-5 text-[11px] font-bold uppercase tracking-wide text-primary';
-const cellClass = 'md:table-cell md:px-3 lg:px-5 md:py-3 md:align-middle before:block before:text-[11px] before:font-bold before:uppercase before:tracking-wide before:text-primary before:content-[attr(data-label)] md:before:hidden';
+const headClass = 'whitespace-nowrap px-3 py-3 lg:px-4 text-[11px] font-bold uppercase tracking-wide text-primary';
+const cellClass = 'md:table-cell md:px-3 lg:px-4 md:py-3 md:align-middle before:block before:text-[11px] before:font-bold before:uppercase before:tracking-wide before:text-primary before:content-[attr(data-label)] md:before:hidden';
 </script>
 
 <template>
@@ -154,14 +154,14 @@ const cellClass = 'md:table-cell md:px-3 lg:px-5 md:py-3 md:align-middle before:
                             <button type="button" data-testid="sort-name" :class="sortClass" @click="sortBy('name')">Song<Icon v-if="isSorted('name')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                             <button type="button" data-testid="sort-artist" :class="[sortClass, 'ml-3 !text-[10px] !text-muted']" @click="sortBy('artist')">Artist<Icon v-if="isSorted('artist')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
-                        <th scope="col" :class="[headClass, 'w-20 text-center']">Votes</th>
-                        <th scope="col" :aria-sort="ariaSort('score')" :class="[headClass, 'w-20 text-center']">
+                        <th scope="col" :class="[headClass, 'w-16 text-center']">Votes</th>
+                        <th scope="col" :aria-sort="ariaSort('score')" :class="[headClass, 'w-16 text-center']">
                             <button type="button" data-testid="sort-score" :class="sortClass" @click="sortBy('score')">Score<Icon v-if="isSorted('score')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
-                        <th scope="col" :aria-sort="ariaSort('requested')" :class="[headClass, 'w-36 text-left']">
+                        <th scope="col" :aria-sort="ariaSort('requested')" :class="[headClass, 'w-32 text-left']">
                             <button type="button" data-testid="sort-requested" :class="sortClass" @click="sortBy('requested')">Requested<Icon v-if="isSorted('requested')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
-                        <th scope="col" :aria-sort="ariaSort('played')" :class="[headClass, 'w-36 text-left']">
+                        <th scope="col" :aria-sort="ariaSort('played')" :class="[headClass, 'w-40 text-left']">
                             <button type="button" data-testid="sort-played" :class="sortClass" @click="sortBy('played')">Sent to Spotify<Icon v-if="isSorted('played')" :name="caretName" class="h-3 w-3" aria-hidden="true" /></button>
                         </th>
                     </tr>

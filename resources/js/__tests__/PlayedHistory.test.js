@@ -102,6 +102,15 @@ describe('PlayedHistory', () => {
         expect(w.find('[data-testid=history-pager]').exists()).toBe(false);
     });
 
+    it('keeps headers on one line and truncates song text so the table cannot overflow', () => {
+        const wrapper = mountHistory();
+        const headers = wrapper.findAll('thead th');
+        expect(headers.every((th) => th.classes().includes('whitespace-nowrap'))).toBe(true);
+        expect(wrapper.get('[data-testid="history-list"]').classes()).toContain('md:table-fixed');
+        expect(wrapper.get('[data-testid="history-title"]').classes()).toContain('truncate');
+        expect(wrapper.get('[data-testid="history-title"]').element.parentElement.classList.contains('min-w-0')).toBe(true);
+    });
+
     it('stacks cells with labels for the mobile card layout', () => {
         const w = mountHistory();
 
