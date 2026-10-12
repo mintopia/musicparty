@@ -616,7 +616,7 @@ describe('UpcomingSongController::store', function () {
             ->and($fake->callsTo('getTrack'))->toBeEmpty();
     });
 
-    it('lets a non member vote on an existing waiting request because the member check is skipped', function () {
+    it('lets a non member vote on an existing waiting request because the member check is skipped (issue #300)', function () {
         $party = reqParty(['allow_requests' => true]);
         $existing = reqWaiting($party, reqMember($party)->user, 'dup', 'Dup Track');
         FakeSpotify::install();
@@ -626,7 +626,7 @@ describe('UpcomingSongController::store', function () {
         expect($existing->votes()->count())->toBe(1);
     });
 
-    it('lets a banned member vote on an existing waiting request because the rules are skipped', function () {
+    it('lets a banned member vote on an existing waiting request because the rules are skipped (issue #300)', function () {
         $party = reqParty(['allow_requests' => false]);
         $existing = reqWaiting($party, reqMember($party)->user, 'dup', 'Dup Track');
         $banned = reqMember($party, 'banned');
