@@ -26,6 +26,10 @@ _Avoid_: Plugin, addon
 Structured presentation data a Mod attaches to a Request or Play, such as a badge, label, icon or accent.
 _Avoid_: CSS classes, styling
 
+**Whamageddon**:
+A first-party Mod that keeps one configured Track in the Queue as a system Request which gains Score each hour until it plays, returns after an interval, and is held back overnight.
+_Avoid_: Last Christmas mod, Christmas mode
+
 **Member**:
 A user who has joined a Party, holding exactly one Party Role.
 _Avoid_: Participant, attendee
