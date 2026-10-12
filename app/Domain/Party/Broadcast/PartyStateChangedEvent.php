@@ -18,14 +18,15 @@ class PartyStateChangedEvent implements ShouldBroadcast, ShouldDispatchAfterComm
     public function __construct(
         protected string $partyCode,
         protected string $state,
+        protected bool $showQrcode = true,
     ) {}
 
     /**
-     * @return array{state: string}
+     * @return array{state: string, show_qrcode: bool}
      */
     public function broadcastWith(): array
     {
-        return ['state' => $this->state];
+        return ['state' => $this->state, 'show_qrcode' => $this->showQrcode];
     }
 
     public function broadcastAs(): string

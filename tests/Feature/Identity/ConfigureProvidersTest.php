@@ -1,5 +1,6 @@
 <?php
 
+use App\Domain\Admin\Actions\EnsureSocialProvider;
 use App\Domain\Identity\Models\SocialProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -24,7 +25,7 @@ it('configures settings and enables the provider', function () {
 
 it('lets the operator pick the provider', function () {
     $this->artisan('providers:configure')
-        ->expectsChoice('Provider', 'discord', ['discord', 'twitch', 'steam', 'spotify', 'google', 'facebook'])
+        ->expectsChoice('Provider', 'discord', ['discord', 'twitch', 'steam', 'spotify', 'spotifysearch', 'google', 'facebook'])
         ->expectsQuestion('Client ID (required)', 'the-id')
         ->expectsQuestion('Client Secret (required)', 'the-secret')
         ->expectsConfirmation('Enable provider?', 'no')
@@ -63,4 +64,10 @@ it('refuses to enable with missing required settings', function () {
         ->assertFailed();
 
     expect(discord()->enabled)->toBeFalse();
+});
+
+it('creates the Spotify Search provider without login support when ensured from the catalogue', function () {
+    $provider = app(EnsureSocialProvider::class)->handle('spotifysearch');
+
+    expect($provider->supports_auth)->toBeFalse();
 });

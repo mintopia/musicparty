@@ -3,6 +3,11 @@
 namespace Tests\Fixtures\Spotify;
 
 use App\Domain\Identity\Models\LinkedAccount;
+use App\Domain\Music\Actions\AuthorisesHost;
+use App\Domain\Music\Providers\Spotify\HostAccountTokens;
+use App\Domain\Music\Providers\Spotify\SearchCredentials;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use Database\Factories\LinkedAccountFactory;
 use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
@@ -12,6 +17,14 @@ use stdClass;
 
 final class SpotifyFake
 {
+    public static function provider(): SpotifyMusicProvider
+    {
+        $tokens = new HostAccountTokens;
+        $api = new SpotifyApi($tokens);
+
+        return new SpotifyMusicProvider($api, new SearchCredentials($api, new AuthorisesHost), $tokens);
+    }
+
     /**
      * @return array<string, mixed>
      */
@@ -86,6 +99,10 @@ final class SpotifyFake
         Artisan::call('migrate', [
             '--force' => true,
             '--path' => 'database/migrations/2026_10_10_100000_create_v3_baseline_schema.php',
+        ]);
+        Artisan::call('migrate', [
+            '--force' => true,
+            '--path' => 'database/migrations/2026_10_12_100000_add_email_normalised_to_linked_accounts.php',
         ]);
     }
 

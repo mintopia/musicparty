@@ -31,8 +31,12 @@ class PartyBlocklistController extends Controller
             'matchTypes' => array_map(fn (BlocklistMatchType $type): array => [
                 'value' => $type->value,
                 'label' => $type->label(),
-                'supportsRegex' => $type->supportsRegex(),
             ], BlocklistMatchType::cases()),
+            'prefill' => [
+                'match_type' => $this->prefillType($request),
+                'value' => $request->string('value')->limit(500, '')->toString(),
+                'notes' => $request->string('name')->limit(1000, '')->toString(),
+            ],
             'abilities' => [
                 'canManage' => $request->user()?->can('moderate', $party) ?? false,
             ],
@@ -53,7 +57,7 @@ class PartyBlocklistController extends Controller
             $request->notes(),
         );
 
-        return $this->withWarning(back()->with('successMessage', "{$entry->value} was added to the blocklist"), $warning);
+        return $this->withWarning(back()->with('success', "{$entry->value} was added to the blocklist"), $warning);
     }
 
     public function update(UpdateBlocklistEntryRequest $request, UpdateBlocklistEntry $updateEntry, Party $party, BlocklistEntry $entry): RedirectResponse
@@ -72,7 +76,7 @@ class PartyBlocklistController extends Controller
             $request->notes(),
         );
 
-        return $this->withWarning(back()->with('successMessage', "{$updated->value} was updated"), $warning);
+        return $this->withWarning(back()->with('success', "{$updated->value} was updated"), $warning);
     }
 
     public function destroy(Request $request, RemoveBlocklistEntry $removeEntry, Party $party, BlocklistEntry $entry): RedirectResponse
@@ -82,12 +86,17 @@ class PartyBlocklistController extends Controller
 
         $warning = $removeEntry($this->currentUser($request), $party, $entry);
 
-        return $this->withWarning(back()->with('successMessage', "{$entry->value} was removed from the blocklist"), $warning);
+        return $this->withWarning(back()->with('success', "{$entry->value} was removed from the blocklist"), $warning);
+    }
+
+    private function prefillType(Request $request): ?string
+    {
+        return BlocklistMatchType::tryFrom($request->string('type')->toString())?->value;
     }
 
     private function withWarning(RedirectResponse $redirect, ?FallbackPlaylistCheck $warning): RedirectResponse
     {
-        return $warning === null ? $redirect : $redirect->with('warningMessage', $warning->message());
+        return $warning === null ? $redirect : $redirect->with('warning', $warning->message());
     }
 
     private function currentUser(Request $request): User

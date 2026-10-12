@@ -1,7 +1,7 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Music Party",
+        "title": "Laravel",
         "version": "0.0.1"
     },
     "servers": [
@@ -285,6 +285,80 @@
                 ]
             }
         },
+        "/v1/admin/users/{user}/linked-accounts/{account}": {
+            "delete": {
+                "operationId": "v1.admin.users.linked-accounts.destroy",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users linked accounts destroy",
+                "tags": [
+                    "LinkedAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "description": "The account ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "This linked account cannot be deleted."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
         "/v1/me": {
             "get": {
                 "operationId": "v1.me",
@@ -319,6 +393,53 @@
                     {
                         "sanctumCookie": []
                     }
+                ]
+            }
+        },
+        "/v1/admin/mods": {
+            "get": {
+                "operationId": "v1.admin.mods.index",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin mods index",
+                "tags": [
+                    "Mod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AdminModResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminModResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
@@ -950,7 +1071,7 @@
         "/v1/parties/{party}/playback/{control}": {
             "post": {
                 "operationId": "v1.parties.playback",
-                "description": "Sends play, pause, skip, seek or volume to the Party's Player. Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.\nReturns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,\nthe Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting.",
+                "description": "Sends play, pause, skip, previous, seek or volume to the Party's Player. Previous restarts the Track after 3 seconds, otherwise replays the previous Track without recording a new Play (Host only). Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.\nReturns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,\nthe Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting.",
                 "summary": "Control playback",
                 "tags": [
                     "Party"
@@ -1047,6 +1168,7 @@
         "/v1/admin/parties/{party}/act-as-host": {
             "post": {
                 "operationId": "v1.admin.parties.act-as-host.enter",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin parties act as host enter",
                 "tags": [
                     "Party"
@@ -1086,19 +1208,23 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.parties.act-as-host.leave",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin parties act as host leave",
                 "tags": [
                     "Party"
@@ -1138,15 +1264,18 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
@@ -1464,11 +1593,90 @@
                         "schema": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "role",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PartyRole"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "nickname",
+                                "role",
+                                "joined",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
                     "200": {
-                        "description": "Array of `PartyMemberResource`",
+                        "description": "Paginated set of `PartyMemberResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -1479,6 +1687,235 @@
                                             "items": {
                                                 "$ref": "#/components/schemas/PartyMemberResource"
                                             }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/members/{member}": {
+            "get": {
+                "operationId": "v1.parties.members.show",
+                "summary": "Parties members show",
+                "tags": [
+                    "PartyMember"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "path",
+                        "required": true,
+                        "description": "The member ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "object",
+                                            "properties": {
+                                                "requests": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "$ref": "#/components/schemas/MemberRequestResource"
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "requests"
+                                            ]
                                         }
                                     },
                                     "required": [
@@ -1488,14 +1925,238 @@
                             }
                         }
                     },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
                     "403": {
                         "$ref": "#/components/responses/AuthorizationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/members/{member}/votes": {
+            "get": {
+                "operationId": "v1.parties.members.votes",
+                "summary": "Parties members votes",
+                "tags": [
+                    "PartyMember"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "member",
+                        "in": "path",
+                        "required": true,
+                        "description": "The member ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "maxLength": 100
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1,
+                            "maximum": 100
+                        }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "minimum": 1
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Paginated set of `MemberVoteResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/MemberVoteResource"
+                                            }
+                                        },
+                                        "links": {
+                                            "type": "object",
+                                            "properties": {
+                                                "first": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "last": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "prev": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                },
+                                                "next": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ]
+                                                }
+                                            },
+                                            "required": [
+                                                "first",
+                                                "last",
+                                                "prev",
+                                                "next"
+                                            ]
+                                        },
+                                        "meta": {
+                                            "type": "object",
+                                            "properties": {
+                                                "current_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "from": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "minimum": 1
+                                                },
+                                                "last_page": {
+                                                    "type": "integer",
+                                                    "minimum": 1
+                                                },
+                                                "links": {
+                                                    "type": "array",
+                                                    "description": "Generated paginator links.",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "url": {
+                                                                "type": [
+                                                                    "string",
+                                                                    "null"
+                                                                ]
+                                                            },
+                                                            "label": {
+                                                                "type": "string"
+                                                            },
+                                                            "active": {
+                                                                "type": "boolean"
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "url",
+                                                            "label",
+                                                            "active"
+                                                        ]
+                                                    }
+                                                },
+                                                "path": {
+                                                    "type": [
+                                                        "string",
+                                                        "null"
+                                                    ],
+                                                    "description": "Base path for paginator generated URLs."
+                                                },
+                                                "per_page": {
+                                                    "type": "integer",
+                                                    "description": "Number of items shown per page.",
+                                                    "minimum": 0
+                                                },
+                                                "to": {
+                                                    "type": [
+                                                        "integer",
+                                                        "null"
+                                                    ],
+                                                    "description": "Number of the last item in the slice.",
+                                                    "minimum": 1
+                                                },
+                                                "total": {
+                                                    "type": "integer",
+                                                    "description": "Total number of items being paginated.",
+                                                    "minimum": 0
+                                                }
+                                            },
+                                            "required": [
+                                                "current_page",
+                                                "from",
+                                                "last_page",
+                                                "links",
+                                                "path",
+                                                "per_page",
+                                                "to",
+                                                "total"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "data",
+                                        "links",
+                                        "meta"
+                                    ]
+                                }
+                            }
+                        }
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
@@ -2009,6 +2670,52 @@
                         }
                     },
                     {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "anyOf": [
+                                {
+                                    "$ref": "#/components/schemas/PlayHistorySort"
+                                },
+                                {
+                                    "type": "null"
+                                }
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "enum": [
+                                "asc",
+                                "desc",
+                                null
+                            ]
+                        }
+                    },
+                    {
+                        "name": "per_page",
+                        "in": "query",
+                        "schema": {
+                            "type": [
+                                "integer",
+                                "null"
+                            ],
+                            "enum": [
+                                10,
+                                20,
+                                50,
+                                100,
+                                null
+                            ]
+                        }
+                    },
+                    {
                         "name": "page",
                         "in": "query",
                         "schema": {
@@ -2022,7 +2729,7 @@
                 ],
                 "responses": {
                     "200": {
-                        "description": "Paginated set of `PlayResource`",
+                        "description": "Paginated set of `HistoryEntryResource`",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -2036,7 +2743,7 @@
                                                 "data": {
                                                     "type": "array",
                                                     "items": {
-                                                        "$ref": "#/components/schemas/PlayResource"
+                                                        "$ref": "#/components/schemas/HistoryEntryResource"
                                                     }
                                                 },
                                                 "links": {
@@ -2175,6 +2882,73 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/plays/{play}": {
+            "get": {
+                "operationId": "v1.parties.plays.show",
+                "summary": "Parties plays show",
+                "tags": [
+                    "PartyPlay"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "play",
+                        "in": "path",
+                        "required": true,
+                        "description": "The play ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SongDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/SongDetailResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -2464,6 +3238,118 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/player/devices": {
+            "get": {
+                "operationId": "v1.parties.player.devices",
+                "description": "Host only. Returns 409 with `relink_required` when the Host's Spotify link needs re-linking to grant the playback scopes.",
+                "summary": "List the Host's Spotify devices",
+                "tags": [
+                    "PartyPlayer"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "relink_required": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "relink_required",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -2907,6 +3793,14 @@
                             "type": "string",
                             "maxLength": 200
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -2927,10 +3821,26 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/SearchHitResource"
                                                     }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "has_more": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "page",
+                                                        "has_more"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "data"
+                                                "data",
+                                                "meta"
                                             ]
                                         }
                                     ]
@@ -3053,6 +3963,138 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/QueueEntryResource"
                                                     }
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/requests/{trackRequest}": {
+            "get": {
+                "operationId": "v1.parties.requests.show",
+                "summary": "Parties requests show",
+                "tags": [
+                    "PartyRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trackRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The track request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SongDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/SongDetailResource"
+                                                }
+                                            },
+                                            "required": [
+                                                "data"
+                                            ]
+                                        }
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            },
+            "delete": {
+                "operationId": "v1.parties.requests.destroy",
+                "summary": "Parties requests destroy",
+                "tags": [
+                    "PartyRequest"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "trackRequest",
+                        "in": "path",
+                        "required": true,
+                        "description": "The track request ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`QueueEntryResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "data": {
+                                                    "$ref": "#/components/schemas/QueueEntryResource"
                                                 }
                                             },
                                             "required": [
@@ -3215,73 +4257,6 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
-                    }
-                },
-                "security": [
-                    {
-                        "sanctumCookie": []
-                    }
-                ]
-            }
-        },
-        "/v1/parties/{party}/requests/{trackRequest}": {
-            "delete": {
-                "operationId": "v1.parties.requests.destroy",
-                "summary": "Parties requests destroy",
-                "tags": [
-                    "PartyRequest"
-                ],
-                "parameters": [
-                    {
-                        "name": "party",
-                        "in": "path",
-                        "required": true,
-                        "description": "The party code",
-                        "schema": {
-                            "type": "string"
-                        }
-                    },
-                    {
-                        "name": "trackRequest",
-                        "in": "path",
-                        "required": true,
-                        "description": "The track request ID",
-                        "schema": {
-                            "type": "integer"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "`QueueEntryResource`",
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "anyOf": [
-                                        {
-                                            "type": "string"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "data": {
-                                                    "$ref": "#/components/schemas/QueueEntryResource"
-                                                }
-                                            },
-                                            "required": [
-                                                "data"
-                                            ]
-                                        }
-                                    ]
-                                }
-                            }
-                        }
-                    },
-                    "404": {
-                        "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "401": {
-                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -3873,6 +4848,7 @@
         "/v1/admin/providers": {
             "get": {
                 "operationId": "v1.admin.providers.index",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin providers index",
                 "tags": [
                     "Provider"
@@ -3899,9 +4875,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3909,13 +4882,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/providers/{provider}": {
             "put": {
                 "operationId": "v1.admin.providers.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin providers update",
                 "tags": [
                     "Provider"
@@ -3961,9 +4941,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -3971,13 +4948,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/settings": {
             "get": {
                 "operationId": "v1.admin.settings.show",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin settings show",
                 "tags": [
                     "Settings"
@@ -4001,9 +4985,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -4011,11 +4992,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "post": {
                 "operationId": "v1.admin.settings.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin settings update",
                 "tags": [
                     "Settings"
@@ -4051,11 +5039,73 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
+        "/v1/spotify/link": {
+            "get": {
+                "operationId": "v1.spotify.link.show",
+                "summary": "Spotify link show",
+                "tags": [
+                    "SpotifyLink"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`SpotifyLinkStatusResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/SpotifyLinkStatusResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/spotify/link/control": {
+            "delete": {
+                "operationId": "v1.spotify.link.destroy",
+                "summary": "Spotify link destroy",
+                "tags": [
+                    "SpotifyLink"
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -4068,6 +5118,7 @@
         "/v1/admin/theme": {
             "get": {
                 "operationId": "v1.admin.theme.show",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme show",
                 "tags": [
                     "Theme"
@@ -4091,9 +5142,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -4101,11 +5149,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "put": {
                 "operationId": "v1.admin.theme.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme update",
                 "tags": [
                     "Theme"
@@ -4141,9 +5196,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -4151,11 +5203,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.theme.destroy",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme destroy",
                 "tags": [
                     "Theme"
@@ -4181,21 +5240,25 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users": {
             "get": {
                 "operationId": "v1.admin.users.index",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users index",
                 "tags": [
                     "User"
@@ -4353,9 +5416,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
@@ -4366,13 +5426,201 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
+        "/v1/admin/users/{user}": {
+            "get": {
+                "operationId": "v1.admin.users.show",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users show",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserDetailResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            },
+            "patch": {
+                "operationId": "v1.admin.users.update",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users update",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserDetailResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            },
+            "delete": {
+                "operationId": "v1.admin.users.destroy",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users destroy",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "confirm",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "delete"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/suspension": {
             "post": {
                 "operationId": "v1.admin.users.suspend",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users suspend",
                 "tags": [
                     "User"
@@ -4412,19 +5660,23 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.users.unsuspend",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users unsuspend",
                 "tags": [
                     "User"
@@ -4464,21 +5716,25 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/roles": {
             "post": {
                 "operationId": "v1.admin.users.roles.grant",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users roles grant",
                 "tags": [
                     "User"
@@ -4529,9 +5785,6 @@
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -4539,13 +5792,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/roles/{role}": {
             "delete": {
                 "operationId": "v1.admin.users.roles.revoke",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users roles revoke",
                 "tags": [
                     "User"
@@ -4593,15 +5853,18 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         }
@@ -4626,6 +5889,31 @@
             }
         },
         "schemas": {
+            "AdminModResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "definitions": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "definitions"
+                ],
+                "title": "AdminModResource"
+            },
             "AdminPartyResource": {
                 "type": "object",
                 "properties": {
@@ -4799,6 +6087,132 @@
                 ],
                 "title": "AdminSocialProviderResource"
             },
+            "AdminUserDetailResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "avatar_url": {
+                        "type": "string"
+                    },
+                    "suspended": {
+                        "type": "boolean"
+                    },
+                    "completed_signup": {
+                        "type": "boolean"
+                    },
+                    "agreed_terms": {
+                        "type": "boolean"
+                    },
+                    "last_login": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "label"
+                            ]
+                        }
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "provider": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "email": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "avatar_url": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "external_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "can_delete": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "provider",
+                                "name",
+                                "email",
+                                "avatar_url",
+                                "external_id",
+                                "can_delete"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "nickname",
+                    "email",
+                    "avatar_url",
+                    "suspended",
+                    "completed_signup",
+                    "agreed_terms",
+                    "last_login",
+                    "created_at",
+                    "roles",
+                    "accounts"
+                ],
+                "title": "AdminUserDetailResource"
+            },
             "AdminUserResource": {
                 "type": "object",
                 "properties": {
@@ -4923,6 +6337,20 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "device_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "device_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -4965,6 +6393,240 @@
                     }
                 },
                 "title": "ControlPlaybackRequest"
+            },
+            "HistoryEntryResource": {
+                "anyOf": [
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "const": "unsent"
+                            },
+                            "request_id": {
+                                "type": "string"
+                            },
+                            "track": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "artists": {
+                                        "type": "string"
+                                    },
+                                    "album": {
+                                        "type": "string"
+                                    },
+                                    "artwork_url": {
+                                        "type": "string"
+                                    },
+                                    "duration_ms": {
+                                        "type": "string"
+                                    },
+                                    "explicit": {
+                                        "type": "string"
+                                    },
+                                    "provider_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "title",
+                                    "artists",
+                                    "album",
+                                    "artwork_url",
+                                    "duration_ms",
+                                    "explicit",
+                                    "provider_url"
+                                ]
+                            },
+                            "requested_by": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            },
+                            "is_mine": {
+                                "type": "string"
+                            },
+                            "votes": {
+                                "type": "integer"
+                            },
+                            "score": {
+                                "type": "integer"
+                            },
+                            "requested_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "likes": {
+                                "type": "integer"
+                            },
+                            "dislikes": {
+                                "type": "integer"
+                            },
+                            "my_rating": {
+                                "type": "integer"
+                            },
+                            "played_at": {
+                                "type": "null"
+                            },
+                            "decorations": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "kind",
+                            "request_id",
+                            "track",
+                            "requested_by",
+                            "is_mine",
+                            "votes",
+                            "score",
+                            "requested_at",
+                            "likes",
+                            "dislikes",
+                            "my_rating",
+                            "played_at",
+                            "decorations"
+                        ]
+                    },
+                    {
+                        "type": "object",
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "track": {
+                                "type": "object",
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "artists": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "album": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "artwork_url": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    },
+                                    "duration_ms": {
+                                        "type": "integer"
+                                    },
+                                    "explicit": {
+                                        "type": "boolean"
+                                    },
+                                    "provider_url": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "title",
+                                    "artists",
+                                    "album",
+                                    "artwork_url",
+                                    "duration_ms",
+                                    "explicit",
+                                    "provider_url"
+                                ]
+                            },
+                            "requested_by": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": [
+                                            "string",
+                                            "null"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "name"
+                                ]
+                            },
+                            "is_mine": {
+                                "type": "boolean"
+                            },
+                            "votes": {
+                                "type": "integer"
+                            },
+                            "score": {
+                                "type": "integer"
+                            },
+                            "requested_at": {
+                                "type": [
+                                    "string",
+                                    "null"
+                                ]
+                            },
+                            "likes": {
+                                "type": "integer"
+                            },
+                            "dislikes": {
+                                "type": "integer"
+                            },
+                            "my_rating": {
+                                "type": "integer"
+                            },
+                            "played_at": {
+                                "type": "string"
+                            },
+                            "decorations": {
+                                "type": "string"
+                            },
+                            "kind": {
+                                "type": "string",
+                                "const": "play"
+                            },
+                            "request_id": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "track",
+                            "requested_by",
+                            "is_mine",
+                            "votes",
+                            "score",
+                            "requested_at",
+                            "likes",
+                            "dislikes",
+                            "my_rating",
+                            "played_at",
+                            "decorations",
+                            "kind",
+                            "request_id"
+                        ]
+                    }
+                ],
+                "title": "HistoryEntryResource"
             },
             "InstanceThemeResource": {
                 "type": "object",
@@ -5013,7 +6675,8 @@
                 "type": "string",
                 "enum": [
                     "read",
-                    "export"
+                    "export",
+                    "admin"
                 ],
                 "title": "IntegrationAbility"
             },
@@ -5151,6 +6814,78 @@
                 ],
                 "title": "MeResource"
             },
+            "MemberRequestResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "requested_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "id",
+                    "title",
+                    "artists",
+                    "status",
+                    "requested_at"
+                ],
+                "title": "MemberRequestResource"
+            },
+            "MemberVoteResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "value": {
+                        "type": "integer"
+                    },
+                    "voted_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "request_id": {
+                        "type": "integer"
+                    },
+                    "title": {
+                        "type": "string"
+                    },
+                    "artists": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "value",
+                    "voted_at",
+                    "request_id",
+                    "title",
+                    "artists"
+                ],
+                "title": "MemberVoteResource"
+            },
             "MemberVotesResource": {
                 "type": "object",
                 "properties": {
@@ -5275,6 +7010,12 @@
                     },
                     "is_you": {
                         "type": "boolean"
+                    },
+                    "joined_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
                     }
                 },
                 "required": [
@@ -5283,7 +7024,8 @@
                     "avatar",
                     "role",
                     "banned",
-                    "is_you"
+                    "is_you",
+                    "joined_at"
                 ],
                 "title": "PartyMemberResource"
             },
@@ -5403,6 +7145,12 @@
                     "hold_requests": {
                         "type": "boolean"
                     },
+                    "freeze_when_paused": {
+                        "type": "boolean"
+                    },
+                    "show_qrcode": {
+                        "type": "boolean"
+                    },
                     "downvotes": {
                         "type": "boolean"
                     },
@@ -5434,6 +7182,8 @@
                     "max_song_length",
                     "no_repeat_interval",
                     "hold_requests",
+                    "freeze_when_paused",
+                    "show_qrcode",
                     "downvotes",
                     "downvotes_per_hour",
                     "selection_mode",
@@ -5537,12 +7287,23 @@
                 ],
                 "title": "PingResource"
             },
+            "PlayHistorySort": {
+                "type": "string",
+                "enum": [
+                    "name",
+                    "artist",
+                    "requested",
+                    "played",
+                    "score"
+                ],
+                "title": "PlayHistorySort"
+            },
             "PlayHistoryType": {
                 "type": "string",
                 "enum": [
-                    "sent",
-                    "requested",
-                    "fallback"
+                    "all",
+                    "played",
+                    "unsent"
                 ],
                 "title": "PlayHistoryType"
             },
@@ -5817,6 +7578,12 @@
                             "null"
                         ]
                     },
+                    "popularity": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "queued": {
                         "type": "boolean"
                     },
@@ -5827,6 +7594,24 @@
                         ]
                     },
                     "score": {
+                        "type": "integer"
+                    },
+                    "eligible": {
+                        "type": "boolean"
+                    },
+                    "reason": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "queued_request_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "my_vote": {
                         "type": "integer"
                     }
                 },
@@ -5839,9 +7624,14 @@
                     "duration_ms",
                     "explicit",
                     "provider_url",
+                    "popularity",
                     "queued",
                     "requested_by",
-                    "score"
+                    "score",
+                    "eligible",
+                    "reason",
+                    "queued_request_id",
+                    "my_vote"
                 ],
                 "title": "SearchHitResource"
             },
@@ -5852,6 +7642,328 @@
                     "weighted"
                 ],
                 "title": "SelectionMode"
+            },
+            "SongDetailResource": {
+                "type": "object",
+                "properties": {
+                    "kind": {
+                        "type": "string",
+                        "enum": [
+                            "play",
+                            "request"
+                        ]
+                    },
+                    "id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "play_id": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "title": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artists": {
+                        "type": [
+                            "array",
+                            "null"
+                        ],
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "album": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "artwork_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "duration_ms": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
+                    "explicit": {
+                        "type": [
+                            "boolean",
+                            "null"
+                        ]
+                    },
+                    "provider_track_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "isrc": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "status": {
+                        "type": "string"
+                    },
+                    "requested_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "sent_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "played_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "spotify_url": {
+                        "type": "string"
+                    },
+                    "requester": {
+                        "type": [
+                            "object",
+                            "null"
+                        ],
+                        "properties": {
+                            "id": {
+                                "type": "integer"
+                            },
+                            "name": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "id",
+                            "name"
+                        ]
+                    },
+                    "votes": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "member": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "direction": {
+                                    "type": "string",
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ]
+                                },
+                                "voted_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "member",
+                                "direction",
+                                "voted_at"
+                            ]
+                        }
+                    },
+                    "ratings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "member": {
+                                    "type": "object",
+                                    "properties": {
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "id",
+                                        "name"
+                                    ]
+                                },
+                                "direction": {
+                                    "type": "string",
+                                    "enum": [
+                                        "up",
+                                        "down"
+                                    ]
+                                },
+                                "rated_at": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                }
+                            },
+                            "required": [
+                                "member",
+                                "direction",
+                                "rated_at"
+                            ]
+                        }
+                    },
+                    "appearances": {
+                        "type": "array",
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "const": "request"
+                                        },
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "requested_at": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        },
+                                        "sent_at": {
+                                            "type": [
+                                                "string",
+                                                "null"
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "kind",
+                                        "id",
+                                        "url",
+                                        "requested_at",
+                                        "sent_at"
+                                    ]
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "kind": {
+                                            "type": "string",
+                                            "const": "play"
+                                        },
+                                        "id": {
+                                            "type": "integer"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "requested_at": {
+                                            "type": "string"
+                                        },
+                                        "sent_at": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "kind",
+                                        "id",
+                                        "url",
+                                        "requested_at",
+                                        "sent_at"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "can_moderate": {
+                        "type": "boolean"
+                    },
+                    "moderate_url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    }
+                },
+                "required": [
+                    "kind",
+                    "id",
+                    "play_id",
+                    "title",
+                    "artists",
+                    "album",
+                    "artwork_url",
+                    "duration_ms",
+                    "explicit",
+                    "provider_track_id",
+                    "isrc",
+                    "status",
+                    "requested_at",
+                    "sent_at",
+                    "played_at",
+                    "spotify_url",
+                    "requester",
+                    "votes",
+                    "ratings",
+                    "appearances",
+                    "can_moderate",
+                    "moderate_url"
+                ],
+                "title": "SongDetailResource"
+            },
+            "SpotifyLinkStatusResource": {
+                "type": "object",
+                "properties": {
+                    "linked": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "needs_relink": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "linked",
+                    "name",
+                    "needs_relink"
+                ],
+                "title": "SpotifyLinkStatusResource"
             },
             "StoreBlocklistEntryRequest": {
                 "type": "object",
@@ -5904,6 +8016,34 @@
                             "browser",
                             "soloist"
                         ]
+                    },
+                    "downvotes": {
+                        "type": "boolean"
+                    },
+                    "downvotes_per_hour": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 0,
+                        "maximum": 1000
+                    },
+                    "selection_mode": {
+                        "$ref": "#/components/schemas/SelectionMode"
+                    },
+                    "allow_requests": {
+                        "type": "boolean"
+                    },
+                    "max_requests": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ],
+                        "minimum": 1,
+                        "maximum": 1000
+                    },
+                    "hold_requests": {
+                        "type": "boolean"
                     }
                 },
                 "required": [
@@ -6012,6 +8152,12 @@
                         "minimum": 0
                     },
                     "hold_requests": {
+                        "type": "boolean"
+                    },
+                    "freeze_when_paused": {
+                        "type": "boolean"
+                    },
+                    "show_qrcode": {
                         "type": "boolean"
                     },
                     "downvotes": {
@@ -6197,6 +8343,9 @@
                 "type": "object",
                 "properties": {
                     "enabled": {
+                        "type": "boolean"
+                    },
+                    "auth_enabled": {
                         "type": "boolean"
                     },
                     "settings": {
@@ -6440,6 +8589,23 @@
                     }
                 },
                 "title": "UpdateThemeRequest"
+            },
+            "UpdateUserRequest": {
+                "type": "object",
+                "properties": {
+                    "nickname": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                    },
+                    "agreed_terms": {
+                        "type": "boolean"
+                    },
+                    "completed_signup": {
+                        "type": "boolean"
+                    }
+                },
+                "title": "UpdateUserRequest"
             },
             "VoteDirection": {
                 "type": "string",

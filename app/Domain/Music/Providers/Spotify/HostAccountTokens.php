@@ -109,8 +109,9 @@ class HostAccountTokens
 
     private function requestRefresh(LinkedAccount $account): Response
     {
-        $clientId = config('services.spotify.client_id');
-        $clientSecret = config('services.spotify.client_secret');
+        $application = $account->provider?->code === SpotifyApi::SEARCH_ID ? SpotifyApi::SEARCH_ID : SpotifyApi::ID;
+        $clientId = config("services.{$application}.client_id");
+        $clientSecret = config("services.{$application}.client_secret");
 
         if (! is_string($clientId) || $clientId === '' || ! is_string($clientSecret) || $clientSecret === '') {
             throw ProviderUnavailableException::forProvider('spotify');

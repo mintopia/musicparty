@@ -4,12 +4,14 @@ namespace App\Domain\Playback\Jobs;
 
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\PlaybackCoordinator;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Foundation\Queue\Queueable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\Middleware\WithoutOverlapping;
+use Illuminate\Support\Facades\Cache;
 
 class TickParty implements ShouldBeUnique, ShouldQueue
 {
@@ -30,6 +32,18 @@ class TickParty implements ShouldBeUnique, ShouldQueue
         $this->onQueue('ticks');
     }
 
+    public static function lastTickedAt(string $partyCode): ?CarbonImmutable
+    {
+        $timestamp = Cache::get(self::lastTickCacheKey($partyCode));
+
+        return is_int($timestamp) ? CarbonImmutable::createFromTimestamp($timestamp) : null;
+    }
+
+    private static function lastTickCacheKey(string $partyCode): string
+    {
+        return "party:last-tick:{$partyCode}";
+    }
+
     public function uniqueId(): string
     {
         return $this->partyCode;
@@ -48,6 +62,7 @@ class TickParty implements ShouldBeUnique, ShouldQueue
         $party = Party::findByCode($this->partyCode);
 
         if ($party !== null) {
+            Cache::put(self::lastTickCacheKey($party->code), now()->getTimestamp(), 3600);
             $coordinator->tick($party);
         }
     }

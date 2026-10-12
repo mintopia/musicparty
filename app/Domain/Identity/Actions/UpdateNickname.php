@@ -8,7 +8,7 @@ readonly class UpdateNickname
 {
     public function __invoke(User $user, string $nickname): User
     {
-        $user->forceFill(['nickname' => $nickname])->save();
+        $user->forceFill(['nickname' => $nickname])->saveClaimingNickname();
 
         return $user;
     }

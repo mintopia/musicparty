@@ -13,4 +13,9 @@ final readonly class SearchPage
         public int $offset,
         public int $limit,
     ) {}
+
+    public function hasMore(): bool
+    {
+        return $this->offset + count($this->items) < $this->total;
+    }
 }

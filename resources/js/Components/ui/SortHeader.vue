@@ -6,6 +6,8 @@ import Icon from '../Icon.vue';
 const props = defineProps({
     column: {type: Object, required: true},
     defaultOrder: {type: String, default: null},
+    orderParam: {type: String, default: 'order'},
+    directionParam: {type: String, default: 'order_direction'},
 });
 
 const page = usePage();
@@ -13,14 +15,14 @@ const parsed = computed(() => {
     const [path, query = ''] = page.url.split('?');
     return {path, params: new URLSearchParams(query)};
 });
-const current = computed(() => parsed.value.params.get('order') ?? props.defaultOrder);
-const direction = computed(() => parsed.value.params.get('order_direction') ?? (current.value === props.defaultOrder ? (props.column.defaultDirection ?? 'asc') : 'asc'));
+const current = computed(() => parsed.value.params.get(props.orderParam) ?? props.defaultOrder);
+const direction = computed(() => parsed.value.params.get(props.directionParam) ?? (current.value === props.defaultOrder ? (props.column.defaultDirection ?? 'asc') : 'asc'));
 const active = computed(() => current.value === props.column.key);
 const href = computed(() => {
     const params = new URLSearchParams(parsed.value.params);
     params.delete('page');
-    params.set('order', props.column.key);
-    params.set('order_direction', active.value && direction.value === 'asc' ? 'desc' : 'asc');
+    params.set(props.orderParam, props.column.key);
+    params.set(props.directionParam, active.value && direction.value === 'asc' ? 'desc' : 'asc');
     return `${parsed.value.path}?${params.toString()}`;
 });
 </script>

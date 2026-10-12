@@ -22,7 +22,7 @@ const normalise = () => {
             class="w-full rounded border border-border bg-surface px-5 pb-6 pt-5 text-center md:w-[280px]"
         >
             <img :src="user.avatarUrl" alt="" class="mx-auto h-20 w-20 rounded" />
-            <div class="mt-3 text-sm font-medium">{{ user.name }}</div>
+            <div class="mt-3 text-base font-medium">{{ user.name }}</div>
             <div v-if="user.email" class="mt-1 text-sm text-muted">{{ user.email }}</div>
         </div>
 

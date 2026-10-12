@@ -73,11 +73,15 @@ it('does not block a request that matches no entry', function () {
     requestBlockable($this->member, 'clean')->assertSuccessful();
 });
 
-it('does not treat a non-regex name entry as a pattern or a substring', function () {
+it('does not treat a non-regex name entry as a pattern or a substring, except for the * wildcard', function () {
     BlocklistEntry::factory()->for($this->party)->matching(BlocklistMatchType::TrackName, 'Midnight')->create();
     BlocklistEntry::factory()->for($this->party)->matching(BlocklistMatchType::ArtistName, 'The Banned.*')->create();
 
     requestBlockable($this->member, 't1')->assertSuccessful();
+
+    BlocklistEntry::factory()->for($this->party)->matching(BlocklistMatchType::ArtistName, 'The Banned*')->create();
+
+    requestBlockable($this->member, 't1')->assertUnprocessable();
 });
 
 it('does not block when the matching entry is disabled', function () {

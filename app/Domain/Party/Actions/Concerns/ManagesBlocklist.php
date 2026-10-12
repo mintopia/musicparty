@@ -32,10 +32,6 @@ trait ManagesBlocklist
             return;
         }
 
-        if (! $type->supportsRegex()) {
-            throw BlocklistActionRefused::regexNotSupported();
-        }
-
         if (! Blocklist::isValidPattern($value)) {
             throw BlocklistActionRefused::invalidRegex();
         }

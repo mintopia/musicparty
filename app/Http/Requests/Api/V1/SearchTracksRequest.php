@@ -19,6 +19,7 @@ class SearchTracksRequest extends FormRequest
     {
         return [
             'q' => 'required|string|max:200',
+            'page' => 'sometimes|integer|min:1',
         ];
     }
 
@@ -31,6 +32,8 @@ class SearchTracksRequest extends FormRequest
             'q.required' => 'Enter something to search for.',
             'q.string' => 'Enter something to search for.',
             'q.max' => 'The search is too long.',
+            'page.integer' => 'The page must be a whole number.',
+            'page.min' => 'The page must be at least 1.',
         ];
     }
 }

@@ -265,6 +265,7 @@ it('sends control commands as Soloist frames', function () {
     $this->player->play();
     $this->player->pause();
     $this->player->skip();
+    $this->player->previous();
     $this->player->seek(12000);
     $this->player->volume(40);
 
@@ -272,6 +273,7 @@ it('sends control commands as Soloist frames', function () {
         ['type' => 'command', 'command' => 'play'],
         ['type' => 'command', 'command' => 'pause'],
         ['type' => 'command', 'command' => 'next'],
+        ['type' => 'command', 'command' => 'skip_prev'],
         ['type' => 'command', 'command' => 'seek', 'position_ms' => 12000],
         ['type' => 'command', 'command' => 'set_volume', 'volume' => 40],
     ]);
@@ -285,6 +287,7 @@ it('refuses to send anything while disconnected', function (Closure $call) {
     'play' => [fn (SoloistPlayer $p) => $p->play()],
     'pause' => [fn (SoloistPlayer $p) => $p->pause()],
     'skip' => [fn (SoloistPlayer $p) => $p->skip()],
+    'previous' => [fn (SoloistPlayer $p) => $p->previous()],
     'seek' => [fn (SoloistPlayer $p) => $p->seek(1)],
     'volume' => [fn (SoloistPlayer $p) => $p->volume(1)],
 ]);

@@ -2,6 +2,9 @@
 
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Music\Data\AlbumData;
+use App\Domain\Music\Data\ArtistData;
+use App\Domain\Music\Data\TrackData;
 use App\Domain\Music\Testing\FakeMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Jobs\StartPlayback;
@@ -101,7 +104,24 @@ it('refuses requests when the party is not live', function (string $state) {
     apiRequest($this->user)->assertUnprocessable()->assertJsonPath('message', 'This party is not live, so requests are closed.');
 
     expect(TrackRequest::query()->count())->toBe(0);
-})->with(['paused', 'ended']);
+})->with(['ended']);
+
+it('refuses requests while paused when the party freezes requests', function () {
+    $this->party->forceFill(['state' => 'paused', 'freeze_when_paused' => true])->save();
+
+    apiRequest($this->user)->assertUnprocessable()->assertJsonPath('message', 'Requests are frozen while this party is paused.');
+
+    expect(TrackRequest::query()->count())->toBe(0);
+});
+
+it('accepts requests while paused when the party does not freeze requests', function () {
+    $this->party->forceFill(['state' => 'paused', 'freeze_when_paused' => false])->save();
+
+    apiRequest($this->user)->assertSuccessful();
+
+    expect(TrackRequest::query()->count())->toBe(1);
+    Bus::assertNotDispatched(StartPlayback::class);
+});
 
 it('refuses an unknown or unplayable track', function (string $trackId) {
     apiRequest($this->user, $trackId)->assertUnprocessable();
@@ -307,4 +327,38 @@ it('includes requester and score on queued search hits', function () {
     $this->getJson('/api/v1/parties/ABCD/search?q=alpha')->assertOk()
         ->assertJsonPath('data.0.requested_by', $this->user->nickname)
         ->assertJsonPath('data.0.score', 1);
+});
+
+describe('duplicate detection is exact', function () {
+    beforeEach(function () {
+        $artist = new ArtistData('a', 'Artist');
+        $album = new AlbumData('al', 'Album');
+        app()->instance(FakeMusicProvider::class, new FakeMusicProvider([
+            new TrackData('fake', 'orig', 'Midnight Train', [$artist], $album, 180000, false, 'ISRC-A'),
+            new TrackData('fake', 'reissue', 'Midnight Train (Remaster)', [$artist], $album, 181000, false, 'ISRC-A'),
+            new TrackData('fake', 'similar', 'Midnight Train', [$artist], $album, 180000, false, 'ISRC-B'),
+        ]));
+        $this->other = PartyMember::factory()->for($this->party)->create();
+    });
+
+    it('treats the same track id as a duplicate', function () {
+        apiRequest($this->user, 'orig')->assertCreated();
+        apiRequest($this->other->user, 'orig')->assertOk()->assertJsonPath('meta.duplicate', true);
+
+        expect(TrackRequest::query()->count())->toBe(1);
+    });
+
+    it('treats a different track id with the same ISRC as a duplicate', function () {
+        apiRequest($this->user, 'orig')->assertCreated();
+        apiRequest($this->other->user, 'reissue')->assertOk()->assertJsonPath('meta.duplicate', true);
+
+        expect(TrackRequest::query()->count())->toBe(1);
+    });
+
+    it('does not treat a similar name with a different id and ISRC as a duplicate', function () {
+        apiRequest($this->user, 'orig')->assertCreated();
+        apiRequest($this->other->user, 'similar')->assertCreated();
+
+        expect(TrackRequest::query()->count())->toBe(2);
+    });
 });

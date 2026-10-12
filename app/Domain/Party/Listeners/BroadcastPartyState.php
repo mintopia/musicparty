@@ -9,6 +9,6 @@ readonly class BroadcastPartyState
 {
     public function handle(PartyStateChanged $event): void
     {
-        PartyStateChangedEvent::dispatch($event->party->code, $event->new->value);
+        PartyStateChangedEvent::dispatch($event->party->code, $event->new->value, (bool) $event->party->show_qrcode);
     }
 }

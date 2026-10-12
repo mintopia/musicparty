@@ -165,3 +165,38 @@ it('runs a constant number of queries for a live stats refresh', function () {
         fn () => app()->call([new RefreshPartyStatsJob($this->party->id), 'handle']),
     );
 });
+
+it('runs a constant number of queries for the filtered members list', function (string $url, bool $json) {
+    $this->actingAs($this->host->user);
+
+    expectConstantQueries(
+        $this->party,
+        fn (int $n) => PartyMember::factory()->for($this->party)->count($n)->state(fn (): array => ['user_id' => User::factory()->state(fn (): array => ['nickname' => 'alpha '.fake()->unique()->numberBetween(1000, 999999)])])->create(),
+        fn () => $json ? $this->getJson($url)->assertOk() : $this->withoutVite()->get($url)->assertOk(),
+    );
+})->with([
+    'api' => ['/api/v1/parties/ABCD/members?search=a&role=guest&sort=joined&direction=desc&per_page=100', true],
+    'web' => ['/parties/ABCD/members?sort=role&direction=desc&per_page=100', false],
+]);
+
+it('runs a constant number of queries for the member detail and votes', function (string $suffix, bool $json) {
+    $this->actingAs($this->host->user);
+    $target = PartyMember::factory()->for($this->party)->create();
+
+    expectConstantQueries(
+        $this->party,
+        function (int $n) use ($target): void {
+            foreach (range(1, $n) as $_) {
+                $request = TrackRequest::factory()->for($this->party)->create(['party_member_id' => $target->id]);
+                RequestVote::factory()->create(['track_request_id' => $request->id, 'party_member_id' => $target->id]);
+            }
+        },
+        fn () => $json
+            ? $this->getJson("/api/v1/parties/ABCD/members/{$target->id}{$suffix}?per_page=100")->assertOk()
+            : $this->withoutVite()->get("/parties/ABCD/members/{$target->id}?per_page=100")->assertOk(),
+    );
+})->with([
+    'api detail' => ['', true],
+    'api votes' => ['/votes', true],
+    'web' => ['', false],
+]);

@@ -7,6 +7,7 @@ use App\Domain\Identity\SocialProviders\FacebookProvider;
 use App\Domain\Identity\SocialProviders\GoogleProvider;
 use App\Domain\Identity\SocialProviders\LaravelPassportProvider;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SpotifySearchProvider;
 use App\Domain\Identity\SocialProviders\SteamProvider;
 use App\Domain\Identity\SocialProviders\TwitchProvider;
 use Illuminate\Database\Seeder;
@@ -24,6 +25,7 @@ class SocialProvidersSeeder extends Seeder
             TwitchProvider::class,
             LaravelPassportProvider::class,
             SpotifyProvider::class,
+            SpotifySearchProvider::class,
             GoogleProvider::class,
             FacebookProvider::class,
         ];

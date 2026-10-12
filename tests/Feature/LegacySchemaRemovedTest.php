@@ -18,7 +18,7 @@ it('has no legacy columns', function (string $table, string $column) {
 })->with(function () {
     $parties = [
         'song_id', 'song_started_at', 'recent_device_id', 'device_id', 'device_name', 'queue', 'force', 'poll',
-        'last_updated_at', 'weighted', 'trustscore', 'trusted_user_id', 'show_qrcode', 'active',
+        'last_updated_at', 'weighted', 'trustscore', 'trusted_user_id', 'active',
         'backup_playlist_id', 'backup_playlist_name',
     ];
 

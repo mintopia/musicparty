@@ -12,6 +12,8 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BrowserPlayerController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Party\PlayerController as PartyPlayerController;
+use App\Http\Controllers\Party\PlayerTokenController as PartyPlayerTokenController;
 use App\Http\Controllers\Party\PlaylistCsvController as PartyPlaylistCsvController;
 use App\Http\Controllers\Party\ThemeController as PartyThemeController;
 use App\Http\Controllers\PartyBlocklistController;
@@ -20,6 +22,7 @@ use App\Http\Controllers\PartyModController;
 use App\Http\Controllers\PartyTvController;
 use App\Http\Controllers\Profile\LinkedAccountController as ProfileLinkedAccountController;
 use App\Http\Controllers\Profile\ProfileController;
+use App\Http\Controllers\SessionKeepAliveController;
 use App\Http\Controllers\SignupController;
 use App\Http\Controllers\SpotifyLinkController;
 use App\Http\Controllers\UserController;
@@ -28,6 +31,8 @@ use Illuminate\Support\Facades\Route;
 Route::post('logout', [UserController::class, 'logout'])->name('logout');
 
 Route::put('colour-scheme', [ColourSchemeController::class, 'update'])->middleware('auth')->name('colour-scheme.update');
+
+Route::get('session/keep-alive', SessionKeepAliveController::class)->middleware('auth')->name('session.keep-alive');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
 
@@ -62,6 +67,10 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::get('parties/{party}/members', [PartyController::class, 'members'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.members');
+    Route::get('parties/{party}/members/{member}', [PartyController::class, 'member'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('member')
+        ->name('parties.members.show');
     Route::get('parties/{party}/stats', [PartyController::class, 'stats'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.stats');
@@ -109,6 +118,9 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->where('party', '[A-Za-z]{4}')
         ->where('mod', '[a-z0-9_-]+')
         ->name('parties.mods.settings');
+    Route::put('parties/{party}/playlists', [PartyController::class, 'updatePlaylists'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.playlists.update');
     Route::patch('parties/{party}', [PartyController::class, 'update'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.update');
@@ -138,7 +150,7 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
         ->name('parties.requests.destroy');
     Route::post('parties/{party}/playback/{control}', [PartyController::class, 'control'])
         ->where('party', '[A-Za-z]{4}')
-        ->where('control', 'play|pause|skip|seek|volume')
+        ->where('control', 'play|pause|skip|previous|seek|volume')
         ->name('parties.playback');
     Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyController::class, 'storeVote'])
         ->where('party', '[A-Za-z]{4}')
@@ -173,6 +185,30 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.theme.destroy');
+    Route::get('parties/{party}/player/devices', [PartyPlayerController::class, 'devices'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.devices');
+    Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.update');
+    Route::get('parties/{party}/player-tokens', [PartyPlayerTokenController::class, 'index'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player-tokens.index');
+    Route::post('parties/{party}/player-tokens', [PartyPlayerTokenController::class, 'store'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player-tokens.store');
+    Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerTokenController::class, 'destroy'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('token')
+        ->name('parties.player-tokens.destroy');
+    Route::get('parties/{party}/songs/{trackRequest}', [PartyController::class, 'song'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('trackRequest')
+        ->name('parties.songs.show');
+    Route::get('parties/{party}/plays/{play}', [PartyController::class, 'playSong'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('play')
+        ->name('parties.plays.show');
     Route::get('parties/{party}/{section?}', [PartyController::class, 'show'])
         ->where('party', '[A-Za-z]{4}')
         ->where('section', 'queue|search|history|party')
@@ -221,8 +257,10 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
 Route::middleware('auth')->delete('admin/impersonate', [AdminImpersonationController::class, 'stop'])->name('admin.impersonate.stop');
 
 Route::middleware('auth')->group(function () {
-    Route::get('parties/{party}/spotify/link', [SpotifyLinkController::class, 'redirect'])->name('spotify.link');
+    Route::get('spotify', [SpotifyLinkController::class, 'index'])->name('spotify.index');
     Route::get('spotify/link/return', [SpotifyLinkController::class, 'callback'])->name('spotify.link.return');
+    Route::get('spotify/link/{account}', [SpotifyLinkController::class, 'redirect'])->where('account', 'control|search')->name('spotify.link');
+    Route::delete('spotify/link/{account}', [SpotifyLinkController::class, 'destroy'])->where('account', 'control|search')->name('spotify.unlink');
 });
 
 Route::middleware('auth')->prefix('profile')->name('profile.')->group(function () {

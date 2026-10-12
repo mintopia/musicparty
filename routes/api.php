@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\IntegrationTokenController as AdminIntegrationTokenController;
+use App\Http\Controllers\Api\V1\Admin\LinkedAccountController as AdminLinkedAccountController;
+use App\Http\Controllers\Api\V1\Admin\ModController as AdminModController;
 use App\Http\Controllers\Api\V1\Admin\PartyController as AdminPartyController;
 use App\Http\Controllers\Api\V1\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Api\V1\Admin\SettingsController as AdminSettingsController;
@@ -21,6 +23,7 @@ use App\Http\Controllers\Api\V1\PartyRequestController;
 use App\Http\Controllers\Api\V1\PartyStatsController;
 use App\Http\Controllers\Api\V1\PartyThemeController;
 use App\Http\Controllers\Api\V1\PingController;
+use App\Http\Controllers\Api\V1\SpotifyLinkController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -54,6 +57,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/join', [PartyController::class, 'join'])->middleware('throttle:party-join')->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::get('parties/{party}/members', [PartyMemberController::class, 'index'])->name('parties.members.index');
+        Route::get('parties/{party}/members/{member}', [PartyMemberController::class, 'show'])->whereNumber('member')->name('parties.members.show');
+        Route::get('parties/{party}/members/{member}/votes', [PartyMemberController::class, 'votes'])->whereNumber('member')->name('parties.members.votes');
         Route::get('parties/{party}/stats', [PartyStatsController::class, 'show'])->name('parties.stats');
         Route::put('parties/{party}/members/{member}/role', [PartyMemberController::class, 'role'])->whereNumber('member')->name('parties.members.role');
         Route::put('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'ban'])->whereNumber('member')->name('parties.members.ban');
@@ -66,23 +71,28 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::put('parties/{party}/mods/{mod}', [PartyModController::class, 'enable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.enable');
         Route::delete('parties/{party}/mods/{mod}', [PartyModController::class, 'disable'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.disable');
         Route::put('parties/{party}/mods/{mod}/settings', [PartyModController::class, 'update'])->where('mod', '[a-z0-9_-]+')->name('parties.mods.settings');
+        Route::get('spotify/link', [SpotifyLinkController::class, 'show'])->name('spotify.link.show');
+        Route::delete('spotify/link/control', [SpotifyLinkController::class, 'destroy'])->name('spotify.link.destroy');
         Route::get('parties/{party}/search', [PartyRequestController::class, 'search'])->name('parties.search');
         Route::post('parties/{party}/requests', [PartyRequestController::class, 'store'])->middleware('throttle:party-requests')->name('parties.requests.store');
         Route::get('parties/{party}/requests/pending', [PartyRequestController::class, 'pending'])->name('parties.requests.pending');
+        Route::get('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'show'])->whereNumber('trackRequest')->name('parties.requests.show');
         Route::post('parties/{party}/requests/{trackRequest}/approve', [PartyRequestController::class, 'approve'])->whereNumber('trackRequest')->name('parties.requests.approve');
         Route::post('parties/{party}/requests/{trackRequest}/reject', [PartyRequestController::class, 'reject'])->whereNumber('trackRequest')->name('parties.requests.reject');
         Route::delete('parties/{party}/requests/{trackRequest}', [PartyRequestController::class, 'destroy'])->whereNumber('trackRequest')->name('parties.requests.destroy');
         Route::put('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'vote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.store');
         Route::delete('parties/{party}/requests/{trackRequest}/vote', [PartyRequestController::class, 'retractVote'])->whereNumber('trackRequest')->middleware('throttle:party-votes')->name('parties.requests.vote.destroy');
         Route::get('parties/{party}/history', [PartyPlayController::class, 'history'])->name('parties.history');
+        Route::get('parties/{party}/plays/{play}', [PartyPlayController::class, 'show'])->whereNumber('play')->name('parties.plays.show');
         Route::put('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'rate'])->whereNumber('play')->name('parties.plays.rating.store');
         Route::delete('parties/{party}/plays/{play}/rating', [PartyPlayController::class, 'retract'])->whereNumber('play')->name('parties.plays.rating.destroy');
         Route::get('parties/{party}/me/votes', [PartyRequestController::class, 'memberVotes'])->name('parties.me.votes');
         Route::get('parties/{party}/queue', [PartyRequestController::class, 'queue'])->name('parties.queue');
-        Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|seek|volume')->name('parties.playback');
+        Route::post('parties/{party}/playback/{control}', [PartyController::class, 'playback'])->where('control', 'play|pause|skip|previous|seek|volume')->name('parties.playback');
         Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
         Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
         Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');
+        Route::get('parties/{party}/player/devices', [PartyPlayerController::class, 'devices'])->name('parties.player.devices');
         Route::get('parties/{party}/player-tokens', [PartyPlayerController::class, 'index'])->name('parties.player-tokens.index');
         Route::post('parties/{party}/player-tokens', [PartyPlayerController::class, 'store'])->name('parties.player-tokens.store');
         Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerController::class, 'destroy'])->whereNumber('token')->name('parties.player-tokens.destroy');
@@ -94,7 +104,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('tokens', [AdminIntegrationTokenController::class, 'index'])->name('tokens.index');
         Route::post('tokens', [AdminIntegrationTokenController::class, 'store'])->name('tokens.store');
         Route::delete('tokens/{token}', [AdminIntegrationTokenController::class, 'destroy'])->name('tokens.destroy');
+    });
+    Route::middleware(['auth:sanctum', 'admin.principal'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+        Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+        Route::delete('users/{user}/linked-accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->scopeBindings()->name('users.linked-accounts.destroy');
+        Route::get('mods', [AdminModController::class, 'index'])->name('mods.index');
         Route::post('users/{user}/suspension', [AdminUserController::class, 'suspend'])->name('users.suspend');
         Route::delete('users/{user}/suspension', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
         Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');

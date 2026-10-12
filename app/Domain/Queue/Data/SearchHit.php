@@ -12,5 +12,8 @@ final readonly class SearchHit
         public ?string $requestedBy = null,
         public int $score = 0,
         public ?string $providerUrl = null,
+        public ?string $ineligibleReason = null,
+        public ?int $queuedRequestId = null,
+        public int $myVote = 0,
     ) {}
 }

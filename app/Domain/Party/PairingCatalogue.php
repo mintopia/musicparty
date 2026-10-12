@@ -22,7 +22,7 @@ readonly class PairingCatalogue
     }
 
     /**
-     * @return list<array{kind: string, label: string, compatibleProviders: list<string>}>
+     * @return list<array{kind: string, label: string, compatibleProviders: list<string>, requiresControlLink: bool}>
      */
     public function players(): array
     {
@@ -32,6 +32,7 @@ readonly class PairingCatalogue
                 'kind' => $kind,
                 'label' => $entry['label'],
                 'compatibleProviders' => $this->player($kind)->compatibleProviders(),
+                'requiresControlLink' => $this->player($kind)->requiresHostAccount(),
             ];
         }
 

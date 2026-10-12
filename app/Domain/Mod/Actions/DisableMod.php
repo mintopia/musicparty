@@ -3,6 +3,7 @@
 namespace App\Domain\Mod\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Mod\Events\ModDisabled;
 use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\PartyMods;
 use App\Domain\Party\Actions\RecordPartyLogEntry;
@@ -41,6 +42,7 @@ readonly class DisableMod
         $this->partyMods->forget($party);
 
         if ($changed) {
+            ModDisabled::dispatch($party, $mod->id());
             BroadcastPartyQueue::dispatch($party->code);
         }
     }

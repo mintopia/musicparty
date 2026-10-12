@@ -7,14 +7,17 @@ use App\Domain\Admin\Models\Role;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Domain\Theming\ColourScheme;
+use App\Rules\UniqueNickname;
 use App\Support\Concerns\ToString;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Validation\ValidationException;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
@@ -43,6 +46,36 @@ class User extends Authenticatable
     ];
 
     protected ?string $email = null;
+
+    protected static function booted(): void
+    {
+        static::saving(function (User $user): void {
+            if ($user->isDirty('nickname') || $user->nickname_key === null) {
+                $user->nickname_key = self::nicknameKey($user->nickname);
+            }
+        });
+    }
+
+    /**
+     * @throws ValidationException
+     */
+    public function saveClaimingNickname(): bool
+    {
+        try {
+            return $this->save();
+        } catch (UniqueConstraintViolationException $exception) {
+            if (! str_contains($exception->getMessage(), 'nickname_key')) {
+                throw $exception;
+            }
+
+            throw ValidationException::withMessages(['nickname' => UniqueNickname::MESSAGE]);
+        }
+    }
+
+    public static function nicknameKey(string $nickname): string
+    {
+        return mb_strtolower(trim($nickname));
+    }
 
     public function hasCompletedSignup(): bool
     {

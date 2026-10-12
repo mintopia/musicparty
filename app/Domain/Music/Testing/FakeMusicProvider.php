@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Testing;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Contracts\MusicProvider;
 use App\Domain\Music\Data\AlbumData;
@@ -46,9 +47,9 @@ class FakeMusicProvider implements MusicProvider
         $artist = new ArtistData('artist-1', 'Test Artist');
 
         $tracks = [
-            new TrackData('fake', 'track-1', 'Alpha Song', [$artist], $album, 180000, false, 'ISRC0000001', ['https://example.test/cover-1.jpg']),
-            new TrackData('fake', 'track-2', 'Beta Song', [$artist], $album, 200000, true, 'ISRC0000002', ['https://example.test/cover-2.jpg']),
-            new TrackData('fake', 'track-3', 'Gamma Tune', [new ArtistData('artist-2', 'Other Band')], $album, 150000),
+            new TrackData('fake', 'track-1', 'Alpha Song', [$artist], $album, 180000, false, 'ISRC0000001', ['https://example.test/cover-1.jpg'], true, 50),
+            new TrackData('fake', 'track-2', 'Beta Song', [$artist], $album, 200000, true, 'ISRC0000002', ['https://example.test/cover-2.jpg'], true, 100),
+            new TrackData('fake', 'track-3', 'Gamma Tune', [new ArtistData('artist-2', 'Other Band')], $album, 150000, popularity: 0),
             new TrackData('fake', 'track-4', 'Region Locked', [$artist], $album, 210000, false, null, [], false),
         ];
 
@@ -86,7 +87,7 @@ class FakeMusicProvider implements MusicProvider
         return $this->failNextWith(new ProviderTemporaryFailure('The Music Provider is rate limiting requests.', $retryAfterSeconds));
     }
 
-    public function search(string $query, int $limit, int $offset): SearchPage
+    public function search(string $query, int $limit, int $offset, ?User $host = null): SearchPage
     {
         $this->throwInjectedFailure();
 

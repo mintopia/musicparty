@@ -299,3 +299,25 @@ it('refuses voting in an ended party with no score change and no broadcast', fun
     Queue::assertNothingPushed();
     expect(RequestVote::query()->count())->toBe(0);
 });
+
+it('lets a moderator remove another member\'s queued request from the list route', function () {
+    $moderator = PartyMember::factory()->for($this->party)->moderator()->create();
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Queued]);
+
+    $this->actingAs($moderator->user)->from('/parties/ABCD')
+        ->delete(route('parties.requests.destroy', ['party' => 'ABCD', 'trackRequest' => $request->id]))
+        ->assertRedirect();
+
+    expect($request->fresh()->status)->toBe(RequestStatus::Removed);
+});
+
+it('refuses a plain member removing another member\'s queued request', function () {
+    $member = PartyMember::factory()->for($this->party)->create();
+    $request = TrackRequest::factory()->for($this->party)->create(['status' => RequestStatus::Queued]);
+
+    $this->actingAs($member->user)->from('/parties/ABCD')
+        ->delete(route('parties.requests.destroy', ['party' => 'ABCD', 'trackRequest' => $request->id]))
+        ->assertForbidden();
+
+    expect($request->fresh()->status)->toBe(RequestStatus::Queued);
+});

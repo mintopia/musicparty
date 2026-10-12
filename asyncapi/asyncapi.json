@@ -1138,10 +1138,15 @@
                                 "ended"
                             ],
                             "type": "string"
+                        },
+                        "show_qrcode": {
+                            "description": "Whether the TV shows the QR code and join link",
+                            "type": "boolean"
                         }
                     },
                     "required": [
-                        "state"
+                        "state",
+                        "show_qrcode"
                     ],
                     "type": "object"
                 },

@@ -4,8 +4,10 @@ namespace App\Domain\Playback\Spotify;
 
 use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use App\Domain\Playback\Contracts\PlaybackClient;
+use App\Domain\Playback\Data\PlaybackDevice;
 use App\Domain\Playback\Data\PlaybackState;
 use App\Domain\Playback\Data\TrackReference;
+use App\Domain\Playback\Exceptions\PlaybackDeviceNotFoundException;
 use App\Domain\Playback\Exceptions\PlayerCommandRejectedException;
 use App\Domain\Playback\PlaybackStatus;
 use Carbon\CarbonImmutable;
@@ -51,50 +53,92 @@ class SpotifyPlaybackClient implements PlaybackClient
         );
     }
 
-    public function queueTrack(string $providerTrackId, string $hostAccountId): void
+    public function queueTrack(string $providerTrackId, string $hostAccountId, ?string $deviceId = null): void
     {
-        $uri = rawurlencode("spotify:track:{$providerTrackId}");
+        $url = SpotifyApi::URL.'/me/player/queue?'.$this->query(['uri' => "spotify:track:{$providerTrackId}"], $deviceId);
 
         $response = $this->api->userRequest(
-            fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL."/me/player/queue?uri={$uri}"),
+            fn (PendingRequest $request): Response => $request->post($url),
             $hostAccountId,
         );
 
         $this->api->guard($response);
     }
 
-    public function play(string $hostAccountId): void
+    public function play(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL.'/me/player/play'), $hostAccountId);
+        $url = SpotifyApi::URL.'/me/player/play'.$this->suffix([], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->put($url), $hostAccountId, $deviceId);
     }
 
-    public function pause(string $hostAccountId): void
+    public function pause(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL.'/me/player/pause'), $hostAccountId);
+        $url = SpotifyApi::URL.'/me/player/pause'.$this->suffix([], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->put($url), $hostAccountId, $deviceId);
     }
 
-    public function next(string $hostAccountId): void
+    public function next(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->command(fn (PendingRequest $request): Response => $request->post(SpotifyApi::URL.'/me/player/next'), $hostAccountId);
+        $url = SpotifyApi::URL.'/me/player/next'.$this->suffix([], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->post($url), $hostAccountId, $deviceId);
     }
 
-    public function seek(int $positionMs, string $hostAccountId): void
+    public function previous(string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL."/me/player/seek?position_ms={$positionMs}"), $hostAccountId);
+        $url = SpotifyApi::URL.'/me/player/previous'.$this->suffix([], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->post($url), $hostAccountId, $deviceId);
     }
 
-    public function volume(int $percent, string $hostAccountId): void
+    public function seek(int $positionMs, string $hostAccountId, ?string $deviceId = null): void
     {
-        $this->command(fn (PendingRequest $request): Response => $request->put(SpotifyApi::URL."/me/player/volume?volume_percent={$percent}"), $hostAccountId);
+        $url = SpotifyApi::URL.'/me/player/seek'.$this->suffix(['position_ms' => $positionMs], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->put($url), $hostAccountId, $deviceId);
+    }
+
+    public function volume(int $percent, string $hostAccountId, ?string $deviceId = null): void
+    {
+        $url = SpotifyApi::URL.'/me/player/volume'.$this->suffix(['volume_percent' => $percent], $deviceId);
+        $this->command(fn (PendingRequest $request): Response => $request->put($url), $hostAccountId, $deviceId);
+    }
+
+    public function devices(string $hostAccountId): array
+    {
+        $response = $this->api->userRequest(
+            fn (PendingRequest $request): Response => $request->get(SpotifyApi::URL.'/me/player/devices'),
+            $hostAccountId,
+        );
+
+        $this->api->guard($response);
+
+        $devices = [];
+
+        foreach ((array) $response->json('devices', []) as $device) {
+            if (! is_array($device) || ! isset($device['id'], $device['name'])) {
+                continue;
+            }
+
+            $devices[] = new PlaybackDevice(
+                (string) $device['id'],
+                (string) $device['name'],
+                (string) ($device['type'] ?? 'Unknown'),
+                ($device['is_active'] ?? false) === true,
+            );
+        }
+
+        return $devices;
     }
 
     /**
      * @param  Closure(PendingRequest): Response  $send
      */
-    private function command(Closure $send, string $hostAccountId): void
+    private function command(Closure $send, string $hostAccountId, ?string $deviceId = null): void
     {
         $response = $this->api->userRequest($send, $hostAccountId);
         $reason = $response->json('error.reason');
+
+        if ($deviceId !== null && $response->status() === 404 && $reason !== 'NO_ACTIVE_DEVICE') {
+            throw new PlaybackDeviceNotFoundException($deviceId);
+        }
 
         if ($response->status() === 404 || $reason === 'NO_ACTIVE_DEVICE') {
             throw new PlayerCommandRejectedException('Spotify has no active device for the Host. Start playing on a Spotify device and try again.');
@@ -107,5 +151,27 @@ class SpotifyPlaybackClient implements PlaybackClient
         }
 
         $this->api->guard($response);
+    }
+
+    /**
+     * @param  array<string, int|string>  $query
+     */
+    private function suffix(array $query, ?string $deviceId): string
+    {
+        $built = $this->query($query, $deviceId);
+
+        return $built === '' ? '' : "?{$built}";
+    }
+
+    /**
+     * @param  array<string, int|string>  $query
+     */
+    private function query(array $query, ?string $deviceId): string
+    {
+        if ($deviceId !== null) {
+            $query['device_id'] = $deviceId;
+        }
+
+        return http_build_query($query, '', '&', PHP_QUERY_RFC3986);
     }
 }

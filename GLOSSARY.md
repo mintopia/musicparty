@@ -26,6 +26,14 @@ _Avoid_: Plugin, addon
 Structured presentation data a Mod attaches to a Request or Play, such as a badge, label, icon or accent.
 _Avoid_: CSS classes, styling
 
+**Whamageddon**:
+A first-party Mod that keeps one configured Track in the Queue as a system Request which gains Score each hour until it plays, returns after an interval, and is held back overnight.
+_Avoid_: Last Christmas mod, Christmas mode
+
+**Trust Score**:
+A first-party Mod that ranks each Member from 0 to 1 by how much the Host, and the Members the Host upvotes, upvote and like their Requests within a recent window, shows the score to the Host and Moderators only, and can add a small Score bonus for trusted requesters.
+_Avoid_: Reputation, karma, EigenKarma
+
 **Member**:
 A user who has joined a Party, holding exactly one Party Role.
 _Avoid_: Participant, attendee
@@ -107,6 +115,10 @@ A Member's like or dislike of a Play.
 **Music Provider**:
 A music service that supplies the catalogue, search and track metadata for a Party (e.g. Spotify, later Tidal).
 _Avoid_: Backend, service, source
+
+**Spotify Search account**:
+An optional second Spotify account a Host links under the separate `spotifysearch` application, so guest search draws on its own quota rather than the control account's. Never used for login.
+_Avoid_: Search login, second Spotify login
 
 **Player**:
 The means by which Music Party observes and controls what is actually playing for a Party.

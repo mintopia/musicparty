@@ -9,19 +9,18 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Music\Data\HostAccountLinkData;
 use App\Domain\Music\Exceptions\AccountAlreadyLinkedException;
 use App\Domain\Music\Exceptions\NotHostException;
-use App\Domain\Party\Models\Party;
 
 class LinkHostAccount
 {
-    public function __construct(private readonly AuthorisesHost $authorisesHost, private readonly UpdateLinkedAccount $updateLinkedAccount) {}
+    public function __construct(private readonly AuthorisesSpotifyLinking $authorisesLinking, private readonly UpdateLinkedAccount $updateLinkedAccount) {}
 
     /**
      * @throws NotHostException
      * @throws AccountAlreadyLinkedException
      */
-    public function __invoke(User $user, Party $party, HostAccountLinkData $data, string $providerCode = 'spotify'): LinkedAccount
+    public function __invoke(User $user, HostAccountLinkData $data, string $providerCode = 'spotify'): LinkedAccount
     {
-        $this->authorisesHost->__invoke($user, $party);
+        ($this->authorisesLinking)($user);
 
         $provider = SocialProvider::query()->where('code', $providerCode)->firstOrFail();
 
@@ -49,6 +48,7 @@ class LinkHostAccount
             'access_token' => $data->accessToken,
             'refresh_token' => $data->refreshToken ?? $account->refresh_token,
             'access_token_expires_at' => $data->expiresIn !== null ? now()->addSeconds($data->expiresIn) : null,
+            'scopes' => $data->scopes,
             'needs_relink' => false,
         ]);
     }

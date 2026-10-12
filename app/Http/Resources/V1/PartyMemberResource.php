@@ -23,6 +23,7 @@ class PartyMemberResource extends JsonResource
             'role' => $this->role->value,
             'banned' => $this->banned,
             'is_you' => $request->user()?->id === $this->user_id,
+            'joined_at' => $this->created_at?->toJSON(),
         ];
     }
 }

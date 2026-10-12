@@ -1,45 +1,67 @@
 <script setup>
 import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, router, useForm, usePage} from '@inertiajs/vue3';
-import {computed, ref, watch} from 'vue';
+import {computed, ref} from 'vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
     entries: {type: Array, required: true},
     matchTypes: {type: Array, required: true},
+    prefill: {type: Object, default: () => ({})},
     abilities: {type: Object, required: true},
 });
 
 usePartyPresence(props.party.code);
 
 const page = usePage();
-const successMessage = computed(() => page.props.flash?.successMessage ?? null);
 
 const base = `/parties/${props.party.code}/blocklist`;
 const typeFor = (value) => props.matchTypes.find((type) => type.value === value) ?? null;
 const typeLabel = (value) => typeFor(value)?.label ?? value;
 
+const defaultType = props.prefill.match_type || props.matchTypes[0]?.value || '';
+
 const form = useForm({
-    match_type: props.matchTypes[0]?.value ?? '',
-    value: '',
+    match_type: defaultType,
+    value: props.prefill.value ?? '',
     is_regex: false,
     is_enabled: true,
-    notes: '',
+    notes: props.prefill.notes ?? '',
 });
 
-const supportsRegex = computed(() => typeFor(form.match_type)?.supportsRegex ?? false);
+const editingId = ref(null);
+const editing = computed(() => editingId.value !== null);
 
-watch(supportsRegex, (supported) => {
-    if (!supported) {
-        form.is_regex = false;
-    }
-});
+const startEdit = (entry) => {
+    editingId.value = entry.id;
+    form.clearErrors();
+    form.match_type = entry.match_type;
+    form.value = entry.value;
+    form.is_regex = entry.is_regex;
+    form.is_enabled = entry.is_enabled;
+    form.notes = entry.notes ?? '';
+};
+
+const cancelEdit = () => {
+    editingId.value = null;
+    form.reset();
+    form.clearErrors();
+};
 
 const submit = () => {
-    form.post(base, {
+    const options = {
         preserveScroll: true,
-        onSuccess: () => form.reset('value', 'notes', 'is_regex'),
-    });
+        onSuccess: () => {
+            editingId.value = null;
+            form.reset('value', 'notes', 'is_regex');
+        },
+    };
+
+    if (editing.value) {
+        form.put(`${base}/${editingId.value}`, options);
+    } else {
+        form.post(base, options);
+    }
 };
 
 const busy = ref(false);
@@ -63,7 +85,13 @@ const toggle = (entry) => {
     }, options);
 };
 
-const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
+const remove = (entry) => {
+    if (!window.confirm(`Remove "${entry.value}" from the blocklist?`)) {
+        return;
+    }
+
+    router.delete(`${base}/${entry.id}`, options);
+};
 </script>
 
 <template>
@@ -77,7 +105,6 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
             >Back to {{ party.name }}</Link>
         </header>
 
-        <p v-if="successMessage" role="status" data-testid="blocklist-success" class="rounded border border-border bg-surface px-5 py-3 text-sm">{{ successMessage }}</p>
 
         <section class="rounded border border-border bg-surface px-5 py-5">
             <p v-if="entries.length === 0" data-testid="blocklist-empty" class="text-sm text-muted">No blocklist entries yet.</p>
@@ -116,7 +143,14 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
                                 </label>
                             </td>
                             <td class="py-3 pr-3 text-muted">{{ entry.notes }}</td>
-                            <td v-if="abilities.canManage" class="py-3">
+                            <td v-if="abilities.canManage" class="flex gap-2 py-3">
+                                <button
+                                    type="button"
+                                    :disabled="busy"
+                                    :data-testid="`blocklist-edit-${entry.id}`"
+                                    class="min-h-11 rounded border border-border px-3 text-sm hover:text-primary disabled:opacity-50"
+                                    @click="startEdit(entry)"
+                                >Edit</button>
                                 <button
                                     type="button"
                                     :disabled="busy"
@@ -137,7 +171,7 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
             class="flex flex-col gap-4 rounded border border-border bg-surface px-5 py-5"
             @submit.prevent="submit"
         >
-            <h2 class="text-base font-bold">Add entry</h2>
+            <h2 class="text-base font-bold">{{ editing ? 'Edit entry' : 'Add entry' }}</h2>
 
             <label class="flex flex-col gap-1 text-sm">
                 <span class="font-medium">Match type</span>
@@ -163,7 +197,7 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
             </label>
 
             <div class="flex flex-wrap gap-4">
-                <label v-if="supportsRegex" class="flex min-h-11 items-center gap-2 text-sm">
+                <label class="flex min-h-11 items-center gap-2 text-sm">
                     <input v-model="form.is_regex" type="checkbox" data-testid="blocklist-regex-checkbox">
                     <span>Regex</span>
                 </label>
@@ -191,7 +225,14 @@ const remove = (entry) => router.delete(`${base}/${entry.id}`, options);
                 :disabled="form.processing"
                 data-testid="blocklist-submit"
                 class="min-h-11 self-start rounded bg-accent px-4 text-sm font-medium text-white disabled:opacity-50"
-            >Add entry</button>
+            >{{ editing ? 'Save changes' : 'Add entry' }}</button>
+            <button
+                v-if="editing"
+                type="button"
+                data-testid="blocklist-cancel-edit"
+                class="min-h-11 self-start rounded border border-border px-4 text-sm"
+                @click="cancelEdit"
+            >Cancel</button>
         </form>
     </div>
 </template>

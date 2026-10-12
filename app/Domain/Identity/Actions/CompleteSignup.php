@@ -11,7 +11,7 @@ class CompleteSignup
         $user->nickname = $nickname;
         $user->terms_agreed_at ??= now();
         $user->first_login = false;
-        $user->save();
+        $user->saveClaimingNickname();
 
         return $user;
     }

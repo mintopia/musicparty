@@ -432,3 +432,11 @@ describe('settings', function () {
         expect(PartyLogEntry::query()->where('action', 'party.settings_changed')->count())->toBe(0);
     });
 });
+
+it('flashes the decision outcome into the next Inertia response', function () {
+    $pending = pendingFor($this->guest);
+    $this->actingAs($this->host->user)->post(route('parties.requests.approve', ['party' => 'ABCD', 'trackRequest' => $pending->id]))->assertRedirect();
+
+    $this->get(route('parties.requests.pending', ['party' => 'ABCD']))
+        ->assertInertia(fn ($page) => $page->where('flash.success', 'Request approved'));
+});

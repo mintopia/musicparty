@@ -156,9 +156,9 @@ it('requires both playlist keys', function () {
 
 it('redirects the host to spotify with the playlist scopes', function () {
     [$host] = hostWithAccount();
-    $party = makeHostedParty($host);
+    makeHostedParty($host);
 
-    $response = $this->actingAs($host)->get(route('spotify.link', $party))->assertRedirect();
+    $response = $this->actingAs($host)->get(route('spotify.link', 'control'))->assertRedirect();
 
     $location = $response->headers->get('Location');
     expect($location)->toContain('accounts.spotify.com')
@@ -167,9 +167,7 @@ it('redirects the host to spotify with the playlist scopes', function () {
 });
 
 it('refuses non-hosts starting the link flow', function () {
-    [$host] = hostWithAccount();
-
-    $this->actingAs(makeUser())->get(route('spotify.link', makeHostedParty($host)))->assertForbidden();
+    $this->actingAs(makeUser())->get(route('spotify.link', 'control'))->assertForbidden();
 });
 
 function mockSpotifyCallback(): void
@@ -178,6 +176,7 @@ function mockSpotifyCallback(): void
     $remote->token = 'plain-access-token';
     $remote->refreshToken = 'plain-refresh-token';
     $remote->expiresIn = 3600;
+    $remote->approvedScopes = [];
 
     $driver = Mockery::mock(AbstractProvider::class);
     $driver->shouldReceive('user')->andReturn($remote);
@@ -188,11 +187,11 @@ function mockSpotifyCallback(): void
 it('links the host account with encrypted tokens', function () {
     spotifyProvider();
     $host = makeUser();
-    $party = makeHostedParty($host);
+    makeHostedParty($host);
     mockSpotifyCallback();
 
-    $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])
-        ->get(route('spotify.link.return'))->assertRedirect(route('home'));
+    $this->actingAs($host)
+        ->get(route('spotify.link.return'))->assertRedirect('/spotify');
 
     $account = LinkedAccount::query()->where('user_id', $host->id)->firstOrFail();
     $raw = DB::table('linked_accounts')->where('id', $account->id)->first();
@@ -208,10 +207,10 @@ it('links the host account with encrypted tokens', function () {
 it('clears needs_relink when re-linking and does not duplicate the account', function () {
     $host = makeUser();
     LinkedAccount::factory()->for($host)->needingRelink()->create(['social_provider_id' => spotifyProvider()->id]);
-    $party = makeHostedParty($host);
+    makeHostedParty($host);
     mockSpotifyCallback();
 
-    $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'))->assertRedirect();
+    $this->actingAs($host)->get(route('spotify.link.return'))->assertRedirect();
 
     expect(LinkedAccount::query()->where('user_id', $host->id)->count())->toBe(1)
         ->and(LinkedAccount::query()->where('user_id', $host->id)->first()->needs_relink)->toBeFalse();
@@ -219,12 +218,10 @@ it('clears needs_relink when re-linking and does not duplicate the account', fun
 
 it('refuses linking by a non-host at callback', function () {
     spotifyProvider();
-    $host = makeUser();
-    $party = makeHostedParty($host);
     $stranger = makeUser();
     mockSpotifyCallback();
 
-    $this->actingAs($stranger)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'))->assertForbidden();
+    $this->actingAs($stranger)->get(route('spotify.link.return'))->assertForbidden();
 
     expect(LinkedAccount::query()->count())->toBe(0);
 });
@@ -233,10 +230,10 @@ it('refuses an external account already linked to another user', function () {
     $other = makeUser();
     LinkedAccount::factory()->for($other)->create(['social_provider_id' => spotifyProvider()->id, 'external_id' => 'spotify-user-1']);
     $host = makeUser();
-    $party = makeHostedParty($host);
+    makeHostedParty($host);
     mockSpotifyCallback();
 
-    $this->actingAs($host)->withSession(['spotify_link_party_id' => $party->id])->get(route('spotify.link.return'))->assertRedirect(route('home'));
+    $this->actingAs($host)->get(route('spotify.link.return'))->assertRedirect('/spotify');
 
     expect(LinkedAccount::query()->where('user_id', $host->id)->exists())->toBeFalse();
 });
@@ -268,7 +265,7 @@ it('retries a temporary failure without throwing into playback', function () {
 
     $job = new class($party->id, 'track-1', 'fake') extends AppendToHistoryPlaylist
     {
-        public ?int $releasedFor = null;
+        public DateInterval|DateTimeInterface|int|null $releasedFor = null;
 
         public function attempts(): int
         {
@@ -380,4 +377,14 @@ it('appends one Play to the history playlist once however often the job runs', f
 
     expect($this->fake->appendedTo('playlist-1'))->toBe(['track-1'])
         ->and($play->fresh()->history_appended_at)->not->toBeNull();
+});
+
+it('flashes the link outcome into the next Inertia response', function () {
+    spotifyProvider();
+    $host = makeUser();
+    makeHostedParty($host);
+    mockSpotifyCallback();
+
+    $this->actingAs($host)->get(route('spotify.link.return'));
+    $this->get(route('home'))->assertInertia(fn ($page) => $page->where('flash.success', 'Spotify account linked'));
 });

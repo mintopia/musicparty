@@ -11,6 +11,7 @@
                 "type": "track",
                 "duration_ms": 180000,
                 "explicit": false,
+                "popularity": 50,
                 "artists": [
                     {
                         "id": "artist-1",

@@ -13,6 +13,18 @@ const path = computed(() => page.url.split('?')[0]);
 const isActive = (href) => path.value === href;
 const isPartyActive = (code) => path.value.startsWith(`/parties/${code}`);
 
+const fallbackMenu = (code) => [
+    {key: 'queue', label: 'Queue', href: `/parties/${code}`},
+    {key: 'search', label: 'Search', href: `/parties/${code}/search`},
+    {key: 'history', label: 'History', href: `/parties/${code}/history`},
+    {key: 'tv', label: 'TV Mode', href: `/parties/${code}/tv`},
+];
+const partyMenu = (code) => {
+    const context = page.props.partyContext;
+
+    return context?.party?.code === code && context.menu?.length ? context.menu : fallbackMenu(code);
+};
+
 const manuallyOpened = ref({});
 const isOpen = (code) => manuallyOpened.value[code] ?? isPartyActive(code);
 const toggle = (code) => {
@@ -63,21 +75,12 @@ const itemClass = (active) => [
                 </button>
                 <div v-if="isOpen(party.code)" class="flex flex-col">
                     <Link
-                        :href="`/parties/${party.code}`"
-                        :class="[itemClass(isActive(`/parties/${party.code}`)), '!pl-11']"
-                    >Queue</Link>
-                    <Link
-                        :href="`/parties/${party.code}/search`"
-                        :class="[itemClass(isActive(`/parties/${party.code}/search`)), '!pl-11']"
-                    >Search</Link>
-                    <Link
-                        :href="`/parties/${party.code}/history`"
-                        :class="[itemClass(isActive(`/parties/${party.code}/history`)), '!pl-11']"
-                    >History</Link>
-                    <Link
-                        :href="`/parties/${party.code}/party`"
-                        :class="[itemClass(isActive(`/parties/${party.code}/party`)), '!pl-11']"
-                    >Party</Link>
+                        v-for="entry in partyMenu(party.code)"
+                        :key="entry.key"
+                        :href="entry.href"
+                        :class="[itemClass(isActive(entry.href)), '!pl-11', isPartyActive(party.code) ? '!border-primary' : '']"
+                        :aria-current="isActive(entry.href) ? 'page' : undefined"
+                    >{{ entry.label }}</Link>
                 </div>
             </div>
 

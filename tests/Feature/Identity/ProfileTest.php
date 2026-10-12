@@ -116,7 +116,7 @@ it('rejects invalid nicknames', function (mixed $nickname) {
         ->assertSessionHasErrors('nickname');
 
     expect($user->fresh()->nickname)->toBe('old');
-})->with([[''], [null], ['a'], [str_repeat('x', 33)], [['array']]]);
+})->with([[''], [null], [str_repeat('x', 33)], [['array']]]);
 
 it('redirects to the provider with the profile return url', function () {
     profileProvider();

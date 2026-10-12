@@ -1,51 +1,22 @@
 <?php
 
+use App\Domain\Admin\Models\Setting;
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Actions\ResolveSocialUser;
 use App\Domain\Identity\Models\LinkedAccount;
 use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Identity\SocialProviders\FacebookProvider;
 use App\Domain\Identity\SocialProviders\GoogleProvider;
+use App\Enums\SettingType;
 use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
-use Laravel\Socialite\Contracts\Provider as SocialiteDriver;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Socialite\Facades\Socialite;
-use Laravel\Socialite\Two\User as SocialiteUser;
-use Mockery\MockInterface;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 
 uses(RefreshDatabase::class);
-
-/**
- * @param  array<string, mixed>  $overrides
- */
-function seedDiscord(array $overrides = []): SocialProvider
-{
-    config(['services.discord.client_id' => 'client-id', 'services.discord.client_secret' => 'client-secret']);
-    test()->artisan('providers:seed')->assertSuccessful();
-
-    return tap(SocialProvider::query()->where('code', 'discord')->firstOrFail(), fn (SocialProvider $provider) => $provider->forceFill($overrides)->save());
-}
-
-function remoteUser(string $id = '1001', string $nickname = 'ravebot'): SocialiteUser
-{
-    return (new SocialiteUser)->map([
-        'id' => $id,
-        'nickname' => $nickname,
-        'name' => 'Rave Bot',
-        'email' => 'rave@example.test',
-        'avatar' => 'https://cdn.example.test/a.png',
-    ])->setToken('access-token')->setRefreshToken('refresh-token');
-}
-
-function mockDriver(): MockInterface
-{
-    $driver = Mockery::mock(SocialiteDriver::class);
-    Socialite::shouldReceive('buildProvider')->andReturn($driver);
-
-    return $driver;
-}
 
 it('offers only enabled and configured providers on the login page', function () {
     seedDiscord();
@@ -59,6 +30,17 @@ it('offers only enabled and configured providers on the login page', function ()
             ->where('providers.0.code', 'discord')
             ->where('providers.0.name', 'Discord')
             ->where('providers.0.url', route('login.redirect', 'discord')));
+});
+
+it('never offers the Spotify Search provider for login even when forced on', function () {
+    seedDiscord();
+    config(['services.spotifysearch' => ['client_id' => 'ss-id', 'client_secret' => 'ss-secret']]);
+    test()->artisan('providers:seed')->assertSuccessful();
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true, 'auth_enabled' => true]);
+
+    $this->get(route('login'))->assertInertia(fn ($page) => $page
+        ->has('providers', 1)
+        ->where('providers.0.code', 'discord'));
 });
 
 it('hides a provider with no credentials from the login page', function () {
@@ -82,7 +64,7 @@ it('refuses the redirect for a disabled provider', function () {
 
     $this->get(route('login.redirect', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage');
+        ->assertSessionHas('error');
 });
 
 it('returns 404 for an unknown provider', function () {
@@ -136,7 +118,7 @@ it('refuses a suspended user', function () {
 
     $this->get(route('login.return', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage', fn (string $message) => str_contains($message, 'suspended'));
+        ->assertSessionHas('error', fn (string $message) => str_contains($message, 'suspended'));
 
     $this->assertGuest();
 });
@@ -145,7 +127,7 @@ it('refuses the callback for a disabled provider', function () {
     seedDiscord(['auth_enabled' => false]);
     Socialite::shouldReceive('buildProvider')->never();
 
-    $this->get(route('login.return', 'discord'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+    $this->get(route('login.return', 'discord'))->assertRedirect(route('login'))->assertSessionHas('error');
 
     $this->assertGuest();
     expect(User::query()->count())->toBe(0);
@@ -157,14 +139,14 @@ it('handles a provider failure gracefully', function () {
 
     $this->get(route('login.return', 'discord'))
         ->assertRedirect(route('login'))
-        ->assertSessionHas('errorMessage', 'Unable to login');
+        ->assertSessionHas('error', 'Unable to login');
 
     $this->assertGuest();
     expect(User::query()->count())->toBe(0);
 });
 
 it('logs out', function () {
-    $this->actingAs(User::factory()->create())->post(route('logout'))->assertRedirect(route('home'));
+    $this->actingAs(User::factory()->create())->post(route('logout'))->assertRedirect(route('login'));
 
     $this->assertGuest();
 });
@@ -219,7 +201,7 @@ it('refuses Google login when the provider is not configured', function (): void
     $this->artisan('providers:seed')->assertSuccessful();
     Socialite::shouldReceive('buildProvider')->never();
 
-    $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('errorMessage');
+    $this->get(route('login.redirect', 'google'))->assertRedirect(route('login'))->assertSessionHas('error');
 });
 
 it('builds Google and Facebook providers from the factory', function (): void {
@@ -231,4 +213,16 @@ it('builds Google and Facebook providers from the factory', function (): void {
         ->and($facebook->code)->toBe('facebook')
         ->and($facebook->provider_class)->toBe(FacebookProvider::class)
         ->and($facebook->supports_auth)->toBeTrue();
+});
+
+it('carries the site name and logos on the login page props', function () {
+    foreach (['name' => 'Lan Jam', 'logo-light' => 'site/light.png', 'logo-dark' => 'site/dark.png'] as $code => $value) {
+        (new Setting)->forceFill(['code' => $code, 'name' => $code, 'encrypted' => false, 'hidden' => false, 'validation' => '', 'type' => SettingType::stString, 'value' => $value])->save();
+    }
+
+    $this->get(route('login'))->assertInertia(fn ($page) => $page
+        ->component('Login')
+        ->where('site.name', 'Lan Jam')
+        ->where('site.logo_light_url', Storage::disk(SiteSettings::disk())->url('site/light.png'))
+        ->where('site.logo_dark_url', Storage::disk(SiteSettings::disk())->url('site/dark.png')));
 });

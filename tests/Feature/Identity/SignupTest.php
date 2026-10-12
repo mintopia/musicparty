@@ -63,7 +63,7 @@ it('rejects invalid signup input', function (array $payload, string $field) {
         ->and($user->fresh()->terms_agreed_at)->toBeNull();
 })->with([
     'missing nickname' => [['terms' => '1'], 'nickname'],
-    'short nickname' => [['nickname' => 'a', 'terms' => '1'], 'nickname'],
+    'blank nickname' => [['nickname' => '   ', 'terms' => '1'], 'nickname'],
     'long nickname' => [['nickname' => str_repeat('a', 33), 'terms' => '1'], 'nickname'],
     'terms not accepted' => [['nickname' => 'valid'], 'terms'],
     'terms declined' => [['nickname' => 'valid', 'terms' => '0'], 'terms'],
@@ -121,4 +121,67 @@ it('refuses party creation and joining in the domain for incomplete signups', fu
 
     expect($user->can('create', Party::class))->toBeFalse();
     expect(fn () => app(JoinParty::class)($user, Party::factory()->create()))->toThrow(AccessDeniedHttpException::class);
+});
+
+function configureConsentUrls(?string $terms, ?string $privacy): void
+{
+    Setting::query()->whereIn('code', ['terms', 'privacypolicy'])->delete();
+    if ($terms !== null) {
+        Setting::query()->forceCreate(['code' => 'terms', 'name' => 'Terms', 'value' => $terms]);
+    }
+    if ($privacy !== null) {
+        Setting::query()->forceCreate(['code' => 'privacypolicy', 'name' => 'Privacy', 'value' => $privacy]);
+    }
+    Cache::flush();
+}
+
+it('names the configured documents when consent is missing', function (?string $terms, ?string $privacy, ?string $message) {
+    configureConsentUrls($terms, $privacy);
+    $user = User::factory()->firstLogin()->create();
+
+    $response = $this->actingAs($user)->post(route('login.signup.store'), ['nickname' => 'valid']);
+
+    if ($message === null) {
+        $response->assertSessionHasNoErrors()->assertRedirect(route('home'));
+
+        return;
+    }
+
+    $response->assertSessionHasErrors(['terms' => $message]);
+    expect($user->fresh()->first_login)->toBeTrue();
+})->with([
+    'terms only' => ['https://example.com/terms', null, 'You must agree to the Terms and Conditions'],
+    'privacy only' => [null, 'https://example.com/privacy', 'You must agree to the Privacy Policy'],
+    'both' => ['https://example.com/terms', 'https://example.com/privacy', 'You must agree to the Terms and Conditions and Privacy Policy'],
+    'neither' => [null, null, null],
+]);
+
+it('accepts consent when only a privacy url is configured', function () {
+    configureConsentUrls(null, 'https://example.com/privacy');
+    $user = User::factory()->firstLogin()->create();
+
+    $this->actingAs($user)->post(route('login.signup.store'), ['nickname' => 'valid', 'terms' => '1'])
+        ->assertRedirect(route('home'));
+
+    expect($user->fresh()->terms_agreed_at)->not->toBeNull();
+});
+
+it('passes the privacy url from site settings and the avatar to the page', function () {
+    configureConsentUrls(null, 'https://example.com/privacy');
+    $user = User::factory()->firstLogin()->create();
+
+    $this->actingAs($user)->get(route('login.signup'))
+        ->assertInertia(fn ($page) => $page
+            ->where('privacyUrl', 'https://example.com/privacy')
+            ->where('termsUrl', null)
+            ->where('avatarUrl', $user->avatarUrl()));
+});
+
+it('logs the user out when they cancel signup', function () {
+    $user = User::factory()->firstLogin()->create();
+
+    $this->actingAs($user)->post(route('logout'))->assertRedirect(route('login'));
+
+    $this->assertGuest();
+    expect($user->fresh()->first_login)->toBeTrue();
 });

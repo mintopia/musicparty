@@ -6,12 +6,10 @@ import {RESYNC_EVENT} from '../../lib/realtimeResync';
 import {estimateQueue} from '../../lib/queueEta';
 import {formatTotal} from '../../lib/format';
 import Icon from '../../Components/Icon.vue';
-import NowPlayingBanner from '../../Components/NowPlayingBanner.vue';
 import UpNextCard from '../../Components/UpNextCard.vue';
 import PlayedHistory from '../../Components/PlayedHistory.vue';
 import QueueList from '../../Components/QueueList.vue';
 import SearchPanel from '../../Components/SearchPanel.vue';
-import PlaybackControls from '../../Components/PlaybackControls.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -31,7 +29,12 @@ const props = defineProps({
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
+    search_page: {type: Number, default: 1},
+    search_has_more: {type: Boolean, default: false},
     enabled_mods: {type: Array, default: () => []},
+    spotify_link_needed: {type: Boolean, default: false},
+    spotify_link_url: {type: String, default: null},
+    spotify_search_relink_needed: {type: Boolean, default: false},
 });
 
 usePartyPresence(props.party.code);
@@ -47,7 +50,6 @@ const votesByRequest = () => ({
     ...Object.fromEntries((props.memberVotes?.votes ?? []).map((vote) => [vote.request_id, vote.value])),
 });
 const ownedRequestIds = () => props.queue.filter((entry) => entry.is_mine === true).map((entry) => entry.id);
-const ratingsByPlay = () => Object.fromEntries((props.memberVotes?.ratings ?? []).map((rating) => [rating.play_id, rating.value]));
 
 const liveState = ref(props.party.state);
 const toasts = ref([]);
@@ -66,15 +68,24 @@ const liveUpNext = ref(props.upNext);
 const liveQueue = ref(props.queue);
 const liveStartedAt = ref(props.startedAt);
 const liveMode = ref(props.party.selection_mode);
+const queueSearch = ref('');
+const submitQueueSearch = () => {
+    const q = queueSearch.value.trim();
+    if (q !== '') {
+        router.get(`/parties/${props.party.code}/search`, {q});
+    }
+};
 const now = ref(Date.now());
 let clock = null;
-const liveRatablePlay = ref(props.ratablePlay);
+let publicChannel = null;
+const applyStateChange = (payload) => {
+    liveState.value = payload.state;
+};
 const myVotes = ref(votesByRequest());
 const myRequestIds = ref(ownedRequestIds());
-const myRatings = ref(ratingsByPlay());
 
 watch(
-    () => [props.nowPlaying, props.upNext, props.queue, props.startedAt, props.party.selection_mode, props.ratablePlay, props.memberVotes, props.party.state, props.membership.banned],
+    () => [props.nowPlaying, props.upNext, props.queue, props.startedAt, props.party.selection_mode, props.memberVotes, props.party.state, props.membership.banned],
     () => {
         liveState.value = props.party.state;
         banned.value = props.membership.banned;
@@ -83,10 +94,8 @@ watch(
         liveQueue.value = props.queue;
         liveStartedAt.value = props.startedAt;
         liveMode.value = props.party.selection_mode;
-        liveRatablePlay.value = props.ratablePlay;
         myVotes.value = votesByRequest();
         myRequestIds.value = ownedRequestIds();
-        myRatings.value = ratingsByPlay();
     },
 );
 
@@ -99,11 +108,6 @@ const eta = computed(() => estimateQueue({
     mode: liveMode.value,
     now: now.value,
 }));
-const shownRatablePlay = computed(() => {
-    const play = liveRatablePlay.value;
-
-    return play === null ? null : {...play, my_rating: myRatings.value[play.id] ?? play.my_rating};
-});
 
 const resync = () => {
     router.reload({only: ['party', 'queue', 'nowPlaying', 'upNext', 'startedAt', 'ratablePlay', 'memberVotes'], preserveScroll: true, async: true});
@@ -120,27 +124,17 @@ const applyQueueUpdate = (payload) => {
     liveQueue.value = payload.queue;
     liveStartedAt.value = payload.started_at ?? null;
     liveMode.value = payload.selection_mode ?? liveMode.value;
-    const playing = payload.now_playing;
-    liveRatablePlay.value = playing?.play_id
-        ? {id: playing.play_id, track: playing.track, likes: playing.likes, dislikes: playing.dislikes, my_rating: 0}
-        : null;
 };
 
 onMounted(() => {
     clock = setInterval(() => {
         now.value = Date.now();
     }, 1000);
-    window.Echo?.channel(channelName)
-        .listen('.queue.updated', applyQueueUpdate)
-        .listen('.party.state_changed', (payload) => {
-            liveState.value = payload.state;
-        });
+    publicChannel = window.Echo?.channel(channelName);
+    publicChannel?.listen('.queue.updated', applyQueueUpdate).listen('.party.state_changed', applyStateChange);
     window.Echo?.private(memberChannelName)
         .listen('.member.vote_changed', (payload) => {
             myVotes.value = {...myVotes.value, [payload.request_id]: payload.value};
-        })
-        .listen('.member.rating_changed', (payload) => {
-            myRatings.value = {...myRatings.value, [payload.play_id]: payload.value};
         })
         .listen('.request.rejected', (payload) => {
             pushToast(payload.reason ? `Your request was rejected: ${payload.reason}` : 'Your request was rejected.');
@@ -161,13 +155,13 @@ onMounted(() => {
 onBeforeUnmount(() => {
     clearInterval(clock);
     window.removeEventListener(RESYNC_EVENT, resync);
-    window.Echo?.leave(channelName);
+    publicChannel?.stopListening?.('.queue.updated', applyQueueUpdate);
+    publicChannel?.stopListening?.('.party.state_changed', applyStateChange);
     window.Echo?.leave(memberChannelName);
 });
 
-const canViewLog = computed(
-    () => !banned.value && ['host', 'moderator'].includes(props.membership.role),
-);
+const isStaff = computed(() => !banned.value && ['host', 'moderator'].includes(props.membership.role));
+const canViewLog = isStaff;
 
 const page = usePage();
 const transitionError = computed(() => page.props.errors?.fallback_playlist_id ?? page.props.errors?.state ?? null);
@@ -218,15 +212,16 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
     <div v-if="toasts.length > 0" class="fixed right-4 top-4 z-50 flex flex-col gap-2" data-testid="toasts">
         <p v-for="toast in toasts" :key="toast.id" role="status" data-testid="toast" class="rounded border border-border bg-surface px-4 py-3 text-sm shadow">{{ toast.message }}</p>
     </div>
-    <NowPlayingBanner
-        v-if="section === 'queue' || section === 'history'"
-        :now-playing="liveNowPlaying"
-        :ratable-play="shownRatablePlay"
-        :party-code="party.code"
-        :read-only="ratingLocked"
-    />
-    <div class="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 pb-6 pt-6 md:gap-6 md:px-0">
-        <header class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
+    <div v-if="spotify_link_needed" role="alert" data-testid="spotify-link-warning" class="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
+        <span>Playback needs a linked Spotify account.</span>
+        <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Link Spotify</Link>
+    </div>
+    <div v-if="spotify_search_relink_needed" role="alert" data-testid="spotify-search-relink-warning" class="mx-4 mt-4 flex flex-wrap items-center justify-between gap-2 rounded border border-border bg-surface px-4 py-3 text-sm">
+        <span>Your Spotify Search account needs re-linking. Guest search is using your playback account instead.</span>
+        <Link v-if="spotify_link_url" :href="spotify_link_url" class="flex min-h-11 items-center rounded border border-border px-3 hover:text-primary">Re-link Spotify Search</Link>
+    </div>
+    <div :class="[section === 'history' ? 'max-w-6xl md:px-4' : 'max-w-3xl md:px-0']" class="mx-auto flex w-full flex-col gap-4 px-4 pb-6 pt-6 md:gap-6">
+        <header v-if="section === 'party'" data-testid="party-card" class="flex flex-col gap-3 rounded border border-border bg-surface px-5 py-5">
             <div class="flex flex-wrap items-center gap-2">
                 <h1 class="text-xl font-semibold">{{ party.name }}</h1>
                 <span
@@ -286,7 +281,6 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             <p v-if="transitionError" role="alert" data-testid="lifecycle-error" class="text-sm text-danger">{{ transitionError }}</p>
         </div>
 
-        <PlaybackControls v-if="canManage && !readOnly" :party-code="party.code" :supported="party.playerKind !== 'browser'" />
         <Link
             v-if="canManage && party.playerKind === 'browser'"
             :href="`/parties/${party.code}/player`"
@@ -350,13 +344,23 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             </dl>
             <template v-else-if="section === 'queue'">
                 <UpNextCard :up-next="liveUpNext" :plays-at="eta.upNextAt" :now="now" class="mb-6" />
-                <h2 class="mb-1 text-base font-bold md:text-lg">Queue</h2>
+                <div class="mb-3 flex flex-wrap items-center justify-between gap-3">
+                    <h2 data-testid="queue-heading" class="text-base font-bold md:text-lg">{{ liveMode === 'weighted' ? 'Upcoming Songs' : 'Queue' }}</h2>
+                    <form data-testid="queue-search-form" class="flex gap-2" @submit.prevent="submitQueueSearch">
+                        <div class="relative">
+                            <input v-model="queueSearch" type="search" data-testid="queue-search-input" placeholder="Search..." aria-label="Search for a track" class="min-h-11 w-48 rounded border border-border bg-surface py-0 pl-3 pr-10 text-sm md:w-64" />
+                            <Icon name="musicSearch" data-testid="queue-search-icon" class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-muted" />
+                        </div>
+                        <button type="submit" data-testid="queue-search-submit" class="min-h-11 rounded bg-primary px-4 text-sm font-medium text-white">Search</button>
+                    </form>
+                </div>
+                <p v-if="liveMode === 'weighted'" data-testid="queue-weighted-hint" class="mb-1 text-sm text-muted">The more upvotes a track has, the more likely it is to play.</p>
                 <p v-if="eta.totalMs > 0" data-testid="queue-total" class="mb-3 text-sm text-muted md:mb-4">Total {{ formatTotal(eta.totalMs) }}</p>
-                <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" />
+                <QueueList :queue="shownQueue" :starts-at="eta.startsAt" :now="now" :party-code="party.code" :downvotes-enabled="party.downvotes !== false" :read-only="readOnly" :can-moderate="isStaff" />
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
-                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
+                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :search-page="search_page" :search-has-more="search_has_more" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>

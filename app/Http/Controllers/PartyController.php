@@ -6,10 +6,21 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Actions\BanMember;
 use App\Domain\Membership\Actions\ChangeMemberRole;
 use App\Domain\Membership\Actions\JoinParty;
+use App\Domain\Membership\Actions\ListMemberRequests;
+use App\Domain\Membership\Actions\ListMemberVoteHistory;
 use App\Domain\Membership\Actions\ListPartyMembers;
 use App\Domain\Membership\Actions\UnbanMember;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
 use App\Domain\Mod\EnabledMods;
+use App\Domain\Mod\Trust\Models\TrustScore;
+use App\Domain\Mod\Trust\TrustScoreMod;
+use App\Domain\Music\Actions\ListHostPlaylists;
+use App\Domain\Music\Actions\SelectPartyPlaylists;
+use App\Domain\Music\Actions\SpotifyControlLinkStatus;
+use App\Domain\Music\Actions\SpotifySearchLinkStatus;
+use App\Domain\Music\Exceptions\NotHostException;
+use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Party\Actions\CreateParty;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\GoLiveParty;
@@ -17,6 +28,7 @@ use App\Domain\Party\Actions\ListPartyLog;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
 use App\Domain\Party\Actions\UpdatePartySettings;
+use App\Domain\Party\FallbackPlaylistGate;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Party\PartyState;
@@ -32,6 +44,7 @@ use App\Domain\Queue\Actions\RejectRequest;
 use App\Domain\Queue\Actions\RemoveRequest;
 use App\Domain\Queue\Actions\RequestTrack;
 use App\Domain\Queue\Actions\SearchPartyProvider;
+use App\Domain\Queue\Actions\ShowSong;
 use App\Domain\Queue\Actions\ThrottleSearch;
 use App\Domain\Queue\Actions\VoteOnRequest;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
@@ -45,31 +58,42 @@ use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\ListMemberVotesRequest;
+use App\Http\Requests\ListPartyMembersRequest;
 use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
 use App\Http\Requests\RejectRequestRequest;
 use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
+use App\Http\Requests\UpdatePartyPlaylistsRequest;
 use App\Http\Requests\UpdatePartyRequest;
+use App\Http\Resources\MemberRequestResource;
+use App\Http\Resources\MemberVoteResource;
+use App\Http\Resources\PartyMemberRowResource;
+use App\Http\Resources\V1\HistoryEntryResource;
 use App\Http\Resources\V1\PartyLogEntryResource;
-use App\Http\Resources\V1\PartyMemberResource;
 use App\Http\Resources\V1\PlayResource;
 use App\Http\Resources\V1\QueueEntryResource;
 use App\Http\Resources\V1\SearchHitResource;
+use App\Http\Resources\V1\SongDetailResource;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Arr;
+use Illuminate\Support\Facades\RateLimiter;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class PartyController extends Controller
 {
-    public function create(Request $request, PairingCatalogue $catalogue): Response
+    public function create(Request $request, PairingCatalogue $catalogue, SpotifyControlLinkStatus $controlLink): Response
     {
         $this->authorize('create', Party::class);
 
         return Inertia::render('Party/Create', [
             'providers' => $catalogue->providers(),
             'players' => $catalogue->players(),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.create', absolute: false)]),
+            'control_link_usable' => $controlLink->isUsable($this->currentUser($request)),
         ]);
     }
 
@@ -80,9 +104,10 @@ class PartyController extends Controller
             $request->string('name')->trim()->toString(),
             $request->string('music_provider')->toString(),
             $request->string('player_kind')->toString(),
+            $request->safe()->only(['downvotes', 'downvotes_per_hour', 'selection_mode', 'allow_requests', 'max_requests', 'hold_requests']),
         );
 
-        return redirect()->route('parties.show', ['party' => $party->code])->with('successMessage', 'Party created');
+        return redirect()->route('parties.show', ['party' => $party->code])->with('success', 'Party created');
     }
 
     public function join(JoinPartyRequest $request, JoinParty $joinParty): RedirectResponse
@@ -108,25 +133,44 @@ class PartyController extends Controller
         ThrottleSearch $throttleSearch,
         EnabledMods $enabledMods,
         PairingCatalogue $pairingCatalogue,
-        Party $party,
+        JoinParty $joinParty,
+        string $party,
         ?string $section = null,
     ): Response|RedirectResponse {
-        $member = $party->memberFor($this->currentUser($request));
+        $found = Party::findByCode($party);
+
+        if ($found === null) {
+            $redirect = redirect()->route('home', ['code' => $party]);
+
+            return $this->joinLimited($request) ? $redirect : $redirect->withErrors(['code' => 'No party found with that code.']);
+        }
+
+        $party = $found;
+        $user = $this->currentUser($request);
+        $member = $party->memberFor($user);
 
         if ($member === null) {
-            return redirect()->route('home', ['code' => $party->code]);
+            if ($this->joinLimited($request)) {
+                return redirect()->route('home', ['code' => $party->code]);
+            }
+
+            $member = $joinParty($user, $party);
         }
 
         $section ??= $party->state === PartyState::Ended ? 'history' : 'queue';
         $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
+        $searchPage = max(1, $request->integer('page', 1));
         $results = null;
         $searchError = null;
+        $searchHasMore = false;
 
         if ($query !== '') {
             try {
                 $throttleSearch($this->currentUser($request));
-                $results = SearchHitResource::collection($search($party, $query))->resolve($request);
+                $found = $search($party, $query, $searchPage, $member);
+                $results = SearchHitResource::collection($found->hits)->resolve($request);
+                $searchHasMore = $found->hasMore;
             } catch (RequestRefusedException $exception) {
                 $results = [];
                 $searchError = $exception->getMessage();
@@ -164,18 +208,35 @@ class PartyController extends Controller
             'upNext' => $playback['up_next'],
             'startedAt' => $playback['started_at'],
             'queue' => QueueEntryResource::collection($listQueue($party, $member))->resolve($request),
-            'history' => $section === 'history' ? PlayResource::collection($listHistory($party, $member, $request->filters())) : null,
+            'history' => $section === 'history' ? HistoryEntryResource::collection($listHistory($party, $member, $request->filters(), $request->filters()['per_page'])) : null,
             'filters' => $request->filters(),
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,
+            'search_page' => $searchPage,
+            'search_has_more' => $searchHasMore,
             'enabled_mods' => $enabledMods->idsFor($party),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.show', $party, false)]),
+            'spotify_link_needed' => $party->user_id === $this->currentUser($request)->id
+                && $party->player_kind === 'polling'
+                && ! app(SpotifyControlLinkStatus::class)->isUsable($this->currentUser($request)),
+            'spotify_search_relink_needed' => $party->user_id === $this->currentUser($request)->id
+                && app(SpotifySearchLinkStatus::class)->needsRelinkWarning($this->currentUser($request)),
         ]);
     }
 
-    public function settings(EnabledMods $enabledMods, Party $party): Response
+    public function settings(Request $request, EnabledMods $enabledMods, ListHostPlaylists $listHostPlaylists, PairingCatalogue $catalogue, Party $party): Response
     {
         $this->authorize('update', $party);
+
+        try {
+            $playlists = array_map(
+                fn ($playlist): array => ['id' => $playlist->id, 'name' => $playlist->name, 'track_count' => $playlist->trackCount],
+                $listHostPlaylists($this->currentUser($request), $party, $catalogue->provider($party->music_provider)),
+            );
+        } catch (NotHostException|ProviderTemporaryFailure) {
+            $playlists = [];
+        }
 
         return Inertia::render('Party/Settings', [
             'party' => ['code' => $party->code, 'name' => $party->name],
@@ -187,22 +248,65 @@ class PartyController extends Controller
                 'explicit' => (bool) $party->explicit,
                 'hold_requests' => (bool) $party->hold_requests,
                 'no_repeat_interval' => $party->no_repeat_interval,
+                'downvotes' => (bool) $party->downvotes,
+                'downvotes_per_hour' => $party->downvotes_per_hour,
+                'selection_mode' => $party->selection_mode->value,
+                'freeze_when_paused' => (bool) $party->freeze_when_paused,
+                'show_qrcode' => (bool) $party->show_qrcode,
             ],
+            'mods_url' => route('parties.mods', $party, false),
+            'theme_url' => route('parties.theme.show', $party, false),
+            'playlists' => $playlists,
+            'fallback_playlist_id' => $party->fallback_playlist_id,
+            'history_playlist_id' => $party->history_playlist_id,
+            'fallback_check' => $request->session()->get('fallback_check'),
             'enabled_mods' => $enabledMods->idsFor($party),
+            'spotify_link_url' => route('spotify.index', ['return' => route('parties.settings', $party, false)]),
+            'player_kind' => $party->player_kind,
+            'player_kinds' => array_map(fn (array $player): array => ['value' => $player['kind'], 'label' => $player['label']], $catalogue->players()),
+            'playback_device' => $party->playback_device_id === null ? null : ['id' => $party->playback_device_id, 'name' => $party->playback_device_name],
+            'player_tokens_url' => route('parties.player-tokens.index', $party, false),
+            'devices_url' => route('parties.player.devices', $party, false),
+            'player_update_url' => route('parties.player.update', $party, false),
         ]);
+    }
+
+    public function updatePlaylists(UpdatePartyPlaylistsRequest $request, SelectPartyPlaylists $selectPlaylists, FallbackPlaylistGate $gate, PairingCatalogue $catalogue, Party $party): RedirectResponse
+    {
+        $this->authorize('update', $party);
+
+        try {
+            $party = $selectPlaylists(
+                $this->currentUser($request),
+                $party,
+                $catalogue->provider($party->music_provider),
+                $request->fallbackPlaylistId(),
+                $request->historyPlaylistId(),
+            );
+        } catch (NotHostException) {
+            abort(403);
+        } catch (ProviderTemporaryFailure $exception) {
+            return back()->withErrors(['fallback_playlist' => $exception->getMessage()]);
+        }
+
+        $check = $gate->check($party);
+
+        return back()
+            ->with('success', 'Playlists saved')
+            ->with('fallback_check', ['playable' => $check->playable, 'required' => $check->required, 'passes' => $check->passes()]);
     }
 
     public function update(UpdatePartyRequest $request, UpdatePartySettings $updateSettings, Party $party): RedirectResponse
     {
         $this->authorize('update', $party);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode', 'freeze_when_paused', 'show_qrcode']);
         $result = $updateSettings($this->currentUser($request), $party, $settings);
 
-        $redirect = back()->with('successMessage', 'Settings saved');
+        $redirect = back()->with('success', 'Settings saved');
         $warning = $result['warning'];
 
-        return $warning === null ? $redirect : $redirect->with('warningMessage', $warning->message());
+        return $warning === null ? $redirect : $redirect->with('warning', $warning->message());
     }
 
     public function live(Request $request, GoLiveParty $goLive, Party $party): RedirectResponse
@@ -210,7 +314,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $goLive($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party is live');
+        return back()->with('success', 'Party is live');
     }
 
     public function pause(Request $request, PauseParty $pauseParty, Party $party): RedirectResponse
@@ -218,7 +322,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $pauseParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party paused');
+        return back()->with('success', 'Party paused');
     }
 
     public function end(Request $request, EndParty $endParty, Party $party): RedirectResponse
@@ -226,7 +330,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $endParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party ended');
+        return back()->with('success', 'Party ended');
     }
 
     public function reopen(Request $request, ReopenParty $reopenParty, Party $party): RedirectResponse
@@ -234,7 +338,7 @@ class PartyController extends Controller
         $this->authorize('transition', $party);
         $reopenParty($this->currentUser($request), $party);
 
-        return back()->with('successMessage', 'Party reopened');
+        return back()->with('success', 'Party reopened');
     }
 
     public function log(Request $request, ListPartyLog $listLog, Party $party): Response
@@ -247,28 +351,85 @@ class PartyController extends Controller
         ]);
     }
 
-    public function members(Request $request, ListPartyMembers $listMembers, Party $party): Response
+    public function members(ListPartyMembersRequest $request, ListPartyMembers $listMembers, EnabledMods $enabledMods, Party $party): Response
     {
-        $this->authorize('viewMembers', $party);
         $user = $this->currentUser($request);
+        $enabledModIds = $enabledMods->idsFor($party);
+        $canModerate = $user->can('moderate', $party);
 
-        $members = PartyMemberResource::collection($listMembers($party, $user->can('moderate', $party)))
-            ->resolve($request);
+        $members = PartyMemberRowResource::collection($listMembers(
+            $party,
+            true,
+            $request->search(),
+            $request->role(),
+            $request->sort(),
+            $request->direction(),
+            $request->perPage(),
+        ));
 
         return Inertia::render('Party/Members', [
             'party' => ['code' => $party->code, 'name' => $party->name],
-            'members' => array_map(fn (array $member): array => [
-                'id' => $member['id'],
-                'nickname' => $member['nickname'],
-                'avatar' => $member['avatar'],
-                'role' => $member['role'],
-                'banned' => $member['banned'],
-                'isYou' => $member['is_you'],
-            ], $members),
+            'members' => $members,
+            'filters' => [
+                'search' => $request->search(),
+                'role' => $request->role()?->value,
+                'sort' => $request->sort(),
+                'direction' => $request->direction(),
+            ],
             'abilities' => [
                 'canChangeRoles' => $user->can('manageRoles', $party),
-                'canBan' => $user->can('moderate', $party),
+                'canBan' => $canModerate,
             ],
+            'enabled_mods' => $enabledModIds,
+            'trust' => $canModerate && in_array(TrustScoreMod::ID, $enabledModIds, true)
+                ? TrustScore::query()->where('party_id', $party->id)->pluck('score', 'party_member_id')->map(fn (float $score): float => round($score, 2))
+                : null,
+        ]);
+    }
+
+    public function member(ListMemberVotesRequest $request, ListMemberVoteHistory $listVotes, ListMemberRequests $listRequests, Party $party, PartyMember $member): Response
+    {
+        $user = $this->currentUser($request);
+        $isSelf = $member->user_id === $user->id;
+
+        return Inertia::render('Party/Member', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'member' => new PartyMemberRowResource($member->loadMissing('user.accounts'))->resolve($request),
+            'requests' => MemberRequestResource::collection($listRequests($member))->resolve($request),
+            'votes' => MemberVoteResource::collection($listVotes($member, $request->search(), $request->perPage())),
+            'filters' => ['search' => $request->search()],
+            'abilities' => [
+                'canChangeRoles' => ! $isSelf && $user->can('manageRoles', $party) && $member->role !== PartyRole::Host,
+                'canBan' => ! $isSelf && $user->can('moderateMember', [$party, $member]) && $member->role !== PartyRole::Host,
+            ],
+        ]);
+    }
+
+    public function song(Request $request, ShowSong $showSong, Party $party, TrackRequest $trackRequest): Response
+    {
+        try {
+            $song = new SongDetailResource($showSong($this->currentUser($request), $party, $trackRequest))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
+        ]);
+    }
+
+    public function playSong(Request $request, ShowSong $showSong, Party $party, Play $play): Response
+    {
+        try {
+            $song = new SongDetailResource($showSong->play($this->currentUser($request), $party, $play))->resolve($request);
+        } catch (RequestRefusedException $exception) {
+            abort($exception->status(), $exception->getMessage());
+        }
+
+        return Inertia::render('Party/Song', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'song' => $song,
         ]);
     }
 
@@ -289,7 +450,7 @@ class PartyController extends Controller
 
         $changed = $changeRole($this->currentUser($request), $party, $member, $request->role());
 
-        return back()->with('successMessage', "{$changed->holder()->nickname} is now {$changed->role->value}");
+        return back()->with('success', "{$changed->holder()->nickname} is now {$changed->role->value}");
     }
 
     public function banMember(Request $request, BanMember $banMember, Party $party, PartyMember $member): RedirectResponse
@@ -299,7 +460,7 @@ class PartyController extends Controller
 
         $banned = $banMember($this->currentUser($request), $party, $member);
 
-        return back()->with('successMessage', "{$banned->holder()->nickname} was banned");
+        return back()->with('success', "{$banned->holder()->nickname} was banned");
     }
 
     public function unbanMember(Request $request, UnbanMember $unbanMember, Party $party, PartyMember $member): RedirectResponse
@@ -309,7 +470,7 @@ class PartyController extends Controller
 
         $unbanned = $unbanMember($this->currentUser($request), $party, $member);
 
-        return back()->with('successMessage', "{$unbanned->holder()->nickname} was unbanned");
+        return back()->with('success', "{$unbanned->holder()->nickname} was unbanned");
     }
 
     public function storeRequest(RequestTrackRequest $request, RequestTrack $requestTrack, Party $party): RedirectResponse
@@ -332,7 +493,7 @@ class PartyController extends Controller
             default => 'Already in the queue and you have already voted for it',
         };
 
-        return back()->with('success', $message)->with('successMessage', $message);
+        return back()->with('success', $message);
     }
 
     public function pendingRequests(Request $request, ListPendingRequests $listPending, Party $party): Response
@@ -384,7 +545,7 @@ class PartyController extends Controller
             return back()->withErrors(['request' => $exception->getMessage()]);
         }
 
-        return back()->with('successMessage', $message);
+        return back()->with('success', $message);
     }
 
     public function storeVote(CastVoteRequest $request, VoteOnRequest $vote, Party $party, TrackRequest $trackRequest): RedirectResponse
@@ -442,6 +603,24 @@ class PartyController extends Controller
         }
 
         return back();
+    }
+
+    private function joinLimited(Request $request): bool
+    {
+        $limiter = RateLimiter::limiter('party-join');
+        $limits = Arr::wrap($limiter === null ? [] : $limiter($request));
+
+        foreach ($limits as $limit) {
+            if (RateLimiter::tooManyAttempts(md5('party-join'.$limit->key), $limit->maxAttempts)) {
+                return true;
+            }
+        }
+
+        foreach ($limits as $limit) {
+            RateLimiter::hit(md5('party-join'.$limit->key), $limit->decaySeconds);
+        }
+
+        return false;
     }
 
     /**

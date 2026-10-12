@@ -51,3 +51,19 @@ describe('QueueList remove button', () => {
         expect(mountList([entry(over)], props).find('[data-testid=remove-request]').exists()).toBe(false);
     });
 });
+
+describe('QueueList staff remove', () => {
+    beforeEach(() => del.mockClear());
+
+    it('lets staff remove another member\'s request even after votes', async () => {
+        const button = mountList([entry({is_mine: false, has_other_votes: true})], {canModerate: true}).find('[data-testid=remove-request]');
+
+        expect(button.attributes('disabled')).toBeUndefined();
+        await button.trigger('click');
+        expect(del.mock.calls[0][0]).toBe('/parties/ABCD/requests/1');
+    });
+
+    it('still hides remove for staff on an Up Next request', () => {
+        expect(mountList([entry({is_mine: false, status: 'up_next'})], {canModerate: true}).find('[data-testid=remove-request]').exists()).toBe(false);
+    });
+});

@@ -117,7 +117,7 @@ it('does not offer a disabled provider and refuses logins through it', function 
 
     $this->get('/login')->assertInertia(fn (Assert $page) => $page->has('providers', 0));
     $this->get('/login/discord')->assertRedirect(route('login'));
-    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('errorMessage', 'Login with discord is not available.');
+    $this->get('/login/discord/return')->assertRedirect(route('login'))->assertSessionHas('error', 'Login with discord is not available.');
 });
 
 it('refuses to enable Google or Facebook without credentials', function (string $code): void {
@@ -282,7 +282,7 @@ it('behaves the same through the api as the web for providers', function (): voi
         ->assertJsonPath('data.enabled', true)
         ->assertJsonPath('data.fields.1.value', ProviderCatalogue::MASK);
 
-    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(7, 'data')->assertJsonMissing(['value' => 'api-secret']);
+    $this->getJson('/api/v1/admin/providers')->assertOk()->assertJsonCount(8, 'data')->assertJsonMissing(['value' => 'api-secret']);
     expect(AdminAuditEntry::query()->where('action', 'provider.credential_changed')->count())->toBe(2);
 
     $this->putJson('/api/v1/admin/providers/discord', ['enabled' => 'maybe'])->assertJsonValidationErrors('enabled');

@@ -16,6 +16,7 @@ File pattern: `<page>-<desktop|mobile>-<light|dark>.png`
 | `party-queue-*` | Party page (`/parties/FRI123`) as a guest: now-playing banner with thumbs rating, "Up Next", search box, upvote/downvote queue (own votes highlighted). Bottom "Loading upcoming songs..." is the infinite-scroll loader. |
 | `party-search-*` | Search results: Add button and popularity stars for new tracks, vote controls for tracks already queued. Results are canned (stubbed). |
 | `played-history-*` | Songs list (`/parties/{code}/songs?type=spotify`, "Sent to Spotify"), i.e. played history. Captured as the party owner: v2 only exposes this to managers, so it also shows the owner nav entries. |
+| `create-party-*` | Create Party form (`/parties/create`), desktop only: name, backup playlist, queue toggles, restrictions, advanced options (device, history playlist), Cancel/Save. Playlist and device lists are stubbed (Spotify never contacted). Full-page. |
 | `tv-*` | TV screen (`/parties/{code}/tv`): large now-playing, progress, Next, party name/code, QR code. Viewport only. The TV page ignores the theme (always black background), so light and dark are visually the same design and differ only in the playback timer. |
 | `party-list-mobile-*` | Party list as v2 presents it: the sidebar nav (opened on mobile) listing the user's parties. Mobile only; desktop sidebar is visible in every other desktop shot. |
 

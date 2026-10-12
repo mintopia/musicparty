@@ -3,11 +3,13 @@
 namespace App\Domain\Queue\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Music\Exceptions\ProviderTemporaryFailure;
 use App\Domain\Music\Exceptions\ProviderUnavailableException;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PairingCatalogue;
 use App\Domain\Queue\Data\SearchHit;
+use App\Domain\Queue\Data\SearchResults;
 use App\Domain\Queue\Exceptions\ProviderRateLimitedException;
 use App\Domain\Queue\Exceptions\RequestRefusedException;
 use App\Domain\Queue\Models\TrackRequest;
@@ -17,21 +19,18 @@ class SearchPartyProvider
 {
     public const LIMIT = 20;
 
-    public function __construct(private readonly PairingCatalogue $catalogue) {}
+    public function __construct(private readonly PairingCatalogue $catalogue, private readonly AssessSearchEligibility $assess) {}
 
-    /**
-     * @return list<SearchHit>
-     */
-    public function __invoke(Party $party, string $query): array
+    public function __invoke(Party $party, string $query, int $page = 1, ?PartyMember $member = null): SearchResults
     {
         $query = trim($query);
         if ($query === '') {
-            return [];
+            return new SearchResults([], false);
         }
 
         try {
             $provider = $this->catalogue->provider($party->music_provider);
-            $page = $provider->search($query, self::LIMIT, 0);
+            $results = $provider->search($query, self::LIMIT, (max(1, $page) - 1) * self::LIMIT, $party->user);
         } catch (ProviderTemporaryFailure $failure) {
             throw $failure->retryAfterSeconds === null
                 ? RequestRefusedException::providerUnavailable()
@@ -45,13 +44,16 @@ class SearchPartyProvider
             ->where('status', RequestStatus::Queued)
             ->with('requester.user')
             ->withSum('votes as score', 'value')
+            ->withSum(['votes as my_vote' => fn ($votes) => $votes->where('party_member_id', $member?->id)], 'value')
             ->oldest('id')
             ->get()
             ->unique('provider_track_id')
             ->keyBy('provider_track_id');
 
-        return array_map(
-            function ($track) use ($queued, $provider): SearchHit {
+        $reasons = $member === null ? [] : ($this->assess)($party, $member, $results->items);
+
+        $hits = array_map(
+            function ($track) use ($queued, $provider, $reasons): SearchHit {
                 $request = $queued->get($track->providerTrackId);
                 $requester = $request?->requester?->user;
 
@@ -61,9 +63,14 @@ class SearchPartyProvider
                     $requester instanceof User ? $requester->nickname : null,
                     (int) $request?->score,
                     $provider->trackUrl($track->providerTrackId),
+                    $request === null ? ($reasons[$track->providerTrackId] ?? null) : null,
+                    $request?->id,
+                    (int) $request?->my_vote,
                 );
             },
-            $page->items,
+            $results->items,
         );
+
+        return new SearchResults($hits, $results->hasMore());
     }
 }

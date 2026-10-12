@@ -108,8 +108,8 @@ function resourceClassNames(): array
 {
     $names = [];
 
-    foreach ((new Finder)->files()->in(app_path())->name('*.php') as $file) {
-        $class = 'App\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
+    foreach ((new Finder)->files()->in(app_path('Http/Resources/V1'))->name('*.php') as $file) {
+        $class = 'App\\Http\\Resources\\V1\\'.str_replace(['/', '.php'], ['\\', ''], $file->getRelativePathname());
 
         if (class_exists($class) && is_subclass_of($class, JsonResource::class)) {
             $names[] = class_basename($class);

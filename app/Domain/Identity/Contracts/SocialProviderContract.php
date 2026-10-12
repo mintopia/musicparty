@@ -6,6 +6,7 @@ use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Laravel\Socialite\Contracts\Provider;
+use Laravel\Socialite\Contracts\User as SocialiteUser;
 
 interface SocialProviderContract
 {
@@ -32,6 +33,11 @@ interface SocialProviderContract
     public function redirect(): RedirectResponse;
 
     public function driver(): Provider;
+
+    /**
+     * Whether the provider says the remote email is verified; null when it does not say.
+     */
+    public function emailVerified(SocialiteUser $remote): ?bool;
 
     /**
      * Process the authentication result and return a local user if appropriate.

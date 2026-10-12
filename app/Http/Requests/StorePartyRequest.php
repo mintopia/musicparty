@@ -2,9 +2,14 @@
 
 namespace App\Http\Requests;
 
+use App\Domain\Music\Actions\SpotifyControlLinkStatus;
 use App\Domain\Party\Models\Party;
+use App\Domain\Party\PairingCatalogue;
+use App\Domain\Queue\SelectionMode;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class StorePartyRequest extends FormRequest
 {
@@ -22,7 +27,32 @@ class StorePartyRequest extends FormRequest
             'name' => 'required|string|min:2|max:64',
             'music_provider' => 'required|string|in:'.implode(',', array_keys(config('musicparty.music_providers', []))),
             'player_kind' => 'required|string|in:'.implode(',', array_keys(config('musicparty.players', []))),
+            'downvotes' => 'sometimes|boolean',
+            'downvotes_per_hour' => 'sometimes|nullable|integer|min:0|max:1000',
+            'selection_mode' => ['sometimes', Rule::enum(SelectionMode::class)],
+            'allow_requests' => 'sometimes|boolean',
+            'max_requests' => 'sometimes|nullable|integer|min:1|max:1000',
+            'hold_requests' => 'sometimes|boolean',
         ];
+    }
+
+    /**
+     * @return list<callable>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            if ($validator->errors()->isNotEmpty()) {
+                return;
+            }
+
+            $user = $this->user();
+            $needsLink = app(PairingCatalogue::class)->player($this->string('player_kind')->toString())->requiresHostAccount();
+
+            if ($needsLink && $user !== null && ! app(SpotifyControlLinkStatus::class)->isUsable($user)) {
+                $validator->errors()->add('player_kind', 'This player needs a linked Spotify account. Link one, then come back to create your party.');
+            }
+        }];
     }
 
     /**
@@ -38,6 +68,16 @@ class StorePartyRequest extends FormRequest
             'music_provider.in' => 'That music provider is not available.',
             'player_kind.required' => 'Please choose a player.',
             'player_kind.in' => 'That player is not available.',
+            'downvotes.boolean' => 'Downvotes must be either on or off.',
+            'downvotes_per_hour.integer' => 'The downvote limit must be a whole number.',
+            'downvotes_per_hour.min' => 'The downvote limit cannot be negative.',
+            'downvotes_per_hour.max' => 'The downvote limit may not be more than :max per hour.',
+            'selection_mode.enum' => 'The selection mode must be deterministic or weighted.',
+            'allow_requests.boolean' => 'Accepting requests must be either on or off.',
+            'max_requests.integer' => 'The request limit must be a whole number.',
+            'max_requests.min' => 'The request limit must be at least :min.',
+            'max_requests.max' => 'The request limit may not be more than :max.',
+            'hold_requests.boolean' => 'Holding requests for approval must be either on or off.',
         ];
     }
 }

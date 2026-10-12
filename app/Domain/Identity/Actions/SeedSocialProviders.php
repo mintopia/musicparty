@@ -10,6 +10,7 @@ use App\Domain\Identity\SocialProviders\DiscordProvider;
 use App\Domain\Identity\SocialProviders\FacebookProvider;
 use App\Domain\Identity\SocialProviders\GoogleProvider;
 use App\Domain\Identity\SocialProviders\SpotifyProvider;
+use App\Domain\Identity\SocialProviders\SpotifySearchProvider;
 use App\Domain\Identity\SocialProviders\SteamProvider;
 use App\Domain\Identity\SocialProviders\TwitchProvider;
 use Illuminate\Support\Facades\DB;
@@ -24,6 +25,7 @@ class SeedSocialProviders
         'twitch' => TwitchProvider::class,
         'steam' => SteamProvider::class,
         'spotify' => SpotifyProvider::class,
+        'spotifysearch' => SpotifySearchProvider::class,
         'google' => GoogleProvider::class,
         'facebook' => FacebookProvider::class,
     ];
@@ -65,7 +67,7 @@ class SeedSocialProviders
 
         if (! $existed && $allConfigured) {
             $provider->enabled = true;
-            $provider->auth_enabled = true;
+            $provider->auth_enabled = (bool) $provider->supports_auth;
             $provider->save();
         }
 

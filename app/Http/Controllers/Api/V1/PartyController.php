@@ -41,6 +41,7 @@ class PartyController extends Controller
             $request->string('name')->trim()->toString(),
             $request->string('music_provider')->toString(),
             $request->string('player_kind')->toString(),
+            $request->safe()->only(['downvotes', 'downvotes_per_hour', 'selection_mode', 'allow_requests', 'max_requests', 'hold_requests']),
         );
 
         return new PartyResource($party)->response()->setStatusCode(201);
@@ -66,7 +67,7 @@ class PartyController extends Controller
         $user = $request->user();
         assert($user instanceof User);
 
-        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode']);
+        $settings = $request->safe()->only(['name', 'fallback_playlist_id', 'allow_requests', 'max_requests', 'explicit', 'min_song_length', 'max_song_length', 'no_repeat_interval', 'hold_requests', 'downvotes', 'downvotes_per_hour', 'selection_mode', 'freeze_when_paused', 'show_qrcode']);
         $result = $updateSettings($user, $party, $settings);
 
         $response = new PartyResource($result['party']);
@@ -125,7 +126,7 @@ class PartyController extends Controller
     /**
      * Control playback.
      *
-     * Sends play, pause, skip, seek or volume to the Party's Player. Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.
+     * Sends play, pause, skip, previous, seek or volume to the Party's Player. Previous restarts the Track after 3 seconds, otherwise replays the previous Track without recording a new Play (Host only). Seek takes `position_ms`; volume takes `level`, a whole percentage from 0 to 100.
      * Returns 422 when the Player does not support the control (the Browser Player supports none), 409 when no Player is paired,
      * the Player is disconnected or the Music Provider has no active device or refuses the command, and 429 when the Music Provider is rate limiting.
      */

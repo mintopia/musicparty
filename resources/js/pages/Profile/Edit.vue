@@ -34,7 +34,7 @@ const submit = () => form.patch('/profile');
                     maxlength="32"
                     class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
                 />
-                <p class="mt-1 text-xs text-muted">Your preferred nickname</p>
+                <p class="mt-1 text-xs text-muted">Your preferred nickname. 1–32 characters. Must be unique, ignoring case.</p>
             </FormField>
             <template #footer>
                 <ButtonLink href="/profile" variant="link" data-action="cancel">Cancel</ButtonLink>

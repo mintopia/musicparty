@@ -81,13 +81,6 @@ describe('Party page presence', () => {
 });
 
 describe('Party page now playing and Up Next', () => {
-    it('shows the now playing track', () => {
-        const w = mount(Show, {props: baseProps()});
-        expect(w.get('[data-testid=now-playing-title]').text()).toBe('Dance Floor Gravity');
-        expect(w.get('[data-testid=now-playing-artist]').text()).toBe('Nova Kids');
-        expect(w.get('[data-testid=now-playing-requester]').text()).toBe('Requested by Alex');
-    });
-
     it('shows Up Next as a locked card with its votes', () => {
         const w = mount(Show, {props: baseProps()});
         const card = w.get('[data-testid=up-next-card]');
@@ -103,14 +96,12 @@ describe('Party page now playing and Up Next', () => {
             nowPlaying: entry({requested_by: {name: null}}),
             upNext: entry({id: 2, status: 'up_next', requested_by: {name: null}}),
         })});
-        expect(w.get('[data-testid=now-playing-requester]').text()).toBe('Fallback playlist');
         expect(w.get('[data-testid=up-next-card]').text()).toContain('Fallback playlist');
         expect(w.text()).not.toContain('Requested by null');
     });
 
     it('shows empty states when nothing is playing or up next', () => {
         const w = mount(Show, {props: baseProps({nowPlaying: null, upNext: null})});
-        expect(w.find('[data-testid=now-playing-empty]').exists()).toBe(true);
         expect(w.find('[data-testid=up-next-empty]').exists()).toBe(true);
         expect(w.find('[data-testid=up-next-card]').exists()).toBe(false);
     });
@@ -199,24 +190,6 @@ describe('Party page now playing and Up Next', () => {
             expect(w.get('[data-testid=vote-up]').attributes('aria-pressed')).toBe('false');
         });
 
-        it('shows the Member rating from page props and member events', async () => {
-            const ratable = {id: 7, track: entry().track, likes: 2, dislikes: 0, my_rating: 0};
-            const w = mount(Show, {props: baseProps({ratablePlay: ratable, memberVotes: {votes: [], ratings: [{play_id: 7, value: 1}]}})});
-            expect(w.get('[data-testid=rate-like]').attributes('aria-pressed')).toBe('true');
-            listeners['.member.rating_changed']({play_id: 7, value: -1});
-            await w.vm.$nextTick();
-            expect(w.get('[data-testid=rate-dislike]').attributes('aria-pressed')).toBe('true');
-        });
-
-        it('follows the now playing Track for rating', async () => {
-            const w = mount(Show, {props: baseProps({ratablePlay: {id: 7, track: entry().track, likes: 0, dislikes: 0, my_rating: 0}})});
-            listeners['.queue.updated'](payload({now_playing: entry({id: 8, play_id: 12, likes: 3, dislikes: 1})}));
-            listeners['.member.rating_changed']({play_id: 12, value: 1});
-            await w.vm.$nextTick();
-            expect(w.get('[data-testid=rating-count]').text()).toBe('3');
-            expect(w.get('[data-testid=rate-like]').attributes('aria-pressed')).toBe('true');
-        });
-
         it('reloads once on realtime:resync and stops after unmount', () => {
             const w = mount(Show, {props: baseProps()});
             window.dispatchEvent(new Event('realtime:resync'));
@@ -225,7 +198,7 @@ describe('Party page now playing and Up Next', () => {
             w.unmount();
             window.dispatchEvent(new Event('realtime:resync'));
             expect(reload).toHaveBeenCalledTimes(1);
-            expect(echo.leave).toHaveBeenCalledWith('party.FRI123');
+            expect(echo.leave).not.toHaveBeenCalledWith('party.FRI123');
         });
 
         it('reloads when the payload version is newer than the client knows', () => {
@@ -239,18 +212,19 @@ describe('Party page now playing and Up Next', () => {
 describe('Party page songs section', () => {
     const play = {id: 7, track: {title: 'T', artists: ['A'], album: null, artwork_url: null, duration_ms: 1, explicit: false}, likes: 2, dislikes: 0, my_rating: 0};
 
-    it('titles the history section Songs and keeps the banner with rating', () => {
+    it('titles the history section Songs', () => {
         const w = mount(Show, {props: baseProps({section: 'history', history: {data: [], meta: {}}, ratablePlay: play})});
 
         expect(w.findAll('h2').map((h) => h.text())).toContain('Songs');
-        expect(w.find('[data-testid=now-playing]').exists()).toBe(true);
-        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeUndefined();
+        expect(w.find('[data-testid=now-playing]').exists()).toBe(false);
     });
 
-    it('locks rating once the party has ended', () => {
-        const w = mount(Show, {props: baseProps({party: {code: 'FRI123', name: 'F', state: 'ended', downvotes: true}, readOnly: true, ratablePlay: play})});
+    it('widens the content container for history only', () => {
+        const history = mount(Show, {props: baseProps({section: 'history', history: {data: [], meta: {}}, ratablePlay: play})});
+        const queue = mount(Show, {props: baseProps()});
 
-        expect(w.get('[data-testid=rate-like]').attributes('disabled')).toBeDefined();
+        expect(history.get('h2').element.closest('div.mx-auto').classList).toContain('max-w-6xl');
+        expect(queue.get('div.mx-auto').classes()).toContain('max-w-3xl');
     });
 });
 
@@ -259,6 +233,43 @@ describe('MiniNowPlaying', () => {
         const w = mount(MiniNowPlaying, {props: {nowPlaying: entry()}});
         expect(w.text()).toContain('Dance Floor Gravity');
         expect(w.text()).toContain('Nova Kids');
+    });
+
+    it('shows a progress bar that follows the position', () => {
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry(), positionMs: 120500}});
+        expect(w.find('[data-testid=mini-progress]').attributes('aria-valuenow')).toBe('50');
+        expect(mount(MiniNowPlaying, {props: {nowPlaying: entry()}}).find('[data-testid=mini-progress]').exists()).toBe(false);
+    });
+
+    it('opens and closes the expanded view and keeps the scroll position', async () => {
+        const scrollTo = vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+        window.scrollY = 640;
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry(), positionMs: 0}});
+        expect(w.find('[data-testid=mini-expanded]').exists()).toBe(false);
+
+        await w.find('[data-testid=mini-expand]').trigger('click');
+        expect(w.find('[data-testid=mini-expanded]').exists()).toBe(true);
+        expect(w.find('[data-testid=mini-expanded] [data-testid=now-playing]').exists()).toBe(true);
+
+        window.scrollY = 0;
+        await w.find('[data-testid=mini-collapse]').trigger('click');
+        await w.vm.$nextTick();
+        expect(w.find('[data-testid=mini-expanded]').exists()).toBe(false);
+        expect(scrollTo).toHaveBeenCalledWith(0, 640);
+        scrollTo.mockRestore();
+    });
+
+    it('keeps the expanded view in step with the mini bar and freezes on pause', async () => {
+        vi.useFakeTimers();
+        const w = mount(MiniNowPlaying, {props: {nowPlaying: entry({track: {...entry().track, duration_ms: 100000}}), positionMs: 0}});
+        await vi.advanceTimersByTimeAsync(30000);
+        await w.find('[data-testid=mini-expand]').trigger('click');
+        expect(w.find('[data-testid=mini-expanded] [data-testid=now-playing-elapsed]').text()).toBe('0:30');
+
+        await w.setProps({paused: true});
+        await vi.advanceTimersByTimeAsync(20000);
+        expect(w.find('[data-testid=mini-progress]').attributes('aria-valuenow')).toBe('30');
+        vi.useRealTimers();
     });
 
     it('shows an empty state', () => {
@@ -284,13 +295,6 @@ describe('rating', () => {
         expect(put).toHaveBeenLastCalledWith('/parties/FRI123/plays/7/rating', {value: 'down'}, expect.any(Object));
     });
 
-    it('rates the Play from the Show banner', async () => {
-        const w = mount(Show, {props: baseProps({ratablePlay: play()})});
-
-        await w.get('[data-testid=rate-like]').trigger('click');
-        expect(put).toHaveBeenCalledWith('/parties/FRI123/plays/7/rating', {value: 'up'}, expect.any(Object));
-    });
-
     it('hides the mini rating without a ratable play', () => {
         expect(mount(MiniNowPlaying, {props: {nowPlaying: entry(), ratablePlay: null}}).find('[data-testid="rating"]').exists()).toBe(false);
     });
@@ -302,50 +306,23 @@ describe('rating', () => {
     });
 });
 
-describe('playback controls', () => {
-    it('shows the controls only to a manager and posts each control', async () => {
-        expect(mount(Show, {props: baseProps()}).find('[data-testid="playback-controls"]').exists()).toBe(false);
-
-        const w = mount(Show, {props: baseProps({canManage: true})});
-        await w.find('[data-testid="playback-play"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/play', {}, expect.any(Object));
-        await w.find('[data-testid="playback-pause"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/pause', {}, expect.any(Object));
-        await w.find('[data-testid="playback-skip"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/skip', {}, expect.any(Object));
-
-        await w.find('[data-testid="playback-seek-input"]').setValue('12');
-        await w.find('[data-testid="playback-seek"]').trigger('click');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/seek', {position_ms: 12000}, expect.any(Object));
-
-        await w.find('[data-testid="playback-volume-input"]').setValue('80');
-        await w.find('[data-testid="playback-volume-input"]').trigger('change');
-        expect(post).toHaveBeenLastCalledWith('/parties/FRI123/playback/volume', {level: 80}, expect.any(Object));
+describe('party card', () => {
+    it.each(['queue', 'search', 'history'])('is absent on the %s section', (section) => {
+        const w = mount(Show, {props: baseProps({section}), global: {stubs: {SearchPanel: true}}});
+        expect(w.find('[data-testid="party-card"]').exists()).toBe(false);
+        expect(w.find('[data-testid="party-code"]').exists()).toBe(false);
     });
 
-    it('disables the controls for a browser player', () => {
-        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'browser'}})});
-        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeDefined();
-        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(true);
-    });
-
-    it('enables the controls for a polling player', () => {
-        const w = mount(Show, {props: baseProps({canManage: true, party: {...baseProps().party, playerKind: 'polling'}})});
-        expect(w.find('[data-testid="playback-play"]').attributes('disabled')).toBeUndefined();
-        expect(w.find('[data-testid="playback-unsupported"]').exists()).toBe(false);
-    });
-
-    it('shows a refusal returned by the server', async () => {
-        post.mockImplementationOnce((_url, _data, options) => options.onError({playback: 'The Player is disconnected, so playback cannot be controlled.'}));
-        const w = mount(Show, {props: baseProps({canManage: true})});
-        await w.find('[data-testid="playback-play"]').trigger('click');
-        expect(w.find('[data-testid="playback-error"]').text()).toContain('disconnected');
+    it('is present on the party section', () => {
+        const w = mount(Show, {props: baseProps({section: 'party'})});
+        expect(w.find('[data-testid="party-card"]').exists()).toBe(true);
+        expect(w.find('[data-testid="party-code"]').text()).toBe('FRI123');
     });
 });
 
 describe('Party Show realtime state and toasts', () => {
     it('applies party.state_changed without reload', async () => {
-        const w = mount(Show, {props: baseProps()});
+        const w = mount(Show, {props: baseProps({section: 'party'})});
         listeners['.party.state_changed']({state: 'ended'});
         await w.vm.$nextTick();
         expect(w.get('[data-testid=party-state]').text()).toBe('ended');

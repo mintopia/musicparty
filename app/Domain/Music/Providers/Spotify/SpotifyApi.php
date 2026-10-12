@@ -21,7 +21,9 @@ class SpotifyApi
 
     public const string URL = 'https://api.spotify.com/v1';
 
-    private const string BACKOFF_CACHE_KEY = 'music.spotify.backoff-until';
+    public const string SEARCH_ID = 'spotifysearch';
+
+    private const string BACKOFF_CACHE_PREFIX = 'music.spotify.backoff.';
 
     private const int DEFAULT_RETRY_AFTER_SECONDS = 5;
 
@@ -57,12 +59,12 @@ class SpotifyApi
      * @throws ProviderUnavailableException
      * @throws ProviderTemporaryFailure
      */
-    public function guard(Response $response): void
+    public function guard(Response $response, ?string $clientId = null): void
     {
         $status = $response->status();
 
         if ($status === 429) {
-            throw $this->startBackoff($response);
+            throw $this->startBackoff($response, $clientId);
         }
 
         if ($status === 401 || $status === 403) {
@@ -74,12 +76,12 @@ class SpotifyApi
         }
     }
 
-    public function startBackoff(Response $response): ProviderTemporaryFailure
+    public function startBackoff(Response $response, ?string $clientId = null): ProviderTemporaryFailure
     {
         $header = $response->header('Retry-After');
         $retryAfter = is_numeric($header) ? max(1, (int) $header) : self::DEFAULT_RETRY_AFTER_SECONDS;
 
-        Cache::put(self::BACKOFF_CACHE_KEY, now()->getTimestamp() + $retryAfter, $retryAfter);
+        Cache::put($this->backoffKey($clientId), now()->getTimestamp() + $retryAfter, $retryAfter);
 
         return new ProviderTemporaryFailure('Spotify is rate limiting requests.', $retryAfter);
     }
@@ -87,9 +89,9 @@ class SpotifyApi
     /**
      * @throws ProviderTemporaryFailure
      */
-    public function assertNotBackingOff(): void
+    public function assertNotBackingOff(?string $clientId = null): void
     {
-        $until = Cache::get(self::BACKOFF_CACHE_KEY);
+        $until = Cache::get($this->backoffKey($clientId));
 
         if (! is_int($until)) {
             return;
@@ -112,14 +114,14 @@ class SpotifyApi
         }
     }
 
-    public function clientId(): ?string
+    public function clientId(string $application = self::ID): ?string
     {
-        return $this->configured('client_id');
+        return $this->configured('client_id', $application);
     }
 
-    public function clientSecret(): ?string
+    public function clientSecret(string $application = self::ID): ?string
     {
-        return $this->configured('client_secret');
+        return $this->configured('client_secret', $application);
     }
 
     public function market(): ?string
@@ -145,9 +147,14 @@ class SpotifyApi
         return $account;
     }
 
-    private function configured(string $key): ?string
+    private function backoffKey(?string $clientId): string
     {
-        $value = config("services.spotify.{$key}");
+        return self::BACKOFF_CACHE_PREFIX.hash('sha256', $clientId ?? $this->clientId() ?? '');
+    }
+
+    private function configured(string $key, string $application = self::ID): ?string
+    {
+        $value = config("services.{$application}.{$key}");
 
         return is_string($value) && $value !== '' ? $value : null;
     }

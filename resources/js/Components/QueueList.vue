@@ -1,6 +1,6 @@
 <script setup>
 import {router} from '@inertiajs/vue3';
-import {ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import Icon from './Icon.vue';
 import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
@@ -13,9 +13,44 @@ const props = defineProps({
     partyCode: {type: String, default: ''},
     downvotesEnabled: {type: Boolean, default: true},
     readOnly: {type: Boolean, default: false},
+    canModerate: {type: Boolean, default: false},
     startsAt: {type: Object, default: () => ({})},
     now: {type: Number, default: 0},
 });
+
+const PAGE_SIZE = 20;
+
+const windowSize = ref(PAGE_SIZE);
+const sentinel = ref(null);
+const visibleQueue = computed(() => props.queue.slice(0, windowSize.value));
+const hasMore = computed(() => props.queue.length > windowSize.value);
+
+let observer = null;
+
+const observeSentinel = () => {
+    observer?.disconnect();
+    if (sentinel.value && observer) {
+        observer.observe(sentinel.value);
+    }
+};
+
+onMounted(() => {
+    if (typeof IntersectionObserver === 'undefined') {
+        windowSize.value = Number.MAX_SAFE_INTEGER;
+        return;
+    }
+    observer = new IntersectionObserver((entries) => {
+        if (entries.some((e) => e.isIntersecting)) {
+            windowSize.value += PAGE_SIZE;
+        }
+    });
+    observeSentinel();
+});
+
+watch(sentinel, observeSentinel, {flush: 'post'});
+watch(windowSize, observeSentinel, {flush: 'post'});
+
+onBeforeUnmount(() => observer?.disconnect());
 
 const pending = ref(null);
 const errors = ref({});
@@ -52,9 +87,9 @@ const vote = (item, direction) => {
 
 const REMOVE_BLOCKED_REASON = 'Someone has already voted on this request';
 
-const canRemove = (item) => !props.readOnly && item.is_mine === true && item.status !== 'up_next';
+const canRemove = (item) => !props.readOnly && (props.canModerate || item.is_mine === true) && item.status !== 'up_next';
 
-const removeBlocked = (item) => item.has_other_votes === true;
+const removeBlocked = (item) => !props.canModerate && item.has_other_votes === true;
 
 const removeRequest = (item) => {
     if (!canRemove(item) || removeBlocked(item) || pending.value === item.id) {
@@ -85,14 +120,13 @@ const buttonClass = (active, activeColor) => [
 <template>
     <p v-if="queue.length === 0" data-testid="queue-empty" class="text-sm text-muted">The queue is empty. Search for a track to request one.</p>
     <ul v-else data-testid="queue-list" class="divide-y divide-border overflow-hidden rounded border border-border bg-surface">
-        <li v-for="item in queue" :key="item.id" data-testid="queue-item" class="px-3 py-3 md:px-5 md:py-4">
+        <li v-for="item in visibleQueue" :key="item.id" data-testid="queue-item" class="px-3 py-5 md:px-5">
             <div class="flex items-center gap-3 md:gap-4">
                 <TrackLink :href="item.track.provider_url"><TrackThumb :src="item.track.artwork_url" /></TrackLink>
                 <div class="min-w-0 flex-1">
                     <div class="truncate text-sm"><TrackLink :href="item.track.provider_url">{{ item.track.title }}</TrackLink></div>
                     <div class="truncate text-sm text-muted">{{ item.track.artists.join(', ') }}</div>
-                    <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}</div>
-                    <div v-if="startsAt[item.id] !== undefined" data-testid="queue-item-eta" class="truncate text-xs tabular-nums text-muted">Estimated in {{ formatCountdown(startsAt[item.id], now) }} (~{{ formatClock(startsAt[item.id]) }})</div>
+                    <div class="truncate text-xs text-muted">{{ requesterLabel(item) }}<span v-if="startsAt[item.id] !== undefined" data-testid="queue-item-eta" class="tabular-nums"> · Estimated in {{ formatCountdown(startsAt[item.id], now) }} (~{{ formatClock(startsAt[item.id]) }})</span></div>
                     <Decorations :decorations="item.decorations" class="mt-1" />
                 </div>
                 <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(item.track.duration_ms) }}</span>
@@ -100,13 +134,13 @@ const buttonClass = (active, activeColor) => [
                     <button
                         type="button"
                         data-testid="vote-up"
-                        :aria-label="`Upvote ${item.track.title}`"
+                        :aria-label="`${downvotesEnabled ? 'Upvote' : 'Like'} ${item.track.title}`"
                         :aria-pressed="item.my_vote === 1"
                         :disabled="isLocked(item)"
                         :class="buttonClass(item.my_vote === 1, 'text-accent')"
                         @click="vote(item, 'up')"
                     >
-                        <Icon name="arrowUp" />
+                        <Icon :name="downvotesEnabled ? 'voteUp' : 'heart'" :filled="item.my_vote === 1" />
                     </button>
                     <span
                         data-testid="queue-score"
@@ -123,14 +157,14 @@ const buttonClass = (active, activeColor) => [
                         :class="buttonClass(item.my_vote === -1, 'text-danger')"
                         @click="vote(item, 'down')"
                     >
-                        <Icon name="arrowDown" />
+                        <Icon :name="item.my_vote === -1 ? 'voteDown' : 'voteDownTray'" :filled="item.my_vote === -1" />
                     </button>
                     <button
                         v-if="canRemove(item)"
                         type="button"
                         data-testid="remove-request"
                         :aria-label="`Remove ${item.track.title}`"
-                        :title="removeBlocked(item) ? REMOVE_BLOCKED_REASON : 'Remove your request'"
+                        :title="removeBlocked(item) ? REMOVE_BLOCKED_REASON : (item.is_mine ? 'Remove your request' : 'Remove request')"
                         :disabled="removeBlocked(item)"
                         :class="buttonClass(false, '')"
                         @click="removeRequest(item)"
@@ -140,7 +174,8 @@ const buttonClass = (active, activeColor) => [
                 </div>
             </div>
             <ModSlot name="queue-item" :item="item" />
-            <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-sm text-danger">{{ errors[item.id] }}</p>
+            <p v-if="errors[item.id]" role="alert" data-testid="vote-error" class="mt-2 text-center text-sm text-danger">{{ errors[item.id] }}</p>
         </li>
+        <li v-if="hasMore" ref="sentinel" data-testid="queue-sentinel" class="py-3 text-center text-sm text-muted">Loading upcoming songs...</li>
     </ul>
 </template>

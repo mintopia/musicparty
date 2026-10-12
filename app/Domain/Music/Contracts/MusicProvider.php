@@ -2,6 +2,7 @@
 
 namespace App\Domain\Music\Contracts;
 
+use App\Domain\Identity\Models\User;
 use App\Domain\Music\Capability;
 use App\Domain\Music\Data\PlaylistData;
 use App\Domain\Music\Data\SearchPage;
@@ -18,7 +19,7 @@ interface MusicProvider
      * @throws ProviderUnavailableException
      * @throws ProviderTemporaryFailure
      */
-    public function search(string $query, int $limit, int $offset): SearchPage;
+    public function search(string $query, int $limit, int $offset, ?User $host = null): SearchPage;
 
     /**
      * @throws ProviderUnavailableException

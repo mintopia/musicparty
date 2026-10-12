@@ -39,6 +39,14 @@ final class SoloistCommands
     /**
      * @return array<string, mixed>
      */
+    public static function previous(): array
+    {
+        return self::command('skip_prev');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
     public static function seek(int $positionMs): array
     {
         return self::command('seek', ['position_ms' => $positionMs]);

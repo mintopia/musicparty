@@ -1,4 +1,5 @@
 <script setup>
+import {describePartyLogEntry} from '../../lib/partyLogLabels';
 import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
@@ -41,52 +42,7 @@ onBeforeUnmount(() => {
 const prevUrl = computed(() => props.entries?.links?.prev ?? null);
 const nextUrl = computed(() => props.entries?.links?.next ?? null);
 
-const formatValue = (value) => (value !== null && typeof value === 'object' ? JSON.stringify(value) : String(value));
-
-const describe = (entry) => {
-    switch (entry.action) {
-        case 'party.created':
-            return 'Party created';
-        case 'party.settings_changed': {
-            const label = `Changed setting ${entry.subject ?? ''}`.trim();
-            if (entry.details && ('old' in entry.details || 'new' in entry.details)) {
-                return `${label}: ${formatValue(entry.details.old ?? '')} -> ${formatValue(entry.details.new ?? '')}`;
-            }
-            return label;
-        }
-        case 'member.role_changed':
-            return `Changed ${entry.subject ?? 'a member'} from ${entry.details?.old ?? '?'} to ${entry.details?.new ?? '?'}`;
-        case 'member.banned':
-            return `Banned ${entry.subject ?? 'a member'}`;
-        case 'member.unbanned':
-            return `Unbanned ${entry.subject ?? 'a member'}`;
-        case 'blocklist.entry_added':
-            return `Added blocklist entry ${entry.subject ?? ''}`.trim();
-        case 'blocklist.entry_updated': {
-            const label = `Updated blocklist entry ${entry.subject ?? ''}`.trim();
-            if (entry.details && ('old' in entry.details || 'new' in entry.details)) {
-                return `${label}: ${formatValue(entry.details.old ?? '')} -> ${formatValue(entry.details.new ?? '')}`;
-            }
-            return label;
-        }
-        case 'blocklist.entry_removed':
-            return `Removed blocklist entry ${entry.subject ?? ''}`.trim();
-        case 'mod.enabled':
-            return `Enabled Mod ${entry.subject ?? ''}`.trim();
-        case 'mod.disabled':
-            return `Disabled Mod ${entry.subject ?? ''}`.trim();
-        case 'mod.settings_updated':
-            return `Changed Mod ${entry.subject ?? ''} settings: ${Object.keys(entry.details?.changes ?? {}).join(', ')}`.trim();
-        case 'act_as_host.entered':
-            return 'An admin started acting as Host';
-        case 'act_as_host.left':
-            return 'An admin stopped acting as Host';
-        case 'act_as_host.expired':
-            return 'An admin\'s time acting as Host expired';
-        default:
-            return entry.action;
-    }
-};
+const describe = describePartyLogEntry;
 
 const formatTime = (iso) => {
     const date = new Date(iso);

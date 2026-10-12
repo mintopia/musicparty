@@ -8,12 +8,20 @@ const props = defineProps({code: {type: String, required: true}});
 const page = usePage();
 const path = computed(() => page.url.split('?')[0]);
 
-const tabs = computed(() => [
-    {label: 'Queue', icon: 'queue', href: `/parties/${props.code}`},
-    {label: 'Search', icon: 'search', href: `/parties/${props.code}/search`},
-    {label: 'History', icon: 'history', href: `/parties/${props.code}/history`},
-    {label: 'Party', icon: 'party', href: `/parties/${props.code}/party`},
-]);
+const icons = {queue: 'queue', search: 'search', history: 'history', tv: 'play'};
+const fallback = (code) => [
+    {key: 'queue', label: 'Queue', href: `/parties/${code}`},
+    {key: 'search', label: 'Search', href: `/parties/${code}/search`},
+    {key: 'history', label: 'History', href: `/parties/${code}/history`},
+    {key: 'tv', label: 'TV Mode', href: `/parties/${code}/tv`},
+];
+
+const tabs = computed(() => {
+    const menu = page.props.partyContext?.menu ?? [];
+    const entries = menu.length ? menu : fallback(props.code);
+
+    return entries.filter((entry) => entry.key in icons).map((entry) => ({...entry, icon: icons[entry.key]}));
+});
 
 const isActive = (href) => path.value === href;
 </script>

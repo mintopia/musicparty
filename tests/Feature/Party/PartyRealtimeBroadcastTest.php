@@ -6,6 +6,7 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Actions\EndParty;
 use App\Domain\Party\Actions\PauseParty;
 use App\Domain\Party\Actions\ReopenParty;
+use App\Domain\Party\Actions\UpdatePartySettings;
 use App\Domain\Party\Broadcast\PartyStateChangedEvent;
 use App\Domain\Party\Models\Party;
 use Illuminate\Broadcasting\PrivateChannel;
@@ -26,7 +27,7 @@ function assertStateBroadcast(string $state): void
         $channels = $event->broadcastOn();
 
         return $event->broadcastAs() === 'party.state_changed'
-            && $event->broadcastWith() === ['state' => $state]
+            && $event->broadcastWith() === ['state' => $state, 'show_qrcode' => true]
             && count($channels) === 1
             && ! $channels[0] instanceof PrivateChannel
             && $channels[0]->name === 'party.ABCD';
@@ -72,4 +73,13 @@ it('does not broadcast member.banned when the ban is refused or already applied'
     expect(fn () => app(BanMember::class)($this->host->user, $this->party, $this->host))->toThrow(Exception::class);
 
     Event::assertNotDispatched(MemberBannedEvent::class);
+});
+
+it('broadcasts the QR code setting when it is toggled and not when unchanged', function () {
+    app(UpdatePartySettings::class)($this->host->user, $this->party, ['show_qrcode' => true]);
+    Event::assertNotDispatched(PartyStateChangedEvent::class);
+
+    app(UpdatePartySettings::class)($this->host->user, $this->party, ['show_qrcode' => false]);
+
+    Event::assertDispatched(PartyStateChangedEvent::class, fn (PartyStateChangedEvent $event): bool => $event->broadcastWith() === ['state' => 'live', 'show_qrcode' => false]);
 });

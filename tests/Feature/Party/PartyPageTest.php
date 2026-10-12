@@ -1,7 +1,9 @@
 <?php
 
+use App\Domain\Admin\SiteSettings;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
 use App\Domain\Party\Models\Party;
 use App\Domain\Queue\Broadcast\PartyQueueSnapshot;
 use App\Domain\Queue\Models\TrackRequest;
@@ -51,11 +53,11 @@ it('serves each section', function (string $section) {
         ->assertInertia(fn (Assert $page): Assert => $page->where('section', $section));
 })->with(['queue', 'search', 'history', 'party']);
 
-it('returns 404 for an invalid section or unknown party', function (string $path) {
+it('returns 404 for an invalid section or malformed code', function (string $path) {
     Party::factory()->create(['code' => 'ABCD']);
 
     $this->withoutVite()->actingAs(User::factory()->create())->get($path)->assertNotFound();
-})->with(['/parties/ABCD/nope', '/parties/ZZZZ', '/parties/ABCDE']);
+})->with(['/parties/ABCD/nope', '/parties/ABCDE']);
 
 it('redirects guests to login', function () {
     Party::factory()->create(['code' => 'ABCD']);
@@ -63,13 +65,84 @@ it('redirects guests to login', function () {
     $this->get('/parties/ABCD')->assertRedirect(route('login'));
 });
 
-it('redirects a non-member to the join form without joining', function () {
+it('joins a non-member as a guest when they open the party link', function () {
     $party = Party::factory()->create(['code' => 'ABCD']);
     $user = User::factory()->create();
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page): Assert => $page->component('Party/Show')->where('membership.role', PartyRole::Guest->value));
+
+    expect($party->memberFor($user)->role)->toBe(PartyRole::Guest);
+});
+
+it('does not duplicate an existing membership when the link is opened', function () {
+    $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+    PartyMember::factory()->for($party)->for($user)->moderator()->create();
+
+    $this->withoutVite()->actingAs($user)->get('/parties/abcd')->assertOk();
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertOk();
+
+    expect(PartyMember::query()->where('party_id', $party->id)->count())->toBe(1)
+        ->and($party->memberFor($user)->role)->toBe(PartyRole::Moderator);
+});
+
+it('shows the join form with an error for an unknown code', function () {
+    $user = User::factory()->create();
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ZZZZ')
+        ->assertRedirect(route('home', ['code' => 'ZZZZ']))
+        ->assertSessionHasErrors(['code' => 'No party found with that code.']);
+
+    expect(PartyMember::query()->count())->toBe(0);
+});
+
+it('sends an anonymous visitor to login and joins them on return', function () {
+    $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+
+    $this->get('/parties/ABCD')->assertRedirect(route('login'));
+    expect(session('url.intended'))->toEndWith('/parties/ABCD');
+
+    $this->withoutVite()->actingAs($user)->get(session('url.intended'))->assertOk();
+
+    expect($party->memberFor($user)->role)->toBe(PartyRole::Guest);
+});
+
+it('falls back to the join form when join attempts are rate limited', function () {
+    $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+
+    foreach (range(1, 20) as $attempt) {
+        $other = Party::factory()->create();
+        $this->withoutVite()->actingAs($user)->get('/parties/'.$other->code)->assertOk();
+    }
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertRedirect(route('home', ['code' => 'ABCD']));
 
     expect($party->memberFor($user))->toBeNull();
+});
+
+it('joins a non-member to an ended party as read-only', function () {
+    $party = Party::factory()->ended()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')
+        ->assertInertia(fn (Assert $page): Assert => $page->where('readOnly', true)->where('section', 'history'));
+
+    expect($party->memberFor($user))->not->toBeNull();
+});
+
+it('joins a logged-in visitor through the default party redirect', function () {
+    $party = Party::factory()->create(['code' => 'ABCD']);
+    $user = User::factory()->create();
+    $this->partialMock(SiteSettings::class, fn ($mock) => $mock->shouldReceive('get')->with('default_party')->andReturn('ABCD'));
+
+    $this->withoutVite()->actingAs($user)->get('/')->assertRedirect('/parties/ABCD');
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertOk();
+
+    expect($party->memberFor($user)->role)->toBe(PartyRole::Guest);
 });
 
 it('prefills the join form from the code', function () {
@@ -134,4 +207,29 @@ it('serialises requester-less requests in the snapshot and the queue resource', 
 
     expect($snapshot['queue'][0]['requested_by'])->toBe(['name' => null])
         ->and($resource['requested_by'])->toBe(['name' => null]);
+});
+
+it('rate limits unknown-code link visits and stops reporting not found', function () {
+    $user = User::factory()->create();
+
+    foreach (range(1, 20) as $attempt) {
+        $this->withoutVite()->actingAs($user)->get('/parties/ZZZZ')->assertSessionHasErrors('code');
+    }
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ZZZZ')
+        ->assertRedirect(route('home', ['code' => 'ZZZZ']))
+        ->assertSessionHasNoErrors();
+});
+
+it('shares the join rate limit between the link and the join form', function () {
+    $user = User::factory()->create();
+    $party = Party::factory()->create(['code' => 'ABCD']);
+
+    foreach (range(1, 20) as $attempt) {
+        $this->actingAs($user)->post(route('parties.join'), ['code' => 'ZZZZ']);
+    }
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD')->assertRedirect(route('home', ['code' => 'ABCD']));
+
+    expect($party->memberFor($user))->toBeNull();
 });

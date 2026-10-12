@@ -3,6 +3,7 @@
 namespace App\Domain\Mod\Actions;
 
 use App\Domain\Identity\Models\User;
+use App\Domain\Mod\Events\ModEnabled;
 use App\Domain\Mod\Models\PartyMod;
 use App\Domain\Mod\ModSettings;
 use App\Domain\Mod\PartyMods;
@@ -46,6 +47,7 @@ readonly class EnableMod
         $this->partyMods->forget($party);
 
         if ($changed) {
+            ModEnabled::dispatch($party, $mod->id());
             BroadcastPartyQueue::dispatch($party->code);
         }
     }

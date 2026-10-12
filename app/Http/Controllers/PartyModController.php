@@ -35,7 +35,7 @@ class PartyModController extends Controller
 
         $enableMod($this->currentUser($request), $party, $mod);
 
-        return back()->with('successMessage', 'Mod enabled');
+        return back()->with('success', 'Mod enabled');
     }
 
     public function disable(Request $request, DisableMod $disableMod, Party $party, string $mod): RedirectResponse
@@ -44,7 +44,7 @@ class PartyModController extends Controller
 
         $disableMod($this->currentUser($request), $party, $mod);
 
-        return back()->with('successMessage', 'Mod disabled');
+        return back()->with('success', 'Mod disabled');
     }
 
     public function update(UpdateModSettingsRequest $request, UpdateModSettings $updateSettings, Party $party, string $mod): RedirectResponse
@@ -53,7 +53,7 @@ class PartyModController extends Controller
 
         $updateSettings($this->currentUser($request), $party, $mod, $request->settings());
 
-        return back()->with('successMessage', 'Mod settings saved');
+        return back()->with('success', 'Mod settings saved');
     }
 
     private function currentUser(Request $request): User

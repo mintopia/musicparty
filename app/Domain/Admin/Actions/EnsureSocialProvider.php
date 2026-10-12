@@ -6,6 +6,7 @@ use App\Domain\Admin\Models\ProviderSetting;
 use App\Domain\Admin\ProviderCatalogue;
 use App\Domain\Identity\Actions\CreateSocialProvider;
 use App\Domain\Identity\Models\SocialProvider;
+use App\Domain\Music\Providers\Spotify\SpotifyApi;
 use App\Enums\SettingType;
 use Illuminate\Support\Facades\DB;
 
@@ -23,7 +24,7 @@ class EnsureSocialProvider
                     'code' => $code,
                     'name' => $definition['name'],
                     'provider_class' => $definition['class'],
-                    'supports_auth' => true,
+                    'supports_auth' => $code !== SpotifyApi::SEARCH_ID,
                     'enabled' => false,
                     'auth_enabled' => false,
                     'can_be_renamed' => false,
