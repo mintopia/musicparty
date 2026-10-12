@@ -58,3 +58,15 @@ describe('Pending requests realtime', () => {
         expect(echo.leave).toHaveBeenCalledWith('party.FRI1.moderators');
     });
 });
+
+describe('Pending action row', () => {
+    it('keeps actions on one non-wrapping row with a flexible reason input', () => {
+        const w = mount(Pending, {props: props()});
+        const row = w.find('[data-testid=pending-1] input').element.parentElement;
+        expect(row.className).not.toContain('flex-wrap');
+        expect(w.find('[data-testid=pending-1] input').classes()).toContain('flex-1');
+        expect(row.textContent).toContain('Approve');
+        expect(row.textContent).toContain('Reject');
+        expect(row.textContent).toContain('Remove');
+    });
+});
