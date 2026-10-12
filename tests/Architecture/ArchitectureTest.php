@@ -140,3 +140,13 @@ it('never lets a Mod class write a Queue model', function () {
     expect($modClasses)->not->toBeEmpty()
         ->and($queueWrites)->toBe([]);
 });
+
+it('reads Spotify client credentials from the environment config only in providers:seed', function () {
+    expect(ArchitectureRules::spotifyEnvCredentialReadViolations(ArchitectureRules::appSourceFiles()))->toBe([]);
+});
+
+it('detects a Spotify client credential config read in a violating fixture', function () {
+    $fixture = dirname(__DIR__).'/Fixtures/Architecture/SpotifyEnvCredentialReader.php';
+
+    expect(ArchitectureRules::spotifyEnvCredentialReadViolations([$fixture]))->toBe([$fixture]);
+});
