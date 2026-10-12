@@ -157,6 +157,11 @@ class BrowserPlayer implements BindsToParty, Player
         throw UnsupportedControl::for(Control::Skip);
     }
 
+    public function previous(): void
+    {
+        throw UnsupportedControl::for(Control::Previous);
+    }
+
     public function seek(int $positionMs): void
     {
         throw UnsupportedControl::for(Control::Seek);

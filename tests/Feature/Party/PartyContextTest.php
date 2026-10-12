@@ -176,7 +176,7 @@ it('shares player capabilities for the party player', function (string $kind, bo
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.capabilities', ['play' => $supported, 'pause' => $supported, 'skip' => $supported]));
+            ->where('partyContext.capabilities', ['play' => $supported, 'pause' => $supported, 'skip' => $supported, 'previous' => $supported]));
 })->with([
     'browser' => ['browser', false],
     'polling' => ['polling', true],
@@ -188,5 +188,5 @@ it('shares no capabilities when the party has no player', function () {
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.capabilities', ['play' => false, 'pause' => false, 'skip' => false]));
+            ->where('partyContext.capabilities', ['play' => false, 'pause' => false, 'skip' => false, 'previous' => false]));
 });

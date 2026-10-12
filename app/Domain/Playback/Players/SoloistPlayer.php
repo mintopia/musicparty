@@ -186,6 +186,11 @@ class SoloistPlayer implements BindsToParty, HandlesPlayerFrames, Player
         $this->send(SoloistCommands::next());
     }
 
+    public function previous(): void
+    {
+        $this->send(SoloistCommands::previous());
+    }
+
     public function seek(int $positionMs): void
     {
         $this->send(SoloistCommands::seek($positionMs));

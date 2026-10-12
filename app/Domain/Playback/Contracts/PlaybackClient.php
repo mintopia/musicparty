@@ -47,6 +47,13 @@ interface PlaybackClient
      * @throws ProviderTemporaryFailure
      * @throws PlayerCommandRejectedException
      */
+    public function previous(string $hostAccountId): void;
+
+    /**
+     * @throws ProviderUnavailableException
+     * @throws ProviderTemporaryFailure
+     * @throws PlayerCommandRejectedException
+     */
     public function seek(int $positionMs, string $hostAccountId): void;
 
     /**

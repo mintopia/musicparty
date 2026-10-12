@@ -8,12 +8,15 @@ use App\Domain\Queue\Events\TrackEnded;
 use App\Domain\Queue\Events\TrackStarted;
 use App\Domain\Queue\Models\Play;
 use App\Domain\Queue\Models\TrackRequest;
+use App\Domain\Queue\ReplayMarker;
 use App\Domain\Queue\RequestStatus;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 
 readonly class AdvanceQueue
 {
+    public function __construct(private ReplayMarker $replayMarker) {}
+
     /**
      * Applies a Player track change, or with a null track the Player stopping: Playing becomes Played, Up Next becomes Playing and is recorded as a Play.
      */
@@ -41,6 +44,23 @@ readonly class AdvanceQueue
             $playing = $requests->where('status', RequestStatus::Playing);
             $upNext = $requests->firstWhere('status', RequestStatus::UpNext);
             $expected = $providerTrackId !== null && $upNext !== null && $upNext->provider_track_id === $providerTrackId;
+
+            $replayedId = $expected || $providerTrackId === null ? null : $this->replayMarker->claim($party, $providerTrackId);
+
+            if ($replayedId !== null && ! $playing->contains('id', $replayedId)) {
+                $replayed = TrackRequest::query()->where('party_id', $party->id)->find($replayedId);
+
+                if ($replayed !== null) {
+                    foreach ($playing as $interrupted) {
+                        $this->finish($interrupted);
+                        DB::afterCommit(fn () => TrackEnded::dispatch($party, $interrupted));
+                    }
+
+                    $replayed->forceFill(['status' => RequestStatus::Playing])->save();
+
+                    return new QueueAdvance($replayed, duplicate: true);
+                }
+            }
 
             if (! $expected && $playing->contains('provider_track_id', $providerTrackId)) {
                 return new QueueAdvance($playing->firstWhere('provider_track_id', $providerTrackId), duplicate: true);

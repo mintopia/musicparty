@@ -115,6 +115,14 @@ const thumbClass = (active, activeColor) => [
                         <div v-if="canControl" data-testid="playback-controls" class="flex items-center justify-center gap-2">
                             <button
                                 type="button"
+                                data-testid="playback-previous"
+                                aria-label="Previous"
+                                :disabled="controlDisabled('previous')"
+                                :class="thumbClass(false, '')"
+                                @click="send('previous')"
+                            ><Icon name="previous" class="h-5 w-5" /></button>
+                            <button
+                                type="button"
                                 data-testid="playback-toggle"
                                 :aria-label="paused ? 'Play' : 'Pause'"
                                 :disabled="controlDisabled(toggleControl)"

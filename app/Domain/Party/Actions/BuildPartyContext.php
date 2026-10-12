@@ -26,7 +26,7 @@ readonly class BuildPartyContext
     ) {}
 
     /**
-     * @return array{party: array{code: string, name: string, state: string}, nowPlaying: array<string, mixed>|null, capabilities: array{play: bool, pause: bool, skip: bool}, role: string, menu: list<array{key: string, label: string, href: string}>, themeCss: string}
+     * @return array{party: array{code: string, name: string, state: string}, nowPlaying: array<string, mixed>|null, capabilities: array{play: bool, pause: bool, skip: bool, previous: bool}, role: string, menu: list<array{key: string, label: string, href: string}>, themeCss: string}
      */
     public function handle(Party $party, ?User $user): array
     {
@@ -52,7 +52,7 @@ readonly class BuildPartyContext
     }
 
     /**
-     * @return array{play: bool, pause: bool, skip: bool}
+     * @return array{play: bool, pause: bool, skip: bool, previous: bool}
      */
     private function capabilities(Party $party): array
     {
@@ -62,6 +62,7 @@ readonly class BuildPartyContext
             'play' => $player?->supports(Control::Play) ?? false,
             'pause' => $player?->supports(Control::Pause) ?? false,
             'skip' => $player?->supports(Control::Skip) ?? false,
+            'previous' => $player?->supports(Control::Previous) ?? false,
         ];
     }
 
