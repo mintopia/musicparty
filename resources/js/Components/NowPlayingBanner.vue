@@ -95,23 +95,23 @@ const thumbClass = (active, activeColor) => [
 <template>
     <section data-testid="now-playing" aria-label="Now playing" class="border-b border-primary text-white">
         <div class="bg-black/90 bg-cover bg-center bg-no-repeat backdrop-blur-[2px] [background-blend-mode:darken]" :style="backdropStyle">
-            <div v-if="nowPlaying" class="mx-auto flex max-w-3xl flex-col gap-4 px-4 py-4 sm:flex-row sm:items-start md:px-0">
-                <TrackLink v-if="nowPlaying.track.artwork_url" :href="nowPlaying.track.provider_url" class="mx-auto shrink-0 sm:mx-0">
-                    <img :src="nowPlaying.track.artwork_url" alt="" data-testid="now-playing-cover" class="h-48 w-48 object-cover md:h-[11em] md:w-[11em]" />
+            <div v-if="nowPlaying" class="mx-auto flex max-w-[780px] items-start gap-3 px-4 py-3 md:gap-4 md:px-0 md:py-4">
+                <TrackLink v-if="nowPlaying.track.artwork_url" :href="nowPlaying.track.provider_url" class="shrink-0">
+                    <img :src="nowPlaying.track.artwork_url" alt="" data-testid="now-playing-cover" class="h-24 w-24 object-cover md:h-[300px] md:w-[300px]" />
                 </TrackLink>
-                <div v-else class="mx-auto h-48 w-48 shrink-0 bg-border sm:mx-0 md:h-[11em] md:w-[11em]" aria-hidden="true"></div>
-                <div class="flex min-w-0 flex-1 flex-col gap-2">
-                    <h2 data-testid="now-playing-title" class="truncate text-2xl font-semibold"><TrackLink :href="nowPlaying.track.provider_url">{{ nowPlaying.track.title }}</TrackLink></h2>
+                <div v-else class="h-24 w-24 shrink-0 bg-border md:h-[300px] md:w-[300px]" aria-hidden="true"></div>
+                <div class="flex min-w-0 flex-1 flex-col gap-1 md:gap-2">
+                    <h2 data-testid="now-playing-title" class="line-clamp-2 text-lg font-semibold leading-tight md:truncate md:text-xl"><TrackLink :href="nowPlaying.track.provider_url">{{ nowPlaying.track.title }}</TrackLink></h2>
                     <div class="flex items-center gap-2 text-sm"><Icon name="users" /><span data-testid="now-playing-artist" class="truncate">{{ nowPlaying.track.artists.join(', ') }}</span></div>
                     <div v-if="nowPlaying.track.album" class="flex items-center gap-2 text-sm"><Icon name="playlist" /><span class="truncate">{{ nowPlaying.track.album }}</span></div>
                     <div class="flex items-center gap-2 text-sm"><Icon name="musicPlus" /><span data-testid="now-playing-requester">{{ requesterLabel(nowPlaying) }}</span></div>
                     <Decorations :decorations="nowPlaying.decorations" />
                     <ModSlot name="now-playing" :now-playing="nowPlaying" />
-                    <div v-if="elapsedMs !== null" data-testid="now-playing-progress" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" class="mt-2 h-[5px] w-full bg-white/20">
+                    <div v-if="elapsedMs !== null" data-testid="now-playing-progress" role="progressbar" :aria-valuenow="Math.round(progressPercent)" aria-valuemin="0" aria-valuemax="100" class="mt-1 h-[5px] w-full bg-white/20 md:mt-2">
                         <div class="h-full bg-primary transition-[width] duration-1000 ease-linear" :style="{width: `${progressPercent}%`}"></div>
                     </div>
-                    <div class="flex items-center justify-between text-sm tabular-nums">
-                        <span class="w-1/4"><span v-if="elapsedMs !== null" data-testid="now-playing-elapsed">{{ formatDuration(elapsedMs) }}</span></span>
+                    <div class="flex items-center justify-between gap-1 text-sm tabular-nums">
+                        <span class="w-10 shrink-0 md:w-1/4"><span v-if="elapsedMs !== null" data-testid="now-playing-elapsed">{{ formatDuration(elapsedMs) }}</span></span>
                         <div v-if="canControl" data-testid="playback-controls" class="flex items-center justify-center gap-2">
                             <button
                                 type="button"
@@ -130,10 +130,10 @@ const thumbClass = (active, activeColor) => [
                                 @click="send('skip')"
                             ><Icon name="next" class="h-5 w-5" /></button>
                         </div>
-                        <span class="w-1/4 text-right" data-testid="now-playing-total">{{ formatDuration(nowPlaying.track.duration_ms) }}</span>
+                        <span class="w-10 shrink-0 text-right md:w-1/4" data-testid="now-playing-total">{{ formatDuration(nowPlaying.track.duration_ms) }}</span>
                     </div>
                     <p v-if="controlError" role="alert" data-testid="playback-error" class="text-center text-sm text-danger">{{ controlError }}</p>
-                    <div v-if="ratablePlay" data-testid="now-playing-rating" class="flex items-center justify-center gap-2">
+                    <div v-if="ratablePlay" data-testid="now-playing-rating" class="hidden items-center justify-center gap-2 md:flex">
                         <button
                             type="button"
                             data-testid="rate-dislike"
