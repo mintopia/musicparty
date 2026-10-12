@@ -1,5 +1,5 @@
 <script setup>
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, router, useForm} from '@inertiajs/vue3';
 import AdminLayout from '../../Layouts/AdminLayout.vue';
 import Button from '../../Components/ui/Button.vue';
 import ButtonLink from '../../Components/ui/ButtonLink.vue';
@@ -14,6 +14,8 @@ defineOptions({layout: AdminLayout});
 const props = defineProps({
     settings: {type: Object, required: true},
     providers: {type: Array, default: () => []},
+    musicProviders: {type: Array, default: () => []},
+    players: {type: Array, default: () => []},
     theme: {type: Object, default: () => ({light: {}, dark: {}, font: ''})},
 });
 
@@ -56,6 +58,15 @@ const schemes = [
 
 const submit = () => form.post('/admin/settings', {forceFormData: true, preserveScroll: true});
 const yesNo = (value) => (value ? 'Yes' : 'No');
+
+const toggleLabel = (item) => (item.enabled ? 'Disable' : 'Enable');
+
+const toggle = (path, item) => {
+    if (item.enabled && item.parties > 0 && !window.confirm(`${item.parties} parties use this. They keep working, but no new party can choose it.`)) {
+        return;
+    }
+    router.put(path, {enabled: !item.enabled}, {preserveScroll: true});
+};
 </script>
 
 <template>
@@ -153,6 +164,76 @@ const yesNo = (value) => (value ? 'Yes' : 'No');
                                 <template #icon><Icon name="edit" /></template>
                                 Edit
                             </ButtonLink>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </Card>
+
+    <Card class="mt-6" flush data-testid="music-providers-card">
+        <template #header>Music Providers</template>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-background text-xs uppercase tracking-wide text-muted">
+                        <th scope="col" class="px-5 py-3 font-semibold">Name</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Enabled</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Configured</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Active Parties</th>
+                        <th scope="col" class="px-5 py-3"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in musicProviders" :key="item.id" :data-testid="`music-provider-${item.id}`" class="border-t border-border">
+                        <td class="px-5 py-3">
+                            <div>{{ item.label }}</div>
+                            <div class="text-muted">{{ item.id }}</div>
+                        </td>
+                        <td class="px-5 py-3"><StatusPill :variant="item.enabled ? 'green' : 'red'">{{ yesNo(item.enabled) }}</StatusPill></td>
+                        <td class="px-5 py-3">
+                            <StatusPill v-if="item.configured" variant="green">Yes</StatusPill>
+                            <template v-else>
+                                <StatusPill variant="red">No</StatusPill>
+                                <div v-for="missing in item.missing" :key="missing.code">
+                                    <a :href="missing.editUrl" class="text-primary underline">Configure {{ missing.code }}</a>
+                                </div>
+                            </template>
+                        </td>
+                        <td class="px-5 py-3" data-testid="parties">{{ item.parties }}</td>
+                        <td class="px-5 py-3 text-right">
+                            <Button variant="outline-primary" data-testid="toggle" @click="toggle(`/admin/music-providers/${item.id}`, item)">{{ toggleLabel(item) }}</Button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </Card>
+
+    <Card class="mt-6" flush data-testid="players-card">
+        <template #header>Players</template>
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-sm">
+                <thead>
+                    <tr class="bg-background text-xs uppercase tracking-wide text-muted">
+                        <th scope="col" class="px-5 py-3 font-semibold">Name</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Enabled</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Compatible with</th>
+                        <th scope="col" class="px-5 py-3 font-semibold">Active Parties</th>
+                        <th scope="col" class="px-5 py-3"><span class="sr-only">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr v-for="item in players" :key="item.kind" :data-testid="`player-${item.kind}`" class="border-t border-border">
+                        <td class="px-5 py-3">
+                            <div>{{ item.label }}</div>
+                            <div class="text-muted">{{ item.kind }}</div>
+                        </td>
+                        <td class="px-5 py-3"><StatusPill :variant="item.enabled ? 'green' : 'red'">{{ yesNo(item.enabled) }}</StatusPill></td>
+                        <td class="px-5 py-3">{{ item.compatibleProviders.join(', ') }}</td>
+                        <td class="px-5 py-3" data-testid="parties">{{ item.parties }}</td>
+                        <td class="px-5 py-3 text-right">
+                            <Button variant="outline-primary" data-testid="toggle" @click="toggle(`/admin/players/${item.kind}`, item)">{{ toggleLabel(item) }}</Button>
                         </td>
                     </tr>
                 </tbody>
