@@ -19,5 +19,6 @@ final readonly class TrackData
         public ?string $isrc = null,
         public array $coverArtUrls = [],
         public bool $playableInMarket = true,
+        public ?int $popularity = null,
     ) {}
 }

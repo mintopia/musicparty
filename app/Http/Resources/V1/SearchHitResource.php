@@ -25,6 +25,7 @@ class SearchHitResource extends JsonResource
             'duration_ms' => $this->track->durationMs,
             'explicit' => $this->track->explicit,
             'provider_url' => $this->providerUrl,
+            'popularity' => $this->track->popularity,
             'queued' => $this->queued,
             'requested_by' => $this->requestedBy,
             'score' => $this->score,

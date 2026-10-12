@@ -5,6 +5,7 @@
         "type": "track",
         "duration_ms": 180000,
         "explicit": false,
+        "popularity": 50,
         "artists": [
             {
                 "id": "artist-1",
@@ -40,6 +41,7 @@
         "type": "track",
         "duration_ms": 200000,
         "explicit": true,
+        "popularity": 100,
         "artists": [
             {
                 "id": "artist-1",
@@ -75,6 +77,7 @@
         "type": "track",
         "duration_ms": 150000,
         "explicit": false,
+        "popularity": 0,
         "artists": [
             {
                 "id": "artist-2",

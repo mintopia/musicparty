@@ -1,7 +1,7 @@
 {
     "openapi": "3.1.0",
     "info": {
-        "title": "Music Party",
+        "title": "Laravel",
         "version": "0.0.1"
     },
     "servers": [
@@ -3148,6 +3148,14 @@
                             "type": "string",
                             "maxLength": 200
                         }
+                    },
+                    {
+                        "name": "page",
+                        "in": "query",
+                        "schema": {
+                            "type": "integer",
+                            "minimum": 1
+                        }
                     }
                 ],
                 "responses": {
@@ -3168,10 +3176,26 @@
                                                     "items": {
                                                         "$ref": "#/components/schemas/SearchHitResource"
                                                     }
+                                                },
+                                                "meta": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "page": {
+                                                            "type": "integer"
+                                                        },
+                                                        "has_more": {
+                                                            "type": "boolean"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "page",
+                                                        "has_more"
+                                                    ]
                                                 }
                                             },
                                             "required": [
-                                                "data"
+                                                "data",
+                                                "meta"
                                             ]
                                         }
                                     ]
@@ -6516,6 +6540,12 @@
                             "null"
                         ]
                     },
+                    "popularity": {
+                        "type": [
+                            "integer",
+                            "null"
+                        ]
+                    },
                     "queued": {
                         "type": "boolean"
                     },
@@ -6538,6 +6568,7 @@
                     "duration_ms",
                     "explicit",
                     "provider_url",
+                    "popularity",
                     "queued",
                     "requested_by",
                     "score"

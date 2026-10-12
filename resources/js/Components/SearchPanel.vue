@@ -11,6 +11,8 @@ const props = defineProps({
     results: {type: Array, default: null},
     searchQuery: {type: String, default: ''},
     searchError: {type: String, default: null},
+    searchPage: {type: Number, default: 1},
+    searchHasMore: {type: Boolean, default: false},
     readOnly: {type: Boolean, default: false},
 });
 
@@ -20,17 +22,27 @@ const pending = ref(null);
 const errors = ref({});
 let timer = null;
 
-const runSearch = () => {
-    router.get(
-        `/parties/${props.party.code}/search`,
-        query.value.trim() === '' ? {} : {q: query.value.trim()},
-        {preserveState: true, preserveScroll: true, replace: true, only: ['results', 'search_query', 'search_error']},
-    );
+const searchProps = ['results', 'search_query', 'search_error', 'search_page', 'search_has_more'];
+
+const runSearch = (page = 1) => {
+    const term = query.value.trim();
+    const params = term === '' ? {} : {q: term};
+    if (term !== '' && page > 1) {
+        params.page = page;
+    }
+    router.get(`/parties/${props.party.code}/search`, params, {preserveState: true, preserveScroll: true, replace: true, only: searchProps});
+};
+
+const nextPage = () => runSearch(props.searchPage + 1);
+
+const starCount = (track) => {
+    const popularity = Number(track.popularity);
+    return Number.isFinite(popularity) ? Math.min(5, Math.max(0, Math.round(popularity / 20))) : 0;
 };
 
 const onInput = () => {
     clearTimeout(timer);
-    timer = setTimeout(runSearch, 300);
+    timer = setTimeout(() => runSearch(), 300);
 };
 
 const submitSearch = () => {
@@ -104,6 +116,12 @@ const hasResults = computed(() => Array.isArray(props.results));
                             <div class="truncate text-sm text-muted">{{ track.artists.join(', ') }}</div>
                             <div v-if="track.queued" data-testid="requested-by" class="truncate text-sm text-muted">Requested by {{ track.requested_by }}</div>
                             <div v-else class="truncate text-xs text-muted">{{ track.album }}</div>
+                            <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
+                                <span data-testid="popularity-stars" role="img" :aria-label="`${starCount(track)} of 5 stars`" :data-stars="starCount(track)" class="flex items-center text-primary">
+                                    <Icon v-for="n in 5" :key="n" name="star" :filled="n <= starCount(track)" class="!h-4 !w-4" :class="n <= starCount(track) ? '' : 'text-muted'" />
+                                </span>
+                                <a v-if="track.provider_url" :href="track.provider_url" target="_blank" rel="noopener" data-testid="view-on-spotify" class="text-xs text-primary hover:underline">View on Spotify</a>
+                            </div>
                         </div>
                         <span class="hidden text-sm tabular-nums text-muted sm:inline">{{ formatDuration(track.duration_ms) }}</span>
                         <span v-if="track.queued" data-testid="result-score" class="min-w-8 text-center text-sm tabular-nums">{{ track.score }}</span>
@@ -122,6 +140,7 @@ const hasResults = computed(() => Array.isArray(props.results));
                     <p v-if="errors[track.provider_track_id]" role="alert" data-testid="request-error" class="mt-2 text-sm text-danger">{{ errors[track.provider_track_id] }}</p>
                 </li>
             </ul>
+            <button v-if="searchHasMore" type="button" data-testid="search-next" class="min-h-11 self-center rounded border border-border px-5 text-sm font-medium text-text hover:opacity-90" @click="nextPage">Load more</button>
         </template>
     </div>
 </template>

@@ -148,13 +148,17 @@ class PartyController extends Controller
         $section ??= $party->state === PartyState::Ended ? 'history' : 'queue';
         $playback = $snapshot->build($party);
         $query = trim($request->string('q')->toString());
+        $searchPage = max(1, $request->integer('page', 1));
         $results = null;
         $searchError = null;
+        $searchHasMore = false;
 
         if ($query !== '') {
             try {
                 $throttleSearch($this->currentUser($request));
-                $results = SearchHitResource::collection($search($party, $query))->resolve($request);
+                $found = $search($party, $query, $searchPage);
+                $results = SearchHitResource::collection($found->hits)->resolve($request);
+                $searchHasMore = $found->hasMore;
             } catch (RequestRefusedException $exception) {
                 $results = [];
                 $searchError = $exception->getMessage();
@@ -197,6 +201,8 @@ class PartyController extends Controller
             'search_query' => $query,
             'results' => $results,
             'search_error' => $searchError,
+            'search_page' => $searchPage,
+            'search_has_more' => $searchHasMore,
             'enabled_mods' => $enabledMods->idsFor($party),
             'spotify_link_url' => route('spotify.index', ['return' => route('parties.show', $party, false)]),
             'spotify_link_needed' => $party->user_id === $this->currentUser($request)->id

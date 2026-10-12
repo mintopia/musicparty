@@ -212,3 +212,22 @@ it('maps an empty search response to an empty page', function () {
 
     expect($page->items)->toBe([])->and($page->total)->toBe(0);
 });
+
+it('maps popularity and sends the requested offset for later pages', function () {
+    fakeSpotify(['api.spotify.com/v1/search*' => Http::response(SpotifyFake::fixture('search'))]);
+
+    $first = $this->provider->search('song', 2, 0);
+    $this->provider->search('song', 20, 20);
+
+    expect($first->items[0]->popularity)->toBe(50)
+        ->and($first->items[1]->popularity)->toBeNull()
+        ->and($first->hasMore())->toBeFalse();
+    Http::assertSent(fn (Request $r): bool => str_contains($r->url(), '/v1/search') && (int) $r['offset'] === 20 && (int) $r['limit'] === 20);
+});
+
+it('reports more results only while the total exceeds the page end', function () {
+    $items = array_fill(0, 5, SpotifyFake::fixture('search')['tracks']['items'][0]);
+    fakeSpotify(['api.spotify.com/v1/search*' => Http::response(['tracks' => ['items' => $items, 'total' => 25, 'limit' => 20, 'offset' => 20]])]);
+
+    expect($this->provider->search('song', 20, 20)->hasMore())->toBeFalse();
+});

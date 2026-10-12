@@ -342,6 +342,7 @@ class SpotifyMusicProvider implements MusicProvider
             is_string($isrc) && $isrc !== '' ? $isrc : null,
             array_values(array_map(fn (array $image): string => (string) $image['url'], array_filter($images, fn (array $image): bool => isset($image['url'])))),
             ($track['is_playable'] ?? true) !== false,
+            is_numeric($track['popularity'] ?? null) ? (int) $track['popularity'] : null,
         );
     }
 }

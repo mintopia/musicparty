@@ -29,6 +29,8 @@ const props = defineProps({
     search_query: {type: String, default: ''},
     results: {type: Array, default: null},
     search_error: {type: String, default: null},
+    search_page: {type: Number, default: 1},
+    search_has_more: {type: Boolean, default: false},
     enabled_mods: {type: Array, default: () => []},
     spotify_link_needed: {type: Boolean, default: false},
     spotify_link_url: {type: String, default: null},
@@ -358,7 +360,7 @@ const ratingLocked = computed(() => banned.value || liveState.value === 'ended')
             </template>
             <template v-else-if="section === 'search'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Search</h2>
-                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :read-only="readOnly" />
+                <SearchPanel :party="party" :results="results" :search-query="search_query" :search-error="search_error" :search-page="search_page" :search-has-more="search_has_more" :read-only="readOnly" />
             </template>
             <template v-else-if="section === 'history'">
                 <h2 class="mb-3 text-base font-bold md:mb-4 md:text-lg">Songs</h2>

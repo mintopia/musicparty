@@ -42,7 +42,11 @@ class PartyRequestController extends Controller
             $this->member($request, $party);
             $throttle($this->currentUser($request));
 
-            return SearchHitResource::collection($search($party, $request->string('q')->toString()));
+            $results = $search($party, $request->string('q')->toString(), $request->integer('page', 1));
+
+            return SearchHitResource::collection($results->hits)->additional([
+                'meta' => ['page' => $request->integer('page', 1), 'has_more' => $results->hasMore],
+            ]);
         } catch (RequestRefusedException $exception) {
             return $this->refusal($exception);
         }
