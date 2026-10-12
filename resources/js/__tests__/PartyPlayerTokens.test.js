@@ -57,14 +57,23 @@ describe('Player Tokens page', () => {
         await w.get('[data-action="copy"]').trigger('click');
         expect(writeText).toHaveBeenCalledWith('1|secret');
 
-        handlers.navigate.forEach((cb) => cb());
+        handlers.navigate.forEach((cb) => cb({detail: {page: {props: {issuedToken: null}}}}));
         await flushPromises();
 
         expect(w.find('[data-testid="issued-token"]').exists()).toBe(false);
         expect(w.html()).not.toContain('1|secret');
     });
 
-    it('clears the token when the page unmounts', () => {
+    it('shows a freshly issued token delivered by the navigate event', async () => {
+        const w = mount(PlayerTokens, {props: props()});
+
+        handlers.navigate.forEach((cb) => cb({detail: {page: {props: {issuedToken: {name: 'Bar', token: '2|fresh'}}}}}));
+        await flushPromises();
+
+        expect(w.get('[data-token]').text()).toBe('2|fresh');
+    });
+
+    it('stops listening for navigation when the page unmounts', () => {
         const w = mount(PlayerTokens, {props: props({issuedToken: {name: 'Stage', token: '1|secret'}})});
         w.unmount();
         expect(handlers.navigate).toHaveLength(0);

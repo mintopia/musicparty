@@ -20,7 +20,10 @@ const clearShown = () => {
     copied.value = false;
 };
 
-const stopListening = router.on('navigate', clearShown);
+const stopListening = router.on('navigate', (event) => {
+    shown.value = event.detail.page.props.issuedToken ?? null;
+    copied.value = false;
+});
 onBeforeUnmount(() => {
     stopListening?.();
     clearShown();
@@ -29,10 +32,7 @@ onBeforeUnmount(() => {
 const issue = () => {
     form.post(`/parties/${props.party.code}/player-tokens`, {
         preserveScroll: true,
-        onSuccess: (page) => {
-            shown.value = page.props.issuedToken ?? null;
-            form.reset();
-        },
+        onSuccess: () => form.reset(),
     });
 };
 

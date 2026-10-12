@@ -27,6 +27,8 @@ class PlayerTokenController extends Controller
             abort(403, $exception->getMessage());
         }
 
+        Inertia::encryptHistory();
+
         return Inertia::render('Party/PlayerTokens', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'tokens' => $tokens->map(fn (PersonalAccessToken $token): array => [
