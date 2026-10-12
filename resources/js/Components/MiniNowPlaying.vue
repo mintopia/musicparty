@@ -2,14 +2,56 @@
 import Icon from './Icon.vue';
 import TrackLink from './TrackLink.vue';
 import Decorations from './Decorations.vue';
+import NowPlayingBanner from './NowPlayingBanner.vue';
 import {useRatePlay} from '../lib/rating';
+import {computed, nextTick, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 
 const props = defineProps({
     nowPlaying: {type: Object, default: null},
     partyCode: {type: String, default: ''},
     ratablePlay: {type: Object, default: null},
     readOnly: {type: Boolean, default: false},
+    positionMs: {type: Number, default: null},
+    paused: {type: Boolean, default: false},
 });
+
+const startMs = computed(() => props.positionMs ?? props.nowPlaying?.position_ms ?? null);
+const isPaused = computed(() => props.paused || props.nowPlaying?.paused === true);
+const anchor = ref(Date.now());
+const tick = ref(anchor.value);
+let clock = null;
+watch(() => [props.nowPlaying, startMs.value], () => {
+    anchor.value = Date.now();
+    tick.value = anchor.value;
+});
+onMounted(() => {
+    clock = setInterval(() => {
+        tick.value = Date.now();
+    }, 1000);
+});
+onBeforeUnmount(() => clearInterval(clock));
+
+const progressPercent = computed(() => {
+    const duration = props.nowPlaying?.track.duration_ms ?? 0;
+    if (!props.nowPlaying || startMs.value === null || duration <= 0) {
+        return null;
+    }
+    const elapsed = startMs.value + (isPaused.value ? 0 : tick.value - anchor.value);
+
+    return Math.max(0, Math.min(100, (elapsed / duration) * 100));
+});
+
+const expanded = ref(false);
+let savedScroll = 0;
+const expand = () => {
+    savedScroll = window.scrollY;
+    expanded.value = true;
+};
+const collapse = async () => {
+    expanded.value = false;
+    await nextTick();
+    window.scrollTo(0, savedScroll);
+};
 
 const {pending, error, rate: ratePlay} = useRatePlay(() => props.partyCode, () => props.readOnly);
 const rate = (direction) => ratePlay(props.ratablePlay, direction);
@@ -59,11 +101,50 @@ const buttonClass = (active, activeColor) => [
         </div>
         <button
             type="button"
-            disabled
+            data-testid="mini-expand"
             aria-label="Expand now playing"
-            class="flex h-11 w-11 items-center justify-center rounded text-muted"
+            :aria-expanded="expanded"
+            class="flex h-11 w-11 items-center justify-center rounded text-muted hover:bg-white/10"
+            @click="expand"
         >
             <Icon name="chevron" class="rotate-180" />
         </button>
+        <div
+            v-if="progressPercent !== null"
+            data-testid="mini-progress"
+            role="progressbar"
+            :aria-valuenow="Math.round(progressPercent)"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            class="absolute inset-x-0 top-0 h-[3px] bg-border"
+        >
+            <div class="h-full bg-primary transition-[width] duration-1000 ease-linear" :style="{width: `${progressPercent}%`}"></div>
+        </div>
+    </div>
+    <div
+        v-if="expanded"
+        data-testid="mini-expanded"
+        role="dialog"
+        aria-modal="true"
+        aria-label="Now playing"
+        class="fixed inset-0 z-50 flex flex-col overflow-y-auto bg-black md:hidden"
+    >
+        <button
+            type="button"
+            data-testid="mini-collapse"
+            aria-label="Close now playing"
+            class="flex h-11 w-11 shrink-0 items-center justify-center self-end rounded text-white hover:bg-white/10"
+            @click="collapse"
+        >
+            <Icon name="chevron" />
+        </button>
+        <NowPlayingBanner
+            :now-playing="nowPlaying"
+            :ratable-play="ratablePlay"
+            :party-code="partyCode"
+            :read-only="readOnly"
+            :position-ms="startMs"
+            :paused="isPaused"
+        />
     </div>
 </template>
