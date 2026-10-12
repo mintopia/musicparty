@@ -232,6 +232,12 @@ class PartyController extends Controller
             'fallback_check' => $request->session()->get('fallback_check'),
             'enabled_mods' => $enabledMods->idsFor($party),
             'spotify_link_url' => route('spotify.index', ['return' => route('parties.settings', $party, false)]),
+            'player_kind' => $party->player_kind,
+            'player_kinds' => array_map(fn (array $player): array => ['value' => $player['kind'], 'label' => $player['label']], $catalogue->players()),
+            'playback_device' => $party->playback_device_id === null ? null : ['id' => $party->playback_device_id, 'name' => $party->playback_device_name],
+            'player_tokens_url' => route('parties.player-tokens.index', $party, false),
+            'devices_url' => route('parties.player.devices', $party, false),
+            'player_update_url' => route('parties.player.update', $party, false),
         ]);
     }
 

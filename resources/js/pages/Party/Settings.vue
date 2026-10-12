@@ -3,6 +3,7 @@ import {usePartyPresence} from '../../composables/usePartyPresence';
 import {Head, Link, useForm, usePage} from '@inertiajs/vue3';
 import {computed, provide} from 'vue';
 import ModSlot from '../../Components/ModSlot.vue';
+import PartyPlayerSettings from '../../Components/PartyPlayerSettings.vue';
 
 const props = defineProps({
     party: {type: Object, required: true},
@@ -13,6 +14,12 @@ const props = defineProps({
     fallback_playlist_id: {type: String, default: null},
     history_playlist_id: {type: String, default: null},
     fallback_check: {type: Object, default: null},
+    player_kind: {type: String, default: null},
+    player_kinds: {type: Array, default: () => []},
+    playback_device: {type: Object, default: null},
+    player_tokens_url: {type: String, default: null},
+    devices_url: {type: String, default: null},
+    player_update_url: {type: String, default: null},
 });
 
 usePartyPresence(props.party.code);
@@ -125,6 +132,17 @@ const numberFields = [
                 </div>
             </form>
         </section>
+
+        <PartyPlayerSettings
+            v-if="player_update_url"
+            :player-kind="player_kind"
+            :player-kinds="player_kinds"
+            :playback-device="playback_device"
+            :player-tokens-url="player_tokens_url"
+            :devices-url="devices_url"
+            :player-update-url="player_update_url"
+            :spotify-link-url="spotify_link_url"
+        />
 
         <form class="flex flex-col gap-4 rounded border border-border bg-surface px-5 py-5" data-testid="settings-form" @submit.prevent="save">
             <h2 class="text-base font-bold">Request rules</h2>

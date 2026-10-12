@@ -86,6 +86,7 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('parties/{party}/playlists', [PartyPlaylistController::class, 'index'])->name('parties.playlists.index');
         Route::put('parties/{party}/playlists', [PartyPlaylistController::class, 'update'])->name('parties.playlists.update');
         Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])->name('parties.player.update');
+        Route::get('parties/{party}/player/devices', [PartyPlayerController::class, 'devices'])->name('parties.player.devices');
         Route::get('parties/{party}/player-tokens', [PartyPlayerController::class, 'index'])->name('parties.player-tokens.index');
         Route::post('parties/{party}/player-tokens', [PartyPlayerController::class, 'store'])->name('parties.player-tokens.store');
         Route::delete('parties/{party}/player-tokens/{token}', [PartyPlayerController::class, 'destroy'])->whereNumber('token')->name('parties.player-tokens.destroy');

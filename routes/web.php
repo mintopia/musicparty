@@ -12,6 +12,7 @@ use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\BrowserPlayerController;
 use App\Http\Controllers\ColourSchemeController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\Party\PlayerController as PartyPlayerController;
 use App\Http\Controllers\Party\PlayerTokenController as PartyPlayerTokenController;
 use App\Http\Controllers\Party\PlaylistCsvController as PartyPlaylistCsvController;
 use App\Http\Controllers\Party\ThemeController as PartyThemeController;
@@ -180,6 +181,12 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::delete('parties/{party}/theme', [PartyThemeController::class, 'destroy'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.theme.destroy');
+    Route::get('parties/{party}/player/devices', [PartyPlayerController::class, 'devices'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.devices');
+    Route::put('parties/{party}/player', [PartyPlayerController::class, 'update'])
+        ->where('party', '[A-Za-z]{4}')
+        ->name('parties.player.update');
     Route::get('parties/{party}/player-tokens', [PartyPlayerTokenController::class, 'index'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.player-tokens.index');
