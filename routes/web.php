@@ -4,7 +4,9 @@ use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\ImpersonationController as AdminImpersonationController;
 use App\Http\Controllers\Admin\IntegrationTokenController as AdminIntegrationTokenController;
 use App\Http\Controllers\Admin\LinkedAccountController as AdminLinkedAccountController;
+use App\Http\Controllers\Admin\MusicProviderController as AdminMusicProviderController;
 use App\Http\Controllers\Admin\PartyController as AdminPartyController;
+use App\Http\Controllers\Admin\PlayerController as AdminPlayerController;
 use App\Http\Controllers\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Admin\SettingsController as AdminSettingsController;
 use App\Http\Controllers\Admin\ThemeController as AdminThemeController;
@@ -246,6 +248,8 @@ Route::middleware(['auth', 'can:admin'])->prefix('admin')->name('admin.')->group
     Route::put('providers/{provider}', [AdminProviderController::class, 'update'])->name('providers.update');
     Route::get('settings', [AdminSettingsController::class, 'show'])->name('settings.show');
     Route::post('settings', [AdminSettingsController::class, 'update'])->name('settings.update');
+    Route::put('music-providers/{provider}', [AdminMusicProviderController::class, 'update'])->name('music-providers.update');
+    Route::put('players/{player}', [AdminPlayerController::class, 'update'])->name('players.update');
     Route::get('parties', [AdminPartyController::class, 'index'])->name('parties.index');
     Route::post('parties/{party:id}/act-as-host', [AdminPartyController::class, 'enter'])->name('parties.act-as-host.enter');
     Route::delete('parties/{party:id}/act-as-host', [AdminPartyController::class, 'leave'])->name('parties.act-as-host.leave');

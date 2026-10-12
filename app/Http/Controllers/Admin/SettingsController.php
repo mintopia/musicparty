@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Domain\Admin\Actions\ListPairingAvailability;
 use App\Domain\Admin\Actions\ListSocialProviders;
 use App\Domain\Admin\Actions\UpdateSiteSettings;
 use App\Domain\Admin\SiteSettings;
@@ -18,13 +19,14 @@ use Inertia\Response;
 
 class SettingsController extends Controller
 {
-    public function show(SiteSettings $site, ListSocialProviders $listProviders, GetInstanceTheme $getInstanceTheme): Response
+    public function show(SiteSettings $site, ListSocialProviders $listProviders, GetInstanceTheme $getInstanceTheme, ListPairingAvailability $listPairing): Response
     {
         $theme = $getInstanceTheme->handle();
 
         return Inertia::render('Admin/Settings', [
             'settings' => new AdminSiteSettingsResource($site)->resolve(),
             'providers' => AdminSocialProviderResource::collection($listProviders->handle())->resolve(),
+            ...$listPairing->handle(),
             'theme' => ['light' => $theme['light'], 'dark' => $theme['dark'], 'font' => ThemeTokens::FONTS[$theme['font']]['label'] ?? $theme['font']],
         ]);
     }
