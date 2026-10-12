@@ -1,6 +1,6 @@
 <script setup>
 import {Head, Link, router, usePage} from '@inertiajs/vue3';
-import {computed, onBeforeUnmount, onMounted, reactive, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, provide, reactive, ref} from 'vue';
 import ModSlot from '../../Components/ModSlot.vue';
 import DataTable from '../../Components/ui/DataTable.vue';
 import RelativeTime from '../../Components/ui/RelativeTime.vue';
@@ -12,7 +12,11 @@ const props = defineProps({
     members: {type: Object, required: true},
     filters: {type: Object, default: () => ({})},
     abilities: {type: Object, required: true},
+    enabled_mods: {type: Array, default: () => []},
+    trust: {type: Object, default: null},
 });
+
+provide('enabledMods', computed(() => props.enabled_mods));
 
 const page = usePage();
 const memberError = computed(() => page.props.errors?.member ?? null);
@@ -24,12 +28,13 @@ const assignableRoles = [
     {value: 'guest', label: 'Guest'},
 ];
 const roleFilterOptions = [{value: '', label: 'All roles'}, {value: 'host', label: 'Host'}, ...assignableRoles];
-const columns = [
+const columns = computed(() => [
     {key: 'nickname', label: 'Nickname', sortable: true},
     {key: 'role', label: 'Role', sortable: true},
     {key: 'joined', label: 'Joined', sortable: true},
     {key: 'ban', label: 'Ban'},
-];
+    ...(props.trust !== null && props.enabled_mods.includes('trust-score') ? [{key: 'trust', label: 'Trust'}] : []),
+]);
 
 const searchText = ref(props.filters?.search ?? '');
 const roleFilter = ref(props.filters?.role ?? '');
@@ -252,7 +257,7 @@ const initial = (member) => member.nickname?.charAt(0).toUpperCase() ?? '?';
                             </template>
                         </div>
                     </td>
-                    <ModSlot name="members.columns" :member="member" />
+                    <ModSlot name="members.columns" :member="member" :trust="trust?.[member.id] ?? null" />
                 </template>
             </DataTable>
             <Pagination :paginator="members" />

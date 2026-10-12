@@ -30,6 +30,10 @@ _Avoid_: CSS classes, styling
 A first-party Mod that keeps one configured Track in the Queue as a system Request which gains Score each hour until it plays, returns after an interval, and is held back overnight.
 _Avoid_: Last Christmas mod, Christmas mode
 
+**Trust Score**:
+A first-party Mod that ranks each Member from 0 to 1 by how much the Host, and the Members the Host upvotes, upvote and like their Requests within a recent window, shows the score to the Host and Moderators only, and can add a small Score bonus for trusted requesters.
+_Avoid_: Reputation, karma, EigenKarma
+
 **Member**:
 A user who has joined a Party, holding exactly one Party Role.
 _Avoid_: Participant, attendee

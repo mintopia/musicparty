@@ -14,6 +14,7 @@ use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Mod\Models\PartyMod;
+use App\Domain\Mod\Trust\Models\TrustScore;
 use App\Domain\Mod\Whamageddon\Models\WhamageddonState;
 use App\Domain\Party\Models\BlocklistEntry;
 use App\Domain\Party\Models\Party;
@@ -135,6 +136,7 @@ class ArchitectureRules
                 ],
                 'models' => [
                     PartyMod::class,
+                    TrustScore::class,
                     WhamageddonState::class,
                 ],
             ],

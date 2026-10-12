@@ -1,9 +1,14 @@
 <?php
 
+use App\Domain\Identity\Models\User;
+use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Mod\Trust\Models\TrustScore;
 use App\Domain\Party\Broadcast\PartyStateChangedEvent;
 use App\Domain\Party\Models\Party;
 use App\Domain\Playback\Jobs\TickParty;
 use App\Domain\Queue\Jobs\BroadcastPartyQueue;
+use App\Domain\Queue\Models\RequestVote;
+use App\Domain\Queue\Models\TrackRequest;
 use Carbon\CarbonImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
@@ -22,7 +27,7 @@ afterEach(fn () => CarbonImmutable::setTestNow());
 it('registers the operator commands and no party:force', function () {
     $names = array_keys(Artisan::all());
 
-    expect($names)->toContain('party:check', 'party:fallback', 'party:updatestate', 'party:pushupdate', 'party:refreshaccesstokens')
+    expect($names)->toContain('party:check', 'party:fallback', 'party:updatestate', 'party:pushupdate', 'party:refreshaccesstokens', 'party:calculatetrust')
         ->not->toContain('party:force');
 });
 
@@ -124,4 +129,29 @@ it('refreshes expiring host tokens once', function () {
     $this->artisan('party:refreshaccesstokens')
         ->expectsOutputToContain('Expiring Host access tokens refreshed.')
         ->assertSuccessful();
+});
+
+it('calculates trust and prints a nickname and score table', function () {
+    $party = Party::factory()->live()->create(['code' => 'TRST']);
+    $host = PartyMember::factory()->for($party)->host()->for(User::factory()->create(['nickname' => 'DJ Anchor']))->create();
+    $fan = PartyMember::factory()->for($party)->for(User::factory()->create(['nickname' => 'Fan Girl']))->create();
+    RequestVote::factory()->create([
+        'track_request_id' => TrackRequest::factory()->create(['party_id' => $party->id, 'party_member_id' => $fan->id])->id,
+        'party_member_id' => $host->id,
+        'value' => 1,
+    ]);
+
+    $this->artisan('party:calculatetrust', ['code' => 'trst'])
+        ->expectsOutputToContain('DJ Anchor')
+        ->expectsOutputToContain('Fan Girl')
+        ->assertSuccessful();
+
+    expect(TrustScore::query()->where('party_id', $party->id)->count())->toBe(2)
+        ->and(TrustScore::query()->where('party_member_id', $fan->id)->value('score'))->toEqualWithDelta(0.85, 1e-4);
+});
+
+it('fails calculatetrust for an unknown code', function () {
+    $this->artisan('party:calculatetrust', ['code' => 'ZZZZ'])
+        ->expectsOutputToContain('No Party found with code ZZZZ.')
+        ->assertFailed();
 });
