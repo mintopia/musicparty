@@ -91,9 +91,9 @@ it('builds the menu through policies', function (string $role, array $keys) {
         ->assertInertia(fn (Assert $page): Assert => $page
             ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->all() === $keys));
 })->with([
-    'host' => ['host', ['queue', 'search', 'history', 'party', 'members', 'pending', 'blocklist', 'log', 'stats', 'mods', 'theme', 'player-tokens', 'settings']],
-    'moderator' => ['moderator', ['queue', 'search', 'history', 'party', 'members', 'pending', 'blocklist', 'log', 'stats']],
-    'guest' => ['guest', ['queue', 'search', 'history', 'party', 'members', 'stats']],
+    'host' => ['host', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log', 'mods', 'theme', 'player-tokens', 'settings']],
+    'moderator' => ['moderator', ['queue', 'search', 'history', 'stats', 'users', 'tv', 'moderation', 'pending', 'log']],
+    'guest' => ['guest', ['queue', 'search', 'history', 'stats', 'tv']],
     'banned' => ['banned', []],
 ]);
 
@@ -107,13 +107,22 @@ it('builds menu hrefs and labels', function () {
             ->where('partyContext.menu.1', ['key' => 'search', 'label' => 'Search', 'href' => '/parties/ABCD/search']));
 });
 
-it('lists pending for members only when requests are held', function () {
-    $party = Party::factory()->live()->create(['code' => 'ABCD', 'hold_requests' => true]);
+it('lists web player for the host only on a browser player party', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD', 'player_kind' => 'browser']);
+    $user = contextUser($party, 'host');
+
+    $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
+        ->assertInertia(fn (Assert $page): Assert => $page
+            ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->contains('web-player')));
+});
+
+it('links the TV mode entry to the party tv page', function () {
+    $party = Party::factory()->live()->create(['code' => 'ABCD']);
     $user = contextUser($party, 'guest');
 
     $this->withoutVite()->actingAs($user)->get('/parties/ABCD/queue')
         ->assertInertia(fn (Assert $page): Assert => $page
-            ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->contains('pending')));
+            ->where('partyContext.menu.4', ['key' => 'tv', 'label' => 'TV Mode', 'href' => '/parties/ABCD/tv']));
 });
 
 it('shares the now playing payload with timing', function () {

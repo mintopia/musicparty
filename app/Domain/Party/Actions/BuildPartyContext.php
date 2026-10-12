@@ -9,6 +9,7 @@ use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Control;
 use App\Domain\Playback\PartyPlayers;
+use App\Domain\Playback\Players\BrowserPlayer;
 use App\Domain\Queue\Actions\RankQueue;
 use App\Domain\Queue\Models\TrackRequest;
 use App\Domain\Queue\Presenters\QueueEntryPresenter;
@@ -87,12 +88,13 @@ readonly class BuildPartyContext
             ['queue', 'Queue', $base, true],
             ['search', 'Search', $base.'/search', true],
             ['history', 'History', $base.'/history', true],
-            ['party', 'Party', $base.'/party', true],
-            ['members', 'Members', $base.'/members', true],
-            ['pending', 'Pending', $base.'/requests/pending', $canModerate || $party->hold_requests],
-            ['blocklist', 'Blocklist', $base.'/blocklist', $canModerate],
-            ['log', 'Log', $base.'/log', $canViewLog],
             ['stats', 'Stats', $base.'/stats', true],
+            ['users', 'Users', $base.'/members', $canModerate],
+            ['tv', 'TV Mode', $base.'/tv', true],
+            ['web-player', 'Web Player', $base.'/player', $canManage && $party->player_kind === BrowserPlayer::KIND],
+            ['moderation', 'Moderation', $base.'/blocklist', $canModerate],
+            ['pending', 'Pending', $base.'/requests/pending', $canModerate],
+            ['log', 'Party Log', $base.'/log', $canViewLog],
             ['mods', 'Mods', $base.'/mods', $canManage],
             ['theme', 'Theme', $base.'/theme', $canManage],
             ['player-tokens', 'Player Tokens', $base.'/player-tokens', $canManage],
