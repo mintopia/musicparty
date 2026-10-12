@@ -8,12 +8,14 @@ use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
-use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\FakeSpotify;
 
+/**
+ * @return array<string, \Illuminate\Console\Scheduling\Event>
+ */
 function scheduledEvents(): array
 {
     $events = [];
@@ -27,6 +29,9 @@ function scheduledEvents(): array
     return $events;
 }
 
+/**
+ * @param  array<string, mixed>  $attributes
+ */
 function activeParty(array $attributes = []): Party
 {
     $party = Party::factory()->create(['active' => false]);
@@ -35,7 +40,7 @@ function activeParty(array $attributes = []): Party
     return $party->fresh();
 }
 
-dataset('schedule', [
+dataset('scheduled entries', [
     'sanctum prune' => ['sanctum:prune-expired --hours=24', '0 0 * * *'],
     'telescope prune' => ['telescope:prune', '0 0 * * *'],
     'party fallback' => ['party:fallback', '* * * * *'],
@@ -50,10 +55,9 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
     $events = scheduledEvents();
 
     expect($events)->toHaveKey($key);
-    /** @var ScheduledEvent $event */
     $event = $events[$key];
     expect($event->expression)->toBe($expression)->and($event->onOneServer)->toBeTrue();
-})->with('schedule');
+})->with('scheduled entries');
 
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
@@ -103,7 +107,15 @@ it('party:force fails for an unknown code', function () {
         ->assertFailed();
 });
 
-it('party:force starts a forced non-polling party whose device is online', function () {
+it('party:force fails for a valid code whose party is ineligible', function () {
+    $party = activeParty(['poll' => true, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20)]);
+
+    $this->artisan('party:force', ['code' => $party->code])
+        ->expectsOutputToContain("Unable to find suitable party with code {$party->code}")
+        ->assertFailed();
+});
+
+it('party:force starts a forced party whose device is online without taking a sync lock (E5 R2)', function () {
     $fake = FakeSpotify::install();
     $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
     $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
@@ -162,7 +174,7 @@ it('party:refreshaccesstokens reports when there is no spotify provider', functi
         ->assertSuccessful();
 });
 
-it('party:refreshaccesstokens refreshes only spotify accounts expiring within four minutes', function () {
+it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via getSpotifyApi with no lock or result check (E5 R5, R6)', function () {
     $provider = SocialProvider::factory()->create(['code' => 'spotify']);
     $expiring = User::factory()->create();
     $fresh = User::factory()->create();
