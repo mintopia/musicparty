@@ -88,7 +88,7 @@ Group ordering and `blocked_by` edges are in design.md under "Task group orderin
 
 ## 4. Docs and integration
 
-- [ ] 4.1 Update the docs.
+- [x] 4.1 Update the docs.
   - README "Login providers and Spotify": Spotify and Spotify Search credentials are edited under `/admin/providers`, env values only seed through `providers:seed`, and Music Providers and Players are enabled on the admin Settings page.
   - Add an upgrade note: run `providers:seed` once if Spotify credentials were env-only.
   - Add GLOSSARY entries for "Available" (Music Provider or Player) and "Registry".

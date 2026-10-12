@@ -30,9 +30,10 @@ beforeEach(function () {
     Cache::flush();
     Queue::fake();
     config([
-        'services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'GB'],
+        'services.spotify.market' => 'GB',
         'musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class],
     ]);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
 
     $this->spotify = new class
     {
@@ -59,7 +60,7 @@ beforeEach(function () {
 function backoffParty(string $code): Party
 {
     $party = Party::factory()->live()->create(['code' => $code, 'music_provider' => 'spotify', 'player_kind' => 'polling']);
-    $provider = SocialProvider::query()->where('code', 'spotify')->first() ?? SocialProvider::factory()->create(['code' => 'spotify']);
+    $provider = SocialProvider::query()->where('code', 'spotify')->first() ?? SocialProvider::query()->where('code', 'spotify')->firstOrFail();
     LinkedAccount::factory()->for($party->user)->create(['social_provider_id' => $provider->id]);
 
     return $party;
@@ -97,8 +98,8 @@ it('stores one deadline per client application from the Retry-After header', fun
 
 function linkSearchAccount(Party $party): void
 {
-    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
-    $provider = SocialProvider::factory()->create(['code' => 'spotifysearch', 'supports_auth' => false, 'auth_enabled' => false]);
+    configureSpotifyCredentials('spotifysearch', 'search-id', 'search-secret');
+    $provider = tap($provider = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail(), fn (SocialProvider $p) => $p->forceFill(['enabled' => true])->save());
     LinkedAccount::factory()->for($party->user)->create(['social_provider_id' => $provider->id]);
 }
 

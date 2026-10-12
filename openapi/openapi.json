@@ -443,6 +443,123 @@
                 ]
             }
         },
+        "/v1/admin/music-providers": {
+            "get": {
+                "operationId": "v1.admin.music-providers.index",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin music providers index",
+                "tags": [
+                    "MusicProvider"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AdminMusicProviderResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminMusicProviderResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
+        "/v1/admin/music-providers/{musicProvider}": {
+            "put": {
+                "operationId": "v1.admin.music-providers.update",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin music providers update",
+                "tags": [
+                    "MusicProvider"
+                ],
+                "parameters": [
+                    {
+                        "name": "musicProvider",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePairingToggleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminMusicProviderResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminMusicProviderResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
         "/v1/parties/{party}": {
             "get": {
                 "operationId": "v1.parties.show",
@@ -4845,6 +4962,123 @@
                 "security": []
             }
         },
+        "/v1/admin/players": {
+            "get": {
+                "operationId": "v1.admin.players.index",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin players index",
+                "tags": [
+                    "Player"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AdminPlayerResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminPlayerResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
+        "/v1/admin/players/{player}": {
+            "put": {
+                "operationId": "v1.admin.players.update",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin players update",
+                "tags": [
+                    "Player"
+                ],
+                "parameters": [
+                    {
+                        "name": "player",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdatePairingToggleRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminPlayerResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminPlayerResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
         "/v1/admin/providers": {
             "get": {
                 "operationId": "v1.admin.providers.index",
@@ -5914,6 +6148,26 @@
                 ],
                 "title": "AdminModResource"
             },
+            "AdminMusicProviderResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "enabled"
+                ],
+                "title": "AdminMusicProviderResource"
+            },
             "AdminPartyResource": {
                 "type": "object",
                 "properties": {
@@ -5933,6 +6187,26 @@
                     "acting_as_host"
                 ],
                 "title": "AdminPartyResource"
+            },
+            "AdminPlayerResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "label": {
+                        "type": "string"
+                    },
+                    "enabled": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "label",
+                    "enabled"
+                ],
+                "title": "AdminPlayerResource"
             },
             "AdminRole": {
                 "type": "string",
@@ -8006,6 +8280,7 @@
                     "music_provider": {
                         "type": "string",
                         "enum": [
+                            "spotify",
                             "fake"
                         ]
                     },
@@ -8098,6 +8373,18 @@
                     "settings"
                 ],
                 "title": "UpdateModSettingsRequest"
+            },
+            "UpdatePairingToggleRequest": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "enabled"
+                ],
+                "title": "UpdatePairingToggleRequest"
             },
             "UpdatePartyRequest": {
                 "type": "object",

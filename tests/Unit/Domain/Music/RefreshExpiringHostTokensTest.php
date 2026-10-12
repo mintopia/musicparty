@@ -14,10 +14,8 @@ use Tests\Fixtures\Spotify\SpotifyFake;
 
 beforeEach(function () {
     SpotifyFake::useInMemoryDatabase();
-    config([
-        'services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret'],
-        'services.spotifysearch' => ['client_id' => 'sid', 'client_secret' => 'ssecret'],
-    ]);
+    configureSpotifyCredentials('spotify', 'id', 'secret');
+    configureSpotifyCredentials('spotifysearch', 'sid', 'ssecret');
     Cache::flush();
     Carbon::setTestNow('2026-10-09 12:00:00');
 });
@@ -28,7 +26,7 @@ afterEach(function () {
 
 function hostTokenProviderRow(string $code): SocialProvider
 {
-    return SocialProvider::factory()->create(['code' => $code, 'name' => $code]);
+    return SocialProvider::query()->where('code', $code)->firstOrFail();
 }
 
 function runHostTokenRefreshJob(): void
@@ -70,7 +68,7 @@ it('leaves fresh tokens, other providers and accounts needing relink alone', fun
     $spotify = hostTokenProviderRow('spotify');
     hostTokenAccount(['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(30)]);
     hostTokenAccount(needingRelink: true, attributes: ['social_provider_id' => $spotify->id, 'access_token_expires_at' => now()->addMinutes(3)]);
-    hostTokenAccount(['social_provider_id' => hostTokenProviderRow('discord')->id, 'access_token_expires_at' => now()->addMinutes(3)]);
+    hostTokenAccount(['social_provider_id' => SocialProvider::factory()->create(['code' => 'discord'])->id, 'access_token_expires_at' => now()->addMinutes(3)]);
 
     runHostTokenRefreshJob();
 

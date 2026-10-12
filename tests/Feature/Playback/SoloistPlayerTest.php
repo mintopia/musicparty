@@ -91,6 +91,8 @@ it('is a just-in-time Spotify player with every control and no Host account', fu
 });
 
 it('is offered by the pairing catalogue', function () {
+    configureSpotifyCredentials();
+
     expect(collect(app(PairingCatalogue::class)->players())->firstWhere('kind', 'soloist'))
         ->toMatchArray(['compatibleProviders' => ['spotify']]);
 });

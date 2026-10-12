@@ -19,6 +19,10 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    setPairingToggle('player.fake.enabled', true);
+});
+
 /**
  * @param  array<string, mixed>  $overrides
  * @return array<string, mixed>
@@ -121,12 +125,14 @@ it('validates the create payload', function (array $payload, string $field) {
 ]);
 
 it('serves the create page with the pairing catalogue', function () {
+    configureSpotifyCredentials();
+    setPairingToggle('player.fake.enabled', true);
     $this->withoutVite()->actingAs(User::factory()->withRole('create-party')->create())
         ->get(route('parties.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page): Assert => $page
             ->component('Party/Create')
-            ->where('providers', [['id' => 'fake', 'label' => 'Fake (development)']])
+            ->where('providers', [['id' => 'spotify', 'label' => 'Spotify'], ['id' => 'fake', 'label' => 'Fake (development)']])
             ->where('players', [
                 ['kind' => 'fake', 'label' => 'Fake player', 'compatibleProviders' => ['fake'], 'requiresControlLink' => false],
                 ['kind' => 'polling', 'label' => 'Polling player', 'compatibleProviders' => ['spotify'], 'requiresControlLink' => true],
@@ -149,6 +155,7 @@ it('tells the home page whether the user can create a party', function (bool $al
 function registerControlLinkPlayer(): void
 {
     config(['musicparty.players.linked' => ['label' => 'Linked player', 'class' => 'test.linked']]);
+    setPairingToggle('player.linked.enabled', true);
     app()->bind('test.linked', fn (): FakePlayer => new FakePlayer(kind: 'linked', requiresHostAccount: true));
 }
 
@@ -207,8 +214,8 @@ it('does not require a control link for a player that needs no host account', fu
 
 it('creates a party with Spotify Search enabled and no Search link', function () {
     registerControlLinkPlayer();
-    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
-    SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => true]);
+    configureSpotifyCredentials('spotifysearch', 'search-id', 'search-secret');
+    SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true]);
     expect(app(SearchCredentials::class)->searchProviderEnabled())->toBeTrue();
     $user = User::factory()->withRole('create-party')->create();
     linkSpotifyControl($user);
@@ -262,6 +269,8 @@ it('rejects invalid settings', function (array $overrides, string $field) {
 ]);
 
 it('exposes control-link requirements on the create page', function () {
+    configureSpotifyCredentials();
+    setPairingToggle('player.fake.enabled', true);
     registerControlLinkPlayer();
     $user = User::factory()->withRole('create-party')->create();
 

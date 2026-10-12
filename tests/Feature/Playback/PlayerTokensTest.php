@@ -18,11 +18,13 @@ uses(RefreshDatabase::class);
 beforeEach(function () {
     $this->host = User::factory()->create();
     $this->party = Party::factory()->create(['user_id' => $this->host->id, 'music_provider' => 'fake', 'player_kind' => 'fake']);
+    setPairingToggle('player.fake.enabled', true);
 });
 
 function registerElsewherePlayer(): void
 {
     config(['musicparty.players.elsewhere' => ['label' => 'Elsewhere player', 'class' => 'test.elsewhere']]);
+    setPairingToggle('player.elsewhere.enabled', true);
     app()->bind('test.elsewhere', fn (): FakePlayer => new FakePlayer(kind: 'elsewhere', compatibleProviders: ['spotify']));
 }
 
@@ -94,6 +96,7 @@ it('forgets the cached player when the pairing changes', function () {
 
 it('refuses an incompatible pairing naming the compatible options', function () {
     registerElsewherePlayer();
+    configureSpotifyCredentials();
     Sanctum::actingAs($this->host);
 
     $response = $this->putJson(route('api.v1.parties.player.update', $this->party), ['player_kind' => 'elsewhere', 'music_provider' => 'fake'])

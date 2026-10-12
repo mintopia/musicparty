@@ -34,7 +34,7 @@ it('offers only enabled and configured providers on the login page', function ()
 
 it('never offers the Spotify Search provider for login even when forced on', function () {
     seedDiscord();
-    config(['services.spotifysearch' => ['client_id' => 'ss-id', 'client_secret' => 'ss-secret']]);
+    configureSpotifyCredentials('spotifysearch', 'ss-id', 'ss-secret');
     test()->artisan('providers:seed')->assertSuccessful();
     SocialProvider::query()->where('code', 'spotifysearch')->update(['enabled' => true, 'auth_enabled' => true]);
 

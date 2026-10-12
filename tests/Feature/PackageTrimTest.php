@@ -94,6 +94,7 @@ it('disables Debugbar package auto-discovery', function (): void {
 });
 
 it('numbers new settings sequentially and exposes an ordered scope', function (): void {
+    Setting::query()->delete();
     foreach (['b', 'a', 'c'] as $code) {
         (new Setting)->forceFill(['code' => $code, 'name' => $code, 'type' => 'stString'])->save();
     }

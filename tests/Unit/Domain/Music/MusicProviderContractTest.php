@@ -21,14 +21,16 @@ dataset('providers', [
         fn (MusicProvider $p, int $seconds) => $p->rateLimitNext($seconds),
     ]],
     'spotify' => [function (): array {
-        config(['services.spotify' => ['client_id' => 'id', 'client_secret' => 'secret', 'market' => 'US']]);
+        SpotifyFake::useInMemoryDatabase();
+        config(['services.spotify.market' => 'US']);
+        configureSpotifyCredentials('spotify', 'id', 'secret');
         Cache::flush();
         $control = new stdClass;
         SpotifyFake::catalogue($control);
 
         return [
             SpotifyFake::provider(),
-            fn () => config(['services.spotify.client_id' => null]),
+            fn () => blankSpotifyCredential('client_id'),
             fn () => $control->next = Http::response('', 503),
             fn (MusicProvider $p, int $seconds) => $control->next = Http::response('', 429, ['Retry-After' => (string) $seconds]),
         ];

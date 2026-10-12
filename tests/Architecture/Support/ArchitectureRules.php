@@ -594,4 +594,31 @@ class ArchitectureRules
                 && preg_match($pattern, (string) file_get_contents($file)) === 1;
         }));
     }
+
+    /**
+     * @param  array<int, string>  $files
+     * @return array<int, string>
+     */
+    public static function spotifyEnvCredentialReadViolations(array $files): array
+    {
+        $pattern = '/services\.spotify(search)?\.client_(id|secret)/';
+
+        return array_values(array_filter($files, static fn (string $file): bool => preg_match($pattern, (string) file_get_contents($file)) === 1));
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    public static function appSourceFiles(): array
+    {
+        $files = [];
+
+        foreach (Finder::create()->files()->name('*.php')->in(self::appPath()) as $file) {
+            $files[] = $file->getRealPath();
+        }
+
+        sort($files);
+
+        return $files;
+    }
 }

@@ -121,6 +121,33 @@ it('saves passport host and spotify search credentials and the auth flag', funct
     'spotify search' => ['spotifysearch', ['client_id' => 'search-id', 'client_secret' => 'shh']],
 ]);
 
+it('lists and toggles music providers and players with an audit entry', function (string $segment, string $id, string $auditAction): void {
+    Sanctum::actingAs(parityAdmin());
+
+    $this->getJson("/api/v1/admin/{$segment}")
+        ->assertOk()
+        ->assertJsonFragment(['id' => $id, 'enabled' => true]);
+
+    $this->putJson("/api/v1/admin/{$segment}/{$id}", ['enabled' => false])
+        ->assertOk()
+        ->assertJsonPath('data.id', $id)
+        ->assertJsonPath('data.enabled', false);
+
+    $this->getJson("/api/v1/admin/{$segment}")->assertJsonFragment(['id' => $id, 'enabled' => false]);
+
+    expect(AdminAuditEntry::query()->where('action', $auditAction)->exists())->toBeTrue();
+})->with([
+    'music provider' => ['music-providers', 'spotify', 'music_provider.disabled'],
+    'player' => ['players', 'browser', 'player.disabled'],
+]);
+
+it('answers 404 for an unknown music provider or player and 422 for a bad body', function (string $segment): void {
+    Sanctum::actingAs(parityAdmin());
+
+    $this->putJson("/api/v1/admin/{$segment}/nope", ['enabled' => true])->assertNotFound();
+    $this->putJson("/api/v1/admin/{$segment}/".($segment === 'players' ? 'browser' : 'spotify'), [])->assertUnprocessable();
+})->with(['music-providers', 'players']);
+
 /**
  * @param  array<string, mixed>  $payload
  * @return array{0: string, 1: array<string, mixed>}
@@ -159,6 +186,10 @@ dataset('adminEndpoints', [
     'mods' => ['getJson', '/api/v1/admin/mods', []],
     'providers' => ['getJson', '/api/v1/admin/providers', []],
     'provider update' => ['putJson', '/api/v1/admin/providers/{provider}', ['enabled' => true, 'auth_enabled' => false, 'settings' => ['client_id' => 'id', 'client_secret' => 'shh']]],
+    'music providers' => ['getJson', '/api/v1/admin/music-providers', []],
+    'music provider update' => ['putJson', '/api/v1/admin/music-providers/spotify', ['enabled' => false]],
+    'players' => ['getJson', '/api/v1/admin/players', []],
+    'player update' => ['putJson', '/api/v1/admin/players/browser', ['enabled' => false]],
     'settings' => ['getJson', '/api/v1/admin/settings', []],
     'settings update' => ['postJson', '/api/v1/admin/settings', ['name' => 'Renamed']],
     'act as host' => ['postJson', '/api/v1/admin/parties/{party}/act-as-host', []],

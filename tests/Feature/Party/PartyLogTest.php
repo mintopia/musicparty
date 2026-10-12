@@ -11,6 +11,10 @@ use Laravel\Sanctum\Sanctum;
 
 uses(RefreshDatabase::class);
 
+beforeEach(function () {
+    setPairingToggle('player.fake.enabled', true);
+});
+
 /**
  * @return array{Party, User}
  */

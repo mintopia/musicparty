@@ -60,6 +60,7 @@ return [
         'verifytls' => env('TICKETTAILOR_VERIFYTLS', true),
     ],
 
+    // Spotify client_id/client_secret are read only by `providers:seed`, which copies them into empty provider settings.
     'spotify' => [
         'client_id' => env('SPOTIFY_CLIENT_ID'),
         'client_secret' => env('SPOTIFY_CLIENT_SECRET'),

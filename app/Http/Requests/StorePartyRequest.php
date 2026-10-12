@@ -25,8 +25,8 @@ class StorePartyRequest extends FormRequest
     {
         return [
             'name' => 'required|string|min:2|max:64',
-            'music_provider' => 'required|string|in:'.implode(',', array_keys(config('musicparty.music_providers', []))),
-            'player_kind' => 'required|string|in:'.implode(',', array_keys(config('musicparty.players', []))),
+            'music_provider' => ['required', 'string', Rule::in(array_keys(config('musicparty.music_providers', [])))],
+            'player_kind' => ['required', 'string', Rule::in(array_keys(config('musicparty.players', [])))],
             'downvotes' => 'sometimes|boolean',
             'downvotes_per_hour' => 'sometimes|nullable|integer|min:0|max:1000',
             'selection_mode' => ['sometimes', Rule::enum(SelectionMode::class)],
@@ -46,8 +46,24 @@ class StorePartyRequest extends FormRequest
                 return;
             }
 
+            $catalogue = app(PairingCatalogue::class);
+            $kind = $this->string('player_kind')->toString();
+            $provider = $this->string('music_provider')->toString();
+
+            if (! $catalogue->isProviderAvailable($provider)) {
+                $validator->errors()->add('music_provider', 'That music provider is not available.');
+
+                return;
+            }
+
+            if (! $catalogue->isPlayerAvailable($kind, $provider)) {
+                $validator->errors()->add('player_kind', 'This player is not available for the chosen music provider.');
+
+                return;
+            }
+
             $user = $this->user();
-            $needsLink = app(PairingCatalogue::class)->player($this->string('player_kind')->toString())->requiresHostAccount();
+            $needsLink = $catalogue->player($kind)->requiresHostAccount();
 
             if ($needsLink && $user !== null && ! app(SpotifyControlLinkStatus::class)->isUsable($user)) {
                 $validator->errors()->add('player_kind', 'This player needs a linked Spotify account. Link one, then come back to create your party.');
