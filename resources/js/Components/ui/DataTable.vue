@@ -7,6 +7,8 @@ defineProps({
     rowKey: {type: String, default: 'id'},
     rowAttrs: {type: Function, default: () => ({})},
     defaultOrder: {type: String, default: null},
+    orderParam: {type: String, default: 'order'},
+    directionParam: {type: String, default: 'order_direction'},
     emptyText: {type: String, default: 'No results.'},
     caption: {type: String, default: null},
 });
@@ -19,7 +21,7 @@ defineProps({
             <thead>
                 <tr class="bg-background text-xs uppercase tracking-wide text-muted">
                     <th v-for="column in columns" :key="column.key" scope="col" class="px-5 py-3 font-semibold" :class="column.class">
-                        <SortHeader v-if="column.sortable" :column="column" :default-order="defaultOrder" />
+                        <SortHeader v-if="column.sortable" :column="column" :default-order="defaultOrder" :order-param="orderParam" :direction-param="directionParam" />
                         <template v-else>{{ column.label }}</template>
                     </th>
                 </tr>

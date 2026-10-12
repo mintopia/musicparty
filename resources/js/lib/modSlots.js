@@ -1,4 +1,4 @@
-export const SLOT_NAMES = ['settings', 'queue-item', 'now-playing'];
+export const SLOT_NAMES = ['settings', 'queue-item', 'now-playing', 'members.columns'];
 
 export const createModSlots = (modules) => {
     const registry = Object.fromEntries(SLOT_NAMES.map((name) => [name, []]));

@@ -11,17 +11,24 @@ use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Party\Models\Party;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
+use App\Http\Requests\ListPartyMembersRequest;
 use App\Http\Resources\V1\PartyMemberResource;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class PartyMemberController extends Controller
 {
-    public function index(Request $request, ListPartyMembers $listMembers, Party $party): AnonymousResourceCollection
+    public function index(ListPartyMembersRequest $request, ListPartyMembers $listMembers, Party $party): AnonymousResourceCollection
     {
-        $this->authorize('viewMembers', $party);
-
-        return PartyMemberResource::collection($listMembers($party, $request->user()?->can('moderate', $party) ?? false));
+        return PartyMemberResource::collection($listMembers(
+            $party,
+            true,
+            $request->search(),
+            $request->role(),
+            $request->sort(),
+            $request->direction(),
+            $request->perPage(),
+        ));
     }
 
     public function role(ChangeMemberRoleRequest $request, ChangeMemberRole $changeRole, Party $party, PartyMember $member): PartyMemberResource
