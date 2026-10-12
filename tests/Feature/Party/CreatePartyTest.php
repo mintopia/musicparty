@@ -5,7 +5,10 @@ use App\Domain\Identity\Models\SocialProvider;
 use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Models\PartyMember;
 use App\Domain\Membership\PartyRole;
+use App\Domain\Music\Actions\SpotifySearchLinkStatus;
+use App\Domain\Music\Providers\Spotify\SearchCredentials;
 use App\Domain\Music\Providers\Spotify\SpotifyScopes;
+use App\Domain\Music\Providers\SpotifyMusicProvider;
 use App\Domain\Party\Models\Party;
 use App\Domain\Party\PartyState;
 use App\Domain\Playback\Testing\FakePlayer;
@@ -202,14 +205,27 @@ it('does not require a control link for a player that needs no host account', fu
 
 it('creates a party with Spotify Search enabled and no Search link', function () {
     registerControlLinkPlayer();
-    config(['musicparty.spotify_search.enabled' => true]);
+    config(['services.spotifysearch' => ['client_id' => 'search-id', 'client_secret' => 'search-secret']]);
+    SocialProvider::factory()->create(['code' => 'spotifysearch', 'name' => 'Spotify Search', 'supports_auth' => false, 'auth_enabled' => false, 'enabled' => true]);
+    expect(app(SearchCredentials::class)->searchProviderEnabled())->toBeTrue();
     $user = User::factory()->withRole('create-party')->create();
     linkSpotifyControl($user);
 
     $this->actingAs($user)->post(route('parties.store'), partyPayload(['player_kind' => 'linked']))
         ->assertSessionHasNoErrors();
 
-    expect(Party::query()->count())->toBe(1);
+    expect(Party::query()->count())->toBe(1)
+        ->and(app(SpotifySearchLinkStatus::class)->enabled())->toBeTrue();
+});
+
+it('creates a Soloist party on Spotify without any link', function () {
+    config(['musicparty.music_providers.spotify' => ['label' => 'Spotify', 'class' => SpotifyMusicProvider::class]]);
+    $user = User::factory()->withRole('create-party')->create();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['music_provider' => 'spotify', 'player_kind' => 'soloist']))
+        ->assertSessionHasNoErrors();
+
+    expect(Party::query()->firstOrFail()->player_kind)->toBe('soloist');
 });
 
 it('applies the submitted settings at creation', function () {
