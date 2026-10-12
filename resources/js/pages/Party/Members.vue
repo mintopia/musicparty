@@ -193,7 +193,11 @@ const initial = (member) => member.nickname?.charAt(0).toUpperCase() ?? '?';
                             >{{ initial(member) }}</span>
                             <div class="flex min-w-0 flex-col gap-1">
                                 <span class="flex flex-wrap items-center gap-2 font-medium">
-                                    <span class="truncate">{{ member.nickname }}</span>
+                                    <Link
+                                        :href="`/parties/${party.code}/members/${member.id}`"
+                                        data-testid="member-link"
+                                        class="truncate hover:text-primary"
+                                    >{{ member.nickname }}</Link>
                                     <span v-if="member.isYou" data-testid="member-you" class="text-xs text-muted">(you)</span>
                                 </span>
                                 <span
