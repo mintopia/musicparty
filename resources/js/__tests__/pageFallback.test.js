@@ -20,13 +20,21 @@ describe('pageFallback', () => {
         expect(pageFallback('Party/Show', {party, section: 'bogus'}).title).toBe('Queue');
     });
 
-    it.each(['Party/Song', 'Party/SomethingNew', 'Elsewhere/ShowThing', 'Mystery'])(
-        'never shows the component name for %s',
-        (component) => {
-            const {title, crumbs} = pageFallback(component, {party});
-            for (const label of [title, ...crumbs.map((c) => c.label)]) {
-                expect(label).not.toMatch(/Song|Something|Show|Thing|Mystery/);
-            }
-        },
-    );
+    it.each([
+        ['Party/PlayerTokens', 'Player Tokens'],
+        ['Party/Blocklist', 'Blocklist'],
+        ['Party/Members', 'Users'],
+        ['Party/Tv', 'TV Mode'],
+    ])('ends %s breadcrumbs with its visible page name', (component, label) => {
+        const {title, crumbs} = pageFallback(component, {party});
+        expect(title).toBe(label);
+        expect(crumbs.at(-1).label).toBe(label);
+    });
+
+    it('never ends a Party page breadcrumb with its raw component name', () => {
+        for (const component of ['Party/Show', 'Party/PlayerTokens', 'Party/BrowserPlayer']) {
+            const {crumbs} = pageFallback(component, {party, section: 'search'});
+            expect(crumbs.at(-1).label).not.toBe(component.split('/').pop());
+        }
+    });
 });

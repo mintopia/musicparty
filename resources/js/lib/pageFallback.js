@@ -8,6 +8,7 @@ const titles = {
     'Party/Log': 'Log',
     'Party/Members': 'Users',
     'Party/Mods': 'Mods',
+    'Party/PlayerTokens': 'Player Tokens',
     'Party/Pending': 'Pending requests',
     'Party/Settings': 'Settings',
     'Party/Stats': 'Stats',
@@ -36,7 +37,7 @@ export const pageFallback = (component, props = {}) => {
     if (name.startsWith('Party/')) {
         const title = name === 'Party/Show'
             ? (sectionTitles[props.section] ?? 'Queue')
-            : (titles[name] ?? 'Party');
+            : (titles[name] ?? humanise(name.split('/').pop()));
         const party = props.party;
         const crumbs = [home];
         if (party?.name) {
@@ -46,6 +47,6 @@ export const pageFallback = (component, props = {}) => {
         return {title, crumbs};
     }
 
-    const title = titles[name] ?? 'Home';
+    const title = titles[name] ?? humanise(name.split('/').pop() || 'Home');
     return {title, crumbs: title === 'Home' ? [{label: 'Home'}] : [home, {label: title}]};
 };
