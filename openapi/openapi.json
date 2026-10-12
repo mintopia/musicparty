@@ -285,6 +285,80 @@
                 ]
             }
         },
+        "/v1/admin/users/{user}/linked-accounts/{account}": {
+            "delete": {
+                "operationId": "v1.admin.users.linked-accounts.destroy",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users linked accounts destroy",
+                "tags": [
+                    "LinkedAccount"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "account",
+                        "in": "path",
+                        "required": true,
+                        "description": "The account ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "422": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview.",
+                                            "examples": [
+                                                "This linked account cannot be deleted."
+                                            ]
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
         "/v1/me": {
             "get": {
                 "operationId": "v1.me",
@@ -319,6 +393,53 @@
                     {
                         "sanctumCookie": []
                     }
+                ]
+            }
+        },
+        "/v1/admin/mods": {
+            "get": {
+                "operationId": "v1.admin.mods.index",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin mods index",
+                "tags": [
+                    "Mod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Array of `AdminModResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {
+                                                "$ref": "#/components/schemas/AdminModResource"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
@@ -1047,6 +1168,7 @@
         "/v1/admin/parties/{party}/act-as-host": {
             "post": {
                 "operationId": "v1.admin.parties.act-as-host.enter",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin parties act as host enter",
                 "tags": [
                     "Party"
@@ -1086,19 +1208,23 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.parties.act-as-host.leave",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin parties act as host leave",
                 "tags": [
                     "Party"
@@ -1138,15 +1264,18 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
@@ -2464,6 +2593,118 @@
                     },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    }
+                ]
+            }
+        },
+        "/v1/parties/{party}/player/devices": {
+            "get": {
+                "operationId": "v1.parties.player.devices",
+                "description": "Host only. Returns 409 with `relink_required` when the Host's Spotify link needs re-linking to grant the playback scopes.",
+                "summary": "List the Host's Spotify devices",
+                "tags": [
+                    "PartyPlayer"
+                ],
+                "parameters": [
+                    {
+                        "name": "party",
+                        "in": "path",
+                        "required": true,
+                        "description": "The party code",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "type": "array",
+                                            "items": {}
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "409": {
+                        "description": "",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "relink_required": {
+                                            "type": "boolean"
+                                        },
+                                        "message": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "relink_required",
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "An error",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "message": {
+                                            "type": "string",
+                                            "description": "Error overview."
+                                        }
+                                    },
+                                    "required": [
+                                        "message"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
                     }
                 },
                 "security": [
@@ -3873,6 +4114,7 @@
         "/v1/admin/providers": {
             "get": {
                 "operationId": "v1.admin.providers.index",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin providers index",
                 "tags": [
                     "Provider"
@@ -3899,9 +4141,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -3909,13 +4148,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/providers/{provider}": {
             "put": {
                 "operationId": "v1.admin.providers.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin providers update",
                 "tags": [
                     "Provider"
@@ -3961,9 +4207,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -3971,13 +4214,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/settings": {
             "get": {
                 "operationId": "v1.admin.settings.show",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin settings show",
                 "tags": [
                     "Settings"
@@ -4001,9 +4251,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -4011,11 +4258,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "post": {
                 "operationId": "v1.admin.settings.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin settings update",
                 "tags": [
                     "Settings"
@@ -4051,9 +4305,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -4061,7 +4312,13 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
@@ -4127,6 +4384,7 @@
         "/v1/admin/theme": {
             "get": {
                 "operationId": "v1.admin.theme.show",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme show",
                 "tags": [
                     "Theme"
@@ -4150,9 +4408,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     }
@@ -4160,11 +4415,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "put": {
                 "operationId": "v1.admin.theme.update",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme update",
                 "tags": [
                     "Theme"
@@ -4200,9 +4462,6 @@
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -4210,11 +4469,18 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.theme.destroy",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin theme destroy",
                 "tags": [
                     "Theme"
@@ -4240,21 +4506,25 @@
                     },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users": {
             "get": {
                 "operationId": "v1.admin.users.index",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users index",
                 "tags": [
                     "User"
@@ -4412,9 +4682,6 @@
                             }
                         }
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "401": {
                         "$ref": "#/components/responses/AuthenticationException"
                     },
@@ -4425,13 +4692,201 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            }
+        },
+        "/v1/admin/users/{user}": {
+            "get": {
+                "operationId": "v1.admin.users.show",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users show",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserDetailResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            },
+            "patch": {
+                "operationId": "v1.admin.users.update",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users update",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "$ref": "#/components/schemas/UpdateUserRequest"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`AdminUserDetailResource`",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "data": {
+                                            "$ref": "#/components/schemas/AdminUserDetailResource"
+                                        }
+                                    },
+                                    "required": [
+                                        "data"
+                                    ]
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
+                ]
+            },
+            "delete": {
+                "operationId": "v1.admin.users.destroy",
+                "description": "Required Integration Token abilities: admin.",
+                "summary": "Admin users destroy",
+                "tags": [
+                    "User"
+                ],
+                "parameters": [
+                    {
+                        "name": "user",
+                        "in": "path",
+                        "required": true,
+                        "description": "The user ID",
+                        "schema": {
+                            "type": "integer"
+                        }
+                    },
+                    {
+                        "name": "confirm",
+                        "in": "query",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "delete"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "No content"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/AuthenticationException"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/ModelNotFoundException"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/ValidationException"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
+                    }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/suspension": {
             "post": {
                 "operationId": "v1.admin.users.suspend",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users suspend",
                 "tags": [
                     "User"
@@ -4471,19 +4926,23 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             },
             "delete": {
                 "operationId": "v1.admin.users.unsuspend",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users unsuspend",
                 "tags": [
                     "User"
@@ -4523,21 +4982,25 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/roles": {
             "post": {
                 "operationId": "v1.admin.users.roles.grant",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users roles grant",
                 "tags": [
                     "User"
@@ -4588,9 +5051,6 @@
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
                     },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
-                    },
                     "422": {
                         "$ref": "#/components/responses/ValidationException"
                     }
@@ -4598,13 +5058,20 @@
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         },
         "/v1/admin/users/{user}/roles/{role}": {
             "delete": {
                 "operationId": "v1.admin.users.roles.revoke",
+                "description": "Required Integration Token abilities: admin.",
                 "summary": "Admin users roles revoke",
                 "tags": [
                     "User"
@@ -4652,15 +5119,18 @@
                     },
                     "404": {
                         "$ref": "#/components/responses/ModelNotFoundException"
-                    },
-                    "403": {
-                        "$ref": "#/components/responses/AuthorizationException"
                     }
                 },
                 "security": [
                     {
                         "sanctumCookie": []
+                    },
+                    {
+                        "integrationBearer": []
                     }
+                ],
+                "x-abilities": [
+                    "admin"
                 ]
             }
         }
@@ -4685,6 +5155,31 @@
             }
         },
         "schemas": {
+            "AdminModResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "name": {
+                        "type": "string"
+                    },
+                    "description": {
+                        "type": "string"
+                    },
+                    "definitions": {
+                        "type": "array",
+                        "items": {}
+                    }
+                },
+                "required": [
+                    "id",
+                    "name",
+                    "description",
+                    "definitions"
+                ],
+                "title": "AdminModResource"
+            },
             "AdminPartyResource": {
                 "type": "object",
                 "properties": {
@@ -4858,6 +5353,132 @@
                 ],
                 "title": "AdminSocialProviderResource"
             },
+            "AdminUserDetailResource": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "integer"
+                    },
+                    "nickname": {
+                        "type": "string"
+                    },
+                    "email": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "avatar_url": {
+                        "type": "string"
+                    },
+                    "suspended": {
+                        "type": "boolean"
+                    },
+                    "completed_signup": {
+                        "type": "boolean"
+                    },
+                    "agreed_terms": {
+                        "type": "boolean"
+                    },
+                    "last_login": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "created_at": {
+                        "type": [
+                            "string",
+                            "null"
+                        ]
+                    },
+                    "roles": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "code": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "code",
+                                "label"
+                            ]
+                        }
+                    },
+                    "accounts": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "id": {
+                                    "type": "integer"
+                                },
+                                "provider": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "name": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "email": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "avatar_url": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "external_id": {
+                                    "type": [
+                                        "string",
+                                        "null"
+                                    ]
+                                },
+                                "can_delete": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "id",
+                                "provider",
+                                "name",
+                                "email",
+                                "avatar_url",
+                                "external_id",
+                                "can_delete"
+                            ]
+                        }
+                    }
+                },
+                "required": [
+                    "id",
+                    "nickname",
+                    "email",
+                    "avatar_url",
+                    "suspended",
+                    "completed_signup",
+                    "agreed_terms",
+                    "last_login",
+                    "created_at",
+                    "roles",
+                    "accounts"
+                ],
+                "title": "AdminUserDetailResource"
+            },
             "AdminUserResource": {
                 "type": "object",
                 "properties": {
@@ -4982,6 +5603,20 @@
                             "null"
                         ],
                         "maxLength": 255
+                    },
+                    "device_id": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
+                    },
+                    "device_name": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "maxLength": 255
                     }
                 },
                 "required": [
@@ -5072,7 +5707,8 @@
                 "type": "string",
                 "enum": [
                     "read",
-                    "export"
+                    "export",
+                    "admin"
                 ],
                 "title": "IntegrationAbility"
             },
@@ -6278,6 +6914,9 @@
                     "enabled": {
                         "type": "boolean"
                     },
+                    "auth_enabled": {
+                        "type": "boolean"
+                    },
                     "settings": {
                         "type": "array",
                         "items": {
@@ -6519,6 +7158,23 @@
                     }
                 },
                 "title": "UpdateThemeRequest"
+            },
+            "UpdateUserRequest": {
+                "type": "object",
+                "properties": {
+                    "nickname": {
+                        "type": "string",
+                        "minLength": 1,
+                        "maxLength": 32
+                    },
+                    "agreed_terms": {
+                        "type": "boolean"
+                    },
+                    "completed_signup": {
+                        "type": "boolean"
+                    }
+                },
+                "title": "UpdateUserRequest"
             },
             "VoteDirection": {
                 "type": "string",

@@ -6,4 +6,5 @@ enum IntegrationAbility: string
 {
     case Read = 'read';
     case Export = 'export';
+    case Admin = 'admin';
 }

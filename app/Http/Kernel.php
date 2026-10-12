@@ -5,6 +5,7 @@ namespace App\Http;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\AuthorizePartyExport;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureAdminPrincipal;
 use App\Http\Middleware\EnsureIntegrationAbility;
 use App\Http\Middleware\EnsurePlayerToken;
 use App\Http\Middleware\EnsureSignupComplete;
@@ -95,6 +96,7 @@ class Kernel extends HttpKernel
         'player.token' => EnsurePlayerToken::class,
         'signup.complete' => EnsureSignupComplete::class,
         'user.principal' => RejectPlayerTokens::class,
+        'admin.principal' => EnsureAdminPrincipal::class,
         'auth.basic' => AuthenticateWithBasicAuth::class,
         'auth.session' => AuthenticateSession::class,
         'cache.headers' => SetCacheHeaders::class,

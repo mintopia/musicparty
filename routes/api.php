@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\V1\Admin\IntegrationTokenController as AdminIntegrationTokenController;
+use App\Http\Controllers\Api\V1\Admin\LinkedAccountController as AdminLinkedAccountController;
+use App\Http\Controllers\Api\V1\Admin\ModController as AdminModController;
 use App\Http\Controllers\Api\V1\Admin\PartyController as AdminPartyController;
 use App\Http\Controllers\Api\V1\Admin\ProviderController as AdminProviderController;
 use App\Http\Controllers\Api\V1\Admin\SettingsController as AdminSettingsController;
@@ -98,7 +100,14 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::get('tokens', [AdminIntegrationTokenController::class, 'index'])->name('tokens.index');
         Route::post('tokens', [AdminIntegrationTokenController::class, 'store'])->name('tokens.store');
         Route::delete('tokens/{token}', [AdminIntegrationTokenController::class, 'destroy'])->name('tokens.destroy');
+    });
+    Route::middleware(['auth:sanctum', 'admin.principal'])->prefix('admin')->name('admin.')->group(function () {
         Route::get('users', [AdminUserController::class, 'index'])->name('users.index');
+        Route::get('users/{user}', [AdminUserController::class, 'show'])->name('users.show');
+        Route::patch('users/{user}', [AdminUserController::class, 'update'])->name('users.update');
+        Route::delete('users/{user}', [AdminUserController::class, 'destroy'])->name('users.destroy');
+        Route::delete('users/{user}/linked-accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->scopeBindings()->name('users.linked-accounts.destroy');
+        Route::get('mods', [AdminModController::class, 'index'])->name('mods.index');
         Route::post('users/{user}/suspension', [AdminUserController::class, 'suspend'])->name('users.suspend');
         Route::delete('users/{user}/suspension', [AdminUserController::class, 'unsuspend'])->name('users.unsuspend');
         Route::post('users/{user}/roles', [AdminUserController::class, 'grantRole'])->name('users.roles.grant');

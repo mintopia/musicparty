@@ -69,7 +69,12 @@ class ApiDocumentationServiceProvider extends ServiceProvider
             ->values()
             ->all();
 
+        if ($middleware->contains('admin.principal')) {
+            $abilities = [IntegrationAbility::Admin->value];
+        }
+
         $schemes = match (true) {
+            $middleware->contains('admin.principal') => [self::SESSION_COOKIE, self::INTEGRATION_BEARER],
             $middleware->contains('export.access') => [self::SESSION_COOKIE, self::INTEGRATION_BEARER],
             $middleware->contains('player.token') => [self::PLAYER_BEARER],
             $abilities !== [] => [self::INTEGRATION_BEARER],
