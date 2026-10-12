@@ -19,7 +19,7 @@ class UserFactory extends Factory
     public function definition(): array
     {
         return [
-            'nickname' => fake()->userName(),
+            'nickname' => mb_substr(fake()->unique()->userName(), 0, 24).' '.fake()->unique()->numberBetween(100, 999999),
             'first_login' => false,
             'terms_agreed_at' => now(),
             'suspended' => false,

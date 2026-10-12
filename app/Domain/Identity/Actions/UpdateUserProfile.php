@@ -12,7 +12,7 @@ readonly class UpdateUserProfile
             'nickname' => $nickname,
             'terms_agreed_at' => $agreedToTerms ? ($user->terms_agreed_at ?? now()) : null,
             'first_login' => ! $completedSignup,
-        ])->save();
+        ])->saveClaimingNickname();
 
         return $user;
     }

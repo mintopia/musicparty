@@ -57,8 +57,10 @@ const submit = () => form.patch(`/admin/users/${props.user.id}`);
                     v-model="form.nickname"
                     type="text"
                     required
+                    maxlength="32"
                     class="w-full rounded border border-border bg-background px-3 py-2 text-sm"
                 />
+                <p class="mt-1 text-xs text-muted">1–32 characters. Must be unique, ignoring case.</p>
             </FormField>
 
             <fieldset class="mb-4">
