@@ -126,12 +126,15 @@ it('refuses guests', function (): void {
 
 it('has no theme library: only show, update and reset routes', function (): void {
     $themeRoutes = collect(app('router')->getRoutes()->getRoutes())
-        ->filter(fn ($route): bool => str_starts_with($route->uri(), 'admin/theme'))
+        ->filter(fn ($route): bool => preg_match('#^(api/v\d+/)?admin/theme#', $route->uri()) === 1)
         ->map(fn ($route): string => implode('|', array_diff($route->methods(), ['HEAD'])).' '.$route->uri())
         ->values()
         ->all();
 
-    expect($themeRoutes)->toEqualCanonicalizing(['GET admin/theme', 'PUT admin/theme', 'DELETE admin/theme']);
+    expect($themeRoutes)->toEqualCanonicalizing([
+        'GET admin/theme', 'PUT admin/theme', 'DELETE admin/theme',
+        'GET api/v1/admin/theme', 'PUT api/v1/admin/theme', 'DELETE api/v1/admin/theme',
+    ]);
 
     $this->withoutVite()->actingAs(adminForTheme())->get('/admin/theme')
         ->assertInertia(fn (Assert $page): Assert => $page
