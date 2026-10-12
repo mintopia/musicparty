@@ -91,7 +91,7 @@ it('builds the menu through policies', function (string $role, array $keys) {
         ->assertInertia(fn (Assert $page): Assert => $page
             ->where('partyContext.menu', fn ($menu): bool => collect($menu)->pluck('key')->all() === $keys));
 })->with([
-    'host' => ['host', ['queue', 'search', 'history', 'party', 'members', 'pending', 'blocklist', 'log', 'stats', 'mods', 'theme', 'settings']],
+    'host' => ['host', ['queue', 'search', 'history', 'party', 'members', 'pending', 'blocklist', 'log', 'stats', 'mods', 'theme', 'player-tokens', 'settings']],
     'moderator' => ['moderator', ['queue', 'search', 'history', 'party', 'members', 'pending', 'blocklist', 'log', 'stats']],
     'guest' => ['guest', ['queue', 'search', 'history', 'party', 'members', 'stats']],
     'banned' => ['banned', []],
