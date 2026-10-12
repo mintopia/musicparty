@@ -6,9 +6,12 @@ use App\Domain\Identity\Models\User;
 use App\Domain\Membership\Actions\BanMember;
 use App\Domain\Membership\Actions\ChangeMemberRole;
 use App\Domain\Membership\Actions\JoinParty;
+use App\Domain\Membership\Actions\ListMemberRequests;
+use App\Domain\Membership\Actions\ListMemberVoteHistory;
 use App\Domain\Membership\Actions\ListPartyMembers;
 use App\Domain\Membership\Actions\UnbanMember;
 use App\Domain\Membership\Models\PartyMember;
+use App\Domain\Membership\PartyRole;
 use App\Domain\Mod\EnabledMods;
 use App\Domain\Mod\Trust\Models\TrustScore;
 use App\Domain\Mod\Trust\TrustScoreMod;
@@ -54,6 +57,7 @@ use App\Http\Requests\Api\V1\ChangeMemberRoleRequest;
 use App\Http\Requests\CastVoteRequest;
 use App\Http\Requests\ControlPlaybackRequest;
 use App\Http\Requests\JoinPartyRequest;
+use App\Http\Requests\ListMemberVotesRequest;
 use App\Http\Requests\ListPartyMembersRequest;
 use App\Http\Requests\ListPlayHistoryRequest;
 use App\Http\Requests\RatePlayRequest;
@@ -62,6 +66,8 @@ use App\Http\Requests\RequestTrackRequest;
 use App\Http\Requests\StorePartyRequest;
 use App\Http\Requests\UpdatePartyPlaylistsRequest;
 use App\Http\Requests\UpdatePartyRequest;
+use App\Http\Resources\MemberRequestResource;
+use App\Http\Resources\MemberVoteResource;
 use App\Http\Resources\PartyMemberRowResource;
 use App\Http\Resources\V1\HistoryEntryResource;
 use App\Http\Resources\V1\PartyLogEntryResource;
@@ -376,6 +382,24 @@ class PartyController extends Controller
             'trust' => $canModerate && in_array(TrustScoreMod::ID, $enabledModIds, true)
                 ? TrustScore::query()->where('party_id', $party->id)->pluck('score', 'party_member_id')->map(fn (float $score): float => round($score, 2))
                 : null,
+        ]);
+    }
+
+    public function member(ListMemberVotesRequest $request, ListMemberVoteHistory $listVotes, ListMemberRequests $listRequests, Party $party, PartyMember $member): Response
+    {
+        $user = $this->currentUser($request);
+        $isSelf = $member->user_id === $user->id;
+
+        return Inertia::render('Party/Member', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'member' => (new PartyMemberRowResource($member->loadMissing('user.accounts')))->resolve($request),
+            'requests' => MemberRequestResource::collection($listRequests($member))->resolve($request),
+            'votes' => MemberVoteResource::collection($listVotes($member, $request->search(), $request->perPage())),
+            'filters' => ['search' => $request->search()],
+            'abilities' => [
+                'canChangeRoles' => ! $isSelf && $user->can('manageRoles', $party) && $member->role !== PartyRole::Host,
+                'canBan' => ! $isSelf && $user->can('moderateMember', [$party, $member]) && $member->role !== PartyRole::Host,
+            ],
         ]);
     }
 

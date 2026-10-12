@@ -57,6 +57,8 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
         Route::post('parties/{party}/join', [PartyController::class, 'join'])->middleware('throttle:party-join')->name('parties.join');
         Route::get('parties/{party}/log', [PartyController::class, 'log'])->name('parties.log');
         Route::get('parties/{party}/members', [PartyMemberController::class, 'index'])->name('parties.members.index');
+        Route::get('parties/{party}/members/{member}', [PartyMemberController::class, 'show'])->whereNumber('member')->name('parties.members.show');
+        Route::get('parties/{party}/members/{member}/votes', [PartyMemberController::class, 'votes'])->whereNumber('member')->name('parties.members.votes');
         Route::get('parties/{party}/stats', [PartyStatsController::class, 'show'])->name('parties.stats');
         Route::put('parties/{party}/members/{member}/role', [PartyMemberController::class, 'role'])->whereNumber('member')->name('parties.members.role');
         Route::put('parties/{party}/members/{member}/ban', [PartyMemberController::class, 'ban'])->whereNumber('member')->name('parties.members.ban');

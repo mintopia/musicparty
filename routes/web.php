@@ -67,6 +67,10 @@ Route::middleware(['auth', 'signup.complete'])->group(function () {
     Route::get('parties/{party}/members', [PartyController::class, 'members'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.members');
+    Route::get('parties/{party}/members/{member}', [PartyController::class, 'member'])
+        ->where('party', '[A-Za-z]{4}')
+        ->whereNumber('member')
+        ->name('parties.members.show');
     Route::get('parties/{party}/stats', [PartyController::class, 'stats'])
         ->where('party', '[A-Za-z]{4}')
         ->name('parties.stats');
