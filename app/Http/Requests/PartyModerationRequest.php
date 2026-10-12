@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\PartyModerationType;
+use App\Models\PartyModeration;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -21,6 +22,15 @@ class PartyModerationRequest extends FormRequest
      *
      * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
      */
+    public function withValidator(\Illuminate\Validation\Validator $validator): void
+    {
+        $validator->after(function ($validator) {
+            if ($this->boolean('regex') && is_string($this->input('value')) && ! PartyModeration::isValidRegex($this->input('value'))) {
+                $validator->errors()->add('value', 'The value must be a valid regular expression of at most '.PartyModeration::MAX_REGEX_LENGTH.' characters.');
+            }
+        });
+    }
+
     public function rules(): array
     {
         return [

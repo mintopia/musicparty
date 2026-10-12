@@ -23,28 +23,31 @@ class PartyModeration extends Model
 
     public function match(object $spotifyTrack): bool
     {
-        $methodName = 'check' . substr($this->type->name, 2);
+        $methodName = 'check'.substr($this->type->name, 2);
         if (method_exists($this, $methodName)) {
             $result = $this->{$methodName}($spotifyTrack);
             if ($result === true) {
                 Log::info("[PartyModeration:{$this->id}] has matched {$spotifyTrack->id}");
             }
+
             return $result;
         }
+
         return false;
     }
 
     protected function checkName(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'name')) {
+        if (! property_exists($spotifyTrack, 'name')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->name);
     }
 
     protected function checkArtist(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'artists') || !is_iterable($spotifyTrack->artists)) {
+        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
         }
         foreach ($spotifyTrack->artists as $artist) {
@@ -52,12 +55,13 @@ class PartyModeration extends Model
                 return true;
             }
         }
+
         return false;
     }
 
     protected function checkArtistId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'artists') || !is_iterable($spotifyTrack->artists)) {
+        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
         }
         foreach ($spotifyTrack->artists as $artist) {
@@ -65,30 +69,34 @@ class PartyModeration extends Model
                 return true;
             }
         }
+
         return false;
     }
 
     protected function checkId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'id')) {
+        if (! property_exists($spotifyTrack, 'id')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->id, false);
     }
 
     protected function checkAlbum(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'album') || !is_object($spotifyTrack->album) || !property_exists($spotifyTrack->album, 'name')) {
+        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'name')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->album->name);
     }
 
     protected function checkAlbumId(object $spotifyTrack): bool
     {
-        if (!property_exists($spotifyTrack, 'album') || !is_object($spotifyTrack->album) || !property_exists($spotifyTrack->album, 'id')) {
+        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'id')) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->album->id, false);
     }
 
@@ -97,6 +105,7 @@ class PartyModeration extends Model
         if ($spotifyTrack?->external_ids?->isrc === null) {
             return false;
         }
+
         return $this->regexTest($spotifyTrack->external_ids->isrc);
     }
 
@@ -116,24 +125,50 @@ class PartyModeration extends Model
         }
     }
 
-    protected function regexTest(mixed $toCheck, $caseInsensitive = true): bool
+    public const MAX_REGEX_LENGTH = 255;
+
+    public const REGEX_BACKTRACK_LIMIT = 10000;
+
+    public static function isValidRegex(string $pattern): bool
     {
-        if ($this->regex) {
-            $result = @preg_match($this->value, $toCheck);
-            if ($result !== false) {
-                return $result > 0;
-            }
+        if (strlen($pattern) > self::MAX_REGEX_LENGTH) {
+            return false;
         }
 
-        // Treat it like a wildcard string match
-        $filter = '/^' . str_replace('*', '(.*)', $this->value) . '$/';
+        return @preg_match($pattern, '') !== false;
+    }
+
+    protected function regexTest(mixed $toCheck, $caseInsensitive = true): bool
+    {
+        $toCheck = (string) $toCheck;
+        if ($this->regex) {
+            return $this->boundedMatch($this->value, $toCheck);
+        }
+
+        $filter = '/^'.str_replace('\\*', '(.*)', preg_quote($this->value, '/')).'$/';
         if ($caseInsensitive) {
             $filter .= 'i';
         }
-        $result = @preg_match($filter, $toCheck);
-        if ($result !== false) {
+
+        return $this->boundedMatch($filter, $toCheck);
+    }
+
+    protected function boundedMatch(string $pattern, string $subject): bool
+    {
+        $previousBacktrackLimit = ini_set('pcre.backtrack_limit', (string) self::REGEX_BACKTRACK_LIMIT);
+        $previousJit = ini_set('pcre.jit', '0');
+        try {
+            $result = @preg_match($pattern, $subject);
+            if ($result === false) {
+                Log::warning("[PartyModeration:{$this->id}] pattern failed: ".preg_last_error_msg());
+
+                return false;
+            }
+
             return $result > 0;
+        } finally {
+            ini_set('pcre.backtrack_limit', (string) $previousBacktrackLimit);
+            ini_set('pcre.jit', (string) $previousJit);
         }
-        return $toCheck == $this->value;
     }
 }
