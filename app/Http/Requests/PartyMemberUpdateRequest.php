@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests;
 
+use App\Models\Party;
+use App\Models\PartyMember;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PartyMemberUpdateRequest extends FormRequest
@@ -11,7 +13,18 @@ class PartyMemberUpdateRequest extends FormRequest
      */
     public function authorize(): bool
     {
-        return true;
+        /** @var Party $party */
+        $party = $this->route('party');
+        /** @var PartyMember $member */
+        $member = $this->route('user');
+        $user = $this->user();
+
+        $touchesOwnerRole = $this->input('role') === 'owner' || $member->role?->code === 'owner';
+        if (! $touchesOwnerRole) {
+            return true;
+        }
+
+        return $user->id === $party->user_id || $user->hasRole('admin');
     }
 
     /**

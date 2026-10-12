@@ -32,7 +32,7 @@
 
         document.addEventListener("DOMContentLoaded", function() {
             let channel = 'spotifytoken.{{ $party->user->id }}';
-            window.Echo.channel(channel).listen('User\\SpotifyAccessTokenUpdatedEvent', (payload) => {
+            window.Echo.private(channel).listen('User\\SpotifyAccessTokenUpdatedEvent', (payload) => {
                 console.log(payload);
                 window.accessToken = payload.accessToken;
             });

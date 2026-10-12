@@ -36,7 +36,19 @@ class PartyPolicy
      */
     public function update(User $user, Party $party): bool
     {
-        return $party->canBeManagedBy($user);
+        return $user->hasRole('admin') || $party->canBeManagedBy($user);
+    }
+
+    public function player(User $user, Party $party): bool
+    {
+        if ($user->hasRole('admin')) {
+            return true;
+        }
+
+        return $party->members()
+            ->whereUserId($user->id)
+            ->whereHas('role', fn ($query) => $query->whereCode('owner'))
+            ->exists();
     }
 
     /**

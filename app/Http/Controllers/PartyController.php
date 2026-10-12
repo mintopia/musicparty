@@ -26,11 +26,12 @@ class PartyController extends Controller
     public function create(Request $request)
     {
         // Check if they have Spotify links
-        if (!$request->user()->hasSpotifyLinks()) {
+        if (! $request->user()->hasSpotifyLinks()) {
             return response()->redirectToRoute('user.spotify');
         }
 
-        $party = new Party();
+        $party = new Party;
+
         return view('parties.create', [
             'party' => $party,
             'mods' => Mod::all(),
@@ -41,9 +42,10 @@ class PartyController extends Controller
 
     public function store(PartyRequest $request)
     {
-        $party = new Party();
+        $party = new Party;
         $party->user()->associate($request->user());
         $this->updateObject($party, $request);
+
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
 
@@ -63,6 +65,7 @@ class PartyController extends Controller
         $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData) {
             $resource = new UpcomingSongResource($song);
             $resource->augment($augmentData[$song->id] ?? null);
+
             return $resource->toArray($request);
         });
 
@@ -99,21 +102,9 @@ class PartyController extends Controller
 
     public function youtube_play(PartyPlayYouTubeRequest $request, Party $party)
     {
-        $videoId = null;
-        $url = parse_url($request->input('video'));
-        if ($url['host'] === 'youtu.be') {
-            // https://youtu.be/Lp__P8VBR5o?si=teYIzjNQoHuD7SEU
-            $videoId = substr($url['path'] ?? '', 1);
-        } else {
-            $query = [];
-            parse_str($url['query'] ?? '', $query);
-            $videoId = $query['v'] ?? null;
-        }
-        if ($videoId === null || !$videoId) {
-            return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
-                ->with('failureMessage', 'Unable to identify video');
-        }
-        PartyPlayYouTubeVideo::dispatch($party, $videoId)->afterResponse();
+        $videoId = $request->videoId();
+        PartyPlayYouTubeVideo::dispatch($party, (string) $videoId)->afterResponse();
+
         return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
             ->with('successMessage', 'Video requested');
     }
@@ -148,7 +139,7 @@ class PartyController extends Controller
             'party' => $party,
             'member' => $member,
             'canManage' => $party->canBeManagedBy($request->user()),
-            'params' => (object)$params,
+            'params' => (object) $params,
             'results' => $results,
         ]);
     }
@@ -168,6 +159,7 @@ class PartyController extends Controller
     {
         $this->updateObject($party, $request);
         $party->save();
+
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been updated');
     }
 
@@ -179,16 +171,16 @@ class PartyController extends Controller
         } else {
             $party->backup_playlist_id = $request->input('backup_playlist_id');
         }
-        $party->allow_requests = (bool)$request->input('allow_requests');
-        $party->active = (bool)$request->input('active');
-        $party->explicit = (bool)$request->input('explicit');
-        $party->downvotes = (bool)$request->input('downvotes');
-        $party->force = (bool)$request->input('force');
-        $party->poll = (bool)$request->input('poll');
-        $party->show_qrcode = (bool)$request->input('show_qrcode');
+        $party->allow_requests = (bool) $request->input('allow_requests');
+        $party->active = (bool) $request->input('active');
+        $party->explicit = (bool) $request->input('explicit');
+        $party->downvotes = (bool) $request->input('downvotes');
+        $party->force = (bool) $request->input('force');
+        $party->poll = (bool) $request->input('poll');
+        $party->show_qrcode = (bool) $request->input('show_qrcode');
         $party->device_name = null;
         $party->device_id = $request->input('device_id');
-        $party->weighted = (bool)$request->input('weighted');
+        $party->weighted = (bool) $request->input('weighted');
         if ($request->input('downvotes_per_hour')) {
             $party->downvotes_per_hour = $request->input('downvotes_per_hour');
         } else {

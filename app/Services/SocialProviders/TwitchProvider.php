@@ -8,8 +8,11 @@ use SocialiteProviders\Twitch\Provider;
 class TwitchProvider extends AbstractSocialProvider
 {
     protected string $name = 'Twitch';
+
     protected string $code = 'twitch';
+
     protected string $socialiteProviderCode = 'twitch';
+
     protected bool $supportsAuth = true;
 
     protected function getSocialiteProvider()
@@ -19,5 +22,10 @@ class TwitchProvider extends AbstractSocialProvider
             'client_secret' => $this->provider->getSetting('client_secret'),
             'redirect' => $this->redirectUrl,
         ]);
+    }
+
+    protected function emailIsVerified($remoteUser): bool
+    {
+        return true;
     }
 }

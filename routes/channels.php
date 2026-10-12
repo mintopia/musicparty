@@ -24,5 +24,5 @@ Broadcast::channel('party.{party}.owner', function($user, Party $party) {
 });
 
 Broadcast::channel('spotifytoken.{userId}', function($user, int $userId) {
-    return $user->id === $userId;
+    return (int)$user->id === (int)$userId;
 });

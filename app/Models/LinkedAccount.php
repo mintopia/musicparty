@@ -22,6 +22,7 @@ class LinkedAccount extends Model
 
     protected $casts = [
         'refresh_token_expires_at' => 'datetime',
+        'email_verified_at' => 'datetime',
         'access_token' => 'encrypted',
         'refresh_token' => 'encrypted',
     ];
@@ -44,13 +45,13 @@ class LinkedAccount extends Model
         }
 
         // If this isn't for auth, it can be deleted
-        if (!$this->provider->auth_enabled) {
+        if (! $this->provider->auth_enabled) {
             return true;
         }
 
         // If it is for auth, they must have at least one other auth
         return $this->user->accounts()->whereHas('provider', function ($query) {
-                $query->where('auth_enabled', true);
+            $query->where('auth_enabled', true);
         })->count() > 1;
     }
 }

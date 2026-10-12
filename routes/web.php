@@ -1,47 +1,25 @@
 <?php
 
-use App\Http\Controllers\Admin\ClanController as AdminClanController;
-use App\Http\Controllers\Admin\ClanMembershipController as AdminClanMembershipController;
-use App\Http\Controllers\Admin\EmailAddressController as AdminEmailAddressController;
-use App\Http\Controllers\Admin\EventController as AdminEventController;
-use App\Http\Controllers\Admin\EventMappingController;
 use App\Http\Controllers\Admin\HomeController as AdminHomeController;
 use App\Http\Controllers\Admin\LinkedAccountController as AdminLinkedAccountController;
-use App\Http\Controllers\Admin\SeatController as AdminSeatController;
-use App\Http\Controllers\Admin\SeatingPlanController as AdminSeatingPlanController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
-use App\Http\Controllers\Admin\TicketController as AdminTicketController;
-use App\Http\Controllers\Admin\TicketProviderController;
-use App\Http\Controllers\Admin\TicketTypeController;
-use App\Http\Controllers\Admin\TicketTypeMappingController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
-use App\Http\Controllers\ClanController;
-use App\Http\Controllers\ClanMembershipController;
-use App\Http\Controllers\EmailAddressController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
-use App\Http\Controllers\PlayedSongController;
-use App\Http\Controllers\SeatingPlanController;
-use App\Http\Controllers\TicketController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\VoteController;
-use App\Http\Controllers\WebhookController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
 
-
 // Always available
-Route::post('proxy', [HomeController::class, 'proxy'])->name('proxy');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');
-Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
 Route::get('parties/{party}/youtube/player', [PartyController::class, 'ytplayer'])->name('parties.ytplayer');
 
 // Authenticated routes
@@ -60,8 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
         Route::resource('parties', PartyController::class)->except(['destroy']);
-        Route::middleware('can:update,party')->group(function() {
-            Route::get('parties/{party}/player', [PartyController::class, 'player'])->name('parties.player');
+        Route::get('parties/{party}/player', [PartyController::class, 'player'])
+            ->middleware('can:player,party')
+            ->name('parties.player');
+        Route::middleware('can:update,party')->group(function () {
+            Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
@@ -75,8 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');
 
         Route::middleware('can:update,linkedaccount')->group(function () {
-            Route::get('/profile/accounts/{linkedaccount}/delete', [LinkedAccountController::class, 'store'])->name('linkedaccounts.delete');
-            Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'store'])->name('linkedaccounts.destroy');
+            Route::get('/profile/accounts/{linkedaccount}/delete', [LinkedAccountController::class, 'delete'])->name('linkedaccounts.delete');
+            Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'destroy'])->name('linkedaccounts.destroy');
         });
 
         Route::get('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
@@ -97,7 +78,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('settings/socialproviders/{provider}/edit', [SocialProviderController::class, 'edit'])->name('settings.socialproviders.edit');
             Route::match(['PUT', 'PATCH'], 'settings/socialproviders/{provider}', [SocialProviderController::class, 'update'])->name('settings.socialproviders.update');
 
-            Route::prefix('settings')->name('settings.')->group(function() {
+            Route::prefix('settings')->name('settings.')->group(function () {
                 Route::resource('themes', ThemeController::class)->except(['index', 'show']);
                 Route::get('themes/{theme}/delete', [ThemeController::class, 'delete'])->name('themes.delete');
             });
