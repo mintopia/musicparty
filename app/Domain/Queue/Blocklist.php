@@ -83,30 +83,30 @@ class Blocklist
     public function matches(BlocklistEntry $entry, TrackData $track): bool
     {
         return match ($entry->match_type) {
-            BlocklistMatchType::TrackName => $this->matchesName($entry, [$track->name]),
-            BlocklistMatchType::ArtistName => $this->matchesName($entry, array_map(fn ($artist): string => $artist->name, $track->artists)),
-            BlocklistMatchType::AlbumName => $this->matchesName($entry, [$track->album->name]),
-            BlocklistMatchType::TrackId => $entry->value === $track->providerTrackId,
-            BlocklistMatchType::ArtistId => in_array($entry->value, array_map(fn ($artist): string => $artist->id, $track->artists), true),
-            BlocklistMatchType::AlbumId => $entry->value === $track->album->id,
-            BlocklistMatchType::Isrc => $track->isrc !== null && strcasecmp($entry->value, $track->isrc) === 0,
+            BlocklistMatchType::TrackName => $this->matchesAny($entry, [$track->name], true),
+            BlocklistMatchType::ArtistName => $this->matchesAny($entry, array_map(fn ($artist): string => $artist->name, $track->artists), true),
+            BlocklistMatchType::AlbumName => $this->matchesAny($entry, [$track->album->name], true),
+            BlocklistMatchType::TrackId => $this->matchesAny($entry, [$track->providerTrackId], false),
+            BlocklistMatchType::ArtistId => $this->matchesAny($entry, array_map(fn ($artist): string => $artist->id, $track->artists), false),
+            BlocklistMatchType::AlbumId => $this->matchesAny($entry, [$track->album->id], false),
+            BlocklistMatchType::Isrc => $track->isrc !== null && $this->matchesAny($entry, [$track->isrc], true),
         };
     }
 
     public static function isValidPattern(string $pattern): bool
     {
-        return @preg_match(self::delimit($pattern), '') !== false;
+        return @preg_match(self::delimit($pattern, true), '') !== false;
     }
 
     /**
      * @param  list<string>  $candidates
      */
-    private function matchesName(BlocklistEntry $entry, array $candidates): bool
+    private function matchesAny(BlocklistEntry $entry, array $candidates, bool $ignoreCase): bool
     {
         foreach ($candidates as $candidate) {
             $matched = $entry->is_regex
-                ? $this->regexMatches($entry, $candidate)
-                : mb_strtolower($entry->value) === mb_strtolower($candidate);
+                ? $this->regexMatches($entry, $candidate, $ignoreCase)
+                : preg_match(self::wildcardPattern($entry->value, $ignoreCase), $candidate) === 1;
 
             if ($matched) {
                 return true;
@@ -116,9 +116,16 @@ class Blocklist
         return false;
     }
 
-    private function regexMatches(BlocklistEntry $entry, string $candidate): bool
+    private static function wildcardPattern(string $value, bool $ignoreCase): string
     {
-        $result = @preg_match(self::delimit($entry->value), $candidate);
+        $literals = array_map(fn (string $part): string => preg_quote($part, '~'), explode('*', $value));
+
+        return '~\A'.implode('.*', $literals).'\z~su'.($ignoreCase ? 'i' : '');
+    }
+
+    private function regexMatches(BlocklistEntry $entry, string $candidate, bool $ignoreCase): bool
+    {
+        $result = @preg_match(self::delimit($entry->value, $ignoreCase), $candidate);
 
         if ($result !== false) {
             return $result === 1;
@@ -142,8 +149,8 @@ class Blocklist
         return true;
     }
 
-    private static function delimit(string $pattern): string
+    private static function delimit(string $pattern, bool $ignoreCase): string
     {
-        return '~'.str_replace('~', '\~', $pattern).'~iu';
+        return '~'.str_replace('~', '\~', $pattern).'~u'.($ignoreCase ? 'i' : '');
     }
 }

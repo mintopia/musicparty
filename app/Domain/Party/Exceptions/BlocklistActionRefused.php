@@ -15,11 +15,6 @@ class BlocklistActionRefused extends RuntimeException
         return new self('You are not allowed to manage the blocklist in this party.', self::FORBIDDEN);
     }
 
-    public static function regexNotSupported(): self
-    {
-        return new self('Only name matches can use a regular expression.', self::UNPROCESSABLE);
-    }
-
     public static function invalidRegex(): self
     {
         return new self('That regular expression is not valid.', self::UNPROCESSABLE);
