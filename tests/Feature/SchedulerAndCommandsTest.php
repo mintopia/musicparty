@@ -173,7 +173,7 @@ it('party:refreshaccesstokens reports when there is no spotify provider', functi
         ->assertSuccessful();
 });
 
-it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway with no lock or result check (E5 R5, R6)', function () {
+it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway, which owns the refresh lock, and ignores the result (E5 R5, R6)', function () {
     $provider = SocialProvider::factory()->create(['code' => 'spotify']);
     $expiring = User::factory()->create();
     $fresh = User::factory()->create();

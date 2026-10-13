@@ -93,11 +93,13 @@ it('records the attempt time when a provider call throws at any step', function 
         {
             $this->failIf('currentPlayback');
 
-            return $this->failingCall === 'play' ? null : new PlaybackState(true, 'T1', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev1', 'Dev', PlaybackSource::Polling);
+            return in_array($this->failingCall, ['play', 'devices'], true) ? null : new PlaybackState(true, 'T1', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev1', 'Dev', PlaybackSource::Polling);
         }
 
         public function devices(): array
         {
+            $this->failIf('devices');
+
             return [new Device('dev1', 'Dev', 'Speaker', true)];
         }
 
@@ -127,7 +129,7 @@ it('records the attempt time when a provider call throws at any step', function 
     expect(fn () => app(PlaybackSync::class)->sync(Party::findOrFail($party->id)))->toThrow(RuntimeException::class, $failingCall);
 
     expect($party->fresh()->last_updated_at->gt($before))->toBeTrue();
-})->with(['current playback' => 'currentPlayback', 'force playback' => 'play', 'track lookup' => 'getTrack']);
+})->with(['current playback' => 'currentPlayback', 'device list' => 'devices', 'force playback' => 'play', 'track lookup' => 'getTrack']);
 
 it('records the attempt time when the relink check throws', function () {
     $user = Mockery::mock($this->party->user)->makePartial();
