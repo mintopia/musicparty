@@ -4,22 +4,25 @@ Baseline for each E9 conversion ticket's side-by-side review (PRD `docs/specs/E0
 
 Captured 2026-10-13 from the local dev deployment (`https://musicparty.sailing-coyote.ws.cloudagent.mintopia.net`), which serves the integration branch at `d2f77b44`. Pages listed below are still Blade and render the v2 look. 1440x900 viewport, full page, headless Chrome 153, Laravel debugbar hidden. Theme: Default. Party `NPRN` (Testing Party) with a playing track and queue.
 
-Roles: `guest`, `member` (plain party member), `manager` (party owner with `create-party`), `admin` (site admin). A page is stored under a role only when that role can open it and the page differs from the role above it; a missing file means the role gets 403 or a redirect. Member gets 403 on songs, users, edit, moderation, party create and `linkedaccount-delete`. Guest gets a login redirect on `party-show` and `home`, so only `login` and the three public player pages are stored. `member/home.png` and the other `home.png` files show the redirect target (the party page).
+Roles: `guest`, `member` (plain party member), `manager` (party owner with `create-party`), `admin` (site admin). A page is stored under a role only when that role can open it and the page differs from the role above it; a missing file means the role gets 403 or a redirect. Member gets 403 on songs, users, edit, moderation, party create and `linkedaccount-delete`. Guest gets a login redirect on `party-show` and `home`, so only `login` and the public `party-tv` page are stored. `home` (`home/home`) redirects members to their party, so it has no image of its own; see `party-show`. `party-tv` is byte-identical for every role, so only `guest/party-tv.png` is kept.
+
+YouTube (`parties/youtube`, `parties/ytplayer`) is dropped in v3 (deleted in E9 #404, not migrated), so it has no reference. The ytplayer page also renders all black without a YouTube session.
+
+The manager and admin users each have both Spotify accounts linked (control and search); without them `parties/create` redirects to the Link Spotify page, which is stored as `manager/spotify.png` (the unlinked state of `users/spotify`).
 
 ## Page to file map
 
 | PRD page | File (under role dir) | Roles captured |
 |---|---|---|
 | `parties/show` (+ `_player`) | `party-show.png` | member, manager, admin |
-| `parties/tv` | `party-tv.png` | guest, member, manager, admin |
-| `parties/youtube` | `party-youtube.png` | guest, member, manager, admin |
-| `parties/ytplayer` | `party-ytplayer.png` | guest, member, manager, admin |
+| `parties/tv` | `party-tv.png` | guest (identical for all roles) |
+| `parties/youtube`, `parties/ytplayer` | none | dropped in v3 (E9 #404) |
 | `upcomingsongs/index` | `party-songs-index.png` | manager, admin |
 | `upcomingsongs/show` | `party-songs-show.png` | manager, admin |
-| `home/home` | `home.png` | member, manager, admin |
+| `home/home` | none (redirects to `party-show`) | member, manager, admin |
 | `users/login` (`layouts/login`) | `login.png` | guest |
 | `users/signup` | `signup.png` | member |
-| `users/spotify` | `spotify.png` | admin (others redirect to profile) |
+| `users/spotify` | `spotify.png` | manager (unlinked state), admin (linked users redirect to profile) |
 | `users/profile` | `profile.png` | member, manager, admin |
 | `users/edit` | `profile-edit.png` | member, manager, admin |
 | `users/linkedaccounts/delete` | `linkedaccount-delete.png` | admin |
