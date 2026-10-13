@@ -21,7 +21,7 @@ Eigenvector centrality is the right *family* (a member is trusted if trusted mem
 
 This always converges to a unique, non-negative distribution. It cannot be singular, so it never throws.
 
-**NumPHP is dropped.** The power iteration is about 20 lines of plain PHP over sparse arrays and needs no linear algebra library. Removing `markrogoyski`/NumPHP from `composer.json` changes dependencies, so it is part of the sign-off.
+**NumPHP is dropped.** The power iteration is about 20 lines of plain PHP over sparse arrays and needs no linear algebra library. Removing `numphp/numphp` from `composer.json` changes dependencies, so it is part of the sign-off.
 
 ## What Trust means and affects
 
