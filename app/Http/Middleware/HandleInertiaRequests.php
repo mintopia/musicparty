@@ -8,6 +8,7 @@ use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\ActiveTheme;
+use App\Services\RealtimeConfig;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -46,9 +47,7 @@ class HandleInertiaRequests extends Middleware
                 'coverImage' => Setting::fetch('cover-image'),
                 'favicon' => Setting::fetch('favicon'),
             ],
-            'reverb' => [
-                'appKey' => config('reverb.apps.apps.0.key'),
-            ],
+            'reverb' => fn (): array => app(RealtimeConfig::class)->forRequest($request),
             'theme' => fn (): array => app(ActiveTheme::class)->shared() ?? ['tokens' => [], 'stylesheet' => null, 'darkMode' => false],
             'instanceName' => fn (): ?string => Setting::fetch('name'),
         ];

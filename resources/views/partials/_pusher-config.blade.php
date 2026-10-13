@@ -1,3 +1,3 @@
 <script>
-    window.pusherConfig = { appKey: @json(config('reverb.apps.apps.0.key')) };
+    window.pusherConfig = @json(app(\App\Services\RealtimeConfig::class)->forRequest(request()));
 </script>

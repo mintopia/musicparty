@@ -24,11 +24,18 @@ export interface SharedProps {
         coverImage: string | null;
         favicon: string | null;
     };
-    theme: {darkMode: boolean};
-    reverb: {appKey: string | null};
+    theme: {darkMode: boolean; tokens: Record<string, string>; stylesheet: string | null};
+    reverb: RealtimeConfig;
     instanceName: string | null;
     errors: Record<string, string>;
     [key: string]: unknown;
+}
+
+export interface RealtimeConfig {
+    appKey: string | null;
+    host: string;
+    port: number;
+    forceTLS: boolean;
 }
 
 export interface TrackAnnotation {
