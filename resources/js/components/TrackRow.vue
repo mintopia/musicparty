@@ -34,7 +34,8 @@ const duration = computed(() => {
 
 const isAwaiting = computed(() => props.awaitingApproval || props.track.awaiting_approval === true);
 const vote = computed(() => props.track.queue.vote ?? 0);
-const displayName = computed(() => props.decoration?.displayName ?? props.track.name);
+const activeDecoration = computed(() => props.decoration ?? props.track.decoration ?? undefined);
+const displayName = computed(() => activeDecoration.value?.displayName ?? props.track.name);
 const canRequest = computed(() => props.track.eligibility.allowed && !props.requesting);
 const flagged = computed(() => props.needsApproval || props.track.eligibility.outcome === 'flag');
 const requestLabel = computed(() => (flagged.value ? 'Request approval' : 'Add'));
@@ -45,8 +46,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 <template>
     <div
         class="list-group-item"
-        :class="decoration?.class"
-        :style="decoration?.accent ? {borderLeft: `4px solid ${decoration.accent}`} : undefined"
+        :class="activeDecoration?.class"
+        :style="activeDecoration?.accent ? {borderLeft: `4px solid ${activeDecoration.accent}`} : undefined"
         data-test="track-row"
     >
         <div class="row g-2 align-items-center">
@@ -73,8 +74,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <span v-if="track.explicit" class="badge bg-secondary ms-1" data-test="explicit-badge"
                         >Explicit</span
                     >
-                    <span v-if="decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{
-                        decoration.label
+                    <span v-if="activeDecoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{
+                        activeDecoration.label
                     }}</span>
                 </div>
                 <div class="text-secondary" data-test="track-artists">

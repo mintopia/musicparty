@@ -6,7 +6,7 @@
             <div class="card mb-3">
                 <div class="list-group card-list-group">
                     <div class="list-group-item">
-                        <div v-bind:class="'row g-2 align-items-center ' + state.next.css_classes">
+                        <div v-bind:class="legacyRowClasses(state.next)">
                             <div class="col-auto">
                                 <img
                                     v-bind:src="state.next.album.image_url"
@@ -23,7 +23,7 @@
                                 </div>
                                 <div class="text-muted">
                                     <template v-if="state.next.user">Requested by {{ state.next.user }}</template>
-                                    <template v-else>{{ state.next.fallback_name }}</template>
+                                    <template v-else>{{ legacyFallbackName(state.next) }}</template>
                                 </div>
                             </div>
                             <div class="col-auto text-secondary text-center">
@@ -67,6 +67,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue';
 import type {LegacyArtist, LegacyPartyState} from '../types';
+import {legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     props: {
@@ -85,6 +86,9 @@ export default defineComponent({
     },
 
     methods: {
+        legacyRowClasses,
+        legacyFallbackName,
+
         updateState(state: LegacyPartyState): void {
             this.state = state;
         },

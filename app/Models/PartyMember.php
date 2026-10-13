@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\ModDataStore;
 use Database\Factories\PartyMemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -15,7 +16,6 @@ use Illuminate\Support\Carbon;
  * @property int $party_id
  * @property bool $canvote
  * @property bool $banned
- * @property float $trustscore
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Party $party
@@ -32,7 +32,6 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereRoleId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereTrustscore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereUserId($value)
  *
@@ -64,5 +63,15 @@ class PartyMember extends Model
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
+    }
+
+    public function trustScore(): float
+    {
+        return (float) app(ModDataStore::class)->get($this, 'trust', 'trustscore', 0);
+    }
+
+    public function setTrustScore(float $score): void
+    {
+        app(ModDataStore::class)->set($this, 'trust', 'trustscore', $score);
     }
 }

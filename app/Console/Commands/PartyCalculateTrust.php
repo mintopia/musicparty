@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Party;
+use App\Models\PartyMember;
 use Carbon\CarbonImmutable;
 use Illuminate\Console\Command;
 use Symfony\Component\Console\Style\SymfonyStyle;
@@ -41,11 +42,12 @@ class PartyCalculateTrust extends Command
         $io = new SymfonyStyle($this->input, $this->output);
 
         $scores = [];
-        foreach ($party->members()->with('user')->orderBy('trustscore', 'desc')->get() as $member) {
-            $scores[] = [
-                $member->user->nickname,
-                $member->trustscore,
-            ];
+        $members = $party->members()->with('user')->get()
+            ->map(fn (PartyMember $member): array => [$member->user->nickname, $member->trustScore()])
+            ->sortByDesc(fn (array $row): float => $row[1])
+            ->values();
+        foreach ($members as $row) {
+            $scores[] = $row;
         }
         $io->table(['Nickname', 'Score'], $scores);
 

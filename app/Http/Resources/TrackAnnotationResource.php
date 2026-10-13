@@ -52,6 +52,7 @@ class TrackAnnotationResource extends JsonResource
                 'reason' => $annotation->reason,
             ],
             'awaiting_approval' => $annotation->awaitingApproval,
+            'decoration' => $annotation->decoration,
         ];
     }
 }

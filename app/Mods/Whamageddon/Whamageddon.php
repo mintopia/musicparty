@@ -6,8 +6,10 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Mods\PartyMods;
+use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
 use App\Services\Music\Spotify\SpotifyMapper;
+use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
@@ -97,6 +99,8 @@ class Whamageddon
         $upcoming = $this->getUpcomingSong();
         if ($upcoming) {
             Log::info("{$this->party} Whamageddon: Upcoming song found, removing from party");
+            $this->storeDecoration($upcoming, 'fallback_override', null);
+            $this->storeDecoration($upcoming, 'css_classes', null);
             $upcoming->delete();
         }
         $this->settings->delete($this->party, self::CODE, 'upcoming_song_id');
@@ -124,24 +128,28 @@ class Whamageddon
             }
             $track = SpotifyPayload::object($response);
             $song = Song::fromTrack(SpotifyMapper::track($track));
-            $upcoming = new UpcomingSong;
-            $upcoming->song()->associate($song);
-            $upcoming->party()->associate($this->party);
+        } else {
+            $song = $upcoming->song;
         }
-        $upcoming->user_id = null;
-        $upcoming->fallback_override = $this->settings->value($this->party, self::CODE, 'fallback_name');
-        $upcoming->css_classes = $this->settings->value($this->party, self::CODE, 'css_classes');
-        if ($upcoming->score_adjustment === 0) {
-            $upcoming->score_adjustment = 1;
+        $attributes = ['user_id' => null];
+        if ($upcoming?->score_adjustment === 0) {
+            $attributes['score_adjustment'] = 1;
         }
-        $upcoming->save();
-        if (! $upcoming->save()) {
-            Log::warning("{$this->party} Whamageddon: Unable to save upcoming song");
+        $upcoming = app(QueueSelector::class)->addRequest($this->party, $song, null, $attributes);
+        $this->storeDecoration($upcoming, 'fallback_override', $this->settings->value($this->party, self::CODE, 'fallback_name'));
+        $this->storeDecoration($upcoming, 'css_classes', $this->settings->value($this->party, self::CODE, 'css_classes'));
+        Log::info("{$this->party} Whamageddon: Added song to party");
+        $this->settings->set($this->party, self::CODE, 'upcoming_song_id', $upcoming->id);
+    }
+
+    protected function storeDecoration(UpcomingSong $upcoming, string $key, mixed $value): void
+    {
+        if ($value === null) {
+            app(ModDataStore::class)->forget($upcoming, self::CODE, $key);
 
             return;
         }
-        Log::info("{$this->party} Whamageddon: Added song to party");
-        $this->settings->set($this->party, self::CODE, 'upcoming_song_id', $upcoming->id);
+        app(ModDataStore::class)->set($upcoming, self::CODE, $key, $value);
     }
 
     protected function addUpvote(UpcomingSong $upcoming): void

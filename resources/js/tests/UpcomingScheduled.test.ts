@@ -35,3 +35,32 @@ describe('Upcoming scheduled time', () => {
         expect(labels[0].text()).toMatch(/Jan 1, 2030.*8:00/);
     });
 });
+
+describe('Upcoming decoration', () => {
+    it('applies decoration class once and shows displayName for fallback tracks', async () => {
+        (window as unknown as {Echo: unknown}).Echo = {private: () => ({listen: () => {}})};
+        const wrapper = mount(Upcoming, {
+            props: {
+                party: 'ABC',
+                timezone: 'UTC',
+                initialstate: JSON.stringify([
+                    song(1, {
+                        user: null,
+                        fallback_name: 'Fallback',
+                        css_classes: 'old mod-row',
+                        decoration: {displayName: 'Mod Name', class: 'mod-row extra'},
+                    }),
+                    song(2, {user: null, fallback_name: 'Plain', decoration: null}),
+                ]),
+            },
+        });
+
+        await wrapper.vm.$nextTick();
+        const rows = wrapper.findAll('.list-group-item > .row');
+        expect(rows[0].classes().filter((c) => c === 'mod-row')).toHaveLength(1);
+        expect(rows[0].classes()).toEqual(expect.arrayContaining(['old', 'extra']));
+        expect(rows[0].text()).toContain('Mod Name');
+        expect(rows[0].text()).not.toContain('Fallback');
+        expect(rows[1].text()).toContain('Plain');
+    });
+});

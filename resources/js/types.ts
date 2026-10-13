@@ -51,6 +51,7 @@ export interface TrackAnnotation {
     eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
     awaiting_approval?: boolean;
     flagged_request_id?: number | null;
+    decoration?: TrackDecoration | null;
 }
 
 export interface FlaggedRequest {
@@ -100,6 +101,7 @@ export interface LegacyTrack {
     user: string | null;
     fallback_name: string | null;
     css_classes: string;
+    decoration?: TrackDecoration | null;
 }
 
 export interface LegacyPlaybackStatus {

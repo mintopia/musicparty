@@ -9,12 +9,13 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\QueueSelector;
 
 class FlaggedRequests
 {
-    public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue) {}
+    public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue, protected ModExtensions $mods) {}
 
     public function flag(Party $party, Song $song, User $user, string $reason): UpcomingSong
     {
@@ -60,6 +61,7 @@ class FlaggedRequests
             externalUrl: $provider->trackUrl($track->id),
             providerName: $provider->displayName(),
             flagged: true,
+            decoration: $this->mods->decorationFor($party, $request->song, $request)?->toArray(),
         );
 
         return [
