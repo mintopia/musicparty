@@ -95,13 +95,19 @@ musicparty.example.com {
 Caddy forwards upgrade headers automatically. For nginx, set `proxy_http_version 1.1`, `proxy_set_header Upgrade
 $http_upgrade`, `proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`.
 
-### Encore relay URL
+### Encore
 
-Encore connects to an instance's Pusher-compatible relay on the same hostname as the app:
+Encore pushes playback state to Music Party over the instance's Pusher-compatible relay, on the same hostname as the
+app. Each Party has its own private channel, `private-encore.<party code>`.
 
-```
-wss://<app host>/app/<REVERB_APP_KEY>
-```
+1. Open the Party's Settings page. The "Encore relay" card shows the relay URL, that the Pusher protocol must be on,
+   the channel and the app key. Instance admins also see the app secret.
+2. Enter those values in Encore. The relay URL has the form `wss://<app host>/app/<REVERB_APP_KEY>`.
+3. When Encore connects, Music Party asks it for a snapshot of its current state.
+
+While Encore is pushing state, polling is suppressed. Polling takes over again (if the Party's Polling setting is on)
+when Encore reports it is logged out, reports an `error`, or goes silent for more than 30 seconds. Pushed state
+resumes once Encore reports `auth_state` logged in again or sends fresh state.
 
 ## Usage Tips
 
