@@ -2,10 +2,13 @@
 
 namespace App\Mods\Whamageddon;
 
+use App\Enums\ScheduleFrequency;
 use App\Enums\SettingType;
 use App\Models\Party;
 use App\Mods\Contracts\Mod;
+use App\Mods\ScheduledAction;
 use App\Mods\SettingDefinition;
+use Illuminate\Support\Facades\Log;
 
 class WhamageddonMod implements Mod
 {
@@ -40,6 +43,16 @@ class WhamageddonMod implements Mod
     public function extensionPoints(): array
     {
         return ['scheduled-actions', 'decorations'];
+    }
+
+    public function scheduledActions(): array
+    {
+        return [
+            new ScheduledAction('hourly', ScheduleFrequency::Hour, function (Party $party): void {
+                Log::info("{$party} Whamageddon: Processing hourly tick");
+                (new Whamageddon($party))->hourly();
+            }),
+        ];
     }
 
     public function onEnable(Party $party): void

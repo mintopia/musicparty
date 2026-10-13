@@ -1,15 +1,14 @@
 <?php
 
-use App\Events\Cron\HourTickEvent;
+use App\Enums\ScheduleFrequency;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\User;
+use App\Mods\ModScheduler;
 use App\Mods\PartyMods;
-use App\Mods\Whamageddon\Listeners\HourTickListener;
 use App\Services\ModSettingsStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Tests\Support\FakeSpotify;
 use Tests\Support\WhamageddonFixtures;
@@ -26,15 +25,8 @@ afterEach(function () {
 
 function whamTick(): void
 {
-    (new HourTickListener)->handle(new HourTickEvent);
+    app(ModScheduler::class)->run(ScheduleFrequency::Hour);
 }
-
-it('registers only the hour tick listener', function () {
-    $raw = Event::getRawListeners();
-
-    expect(Event::hasListeners(HourTickEvent::class))->toBeTrue()
-        ->and($raw[HourTickEvent::class])->toContain(HourTickListener::class);
-});
 
 it('enabling the mod for a party adds the configured track', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
@@ -103,16 +95,6 @@ it('hourly tick ignores a removed whamageddon mod', function () {
     expect($upcoming->fresh()->score_adjustment)->toBe(0);
 });
 
-it('dispatching the hour tick event runs the listener through the registered binding', function () {
-    Carbon::setTestNow('2026-12-24 12:00:00');
-    $party = WhamageddonFixtures::party(['enabled' => true]);
-    $upcoming = WhamageddonFixtures::upcoming($party);
-
-    HourTickEvent::dispatch();
-
-    expect($upcoming->fresh()->score_adjustment)->toBe(1);
-});
-
 it('isolates a throwing party so the next party still ticks and the failure is logged', function () {
     Carbon::setTestNow('2026-12-24 12:00:00');
     $broken = WhamageddonFixtures::party(['enabled' => true]);
@@ -124,7 +106,7 @@ it('isolates a throwing party so the next party still ticks and the failure is l
     whamTick();
 
     expect($upcoming->fresh()->score_adjustment)->toBe(1);
-    Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'Hourly tick failed'))->once();
+    Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'hourly failed'))->once();
 });
 
 it('logs the hourly tick through the app logger', function () {

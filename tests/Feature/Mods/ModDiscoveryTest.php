@@ -5,16 +5,14 @@ use App\Mods\Foo\FooMod;
 use App\Mods\Foo\FooServiceProvider;
 use App\Mods\ModRegistry;
 use App\Mods\Whamageddon\WhamageddonMod;
-use App\Mods\Whamageddon\WhamageddonServiceProvider;
 use Illuminate\Support\Facades\Artisan;
 use Tests\Support\FooModFixture;
 
-it('discovers the real mods and their providers in app/Mods', function () {
+it('discovers the real mods in app/Mods', function () {
     $registry = app(ModRegistry::class);
 
     expect(array_keys($registry->all()))->toContain('whamageddon')
         ->and($registry->find('whamageddon'))->toBeInstanceOf(WhamageddonMod::class)
-        ->and($registry->providers())->toContain(WhamageddonServiceProvider::class)
         ->and($registry->find('nope'))->toBeNull();
 });
 
@@ -48,10 +46,6 @@ it('does not list any mod in bootstrap/providers.php or config/app.php', functio
     expect($providers)->not->toContain('Whamageddon')->not->toContain('App\\Mods\\Whamageddon')
         ->and($config)->not->toContain('Whamageddon')
         ->and($providers)->toContain('ModServiceProvider');
-});
-
-it('registers the discovered mod providers through ModServiceProvider', function () {
-    expect(array_keys(app()->getLoadedProviders()))->toContain(WhamageddonServiceProvider::class);
 });
 
 it('has removed the old install command and provider', function () {
