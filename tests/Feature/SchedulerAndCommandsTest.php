@@ -42,7 +42,6 @@ function activeParty(array $attributes = []): Party
 
 dataset('scheduled entries', [
     'sanctum prune' => ['sanctum:prune-expired --hours=24', '0 0 * * *'],
-    'telescope prune' => ['telescope:prune', '0 0 * * *'],
     'party fallback' => ['party:fallback', '* * * * *'],
     'party force' => ['party:force', '* * * * *'],
     'refresh tokens' => ['party:refreshaccesstokens', '* * * * *'],
@@ -61,7 +60,7 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
-        'sanctum:prune-expired --hours=24', 'telescope:prune', 'party:fallback', 'party:force',
+        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force',
         'party:refreshaccesstokens', 'tick:minute', 'tick:hour', 'tick:day',
     ]);
 });

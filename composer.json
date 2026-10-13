@@ -15,7 +15,6 @@
         "laravel/reverb": "@beta",
         "laravel/sanctum": "^4.0",
         "laravel/socialite": "^5.11",
-        "laravel/telescope": "^5.0",
         "laravel/tinker": "^2.8",
         "numphp/numphp": "^1.2",
         "open-telemetry/exporter-otlp": "^1.3",
