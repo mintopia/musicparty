@@ -7,7 +7,6 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Illuminate\Queue\Middleware\WithoutOverlapping;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
@@ -27,26 +26,15 @@ class PartyUpdate implements ShouldQueue
     }
 
     /**
-     * @return list<WithoutOverlapping>
-     */
-    public function middleware(): array
-    {
-        $middleware = [];
-        if (config('musicparty.allow_overlapping_updates')) {
-            $middleware[] = (new WithoutOverlapping("party-update:{$this->party->id}"))->dontRelease()->expireAfter(4);
-        }
-
-        return $middleware;
-    }
-
-    /**
      * Execute the job.
      */
     public function handle(): void
     {
         if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
-            $this->party->updateState();
+            if (! $this->party->tryUpdateState()) {
+                $this->release(2);
+            }
 
             return;
         }
@@ -59,7 +47,11 @@ class PartyUpdate implements ShouldQueue
         }
 
         Log::debug("{$this->party}: Updating from PartyUpdate job");
-        $this->party->updateState();
+        if (! $this->party->tryUpdateState()) {
+            $this->release(2);
+
+            return;
+        }
 
         $delay = $this->party->getNextUpdateDelay();
         if ($delay === null) {
