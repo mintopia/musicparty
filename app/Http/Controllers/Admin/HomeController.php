@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class HomeController extends Controller
 {
-    public function dashboard()
+    public function dashboard(): View
     {
         $stats = (object) [
             'users' => (object) [
@@ -23,13 +25,13 @@ class HomeController extends Controller
         ]);
     }
 
-    public function unimpersonate(Request $request)
+    public function unimpersonate(Request $request): RedirectResponse
     {
         if (! $request->session()->get('impersonating')) {
             abort(403);
         }
-        $impersonated = $request->user();
-        $user = User::find($request->session()->get('originalUserId'));
+        $impersonated = $this->resolveAuthenticatedUser($request);
+        $user = User::findOrFail((int) $request->session()->get('originalUserId'));
         $request->session()->flush();
         $request->session()->regenerate(true);
 

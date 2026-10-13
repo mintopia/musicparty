@@ -11,15 +11,15 @@ use App\Models\UpcomingSong;
 
 class VoteController extends Controller
 {
-    public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong)
+    public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong): UpcomingSongResource
     {
         try {
             if ($request->input('vote') < 0) {
-                $vote = $upcomingsong->downvote($request->user());
+                $vote = $upcomingsong->downvote($this->resolveAuthenticatedUser($request));
             } elseif ($request->input('vote') > 0) {
-                $vote = $upcomingsong->upvote($request->user());
+                $vote = $upcomingsong->upvote($this->resolveAuthenticatedUser($request));
             } else {
-                $vote = $request->user()->votes()->whereUpcomingSongId($upcomingsong->id)->first();
+                $vote = $this->resolveAuthenticatedUser($request)->votes()->whereUpcomingSongId($upcomingsong->id)->first();
                 if ($vote) {
                     $vote->delete();
                     $vote = null;

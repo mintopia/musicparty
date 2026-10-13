@@ -10,15 +10,17 @@ use App\Models\Setting;
 use App\Models\SocialProvider;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
-    public function profile(Request $request)
+    public function profile(Request $request): View
     {
-        $ids = $request->user()->accounts->pluck('social_provider_id')->toArray();
+        $ids = $this->resolveAuthenticatedUser($request)->accounts->pluck('social_provider_id')->toArray();
         $providers = SocialProvider::whereEnabled(true)
             ->get()
             ->filter(fn ($provider) => ! in_array($provider->id, $ids));
@@ -28,7 +30,7 @@ class UserController extends Controller
         ]);
     }
 
-    public function logout(Request $request)
+    public function logout(Request $request): RedirectResponse
     {
         Auth::logout();
         $request->session()->regenerate(true);
@@ -36,7 +38,7 @@ class UserController extends Controller
         return response()->redirectToRoute('home')->with('successMessage', 'You have been logged out');
     }
 
-    public function login_redirect(SocialProvider $socialprovider)
+    public function login_redirect(SocialProvider $socialprovider): RedirectResponse
     {
         if (! $socialprovider->enabled || ! $socialprovider->auth_enabled) {
             return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
@@ -45,7 +47,7 @@ class UserController extends Controller
         return $socialprovider->redirect();
     }
 
-    public function login_return(SocialProvider $socialprovider)
+    public function login_return(SocialProvider $socialprovider): RedirectResponse
     {
         if (Auth::hasUser()) {
             return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
@@ -74,7 +76,7 @@ class UserController extends Controller
         return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
     }
 
-    public function login()
+    public function login(): View
     {
         $providers = SocialProvider::whereAuthEnabled(true)->whereEnabled(true)->get();
 
@@ -83,51 +85,51 @@ class UserController extends Controller
         ]);
     }
 
-    public function signup(Request $request)
+    public function signup(Request $request): View
     {
         return view('users.signup', [
-            'user' => $request->user(),
+            'user' => $this->resolveAuthenticatedUser($request),
             'terms' => Setting::fetch('terms'),
             'privacy' => Setting::fetch('privacypolicy'),
         ]);
     }
 
-    public function signup_process(UserSignupRequest $request)
+    public function signup_process(UserSignupRequest $request): RedirectResponse
     {
-        $user = $request->user();
+        $user = $this->resolveAuthenticatedUser($request);
         $user->nickname = $request->input('nickname');
         $user->first_login = false;
-        $user->terms_agreed_at = Carbon::now();
+        $user->terms_agreed_at = now();
         $user->save();
 
         return response()->redirectToRoute('home')->with('successMessage', 'Your account has been created');
     }
 
-    public function edit(Request $request)
+    public function edit(Request $request): View
     {
         return view('users.edit', [
-            'user' => $request->user(),
+            'user' => $this->resolveAuthenticatedUser($request),
         ]);
     }
 
-    public function update(ProfileUpdateRequest $request)
+    public function update(ProfileUpdateRequest $request): RedirectResponse
     {
-        $user = $request->user();
+        $user = $this->resolveAuthenticatedUser($request);
         $user->nickname = $request->input('nickname');
         $user->save();
 
         return response()->redirectToRoute('user.profile')->with('successMessage', 'Your profile has been updated');
     }
 
-    public function spotify(Request $request)
+    public function spotify(Request $request): RedirectResponse|View
     {
-        if ($request->user()->cannot('create', Party::class)) {
+        if ($this->resolveAuthenticatedUser($request)->cannot('create', Party::class)) {
             return response()->redirectToRoute('user.profile')->with('errorMessage', 'You are not able to link Spotify accounts');
         }
 
         $spotify = null;
         $search = null;
-        foreach ($request->user()->accounts as $account) {
+        foreach ($this->resolveAuthenticatedUser($request)->accounts as $account) {
             if ($account->provider?->code == 'spotify') {
                 $spotify = $account;
             } elseif ($account->provider?->code == 'spotifysearch') {

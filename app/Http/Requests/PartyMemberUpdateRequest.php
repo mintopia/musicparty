@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Models\PartyMember;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -9,6 +10,8 @@ use Illuminate\Foundation\Http\FormRequest;
 
 class PartyMemberUpdateRequest extends FormRequest
 {
+    use ResolvesAuthenticatedUser;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -18,7 +21,7 @@ class PartyMemberUpdateRequest extends FormRequest
         $party = $this->route('party');
         /** @var PartyMember $member */
         $member = $this->route('user');
-        $user = $this->user();
+        $user = $this->resolveAuthenticatedUser($this);
 
         $touchesOwnerRole = $this->input('role') === 'owner' || $member->role->code === 'owner';
         if (! $touchesOwnerRole) {

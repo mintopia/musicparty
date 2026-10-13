@@ -13,6 +13,8 @@ use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -23,10 +25,10 @@ class PartyController extends Controller
         $this->authorizeResource(Party::class, 'party');
     }
 
-    public function create(Request $request)
+    public function create(Request $request): RedirectResponse|View
     {
         // Check if they have Spotify links
-        if (! $request->user()->hasSpotifyLinks()) {
+        if (! $this->resolveAuthenticatedUser($request)->hasSpotifyLinks()) {
             return response()->redirectToRoute('user.spotify');
         }
 
@@ -35,23 +37,23 @@ class PartyController extends Controller
         return view('parties.create', [
             'party' => $party,
             'mods' => Mod::all(),
-            'playlists' => $request->user()->getPlaylists(),
-            'devices' => $request->user()->getDevices(),
+            'playlists' => $this->resolveAuthenticatedUser($request)->getPlaylists(),
+            'devices' => $this->resolveAuthenticatedUser($request)->getDevices(),
         ]);
     }
 
-    public function store(PartyRequest $request)
+    public function store(PartyRequest $request): RedirectResponse
     {
         $party = new Party;
-        $party->user()->associate($request->user());
+        $party->user()->associate($this->resolveAuthenticatedUser($request));
         $this->updateObject($party, $request);
 
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
 
-    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party)
+    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): View
     {
-        $member = $party->getMember($request->user());
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
         $upcomingSongs = $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
             ->whereNull('queued_at')
@@ -61,7 +63,7 @@ class PartyController extends Controller
             ->take(20)
             ->get();
 
-        $augmentData = $augmentService->augmentCollection($upcomingSongs, $request->user());
+        $augmentData = $augmentService->augmentCollection($upcomingSongs, $this->resolveAuthenticatedUser($request));
         $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData) {
             $resource = new UpcomingSongResource($song);
             $resource->augment($augmentData[$song->id] ?? null);
@@ -73,34 +75,34 @@ class PartyController extends Controller
             'party' => $party,
             'member' => $member,
             'upcoming' => $upcoming->toArray(),
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
         ]);
     }
 
-    public function player(Request $request, Party $party)
+    public function player(Request $request, Party $party): View
     {
         return view('parties.player', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
         ]);
     }
 
-    public function tv(Party $party)
+    public function tv(Party $party): View
     {
         return view('parties.tv', [
             'party' => $party,
         ]);
     }
 
-    public function youtube(Request $request, Party $party)
+    public function youtube(Request $request, Party $party): View
     {
         return view('parties.youtube', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
         ]);
     }
 
-    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party)
+    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party): RedirectResponse
     {
         $videoId = $request->videoId();
         PartyPlayYouTubeVideo::dispatch($party, (string) $videoId)->afterResponse();
@@ -109,16 +111,16 @@ class PartyController extends Controller
             ->with('successMessage', 'Video requested');
     }
 
-    public function ytplayer(Party $party)
+    public function ytplayer(Party $party): View
     {
         return view('parties.ytplayer', [
             'party' => $party,
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party)
+    public function search(SearchRequest $request, Party $party): View
     {
-        $member = $party->getMember($request->user());
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
         $params = [
             'query' => $request->input('query'),
@@ -138,13 +140,13 @@ class PartyController extends Controller
         return view('parties.search', [
             'party' => $party,
             'member' => $member,
-            'canManage' => $party->canBeManagedBy($request->user()),
+            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
             'params' => (object) $params,
             'results' => $results,
         ]);
     }
 
-    public function edit(Party $party)
+    public function edit(Party $party): View
     {
         return view('parties.edit', [
             'party' => $party,
@@ -155,7 +157,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function update(PartyRequest $request, Party $party)
+    public function update(PartyRequest $request, Party $party): RedirectResponse
     {
         $this->updateObject($party, $request);
         $party->save();

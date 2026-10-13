@@ -10,7 +10,7 @@ use App\Models\PlayedSong;
 
 class SongRatingController extends Controller
 {
-    public function store(SongRatingRequest $request, Party $party, PlayedSong $playedsong)
+    public function store(SongRatingRequest $request, Party $party, PlayedSong $playedsong): PlayedSongResource
     {
         $current = $playedsong->party->current();
         if ($current->id != $playedsong->id) {
@@ -18,9 +18,9 @@ class SongRatingController extends Controller
         }
         $rating = null;
         if ($request->input('rating') < 0) {
-            $rating = $playedsong->dislike($request->user());
+            $rating = $playedsong->dislike($this->resolveAuthenticatedUser($request));
         } elseif ($request->input('rating') > 0) {
-            $rating = $playedsong->like($request->user());
+            $rating = $playedsong->like($this->resolveAuthenticatedUser($request));
         }
         $resource = new PlayedSongResource($playedsong);
         $resource->augment((object) [

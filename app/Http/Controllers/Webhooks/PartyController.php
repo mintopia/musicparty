@@ -6,11 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Webhooks\PartyLibrespotRequest;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
 class PartyController extends Controller
 {
-    public function librespot(PartyLibrespotRequest $request, Party $party)
+    public function librespot(PartyLibrespotRequest $request, Party $party): Response
     {
         switch ($request->input('event')) {
             case 'started':
@@ -28,7 +29,7 @@ class PartyController extends Controller
         return response()->noContent();
     }
 
-    public function simple(Party $party)
+    public function simple(Party $party): Response
     {
         Log::debug("{$party}: Received simple webhook event");
         if (config('musicparty.webhook_should_queue')) {
@@ -47,7 +48,7 @@ class PartyController extends Controller
         return response()->noContent();
     }
 
-    public function soloist(Party $party)
+    public function soloist(Party $party): Response
     {
         Log::debug("{$party}: Received soloist webhook event");
         PartyUpdate::dispatch($party);
