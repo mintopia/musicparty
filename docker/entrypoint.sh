@@ -4,8 +4,10 @@ set -e
 APP_USER=musicparty
 
 if [ "$(id -u)" = "0" ]; then
-    PUID="${PUID:-1000}"
-    PGID="${PGID:-1000}"
+    PUID="${PUID:-$(stat -c %u /app)}"
+    PGID="${PGID:-$(stat -c %g /app)}"
+    [ "$PUID" != "0" ] || PUID=1000
+    [ "$PGID" != "0" ] || PGID=1000
 
     if [ "$(id -g "$APP_USER")" != "$PGID" ]; then
         groupmod -o -g "$PGID" "$APP_USER"

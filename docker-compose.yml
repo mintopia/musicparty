@@ -2,8 +2,8 @@
 name: musicparty
 
 x-user-env: &user-env
-  PUID: "${PUID:-1000}"
-  PGID: "${PGID:-1000}"
+  PUID: "${PUID:-}"
+  PGID: "${PGID:-}"
 
 services:
   musicparty:
@@ -93,9 +93,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/entrypoint.sh", "composer" ]
+    entrypoint: [ "composer" ]
     command: [ "--version" ]
-    environment: *user-env
     volumes:
       - ./:/app
     healthcheck:
@@ -106,8 +105,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/entrypoint.sh", "php", "vendor/bin/phpunit" ]
-    environment: *user-env
+    entrypoint: [ "php", "vendor/bin/phpunit" ]
     volumes:
       - ./:/app
     healthcheck:
@@ -116,9 +114,6 @@ services:
   vite:
     profiles: [ "vite" ]
     image: node:23
-    user: "${PUID:-1000}:${PGID:-1000}"
-    environment:
-      HOME: /tmp
     entrypoint: [ "npm" ]
     command: [ "run", "dev" ]
     working_dir: /app
@@ -130,9 +125,6 @@ services:
   npm:
     profiles: [ "npm" ]
     image: node:23
-    user: "${PUID:-1000}:${PGID:-1000}"
-    environment:
-      HOME: /tmp
     entrypoint: [ "npm" ]
     command: [ "" ]
     working_dir: /app
@@ -159,8 +151,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    command: [ "/bin/sh" ]
-    environment: *user-env
+    entrypoint: [ "/bin/sh" ]
     volumes:
       - ./:/app/
     depends_on:
