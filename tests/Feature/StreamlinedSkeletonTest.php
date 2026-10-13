@@ -2,7 +2,9 @@
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use App\Listeners\MessageLoggedListener;
 use Illuminate\Auth\Events\Registered;
+use Illuminate\Auth\Listeners\SendEmailVerificationNotification;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
 use Illuminate\Log\Events\MessageLogged;
@@ -50,8 +52,10 @@ it('resolves the framework exception handler', function () {
 });
 
 it('registers each listener once', function () {
-    $dispatcher = app('events');
+    $registrations = fn (string $event, string $listener): int => collect(app('events')->getRawListeners()[$event] ?? [])
+        ->filter(fn ($registered) => $registered === $listener)
+        ->count();
 
-    expect($dispatcher->getListeners(MessageLogged::class))->toHaveCount(1)
-        ->and($dispatcher->getListeners(Registered::class))->toHaveCount(1);
+    expect($registrations(MessageLogged::class, MessageLoggedListener::class))->toBe(1)
+        ->and($registrations(Registered::class, SendEmailVerificationNotification::class))->toBe(1);
 });
