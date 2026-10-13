@@ -28,7 +28,7 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, opentelemetry
           coverage: xdebug
           tools: composer:v2
@@ -44,7 +44,7 @@ jobs:
           restore-keys: composer-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Prepare environment
         run: |
@@ -90,13 +90,13 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, opentelemetry
           coverage: none
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Pint
         run: vendor/bin/pint --test
@@ -125,13 +125,13 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, opentelemetry
           coverage: none
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: PHPStan
         run: composer analyse
@@ -144,13 +144,33 @@ jobs:
 
       - uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.4'
+          php-version: '8.5'
           extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, opentelemetry
           coverage: none
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Rector dry run
         run: composer rector
+
+  docker:
+    name: Docker image (${{ matrix.image }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        image: [develop, production]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/${{ matrix.image }}/Dockerfile
+          push: false
+          cache-from: type=gha,scope=${{ matrix.image }}
+          cache-to: type=gha,scope=${{ matrix.image }},mode=max

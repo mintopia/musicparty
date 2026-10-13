@@ -4,7 +4,7 @@
     "description": "Music Party",
     "license": "MIT",
     "require": {
-        "php": "^8.2",
+        "php": "^8.5",
         "guzzlehttp/guzzle": "^7.2",
         "jwilsson/spotify-web-api-php": "^6.0",
         "laravel/framework": "^12.0",
