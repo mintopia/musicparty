@@ -140,7 +140,7 @@ class PlayedSong extends Model
         $data = $this->song->toApi();
         $data['id'] = $this->id;
         $data['rating'] = (int) $this->rating;
-        $data['played_at'] = $this->played_at ? $this->played_at->toIso8601String() : null;
+        $data['played_at'] = $this->played_at->toIso8601String();
         $data['user'] = $this->upcoming->user->nickname ?? null;
 
         return $data;

@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Support\Carbon;
+use stdClass;
 
 /**
  * @property int $id
@@ -46,7 +47,7 @@ class Artist extends Model
         return $this->belongsToMany(Song::class)->withTimestamps();
     }
 
-    public static function fromSpotify(object $spotifyArtist): Artist
+    public static function fromSpotify(stdClass $spotifyArtist): Artist
     {
         $artist = Artist::whereSpotifyId($spotifyArtist->id)->first();
         if ($artist) {

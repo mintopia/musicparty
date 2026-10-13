@@ -8,6 +8,7 @@ use App\Models\Song;
 use App\Support\SpotifyPayload;
 use Illuminate\Support\Collection;
 use SpotifyWebAPI\SpotifyWebAPIException;
+use stdClass;
 
 class RequestCheckService
 {
@@ -38,7 +39,7 @@ class RequestCheckService
         return collect($output);
     }
 
-    public function checkSong(object|string $input): RequestCheckResponse
+    public function checkSong(stdClass|string $input): RequestCheckResponse
     {
         if (is_string($input)) {
             // Get the song from Spotify
@@ -103,7 +104,7 @@ class RequestCheckService
         return collect($output);
     }
 
-    protected function singleCheck(object $spotifyData): ?RequestCheckResponse
+    protected function singleCheck(stdClass $spotifyData): ?RequestCheckResponse
     {
         if ($spotifyData->id === self::CONTEXT_PLAYLIST_TRACK) {
             return new RequestCheckResponse(false, 'This song is not available');

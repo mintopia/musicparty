@@ -90,7 +90,7 @@ class SpotifySearchService
 
             $votes = [];
             $upcomingIds = $upcomingSongs->pluck('id');
-            if ($upcomingIds) {
+            if ($upcomingIds->isNotEmpty()) {
                 $allVotes = Vote::whereUserId($this->member->user->id)->whereIn('upcoming_song_id', $upcomingIds)->get();
                 foreach ($allVotes as $vote) {
                     $votes[$vote->upcoming_song_id] = $vote;

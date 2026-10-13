@@ -61,8 +61,9 @@ abstract class AbstractSocialProvider implements SocialProviderContract
 
     public function install(): SocialProvider
     {
-        $this->provider = SocialProvider::whereCode($this->code)->first();
-        if (! $this->provider) {
+        $provider = SocialProvider::whereCode($this->code)->first();
+        $this->provider = $provider;
+        if ($provider === null) {
             $provider = new SocialProvider;
             $this->provider = $provider;
             $provider->name = $this->name;
@@ -81,7 +82,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $provider->save();
         }
 
-        return $this->provider;
+        return $provider;
     }
 
     public function installSettings(): void

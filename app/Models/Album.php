@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
+use stdClass;
 
 /**
  * @property int $id
@@ -48,7 +49,7 @@ class Album extends Model
         return $this->hasMany(Song::class);
     }
 
-    public static function fromSpotify(object $spotifyAlbum): Album
+    public static function fromSpotify(stdClass $spotifyAlbum): Album
     {
         $album = Album::whereSpotifyId($spotifyAlbum->id)->first();
         if ($album) {

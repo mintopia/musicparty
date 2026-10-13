@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
+use stdClass;
 
 /**
  * @property int $id
@@ -53,7 +54,7 @@ class PartyModeration extends Model
         return $this->belongsTo(Party::class);
     }
 
-    public function match(object $spotifyTrack): bool
+    public function match(stdClass $spotifyTrack): bool
     {
         $methodName = 'check'.substr($this->type->name, 2);
         if (method_exists($this, $methodName)) {
@@ -68,7 +69,7 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkName(object $spotifyTrack): bool
+    protected function checkName(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'name')) {
             return false;
@@ -77,7 +78,7 @@ class PartyModeration extends Model
         return $this->regexTest($spotifyTrack->name);
     }
 
-    protected function checkArtist(object $spotifyTrack): bool
+    protected function checkArtist(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
@@ -91,7 +92,7 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkArtistId(object $spotifyTrack): bool
+    protected function checkArtistId(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
             return false;
@@ -105,7 +106,7 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkId(object $spotifyTrack): bool
+    protected function checkId(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'id')) {
             return false;
@@ -114,7 +115,7 @@ class PartyModeration extends Model
         return $this->regexTest($spotifyTrack->id, false);
     }
 
-    protected function checkAlbum(object $spotifyTrack): bool
+    protected function checkAlbum(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'name')) {
             return false;
@@ -123,7 +124,7 @@ class PartyModeration extends Model
         return $this->regexTest($spotifyTrack->album->name);
     }
 
-    protected function checkAlbumId(object $spotifyTrack): bool
+    protected function checkAlbumId(stdClass $spotifyTrack): bool
     {
         if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'id')) {
             return false;
@@ -132,9 +133,9 @@ class PartyModeration extends Model
         return $this->regexTest($spotifyTrack->album->id, false);
     }
 
-    protected function checkISRC(object $spotifyTrack): bool
+    protected function checkISRC(stdClass $spotifyTrack): bool
     {
-        if ($spotifyTrack?->external_ids?->isrc === null) {
+        if ($spotifyTrack->external_ids?->isrc === null) {
             return false;
         }
 

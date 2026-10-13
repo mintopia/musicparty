@@ -71,7 +71,10 @@ class SocialProvider extends Model
 
     public function getProvider(?string $redirectUrl = null): SocialProviderContract
     {
-        return new $this->provider_class($this, $redirectUrl);
+        /** @var class-string<SocialProviderContract> $providerClass */
+        $providerClass = $this->provider_class;
+
+        return new $providerClass($this, $redirectUrl);
     }
 
     public function user(?string $redirectUrl = null)

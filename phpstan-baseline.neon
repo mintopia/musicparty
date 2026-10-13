@@ -793,24 +793,6 @@ parameters:
 			path: app/Jobs/PartyUpdate.php
 
 		-
-			message: '#^Access to an undefined property object\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Album.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$images\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Album.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Album.php
-
-		-
 			message: '#^Class App\\Models\\Album uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -821,18 +803,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Models/Album.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Artist.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Artist.php
 
 		-
 			message: '#^Class App\\Models\\Artist uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -949,18 +919,6 @@ parameters:
 			path: app/Models/PartyModSetting.php
 
 		-
-			message: '#^Access to an undefined property object\:\:\$external_ids\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/PartyModeration.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/PartyModeration.php
-
-		-
 			message: '#^Class App\\Models\\PartyModeration uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -969,12 +927,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\PartyModeration\:\:regexTest\(\) has parameter \$caseInsensitive with no type specified\.$#'
 			identifier: missingType.parameter
-			count: 1
-			path: app/Models/PartyModeration.php
-
-		-
-			message: '#^Using nullsafe property access on non\-nullable type object\. Use \-\> instead\.$#'
-			identifier: nullsafe.neverNull
 			count: 1
 			path: app/Models/PartyModeration.php
 
@@ -993,12 +945,6 @@ parameters:
 		-
 			message: '#^Property App\\Models\\PlayedSong\:\:\$rating \(int\) does not accept float\|int\|string\.$#'
 			identifier: assign.propertyType
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Ternary operator condition is always true\.$#'
-			identifier: ternary.alwaysTrue
 			count: 1
 			path: app/Models/PlayedSong.php
 
@@ -1063,12 +1009,6 @@ parameters:
 			path: app/Models/SocialProvider.php
 
 		-
-			message: '#^Method App\\Models\\SocialProvider\:\:getProvider\(\) should return App\\Services\\Contracts\\SocialProviderContract but returns object\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/SocialProvider.php
-
-		-
 			message: '#^Method App\\Models\\SocialProvider\:\:redirect\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -1085,36 +1025,6 @@ parameters:
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Models/SocialProvider.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$album\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$artists\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$duration_ms\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Song.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Song.php
 
 		-
 			message: '#^Class App\\Models\\Song uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1249,24 +1159,6 @@ parameters:
 			path: app/Services/PlayedSongAugmentService.php
 
 		-
-			message: '#^Access to an undefined property object\:\:\$duration_ms\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$explicit\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
 			message: '#^Method App\\Services\\RequestCheckService\:\:bulkCheck\(\) has parameter \$input with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
@@ -1347,12 +1239,6 @@ parameters:
 		-
 			message: '#^Method App\\Services\\SocialProviders\\AbstractSocialProvider\:\:getSocialiteProvider\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Method App\\Services\\SocialProviders\\AbstractSocialProvider\:\:install\(\) should return App\\Models\\SocialProvider but returns App\\Models\\SocialProvider\|null\.$#'
-			identifier: return.type
 			count: 1
 			path: app/Services/SocialProviders/AbstractSocialProvider.php
 
@@ -1509,12 +1395,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property object\:\:\$total\.$#'
 			identifier: property.notFound
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^If condition is always true\.$#'
-			identifier: if.alwaysTrue
 			count: 1
 			path: app/Services/SpotifySearchService.php
 
