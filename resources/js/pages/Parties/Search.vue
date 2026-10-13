@@ -5,11 +5,13 @@ import {computed, ref, watch} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackList from '@/components/TrackList.vue';
 import {useEcho} from '@/composables/useEcho';
+import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {flaggedWithdrawUrl} from '@/lib/flagged';
 import {show, search} from '@/routes/parties';
+import {show as showAlbum} from '@/routes/parties/albums';
 import {show as showArtist} from '@/routes/parties/artists';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
 import type {LegacyPartyState, Paginator, SharedProps, TrackAnnotation} from '@/types';
@@ -41,6 +43,8 @@ function submit(): void {
         perPage: props.params.perPage === 20 ? undefined : props.params.perPage,
     });
 }
+
+useQueueSync(props.party.code, ['results']);
 
 const authUser = usePage<SharedProps>().props.auth.user;
 if (authUser) {
@@ -144,6 +148,11 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         :tracks="tracks"
                         :can-downvote="party.downvotes"
                         empty-title="No results found"
+                        :album-route="
+                            (id: string) =>
+                                showAlbum({party: party.code, album: id}).url +
+                                (query ? `?query=${encodeURIComponent(query)}` : '')
+                        "
                         :artist-route="
                             (id: string) =>
                                 showArtist({party: party.code, artist: id}).url +

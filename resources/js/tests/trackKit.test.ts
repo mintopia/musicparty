@@ -139,6 +139,7 @@ describe('TrackRow', () => {
         });
 
         expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual([
+            '/albums/a1',
             '/artists/r1',
             '/artists/r2',
             '/albums/a1',

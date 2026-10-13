@@ -51,15 +51,21 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
     >
         <div class="row g-2 align-items-center">
             <div class="col-auto">
-                <img
-                    v-if="track.album.image_url"
-                    :src="track.album.image_url"
-                    :title="track.album.name"
-                    :alt="track.album.name"
-                    class="rounded"
-                    width="60"
-                    height="60"
-                />
+                <component
+                    :is="albumRoute ? 'a' : 'span'"
+                    :href="albumRoute ? href(albumRoute(track.album.id)) : undefined"
+                    data-test="track-art"
+                >
+                    <img
+                        v-if="track.album.image_url"
+                        :src="track.album.image_url"
+                        :title="track.album.name"
+                        :alt="track.album.name"
+                        class="rounded"
+                        width="60"
+                        height="60"
+                    />
+                </component>
             </div>
             <div class="col">
                 <div>
