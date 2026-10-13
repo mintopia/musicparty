@@ -84,6 +84,11 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         return "https://open.spotify.com/track/{$trackId}";
     }
 
+    public function resolveTrackReference(string $reference): ?string
+    {
+        return preg_match('/^spotify:track:([A-Za-z0-9]{22})$/D', $reference, $matches) === 1 ? $matches[1] : null;
+    }
+
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
         $result = SpotifyPayload::object($this->reader()->search($query, 'track', [

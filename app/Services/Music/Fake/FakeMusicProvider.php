@@ -169,6 +169,11 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return null;
     }
 
+    public function resolveTrackReference(string $reference): ?string
+    {
+        return preg_match('/^fake:track:([A-Za-z0-9-]+)$/D', $reference, $matches) === 1 ? $matches[1] : null;
+    }
+
     public function isReservedTrack(string $trackId): bool
     {
         return in_array($trackId, $this->reservedTrackIds, true);
