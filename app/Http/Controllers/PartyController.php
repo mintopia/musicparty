@@ -11,6 +11,7 @@ use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
@@ -134,7 +135,11 @@ class PartyController extends Controller
         $results = null;
         if ($params['query']) {
             $searchService = new SpotifySearchService($party, $member);
-            $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+            try {
+                $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+            } catch (SpotifyBackoffException) {
+                session()->now('errorMessage', 'Spotify is busy right now. Please try again shortly.');
+            }
         }
 
         return view('parties.search', [
