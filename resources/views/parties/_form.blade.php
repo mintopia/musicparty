@@ -1,6 +1,24 @@
 {{ csrf_field() }}
 <div class="card-body">
     <div class="mb-3">
+        <label class="form-label required">Music Provider</label>
+        <div>
+            @if($party->exists)
+                <input type="text" class="form-control" value="{{ ucfirst($party->provider_id) }}" disabled>
+                <small class="form-hint">The Music Provider cannot be changed after creation</small>
+            @else
+                <select name="provider_id" class="form-control @error('provider_id') is-invalid @enderror">
+                    @foreach($providerIds as $providerId)
+                        <option value="{{ $providerId }}" @if(old('provider_id') === $providerId) selected @endif>{{ ucfirst($providerId) }}</option>
+                    @endforeach
+                </select>
+                @error('provider_id')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            @endif
+        </div>
+    </div>
+    <div class="mb-3">
         <label class="form-label required">Name</label>
         <div>
             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"

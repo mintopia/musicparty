@@ -46,6 +46,7 @@ class PartyController extends Controller
             'mods' => Mod::all(),
             'playlists' => $this->resolveAuthenticatedUser($request)->getPlaylists(),
             'devices' => $this->resolveAuthenticatedUser($request)->getDevices(),
+            'providerIds' => app(MusicProviderFactory::class)->selectableIds(),
         ]);
     }
 
@@ -53,6 +54,7 @@ class PartyController extends Controller
     {
         $party = new Party;
         $party->user()->associate($this->resolveAuthenticatedUser($request));
+        $party->provider_id = $request->string('provider_id')->toString();
         $this->updateObject($party, $request);
         PartyUpdate::dispatch($party);
 

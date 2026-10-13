@@ -8,6 +8,7 @@ use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Database\Eloquent\Model;
 
 /**
  * @extends Factory<User>
@@ -29,10 +30,10 @@ class UserFactory extends Factory
     public function withSpotify(): static
     {
         return $this->afterCreating(function (User $user): void {
-            $provider = SocialProvider::query()->firstOrCreate(
+            $provider = Model::unguarded(fn () => SocialProvider::query()->firstOrCreate(
                 ['code' => 'spotify'],
                 SocialProvider::factory()->make(['code' => 'spotify'])->getAttributes()
-            );
+            ));
             foreach (['client_id', 'client_secret'] as $code) {
                 if (! $provider->settings()->whereCode($code)->exists()) {
                     $setting = new ProviderSetting;
