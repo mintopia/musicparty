@@ -13,8 +13,18 @@ export interface PartyMembership {
 }
 
 export interface SharedProps {
-    auth: {user: AuthUser | null; parties: PartyMembership[]};
-    flash: {success: string | null; error: string | null; status: string | null};
+    auth: {user: AuthUser | null; parties: PartyMembership[]; can: {admin: boolean; createParty: boolean}};
+    flash: {success: string | null; error: string | null; info: string | null; warning: string | null};
+    site: {
+        defaultParty: string | null;
+        logoLight: string | null;
+        logoDark: string | null;
+        terms: string | null;
+        privacyPolicy: string | null;
+        coverImage: string | null;
+        favicon: string | null;
+    };
+    theme: {darkMode: boolean};
     reverb: {appKey: string | null};
     instanceName: string | null;
     errors: Record<string, string>;

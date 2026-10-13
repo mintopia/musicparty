@@ -2,9 +2,11 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\Setting;
+use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
@@ -24,11 +26,28 @@ class HandleInertiaRequests extends Middleware
             'auth' => fn (): array => [
                 'user' => $this->userProps($request->user()),
                 'parties' => fn (): array => $this->partyProps($request->user()),
+                'can' => fn (): array => [
+                    'admin' => $request->user()?->can('admin') ?? false,
+                    'createParty' => $request->user()?->can('create', Party::class) ?? false,
+                ],
             ],
             'flash' => fn (): array => [
-                'success' => $request->session()->get('success'),
-                'error' => $request->session()->get('error'),
-                'status' => $request->session()->get('status'),
+                'success' => $request->session()->get('successMessage'),
+                'error' => $request->session()->get('errorMessage'),
+                'info' => $request->session()->get('infoMessage'),
+                'warning' => $request->session()->get('warningMessage'),
+            ],
+            'site' => fn (): array => [
+                'defaultParty' => Setting::fetch('defaultparty'),
+                'logoLight' => Setting::fetch('logo-light'),
+                'logoDark' => Setting::fetch('logo-dark'),
+                'terms' => Setting::fetch('terms'),
+                'privacyPolicy' => Setting::fetch('privacypolicy'),
+                'coverImage' => Setting::fetch('cover-image'),
+                'favicon' => Setting::fetch('favicon'),
+            ],
+            'theme' => fn (): array => [
+                'darkMode' => (bool) Theme::whereActive(true)->value('dark_mode'),
             ],
             'reverb' => [
                 'appKey' => config('reverb.apps.apps.0.key'),
