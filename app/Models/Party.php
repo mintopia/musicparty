@@ -139,6 +139,13 @@ class Party extends Model
         'song_started_at' => 'datetime',
     ];
 
+    /** @var array<int, string> */
+    public const array RENDERED_ATTRIBUTES = [
+        'code', 'name', 'backup_playlist_id', 'show_qrcode', 'song_id', 'song_started_at',
+    ];
+
+    protected bool $coalescingBroadcasts = false;
+
     /** @var Collection<string, PartyModSetting>|null */
     protected ?Collection $_modSettings = null;
 
@@ -255,7 +262,7 @@ class Party extends Model
     protected function withSyncLock(callable $callback): bool
     {
         if (! config('musicparty.prevent_overlapping_updates')) {
-            $callback();
+            $this->runCoalescingBroadcasts($callback);
 
             return true;
         }
@@ -268,12 +275,27 @@ class Party extends Model
         }
 
         try {
-            $callback();
+            $this->runCoalescingBroadcasts($callback);
         } finally {
             $lock->release();
         }
 
         return true;
+    }
+
+    protected function runCoalescingBroadcasts(callable $sync): void
+    {
+        $this->coalescingBroadcasts = true;
+        $stateBefore = $this->renderedStateFingerprint();
+
+        try {
+            $sync();
+        } finally {
+            $this->coalescingBroadcasts = false;
+            if ($this->renderedStateFingerprint() !== $stateBefore) {
+                UpdatedEvent::dispatch($this);
+            }
+        }
     }
 
     protected function runStateUpdate(): void
@@ -882,6 +904,24 @@ class Party extends Model
     public function pushUpdate(): void
     {
         UpdatedEvent::dispatch($this);
+    }
+
+    public function broadcastRenderedChange(): void
+    {
+        if (! $this->coalescingBroadcasts) {
+            UpdatedEvent::dispatch($this);
+        }
+    }
+
+    protected function renderedStateFingerprint(): string
+    {
+        $state = (array) $this->getState();
+        unset($state['updated_at']);
+        $status = (array) $state['status'];
+        unset($status['updatedAt']);
+        $state['status'] = $status;
+
+        return json_encode($state, JSON_THROW_ON_ERROR);
     }
 
     public function checkDownvotesForUser(User $user): void

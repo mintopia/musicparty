@@ -20,6 +20,7 @@ use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
+use Tests\Support\FakeSpotify;
 
 function realtimeParty(string $code = 'RTPT'): Party
 {
@@ -132,14 +133,79 @@ it('declares the placeholder channel-name channel on the cron ticks and mod sett
         ->and($channels[0]->name)->toBe('private-channel-name');
 })->with([MinuteTickEvent::class, HourTickEvent::class, DayTickEvent::class, PartyModSettingDeletedEvent::class]);
 
-it('pins E5 R9: every Party save broadcasts Party UpdatedEvent, including bookkeeping bumps to last_updated_at', function () {
+it('does not broadcast Party UpdatedEvent for bookkeeping bumps to last_updated_at', function () {
     $party = realtimeParty();
     Event::fake([PartyUpdatedEvent::class]);
 
     $party->last_updated_at = now()->addMinute();
     $party->save();
 
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+});
+
+it('broadcasts Party UpdatedEvent once when a rendered field changes', function () {
+    $party = realtimeParty();
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $party->name = 'Renamed';
+    $party->save();
+
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+it('broadcasts once per sync when the track, playback status and device change', function () {
+    $fake = FakeSpotify::install();
+    $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
+    $playback = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), true, 1000);
+    $playback->device = FakeSpotify::device('device1');
+    $fake->respond('getMyCurrentPlaybackInfo', $playback);
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $party->updateState();
+
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+it('broadcasts when only the playback status changes during a sync', function () {
+    $fake = FakeSpotify::install();
+    $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
+    $playing = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), true, 1000);
+    $playing->device = FakeSpotify::device('device1');
+    $fake->respond('getMyCurrentPlaybackInfo', $playing);
+    $party->updateState();
+
+    $paused = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), false, 1000);
+    $paused->device = FakeSpotify::device('device1');
+    $fake->respond('getMyCurrentPlaybackInfo', $paused);
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $party->updateState();
+
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+it('does not broadcast when a sync changes nothing that clients render', function () {
+    $fake = FakeSpotify::install();
+    $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
+    $playback = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), false, 1000);
+    $playback->device = FakeSpotify::device('device1');
+    $fake->respond('getMyCurrentPlaybackInfo', $playback);
+    $party->updateState();
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $party->updateState();
+
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+});
+
+it('builds the broadcast payload from state at dispatch time', function () {
+    $party = realtimeParty();
+    $event = new PartyUpdatedEvent($party);
+
+    $party->name = 'Changed After Dispatch';
+    $party->save();
+
+    expect($event->broadcastWith()['name'])->not->toBe('Changed After Dispatch');
 });
 
 it('allows any authenticated user, member or not, onto the party channel (pins today: returns true)', function () {

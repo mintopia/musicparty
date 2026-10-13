@@ -2,7 +2,6 @@
 
 namespace App\Observers;
 
-use App\Events\Party\UpdatedEvent;
 use App\Models\Party;
 use Illuminate\Support\Str;
 
@@ -40,6 +39,8 @@ class PartyObserver
      */
     public function updated(Party $party): void
     {
-        UpdatedEvent::dispatch($party);
+        if ($party->wasChanged(Party::RENDERED_ATTRIBUTES)) {
+            $party->broadcastRenderedChange();
+        }
     }
 }
