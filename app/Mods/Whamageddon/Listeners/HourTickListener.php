@@ -3,8 +3,9 @@
 namespace App\Mods\Whamageddon\Listeners;
 
 use App\Events\Cron\HourTickEvent;
-use App\Models\PartyModSetting;
+use App\Models\Party;
 use App\Mods\Whamageddon\Whamageddon;
+use App\Mods\Whamageddon\WhamageddonMod;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
 use Throwable;
@@ -13,22 +14,17 @@ class HourTickListener implements ShouldQueue
 {
     public function handle(HourTickEvent $event): void
     {
-        $settings = PartyModSetting::whereHas('setting', function ($query) {
-            $query->where('code', 'enabled');
-            $query->whereHas('mod', function ($query) {
-                $query->where('code', 'whamageddon');
-            });
-        })->whereHas('party', function ($query) {
-            $query->whereActive(true);
-        })->with('party')->get();
+        $parties = Party::whereActive(true)->whereHas('mods', function ($query) {
+            $query->where('mods.code', WhamageddonMod::CODE)->whereNull('mods.removed_at');
+        })->get();
 
-        foreach ($settings as $setting) {
+        foreach ($parties as $party) {
             try {
-                Log::info("{$setting->party} Whamageddon: Processing hourly tick");
-                $whamageddon = new Whamageddon($setting->party);
+                Log::info("{$party} Whamageddon: Processing hourly tick");
+                $whamageddon = new Whamageddon($party);
                 $whamageddon->hourly();
             } catch (Throwable $e) {
-                Log::error("{$setting->party_id} Whamageddon: Hourly tick failed", ['exception' => $e]);
+                Log::error("{$party->id} Whamageddon: Hourly tick failed", ['exception' => $e]);
             }
         }
     }

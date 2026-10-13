@@ -33,35 +33,14 @@ it('does nothing for an inactive party', function () {
         ->and($party->upcoming()->count())->toBe(1);
 });
 
-it('does nothing when the enabled setting is falsy', function (mixed $value) {
-    $party = WhamageddonFixtures::party(['enabled' => $value]);
-    $upcoming = WhamageddonFixtures::upcoming($party);
-    whamAt('2026-12-24 12:00:00');
-
-    new Whamageddon($party)->hourly();
-
-    expect($upcoming->fresh()->score_adjustment)->toBe(0);
-})->with([0, null]);
-
-it('pins that a stored boolean false reads back as the truthy string b:0; so hourly cannot be switched off with false', function () {
-    $party = WhamageddonFixtures::party(['enabled' => false]);
-    $upcoming = WhamageddonFixtures::upcoming($party);
-    whamAt('2026-12-24 12:00:00');
-
-    new Whamageddon($party)->hourly();
-
-    expect(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'enabled'))->toBe('b:0;')
-        ->and($upcoming->fresh()->score_adjustment)->toBe(1);
-});
-
-it('treats a party with no stored enabled value as enabled because the false default reads as true', function () {
+it('does nothing when the mod is not enabled for the party', function () {
     $party = WhamageddonFixtures::party();
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
     new Whamageddon($party)->hourly();
 
-    expect($upcoming->fresh()->score_adjustment)->toBe(1);
+    expect($upcoming->fresh()->score_adjustment)->toBe(0);
 });
 
 it('applies the hourly upvote only outside the 2AM to 9AM window', function (string $time, bool $skipped) {

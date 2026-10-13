@@ -13,6 +13,7 @@ use Database\Factories\PartyFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
@@ -62,6 +63,8 @@ use NumPHP\LinAlg\LinAlg;
  * @property-read int|null $members_count
  * @property-read Collection<int, PartyModeration> $moderations
  * @property-read int|null $moderations_count
+ * @property-read Collection<int, Mod> $mods
+ * @property-read int|null $mods_count
  * @property-read Collection<int, PartyModSetting> $modsettings
  * @property-read int|null $modsettings_count
  * @property-read Song|null $song
@@ -167,7 +170,12 @@ class Party extends Model
         return $this->hasMany(PartyMember::class);
     }
 
-    /** @return HasMany<PartyModSetting, $this> */
+    /** @return BelongsToMany<Mod, $this> */
+    public function mods(): BelongsToMany
+    {
+        return $this->belongsToMany(Mod::class, 'party_mods')->withTimestamps();
+    }
+
     /** @return HasMany<PartyModSetting, $this> */
     public function modsettings(): HasMany
     {

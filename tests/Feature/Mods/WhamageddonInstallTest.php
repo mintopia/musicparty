@@ -7,13 +7,12 @@ use Illuminate\Support\Facades\Artisan;
 use Tests\Support\WhamageddonFixtures;
 
 it('creates the whamageddon mod with its settings and defaults', function () {
-    expect(Artisan::call('mods:whamageddon:install'))->toBe(0);
+    expect(Artisan::call('mods:sync'))->toBe(0);
 
     $mod = Mod::whereCode('whamageddon')->firstOrFail();
-    expect($mod->name)->toBe('Whamageddon');
+    expect($mod->name)->toBe('Whamageddon')->and($mod->removed_at)->toBeNull();
 
     $expected = [
-        'enabled' => [SettingType::stBoolean, true, false],
         'spotify_id' => [SettingType::stString, '2FRnf9qhLbvw8fu4IBXx78', false],
         'votes' => [SettingType::stInteger, 1, false],
         'fallback_name' => [SettingType::stString, 'Whamageddon', false],
@@ -30,12 +29,10 @@ it('creates the whamageddon mod with its settings and defaults', function () {
     }
 });
 
-it('pins that a false boolean default reads back as true through the SettingValue cast', function () {
+it('no longer defines an enabled setting', function () {
     WhamageddonFixtures::install();
 
-    $setting = ModSetting::whereCode('enabled')->firstOrFail();
-    expect($setting->getRawOriginal('default'))->toBe('b:0;')
-        ->and($setting->default)->toBeTrue();
+    expect(ModSetting::whereCode('enabled')->exists())->toBeFalse();
 });
 
 it('does not define a score_adjustment setting even though the mod reads one', function () {
@@ -57,7 +54,7 @@ it('is idempotent and restores edited names and defaults on re-run', function ()
 
     expect(Mod::whereCode('whamageddon')->count())->toBe(1)
         ->and(Mod::whereCode('whamageddon')->first()->name)->toBe('Whamageddon')
-        ->and(ModSetting::count())->toBe(6);
+        ->and(ModSetting::count())->toBe(5);
     $setting->refresh();
     expect($setting->name)->toBe('Fallback Name Override')
         ->and($setting->default)->toBe('Whamageddon');
