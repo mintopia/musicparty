@@ -3,13 +3,19 @@ import {describe, expect, it, vi} from 'vitest';
 import Shell from '@/pages/Shell.vue';
 
 const props = vi.hoisted(() => ({
-    value: {auth: {user: null as {nickname: string} | null}, instanceName: 'Music Party'},
+    value: {
+        auth: {user: null as {nickname: string} | null, parties: [], can: {admin: false, createParty: false}},
+        instanceName: 'Music Party',
+        theme: {darkMode: false},
+        site: {logoLight: null, favicon: null, terms: null, privacyPolicy: null},
+        flash: {success: null, error: null, info: null, warning: null},
+    },
 }));
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    usePage: () => ({props: props.value}),
+    usePage: () => ({props: props.value, url: '/ui/shell'}),
 }));
 
 describe('Shell page', () => {
