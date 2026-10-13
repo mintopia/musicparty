@@ -1,14 +1,17 @@
 <?php
 
-it('renders only the Reverb app key into pusherConfig', function () {
+use App\Services\RealtimeConfig;
+use Illuminate\Http\Request;
+use Inertia\Testing\AssertableInertia as Assert;
+
+it('shares the same-origin realtime config through Inertia', function () {
     config(['reverb.apps.apps.0.key' => 'party-key']);
+    $expected = ['appKey' => 'party-key', 'host' => 'party.example.test', 'port' => 8443, 'forceTLS' => true];
 
-    $html = (string) view('partials._pusher-config');
-
-    expect($html)->toContain('appKey: "party-key"')
-        ->not->toContain('host')
-        ->not->toContain('port')
-        ->not->toContain('scheme');
+    expect(app(RealtimeConfig::class)->forRequest(Request::create('https://party.example.test:8443/login')))->toBe($expected);
+    $this->withoutVite()->get('https://party.example.test:8443/login')
+        ->assertInertia(fn (Assert $page) => $page->where('reverb', $expected))
+        ->assertDontSee('window.pusherConfig', false);
 });
 
 it('does not call env() in any Blade view', function () {
@@ -22,7 +25,7 @@ it('limits Reverb allowed origins to the APP_URL host', function () {
     expect(config('reverb.apps.apps.0.allowed_origins'))->toBe([parse_url((string) config('app.url'), PHP_URL_HOST)]);
 });
 
-it('renders a page with only the app key after config is cached', function () {
+it('renders the realtime config after config is cached', function () {
     $cachePath = sys_get_temp_dir().'/config-cache-'.uniqid().'.php';
 
     try {
@@ -43,6 +46,6 @@ it('renders a page with only the app key after config is cached', function () {
 
     $this->withoutVite()->get('/login')
         ->assertOk()
-        ->assertSee('window.pusherConfig = { appKey: '.json_encode($cached['reverb']['apps']['apps'][0]['key']).' };', false)
+        ->assertInertia(fn (Assert $page) => $page->where('reverb.appKey', $cached['reverb']['apps']['apps'][0]['key']))
         ->assertDontSee('VITE_REVERB', false);
 });

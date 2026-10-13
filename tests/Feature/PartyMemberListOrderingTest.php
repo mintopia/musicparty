@@ -6,6 +6,7 @@ use App\Models\PartyMemberRole;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PartyMemberRoleSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
 
 function orderingPartyWithNicknames(array $nicknames): array
 {
@@ -29,13 +30,13 @@ function orderingPartyWithNicknames(array $nicknames): array
 it('honours the requested direction when sorting members by nickname', function (string $direction, array $expected) {
     [$party, $owner] = orderingPartyWithNicknames(['bravo', 'alpha', 'charlie']);
 
-    $members = $this->withoutVite()->actingAs($owner)
+    $this->withoutVite()->actingAs($owner)
         ->get(route('parties.users.index', [$party->code, 'order' => 'nickname', 'order_direction' => $direction]))
         ->assertOk()
-        ->viewData('members');
-
-    expect($members->getCollection()->map(fn (PartyMember $member) => $member->user->nickname)->all())->toBe($expected)
-        ->and($members->getCollection()->every(fn (PartyMember $member) => $member->party_id === $party->id))->toBeTrue();
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parties/Members/Index')
+            ->has('members.data', 3)
+            ->where('members.data', fn ($rows) => collect($rows)->pluck('nickname')->all() === $expected));
 })->with([
     'ascending' => ['asc', ['alpha', 'bravo', 'charlie']],
     'descending' => ['desc', ['charlie', 'bravo', 'alpha']],

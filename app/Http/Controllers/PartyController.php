@@ -5,23 +5,22 @@ namespace App\Http\Controllers;
 use App\Enums\Purpose;
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
-use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\TrackAnnotationResource;
 use App\Http\Resources\V1\UpcomingSongResource;
-use App\Jobs\PartyPlayYouTubeVideo;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
+use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
+use App\Services\PartyTimezone;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -35,7 +34,7 @@ class PartyController extends Controller
         $this->authorizeResource(Party::class, 'party');
     }
 
-    public function create(Request $request, PartyProviderOptions $options): RedirectResponse|View
+    public function create(Request $request, PartyProviderOptions $options): RedirectResponse|Response
     {
         $user = $this->resolveAuthenticatedUser($request);
         $factory = app(MusicProviderFactory::class);
@@ -50,10 +49,8 @@ class PartyController extends Controller
 
         $draft = $options->draft($user, $providerId);
 
-        return view('parties.create', [
-            'party' => new Party,
-            'playlists' => $options->playlists($draft),
-            'devices' => $options->devices($draft),
+        return Inertia::render('Parties/Create', $this->formProps($options, $draft, $user) + [
+            'party' => $this->formValues(new Party),
             'providerIds' => $factory->selectableIds(),
         ]);
     }
@@ -69,7 +66,7 @@ class PartyController extends Controller
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
 
-    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): View
+    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
         $upcomingSongs = $party->upcoming()
@@ -90,43 +87,35 @@ class PartyController extends Controller
             return $resource->toArray($request);
         });
 
-        return view('parties.show', [
-            'party' => $party,
-            'member' => $member,
-            'upcoming' => $upcoming->toArray(),
-            'canManage' => $party->canBeManagedBy($request->user()),
-            'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && app(MusicProviderFactory::class)->partyNeedsRelink($party),
+        $canManage = $party->canBeManagedBy($request->user());
+
+        return Inertia::render('Parties/Show', [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $canManage,
+                'weighted' => (bool) $party->weighted,
+            ],
+            'member' => ['id' => $member->id],
+            'upcoming' => $upcoming->values()->all(),
+            'timezone' => app(PartyTimezone::class)->for($party),
+            'spotifyNeedsRelink' => $canManage && app(MusicProviderFactory::class)->partyNeedsRelink($party),
+            'relinkUrl' => route('linkedaccounts.create', 'spotify'),
+            'searchUrl' => route('parties.search', $party->code),
+            'playerState' => $party->getState(),
         ]);
     }
 
-    public function tv(Party $party): View
+    public function tv(Party $party): Response
     {
-        return view('parties.tv', [
-            'party' => $party,
-        ]);
-    }
-
-    public function youtube(Request $request, Party $party): View
-    {
-        return view('parties.youtube', [
-            'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
-        ]);
-    }
-
-    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party): RedirectResponse
-    {
-        $videoId = $request->videoId();
-        PartyPlayYouTubeVideo::dispatch($party, (string) $videoId)->afterResponse();
-
-        return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
-            ->with('successMessage', 'Video requested');
-    }
-
-    public function ytplayer(Party $party): View
-    {
-        return view('parties.ytplayer', [
-            'party' => $party,
+        return Inertia::render('Parties/Tv', [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'url' => route('parties.show', $party->code),
+            ],
+            'state' => fn () => $party->getState(),
         ]);
     }
 
@@ -302,14 +291,65 @@ class PartyController extends Controller
         ))->attempt();
     }
 
-    public function edit(Party $party, PartyProviderOptions $options): View
+    public function edit(Request $request, Party $party, PartyProviderOptions $options): Response
     {
-        return view('parties.edit', [
-            'party' => $party,
-            'canManage' => true,
-            'playlists' => $options->playlists($party),
-            'devices' => $options->devices($party),
+        $reverbApp = config('reverb.apps.apps.0');
+        $isAdmin = $request->user()?->can('admin') ?? false;
+
+        return Inertia::render('Parties/Edit', $this->formProps($options, $party, $this->resolveAuthenticatedUser($request)) + [
+            'party' => $this->formValues($party) + ['code' => $party->code],
+            'providerName' => ucfirst((string) $party->provider_id),
+            'playerState' => $party->getState(),
+            'encore' => [
+                'host' => $request->getHost(),
+                'key' => $reverbApp['key'] ?? null,
+                'channel' => "private-encore.{$party->code}",
+                'secret' => $isAdmin ? ($reverbApp['secret'] ?? null) : null,
+            ],
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formProps(PartyProviderOptions $options, Party $source, User $user): array
+    {
+        return [
+            'playlists' => array_map(fn ($playlist): array => ['id' => $playlist->id, 'name' => $playlist->name], $options->playlists($source)),
+            'devices' => array_map(fn ($device): array => ['id' => $device->id, 'name' => $device->name], $options->devices($source)),
+            'defaultCountry' => $user->market ?: 'GB',
+            'instanceTimezone' => app(PartyTimezone::class)->instance(),
+            'timezones' => \DateTimeZone::listIdentifiers(),
+        ];
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    protected function formValues(Party $party): array
+    {
+        return [
+            'name' => $party->name,
+            'country' => $party->country,
+            'timezone' => $party->timezone,
+            'backup_playlist_id' => $party->backup_playlist_id,
+            'history_playlist_id' => $party->history_playlist_id,
+            'device_id' => $party->device_id,
+            'active' => (bool) $party->active,
+            'allow_requests' => (bool) $party->allow_requests,
+            'downvotes' => (bool) $party->downvotes,
+            'weighted' => (bool) $party->weighted,
+            'show_qrcode' => (bool) $party->show_qrcode,
+            'flag_requests' => (bool) $party->flag_requests,
+            'explicit' => (bool) $party->explicit,
+            'poll' => (bool) $party->poll,
+            'force' => (bool) $party->force,
+            'min_song_length' => $party->min_song_length,
+            'max_song_length' => $party->max_song_length,
+            'no_repeat_interval' => $party->no_repeat_interval,
+            'downvotes_per_hour' => $party->downvotes_per_hour,
+            'max_requests' => $party->max_requests,
+        ];
     }
 
     public function update(PartyRequest $request, Party $party): RedirectResponse

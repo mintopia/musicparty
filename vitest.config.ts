@@ -26,6 +26,14 @@ export default defineConfig({
                 find: /^@\/routes\/parties$/,
                 replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-parties.ts'),
             },
+            {
+                find: /^@\/routes\/api\/v1$/,
+                replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-ping.ts'),
+            },
+            {
+                find: /^@\/routes\/parties\/songs$/,
+                replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-songs.ts'),
+            },
             {find: '@', replacement: path.resolve(import.meta.dirname, 'resources/js')},
         ],
     },

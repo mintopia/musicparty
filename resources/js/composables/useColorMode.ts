@@ -1,15 +1,10 @@
 import {usePage} from '@inertiajs/vue3';
 import {watchEffect} from 'vue';
+import {applyTheme} from '@/lib/theme';
 import type {SharedProps} from '@/types';
 
 export function useColorMode(): void {
     const page = usePage<SharedProps>();
 
-    watchEffect(() => {
-        if (page.props.theme.darkMode) {
-            document.body.setAttribute('data-bs-theme', 'dark');
-        } else {
-            document.body.removeAttribute('data-bs-theme');
-        }
-    });
+    watchEffect(() => applyTheme(page.props.theme));
 }

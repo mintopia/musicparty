@@ -22,7 +22,9 @@ export function useQueueSync(party: string, only: string[]): void {
         }, 250);
     };
 
-    const channel = useEcho().privateChannel(`party.${party}`) as Subscription;
+    const echo = useEcho();
+    const channel = echo.privateChannel(`party.${party}`) as Subscription;
+    echo.onReconnect(() => router.reload({only}));
     EVENTS.forEach((event) => channel.listen(event, refresh));
 
     onBeforeUnmount(() => {

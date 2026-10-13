@@ -54,26 +54,24 @@ function payload(string $providerId, string $playlist): array
     return ['name' => 'Test', 'provider_id' => $providerId, 'backup_playlist_id' => $playlist];
 }
 
-it('offers the chosen provider\'s playlists and devices on create', function (string $query, string $see, string $dontSee) {
+it('offers the chosen provider\'s playlists and devices on create', function (string $query, string $playlist) {
     $this->actingAs($this->owner)->get(route('parties.create').$query)
         ->assertOk()
-        ->assertSee($see, false)
-        ->assertDontSee($dontSee, false);
+        ->assertInertia(fn ($page) => $page->component('Parties/Create', false)->where('playlists.0.name', $playlist)->has('playlists', 1));
 })->with([
-    'spotify' => ['', 'Spotify List', 'Fake Playlist'],
-    'fake' => ['?provider_id=fake', 'Fake Playlist', 'Spotify List'],
+    'spotify' => ['', 'Spotify List'],
+    'fake' => ['?provider_id=fake', 'Fake Playlist'],
 ]);
 
-it('offers the party provider\'s playlists and devices on edit', function (string $providerId, string $see, string $dontSee) {
+it('offers the party provider\'s playlists and devices on edit', function (string $providerId, string $device) {
     $party = Party::factory()->for($this->owner)->create(['provider_id' => $providerId]);
 
     $this->actingAs($this->owner)->get(route('parties.edit', $party->code))
         ->assertOk()
-        ->assertSee($see, false)
-        ->assertDontSee($dontSee, false);
+        ->assertInertia(fn ($page) => $page->component('Parties/Edit', false)->where('devices.0.name', $device)->has('devices', 1));
 })->with([
-    'spotify' => ['spotify', 'Spotify Speaker', 'Fake Speaker'],
-    'fake' => ['fake', 'Fake Speaker', 'Spotify Speaker'],
+    'spotify' => ['spotify', 'Spotify Speaker'],
+    'fake' => ['fake', 'Fake Speaker'],
 ]);
 
 it('validates the backup playlist against the chosen provider on create', function (string $providerId, string $valid, string $invalid) {
@@ -126,7 +124,7 @@ it('renders the form with empty lists when the provider needs a relink or is bac
 
     $this->actingAs($this->owner)->get(route('parties.edit', $party->code))
         ->assertOk()
-        ->assertDontSee('Fake Playlist', false);
+        ->assertInertia(fn ($page) => $page->component('Parties/Edit', false)->where('playlists', [])->where('devices', []));
 })->with([
     'relink' => [fn () => new class extends RuntimeException implements ProviderRelinkRequiredException {}],
     'backoff' => [fn () => new class extends RuntimeException implements ProviderBackoffException

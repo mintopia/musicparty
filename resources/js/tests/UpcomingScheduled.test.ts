@@ -3,6 +3,9 @@ import {describe, expect, it, vi} from 'vitest';
 import Upcoming from '../components/Upcoming.vue';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
+vi.mock('@/composables/useEcho', () => ({
+    useEcho: () => ({onReconnect: () => undefined, privateChannel: () => ({listen: () => undefined})}),
+}));
 
 const song = (id: number, extra: Record<string, unknown> = {}) => ({
     id,
@@ -14,18 +17,18 @@ const song = (id: number, extra: Record<string, unknown> = {}) => ({
     vote: 0,
     user: 'u',
     css_classes: '',
+    fallback_name: null,
     created_at: '2030-01-01T00:00:00Z',
     ...extra,
 });
 
 describe('Upcoming scheduled time', () => {
     it('shows the scheduled time in the party timezone only for scheduled requests', async () => {
-        (window as unknown as {Echo: unknown}).Echo = {private: () => ({listen: () => {}})};
         const wrapper = mount(Upcoming, {
             props: {
                 party: 'ABC',
                 timezone: 'America/New_York',
-                initialstate: JSON.stringify([song(1, {scheduled_for: '2030-01-02T01:00:00+00:00'}), song(2)]),
+                initialState: [song(1, {scheduled_for: '2030-01-02T01:00:00+00:00'}), song(2)],
             },
         });
 
@@ -38,12 +41,11 @@ describe('Upcoming scheduled time', () => {
 
 describe('Upcoming decoration', () => {
     it('applies decoration class once and shows displayName for fallback tracks', async () => {
-        (window as unknown as {Echo: unknown}).Echo = {private: () => ({listen: () => {}})};
         const wrapper = mount(Upcoming, {
             props: {
                 party: 'ABC',
                 timezone: 'UTC',
-                initialstate: JSON.stringify([
+                initialState: [
                     song(1, {
                         user: null,
                         fallback_name: 'Fallback',
@@ -51,7 +53,7 @@ describe('Upcoming decoration', () => {
                         decoration: {displayName: 'Mod Name', class: 'mod-row extra'},
                     }),
                     song(2, {user: null, fallback_name: 'Plain', decoration: null}),
-                ]),
+                ],
             },
         });
 

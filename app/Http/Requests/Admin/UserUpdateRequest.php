@@ -44,7 +44,6 @@ class UserUpdateRequest extends FormRequest
                 'min:2',
                 Rule::unique('users', 'nickname')->ignore($this->user->id),
             ],
-            'name' => 'required|string|max:255|min:4',
             'primary_email_id' => [
                 'sometimes',
                 'integer',

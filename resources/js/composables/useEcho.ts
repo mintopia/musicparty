@@ -2,7 +2,8 @@ import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import {usePage} from '@inertiajs/vue3';
 import {onBeforeUnmount} from 'vue';
-import type {SharedProps} from '@/types';
+import {echoOptions} from '@/lib/realtime';
+import type {RealtimeConfig, SharedProps} from '@/types';
 
 type EchoLike = {
     private(name: string): unknown;
@@ -17,22 +18,10 @@ type PusherConnection = {
     unbind(event: string, cb: (states: {previous: string; current: string}) => void): void;
 };
 
-export type EchoFactory = (appKey: string | null) => EchoLike;
+export type EchoFactory = (config: RealtimeConfig) => EchoLike;
 
-const defaultFactory: EchoFactory = (appKey) => {
-    const forceTLS = window.location.protocol === 'https:';
-
-    return new Echo({
-        broadcaster: 'reverb',
-        key: appKey ?? '',
-        Pusher,
-        wsHost: window.location.hostname,
-        wsPort: Number(window.location.port) || (forceTLS ? 443 : 80),
-        wssPort: Number(window.location.port) || 443,
-        forceTLS,
-        enabledTransports: ['ws', 'wss'],
-    } as ConstructorParameters<typeof Echo>[0]) as unknown as EchoLike;
-};
+const defaultFactory: EchoFactory = (config) =>
+    new Echo({...echoOptions(config), Pusher} as ConstructorParameters<typeof Echo>[0]) as unknown as EchoLike;
 
 let factory: EchoFactory = defaultFactory;
 let instance: EchoLike | null = null;
@@ -46,7 +35,7 @@ export function setEchoFactory(next: EchoFactory | null): void {
 
 export function useEcho() {
     const page = usePage<SharedProps>();
-    instance ??= factory(page.props.reverb.appKey);
+    instance ??= factory(page.props.reverb);
     const echo = instance;
     const joined = new Set<string>();
 

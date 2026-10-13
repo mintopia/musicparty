@@ -1,14 +1,173 @@
+<script setup lang="ts">
+import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
+import type {LoadAction} from '@ts-pro/vue-eternal-loading';
+import axios from 'axios';
+import {onBeforeUnmount, ref} from 'vue';
+import {useEcho} from '@/composables/useEcho';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
+import {destroy, index} from '@/routes/api/v1/parties/upcomingsongs';
+import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
+import type {LegacyArtist, LegacyUpcomingSong} from '@/types';
+
+const props = withDefaults(
+    defineProps<{
+        party: string;
+        canManage?: boolean;
+        canDownvote?: boolean;
+        timezone?: string;
+        initialState: LegacyUpcomingSong[] | null;
+    }>(),
+    {canManage: false, canDownvote: false, timezone: 'UTC'},
+);
+
+const page = ref(1);
+const upcoming = ref<LegacyUpcomingSong[]>([]);
+const message = ref('');
+let messageTimer: ReturnType<typeof setTimeout> | null = null;
+
+function showMessage(text: string): void {
+    message.value = text;
+    if (messageTimer !== null) {
+        clearTimeout(messageTimer);
+    }
+    messageTimer = setTimeout(() => {
+        message.value = '';
+        messageTimer = null;
+    }, 5000);
+}
+
+function formatMs(ms: number): string {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
+}
+
+function formatScheduled(iso: string): string {
+    return new Intl.DateTimeFormat(undefined, {
+        dateStyle: 'medium',
+        timeStyle: 'short',
+        timeZone: props.timezone,
+    }).format(new Date(iso));
+}
+
+function sortUpcoming(): void {
+    upcoming.value.sort((alpha, bravo) => {
+        if (alpha.score !== bravo.score) {
+            return Math.sign(bravo.score - alpha.score);
+        }
+        const diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
+
+        return diff === 0 ? Math.sign(alpha.id - bravo.id) : diff;
+    });
+}
+
+function addOrUpdateItem(newItem: LegacyUpcomingSong, fromPubSub = false): void {
+    const position = upcoming.value.findIndex((existing) => existing.id === newItem.id);
+    if (position === -1) {
+        upcoming.value.push(newItem);
+        return;
+    }
+    if (fromPubSub) {
+        newItem.vote = upcoming.value[position].vote;
+    }
+    upcoming.value.splice(position, 1, newItem);
+}
+
+function removeItem(id: number): void {
+    upcoming.value = upcoming.value.filter((song) => song.id !== id);
+}
+
+async function vote(songId: number, value: number): Promise<void> {
+    const route = storeVote({party: props.party, upcomingsong: songId});
+    try {
+        const response = await axios.request({url: route.url, method: route.method, data: {vote: value}});
+        addOrUpdateItem(response.data.data);
+        sortUpcoming();
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 400) {
+            showMessage((error.response.data as {message: string}).message);
+        }
+    }
+}
+
+function deleteSong(songId: number): void {
+    removeItem(songId);
+    const route = destroy({party: props.party, upcomingsong: songId});
+    void axios.request({url: route.url, method: route.method});
+}
+
+async function fetchPage(number: number): Promise<LegacyUpcomingSong[]> {
+    const response = await axios.get(index(props.party).url, {params: {page: number}});
+
+    return response.data.data as LegacyUpcomingSong[];
+}
+
+async function getPage({loaded, error}: LoadAction): Promise<void> {
+    try {
+        const items = await fetchPage(page.value);
+        if (items.length > 0) {
+            page.value += 1;
+            items.forEach((item) => addOrUpdateItem(item));
+            sortUpcoming();
+        }
+        loaded(items.length, 20);
+    } catch {
+        error();
+    }
+}
+
+async function resync(): Promise<void> {
+    const last = Math.max(page.value - 1, 1);
+    try {
+        const fresh: LegacyUpcomingSong[] = [];
+        for (let number = 1; number <= last; number += 1) {
+            fresh.push(...(await fetchPage(number)));
+        }
+        const votes = new Map(upcoming.value.map((song) => [song.id, song.vote]));
+        upcoming.value = fresh.map((song) => ({...song, vote: votes.get(song.id) ?? song.vote}));
+        sortUpcoming();
+    } catch {
+        showMessage('Could not refresh the queue.');
+    }
+}
+
+(props.initialState ?? []).forEach((item) => addOrUpdateItem(item));
+
+const echo = useEcho();
+const channel = echo.privateChannel(`party.${props.party}`) as {
+    listen<T>(event: string, cb: (payload: T) => void): unknown;
+};
+channel.listen<LegacyUpcomingSong>('UpcomingSong\\UpdatedEvent', (payload) => {
+    addOrUpdateItem(payload, true);
+    sortUpcoming();
+});
+channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
+    removeItem(payload.id);
+});
+echo.onReconnect(() => void resync());
+
+onBeforeUnmount(() => {
+    if (messageTimer !== null) {
+        clearTimeout(messageTimer);
+    }
+});
+</script>
 <template>
     <div>
         <div v-if="upcoming.length > 0" class="card">
             <div class="list-group card-list-group">
                 <TransitionGroup name="list" tag="div">
                     <div class="list-group-item" v-for="song in upcoming" :key="song.id">
-                        <div v-bind:class="legacyRowClasses(song)" v-bind:style="legacyAccentStyle(song)">
+                        <div :class="legacyRowClasses(song)" :style="legacyAccentStyle(song)">
                             <div class="col-auto">
                                 <img
-                                    v-bind:src="song.album.image_url"
-                                    v-bind:title="song.album.name"
+                                    :src="song.album.image_url"
+                                    :title="song.album.name"
                                     class="rounded"
                                     width="60"
                                     height="60"
@@ -37,7 +196,7 @@
                             <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
                             <div class="col-auto text-center">
                                 <div class="row">
-                                    <template v-if="can_downvote == 1">
+                                    <template v-if="canDownvote">
                                         <div class="col-3">
                                             <i
                                                 v-if="song.vote <= 0"
@@ -85,7 +244,7 @@
                                     </template>
                                 </div>
                             </div>
-                            <div v-if="can_manage" class="col-auto lh-1">
+                            <div v-if="canManage" class="col-auto lh-1">
                                 <i class="icon ti ti-x cursor-pointer" @click="deleteSong(song.id)"></i>
                             </div>
                         </div>
@@ -166,155 +325,3 @@
     background-color: #990000;
 }
 </style>
-<script lang="ts">
-import {defineComponent} from 'vue';
-import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
-import type {LoadAction} from '@ts-pro/vue-eternal-loading';
-import type {LegacyArtist, LegacyUpcomingSong} from '../types';
-import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
-
-export default defineComponent({
-    components: {
-        VueEternalLoading,
-    },
-    props: {
-        can_manage: {type: [String, Number, Boolean]},
-        can_downvote: {type: [String, Number, Boolean]},
-        party: {type: String},
-        timezone: {type: String, default: 'UTC'},
-        initialstate: {type: String, required: true},
-    },
-    data() {
-        return {
-            page: 1,
-            code: null as string | null,
-            upcoming: [] as LegacyUpcomingSong[],
-            message: '' as string,
-        };
-    },
-
-    methods: {
-        legacyRowClasses,
-        legacyAccentStyle,
-        legacyFallbackName,
-
-        vote(song_id: number, value: number): void {
-            window.axios
-                .post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {
-                    vote: value,
-                })
-                .then((response) => {
-                    this.addOrUpdateItem(response.data.data);
-                    this.sortUpcoming();
-                })
-                .catch((error) => {
-                    if (error.response?.status !== 400) {
-                        return;
-                    }
-                    this.message = error.response.data.message;
-                    setTimeout(() => {
-                        this.message = '';
-                    }, 5000);
-                });
-        },
-
-        deleteSong(song_id: number): void {
-            this.removeItem(song_id);
-            window.axios.delete(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}`);
-        },
-
-        getPage({loaded}: LoadAction): void {
-            window.axios
-                .get(`/api/v1/parties/${this.party}/upcomingsongs`, {
-                    params: {
-                        page: this.page,
-                    },
-                })
-                .then((response) => {
-                    if (response.data.data.length > 0) {
-                        this.page += 1;
-                        response.data.data.forEach((newItem: LegacyUpcomingSong) => {
-                            this.addOrUpdateItem(newItem);
-                        });
-                        this.sortUpcoming();
-                    }
-                    loaded(response.data.data.length, 20);
-                })
-                .catch(() => {});
-        },
-
-        combineArtists(artists: LegacyArtist[]): string {
-            return artists.map((artist) => artist.name).join(', ');
-        },
-
-        sortUpcoming(): void {
-            this.upcoming.sort((alpha, bravo) => {
-                if (alpha.score === bravo.score) {
-                    let diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
-                    if (diff === 0) {
-                        return Math.sign(alpha.id - bravo.id);
-                    }
-                    return diff;
-                } else {
-                    return Math.sign(bravo.score - alpha.score);
-                }
-            });
-        },
-
-        addOrUpdateItem(newItem: LegacyUpcomingSong, fromPubSub: boolean = false): void {
-            let result = this.upcoming.some((existing, index) => {
-                if (existing.id === newItem.id) {
-                    if (fromPubSub) {
-                        newItem.vote = existing.vote;
-                    }
-                    this.upcoming.splice(index, 1, newItem);
-                    return true;
-                }
-                return false;
-            });
-            if (!result) {
-                this.upcoming.push(newItem);
-            }
-        },
-
-        removeItem(id: number): void {
-            this.upcoming = this.upcoming.filter((song) => song.id !== id);
-        },
-
-        formatScheduled(iso: string): string {
-            return new Intl.DateTimeFormat(undefined, {
-                dateStyle: 'medium',
-                timeStyle: 'short',
-                timeZone: this.timezone,
-            }).format(new Date(iso));
-        },
-
-        formatMs(ms: number): string {
-            const mins = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-        },
-    },
-
-    mounted() {
-        window.Echo.private(`party.${this.party}`).listen(
-            'UpcomingSong\\UpdatedEvent',
-            (payload: LegacyUpcomingSong) => {
-                this.addOrUpdateItem(payload, true);
-                this.sortUpcoming();
-            },
-        );
-        window.Echo.private(`party.${this.party}`).listen('UpcomingSong\\RemovedEvent', (payload: {id: number}) => {
-            this.removeItem(payload.id);
-        });
-        const initial = JSON.parse(this.initialstate) as LegacyUpcomingSong[] | null;
-        if (initial) {
-            initial.forEach((item) => {
-                this.addOrUpdateItem(item);
-            });
-        }
-    },
-
-    created() {},
-});
-</script>

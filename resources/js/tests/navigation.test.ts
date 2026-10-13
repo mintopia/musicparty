@@ -36,7 +36,6 @@ vi.mock('@/routes/parties', () => ({
     edit: (code: string) => ({url: `/parties/${code}/edit`}),
     search: (code: string) => ({url: `/parties/${code}/search`}),
     tv: (code: string) => ({url: `/parties/${code}/tv`}),
-    youtube: (code: string) => ({url: `/parties/${code}/youtube`}),
     player: (code: string) => ({url: `/parties/${code}/player`}),
 }));
 vi.mock('@/routes/parties/moderation', () => ({index: (code: string) => ({url: `/parties/${code}/moderation`})}));
@@ -101,7 +100,6 @@ describe('buildNavigation', () => {
             'Songs',
             'Users',
             'TV Mode',
-            'YouTube Player',
             'Web Player',
             'Flagged',
             'Moderation',

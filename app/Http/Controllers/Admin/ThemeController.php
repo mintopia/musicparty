@@ -5,13 +5,14 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ThemeUpdateRequest;
 use App\Models\Theme;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ThemeController extends Controller
 {
-    public function create(): View
+    public function create(): Response
     {
         $default = Theme::whereCode('default')->first();
         if ($default) {
@@ -23,8 +24,9 @@ class ThemeController extends Controller
         $theme->readonly = false;
         $theme->active = false;
 
-        return view('admin.themes.create', [
-            'theme' => $theme,
+        return Inertia::render('Admin/Themes/Create', [
+            'theme' => $this->themeProps($theme),
+            'colourTokens' => $this->colourTokenProps(),
         ]);
     }
 
@@ -36,10 +38,11 @@ class ThemeController extends Controller
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
     }
 
-    public function edit(Theme $theme): View
+    public function edit(Theme $theme): Response
     {
-        return view('admin.themes.edit', [
-            'theme' => $theme,
+        return Inertia::render('Admin/Themes/Edit', [
+            'theme' => $this->themeProps($theme),
+            'colourTokens' => $this->colourTokenProps(),
         ]);
     }
 
@@ -50,14 +53,14 @@ class ThemeController extends Controller
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
     }
 
-    public function delete(Theme $theme): View
+    public function delete(Theme $theme): Response
     {
         if ($theme->readonly) {
             abort(400);
         }
 
-        return view('admin.themes.delete', [
-            'theme' => $theme,
+        return Inertia::render('Admin/Themes/Delete', [
+            'theme' => ['id' => $theme->id, 'name' => $theme->name],
         ]);
     }
 
@@ -69,6 +72,39 @@ class ThemeController extends Controller
         $theme->delete();
 
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
+    }
+
+    /**
+     * @return array{id: int|null, name: string, css: string, tokens: array<string, string>, active: bool, dark_mode: bool, readonly: bool}
+     */
+    protected function themeProps(Theme $theme): array
+    {
+        return [
+            'id' => $theme->id,
+            'name' => (string) $theme->name,
+            'css' => (string) $theme->css,
+            'tokens' => array_map('strval', (array) $theme->tokens),
+            'active' => (bool) $theme->active,
+            'dark_mode' => (bool) $theme->dark_mode,
+            'readonly' => (bool) $theme->readonly,
+        ];
+    }
+
+    /**
+     * @return list<array{token: string, label: string, required: bool}>
+     */
+    protected function colourTokenProps(): array
+    {
+        $tokens = [];
+        foreach (Theme::COLOUR_TOKENS as $token => $label) {
+            $tokens[] = [
+                'token' => $token,
+                'label' => $label,
+                'required' => in_array($token, ['primary', 'nav-background'], true),
+            ];
+        }
+
+        return $tokens;
     }
 
     protected function updateObject(Theme $theme, Request $request): void

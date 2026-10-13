@@ -5,16 +5,32 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\SettingType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SocialProviderUpdateRequest;
+use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class SocialProviderController extends Controller
 {
-    public function edit(SocialProvider $provider): View
+    public function edit(SocialProvider $provider): Response
     {
-        return view('admin.socialproviders.edit', [
-            'provider' => $provider,
+        return Inertia::render('Admin/SocialProviders/Edit', [
+            'provider' => [
+                'id' => $provider->id,
+                'name' => $provider->name,
+                'can_be_renamed' => (bool) $provider->can_be_renamed,
+                'supports_auth' => (bool) $provider->supports_auth,
+                'enabled' => (bool) $provider->enabled,
+                'auth_enabled' => (bool) $provider->auth_enabled,
+            ],
+            'settings' => $provider->settings->map(fn (ProviderSetting $setting): array => [
+                'code' => $setting->code,
+                'name' => $setting->name,
+                'description' => $setting->description,
+                'required' => $setting->isRequired(),
+                'value' => $setting->value === null ? '' : (string) $setting->value,
+            ])->values(),
         ]);
     }
 
