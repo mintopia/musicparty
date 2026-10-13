@@ -111,7 +111,7 @@ class Whamageddon
         $upcoming = $this->party->upcoming()
             ->whereNull('queued_at')
             ->whereHas('song', function ($query) use ($trackId) {
-                $query->where('spotify_id', $trackId);
+                $query->where('provider_track_id', $trackId);
             })->first();
         if ($upcoming === null) {
             $response = app(SpotifyGateway::class)->requireClient($this->party->user)->getTrack($trackId);

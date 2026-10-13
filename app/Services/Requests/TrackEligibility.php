@@ -51,7 +51,7 @@ class TrackEligibility
     {
         $ids = array_map(fn (Track $track): string => $track->id, $tracks);
         $upcomingSongs = $party->upcoming()->with(['song', 'user'])->whereNull('queued_at')
-            ->whereHas('song', fn ($query) => $query->whereIn('spotify_id', $ids))
+            ->whereHas('song', fn ($query) => $query->whereIn('provider_track_id', $ids))
             ->get();
         if ($upcomingSongs->isEmpty()) {
             return [];
@@ -61,7 +61,7 @@ class TrackEligibility
 
         $waiting = [];
         foreach ($upcomingSongs as $upcoming) {
-            $waiting[$upcoming->song->spotify_id] = [
+            $waiting[$upcoming->song->provider_track_id] = [
                 'id' => $upcoming->id,
                 'score' => $upcoming->score,
                 'vote' => $votes[$upcoming->id] ?? null,

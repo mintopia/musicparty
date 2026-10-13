@@ -71,7 +71,7 @@ class UpcomingSongController extends Controller
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
                 ->block((int) config('musicparty.request_lock_wait_seconds'), function () use ($request, $party, $member): UpcomingSong|JsonResponse {
                     $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
-                        $query->whereSpotifyId($request->input('spotify_id'));
+                        $query->where(['provider_id' => 'spotify', 'provider_track_id' => $request->input('spotify_id')]);
                     })->first();
                     if (! $upcoming) {
                         $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('spotify_id'));

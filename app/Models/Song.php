@@ -21,6 +21,8 @@ use stdClass;
 /**
  * @property int $id
  * @property string $spotify_id
+ * @property string $provider_id
+ * @property string $provider_track_id
  * @property string $name
  * @property int $length
  * @property int $album_id
@@ -96,13 +98,13 @@ class Song extends Model
     {
         return new Track(
             providerId: 'spotify',
-            id: $this->spotify_id,
+            id: $this->provider_track_id,
             name: $this->name,
             durationMs: (int) $this->length,
             explicit: false,
             isPlayable: true,
-            album: new AlbumRef(id: $this->album->spotify_id, name: $this->album->name, imageUrl: $this->album->image_url),
-            artists: array_values($this->artists->map(fn (Artist $artist): ArtistRef => new ArtistRef(id: $artist->spotify_id, name: $artist->name))->all()),
+            album: new AlbumRef(id: $this->album->provider_album_id, name: $this->album->name, imageUrl: $this->album->image_url),
+            artists: array_values($this->artists->map(fn (Artist $artist): ArtistRef => new ArtistRef(id: $artist->provider_artist_id, name: $artist->name))->all()),
         );
     }
 
@@ -123,7 +125,7 @@ class Song extends Model
 
     public static function fromSpotify(stdClass $track): Song
     {
-        $song = Song::whereSpotifyId($track->id)->first();
+        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->first();
         if ($song) {
             return $song;
         }
@@ -133,6 +135,8 @@ class Song extends Model
         try {
             return DB::transaction(function () use ($track, $album, $artists): Song {
                 $song = new Song;
+                $song->provider_id = 'spotify';
+                $song->provider_track_id = $track->id;
                 $song->spotify_id = $track->id;
                 $song->name = $track->name;
                 $song->length = $track->duration_ms;
@@ -145,7 +149,7 @@ class Song extends Model
                 return $song;
             });
         } catch (UniqueConstraintViolationException) {
-            return Song::whereSpotifyId($track->id)->firstOrFail();
+            return Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->firstOrFail();
         }
     }
 

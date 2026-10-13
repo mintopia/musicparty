@@ -85,14 +85,14 @@ class PlayedSong extends Model
             return $this->upcoming;
         }
 
-        $ids = [$this->song->spotify_id];
+        $ids = [$this->song->provider_track_id];
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
         $upcoming = UpcomingSong::where('party_id', $this->party_id)
             ->whereNotNull('queued_at')
             ->whereHas('song', function ($query) use ($ids) {
-                $query->whereIn('spotify_id', $ids);
+                $query->whereIn('provider_track_id', $ids);
             })->doesntHave('played')
             ->orderBy('queued_at', 'desc')
             ->orderBy('id', 'desc')
