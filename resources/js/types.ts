@@ -130,3 +130,17 @@ export interface LegacyUpcomingSong extends LegacyTrack {
     vote: number;
     created_at: string;
 }
+
+export interface PlaybackState {
+    isPlaying: boolean;
+    trackId: string | null;
+    linkedFromId: string | null;
+    durationMs: number | null;
+    progressMs: number;
+    sampledAt: string;
+    shuffle: boolean;
+    repeat: string;
+    deviceId: string | null;
+    deviceName: string | null;
+    source: string;
+}
