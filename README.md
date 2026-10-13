@@ -66,9 +66,9 @@ application key (a [random Laravel key](https://generate-random.org/laravel-key-
 
 ```bash
 docker compose up -d database redis
-docker compose run --rm --entrypoint php app artisan migrate
-docker compose run --rm --entrypoint php app artisan db:seed
-docker compose run --rm --entrypoint php app artisan setup:discord
+docker compose run --rm app php artisan migrate
+docker compose run --rm app php artisan db:seed
+docker compose run --rm app php artisan setup:discord
 docker compose up -d
 ```
 
@@ -88,7 +88,7 @@ Caddy example:
 
 ```
 musicparty.example.com {
-  reverse_proxy musicparty-app-1:80
+  reverse_proxy musicparty-app-1:8080
 }
 ```
 

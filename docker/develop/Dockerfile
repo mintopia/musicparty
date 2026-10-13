@@ -20,6 +20,20 @@ RUN apt-get update && \
 COPY --from=composer:latest /usr/bin/composer /usr/local/bin/
 
 COPY docker/Caddyfile /
-ENV XDEBUG_MODE=off
+COPY docker/entrypoint.sh /entrypoint.sh
 
-ENTRYPOINT ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--admin-host=0.0.0.0", "--port=80", "--caddyfile=/Caddyfile"]
+RUN chmod +x /entrypoint.sh && \
+    setcap -r /usr/local/bin/frankenphp && \
+    groupadd -g 1000 musicparty && \
+    useradd -u 1000 -g 1000 -m -s /bin/sh musicparty && \
+    chmod 755 /home/musicparty && \
+    mkdir -p /data/caddy /config/caddy && \
+    chown -R musicparty:musicparty /data /config && \
+    chmod -R a+rwX /data /config
+
+ENV XDEBUG_MODE=off \
+    PUID=1000 \
+    PGID=1000
+
+ENTRYPOINT ["/entrypoint.sh"]
+CMD ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--host=0.0.0.0", "--admin-host=0.0.0.0", "--port=8080", "--caddyfile=/Caddyfile"]
