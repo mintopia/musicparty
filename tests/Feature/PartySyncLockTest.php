@@ -2,6 +2,8 @@
 
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Models\Song;
+use App\Models\UpcomingSong;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -67,4 +69,39 @@ it('records the attempt time and releases the lock when a sync throws', function
 
     expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue()
         ->and(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
+});
+
+it('sends exactly one track when a concurrent sync races the Send to Player', function () {
+    $user = $this->party->user;
+    $song = Song::fromSpotify(FakeSpotify::track('raced'));
+    $upcoming = new UpcomingSong;
+    $upcoming->party()->associate($this->party);
+    $upcoming->song()->associate($song);
+    $upcoming->score = 5;
+    $upcoming->save();
+
+    $racer = Party::findOrFail($this->party->id);
+    $racerResults = [];
+    $fake = new class($racer, $racerResults) extends FakeSpotify
+    {
+        public function __construct(private Party $racer, public array &$racerResults) {}
+
+        public function queue(string $trackUri, string $deviceId = ''): bool
+        {
+            $this->racerResults[] = $this->racer->tryUpdateState();
+
+            return parent::queue($trackUri, $deviceId);
+        }
+    };
+    app()->bind(SpotifyWebAPI::class, fn () => $fake);
+
+    expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue();
+
+    expect($fake->callsTo('queue'))->toHaveCount(1)
+        ->and($racerResults)->toBe([false])
+        ->and($upcoming->fresh()->queued_at)->not->toBeNull();
+
+    Party::findOrFail($this->party->id)->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
+    expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue()
+        ->and($fake->callsTo('queue'))->toHaveCount(1);
 });

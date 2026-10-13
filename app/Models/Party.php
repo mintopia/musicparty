@@ -244,8 +244,18 @@ class Party extends Model
      */
     public function tryUpdateState(): bool
     {
+        return $this->withSyncLock(fn () => $this->runStateUpdate());
+    }
+
+    /**
+     * Runs the callback under the per-Party sync lock. Returns false when another caller holds the lock.
+     *
+     * @param  callable(): mixed  $callback
+     */
+    protected function withSyncLock(callable $callback): bool
+    {
         if (! config('musicparty.prevent_overlapping_updates')) {
-            $this->runStateUpdate();
+            $callback();
 
             return true;
         }
@@ -258,7 +268,7 @@ class Party extends Model
         }
 
         try {
-            $this->runStateUpdate();
+            $callback();
         } finally {
             $lock->release();
         }
@@ -452,7 +462,7 @@ class Party extends Model
         }
         if ($trackUri === '') {
             // We are stuck, let's add something to the queue and use it
-            $this->addTracksToQueue();
+            $this->withSyncLock(fn () => $this->addTracksToQueue());
             $song = $this->upcoming()->orderBy('queued_at', 'desc')->first();
             if ($song) {
                 $trackUri = "spotify:track:{$song->song->spotify_id}";
@@ -501,6 +511,9 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
+        $current = $this->fresh() ?? $this;
+        $weighted = $current->weighted;
+        $historyPlaylistId = $current->history_playlist_id;
         $this->user->getSpotifyStatus();
         $queue = SpotifyPayload::object($this->user->requireSpotifyApi()->getMyQueue());
         $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
@@ -537,7 +550,7 @@ class Party extends Model
          *
          */
 
-        if ($this->weighted) {
+        if ($weighted) {
             $randomizer = app(Randomizer::class);
             $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
@@ -598,15 +611,20 @@ class Party extends Model
             return;
         }
         foreach ($songsToAdd as $song) {
+            if ($song->fresh()?->queued_at !== null) {
+                Log::debug("{$this}: {$song->song} was already sent to the player");
+
+                continue;
+            }
             Log::info("{$this}: Adding {$song->song} to queue");
             Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
             $this->user->requireSpotifyApi()->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
-            if ($this->history_playlist_id !== null) {
+            if ($historyPlaylistId !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->requireSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$historyPlaylistId}, [{$song->song->spotify_id}])");
+                $this->user->requireSpotifyApi()->addPlaylistTracks($historyPlaylistId, [$song->song->spotify_id]);
             }
         }
     }
