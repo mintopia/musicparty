@@ -300,12 +300,12 @@ describe('RequestCheckService rules', function () {
             expect(reqCheck($party, reqMember($party), reqTrack('different'))->allowed)->toBeTrue();
         });
 
-        it('accepts a track that is only waiting in the queue', function () {
+        it('reports a similar song rather than will be played next for a track only waiting in the queue', function () {
             $party = reqParty(['allow_requests' => true]);
             $song = Song::fromSpotify(reqTrack('waiting'));
             UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
 
-            expect(reqCheck($party, reqMember($party), reqTrack('waiting'))->allowed)->toBeTrue();
+            expect(reqCheck($party, reqMember($party), reqTrack('waiting'))->reason)->toBe('A similar song is already in the queue');
         });
 
         it('prefers the played recently reason over the will be played next reason', function () {
@@ -408,14 +408,14 @@ describe('RequestCheckService rules', function () {
     });
 
     describe('similar song', function () {
-        it('pins the similar song rule never firing for a same name same artist waiting request (E5 R11)', function () {
+        it('blocks a same name same artist waiting request', function () {
             $party = reqParty(['allow_requests' => true]);
             $song = Song::fromSpotify(FakeSpotify::track('original', 'Same Name'));
             UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
 
             $response = reqCheck($party, reqMember($party), FakeSpotify::track('remaster', 'Same Name'));
 
-            expect($response->allowed)->toBeTrue()->and($response->reason)->toBeNull();
+            expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('A similar song is already in the queue');
         });
 
         it('accepts a differently named track', function () {
@@ -659,15 +659,15 @@ describe('UpcomingSongController::store', function () {
         expect(UpcomingSong::count())->toBe(1)->and(Vote::count())->toBe(1);
     });
 
-    it('pins the similar song rule not blocking a same name same artist request at the endpoint (E5 R11)', function () {
+    it('blocks a same name same artist request at the endpoint', function () {
         $party = reqParty(['allow_requests' => true]);
         $member = reqMember($party);
         $song = Song::fromSpotify(FakeSpotify::track('original', 'Same Name'));
         UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
         FakeSpotify::install()->respond('getTrack', FakeSpotify::track('remaster', 'Same Name'));
 
-        reqPost($party, $member->user, 'remaster')->assertSuccessful();
+        reqPost($party, $member->user, 'remaster');
 
-        expect(UpcomingSong::count())->toBe(2);
+        expect(UpcomingSong::count())->toBe(1);
     });
 });

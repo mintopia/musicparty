@@ -221,7 +221,7 @@ it('blocks tracks outside the party length limits', function () {
 it('blocks a member who has reached the request limit but not an owner', function () {
     $this->party->forceFill(['max_requests' => 1])->save();
     searchUpcoming($this->party, FakeSpotify::track('mine'), $this->member->user);
-    searchResults($this->fake, FakeSpotify::track('x'));
+    searchResults($this->fake, FakeSpotify::track('x', 'Another Track'));
 
     $limited = searchFor($this->party->refresh(), $this->member)['x'];
     $owner = searchFor($this->party->refresh(), searchMember($this->party, 'owner'))['x'];
@@ -239,15 +239,15 @@ it('blocks the context playlist track as unavailable', function () {
     expect($item->allowed)->toBeFalse()->and($item->reason)->toBe('This song is not available');
 });
 
-it('pins E5-8 R11: a same-name same-artist waiting request does not block a different track because checkSimilarSongs matches on array indexes', function () {
+it('blocks a track with the same name and artist as a waiting request', function () {
     searchUpcoming($this->party, FakeSpotify::track('original', 'Same Name'));
     searchResults($this->fake, FakeSpotify::track('remaster', 'Same Name'));
 
     $item = searchFor($this->party, $this->member)['remaster'];
 
     expect($item->upcoming)->toBeFalse()
-        ->and($item->allowed)->toBeTrue()
-        ->and($item->reason)->toBeNull();
+        ->and($item->allowed)->toBeFalse()
+        ->and($item->reason)->toBe('A similar song is already in the queue');
 });
 
 it('skips the upcoming lookup and returns an empty page when Spotify returns no tracks', function () {
