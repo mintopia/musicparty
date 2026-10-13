@@ -59,6 +59,8 @@ const spotify = {
     options: null as null | Record<string, unknown>,
     connect: vi.fn(),
     disconnect: vi.fn(),
+    activateElement: vi.fn(),
+    togglePlay: vi.fn(),
     resume: vi.fn(),
     pause: vi.fn(),
     nextTrack: vi.fn(),
@@ -77,8 +79,8 @@ class FakePlayer {
     }
     connect = spotify.connect;
     disconnect = spotify.disconnect;
-    activateElement = vi.fn();
-    togglePlay = vi.fn();
+    activateElement = spotify.activateElement;
+    togglePlay = spotify.togglePlay;
     resume = spotify.resume;
     pause = spotify.pause;
     nextTrack = spotify.nextTrack;
@@ -96,7 +98,7 @@ const mounted: Array<{unmount: () => void}> = [];
 
 async function mountPlayer() {
     const wrapper = mount(WebPlayer, {
-        props: {party: {code: 'ABC', name: 'Friday'}, tokenUrl: '/token', deviceName: 'Music Party'},
+        props: {party: {code: 'ABC', name: 'Friday'}, tokenUrl: '/token', activateUrl: '/activate', deviceName: 'Music Party'},
     });
     await flushPromises();
     (window as unknown as {onSpotifyWebPlaybackSDKReady: () => void}).onSpotifyWebPlaybackSDKReady();
@@ -281,6 +283,25 @@ describe('WebPlayer', () => {
         expect(spotify.nextTrack).toHaveBeenCalled();
         expect(spotify.previousTrack).toHaveBeenCalled();
         expect(spotify.seek).toHaveBeenCalledWith(0);
+    });
+
+    it('starts party playback via the activate endpoint on first play, then toggles the SDK', async () => {
+        const wrapper = await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        await flushPromises();
+
+        await wrapper.get('[data-test="start"]').trigger('click');
+        await flushPromises();
+        expect(axios.post).toHaveBeenCalledWith('/activate', {device_id: 'dev1'});
+        expect(spotify.togglePlay).not.toHaveBeenCalled();
+
+        spotify.listeners.player_state_changed(state());
+        await flushPromises();
+        vi.mocked(axios.post).mockClear();
+
+        await wrapper.get('[data-test="start"]').trigger('click');
+        expect(spotify.togglePlay).toHaveBeenCalled();
+        expect(axios.post).not.toHaveBeenCalled();
     });
 
     it('warns before unload and navigation only while it is the active Player', async () => {

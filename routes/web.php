@@ -52,6 +52,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:player,party')->group(function () {
             Route::get('parties/{party}/player', [WebPlayerController::class, 'show'])->name('parties.player');
             Route::get('parties/{party}/player/token', [WebPlayerController::class, 'token'])->name('parties.player.token');
+            Route::post('parties/{party}/player/activate', [WebPlayerController::class, 'activate'])->name('parties.player.activate');
         });
         Route::middleware('can:update,party')->group(function () {
             Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');

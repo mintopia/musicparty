@@ -48,6 +48,7 @@ const LEAVE_WARNING = 'This is the active Web Player for the Party. Leaving will
 const props = defineProps<{
     party: {code: string; name: string};
     tokenUrl: string;
+    activateUrl: string;
     deviceName: string;
 }>();
 
@@ -232,7 +233,19 @@ function loadSdk(): void {
 
 async function startPlayback(): Promise<void> {
     await player?.activateElement();
-    await player?.togglePlay();
+    if (track.value !== null) {
+        await player?.togglePlay();
+
+        return;
+    }
+    if (deviceId === null) {
+        return;
+    }
+    try {
+        await axios.post(props.activateUrl, {device_id: deviceId});
+    } catch {
+        fail('Could not start playback.');
+    }
 }
 
 async function resumePlayback(): Promise<void> {

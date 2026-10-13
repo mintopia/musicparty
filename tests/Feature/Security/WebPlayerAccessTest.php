@@ -57,6 +57,7 @@ it('forbids a manager without the owner role from the page, token and channel', 
 
     $this->actingAs($member)->get(route('parties.player', $party))->assertForbidden();
     $this->actingAs($member)->getJson(route('parties.player.token', $party))->assertForbidden();
+    $this->actingAs($member)->postJson(route('parties.player.activate', $party), ['device_id' => 'dev-1'])->assertForbidden();
     expect(webPlayerChannelAllows($member, $party))->toBeFalse();
 });
 
@@ -65,6 +66,7 @@ it('forbids a plain member from the page, token and channel', function () {
 
     $this->actingAs($member)->get(route('parties.player', $party))->assertForbidden();
     $this->actingAs($member)->getJson(route('parties.player.token', $party))->assertForbidden();
+    $this->actingAs($member)->postJson(route('parties.player.activate', $party), ['device_id' => 'dev-1'])->assertForbidden();
     expect(webPlayerChannelAllows($member, $party))->toBeFalse();
 });
 
@@ -73,6 +75,7 @@ it('redirects a guest away from the page and token', function () {
 
     $this->get(route('parties.player', $party))->assertRedirect();
     $this->getJson(route('parties.player.token', $party))->assertUnauthorized();
+    $this->postJson(route('parties.player.activate', $party), ['device_id' => 'dev-1'])->assertUnauthorized();
 });
 
 it('renders the web player for an owner-role member without the token in the HTML', function () {
@@ -84,6 +87,7 @@ it('renders the web player for an owner-role member without the token in the HTM
         ->component('Parties/WebPlayer')
         ->where('party.code', $party->code)
         ->where('tokenUrl', route('parties.player.token', $party))
+        ->where('activateUrl', route('parties.player.activate', $party))
         ->missing('accessToken'));
     expect($response->getContent())->not->toContain('secret-token');
     expect(webPlayerChannelAllows($member, $party))->toBeTrue();

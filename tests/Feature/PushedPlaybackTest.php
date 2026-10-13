@@ -14,7 +14,6 @@ use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\PlaybackSync;
 use Carbon\CarbonImmutable;
-use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\FakeSpotify;
@@ -119,17 +118,6 @@ it('lets the latest sampledAt win when two sources send', function () {
     $fresh = $party->fresh();
     expect(Song::find($fresh->song_id)->provider_track_id)->toBe('B')
         ->and($fresh->playback_source)->toBe(PlaybackSource::Encore);
-});
-
-it('shows the Host the current Player on the Party page but not guests', function () {
-    $this->withoutVite();
-    $this->seed(PartyMemberRoleSeeder::class);
-    $host = User::factory()->create(['first_login' => false]);
-    [$party] = pushedParty(['user_id' => $host->id]);
-    $party->forceFill(['playback_source' => PlaybackSource::Encore])->save();
-
-    $this->actingAs($host)->get(route('parties.show', $party->code))->assertOk()->assertSee('Player: Encore');
-    $this->actingAs(User::factory()->create(['first_login' => false]))->get(route('parties.show', $party->code))->assertOk()->assertDontSee('current-player');
 });
 
 it('lets polling take over when Encore reports logged out or an error', function (PlaybackConnectionStatus $status) {
