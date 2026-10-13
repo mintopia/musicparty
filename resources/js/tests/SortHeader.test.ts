@@ -1,11 +1,18 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it} from 'vitest';
-import {h} from 'vue';
+import {defineComponent, h} from 'vue';
 import SortHeader from '@/components/SortHeader.vue';
 
-const Link = {props: ['href'], setup: (p: {href: string}, {slots}: any) => () => h('a', {href: p.href}, slots.default?.())};
+const Link = defineComponent({
+    props: {href: {type: String, required: true}},
+    setup:
+        (props, {slots}) =>
+        () =>
+            h('a', {href: props.href}, slots.default?.()),
+});
 
-const render = (props: Record<string, unknown>) => mount(SortHeader, {props: {title: 'Name', field: 'name', ...props}, global: {stubs: {Link}}});
+const render = (props: Record<string, unknown>) =>
+    mount(SortHeader, {props: {title: 'Name', field: 'name', ...props}, global: {stubs: {Link}}});
 
 describe('SortHeader', () => {
     beforeEach(() => window.history.replaceState({}, '', '/admin/users?q=bob&page=3'));

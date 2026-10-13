@@ -24,10 +24,15 @@ describe('SearchTextField', () => {
 });
 
 describe('SearchSelectField', () => {
-    const options = [{id: 1, label: 'One'}, {id: 2, label: 'Two'}];
+    const options = [
+        {id: 1, label: 'One'},
+        {id: 2, label: 'Two'},
+    ];
 
     it('renders All plus options and emits selection', async () => {
-        const w = mount(SearchSelectField, {props: {name: 'Kind', property: 'kind', options, valueKey: 'id', labelKey: 'label', modelValue: 2}});
+        const w = mount(SearchSelectField, {
+            props: {name: 'Kind', property: 'kind', options, valueKey: 'id', labelKey: 'label', modelValue: 2},
+        });
         const opts = w.findAll('option');
         expect(opts.map((o) => o.text())).toEqual(['All', 'One', 'Two']);
         expect(opts[0].attributes('value')).toBe('');
@@ -37,7 +42,9 @@ describe('SearchSelectField', () => {
     });
 
     it('shows the error', () => {
-        const w = mount(SearchSelectField, {props: {name: 'Kind', property: 'kind', options, valueKey: 'id', labelKey: 'label', error: 'Bad'}});
+        const w = mount(SearchSelectField, {
+            props: {name: 'Kind', property: 'kind', options, valueKey: 'id', labelKey: 'label', error: 'Bad'},
+        });
         expect(w.get('select').classes()).toEqual(expect.arrayContaining(['form-select', 'is-invalid']));
         expect(w.get('.invalid-feedback').text()).toBe('Bad');
     });
