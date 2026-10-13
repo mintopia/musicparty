@@ -3,7 +3,6 @@
 namespace App\Services\Spotify;
 
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\Request;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
@@ -46,7 +45,6 @@ class BackoffRequest extends Request
             return $this->transport($method, $url, $parameters, $headers);
         } catch (SpotifyWebAPIException $e) {
             if ($e->isRateLimited()) {
-                Log::critical('Spotify Rate Limit Hit');
                 $this->startBackoff($this->retryAfterSeconds());
             }
 
