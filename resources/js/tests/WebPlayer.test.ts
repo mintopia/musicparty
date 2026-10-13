@@ -6,6 +6,12 @@ import WebPlayer from '@/pages/Parties/WebPlayer.vue';
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     usePage: () => ({props: {flash: {}, auth: {user: null}}}),
+    router: {
+        on: (_event: string, cb: (e: {preventDefault: () => void}) => void) => {
+            echo.navGuard = cb;
+            return () => {};
+        },
+    },
 }));
 
 vi.mock('@/layouts/BareLayout.vue', () => ({default: {template: '<div><slot /></div>'}}));
@@ -16,6 +22,8 @@ const echo = vi.hoisted(() => ({
     channels: [] as string[],
     handlers: {} as Record<string, (payload: never) => void>,
     whispers: [] as Array<[string, Record<string, unknown>]>,
+    whisperHandlers: {} as Record<string, (payload: never) => void>,
+    navGuard: null as null | ((e: {preventDefault: () => void}) => void),
 }));
 
 vi.mock('@/composables/useEcho', () => ({
@@ -23,6 +31,10 @@ vi.mock('@/composables/useEcho', () => ({
         const channel = {
             listen: (event: string, cb: (payload: never) => void) => {
                 echo.handlers[event] = cb;
+                return channel;
+            },
+            listenForWhisper: (event: string, cb: (payload: never) => void) => {
+                echo.whisperHandlers[event] = cb;
                 return channel;
             },
             whisper: (event: string, data: Record<string, unknown>) => {
@@ -47,6 +59,11 @@ const spotify = {
     options: null as null | Record<string, unknown>,
     connect: vi.fn(),
     disconnect: vi.fn(),
+    resume: vi.fn(),
+    pause: vi.fn(),
+    nextTrack: vi.fn(),
+    previousTrack: vi.fn(),
+    seek: vi.fn(),
 };
 
 class FakePlayer {
@@ -62,6 +79,11 @@ class FakePlayer {
     disconnect = spotify.disconnect;
     activateElement = vi.fn();
     togglePlay = vi.fn();
+    resume = spotify.resume;
+    pause = spotify.pause;
+    nextTrack = spotify.nextTrack;
+    previousTrack = spotify.previousTrack;
+    seek = spotify.seek;
 }
 
 function currentToken(): string {
@@ -70,6 +92,8 @@ function currentToken(): string {
     return token;
 }
 
+const mounted: Array<{unmount: () => void}> = [];
+
 async function mountPlayer() {
     const wrapper = mount(WebPlayer, {
         props: {party: {code: 'ABC', name: 'Friday'}, tokenUrl: '/token', deviceName: 'Music Party'},
@@ -77,6 +101,7 @@ async function mountPlayer() {
     await flushPromises();
     (window as unknown as {onSpotifyWebPlaybackSDKReady: () => void}).onSpotifyWebPlaybackSDKReady();
     await flushPromises();
+    mounted.push(wrapper);
 
     return wrapper;
 }
@@ -99,6 +124,9 @@ describe('WebPlayer', () => {
         echo.channels.length = 0;
         echo.whispers.length = 0;
         echo.handlers = {};
+        echo.whisperHandlers = {};
+        echo.navGuard = null;
+        vi.clearAllMocks();
         spotify.listeners = {};
         spotify.getOAuthToken = null;
         vi.mocked(axios.get)
@@ -109,6 +137,7 @@ describe('WebPlayer', () => {
     });
 
     afterEach(() => {
+        mounted.splice(0).forEach((wrapper) => wrapper.unmount());
         document.querySelectorAll('script[src*="sdk.scdn.co"]').forEach((el) => el.remove());
     });
 
@@ -132,7 +161,7 @@ describe('WebPlayer', () => {
         spotify.listeners.player_state_changed(state());
         await flushPromises();
 
-        expect(echo.whispers).toEqual([
+        expect(echo.whispers.filter(([event]) => event === 'state')).toEqual([
             [
                 'state',
                 {
@@ -166,8 +195,148 @@ describe('WebPlayer', () => {
         await flushPromises();
         expect(wrapper.get('[data-test="status"]').text()).toBe('Ready');
 
-        spotify.listeners.authentication_error({message: 'bad token'});
+        spotify.listeners.account_error({message: 'premium required'});
         await flushPromises();
-        expect(wrapper.get('[data-test="error"]').text()).toBe('bad token');
+        expect(wrapper.get('[data-test="error"]').text()).toBe('premium required');
+    });
+
+    describe('recovery', () => {
+        beforeEach(() => vi.useFakeTimers());
+        afterEach(() => vi.useRealTimers());
+
+        it('refreshes the token and reconnects after not_ready and authentication_error', async () => {
+            await mountPlayer();
+            spotify.connect.mockClear();
+            vi.mocked(axios.get).mockResolvedValue({data: {accessToken: 'tok2'}});
+
+            spotify.listeners.not_ready({device_id: 'dev1'});
+            await vi.advanceTimersByTimeAsync(1000);
+
+            expect(axios.get).toHaveBeenCalledTimes(2);
+            expect(currentToken()).toBe('tok2');
+            expect(spotify.disconnect).toHaveBeenCalled();
+            expect(spotify.connect).toHaveBeenCalledTimes(1);
+
+            vi.mocked(axios.get).mockResolvedValue({data: {accessToken: 'tok3'}});
+            spotify.listeners.authentication_error({message: 'expired'});
+            await vi.advanceTimersByTimeAsync(2000);
+
+            expect(currentToken()).toBe('tok3');
+            expect(spotify.connect).toHaveBeenCalledTimes(2);
+        });
+
+        it('backs off when the token refresh fails', async () => {
+            await mountPlayer();
+            spotify.connect.mockClear();
+            vi.mocked(axios.get).mockRejectedValue(new Error('down'));
+
+            spotify.listeners.not_ready({device_id: 'dev1'});
+            await vi.advanceTimersByTimeAsync(1000);
+            expect(spotify.connect).not.toHaveBeenCalled();
+
+            vi.mocked(axios.get).mockResolvedValue({data: {accessToken: 'tok2'}});
+            await vi.advanceTimersByTimeAsync(2000);
+            expect(spotify.connect).toHaveBeenCalledTimes(1);
+        });
+
+        it('shows a resume control when autoplay is blocked and hides it once playing', async () => {
+            const wrapper = await mountPlayer();
+            expect(wrapper.find('[data-test="resume"]').exists()).toBe(false);
+
+            spotify.listeners.autoplay_failed({});
+            await flushPromises();
+            expect(wrapper.get('[data-test="resume"]').text()).toBe('Click to resume');
+
+            await wrapper.get('[data-test="resume"]').trigger('click');
+            expect(spotify.resume).toHaveBeenCalled();
+            expect(wrapper.find('[data-test="resume"]').exists()).toBe(false);
+        });
+    });
+
+    it('maps channel transport commands onto the SDK', async () => {
+        await mountPlayer();
+
+        echo.handlers['.play']({} as never);
+        echo.handlers['.pause']({} as never);
+        echo.handlers['.next']({} as never);
+        echo.handlers['.skip_prev']({} as never);
+        echo.handlers['.seek']({position_ms: 5000} as never);
+
+        expect(spotify.resume).toHaveBeenCalled();
+        expect(spotify.pause).toHaveBeenCalled();
+        expect(spotify.nextTrack).toHaveBeenCalled();
+        expect(spotify.previousTrack).toHaveBeenCalled();
+        expect(spotify.seek).toHaveBeenCalledWith(5000);
+    });
+
+    it('controls the SDK from on-page buttons and the seek bar', async () => {
+        const wrapper = await mountPlayer();
+
+        await wrapper.get('[data-test="next"]').trigger('click');
+        await wrapper.get('[data-test="previous"]').trigger('click');
+        const seek = wrapper.get('[data-test="seek"]');
+        (seek.element as HTMLInputElement).value = '0';
+        await seek.trigger('change');
+
+        expect(spotify.nextTrack).toHaveBeenCalled();
+        expect(spotify.previousTrack).toHaveBeenCalled();
+        expect(spotify.seek).toHaveBeenCalledWith(0);
+    });
+
+    it('warns before unload and navigation only while it is the active Player', async () => {
+        await mountPlayer();
+        const unload = () => {
+            const event = new Event('beforeunload', {cancelable: true});
+            window.dispatchEvent(event);
+            return event.defaultPrevented;
+        };
+        const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+        const navigate = () => {
+            const preventDefault = vi.fn();
+            echo.navGuard?.({preventDefault});
+            return preventDefault;
+        };
+
+        expect(unload()).toBe(false);
+        expect(navigate()).not.toHaveBeenCalled();
+        expect(confirm).not.toHaveBeenCalled();
+
+        spotify.listeners.ready({device_id: 'dev1'});
+        expect(unload()).toBe(true);
+        expect(navigate()).toHaveBeenCalled();
+
+        confirm.mockReturnValue(true);
+        expect(navigate()).not.toHaveBeenCalled();
+
+        echo.whisperHandlers.claim({instanceId: 'zzz', claimedAt: Date.now() + 1000} as never);
+        expect(unload()).toBe(false);
+        confirm.mockRestore();
+    });
+
+    it('claims on ready, stands down for a newer claim and stops sending state', async () => {
+        const wrapper = await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        expect(echo.whispers.map(([event]) => event)).toEqual(['claim']);
+
+        echo.whisperHandlers.claim({instanceId: 'zzz', claimedAt: Date.now() + 1000} as never);
+        await flushPromises();
+
+        expect(spotify.disconnect).toHaveBeenCalled();
+        expect(wrapper.get('[data-test="status"]').text()).toBe('Taken over elsewhere');
+        expect(wrapper.find('[data-test="taken-over"]').exists()).toBe(true);
+
+        spotify.listeners.player_state_changed(state());
+        expect(echo.whispers.map(([event]) => event)).toEqual(['claim']);
+    });
+
+    it('re-asserts its claim when an older instance claims', async () => {
+        await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        echo.whispers.length = 0;
+
+        echo.whisperHandlers.claim({instanceId: 'old', claimedAt: 1} as never);
+
+        expect(echo.whispers.map(([event]) => event)).toEqual(['claim']);
+        expect(spotify.disconnect).not.toHaveBeenCalled();
     });
 });
