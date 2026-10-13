@@ -2,8 +2,8 @@
 name: musicparty
 
 x-user-env: &user-env
-  PUID: "${PUID:-1000}"
-  PGID: "${PGID:-1000}"
+  PUID: "${PUID:-}"
+  PGID: "${PGID:-}"
 
 services:
   musicparty:

@@ -31,9 +31,7 @@ RUN chmod +x /entrypoint.sh && \
     chown -R musicparty:musicparty /data /config && \
     chmod -R a+rwX /data /config
 
-ENV XDEBUG_MODE=off \
-    PUID=1000 \
-    PGID=1000
+ENV XDEBUG_MODE=off
 
 ENTRYPOINT ["/entrypoint.sh"]
 CMD ["php", "artisan", "octane:frankenphp", "--watch", "--poll", "--host=0.0.0.0", "--admin-host=0.0.0.0", "--port=8080", "--caddyfile=/Caddyfile"]
