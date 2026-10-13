@@ -89,9 +89,10 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 
 ## Suggested ticket slices
 
-1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADR (R1-R3, R11, R13 tooling). blocked_by: E3 skeleton migration (#304, reopened: it never reached `feature/v3-rewrite`).
+0. **E7-0** Migrate to the streamlined Laravel skeleton (#348). This redoes E3's #304, whose work never reached `feature/v3-rewrite`. blocked_by: none. Every other E7 ticket is blocked by it.
+1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADR (R1-R3, R11, R13 tooling). blocked_by: E7-0.
 2. **E7-2** Front-end lint (ESLint, Prettier) and Vitest tooling, plus lint, type-check and test steps in CI (R12). blocked_by: E7-1.
-3. **E7-3** Tabler upgrade and Blade visual fixes (R4). blocked_by: none.
+3. **E7-3** Tabler upgrade and Blade visual fixes (R4). blocked_by: E7-0.
 4. **E7-4** Token stylesheet mapped onto Tabler (R5). blocked_by: E7-3.
 5. **E7-5** Themes as token sets: cached active-theme resolver and removal of the seating CSS first, then the migration, served theme CSS, theme shared prop and admin form (R2 theme, R6, R7). blocked_by: E7-1, E7-4.
 6. **E7-6** `AppLayout`, `GuestLayout` and `BareLayout` matching v2 (R8). blocked_by: E7-1, E7-4.
