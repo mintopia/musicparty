@@ -25,8 +25,18 @@ const switches: {name: SwitchField; label: string}[] = [
 ];
 
 const limits: {name: LimitField; label: string; hint: string; unit?: string}[] = [
-    {name: 'min_song_length', label: 'Minimum Song Length', hint: 'The minimum length a requested song can be', unit: 'seconds'},
-    {name: 'max_song_length', label: 'Maximum Song Length', hint: 'The maximum length a requested song can be', unit: 'seconds'},
+    {
+        name: 'min_song_length',
+        label: 'Minimum Song Length',
+        hint: 'The minimum length a requested song can be',
+        unit: 'seconds',
+    },
+    {
+        name: 'max_song_length',
+        label: 'Maximum Song Length',
+        hint: 'The maximum length a requested song can be',
+        unit: 'seconds',
+    },
     {
         name: 'no_repeat_interval',
         label: 'Song Cooldown',
@@ -39,7 +49,11 @@ const limits: {name: LimitField; label: string; hint: string; unit?: string}[] =
         hint: 'The maximum number of times a user can downvote in a 1 hour period',
         unit: 'per hour',
     },
-    {name: 'max_requests', label: 'Max Requests', hint: 'The maximum number of requests that a user can have in the queue'},
+    {
+        name: 'max_requests',
+        label: 'Max Requests',
+        hint: 'The maximum number of requests that a user can have in the queue',
+    },
 ];
 
 const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value.slice(1);
@@ -141,10 +155,15 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                         type="text"
                         name="custom_backup_playlist_id"
                         class="form-control mt-2"
-                        :class="{'is-invalid': form.errors.custom_backup_playlist_id, 'd-none': form.backup_playlist_id !== 'other'}"
+                        :class="{
+                            'is-invalid': form.errors.custom_backup_playlist_id,
+                            'd-none': form.backup_playlist_id !== 'other',
+                        }"
                         placeholder="Spotify Playlist ID"
                     />
-                    <small class="form-hint">The backup playlist is used to fill the queue if there are no requests</small>
+                    <small class="form-hint"
+                        >The backup playlist is used to fill the queue if there are no requests</small
+                    >
                     <p v-if="form.errors.backup_playlist_id" class="invalid-feedback">
                         {{ form.errors.backup_playlist_id }}
                     </p>
@@ -155,7 +174,13 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
             </div>
             <div class="mb-3">
                 <label v-for="item in switches" :key="item.name" class="form-check form-switch">
-                    <input v-model="form[item.name]" type="checkbox" class="form-check-input" :name="item.name" value="1" />
+                    <input
+                        v-model="form[item.name]"
+                        type="checkbox"
+                        class="form-check-input"
+                        :name="item.name"
+                        value="1"
+                    />
                     {{ item.label }}
                 </label>
 

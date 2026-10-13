@@ -59,4 +59,5 @@ export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[
 export type PartyFormData = ReturnType<typeof initialPartyForm> & {provider_id?: string};
 export type PartyFormState = InertiaForm<PartyFormData>;
 export type SwitchField = 'active' | 'allow_requests' | 'downvotes' | 'weighted' | 'show_qrcode' | 'flag_requests';
-export type LimitField = 'min_song_length' | 'max_song_length' | 'no_repeat_interval' | 'downvotes_per_hour' | 'max_requests';
+export type LimitField =
+    'min_song_length' | 'max_song_length' | 'no_repeat_interval' | 'downvotes_per_hour' | 'max_requests';

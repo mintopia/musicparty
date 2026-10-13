@@ -3,7 +3,7 @@ import {describe, expect, it, vi} from 'vitest';
 import {reactive} from 'vue';
 import PartyForm from '@/components/PartyForm.vue';
 import {initialPartyForm} from '@/lib/partyForm';
-import type {PartyFormValues} from '@/lib/partyForm';
+import type {PartyFormState, PartyFormValues} from '@/lib/partyForm';
 import Create from '@/pages/Parties/Create.vue';
 import Edit from '@/pages/Parties/Edit.vue';
 
@@ -89,7 +89,15 @@ describe('party form', () => {
 
         expect(wrapper.find('.invalid-feedback').text()).toContain('name field is required');
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(true);
-        for (const name of ['name', 'country', 'timezone', 'backup_playlist_id', 'device_id', 'weighted', 'max_requests']) {
+        for (const name of [
+            'name',
+            'country',
+            'timezone',
+            'backup_playlist_id',
+            'device_id',
+            'weighted',
+            'max_requests',
+        ]) {
             expect(wrapper.find(`[name="${name}"]`).exists(), name).toBe(true);
         }
 
@@ -127,7 +135,9 @@ describe('party form', () => {
 
     it('renders as a standalone form component', () => {
         const form = reactive({...initialPartyForm(party, playlists, 'GB'), errors: {}, processing: false});
-        const wrapper = mount(PartyForm, {props: {form, ...common, cancelUrl: '/x', providerName: 'Spotify'}});
+        const wrapper = mount(PartyForm, {
+            props: {form: form as unknown as PartyFormState, ...common, cancelUrl: '/x', providerName: 'Spotify'},
+        });
 
         expect(wrapper.find('input[disabled]').exists()).toBe(true);
     });
