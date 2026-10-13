@@ -13,7 +13,7 @@ import YouTubePlayer from './components/YouTubePlayer.vue'
 import.meta.glob([
     '../img/**',
     '../fonts/**',
-]);
+], {eager: true, query: '?url', import: 'default'});
 
 const app = createApp()
 
