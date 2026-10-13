@@ -36,4 +36,10 @@ if [ "${ENTRYPOINT_OPTIMIZE:-0}" = "1" ]; then
     php /app/artisan optimize
 fi
 
+case "$*" in
+    *octane:*)
+        php /app/artisan mods:sync || echo "entrypoint: mods:sync failed (is the database migrated?)" >&2
+        ;;
+esac
+
 exec "$@"

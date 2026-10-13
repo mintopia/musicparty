@@ -241,6 +241,13 @@
                 {{ $mod->description }}
             </p>
         @endif
+        <div class="mb-3">
+            <label class="form-check form-switch">
+                <input type="checkbox" class="form-check-input" name="mods_enabled[]" value="{{ $mod->code }}"
+                       @if(in_array($mod->code, old('mods_enabled', $party->exists ? $party->mods()->pluck('mods.code')->all() : []), true)) checked @endif>
+                Enable
+            </label>
+        </div>
         @foreach ($mod->settings()->wherePrivate(false)->get() as $setting)
             <div class="mb-3">
                 @if ($setting->type === \App\Enums\SettingType::stBoolean)

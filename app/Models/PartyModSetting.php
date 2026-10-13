@@ -4,8 +4,6 @@ namespace App\Models;
 
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
-use App\Events\Mods\PartyModSettingDeletedEvent;
-use App\Events\Mods\PartyModSettingUpdatedEvent;
 use Database\Factories\PartyModSettingFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -44,11 +42,6 @@ class PartyModSetting extends Model
 
     protected $casts = [
         'value' => SettingValue::class,
-    ];
-
-    protected $dispatchesEvents = [
-        'saved' => PartyModSettingUpdatedEvent::class,
-        'deleted' => PartyModSettingDeletedEvent::class,
     ];
 
     /** @return Attribute<SettingType, never> */

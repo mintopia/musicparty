@@ -5,6 +5,7 @@ namespace App\Mods\Whamageddon;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
 use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Spotify\SpotifyGateway;
@@ -14,7 +15,7 @@ use Illuminate\Support\Facades\Log;
 
 class Whamageddon
 {
-    protected const CODE = 'whamageddon';
+    protected const CODE = WhamageddonMod::CODE;
 
     protected bool $isEnabled = false;
 
@@ -32,7 +33,7 @@ class Whamageddon
 
             return;
         }
-        if (! $this->settings->value($this->party, self::CODE, 'enabled')) {
+        if (! app(PartyMods::class)->isEnabled($this->party, self::CODE)) {
             Log::info("{$this->party} Whamageddon: Whamageddon is not enabled");
 
             return;

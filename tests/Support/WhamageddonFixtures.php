@@ -3,12 +3,13 @@
 namespace Tests\Support;
 
 use App\Models\LinkedAccount;
+use App\Models\Mod;
 use App\Models\Party;
-use App\Models\PartyModSetting;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 class WhamageddonFixtures
 {
@@ -16,7 +17,7 @@ class WhamageddonFixtures
 
     public static function install(): void
     {
-        Artisan::call('mods:whamageddon:install');
+        Artisan::call('mods:sync');
     }
 
     public static function fake(): FakeSpotify
@@ -38,11 +39,18 @@ class WhamageddonFixtures
         }
         LinkedAccount::query()->update(['access_token_expires_at' => now()->addYears(5)]);
         $party->refresh();
-        PartyModSetting::withoutEvents(function () use ($party, $settings): void {
-            foreach ($settings as $code => $value) {
-                app(ModSettingsStore::class)->set($party, 'whamageddon', $code, $value);
-            }
-        });
+        if (! empty($settings['enabled'])) {
+            DB::table('party_mods')->insert([
+                'party_id' => $party->id,
+                'mod_id' => Mod::whereCode('whamageddon')->firstOrFail()->id,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+        unset($settings['enabled']);
+        foreach ($settings as $code => $value) {
+            app(ModSettingsStore::class)->set($party, 'whamageddon', $code, $value);
+        }
 
         return $party;
     }
@@ -60,7 +68,7 @@ class WhamageddonFixtures
             'score_adjustment' => 0,
         ], $attributes));
         if ($track) {
-            PartyModSetting::withoutEvents(fn () => app(ModSettingsStore::class)->set($party, 'whamageddon', 'upcoming_song_id', $upcoming->id));
+            app(ModSettingsStore::class)->set($party, 'whamageddon', 'upcoming_song_id', $upcoming->id);
         }
 
         return $upcoming;
