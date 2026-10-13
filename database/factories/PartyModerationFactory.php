@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Enums\PartyModerationAction;
 use App\Enums\PartyModerationType;
 use App\Models\Party;
 use App\Models\PartyModeration;
@@ -12,6 +13,11 @@ use Illuminate\Database\Eloquent\Factories\Factory;
  */
 class PartyModerationFactory extends Factory
 {
+    public function flagging(): static
+    {
+        return $this->state(['action' => PartyModerationAction::Flag]);
+    }
+
     /**
      * @return array<string, mixed>
      */

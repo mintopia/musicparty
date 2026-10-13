@@ -14,6 +14,7 @@ use Illuminate\Support\Carbon;
  * @property string $code
  * @property string $name
  * @property string|null $description
+ * @property Carbon|null $removed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, ModSetting> $settings
@@ -36,6 +37,10 @@ class Mod extends Model
 {
     /** @use HasFactory<ModFactory> */
     use HasFactory;
+
+    protected $casts = [
+        'removed_at' => 'datetime',
+    ];
 
     /** @return HasMany<ModSetting, $this> */
     public function settings(): HasMany

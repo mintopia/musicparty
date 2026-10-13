@@ -21,6 +21,7 @@ const listeners = vi.hoisted(() => ({handlers: {} as Record<string, (payload: un
 
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
+        privateChannel: () => ({listen: () => undefined}),
         publicChannel: () => ({
             listen: (event: string, cb: (payload: unknown) => void) => {
                 listeners.handlers[event] = cb;
@@ -43,7 +44,7 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
         album: {id: 'a', name: 'Album', image_url: null},
         artists: [{id: 'x', name: 'Artist'}],
         queue: {in_queue: false, upcoming_id: null, score: 0, vote: null, requested_by: null, ...queue},
-        eligibility: {allowed, reason: allowed ? null : 'Not allowed'},
+        eligibility: {allowed, outcome: allowed ? 'allow' : 'reject', reason: allowed ? null : 'Not allowed'},
     };
 }
 

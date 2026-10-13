@@ -27,6 +27,8 @@ class PlaybackStatus
         $state = $this->recall($party);
 
         if ($state === null) {
+            $sampledAt = now()->toIso8601String();
+
             return (object) [
                 'device' => null,
                 'repeat' => null,
@@ -34,8 +36,10 @@ class PlaybackStatus
                 'active' => false,
                 'isPlaying' => false,
                 'progress' => null,
+                'progressMs' => null,
                 'length' => null,
-                'updatedAt' => now()->toIso8601String(),
+                'updatedAt' => $sampledAt,
+                'sampledAt' => $sampledAt,
             ];
         }
 
@@ -53,8 +57,10 @@ class PlaybackStatus
             'active' => $isCurrentSong,
             'isPlaying' => $state->isPlaying,
             'progress' => $isCurrentSong ? $state->progressMs : null,
+            'progressMs' => $isCurrentSong ? $state->progressMs : null,
             'length' => $isCurrentSong ? $party->song->length : null,
             'updatedAt' => $state->sampledAt->toIso8601String(),
+            'sampledAt' => $state->sampledAt->toIso8601String(),
         ];
     }
 

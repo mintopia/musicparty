@@ -12,6 +12,11 @@ use App\Models\Vote;
 use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Requests\RequestContext;
+use App\Services\Requests\RequestDecision;
+use App\Services\Requests\RequestMode;
+use App\Services\Requests\RequestOutcome;
+use App\Services\Requests\RequestRule;
 use App\Services\Requests\RequestRules;
 use App\Services\Requests\TrackEligibility;
 use Illuminate\Support\Facades\DB;
@@ -411,5 +416,92 @@ describe('TrackEligibility', function () {
             'allowed' => true,
             'reason' => null,
         ]);
+    });
+});
+
+describe('three-way outcome and stage order', function () {
+    function stubRule(RequestDecision $decision, array &$calls, string $name): RequestRule
+    {
+        return new class($decision, $calls, $name) implements RequestRule
+        {
+            public function __construct(private RequestDecision $decision, private array &$calls, private string $name) {}
+
+            public function decide(RequestContext $context, Track $track): RequestDecision
+            {
+                $this->calls[] = $this->name.':'.$context->mode->value;
+
+                return $this->decision;
+            }
+        };
+    }
+
+    it('runs core, then mod, then ai rules, telling each the mode', function () {
+        $party = rulesParty();
+        $calls = [];
+        $rules = new RequestRules(
+            [stubRule(RequestDecision::allow(), $calls, 'core')],
+            [stubRule(RequestDecision::allow(), $calls, 'mod')],
+            [stubRule(RequestDecision::allow(), $calls, 'ai')],
+        );
+
+        $rules->check($party, rulesMember($party), rulesTrack());
+
+        expect($calls)->toBe(['core:submit', 'mod:submit', 'ai:submit']);
+    });
+
+    it('stops later stages on reject', function () {
+        $party = rulesParty();
+        $calls = [];
+        $rules = new RequestRules(
+            [stubRule(RequestDecision::allow(), $calls, 'core')],
+            [stubRule(RequestDecision::reject('No'), $calls, 'mod')],
+            [stubRule(RequestDecision::allow(), $calls, 'ai')],
+        );
+
+        $decision = $rules->check($party, rulesMember($party), rulesTrack());
+
+        expect($decision->outcome)->toBe(RequestOutcome::Reject)
+            ->and($decision->reason)->toBe('No')
+            ->and($calls)->toBe(['core:submit', 'mod:submit']);
+    });
+
+    it('does not call ai rules during annotation', function () {
+        $party = rulesParty();
+        $calls = [];
+        $rules = new RequestRules(
+            [stubRule(RequestDecision::allow(), $calls, 'core')],
+            [stubRule(RequestDecision::allow(), $calls, 'mod')],
+            [stubRule(RequestDecision::reject('AI'), $calls, 'ai')],
+        );
+
+        $decision = $rules->check($party, rulesMember($party), rulesTrack(), RequestMode::Annotate);
+
+        expect($decision->allowed)->toBeTrue()
+            ->and($calls)->toBe(['core:annotate', 'mod:annotate']);
+    });
+
+    it('keeps a flag but lets a later reject win', function () {
+        $party = rulesParty(['flag_requests' => true]);
+        $calls = [];
+        $flagging = new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')], [stubRule(RequestDecision::allow(), $calls, 'mod')]);
+        $rejecting = new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')], [stubRule(RequestDecision::reject('No'), $calls, 'mod')]);
+        $member = rulesMember($party);
+
+        $flagged = $flagging->check($party, $member, rulesTrack());
+
+        expect($flagged->outcome)->toBe(RequestOutcome::Flag)
+            ->and($flagged->allowed)->toBeTrue()
+            ->and($flagged->reason)->toBe('Check')
+            ->and($rejecting->check($party, $member, rulesTrack())->outcome)->toBe(RequestOutcome::Reject);
+    });
+
+    it('annotates a flagged track as flagged but allowed', function () {
+        $party = rulesParty(['flag_requests' => true]);
+        $calls = [];
+        $this->app->instance(RequestRules::class, new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')]));
+
+        $result = app(TrackEligibility::class)->annotate($party, rulesMember($party), [rulesTrack()]);
+
+        expect($result[0]->flagged)->toBeTrue()->and($result[0]->allowed)->toBeTrue()->and($result[0]->reason)->toBe('Check');
     });
 });

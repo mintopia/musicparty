@@ -20,6 +20,11 @@ class SettingsSeeder extends Seeder
                 'default' => 'Music Party',
                 'validation' => 'required|string|max:200|min:2',
             ],
+            'timezone' => (object) [
+                'name' => 'Timezone',
+                'validation' => 'sometimes|nullable|string|timezone:all',
+                'description' => 'Default timezone for parties, used by time-based mods and scheduled requests. Leave blank to use the application timezone',
+            ],
             'terms' => (object) [
                 'name' => 'Terms and Conditions URL',
                 'validation' => 'sometimes|nullable|string|url:http,https',

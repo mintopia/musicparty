@@ -2,19 +2,23 @@
 
 use App\Http\Controllers\Admin\HomeController as AdminHomeController;
 use App\Http\Controllers\Admin\LinkedAccountController as AdminLinkedAccountController;
+use App\Http\Controllers\Admin\ModsController as AdminModsController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\FlaggedRequestController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
+use App\Http\Controllers\PartyModsController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebPlayerController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -45,11 +49,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
         Route::resource('parties', PartyController::class)->except(['destroy']);
-        Route::get('parties/{party}/player', [PartyController::class, 'player'])
-            ->middleware('can:player,party')
-            ->name('parties.player');
+        Route::middleware('can:player,party')->group(function () {
+            Route::get('parties/{party}/player', [WebPlayerController::class, 'show'])->name('parties.player');
+            Route::get('parties/{party}/player/token', [WebPlayerController::class, 'token'])->name('parties.player.token');
+        });
         Route::middleware('can:update,party')->group(function () {
             Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
+            Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
+            Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
@@ -58,6 +65,13 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
+        Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->name('parties.artists.show');
+
+        Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
+        Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
+        Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->name('parties.flagged.reject');
+        Route::delete('parties/{party}/requests/{upcomingSong}/flag', [FlaggedRequestController::class, 'withdraw'])->scopeBindings()->name('parties.requests.withdraw');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');
@@ -79,6 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
+
+            Route::get('mods', [AdminModsController::class, 'edit'])->name('mods.edit');
+            Route::match(['PUT', 'PATCH'], 'mods', [AdminModsController::class, 'update'])->name('mods.update');
 
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::match(['PUT', 'PATCH'], 'settings', [AdminSettingController::class, 'update'])->name('settings.update');

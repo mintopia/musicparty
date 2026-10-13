@@ -29,7 +29,7 @@ it('describes a track that is not in the queue and allowed', function () {
         ->and($json['album'])->toHaveKeys(['id', 'name', 'image_url'])
         ->and($json['artists'][0])->toHaveKeys(['id', 'name'])
         ->and($json['queue'])->toBe(['in_queue' => false, 'upcoming_id' => null, 'score' => 0, 'vote' => null, 'requested_by' => null])
-        ->and($json['eligibility'])->toBe(['allowed' => true, 'reason' => null]);
+        ->and($json['eligibility'])->toBe(['allowed' => true, 'outcome' => 'allow', 'reason' => null]);
 });
 
 it('describes a track already in the queue', function () {
@@ -41,7 +41,7 @@ it('describes a track already in the queue', function () {
 it('describes a blocked track with its reason', function () {
     $json = annotationFor(false, false, 'Explicit tracks are not allowed');
 
-    expect($json['eligibility'])->toBe(['allowed' => false, 'reason' => 'Explicit tracks are not allowed']);
+    expect($json['eligibility'])->toBe(['allowed' => false, 'outcome' => 'reject', 'reason' => 'Explicit tracks are not allowed']);
 });
 
 it('does not expose the legacy spotify-shaped keys', function () {

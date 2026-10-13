@@ -6,12 +6,13 @@ use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
+use App\Mods\ModExtensions;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 
 class TrackEligibility
 {
-    public function __construct(protected RequestRules $rules, protected MusicProviderFactory $providers) {}
+    public function __construct(protected RequestRules $rules, protected MusicProviderFactory $providers, protected ModExtensions $mods) {}
 
     /**
      * @param  list<Track>  $tracks
@@ -25,7 +26,7 @@ class TrackEligibility
 
         $provider = $this->providers->forParty($party, Purpose::Search);
         $waiting = $this->waitingByProviderId($party, $member, $tracks);
-        $decisions = $this->rules->checkMany($party, $member, $tracks);
+        $decisions = $this->rules->checkMany($party, $member, $tracks, RequestMode::Annotate);
 
         $annotations = [];
         foreach ($tracks as $track) {
@@ -33,7 +34,7 @@ class TrackEligibility
             $decision = $decisions[$track->id];
             $annotations[] = new TrackAnnotation(
                 track: $track,
-                upcoming: $entry !== null,
+                upcoming: $entry !== null && ! $entry['awaiting'],
                 upcomingId: $entry['id'] ?? null,
                 score: $entry['score'] ?? 0,
                 vote: $entry['vote'] ?? null,
@@ -42,6 +43,9 @@ class TrackEligibility
                 reason: $decision->reason,
                 externalUrl: $provider->trackUrl($track->id),
                 providerName: $provider->displayName(),
+                flagged: $decision->isFlagged(),
+                awaitingApproval: $entry['awaiting'] ?? false,
+                decoration: $entry['decoration'] ?? null,
             );
         }
 
@@ -50,7 +54,7 @@ class TrackEligibility
 
     /**
      * @param  list<Track>  $tracks
-     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null}>
+     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null, awaiting: bool, decoration: array<string, string>|null}>
      */
     protected function waitingByProviderId(Party $party, PartyMember $member, array $tracks): array
     {
@@ -66,11 +70,17 @@ class TrackEligibility
 
         $waiting = [];
         foreach ($upcomingSongs as $upcoming) {
+            $awaiting = $upcoming->flagged_at !== null;
+            if ($awaiting && $upcoming->user_id !== $member->user_id) {
+                continue;
+            }
             $waiting[$upcoming->song->provider_track_id] = [
                 'id' => $upcoming->id,
                 'score' => $upcoming->score,
                 'vote' => $votes[$upcoming->id] ?? null,
                 'user' => $upcoming->user->nickname ?? null,
+                'awaiting' => $awaiting,
+                'decoration' => $this->mods->decorationFor($party, $upcoming->song, $upcoming)?->toArray(),
             ];
         }
 

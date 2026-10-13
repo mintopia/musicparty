@@ -2,7 +2,9 @@
 
 use App\Models\PartyModSetting;
 use App\Models\UpcomingSong;
+use App\Mods\ModExtensions;
 use App\Mods\Whamageddon\Whamageddon;
+use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
 use Tests\Support\WhamageddonFixtures;
 
@@ -12,15 +14,14 @@ beforeEach(function () {
 });
 
 it('adds the configured track to the party on enable', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
 
     new Whamageddon($party)->enable();
 
     $upcoming = $party->upcoming()->sole();
     expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
         ->and($upcoming->user_id)->toBeNull()
-        ->and($upcoming->fallback_override)->toBe('Whamageddon')
-        ->and($upcoming->css_classes)->toBe('whamageddon')
+        ->and(app(ModDataStore::class)->all($upcoming, 'whamageddon'))->toEqual(['fallback_override' => 'Whamageddon', 'css_classes' => 'whamageddon'])
         ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($upcoming->id)
         ->and($this->fake->callsTo('getTrack'))->toBe([[WhamageddonFixtures::TRACK_ID]]);
 });
@@ -39,11 +40,11 @@ it('uses the overridden fallback name and css classes', function () {
     new Whamageddon($party)->enable();
 
     $upcoming = $party->upcoming()->sole();
-    expect($upcoming->fallback_override)->toBe('Wham')->and($upcoming->css_classes)->toBe('a b');
+    expect(app(ModDataStore::class)->all($upcoming, 'whamageddon'))->toEqual(['fallback_override' => 'Wham', 'css_classes' => 'a b']);
 });
 
 it('adds nothing when the spotify id is null', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => null]);
+    $party = WhamageddonFixtures::party(['track' => null]);
 
     new Whamageddon($party)->enable();
 
@@ -51,9 +52,8 @@ it('adds nothing when the spotify id is null', function () {
         ->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
-it('adds nothing when spotify returns no track', function () {
-    $this->fake->respond('getTrack', []);
-    $party = WhamageddonFixtures::party();
+it('adds nothing when the music provider has no such track', function () {
+    $party = WhamageddonFixtures::party(['track' => 'missing-track']);
 
     new Whamageddon($party)->enable();
 
@@ -73,7 +73,7 @@ it('does nothing on enable when an upcoming song is already tracked', function (
 });
 
 it('reuses an existing unqueued upcoming for the same track', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     $existing = WhamageddonFixtures::upcoming($party, ['user_id' => null], track: false);
 
     new Whamageddon($party)->enable();
@@ -81,13 +81,13 @@ it('reuses an existing unqueued upcoming for the same track', function () {
     $upcoming = $party->upcoming()->sole();
     expect($upcoming->id)->toBe($existing->id)
         ->and($upcoming->score_adjustment)->toBe(1)
-        ->and($upcoming->css_classes)->toBe('whamageddon')
+        ->and(app(ModDataStore::class)->get($upcoming, 'whamageddon', 'css_classes'))->toBe('whamageddon')
         ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($existing->id)
         ->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
 it('does not reuse an existing queued upcoming and creates a new row', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     $queued = WhamageddonFixtures::upcoming($party, ['queued_at' => now()], track: false);
 
     new Whamageddon($party)->enable();
@@ -115,4 +115,24 @@ it('disable is safe when nothing was added', function () {
     new Whamageddon($party)->disable();
 
     expect($party->upcoming()->count())->toBe(0);
+});
+
+it('decorates its request through the decoration contract and not other parties', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true, 'fallback_name' => 'Wham', 'css_classes' => 'a b']);
+    $other = WhamageddonFixtures::party();
+    new Whamageddon($party)->enable();
+    $upcoming = $party->upcoming()->with('song')->sole();
+
+    $decoration = app(ModExtensions::class)->decorationFor($party, $upcoming->song, $upcoming);
+
+    expect($decoration->toArray())->toBe(['displayName' => 'Wham', 'class' => 'a b'])
+        ->and($upcoming->toApi())->toMatchArray(['fallback_name' => 'Wham', 'css_classes' => 'a b', 'decoration' => ['displayName' => 'Wham', 'class' => 'a b']])
+        ->and(app(ModExtensions::class)->decorationFor($other, $upcoming->song, $upcoming))->toBeNull();
+});
+
+it('returns no decoration for a request without whamageddon data', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true]);
+    $request = WhamageddonFixtures::upcoming($party);
+
+    expect(app(ModExtensions::class)->decorationFor($party, $request->song, $request))->toBeNull();
 });

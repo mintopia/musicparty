@@ -51,7 +51,7 @@ Goal: build the shared Request and playback foundations on the E6 seams, then gi
 
 - Encore dials `wss://<app host>/app/<REVERB_APP_KEY>` (one public hostname after E4) and subscribes to its configured channel. For a `private-` channel it signs the subscription itself: `auth = key:HMAC-SHA256(secret, "<socket_id>:<channel>")`. It does not call Music Party's auth endpoint.
 - Outbound: every Soloist frame is sent as a client event `{"event":"client-<frame.type>","channel":"<channel>","data":<frame object>}`. Frames are Soloist's native JSON: `playback_state`, `track_changed`, `playback_changed`, `position_sync`, `volume_changed`, `queue_changed`, `auth_state`, `device_changed`, `context_changed`, `options_changed`, `error`. Track identity is `item.uri` (`spotify:track:...`). Position is `{position_ms, timestamp_ms, speed}`.
-- Inbound: any non-`pusher:` event on the channel has its `data` unwrapped and sent to Soloist as a command, e.g. `{"type":"get_state"}`, `play`, `pause`, `next`, `skip_prev`, `seek {position_ms}`.
+- Inbound: any non-`pusher:` event on the channel has its `data` unwrapped and sent to Soloist as a command, as `{"type":"command","command":"<name>"}`, e.g. `get_state`, `play`, `pause`, `next`, `skip_prev`, `seek {position_ms}`.
 - Delivery is best effort. Frames are dropped while disconnected, reconnect backs off 0.5 s to 30 s, and Soloist emits a frame about every 10 s while playing. On (re)subscribe the relay does not replay the latest state.
 - Known limitation: the app secret lets Encore subscribe to any private channel, so only the operator should run it. This will most likely be revised later.
 
@@ -123,7 +123,7 @@ Goal: build the shared Request and playback foundations on the E6 seams, then gi
 ### Encore
 47. Each Party has an Encore channel, `private-encore.{code}`. Music Party shows the operator its relay settings (URL, Pusher protocol on, channel, app key). The app secret is shown only to instance admins.
 48. `routes/channels.php` refuses user sessions on `encore.{code}`.
-49. When Encore (re)connects, Music Party requests a snapshot by broadcasting `{"type":"get_state"}` on the Encore channel.
+49. When Encore (re)connects, Music Party requests a snapshot by broadcasting `{"type":"command","command":"get_state"}` on the Encore channel (Encore relays the payload verbatim and Soloist only accepts that command shape). It detects the connect from Encore's signed `pusher:subscribe` on the channel, checked against the app secret.
 50. Soloist frames map to a `PlaybackState` with `source = Encore`: `status` to isPlaying, `item.uri` through requirement 1 to trackId, `item.decorations.playback.duration_ms` to durationMs, `position.position_ms`/`position.timestamp_ms` to progressMs and `sampledAt`, `queue_changed` to upcoming tracks, `auth_state`/`error` to connection status.
 51. A logged-out `auth_state` or an `error` marks pushed state as insufficient and lets polling take over if Polling is on.
 
@@ -214,7 +214,8 @@ Implementation-level; settle when tickets are written.
 - **Staleness window per source.** Soloist emits about every 10 s while playing, but nothing while paused.
 - **Insufficient pushed state.** Candidates: Queue contents for Sent to Player (Encore's `queue_changed` vs the provider's queue), album art (Soloist `item` has no art URL; `MusicProvider::getTrack` can fill it), relinked tracks (`linkedFromId`).
 - **Transport coverage.** Which actions Soloist and the Web Playback SDK support; the SDK has no queue-add, so Sent to Player may still need the Web API.
-- **Encore (re)connect detection.** The first frame after silence, or the subscription seen in `MessageReceived`. Verify `get_state` against Soloist before relying on it.
+- **Encore (re)connect detection.** The signed `pusher:subscribe` for `private-encore.{code}` seen in `MessageReceived`, verified against the app secret as Reverb does. Verified against Encore's relay (`musicparty-soloist/src/relay.ts`).
 - **Reverb.** Confirm client events from a secret-signed subscription and from browser whispers reach `MessageReceived` after E3's upgrade, and how this behaves with Redis scaling across Reverb servers.
+  - *Verified (slice 3, from Reverb 1.12 source).* `Server::message` runs `ClientEvent::handle` and then dispatches `MessageReceived` with the raw frame for every accepted frame, whether the connection subscribed with a secret-signed auth (Encore) or a browser auth endpoint (Web Player); both are ordinary subscriptions. The app config previously omitted `accept_client_events_from`, which defaults to `all`; it is now `members`, so only connections subscribed to the channel can whisper. `MessageReceived` fires on the Reverb server that received the frame, before Redis scaling fans it out, so each frame reaches the listener exactly once however many servers run. Only a Reverb process with the app's listener registered dispatches the job, so the Reverb container must boot the app (it does: `reverb:start`).
 - **Web Player channel layout.** Whether token refresh, state whispers and takeover share one per-Party private channel or use separate ones.
 - **Trust scope** is unknown until the research is signed off; slice 17 may split and may also need slice 10 or 12.

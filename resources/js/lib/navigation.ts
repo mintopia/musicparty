@@ -8,6 +8,8 @@ import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
 import {home, login, logout, pulse} from '@/routes';
 import {profile} from '@/routes/user';
+import {flaggedUrl} from '@/lib/flagged';
+import {adminModsUrl, partyModsUrl} from '@/lib/mods';
 import type {PartyMembership, SharedProps} from '@/types';
 
 export interface NavLink {
@@ -36,7 +38,9 @@ export function partyLinks(party: PartyMembership): NavLink[] {
             {title: 'TV Mode', href: tv(party.code).url},
             {title: 'YouTube Player', href: youtube(party.code).url},
             {title: 'Web Player', href: player(party.code).url},
+            {title: 'Flagged', href: flaggedUrl(party.code)},
             {title: 'Moderation', href: moderation(party.code).url},
+            {title: 'Mods', href: partyModsUrl(party.code)},
             {title: 'Settings', href: edit(party.code).url},
         );
     }
@@ -49,6 +53,7 @@ export function adminLinks(): NavLink[] {
         {title: 'Dashboard', href: adminDashboard().url},
         {title: 'Users', href: adminUsers().url},
         {title: 'Settings', href: adminSettings().url},
+        {title: 'Mods', href: adminModsUrl()},
         {title: 'Pulse', href: pulse().url},
         {title: 'Horizon', href: horizon().url},
     ];

@@ -1,10 +1,5 @@
 <?php
 
-use App\Events\Cron\DayTickEvent;
-use App\Events\Cron\HourTickEvent;
-use App\Events\Cron\MinuteTickEvent;
-use App\Events\Mods\PartyModSettingDeletedEvent;
-use App\Events\Mods\PartyModSettingUpdatedEvent;
 use App\Events\Party\PlayYouTubeVideoEvent;
 use App\Events\Party\UpdatedEvent as PartyUpdatedEvent;
 use App\Events\UpcomingSong\RemovedEvent;
@@ -66,7 +61,7 @@ it('shapes the party update payload as the party state', function () {
         ->and($payload['code'])->toBe('RTPT')
         ->and($payload['status'])->toBeObject()
         ->and((array) $payload['status'])->toHaveKeys([
-            'device', 'repeat', 'shuffle', 'active', 'isPlaying', 'progress', 'length', 'updatedAt',
+            'device', 'repeat', 'shuffle', 'active', 'isPlaying', 'progress', 'progressMs', 'length', 'updatedAt', 'sampledAt',
         ]);
 });
 
@@ -126,20 +121,6 @@ it('broadcasts the Spotify token on the private per-user channel', function () {
         ->and($channels[0]->name)->toBe("private-spotifytoken.{$user->id}")
         ->and($event->broadcastWith())->toBe(['accessToken' => 'tok']);
 });
-
-it('does not broadcast the cron tick and mod setting events, which are placeholders', function (string $class) {
-    expect(is_subclass_of($class, ShouldBroadcast::class))->toBeFalse();
-})->with([
-    MinuteTickEvent::class, HourTickEvent::class, DayTickEvent::class,
-    PartyModSettingUpdatedEvent::class, PartyModSettingDeletedEvent::class,
-]);
-
-it('declares the placeholder channel-name channel on the cron ticks and mod setting deletion', function (string $event) {
-    $channels = new ReflectionClass($event)->newInstanceWithoutConstructor()->broadcastOn();
-
-    expect($channels[0])->toBeInstanceOf(PrivateChannel::class)
-        ->and($channels[0]->name)->toBe('private-channel-name');
-})->with([MinuteTickEvent::class, HourTickEvent::class, DayTickEvent::class, PartyModSettingDeletedEvent::class]);
 
 it('does not broadcast Party UpdatedEvent for bookkeeping bumps to last_updated_at', function () {
     $party = realtimeParty();

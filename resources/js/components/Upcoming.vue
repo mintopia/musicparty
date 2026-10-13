@@ -4,7 +4,7 @@
             <div class="list-group card-list-group">
                 <TransitionGroup name="list" tag="div">
                     <div class="list-group-item" v-for="song in upcoming" :key="song.id">
-                        <div v-bind:class="'row g-2 align-items-center ' + song.css_classes">
+                        <div v-bind:class="legacyRowClasses(song)" v-bind:style="legacyAccentStyle(song)">
                             <div class="col-auto">
                                 <img
                                     v-bind:src="song.album.image_url"
@@ -16,12 +16,22 @@
                             </div>
                             <div class="col">
                                 {{ song.name }}
+                                <span
+                                    v-if="song.decoration?.label"
+                                    class="badge bg-azure-lt ms-1"
+                                    data-test="decoration-label"
+                                    >{{ song.decoration.label }}</span
+                                >
                                 <div class="text-secondary">
                                     {{ combineArtists(song.artists) }}
                                 </div>
+                                <div v-if="song.scheduled_for" class="text-info scheduled-time">
+                                    <i class="icon ti ti-clock"></i>
+                                    Scheduled for {{ formatScheduled(song.scheduled_for) }}
+                                </div>
                                 <div class="text-muted">
                                     <template v-if="song.user">Requested by {{ song.user }}</template>
-                                    <template v-else>{{ song.fallback_name }}</template>
+                                    <template v-else>{{ legacyFallbackName(song) }}</template>
                                 </div>
                             </div>
                             <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
@@ -161,6 +171,7 @@ import {defineComponent} from 'vue';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import type {LegacyArtist, LegacyUpcomingSong} from '../types';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     components: {
@@ -170,6 +181,7 @@ export default defineComponent({
         can_manage: {type: [String, Number, Boolean]},
         can_downvote: {type: [String, Number, Boolean]},
         party: {type: String},
+        timezone: {type: String, default: 'UTC'},
         initialstate: {type: String, required: true},
     },
     data() {
@@ -182,6 +194,10 @@ export default defineComponent({
     },
 
     methods: {
+        legacyRowClasses,
+        legacyAccentStyle,
+        legacyFallbackName,
+
         vote(song_id: number, value: number): void {
             window.axios
                 .post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {
@@ -263,6 +279,14 @@ export default defineComponent({
 
         removeItem(id: number): void {
             this.upcoming = this.upcoming.filter((song) => song.id !== id);
+        },
+
+        formatScheduled(iso: string): string {
+            return new Intl.DateTimeFormat(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+                timeZone: this.timezone,
+            }).format(new Date(iso));
         },
 
         formatMs(ms: number): string {

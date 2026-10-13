@@ -15,7 +15,6 @@ use Illuminate\Support\Carbon;
  * @property int $party_id
  * @property bool $canvote
  * @property bool $banned
- * @property float $trustscore
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Party $party
@@ -32,7 +31,6 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereRoleId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereTrustscore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereUserId($value)
  *

@@ -20,6 +20,17 @@
     @endif
 
     <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        @if ($canManage)
+            <div class="text-secondary small mb-1" data-testid="current-player">
+                Player: {{ $party->playback_source ? Str::headline($party->playback_source->value) : 'None' }}
+            </div>
+            @can('player', $party)
+                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="open-web-player"
+                    onclick="window.open('{{ route('parties.player', $party->code) }}', 'musicparty-web-player-{{ $party->code }}', 'popup,width=480,height=640')">
+                    Open Web Player
+                </button>
+            @endcan
+        @endif
         <next
             code="{{ $party->code }}"
             can_manage="{{ $canManage }}"
@@ -58,6 +69,7 @@
             party="{{ $party->code }}"
             can_manage="{{ $canManage }}"
             can_downvote="{{ $party->downvotes }}"
+            timezone="{{ app(\App\Services\PartyTimezone::class)->for($party) }}"
             initialstate='@json($upcoming)'
         ></upcoming>
     </div>

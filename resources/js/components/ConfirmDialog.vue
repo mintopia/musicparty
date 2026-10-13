@@ -41,6 +41,7 @@ function cancel(): void {
                     <div class="modal-body">
                         <div class="modal-title">{{ props.title }}</div>
                         <div>{{ props.message }}</div>
+                        <slot />
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-link link-secondary me-auto" @click="cancel">

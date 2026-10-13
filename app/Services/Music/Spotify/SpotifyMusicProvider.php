@@ -33,11 +33,17 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         protected SpotifyGateway $gateway,
         protected User $user,
         protected Purpose $purpose,
+        protected ?string $market = null,
     ) {}
 
-    public static function make(User $user, Purpose $purpose): self
+    public static function make(User $user, Purpose $purpose, ?string $market = null): self
     {
-        return new self(app(SpotifyGateway::class), $user, $purpose);
+        return new self(app(SpotifyGateway::class), $user, $purpose, $market);
+    }
+
+    protected function market(): string
+    {
+        return $this->market ?: $this->user->market;
     }
 
     /**
@@ -84,10 +90,15 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         return "https://open.spotify.com/track/{$trackId}";
     }
 
+    public function resolveTrackReference(string $reference): ?string
+    {
+        return preg_match('/^spotify:track:([A-Za-z0-9]{22})$/D', $reference, $matches) === 1 ? $matches[1] : null;
+    }
+
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
         $result = SpotifyPayload::object($this->reader()->search($query, 'track', [
-            'market' => $this->user->market,
+            'market' => $this->market(),
             'limit' => $perPage,
             'offset' => ($page - 1) * $perPage,
         ]));
@@ -98,7 +109,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function getTrack(string $id): ?Track
     {
-        $payload = SpotifyPayload::object($this->reader()->getTrack($id, ['market' => $this->user->market]));
+        $payload = SpotifyPayload::object($this->reader()->getTrack($id, ['market' => $this->market()]));
 
         return isset($payload->id) ? SpotifyMapper::track($payload) : null;
     }
@@ -119,7 +130,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     {
         $tracks = [];
         foreach (array_chunk($ids, 50) as $chunk) {
-            $result = SpotifyPayload::object($this->reader()->getTracks($chunk, ['market' => $this->user->market]));
+            $result = SpotifyPayload::object($this->reader()->getTracks($chunk, ['market' => $this->market()]));
             array_push($tracks, ...$this->mapTracks((array) $result->tracks));
         }
 
@@ -128,8 +139,15 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function getAlbum(string $id): ?Album
     {
-        return Cache::remember("music.spotify.album.{$id}.{$this->user->market}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Album {
-            $payload = SpotifyPayload::object($this->reader()->getAlbum($id, ['market' => $this->user->market]));
+        return Cache::remember("music.spotify.album.{$id}.{$this->market()}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Album {
+            try {
+                $payload = SpotifyPayload::object($this->reader()->getAlbum($id, ['market' => $this->market()]));
+            } catch (SpotifyWebAPIException $exception) {
+                if (in_array($exception->getCode(), [400, 404], true)) {
+                    return null;
+                }
+                throw $exception;
+            }
 
             return isset($payload->id) ? SpotifyMapper::album($payload) : null;
         });
@@ -138,7 +156,14 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     public function getArtist(string $id): ?Artist
     {
         return Cache::remember("music.spotify.artist.{$id}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Artist {
-            $payload = SpotifyPayload::object($this->reader()->getArtist($id));
+            try {
+                $payload = SpotifyPayload::object($this->reader()->getArtist($id));
+            } catch (SpotifyWebAPIException $exception) {
+                if (in_array($exception->getCode(), [400, 404], true)) {
+                    return null;
+                }
+                throw $exception;
+            }
 
             return isset($payload->id) ? SpotifyMapper::artist($payload) : null;
         });
@@ -146,21 +171,26 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function getArtistTopTracks(string $id): array
     {
-        $result = SpotifyPayload::object($this->reader()->getArtistTopTracks($id, ['market' => $this->user->market]));
+        return Cache::remember("music.spotify.artist.{$id}.top-tracks.{$this->market()}", self::BROWSE_CACHE_SECONDS, function () use ($id): array {
+            $result = SpotifyPayload::object($this->reader()->getArtistTopTracks($id, ['market' => $this->market()]));
 
-        return $this->mapTracks((array) $result->tracks);
+            return $this->mapTracks((array) $result->tracks);
+        });
     }
 
     public function getArtistAlbums(string $id, int $page, int $perPage): Page
     {
-        $result = SpotifyPayload::object($this->reader()->getArtistAlbums($id, [
-            'market' => $this->user->market,
-            'limit' => $perPage,
-            'offset' => ($page - 1) * $perPage,
-        ]));
-        $albums = array_map(fn (mixed $album): AlbumRef => SpotifyMapper::albumRef(SpotifyPayload::object($album)), array_values((array) $result->items));
+        return Cache::remember("music.spotify.artist.{$id}.albums.{$this->market()}.{$page}.{$perPage}", self::BROWSE_CACHE_SECONDS, function () use ($id, $page, $perPage): Page {
+            $result = SpotifyPayload::object($this->reader()->getArtistAlbums($id, [
+                'market' => $this->market(),
+                'include_groups' => 'album,single',
+                'limit' => $perPage,
+                'offset' => ($page - 1) * $perPage,
+            ]));
+            $albums = array_map(fn (mixed $album): AlbumRef => SpotifyMapper::albumRef(SpotifyPayload::object($album)), array_values((array) $result->items));
 
-        return new Page($albums, (int) $result->total, $page, $perPage);
+            return new Page($albums, (int) $result->total, $page, $perPage);
+        });
     }
 
     public function getPlaylistTracks(string $playlistId): array
@@ -171,7 +201,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
             $response = SpotifyPayload::object($this->reader()->getPlaylistTracks($playlistId, [
                 'limit' => 50,
                 'offset' => $offset,
-                'market' => $this->user->market,
+                'market' => $this->market(),
             ]));
             foreach ((array) $response->items as $item) {
                 $track = SpotifyPayload::object($item)->track ?? null;
@@ -224,7 +254,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function currentPlayback(): ?PlaybackState
     {
-        $playback = $this->control()->getMyCurrentPlaybackInfo(['market' => $this->user->market]);
+        $playback = $this->control()->getMyCurrentPlaybackInfo(['market' => $this->market()]);
         if ($playback === null || (array) $playback === []) {
             return null;
         }

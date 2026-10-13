@@ -4,16 +4,27 @@ namespace App\Services;
 
 use App\Enums\Purpose;
 use App\Models\Party;
+use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Models\User;
+use App\Mods\Contracts\ModifiesScore;
+use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Queue\CandidateFilter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Random\Randomizer;
+use Throwable;
 
 class QueueSelector
 {
     public const QUEUE_LENGTH = 1;
+
+    /** @var array<int, list<ModifiesScore>> */
+    protected array $modifiers = [];
+
+    protected bool $selecting = false;
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -31,6 +42,18 @@ class QueueSelector
 
     public function sendNext(Party $party): void
     {
+        $this->modifiers = [];
+        $this->selecting = true;
+        try {
+            $this->sendNextRequests($party);
+        } finally {
+            $this->selecting = false;
+            $this->modifiers = [];
+        }
+    }
+
+    protected function sendNextRequests(Party $party): void
+    {
         Log::debug("{$party}: Checking if we need to add tracks to queue");
         $current = $party->fresh() ?? $party;
         $provider = $this->providers->forParty($party, Purpose::Control);
@@ -45,9 +68,12 @@ class QueueSelector
 
         Log::debug("{$party}: Adding {$toAdd} tracks to the queue");
         $candidates = $this->candidates($party);
-        $selected = $current->weighted
-            ? $this->selectWeighted($candidates, $toAdd)
-            : $this->selectRanked($candidates, $toAdd);
+        $due = $candidates->filter(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->take($toAdd)->values();
+        $rest = $candidates->reject(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->values();
+        $remaining = $toAdd - $due->count();
+        $selected = $due->concat($remaining < 1 ? [] : ($current->weighted
+            ? $this->selectWeighted($rest, $remaining)
+            : $this->selectRanked($rest, $remaining)))->values();
 
         if ($selected->isEmpty()) {
             Log::debug("{$party}: Found no songs in the upcoming songs list to backfill");
@@ -74,31 +100,78 @@ class QueueSelector
     }
 
     /**
-     * The single step that turns a Request into the score used for selection. Mods (E8) override this.
+     * The single step that turns a Request into the score used for selection: the stored score passed through
+     * every ModifiesScore mod enabled for the Request's Party. Modifiers are resolved once per Party while a selection runs.
      */
     public function effectiveScore(UpcomingSong $request): int
     {
-        return $request->score;
+        $score = $request->score;
+        foreach ($this->scoreModifiers($request->party) as $modifier) {
+            try {
+                $score = $modifier->modifyScore($request->party, $request, $score);
+            } catch (Throwable $exception) {
+                Log::warning("{$request->party}: Mod ".$modifier::class." failed to modify a score: {$exception->getMessage()}");
+            }
+        }
+
+        return $score;
     }
 
     /**
-     * Waiting, released Requests ranked by Effective Score, then age.
+     * @return list<ModifiesScore>
+     */
+    protected function scoreModifiers(Party $party): array
+    {
+        if (! $this->selecting) {
+            return app(ModExtensions::class)->for($party, ModifiesScore::class);
+        }
+
+        return $this->modifiers[$party->id] ??= app(ModExtensions::class)->for($party, ModifiesScore::class);
+    }
+
+    /**
+     * Adds a Request to the Party's Queue; the entry point for core features and mods. Reuses a waiting Request for the Song.
+     *
+     * @param  array<string, mixed>  $attributes  Request attributes such as not_before, score_adjustment. A null $user makes a system Request.
+     */
+    public function addRequest(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
+    {
+        $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
+        if (! $request->exists) {
+            $request->party()->associate($party);
+            $request->song()->associate($song);
+            $request->user()->associate($user);
+        }
+        $request->forceFill($attributes)->save();
+        $request->updateScore();
+
+        return $request;
+    }
+
+    /**
+     * Waiting, unflagged, released Requests that pass every tagged candidate filter, Scheduled Requests first by time, then ranked by Effective Score and age.
      *
      * @return Collection<int, UpcomingSong>
      */
     protected function candidates(Party $party): Collection
     {
+        /** @var list<CandidateFilter> $filters */
+        $filters = iterator_to_array(app()->tagged('queue.candidate-filters'), false);
+
         $now = Carbon::now();
 
         return $party->upcoming()
             ->whereNull('queued_at')
+            ->whereNull('flagged_at')
             ->where(function ($query) use ($now): void {
                 $query->whereNull('not_before')->orWhere('not_before', '<=', $now);
             })
             ->with('song')
             ->get()
+            ->each(fn (UpcomingSong $request): UpcomingSong => $request->setRelation('party', $party))
+            ->filter(fn (UpcomingSong $request): bool => collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))
             ->map(fn (UpcomingSong $request): array => [$request, $this->effectiveScore($request)])
-            ->sort(fn (array $a, array $b): int => [$b[1], $a[0]->created_at, $a[0]->id] <=> [$a[1], $b[0]->created_at, $b[0]->id])
+            ->sort(fn (array $a, array $b): int => [$a[0]->scheduled_for === null ? 1 : 0, $a[0]->scheduled_for, $b[1], $a[0]->created_at, $a[0]->id] <=> [$b[0]->scheduled_for === null ? 1 : 0, $b[0]->scheduled_for, $a[1], $b[0]->created_at, $b[0]->id])
             ->map(fn (array $pair): UpcomingSong => $pair[0])
             ->values();
     }

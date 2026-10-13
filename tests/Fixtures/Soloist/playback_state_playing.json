@@ -1,0 +1,1 @@
+{"type":"playback_state","status":"playing","position":{"position_ms":1500,"timestamp_ms":1767268800000,"speed":1.0},"volume":60,"item":{"uri":"fake:track:t1","decorations":{"identity":{"name":"T"},"playback":{"duration_ms":180000}}},"logged_in":true}

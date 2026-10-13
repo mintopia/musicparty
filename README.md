@@ -95,13 +95,19 @@ musicparty.example.com {
 Caddy forwards upgrade headers automatically. For nginx, set `proxy_http_version 1.1`, `proxy_set_header Upgrade
 $http_upgrade`, `proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`.
 
-### Encore relay URL
+### Encore
 
-Encore connects to an instance's Pusher-compatible relay on the same hostname as the app:
+Encore pushes playback state to Music Party over the instance's Pusher-compatible relay, on the same hostname as the
+app. Each Party has its own private channel, `private-encore.<party code>`.
 
-```
-wss://<app host>/app/<REVERB_APP_KEY>
-```
+1. Open the Party's Settings page. The "Encore relay" card shows the relay URL, that the Pusher protocol must be on,
+   the channel and the app key. Instance admins also see the app secret.
+2. Enter those values in Encore. The relay URL has the form `wss://<app host>/app/<REVERB_APP_KEY>`.
+3. When Encore connects, Music Party asks it for a snapshot of its current state.
+
+While Encore is pushing state, polling is suppressed. Polling takes over again (if the Party's Polling setting is on)
+when Encore reports it is logged out, reports an `error`, or goes silent for more than 30 seconds. Pushed state
+resumes once Encore reports `auth_state` logged in again or sends fresh state.
 
 ## Usage Tips
 
@@ -196,23 +202,15 @@ service:
 
 ## Modding Support
 
-Music Party now supports mods! Simply write a service provider to provide commands and event listeners. There are some
-classes to help with this:
+Mods live in `app/Mods/<Name>/` and are discovered automatically (see ADR 0009). A mod needs:
 
-- `Mod` - Write an install method to create a Mod object for your mod. It should have a unique code.
-- `ModSetting` - Similar to provider settings, it allows you to define configuration for your mod. By setting it to
-  `private` you can use it as a variable to store data for your mod.
-- `PartyModSetting` - A value of a setting for the party.
+- `<Name>Mod` - the manifest, implementing `App\Mods\Contracts\Mod`: code, name, description, typed settings
+  (`SettingDefinition`), the extension points it implements, and `onEnable(Party)` / `onDisable(Party)` hooks.
+- `<Name>ServiceProvider` - registered automatically; use it for event listeners such as the hourly tick.
 
-The best way to work with mod settings in the context of a party is using the helper methods on the `Party` class, eg.
-
-```php
-$isEnabled = $party->getModSettingValue('testmod', 'enabled');
-$party->setModSetting('testmod', 'enabled', true);
-```
-
-There are new events that are emitted when a mod setting is updated or deleted for a party, and events emitted every
-minute, hour and day.
+`php artisan mods:sync` (run by the container entrypoint) keeps the `mods` and `mod_settings` tables in line with the
+manifests. A mod whose directory is removed is disabled for every Party and its settings are kept. Each Party enables
+mods individually (`App\Mods\PartyMods`); settings values are read with `ModSettingsStore`.
 
 ### Whamageddon
 

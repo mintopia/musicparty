@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Exceptions\VoteException;
+use App\Mods\ModExtensions;
 use Database\Factories\UpcomingSongFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,10 +19,11 @@ use Illuminate\Support\Carbon;
  * @property int $party_id
  * @property int $song_id
  * @property Carbon|null $not_before
+ * @property Carbon|null $scheduled_for
+ * @property Carbon|null $flagged_at
+ * @property string|null $flag_reason
  * @property int $score
  * @property int $score_adjustment
- * @property string|null $fallback_override
- * @property string|null $css_classes
  * @property int $upvotes
  * @property int $downvotes
  * @property Carbon|null $queued_at
@@ -40,9 +42,7 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCreatedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCssClasses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereDownvotes($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereFallbackOverride($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereNotBefore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong wherePartyId($value)
@@ -64,6 +64,8 @@ class UpcomingSong extends Model
     protected $casts = [
         'queued_at' => 'datetime',
         'not_before' => 'datetime',
+        'scheduled_for' => 'datetime',
+        'flagged_at' => 'datetime',
     ];
 
     /** @return BelongsTo<Party, $this> */
@@ -96,15 +98,18 @@ class UpcomingSong extends Model
         return $this->hasOne(PlayedSong::class);
     }
 
-    /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int, score: int, queued_at: string|null, user: string|null, fallback_name: string, css_classes: string} */
+    /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int, score: int, queued_at: string|null, user: string|null, fallback_name: string, css_classes: string, decoration: array{displayName?: string, label?: string, class?: string, accent?: string}|null} */
     public function toApi(): array
     {
         $data = $this->song->toApi();
         $data['score'] = $this->score;
         $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
+        $data['scheduled_for'] = $this->scheduled_for?->toIso8601String();
         $data['user'] = $this->user->nickname ?? null;
-        $data['fallback_name'] = $this->fallback_override ?? 'Fallback Track';
-        $data['css_classes'] = $this->css_classes ?? '';
+        $decoration = app(ModExtensions::class)->decorationFor($this->party, $this->song, $this);
+        $data['fallback_name'] = $decoration->displayName ?? 'Fallback Track';
+        $data['css_classes'] = $decoration->cssClass ?? '';
+        $data['decoration'] = $decoration?->toArray();
 
         return $data;
     }
@@ -125,6 +130,9 @@ class UpcomingSong extends Model
 
     protected function addVote(User $user, int $value): Vote
     {
+        if ($this->flagged_at !== null) {
+            throw new VoteException('This request is awaiting approval and cannot be voted on');
+        }
         $member = $this->party->getMember($user);
         if ($member->role->code === 'banned') {
             throw new VoteException('You are banned from voting for songs');

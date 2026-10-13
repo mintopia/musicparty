@@ -1,14 +1,15 @@
 <?php
 
-use App\Events\Cron\DayTickEvent;
-use App\Events\Cron\HourTickEvent;
-use App\Events\Cron\MinuteTickEvent;
+use App\Enums\ScheduleFrequency;
+use App\Events\Party\PlayerCommand;
 use App\Jobs\PartyUpdate;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Mods\ModScheduler;
 use App\Services\Music\Data\Device;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Console\Scheduling\Schedule;
@@ -51,9 +52,9 @@ dataset('scheduled entries', [
     'party fallback' => ['party:fallback', '* * * * *'],
     'party force' => ['party:force', '* * * * *'],
     'refresh tokens' => ['party:refreshaccesstokens', '* * * * *'],
-    'minute tick' => ['tick:minute', '* * * * *'],
-    'hour tick' => ['tick:hour', '0 * * * *'],
-    'day tick' => ['tick:day', '0 0 * * *'],
+    'minute mods' => ['mods:minute', '* * * * *'],
+    'hour mods' => ['mods:hour', '0 * * * *'],
+    'day mods' => ['mods:day', '0 0 * * *'],
 ]);
 
 it('registers every scheduled entry with its frequency and onOneServer', function (string $key, string $expression) {
@@ -67,20 +68,20 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
         'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force',
-        'party:refreshaccesstokens', 'tick:minute', 'tick:hour', 'tick:day',
+        'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day',
     ]);
 });
 
-it('dispatches the tick event from each tick entry', function (string $key, string $eventClass) {
-    Event::fake([$eventClass]);
+it('runs the mod scheduler for the matching frequency from each mod entry', function (string $key, ScheduleFrequency $frequency) {
+    $scheduler = Mockery::mock(ModScheduler::class);
+    $scheduler->shouldReceive('run')->once()->with($frequency);
+    app()->instance(ModScheduler::class, $scheduler);
 
     scheduledEvents()[$key]->run(app());
-
-    Event::assertDispatchedTimes($eventClass, 1);
 })->with([
-    'minute' => ['tick:minute', MinuteTickEvent::class],
-    'hour' => ['tick:hour', HourTickEvent::class],
-    'day' => ['tick:day', DayTickEvent::class],
+    'minute' => ['mods:minute', ScheduleFrequency::Minute],
+    'hour' => ['mods:hour', ScheduleFrequency::Hour],
+    'day' => ['mods:day', ScheduleFrequency::Day],
 ]);
 
 it('party:fallback dispatches updates for active polling parties never updated or older than 90 seconds', function () {
@@ -130,6 +131,15 @@ it('party:force starts a forced party whose device is online and stamps last_upd
         ->assertSuccessful();
 
     expect($party->fresh()->last_updated_at->gt(now()->subMinute()))->toBeTrue();
+});
+
+it('party:force sends play to a fresh pushed Player through the transport seam', function () {
+    Event::fake([PlayerCommand::class]);
+    $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
+
+    $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === PlaybackSource::Encore && $e->command === ['type' => 'play']);
 });
 
 it('party:force skips a party whose device is offline', function () {

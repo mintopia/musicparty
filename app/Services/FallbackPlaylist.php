@@ -59,7 +59,7 @@ class FallbackPlaylist
     public function backfill(Party $party): void
     {
         Log::debug("{$party}: Backfilling upcoming songs");
-        $toAdd = Party::MINIMUM_UPCOMING - $party->upcoming()->whereNull('queued_at')->count();
+        $toAdd = Party::MINIMUM_UPCOMING - $party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->count();
         if ($toAdd <= 0) {
             return;
         }

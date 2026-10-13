@@ -23,7 +23,7 @@ const make = (overrides: Partial<TrackAnnotation> = {}): TrackAnnotation => ({
         {id: 'r2', name: 'Two'},
     ],
     queue: {in_queue: false, upcoming_id: null, score: 0, vote: null, requested_by: null},
-    eligibility: {allowed: true, reason: null},
+    eligibility: {allowed: true, outcome: 'allow', reason: null},
     ...overrides,
 });
 
@@ -42,8 +42,26 @@ describe('TrackRow', () => {
         expect(wrapper.emitted('request')?.[0]).toEqual([track]);
     });
 
+    it('uses track.decoration and lets the decoration prop take precedence', () => {
+        const track = make({decoration: {displayName: 'Mod Name', label: 'Mod', class: 'mod-row', accent: '#ff0000'}});
+        const row = mount(TrackRow, {props: {track}});
+
+        expect(row.get('[data-test=track-name]').text()).toBe('Mod Name');
+        expect(row.get('[data-test=decoration-label]').text()).toBe('Mod');
+        expect(row.classes()).toContain('mod-row');
+        expect(row.attributes('style')).toContain('border-left');
+
+        const override = mount(TrackRow, {props: {track, decoration: {displayName: 'Prop Name'}}});
+
+        expect(override.get('[data-test=track-name]').text()).toBe('Prop Name');
+        expect(override.find('[data-test=decoration-label]').exists()).toBe(false);
+        expect(override.classes()).not.toContain('mod-row');
+    });
+
     it('disables request and shows the reason when blocked', async () => {
-        const wrapper = mount(TrackRow, {props: {track: make({eligibility: {allowed: false, reason: 'Too long'}})}});
+        const wrapper = mount(TrackRow, {
+            props: {track: make({eligibility: {allowed: false, outcome: 'reject', reason: 'Too long'}})},
+        });
 
         expect(wrapper.get('[data-test=reason]').text()).toContain('Too long');
         expect(wrapper.get('[data-test=request]').attributes('disabled')).toBeDefined();
@@ -53,6 +71,15 @@ describe('TrackRow', () => {
 
     it('labels the button and row when approval is needed', () => {
         const wrapper = mount(TrackRow, {props: {track: make(), needsApproval: true}});
+
+        expect(wrapper.find('[data-test=needs-approval]').exists()).toBe(true);
+        expect(wrapper.get('[data-test=request]').text()).toContain('Request approval');
+    });
+
+    it('shows needs approval for a flagged eligibility outcome', () => {
+        const wrapper = mount(TrackRow, {
+            props: {track: make({eligibility: {allowed: true, outcome: 'flag', reason: 'Needs a mod'}})},
+        });
 
         expect(wrapper.find('[data-test=needs-approval]').exists()).toBe(true);
         expect(wrapper.get('[data-test=request]').text()).toContain('Request approval');
@@ -130,6 +157,7 @@ describe('TrackRow', () => {
         });
 
         expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual([
+            '/albums/a1',
             '/artists/r1',
             '/artists/r2',
             '/albums/a1',

@@ -18,6 +18,10 @@ final readonly class TrackAnnotation
         public ?string $reason,
         public ?string $externalUrl = null,
         public string $providerName = '',
+        public bool $flagged = false,
+        public bool $awaitingApproval = false,
+        /** @var array<string, string>|null */
+        public ?array $decoration = null,
     ) {}
 
     /**

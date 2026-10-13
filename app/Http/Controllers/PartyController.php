@@ -12,16 +12,15 @@ use App\Http\Resources\TrackAnnotationResource;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
 use App\Jobs\PartyUpdate;
-use App\Models\Mod;
-use App\Models\ModSetting;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\UpcomingSong;
-use App\Services\ModSettingsStore;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
+use App\Support\LeakyBucket;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -53,7 +52,6 @@ class PartyController extends Controller
 
         return view('parties.create', [
             'party' => new Party,
-            'mods' => Mod::all(),
             'playlists' => $options->playlists($draft),
             'devices' => $options->devices($draft),
             'providerIds' => $factory->selectableIds(),
@@ -77,6 +75,7 @@ class PartyController extends Controller
         $upcomingSongs = $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
             ->whereNull('queued_at')
+            ->whereNull('flagged_at')
             ->orderBy('score', 'desc')
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
@@ -97,14 +96,6 @@ class PartyController extends Controller
             'upcoming' => $upcoming->toArray(),
             'canManage' => $party->canBeManagedBy($request->user()),
             'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && app(MusicProviderFactory::class)->partyNeedsRelink($party),
-        ]);
-    }
-
-    public function player(Request $request, Party $party): View
-    {
-        return view('parties.player', [
-            'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
         ]);
     }
 
@@ -153,7 +144,9 @@ class PartyController extends Controller
         }
 
         $results = null;
-        if ($params['query']) {
+        if ($params['query'] && ! $this->withinSearchLimit($party, $member)) {
+            session()->now('errorMessage', 'The music provider is busy right now. Please try again shortly.');
+        } elseif ($params['query']) {
             try {
                 $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
                 $items = $eligibility->annotate($party, $member, $found->items);
@@ -181,11 +174,138 @@ class PartyController extends Controller
         ]);
     }
 
+    public function album(SearchRequest $request, Party $party, string $album, MusicProviderFactory $factory, TrackEligibility $eligibility): Response|\Symfony\Component\HttpFoundation\Response
+    {
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
+        $query = $request->input('query');
+
+        $props = [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $party->canBeManagedBy($request->user()),
+            ],
+            'query' => is_string($query) ? $query : null,
+            'album' => null,
+            'tracks' => null,
+            'retry' => false,
+            'playerState' => $party->getState(),
+        ];
+
+        if (! $this->withinSearchLimit($party, $member)) {
+            return Inertia::render('Parties/Album', ['retry' => true] + $props);
+        }
+
+        try {
+            $found = $factory->forParty($party, Purpose::Search)->getAlbum($album);
+        } catch (ProviderRelinkRequiredException) {
+            session()->now('errorMessage', 'The music provider needs re-linking before albums are available.');
+
+            return Inertia::render('Parties/Album', $props);
+        } catch (ProviderBackoffException) {
+            return Inertia::render('Parties/Album', ['retry' => true] + $props);
+        }
+
+        if ($found === null) {
+            return Inertia::render('Parties/Album', $props)->toResponse($request)->setStatusCode(404);
+        }
+
+        $annotations = $eligibility->annotate($party, $member, $found->tracks);
+        $tracks = new LengthAwarePaginator($annotations, count($annotations), max(count($annotations), 1), 1)
+            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+
+        return Inertia::render('Parties/Album', [
+            'album' => [
+                'id' => $found->ref->id,
+                'name' => $found->ref->name,
+                'image_url' => $found->ref->imageUrl,
+                'artists' => array_map(fn ($artist): array => ['id' => $artist->id, 'name' => $artist->name], $found->artists),
+                'release_year' => $found->releaseDate !== null ? substr($found->releaseDate, 0, 4) : null,
+                'track_count' => $found->totalTracks,
+            ],
+            'tracks' => $tracks,
+        ] + $props);
+    }
+
+    public function artist(SearchRequest $request, Party $party, string $artist, MusicProviderFactory $factory, TrackEligibility $eligibility): Response|\Symfony\Component\HttpFoundation\Response
+    {
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
+        $query = $request->input('query');
+
+        $props = [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $party->canBeManagedBy($request->user()),
+            ],
+            'query' => is_string($query) ? $query : null,
+            'artist' => null,
+            'tracks' => null,
+            'albums' => null,
+            'retry' => false,
+            'playerState' => $party->getState(),
+        ];
+
+        if (! $this->withinSearchLimit($party, $member)) {
+            return Inertia::render('Parties/Artist', ['retry' => true] + $props);
+        }
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 12;
+
+        try {
+            $provider = $factory->forParty($party, Purpose::Search);
+            $found = $provider->getArtist($artist);
+            if ($found !== null) {
+                $topTracks = $provider->getArtistTopTracks($artist);
+                $albumPage = $provider->getArtistAlbums($artist, $page, $perPage);
+            }
+        } catch (ProviderRelinkRequiredException) {
+            session()->now('errorMessage', 'The music provider needs re-linking before artists are available.');
+
+            return Inertia::render('Parties/Artist', $props);
+        } catch (ProviderBackoffException) {
+            return Inertia::render('Parties/Artist', ['retry' => true] + $props);
+        }
+
+        if ($found === null) {
+            return Inertia::render('Parties/Artist', $props)->toResponse($request)->setStatusCode(404);
+        }
+
+        $annotations = $eligibility->annotate($party, $member, $topTracks);
+        $tracks = new LengthAwarePaginator($annotations, count($annotations), max(count($annotations), 1), 1)
+            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+        $albums = new LengthAwarePaginator($albumPage->items, $albumPage->total, $perPage, $page)
+            ->setPath(route('parties.artists.show', ['party' => $party->code, 'artist' => $artist]))
+            ->appends(array_filter(['query' => $props['query']]))
+            ->through(fn ($album): array => ['id' => $album->id, 'name' => $album->name, 'image_url' => $album->imageUrl]);
+
+        return Inertia::render('Parties/Artist', [
+            'artist' => [
+                'id' => $found->ref->id,
+                'name' => $found->ref->name,
+                'image_url' => $found->imageUrl,
+            ],
+            'tracks' => $tracks,
+            'albums' => $albums,
+        ] + $props);
+    }
+
+    protected function withinSearchLimit(Party $party, PartyMember $member): bool
+    {
+        return (new LeakyBucket(
+            "search:{$party->getKey()}:{$member->user_id}",
+            (int) config('musicparty.search_burst'),
+            (float) config('musicparty.search_leak_per_second'),
+        ))->attempt();
+    }
+
     public function edit(Party $party, PartyProviderOptions $options): View
     {
         return view('parties.edit', [
             'party' => $party,
-            'mods' => Mod::all(),
             'canManage' => true,
             'playlists' => $options->playlists($party),
             'devices' => $options->devices($party),
@@ -203,6 +323,12 @@ class PartyController extends Controller
     protected function updateObject(Party $party, Request $request): void
     {
         $party->name = $request->input('name');
+        if ($request->filled('country')) {
+            $party->country = strtoupper($request->string('country')->toString());
+        } elseif (! $party->exists) {
+            $party->country = strtoupper($party->user->market ?: 'GB');
+        }
+        $party->timezone = $request->input('timezone') ?: null;
         if ($request->input('backup_playlist_id') === 'other') {
             $party->backup_playlist_id = $request->input('custom_backup_playlist_id');
         } else {
@@ -215,6 +341,7 @@ class PartyController extends Controller
         $party->force = (bool) $request->input('force');
         $party->poll = (bool) $request->input('poll');
         $party->show_qrcode = (bool) $request->input('show_qrcode');
+        $party->flag_requests = (bool) $request->input('flag_requests');
         $deviceId = $request->input('device_id') ?: null;
         if ($deviceId === null) {
             $party->device_name = null;
@@ -249,15 +376,5 @@ class PartyController extends Controller
             $party->history_playlist_id = null;
         }
         $party->save();
-
-        $store = app(ModSettingsStore::class);
-        $modSettings = ModSetting::wherePrivate(false)->with('mod')->get();
-        foreach ($modSettings as $modSetting) {
-            $currentValue = $store->value($party, $modSetting->mod, $modSetting->code);
-            $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
-            if ($value !== $currentValue) {
-                $store->set($party, $modSetting->mod, $modSetting->code, $value);
-            }
-        }
     }
 }

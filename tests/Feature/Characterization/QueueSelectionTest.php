@@ -5,6 +5,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Services\FallbackPlaylist;
+use App\Services\ModDataStore;
 use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
@@ -469,10 +470,10 @@ it('ranks by the overridable Effective Score rather than the stored score', func
     expect(sentIds())->toBe(['LOW']);
 });
 
-it('keeps fallback_override as display metadata and does not affect selection', function () {
+it('keeps mod decoration data as display metadata and does not affect selection', function () {
     $party = selectionParty();
     queueWith(['NOW']);
-    waitingRequest($party, 'A', 1, ['fallback_override' => 'Mystery Gift']);
+    app(ModDataStore::class)->set(waitingRequest($party, 'A', 1), 'whamageddon', 'fallback_override', 'Mystery Gift');
     waitingRequest($party, 'B', 5);
 
     runSync($party);

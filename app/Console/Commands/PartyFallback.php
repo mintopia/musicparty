@@ -36,7 +36,7 @@ class PartyFallback extends Command
 
         $factory = app(MusicProviderFactory::class);
         foreach ($parties as $party) {
-            if ($factory->partyNeedsRelink($party)) {
+            if ($party->hasFreshPushedPlayback() || $factory->partyNeedsRelink($party)) {
                 continue;
             }
 

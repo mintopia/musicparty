@@ -30,6 +30,33 @@
         </div>
     </div>
     <div class="mb-3">
+        <label class="form-label required">Country</label>
+        <div>
+            <input type="text" name="country" maxlength="2" class="form-control @error('country') is-invalid @enderror"
+                   placeholder="GB" value="{{ old('country', $party->country ?? auth()->user()?->market ?? 'GB') }}">
+            <small class="form-hint">Two-letter country code used for search and browse results</small>
+            @error('country')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+    <div class="mb-3">
+        <label class="form-label">Timezone</label>
+        <div>
+            <input type="text" name="timezone" list="timezone-options" class="form-control @error('timezone') is-invalid @enderror"
+                   placeholder="{{ app(\App\Services\PartyTimezone::class)->instance() }}" value="{{ old('timezone', $party->timezone ?? '') }}">
+            <datalist id="timezone-options">
+                @foreach(\DateTimeZone::listIdentifiers() as $identifier)
+                    <option value="{{ $identifier }}"></option>
+                @endforeach
+            </datalist>
+            <small class="form-hint">Used by time-based mods and scheduled requests. Leave blank to use the instance timezone</small>
+            @error('timezone')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+    <div class="mb-3">
         <label class="form-label required">Backup Playlist</label>
         <div>
             <select id="backup_playlist_id" name="backup_playlist_id" class="form-control @error('backup_playlist_id') is-invalid @enderror">
@@ -88,6 +115,12 @@
             <input type="checkbox" class="form-check-input" name="show_qrcode" value="1"
                    @if(old('show_qrcode', $party->show_qrcode)) checked @endif>
             Show QR Code on TV view
+        </label>
+
+        <label class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" name="flag_requests" value="1"
+                   @if(old('flag_requests', $party->flag_requests)) checked @endif>
+            Hold flagged requests for manager approval
         </label>
 
         <h2 class="mt-4">Restrictions</h2>
@@ -215,45 +248,6 @@
             @enderror
         </div>
     </div>
-
-    @foreach ($mods as $mod)
-        <h2 class="mt-4">{{ $mod->name }}</h2>
-
-        @if ($mod->description)
-            <p>
-                {{ $mod->description }}
-            </p>
-        @endif
-        @foreach ($mod->settings()->wherePrivate(false)->get() as $setting)
-            <div class="mb-3">
-                @if ($setting->type === \App\Enums\SettingType::stBoolean)
-                    <label class="form-check form-switch">
-                        <input type="checkbox" class="form-check-input" name="mods_{{ $mod->code }}_{{ $setting->code }}" value="1"
-                               @if(old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code))) checked @endif>
-                        {{ $setting->name }}
-                    </label>
-                    @if ($setting->description)
-                        <small class="form-hint">{{ $setting->description }}</small>
-                    @endif
-                    @error("mods_{$mod->code}_{$setting->code}")
-                    <p class="invalid-feedback">{{ $message }}</p>
-                    @enderror
-                @else
-                    <label class="form-label required">{{ $setting->name }}</label>
-                    <div>
-                        <input type="text" name="mods_{{ $mod->code }}_{{ $setting->code }}" class="form-control @error("mods_{$mod->code}_{$setting->code}") is-invalid @enderror"
-                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code) ?? '') }}">
-                        @if ($setting->description)
-                            <small class="form-hint">{{ $setting->description }}</small>
-                        @endif
-                        @error("mods_{$mod->code}_{$setting->code}")
-                        <p class="invalid-feedback">{{ $message }}</p>
-                        @enderror
-                    </div>
-                @endif
-            </div>
-        @endforeach
-    @endforeach
 </div>
 
 

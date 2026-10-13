@@ -176,3 +176,20 @@ it('swallows a provider-neutral relink in both party jobs', function () {
     $fallback->shouldHaveReceived('refresh')->once();
     $sync->shouldHaveReceived('sync')->once();
 });
+
+it('stores the Party country from the form and defaults it to the owner market', function () {
+    $this->owner->forceFill(['market' => 'NZ'])->save();
+
+    $this->actingAs($this->owner)->post(route('parties.store'), payload('spotify', 'sp-list') + ['country' => 'fr'])
+        ->assertSessionHasNoErrors();
+    expect(Party::query()->latest('id')->firstOrFail()->country)->toBe('FR');
+
+    $this->actingAs($this->owner)->post(route('parties.store'), payload('spotify', 'sp-list'))
+        ->assertSessionHasNoErrors();
+    expect(Party::query()->latest('id')->firstOrFail()->country)->toBe('NZ');
+});
+
+it('rejects an invalid Party country', function () {
+    $this->actingAs($this->owner)->post(route('parties.store'), payload('spotify', 'sp-list') + ['country' => 'GBR'])
+        ->assertSessionHasErrors('country');
+});

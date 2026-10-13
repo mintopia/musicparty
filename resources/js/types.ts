@@ -48,7 +48,18 @@ export interface TrackAnnotation {
         vote: number | null;
         requested_by: string | null;
     };
-    eligibility: {allowed: boolean; reason: string | null};
+    eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
+    awaiting_approval?: boolean;
+    flagged_request_id?: number | null;
+    decoration?: TrackDecoration | null;
+}
+
+export interface FlaggedRequest {
+    id: number;
+    reason: string | null;
+    flagged_at: string;
+    requester: {id: number; name: string};
+    track: TrackAnnotation;
 }
 
 export interface TrackDecoration {
@@ -90,12 +101,13 @@ export interface LegacyTrack {
     user: string | null;
     fallback_name: string | null;
     css_classes: string;
+    decoration?: TrackDecoration | null;
 }
 
 export interface LegacyPlaybackStatus {
     isPlaying: boolean;
-    updatedAt: string;
-    progress: number;
+    sampledAt: string;
+    progressMs: number;
     length: number;
 }
 
@@ -131,6 +143,7 @@ export interface LegacyUpcomingSong extends LegacyTrack {
     id: number;
     vote: number;
     created_at: string;
+    scheduled_for?: string | null;
 }
 
 export interface PlaybackState {
@@ -145,4 +158,33 @@ export interface PlaybackState {
     deviceId: string | null;
     deviceName: string | null;
     source: string;
+}
+
+export type ModSettingType =
+    'string' | 'boolean' | 'integer' | 'float' | 'datetime' | 'track' | 'time_of_day' | 'secret';
+
+export interface ModSetting {
+    code: string;
+    name: string;
+    description: string;
+    type: ModSettingType;
+    value: unknown;
+    has_value: boolean;
+    default: unknown;
+    required: boolean;
+}
+
+export interface PartyMod {
+    code: string;
+    name: string;
+    description: string;
+    enabled: boolean;
+    settings: ModSetting[];
+}
+
+export interface AdminMod {
+    code: string;
+    name: string;
+    description: string;
+    settings: ModSetting[];
 }

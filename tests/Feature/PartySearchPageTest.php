@@ -2,15 +2,11 @@
 
 use App\Enums\PartyModerationType;
 use App\Enums\Purpose;
-use App\Enums\SettingType;
-use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
 use App\Models\PartyModeration;
 use App\Models\PlayedSong;
-use App\Models\ProviderSetting;
-use App\Models\SocialProvider;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
@@ -22,48 +18,11 @@ use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
-use Illuminate\Support\Str;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeSpotify;
 
-function pageSearchLinkAccount(User $user, string $providerCode, string $token): void
-{
-    $provider = SocialProvider::query()->where('code', $providerCode)->first() ?? SocialProvider::factory()->create(['code' => $providerCode]);
-    foreach (['client_id', 'client_secret'] as $code) {
-        $setting = new ProviderSetting;
-        $setting->forceFill(['code' => $code, 'name' => $code, 'type' => SettingType::stString, 'value' => 'test']);
-        $setting->provider()->associate($provider);
-        $setting->save();
-    }
-    LinkedAccount::factory()->create([
-        'user_id' => $user->id,
-        'social_provider_id' => $provider->id,
-        'access_token' => $token,
-        'refresh_token' => 'refresh',
-        'access_token_expires_at' => now()->addHour(),
-    ]);
-}
-
-function pageSearchParty(User $owner, array $attributes = []): Party
-{
-    $party = new Party;
-    $party->forceFill(array_merge(['code' => strtoupper(Str::random(4)), 'name' => 'Search Party', 'user_id' => $owner->id, 'provider_id' => 'spotify', 'active' => false, 'allow_requests' => true, 'explicit' => true], $attributes));
-    Party::withoutEvents(fn () => $party->save());
-
-    return $party;
-}
-
-function pageSearchMember(Party $party, string $roleCode = 'member'): PartyMember
-{
-    $role = PartyMemberRole::query()->where('code', $roleCode)->first() ?? PartyMemberRole::query()->forceCreate(['code' => $roleCode, 'name' => ucfirst($roleCode)]);
-    $member = new PartyMember;
-    $member->party_id = $party->id;
-    $member->user_id = User::factory()->create(['first_login' => false])->id;
-    $member->role_id = $role->id;
-    $member->save();
-
-    return $member;
-}
+require_once __DIR__.'/../Support/PartyPageHelpers.php';
 
 function pageSearchUpcoming(Party $party, object $track, ?User $requester = null, int $score = 3, bool $queued = false): UpcomingSong
 {
@@ -223,3 +182,38 @@ it('reports every eligibility reason on the search page', function (string $reas
         $moderation->save();
     }],
 ]);
+
+it('searches in the Party country rather than the owner market', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose, ?string $market = null) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose, $market));
+    $this->owner->forceFill(['market' => 'GB'])->save();
+    $this->party->forceFill(['country' => 'DE'])->save();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertOk();
+
+    expect($this->fake->callsTo('search')[0][2]['market'])->toBe('DE');
+});
+
+it('shows the try again shortly state once a member exhausts the search bucket', function () {
+    config(['musicparty.search_burst' => 2, 'musicparty.search_leak_per_second' => 0.001]);
+    Cache::flush();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+
+    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
+    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
+    expect($this->fake->callsTo('search'))->toHaveCount(2);
+
+    $this->actingAs($this->member->user, 'sanctum')->get($url)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parties/Search')
+            ->where('results', null)
+            ->where('flash.error', 'The music provider is busy right now. Please try again shortly.'));
+    expect($this->fake->callsTo('search'))->toHaveCount(2);
+
+    $other = pageSearchMember($this->party);
+    $this->actingAs($other->user, 'sanctum')->get($url)->assertInertia(fn (Assert $page) => $page->where('results.current_page', 1));
+});

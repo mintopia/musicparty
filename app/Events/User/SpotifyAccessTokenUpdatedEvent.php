@@ -16,7 +16,7 @@ class SpotifyAccessTokenUpdatedEvent implements ShouldBroadcast
     /**
      * Create a new event instance.
      */
-    public function __construct(protected User $user, protected string $accessToken)
+    public function __construct(public User $user, public string $accessToken)
     {
         //
     }

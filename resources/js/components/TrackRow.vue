@@ -9,11 +9,12 @@ const props = withDefaults(
         requesting?: boolean;
         needsApproval?: boolean;
         awaitingApproval?: boolean;
+        hideActions?: boolean;
         decoration?: TrackDecoration;
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
     }>(),
-    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false},
+    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false, hideActions: false},
 );
 
 const emit = defineEmits<{
@@ -31,10 +32,13 @@ const duration = computed(() => {
     return `${Math.floor(totalSeconds / 60)}:${seconds < 10 ? '0' : ''}${seconds}`;
 });
 
+const isAwaiting = computed(() => props.awaitingApproval || props.track.awaiting_approval === true);
 const vote = computed(() => props.track.queue.vote ?? 0);
-const displayName = computed(() => props.decoration?.displayName ?? props.track.name);
+const activeDecoration = computed(() => props.decoration ?? props.track.decoration ?? undefined);
+const displayName = computed(() => activeDecoration.value?.displayName ?? props.track.name);
 const canRequest = computed(() => props.track.eligibility.allowed && !props.requesting);
-const requestLabel = computed(() => (props.needsApproval ? 'Request approval' : 'Add'));
+const flagged = computed(() => props.needsApproval || props.track.eligibility.outcome === 'flag');
+const requestLabel = computed(() => (flagged.value ? 'Request approval' : 'Add'));
 
 const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 </script>
@@ -42,21 +46,27 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 <template>
     <div
         class="list-group-item"
-        :class="decoration?.class"
-        :style="decoration?.accent ? {borderLeft: `4px solid ${decoration.accent}`} : undefined"
+        :class="activeDecoration?.class"
+        :style="activeDecoration?.accent ? {borderLeft: `4px solid ${activeDecoration.accent}`} : undefined"
         data-test="track-row"
     >
         <div class="row g-2 align-items-center">
             <div class="col-auto">
-                <img
-                    v-if="track.album.image_url"
-                    :src="track.album.image_url"
-                    :title="track.album.name"
-                    :alt="track.album.name"
-                    class="rounded"
-                    width="60"
-                    height="60"
-                />
+                <component
+                    :is="albumRoute ? 'a' : 'span'"
+                    :href="albumRoute ? href(albumRoute(track.album.id)) : undefined"
+                    data-test="track-art"
+                >
+                    <img
+                        v-if="track.album.image_url"
+                        :src="track.album.image_url"
+                        :title="track.album.name"
+                        :alt="track.album.name"
+                        class="rounded"
+                        width="60"
+                        height="60"
+                    />
+                </component>
             </div>
             <div class="col">
                 <div>
@@ -64,8 +74,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <span v-if="track.explicit" class="badge bg-secondary ms-1" data-test="explicit-badge"
                         >Explicit</span
                     >
-                    <span v-if="decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{
-                        decoration.label
+                    <span v-if="activeDecoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{
+                        activeDecoration.label
                     }}</span>
                 </div>
                 <div class="text-secondary" data-test="track-artists">
@@ -88,7 +98,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <i class="icon ti ti-alert-triangle"></i>
                         {{ track.eligibility.reason }}
                     </span>
-                    <span v-else-if="needsApproval" data-test="needs-approval">Needs approval</span>
+                    <span v-else-if="flagged" data-test="needs-approval">Needs approval</span>
                 </div>
                 <slot name="decoration" />
             </div>
@@ -134,9 +144,9 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <span data-test="score">{{ track.queue.score }}</span>
                 </template>
             </div>
-            <div v-else class="col-auto text-center w-8">
+            <div v-else-if="!hideActions" class="col-auto text-center w-8">
                 <button
-                    v-if="awaitingApproval"
+                    v-if="isAwaiting"
                     type="button"
                     class="btn btn-outline-secondary ms-2 w-100"
                     data-test="withdraw"
@@ -157,7 +167,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 </button>
             </div>
         </div>
-        <div v-if="awaitingApproval && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
+        <div v-if="isAwaiting && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
             Awaiting approval
         </div>
     </div>
