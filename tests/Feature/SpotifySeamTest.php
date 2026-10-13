@@ -8,6 +8,8 @@ use App\Models\SocialProvider;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
@@ -60,7 +62,7 @@ function seamUpcoming(Party $party, string $spotifyId, int $score = 5): Upcoming
 
 function seamQueueTracks(Party $party): void
 {
-    (new ReflectionMethod($party, 'addTracksToQueue'))->invoke($party);
+    app(QueueSelector::class)->sendNext($party);
 }
 
 it('blocks stray http requests', function () {
@@ -129,17 +131,19 @@ it('selects weighted queue songs exactly with a seeded randomizer', function () 
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(7)));
 
     seamQueueTracks($party->refresh());
-    $first = $fake->callsTo('queue');
+    $first = array_map(fn ($track) => $track->id, app(FakeMusicProvider::class)->sentToPlayer());
 
     foreach ($songs as $s) {
         $s->queued_at = null;
         $s->save();
     }
     $fake->calls = [];
+    app()->forgetInstance(FakeMusicProvider::class);
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(7)));
     seamQueueTracks($party->refresh());
 
-    expect($first)->not->toBeEmpty()->and($fake->callsTo('queue'))->toBe($first);
+    $second = array_map(fn ($track) => $track->id, app(FakeMusicProvider::class)->sentToPlayer());
+    expect($first)->not->toBeEmpty()->and($second)->toBe($first);
 });
 
 it('freezes time with travelTo, which is reset after each test', function () {
