@@ -103,14 +103,6 @@ class PartyController extends Controller
         ]);
     }
 
-    public function player(Request $request, Party $party): View
-    {
-        return view('parties.player', [
-            'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
-        ]);
-    }
-
     public function tv(Party $party): View
     {
         return view('parties.tv', [

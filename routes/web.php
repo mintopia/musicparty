@@ -16,6 +16,7 @@ use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\WebPlayerController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
 
@@ -46,9 +47,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(['PATCH', 'PUT'], '/profile', [UserController::class, 'update'])->name('user.profile.update');
 
         Route::resource('parties', PartyController::class)->except(['destroy']);
-        Route::get('parties/{party}/player', [PartyController::class, 'player'])
-            ->middleware('can:player,party')
-            ->name('parties.player');
+        Route::middleware('can:player,party')->group(function () {
+            Route::get('parties/{party}/player', [WebPlayerController::class, 'show'])->name('parties.player');
+            Route::get('parties/{party}/player/token', [WebPlayerController::class, 'token'])->name('parties.player.token');
+        });
         Route::middleware('can:update,party')->group(function () {
             Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
