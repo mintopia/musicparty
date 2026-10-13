@@ -6,7 +6,8 @@
         "build": "vite build"
     },
     "devDependencies": {
-        "@tabler/core": "^1.0.0-beta20",
+        "@tabler/core": "^1.6.1",
+        "@tabler/icons-webfont": "^3.49.0",
         "@ts-pro/vue-eternal-loading": "github:ts-pro/vue-eternal-loading",
         "@vitejs/plugin-vue": "^6.0.10",
         "autosize": "^6.0.1",
