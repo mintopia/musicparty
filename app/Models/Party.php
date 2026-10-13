@@ -22,6 +22,7 @@ use NumPHP\LinAlg\LinAlg;
  * @property int $id
  * @property string $code
  * @property string $name
+ * @property string $provider_id
  * @property int $user_id
  * @property int|null $song_id
  * @property Carbon|null $song_started_at

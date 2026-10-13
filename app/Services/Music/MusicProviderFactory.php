@@ -4,6 +4,7 @@ namespace App\Services\Music;
 
 use App\Enums\Purpose;
 use App\Models\Party;
+use App\Models\Setting;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
@@ -33,6 +34,27 @@ class MusicProviderFactory
     public function ids(): array
     {
         return array_keys($this->registry);
+    }
+
+    public function isEnabled(string $id): bool
+    {
+        $raw = Setting::query()->where('code', "provider-{$id}-enabled")->first()?->getRawOriginal('value');
+
+        // SettingValue reads a stored false back as true, so compare the serialized value.
+        return $raw !== 'b:0;';
+    }
+
+    /**
+     * Ids a Party may be created with: registered, admin-enabled, and Fake only in `local`.
+     *
+     * @return list<string>
+     */
+    public function selectableIds(): array
+    {
+        return array_values(array_filter(
+            $this->ids(),
+            fn (string $id): bool => $this->isEnabled($id) && ($id !== 'fake' || app()->environment('local')),
+        ));
     }
 
     public function forParty(Party $party, Purpose $purpose): MusicProvider&ProviderPlayback

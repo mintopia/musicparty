@@ -4,8 +4,10 @@ namespace App\Http\Requests;
 
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
+use App\Services\Music\MusicProviderFactory;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PartyRequest extends FormRequest
 {
@@ -17,6 +19,13 @@ class PartyRequest extends FormRequest
     public function authorize(): bool
     {
         return true;
+    }
+
+    protected function prepareForValidation(): void
+    {
+        if (! $this->route('party') instanceof Party && ! $this->has('provider_id')) {
+            $this->merge(['provider_id' => MusicProviderFactory::DEFAULT_PROVIDER_ID]);
+        }
     }
 
     /**
@@ -36,6 +45,9 @@ class PartyRequest extends FormRequest
         }
 
         return [
+            'provider_id' => $party instanceof Party
+                ? 'prohibited'
+                : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
             'name' => 'required|string|max:50',
             'backup_playlist_id' => [
                 'required',
