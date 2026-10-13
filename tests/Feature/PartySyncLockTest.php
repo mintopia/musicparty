@@ -1,6 +1,5 @@
 <?php
 
-use App\Services\Music\MusicProviderFactory;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Song;
@@ -10,6 +9,7 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\PlaybackSync;
 use Carbon\CarbonImmutable;
