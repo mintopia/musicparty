@@ -4,6 +4,8 @@ use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\Music\Data\Track;
+use App\Services\Music\Fake\FakeMusicProvider;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -82,28 +84,31 @@ it('sends exactly one track when a concurrent sync races the Send to Player', fu
 
     $racer = Party::findOrFail($this->party->id);
     $racerResults = [];
-    $fake = new class($racer, $racerResults) extends FakeSpotify
+    $fake = new class($racer, $racerResults) extends FakeMusicProvider
     {
-        public function __construct(private Party $racer, public array &$racerResults) {}
+        public function __construct(private Party $racer, public array &$racerResults)
+        {
+            parent::__construct();
+        }
 
-        public function queue(string $trackUri, string $deviceId = ''): bool
+        public function sendToPlayer(Track $track): void
         {
             $this->racerResults[] = $this->racer->tryUpdateState();
-
-            return parent::queue($trackUri, $deviceId);
+            parent::sendToPlayer($track);
         }
     };
-    app()->bind(SpotifyWebAPI::class, fn () => $fake);
+    app()->forgetInstance(FakeMusicProvider::class);
+    app()->scoped(FakeMusicProvider::class, fn () => $fake);
 
     expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue();
 
-    expect($fake->callsTo('queue'))->toHaveCount(1)
+    expect($fake->callsTo('sendToPlayer'))->toHaveCount(1)
         ->and($racerResults)->toBe([false])
         ->and($upcoming->fresh()->queued_at)->not->toBeNull();
 
     Party::findOrFail($this->party->id)->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
     expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue()
-        ->and($fake->callsTo('queue'))->toHaveCount(1);
+        ->and($fake->callsTo('sendToPlayer'))->toHaveCount(1);
 });
 
 it('declares bounded retries with exponential backoff', function () {

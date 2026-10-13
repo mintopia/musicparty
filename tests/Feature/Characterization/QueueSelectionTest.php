@@ -4,8 +4,13 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
+use App\Services\FallbackPlaylist;
 use App\Services\Music\Data\Playlist;
+use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\QueueSelector;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -50,9 +55,9 @@ function queueWith(FakeSpotify $fake, array $trackIds): void
     ]);
 }
 
-function sentIds(FakeSpotify $fake): array
+function sentIds(?FakeSpotify $fake = null): array
 {
-    return array_map(fn (array $args) => $args[0], $fake->callsTo('queue'));
+    return array_map(fn (Track $track) => $track->id, app(FakeMusicProvider::class)->sentToPlayer());
 }
 
 beforeEach(function () {
@@ -78,7 +83,7 @@ it('sends the bare Spotify track id to the queue endpoint and stamps queued_at o
 
     $party->updateState();
 
-    expect($fake->callsTo('queue'))->toBe([['ONE']])
+    expect(sentIds($fake))->toBe(['ONE'])
         ->and($request->fresh()->queued_at->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
@@ -87,7 +92,7 @@ it('sends nothing and does not call queue when there are no waiting requests', f
 
     $party->updateState();
 
-    expect($fake->callsTo('queue'))->toBe([]);
+    expect(sentIds($fake))->toBe([]);
 });
 
 it('does not resend a Request that already has queued_at set', function () {
@@ -126,7 +131,7 @@ it('does nothing when the party is inactive', function () {
 
     $party->updateState();
 
-    expect($fake->callsTo('queue'))->toBe([])
+    expect(sentIds($fake))->toBe([])
         ->and($fake->callsTo('getMyQueue'))->toBe([]);
 });
 
@@ -138,7 +143,7 @@ it('sends two requests when the Spotify queue is empty because QUEUE_LENGTH minu
 
     $party->updateState();
 
-    expect(Party::QUEUE_LENGTH)->toBe(1)
+    expect(QueueSelector::QUEUE_LENGTH)->toBe(1)
         ->and(sentIds($fake))->toBe(['A', 'B']);
 });
 
@@ -171,7 +176,7 @@ it('sends nothing when the Spotify queue already holds two unique tracks', funct
 
     $party->updateState();
 
-    expect($fake->callsTo('queue'))->toBe([])
+    expect(sentIds($fake))->toBe([])
         ->and(UpcomingSong::query()->whereNotNull('queued_at')->count())->toBe(0);
 });
 
@@ -192,7 +197,8 @@ it('adds each sent track to the history playlist when one is configured', functi
 
     $party->updateState();
 
-    expect($fake->callsTo('addPlaylistTracks'))->toBe([['HIST', ['A']], ['HIST', ['B']]]);
+    expect(array_map(fn (array $call) => [$call[0], array_map(fn (Track $track) => $track->id, $call[1])], app(FakeMusicProvider::class)->callsTo('appendToPlaylist')))
+        ->toBe([['HIST', ['A']], ['HIST', ['B']]]);
 });
 
 it('does not touch a history playlist when none is configured', function () {
@@ -201,7 +207,7 @@ it('does not touch a history playlist when none is configured', function () {
 
     $party->updateState();
 
-    expect($fake->callsTo('addPlaylistTracks'))->toBe([]);
+    expect(app(FakeMusicProvider::class)->callsTo('appendToPlaylist'))->toBe([]);
 });
 
 it('sends another waiting request on every run while Spotify still reports an empty queue (E5 R3)', function () {
@@ -353,7 +359,7 @@ it('tops up to five waiting requests from the Fallback Playlist after sending, s
     $party->updateState();
 
     $waiting = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
-    expect($fake->callsTo('queue'))->toBe([])
+    expect(sentIds($fake))->toBe([])
         ->and($waiting)->toHaveCount(Party::MINIMUM_UPCOMING)
         ->and($waiting->pluck('song.spotify_id')->all())->toBe(['F7', 'F2', 'F3', 'F6', 'F1']);
 
@@ -443,4 +449,33 @@ it('caches the fallback playlist for an hour so a second run does not refetch it
     $party->updateState();
 
     expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toHaveCount(1);
+});
+
+it('ranks by the overridable Effective Score rather than the stored score', function () {
+    [$party, $fake] = selectionParty();
+    queueWith($fake, ['NOW']);
+    waitingRequest($party, 'HIGH', 9);
+    waitingRequest($party, 'LOW', 1);
+    app()->bind(QueueSelector::class, fn () => new class(app(MusicProviderFactory::class), app(SpotifyGateway::class), app(FallbackPlaylist::class)) extends QueueSelector
+    {
+        public function effectiveScore(UpcomingSong $request): int
+        {
+            return -$request->score;
+        }
+    });
+
+    $party->updateState();
+
+    expect(sentIds())->toBe(['LOW']);
+});
+
+it('keeps fallback_override as display metadata and does not affect selection', function () {
+    [$party, $fake] = selectionParty();
+    queueWith($fake, ['NOW']);
+    waitingRequest($party, 'A', 1, ['fallback_override' => 'Mystery Gift']);
+    waitingRequest($party, 'B', 5);
+
+    $party->updateState();
+
+    expect(sentIds())->toBe(['B']);
 });

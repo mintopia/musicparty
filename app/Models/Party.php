@@ -5,22 +5,21 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
-use App\Services\FallbackPlaylist;
+use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Database\Factories\PartyFactory;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
-use Random\Randomizer;
 use stdClass;
 
 /**
@@ -54,17 +53,17 @@ use stdClass;
  * @property Carbon|null $last_updated_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PlayedSong> $history
+ * @property-read Collection<int, PlayedSong> $history
  * @property-read int|null $history_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyMember> $members
+ * @property-read Collection<int, PartyMember> $members
  * @property-read int|null $members_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyModeration> $moderations
+ * @property-read Collection<int, PartyModeration> $moderations
  * @property-read int|null $moderations_count
- * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyModSetting> $modsettings
+ * @property-read Collection<int, PartyModSetting> $modsettings
  * @property-read int|null $modsettings_count
  * @property-read Song|null $song
  * @property-read User|null $trustedUser
- * @property-read \Illuminate\Database\Eloquent\Collection<int, UpcomingSong> $upcoming
+ * @property-read Collection<int, UpcomingSong> $upcoming
  * @property-read int|null $upcoming_count
  * @property-read User $user
  *
@@ -115,8 +114,6 @@ class Party extends Model
     use ToString;
 
     const MINIMUM_UPCOMING = 5;
-
-    const QUEUE_LENGTH = 1;
 
     protected $attributes = [
         'allow_requests' => true,
@@ -325,8 +322,7 @@ class Party extends Model
 
         try {
             $this->updateCurrentSong();
-            $this->addTracksToQueue();
-            $this->backfillUpcomingSongs();
+            app(QueueSelector::class)->run($this);
         } finally {
             $this->last_updated_at = Carbon::now();
             $this->save();
@@ -417,7 +413,7 @@ class Party extends Model
         }
         if ($trackUri === '') {
             // We are stuck, let's add something to the queue and use it
-            $this->withSyncLock(fn () => $this->addTracksToQueue());
+            $this->withSyncLock(fn () => app(QueueSelector::class)->sendNext($this));
             $song = $this->upcoming()->orderBy('queued_at', 'desc')->first();
             if ($song) {
                 $trackUri = "spotify:track:{$song->song->spotify_id}";
@@ -461,128 +457,6 @@ class Party extends Model
 
             return $data->id;
         });
-    }
-
-    protected function addTracksToQueue(): void
-    {
-        Log::debug("{$this}: Checking if we need to add tracks to queue");
-        $current = $this->fresh() ?? $this;
-        $weighted = $current->weighted;
-        $historyPlaylistId = $current->history_playlist_id;
-        $this->user->getSpotifyStatus();
-        $queue = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->user)->getMyQueue());
-        $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
-        $count = count($queueItems);
-        $ids = collect($queueItems)->pluck('id')->unique();
-        /* So let's talk about the Spotify queue. The Queue endpoint will return up to a maximum of 20 items, and a
-         * minimum of 10. If the queue doesn't actually have anything, it will fill it up with multiple copies of
-         * whatever is in the current context. This is utterly stupid.
-         *
-         * What this does mean, is that we can count the number of unique items in the queue. If we only have 1
-         * unique item, then our queue is empty!
-         *
-         * So we take unique count, subtract 1 and then use that to determine how may tracks to add to the queue.
-         */
-
-        Log::debug("{$this}: Queue contains {$count} items, unique: {$ids->count()}");
-        $toAdd = self::QUEUE_LENGTH - ($ids->count() - 1);
-        if ($toAdd < 1) {
-            Log::debug("{$this}: No tracks to add");
-
-            return;
-        }
-
-        Log::debug("{$this}: Adding {$toAdd} tracks to the queue");
-
-        /*
-         * Notes by Cwis
-         * Remove the limit - fetch everything
-         * Get sum of score for everything
-         * Get random number up to total sum of score
-         * Iterate through songs
-         * For each song, decrease random number
-         * when it drops below zero, take current song
-         *
-         */
-
-        $now = Carbon::now();
-        $released = static function ($query) use ($now): void {
-            $query->whereNull('not_before');
-            $query->orWhere('not_before', '<=', $now);
-        };
-
-        if ($weighted) {
-            $randomizer = app(Randomizer::class);
-            $songsToAdd = new Collection;
-            $allSongs = $this->upcoming()
-                ->whereNull('queued_at')
-                ->where($released)
-                ->where('score', '>', 0)->get();
-            $allSongs = collect($randomizer->shuffleArray($allSongs->all()));
-
-            for ($i = 0; $i < $toAdd; $i++) {
-                $sum = $allSongs->sum('score');
-                $random = $randomizer->getInt(0, (int) $sum);
-                foreach ($allSongs as $index => $song) {
-                    $random -= $song->score;
-                    if ($random <= 0) {
-                        $allSongs->forget($index);
-                        $songsToAdd->push($song);
-                        break;
-                    }
-                }
-            }
-            $remaining = $toAdd - $songsToAdd->count();
-
-            if ($remaining > 0) {
-                // Didn't add enough songs, try and find *any* using old method
-                $ids = $songsToAdd->pluck('id');
-                $toAdd = $this->upcoming()
-                    ->whereNull('queued_at')
-                    ->whereNotIn('id', $ids)
-                    ->where($released)
-                    ->orderBy('score', 'desc')
-                    ->orderBy('created_at', 'asc')
-                    ->orderBy('id', 'asc')
-                    ->limit($remaining)
-                    ->get();
-                foreach ($toAdd as $song) {
-                    $songsToAdd->push($song);
-                }
-            }
-        } else {
-            $songsToAdd = $this->upcoming()
-                ->whereNull('queued_at')
-                ->where($released)
-                ->orderBy('score', 'desc')
-                ->orderBy('created_at', 'asc')
-                ->orderBy('id', 'asc')
-                ->limit($toAdd)
-                ->get();
-        }
-
-        if ($songsToAdd->isEmpty()) {
-            Log::debug("{$this}: Found no songs in the upcoming songs list to backfill");
-
-            return;
-        }
-        foreach ($songsToAdd as $song) {
-            if ($song->fresh()?->queued_at !== null) {
-                Log::debug("{$this}: {$song->song} was already sent to the player");
-
-                continue;
-            }
-            Log::info("{$this}: Adding {$song->song} to queue");
-            Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
-            app(SpotifyGateway::class)->requireClient($this->user)->queue($song->song->spotify_id);
-            $song->queued_at = Carbon::now();
-            $song->save();
-            if ($historyPlaylistId !== null) {
-                Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$historyPlaylistId}, [{$song->song->spotify_id}])");
-                app(SpotifyGateway::class)->requireClient($this->user)->addPlaylistTracks($historyPlaylistId, [$song->song->spotify_id]);
-            }
-        }
     }
 
     public function updateDeviceName(): void
@@ -732,11 +606,6 @@ class Party extends Model
         }
 
         return false;
-    }
-
-    protected function backfillUpcomingSongs(): void
-    {
-        app(FallbackPlaylist::class)->backfill($this);
     }
 
     public function canBeManagedBy(?User $user): bool
