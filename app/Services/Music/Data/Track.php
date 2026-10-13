@@ -17,5 +17,7 @@ final readonly class Track
         public AlbumRef $album,
         public array $artists,
         public ?string $linkedFromId = null,
+        public ?string $isrc = null,
+        public ?int $popularity = null,
     ) {}
 }

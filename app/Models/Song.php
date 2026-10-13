@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Track;
 use Database\Factories\SongFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -90,6 +91,21 @@ class Song extends Model
         return $this->belongsToMany(Artist::class)->withTimestamps();
     }
 
+    public static function fromTrack(Track $track): Song
+    {
+        return self::fromSpotify((object) [
+            'id' => $track->id,
+            'name' => $track->name,
+            'duration_ms' => $track->durationMs,
+            'album' => (object) [
+                'id' => $track->album->id,
+                'name' => $track->album->name,
+                'images' => [(object) ['url' => $track->album->imageUrl ?? '']],
+            ],
+            'artists' => array_map(fn (ArtistRef $artist): stdClass => (object) ['id' => $artist->id, 'name' => $artist->name], $track->artists),
+        ]);
+    }
+
     public static function fromSpotify(stdClass $track): Song
     {
         $song = Song::whereSpotifyId($track->id)->first();
@@ -116,21 +132,6 @@ class Song extends Model
         } catch (UniqueConstraintViolationException) {
             return Song::whereSpotifyId($track->id)->firstOrFail();
         }
-    }
-
-    public static function fromTrack(Track $track): Song
-    {
-        return self::fromSpotify((object) [
-            'id' => $track->id,
-            'name' => $track->name,
-            'duration_ms' => $track->durationMs,
-            'album' => (object) [
-                'id' => $track->album->id,
-                'name' => $track->album->name,
-                'images' => [(object) ['url' => $track->album->imageUrl ?? '']],
-            ],
-            'artists' => array_map(fn ($artist) => (object) ['id' => $artist->id, 'name' => $artist->name], $track->artists),
-        ]);
     }
 
     /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int} */

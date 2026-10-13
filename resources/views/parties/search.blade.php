@@ -45,7 +45,7 @@
                         @foreach($results as $item)
                             <search-result
                                 party="{{ $party->code }}"
-                                initialstate='@json($item)'
+                                initialstate='@json($item->toSearchResult())'
                                 can_downvote="{{ $party->downvotes }}"
                             >
                             </search-result>

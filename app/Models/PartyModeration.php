@@ -3,13 +3,13 @@
 namespace App\Models;
 
 use App\Enums\PartyModerationType;
+use App\Services\Music\Data\Track;
 use Database\Factories\PartyModerationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use stdClass;
 
 /**
  * @property int $id
@@ -56,13 +56,13 @@ class PartyModeration extends Model
         return $this->belongsTo(Party::class);
     }
 
-    public function match(stdClass $spotifyTrack): bool
+    public function match(Track $track): bool
     {
         $methodName = 'check'.substr($this->type->name, 2);
         if (method_exists($this, $methodName)) {
-            $result = $this->{$methodName}($spotifyTrack);
+            $result = $this->{$methodName}($track);
             if ($result === true) {
-                Log::info("[PartyModeration:{$this->id}] has matched {$spotifyTrack->id}");
+                Log::info("[PartyModeration:{$this->id}] has matched {$track->id}");
             }
 
             return $result;
@@ -71,21 +71,14 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkName(stdClass $spotifyTrack): bool
+    protected function checkName(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'name')) {
-            return false;
-        }
-
-        return $this->regexTest($spotifyTrack->name);
+        return $this->regexTest($track->name);
     }
 
-    protected function checkArtist(stdClass $spotifyTrack): bool
+    protected function checkArtist(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
-            return false;
-        }
-        foreach ($spotifyTrack->artists as $artist) {
+        foreach ($track->artists as $artist) {
             if ($this->regexTest($artist->name)) {
                 return true;
             }
@@ -94,12 +87,9 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkArtistId(stdClass $spotifyTrack): bool
+    protected function checkArtistId(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'artists') || ! is_iterable($spotifyTrack->artists)) {
-            return false;
-        }
-        foreach ($spotifyTrack->artists as $artist) {
+        foreach ($track->artists as $artist) {
             if ($this->regexTest($artist->id, false)) {
                 return true;
             }
@@ -108,40 +98,28 @@ class PartyModeration extends Model
         return false;
     }
 
-    protected function checkId(stdClass $spotifyTrack): bool
+    protected function checkId(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'id')) {
-            return false;
-        }
-
-        return $this->regexTest($spotifyTrack->id, false);
+        return $this->regexTest($track->id, false);
     }
 
-    protected function checkAlbum(stdClass $spotifyTrack): bool
+    protected function checkAlbum(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'name')) {
-            return false;
-        }
-
-        return $this->regexTest($spotifyTrack->album->name);
+        return $this->regexTest($track->album->name);
     }
 
-    protected function checkAlbumId(stdClass $spotifyTrack): bool
+    protected function checkAlbumId(Track $track): bool
     {
-        if (! property_exists($spotifyTrack, 'album') || ! is_object($spotifyTrack->album) || ! property_exists($spotifyTrack->album, 'id')) {
-            return false;
-        }
-
-        return $this->regexTest($spotifyTrack->album->id, false);
+        return $this->regexTest($track->album->id, false);
     }
 
-    protected function checkISRC(stdClass $spotifyTrack): bool
+    protected function checkISRC(Track $track): bool
     {
-        if ($spotifyTrack->external_ids?->isrc === null) {
+        if ($track->isrc === null) {
             return false;
         }
 
-        return $this->regexTest($spotifyTrack->external_ids->isrc);
+        return $this->regexTest($track->isrc);
     }
 
     public function getMessage(): string

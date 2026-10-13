@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\Purpose;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
@@ -11,10 +12,9 @@ use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
-use App\Services\RequestCheckService;
-use App\Services\Spotify\SpotifyGateway;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
-use App\Support\SpotifyPayload;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -74,8 +74,8 @@ class UpcomingSongController extends Controller
                         $query->whereSpotifyId($request->input('spotify_id'));
                     })->first();
                     if (! $upcoming) {
-                        $response = app(SpotifyGateway::class)->requireClient($party->user)->getTrack($request->input('spotify_id'));
-                        if (! $response) {
+                        $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('spotify_id'));
+                        if (! $track) {
                             return response()->json([
                                 'message' => 'Unable to find the song in Spotify.',
                                 'errors' => [
@@ -86,9 +86,7 @@ class UpcomingSongController extends Controller
                             ], 422);
                         }
 
-                        $spotifySong = SpotifyPayload::object($response);
-                        $checkService = new RequestCheckService($party, $member);
-                        $checkResponse = $checkService->checkSong($spotifySong);
+                        $checkResponse = app(RequestRules::class)->check($party, $member, $track);
                         if (! $checkResponse->allowed) {
                             return response()->json([
                                 'message' => $checkResponse->reason,
@@ -100,7 +98,7 @@ class UpcomingSongController extends Controller
                             ])->setStatusCode(400);
                         }
 
-                        $song = Song::fromSpotify($spotifySong);
+                        $song = Song::fromTrack($track);
                         $upcoming = new UpcomingSong;
                         $upcoming->party()->associate($party);
                         $upcoming->user()->associate($this->resolveAuthenticatedUser($request));

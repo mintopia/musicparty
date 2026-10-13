@@ -36,6 +36,8 @@ final class SpotifyMapper
             album: $album ?? new AlbumRef('', '', null),
             artists: self::artistRefs($payload->artists ?? []),
             linkedFromId: isset($linkedFrom->id) ? (string) $linkedFrom->id : null,
+            isrc: isset($payload->external_ids->isrc) ? (string) $payload->external_ids->isrc : null,
+            popularity: isset($payload->popularity) ? (int) $payload->popularity : null,
         );
     }
 

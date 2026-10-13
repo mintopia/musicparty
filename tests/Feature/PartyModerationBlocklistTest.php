@@ -3,6 +3,8 @@
 use App\Enums\PartyModerationType;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\PartyModeration;
+use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\Track;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 
@@ -18,7 +20,7 @@ function rule(string $value, bool $regex): PartyModeration
 
 function matches(PartyModeration $moderation, string $name): bool
 {
-    return $moderation->match((object) ['id' => 'x', 'name' => $name]);
+    return $moderation->match(new Track('fake', 'x', $name, 1000, false, true, new AlbumRef('a', 'A', null), []));
 }
 
 it('treats wildcard rules literally except for *', function (string $rule, string $name, bool $expected) {
