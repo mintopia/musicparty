@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Mockery\MockInterface;
+use Tests\Support\FakeFallbackPlaylist;
 use Tests\Support\FakeSpotify;
 
 /**
@@ -121,7 +122,7 @@ it('party:force starts a forced party whose device is online without taking a sy
     $fake = FakeSpotify::install();
     $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
     $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    $fake->withBackupPlaylist(['bk1']);
+    FakeFallbackPlaylist::seed(['bk1'], 'backup');
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)]);
 
     $this->artisan('party:force')
@@ -159,7 +160,7 @@ it('party:force with a code processes only that party', function () {
     $fake = FakeSpotify::install();
     $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
     $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    $fake->withBackupPlaylist(['bk1']);
+    FakeFallbackPlaylist::seed(['bk1'], 'backup');
     $attributes = ['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)];
     $target = activeParty($attributes);
     $other = activeParty($attributes);

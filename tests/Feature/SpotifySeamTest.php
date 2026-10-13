@@ -15,6 +15,7 @@ use Illuminate\Support\Facades\Http;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 use SpotifyWebAPI\SpotifyWebAPI;
+use Tests\Support\FakeFallbackPlaylist;
 use Tests\Support\FakeSpotify;
 
 function seamSpotifyUser(): User
@@ -111,7 +112,8 @@ it('orders the fallback playlist exactly with a seeded randomizer', function () 
     $ids = ['a', 'b', 'c', 'd', 'e'];
     $expected = (new Randomizer(new Mt19937(42)))->shuffleArray($ids);
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(42)));
-    FakeSpotify::install()->withBackupPlaylist($ids);
+    FakeSpotify::install();
+    FakeFallbackPlaylist::seed($ids, 'backup');
     $user = seamSpotifyUser();
 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
