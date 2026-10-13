@@ -40,6 +40,28 @@ it('plays the current track on the given device through the provider', function 
         ->and($calls[0][1]->id)->toBe('cur');
 });
 
+it('transfers playback to the web player device before playing', function () {
+    $fake = app(FakeMusicProvider::class)
+        ->withoutActiveDevice()
+        ->withTrack(FakeFallbackPlaylist::track('cur'))
+        ->withPlayback(playingState('cur'));
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play', 'deviceId' => 'web-sdk'])->assertOk();
+
+    $methods = array_column($fake->calls(), 'method');
+    expect($fake->callsTo('transferPlayback'))->toBe([['web-sdk']])
+        ->and(array_search('transferPlayback', $methods, true))->toBeLessThan(array_search('play', $methods, true))
+        ->and($fake->callsTo('play')[0][0])->toBe('web-sdk');
+});
+
+it('returns a client error rather than a server error when there is no active device', function () {
+    app(FakeMusicProvider::class)->withoutActiveDevice();
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertStatus(409);
+});
+
 it('routes pause, next and previous to the provider', function (string $action, string $method, array $args) {
     $fake = app(FakeMusicProvider::class);
     $party = controlParty();

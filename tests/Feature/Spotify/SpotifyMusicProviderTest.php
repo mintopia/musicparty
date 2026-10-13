@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\Purpose;
+use App\Exceptions\NoActiveDeviceException;
 use App\Models\User;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Spotify\SpotifyMapper;
@@ -8,6 +9,7 @@ use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
+use SpotifyWebAPI\SpotifyWebAPIException;
 use Tests\Support\FakeSpotify;
 
 function spotifyProvider(FakeSpotify $api): SpotifyMusicProvider
@@ -41,6 +43,17 @@ it('sends tracks to the player by id and plays with a track uri', function () {
     expect($api->callsTo('queue'))->toBe([['abc']])
         ->and($api->callsTo('play'))->toBe([['dev1', ['uris' => ['spotify:track:abc']]], ['', []]]);
 });
+
+it('transfers playback with changeMyDevice and maps a player 404 to NoActiveDeviceException', function () {
+    $api = FakeSpotify::install();
+    $provider = spotifyProvider($api);
+
+    $provider->transferPlayback('dev1');
+    expect($api->callsTo('changeMyDevice'))->toBe([[['device_ids' => ['dev1']]]]);
+
+    $api->respond('queue', new SpotifyWebAPIException('Player command failed: No active device found', 404));
+    $provider->sendToPlayer(mappedTrack('abc'));
+})->throws(NoActiveDeviceException::class);
 
 it('maps current playback and handles an idle player', function () {
     $api = FakeSpotify::install();

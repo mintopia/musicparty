@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\NoActiveDeviceException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyControlRequest;
 use App\Http\Resources\V1\PartyResource;
@@ -24,7 +25,12 @@ class PartyController extends Controller
     public function control(PartyControlRequest $request, Party $party, PlaybackControl $control, PlaybackSync $sync): PartyResource
     {
         $this->authorize('update', $party);
-        $control->perform($party, (string) $request->input('action'), $request->deviceId ?? null);
+
+        try {
+            $control->perform($party, (string) $request->input('action'), $request->deviceId ?? null);
+        } catch (NoActiveDeviceException $ex) {
+            abort(409, 'No active playback device. Open Spotify on a device or pick one and try again.');
+        }
 
         $sync->sync($party);
 
