@@ -63,7 +63,7 @@ it('dispatches a queued job for client events with only channel, event and data'
 it('ignores pusher protocol events and unparseable frames', function () {
     Queue::fake();
 
-    receive(['event' => 'pusher:subscribe', 'data' => ['channel' => 'private-encore.ABC']]);
+    receive(['event' => 'pusher:ping', 'data' => []]);
     receive(['event' => 'client-x']);
     receive('not json');
 

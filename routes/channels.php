@@ -27,3 +27,5 @@ Broadcast::channel('party.{party}.managers', fn ($user, Party $party) => $party-
 Broadcast::channel('user.{userId}', fn ($user, int $userId) => (int) $user->id === (int) $userId);
 
 Broadcast::channel('webplayer.{party}', fn (User $user, Party $party) => Gate::forUser($user)->allows('player', $party));
+
+Broadcast::channel('encore.{code}', fn () => false);

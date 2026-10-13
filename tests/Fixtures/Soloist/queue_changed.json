@@ -1,0 +1,1 @@
+{"type":"queue_changed","upcoming":[{"uid":"u-1","source":"queue","item":{"uri":"fake:track:t2","decorations":{"identity":{"name":"T"},"playback":{"duration_ms":180000}}}},{"uid":"u-2","source":"autoplay","item":{"uri":"fake:track:t3","decorations":{"identity":{"name":"T"},"playback":{"duration_ms":180000}}}}]}

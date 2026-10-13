@@ -28,6 +28,7 @@ use App\Services\ModSettingsStore;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\Playback\WebPlayerStateMapper;
 use App\Services\PlayedSongAugmentService;
@@ -59,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ActiveTheme::class);
         $this->app->tag([WebPlayerStateMapper::class], 'pushed-state-mappers');
         $this->app->bind(PushedStateRouter::class, fn (): PushedStateRouter => new PushedStateRouter($this->app->tagged('pushed-state-mappers')));
+        $this->app->tag(EncoreStateMapper::class, 'pushed-state-mappers');
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
