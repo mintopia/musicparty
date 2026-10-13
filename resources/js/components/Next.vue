@@ -1,6 +1,6 @@
 <template>
     <div>
-        <template v-if="this.state !== null && this.state.next">
+        <template v-if="state !== null && state.next">
 
 
             <h3>Up Next</h3>
@@ -58,35 +58,38 @@
     background-color: #990000;
 }
 </style>
-<script>
-    export default {
-        props: [
-            'code',
-            'initialstate',
-        ],
+<script lang="ts">
+    import {defineComponent} from 'vue';
+    import type {LegacyArtist, LegacyPartyState} from '../types';
+
+    export default defineComponent({
+        props: {
+            code: {type: String, required: true},
+            initialstate: {type: String, required: true},
+        },
         data() {
             return {
-                state: null,
+                state: null as LegacyPartyState | null,
                 currentTime: '',
                 endTime: '',
                 progress: '',
-                startedAt: null,
-                intervalId: null,
+                startedAt: null as number | null,
+                intervalId: null as ReturnType<typeof setInterval> | null,
             }
         },
 
         methods: {
-            updateState(state) {
+            updateState(state: LegacyPartyState): void {
                 this.state = state;
             },
 
-            formatMs(ms) {
+            formatMs(ms: number): string {
                 const mins = Math.floor(ms / 60000);
                 const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
             },
 
-            combineArtists(artists) {
+            combineArtists(artists: LegacyArtist[]): string {
                 return artists.map(artist => artist.name).join(', ');
             },
         },
@@ -94,7 +97,7 @@
         mounted() {
             this.updateState(JSON.parse(this.initialstate));
             let channel = `party.${this.code}`;
-            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload) => {
+            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
                 this.updateState(payload);
             });
         },
@@ -104,5 +107,5 @@
 
         beforeDestroy() {
         }
-    }
+    })
 </script>

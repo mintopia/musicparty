@@ -43,20 +43,20 @@
                 <div class="row">
                     <template v-if="can_downvote == 1">
                         <div class="col-5 text-end">
-                            <i v-if="state.vote <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(1)"></i>
+                            <i v-if="state.vote! <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(1)"></i>
                             <i v-if="state.vote === 1" class="icon ti ti-arrow-big-up-filled cursor-pointer text-success" @click="vote(0)"></i>
                         </div>
                         <div class="col-3 ps-0 pe-0">
                             {{ state.score }}
                         </div>
                         <div class="col-4 text-start">
-                            <i v-if="state.vote >= 0" class="icon ti ti-arrow-big-down cursor-pointer" @click="vote(-1)"></i>
+                            <i v-if="state.vote! >= 0" class="icon ti ti-arrow-big-down cursor-pointer" @click="vote(-1)"></i>
                             <i v-if="state.vote === -1" class="icon ti ti-arrow-big-down-filled cursor-pointer text-danger" @click="vote(0)"></i>
                         </div>
                     </template>
                     <template v-else>
                         <div class="col-7 text-end">
-                            <i v-if="state.vote <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(1)"></i>
+                            <i v-if="state.vote! <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(1)"></i>
                             <i v-if="state.vote === 1" class="icon ti ti-heart-filled cursor-pointer text-success" @click="vote(0)"></i>
                         </div>
                         <div class="col-5 text-start">
@@ -109,28 +109,58 @@
 <style>
 
 </style>
-<script>
-    export default {
-        props: [
-            'can_downvote',
-            'party',
-            'initialstate',
-        ],
+<script lang="ts">
+    import {defineComponent, type PropType} from 'vue';
+    import type {AxiosError} from 'axios';
+    import type {LegacyArtist} from '../types';
+
+    interface LegacySearchTrack {
+        id: string;
+        name: string;
+        artists: LegacyArtist[];
+        album: {name: string; images: {url: string}[]};
+        external_urls: {spotify: string};
+        duration_ms: number;
+        popularity: number;
+        allowed?: boolean;
+        reason?: string;
+        added?: boolean;
+        sending?: boolean;
+        upcoming?: boolean;
+        upcoming_id?: number;
+        user?: string | null;
+        score?: number;
+        vote?: number;
+    }
+
+    interface LegacyVoteResponse {
+        user: string | null;
+        score: number;
+        vote: number;
+        id: number;
+    }
+
+    export default defineComponent({
+        props: {
+            can_downvote: {type: [Number, String, Boolean] as PropType<number | string | boolean>},
+            party: {type: String},
+            initialstate: {type: String, required: true},
+        },
         data() {
             return {
-                state: null,
-                message: '',
+                state: null as LegacySearchTrack | null,
+                message: '' as string,
             }
         },
 
         methods: {
-            add() {
-                this.state.sending = true;
-                axios.post(`/api/v1/parties/${this.party}/upcomingsongs`, {
-                    provider_track_id: this.state.id
+            add(): void {
+                this.state!.sending = true;
+                window.axios.post(`/api/v1/parties/${this.party}/upcomingsongs`, {
+                    provider_track_id: this.state!.id
                 }).then((response) => {
                     this.updateResponseFromData(response.data.data);
-                }).catch((error) => {
+                }).catch((error: AxiosError<{message: string}>) => {
                     if (error.response?.status !== 400) {
                         return;
                     }
@@ -139,16 +169,16 @@
                         this.message = '';
                     }, 5000);
                 }).finally(() => {
-                    this.state.sending = false;
+                    this.state!.sending = false;
                 });
             },
 
-            vote(value) {
-                axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${this.state.upcoming_id}/vote`, {
+            vote(value: number): void {
+                window.axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${this.state!.upcoming_id}/vote`, {
                     vote: value,
                 }).then((response) => {
                     this.updateResponseFromData(response.data.data);
-                }).catch((error) => {
+                }).catch((error: AxiosError<{message: string}>) => {
                     if (error.response?.status !== 400) {
                         return;
                     }
@@ -159,30 +189,30 @@
                 });
             },
 
-            updateResponseFromData(data) {
-                this.state.user = data.user;
-                this.state.score = data.score;
-                this.state.vote = data.vote;
-                this.state.upcoming = true;
-                this.state.upcoming_id = data.id;
+            updateResponseFromData(data: LegacyVoteResponse): void {
+                this.state!.user = data.user;
+                this.state!.score = data.score;
+                this.state!.vote = data.vote;
+                this.state!.upcoming = true;
+                this.state!.upcoming_id = data.id;
             },
 
-            combineArtists(artists) {
+            combineArtists(artists: LegacyArtist[]): string {
                 return artists.map(artist => artist.name).join(', ');
             },
 
-            formatMs(ms) {
+            formatMs(ms: number): string {
                 const mins = Math.floor(ms / 60000);
                 const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
             },
         },
 
-        mounted() {
+        mounted(): void {
             this.state = JSON.parse(this.initialstate);
         },
 
-        created() {
+        created(): void {
         }
-    }
+    })
 </script>

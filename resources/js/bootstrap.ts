@@ -29,10 +29,10 @@ const forceTLS = window.location.protocol === 'https:';
 
 window.Echo = new Echo({
      broadcaster: 'reverb',
-     key: window.pusherConfig.appKey,
+     key: window.pusherConfig.appKey as string,
      wsHost: window.location.hostname,
-     wsPort: window.location.port || (forceTLS ? 443 : 80),
-     wssPort: window.location.port || 443,
+     wsPort: Number(window.location.port) || (forceTLS ? 443 : 80),
+     wssPort: Number(window.location.port) || 443,
      forceTLS,
      enabledTransports: ['ws', 'wss'],
 });

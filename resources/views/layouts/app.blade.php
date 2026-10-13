@@ -7,7 +7,7 @@
 
     @include('partials._pusher-config')
 
-    @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @vite(['resources/css/app.css', 'resources/js/app.ts'])
 
     <meta name="csrf-token" content="{{ csrf_token() }}">
 

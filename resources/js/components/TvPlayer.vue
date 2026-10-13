@@ -135,55 +135,59 @@
         font-size: 2rem !important;
     }
 </style>
-<script>
-    export default {
-        props: [
-            'code',
-            'partyurl',
-            'initialstate',
-        ],
+<script lang="ts">
+    import {defineComponent} from 'vue';
+    import type {LegacyArtist, LegacyTvPartyState} from '../types';
+
+    export default defineComponent({
+        props: {
+            code: {type: String},
+            partyurl: {type: String},
+            initialstate: {type: String, required: true},
+        },
         data() {
             return {
-                state: null,
-                currentTime: '',
-                endTime: '',
-                progress: '',
-                startedAt: null,
-                intervalId: null,
-                qrCodeUrl: null,
+                state: null as LegacyTvPartyState | null,
+                currentTime: '' as string,
+                endTime: '' as string,
+                progress: '' as string | number,
+                startedAt: null as number | null,
+                intervalId: null as ReturnType<typeof setInterval> | null,
+                qrCodeUrl: null as unknown as string | undefined,
             }
         },
 
         methods: {
-            updateState(state) {
+            updateState(state: LegacyTvPartyState): void {
                 this.state = state;
                 this.updateProgressBar();
             },
 
-            formatMs(ms) {
+            formatMs(ms: number): string {
                 const mins = Math.floor(ms / 60000);
                 const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
             },
 
-            isPlaying() {
+            isPlaying(): boolean {
                 if (this.state === null || this.state.status === null || this.state.status.isPlaying === false) {
                     return false;
                 }
                 return true;
             },
 
-            getBackgroundImageStyle() {
+            getBackgroundImageStyle(): string {
                 if (this.state === null || this.state.now === null) {
                     return '';
                 }
                 return `background-image: url('${this.state.now.album.image_url}');`;
             },
 
-            updateProgressBar() {
+            updateProgressBar(): void {
                 if (this.isPlaying()) {
-                    this.startedAt = new Date(this.state.status.updatedAt).getTime() - this.state.status.progress;
-                    this.endTime = this.formatMs(this.state.status.length);
+                    const status = this.state!.status!;
+                    this.startedAt = new Date(status.updatedAt).getTime() - status.progress;
+                    this.endTime = this.formatMs(status.length);
                     this.moveProgressBar();
                     if (this.intervalId === null) {
                         this.intervalId = setInterval(this.moveProgressBar, 1000);
@@ -199,26 +203,27 @@
                 }
             },
 
-            moveProgressBar() {
+            moveProgressBar(): void {
                 if (!this.isPlaying() || this.startedAt === null) {
                     return;
                 }
 
+                const length = this.state!.status!.length;
                 const progress = new Date().getTime() - this.startedAt;
-                this.progress = Math.min((progress / this.state.status.length) * 100, 100);
-                this.currentTime = this.formatMs(Math.min(progress, this.state.status.length));
+                this.progress = Math.min((progress / length) * 100, 100);
+                this.currentTime = this.formatMs(Math.min(progress, length));
             },
 
-            combineArtists(artists) {
+            combineArtists(artists: LegacyArtist[]): string {
                 return artists.map(artist => artist.name).join(', ');
             },
         },
 
         mounted() {
-            this.updateState(JSON.parse(this.initialstate));
+            this.updateState(JSON.parse(this.initialstate) as LegacyTvPartyState);
             let channel = `party.${this.code}`;
             this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${this.partyurl}`;
-            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload) => {
+            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyTvPartyState) => {
                 this.updateState(payload);
             });
         },
@@ -231,5 +236,5 @@
                 clearInterval(this.intervalId);
             }
         }
-    }
+    })
 </script>
