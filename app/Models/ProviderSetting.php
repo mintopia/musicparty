@@ -11,9 +11,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
-/**
- * @mixin IdeHelperProviderSetting
- */
 class ProviderSetting extends Model implements Sortable
 {
     use HasFactory;

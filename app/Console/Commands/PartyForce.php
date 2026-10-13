@@ -29,7 +29,7 @@ class PartyForce extends Command
         $cutoff = now()->subMinutes(15);
         $query = Party::whereActive(true)->wherePoll(false)->whereForce(true)->whereNotNull('device_id')->where('last_updated_at', '<', $cutoff);
         $code = $this->argument('code');
-        if ($code !== null) {
+        if (is_string($code)) {
             $party = $query->whereCode($code)->first();
             if (! $party) {
                 $this->error("Unable to find suitable party with code {$code}");

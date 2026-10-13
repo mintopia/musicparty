@@ -18,9 +18,6 @@ use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
 use Random\Randomizer;
 
-/**
- * @mixin IdeHelperParty
- */
 class Party extends Model
 {
     use HasFactory;
