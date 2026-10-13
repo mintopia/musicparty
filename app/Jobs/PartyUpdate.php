@@ -18,6 +18,26 @@ class PartyUpdate implements ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public int $maxExceptions = 5;
+
+    /**
+     * Seconds to wait before retrying after a thrown exception, growing exponentially.
+     *
+     * @return list<int>
+     */
+    public function backoff(): array
+    {
+        return [2, 5, 15, 30];
+    }
+
+    /**
+     * Lock-contention and Spotify-backoff releases also count as attempts, so retries are bounded by time and thrown exceptions rather than a try count.
+     */
+    public function retryUntil(): \DateTimeInterface
+    {
+        return now()->addMinutes(5);
+    }
+
     /**
      * Create a new job instance.
      */
