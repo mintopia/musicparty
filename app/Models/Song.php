@@ -3,6 +3,9 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\Track;
 use Database\Factories\SongFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +20,8 @@ use stdClass;
 
 /**
  * @property int $id
- * @property string $spotify_id
+ * @property string $provider_id
+ * @property string $provider_track_id
  * @property string $name
  * @property int $length
  * @property int $album_id
@@ -89,9 +93,38 @@ class Song extends Model
         return $this->belongsToMany(Artist::class)->withTimestamps();
     }
 
+    public function toTrack(): Track
+    {
+        return new Track(
+            providerId: 'spotify',
+            id: $this->provider_track_id,
+            name: $this->name,
+            durationMs: (int) $this->length,
+            explicit: false,
+            isPlayable: true,
+            album: new AlbumRef(id: $this->album->provider_album_id, name: $this->album->name, imageUrl: $this->album->image_url),
+            artists: array_values($this->artists->map(fn (Artist $artist): ArtistRef => new ArtistRef(id: $artist->provider_artist_id, name: $artist->name))->all()),
+        );
+    }
+
+    public static function fromTrack(Track $track): Song
+    {
+        return self::fromSpotify((object) [
+            'id' => $track->id,
+            'name' => $track->name,
+            'duration_ms' => $track->durationMs,
+            'album' => (object) [
+                'id' => $track->album->id,
+                'name' => $track->album->name,
+                'images' => [(object) ['url' => $track->album->imageUrl ?? '']],
+            ],
+            'artists' => array_map(fn (ArtistRef $artist): stdClass => (object) ['id' => $artist->id, 'name' => $artist->name], $track->artists),
+        ]);
+    }
+
     public static function fromSpotify(stdClass $track): Song
     {
-        $song = Song::whereSpotifyId($track->id)->first();
+        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->first();
         if ($song) {
             return $song;
         }
@@ -101,7 +134,8 @@ class Song extends Model
         try {
             return DB::transaction(function () use ($track, $album, $artists): Song {
                 $song = new Song;
-                $song->spotify_id = $track->id;
+                $song->provider_id = 'spotify';
+                $song->provider_track_id = $track->id;
                 $song->name = $track->name;
                 $song->length = $track->duration_ms;
                 $song->album()->associate($album);
@@ -113,15 +147,15 @@ class Song extends Model
                 return $song;
             });
         } catch (UniqueConstraintViolationException) {
-            return Song::whereSpotifyId($track->id)->firstOrFail();
+            return Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->firstOrFail();
         }
     }
 
-    /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int} */
+    /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int} */
     public function toApi(): array
     {
         return [
-            'spotify_id' => $this->spotify_id,
+            'provider_track_id' => $this->provider_track_id,
             'name' => $this->name,
             'album' => $this->album->toApi(),
             'artists' => $this->artists->map(fn (Artist $artist) => $artist->toApi())->toArray(),

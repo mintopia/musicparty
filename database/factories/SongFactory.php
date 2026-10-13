@@ -18,7 +18,8 @@ class SongFactory extends Factory
     public function definition(): array
     {
         return [
-            'spotify_id' => fake()->unique()->regexify('[A-Za-z0-9]{22}'),
+            'provider_track_id' => fake()->unique()->regexify('[A-Za-z0-9]{22}'),
+            'provider_id' => 'spotify',
             'name' => fake()->words(3, true),
             'length' => fake()->numberBetween(120000, 300000),
             'album_id' => Album::factory(),

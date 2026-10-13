@@ -1,6 +1,7 @@
 <?php
 
 use App\Enums\PartyModerationType;
+use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyModeration;
@@ -9,7 +10,13 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
-use App\Services\RequestCheckService;
+use App\Services\Music\Data\Track;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMapper;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\Requests\RequestRules;
+use App\Services\Requests\Rules\ContextPlaylistTrackRule;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -45,9 +52,19 @@ function reqTrack(string $id = 'track1', array $overrides = []): object
     return $track;
 }
 
+function reqSpotifyTrack(object $payload): Track
+{
+    return SpotifyMapper::track($payload);
+}
+
 function reqCheck(Party $party, PartyMember $member, object $track): object
 {
-    return (new RequestCheckService($party->refresh(), $member->refresh()))->checkSong($track);
+    return app(RequestRules::class)->check($party->refresh(), $member->refresh(), reqSpotifyTrack($track));
+}
+
+function reqUseSpotifyProvider(): void
+{
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
 }
 
 function reqModeration(Party $party, PartyModerationType $type, string $value, bool $regex = false): void
@@ -85,10 +102,12 @@ function reqPost(Party $party, User $user, string $spotifyId)
 {
     Sanctum::actingAs($user);
 
-    return test()->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['spotify_id' => $spotifyId]);
+    return test()->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['provider_track_id' => $spotifyId]);
 }
 
-describe('RequestCheckService rules', function () {
+beforeEach(fn () => reqUseSpotifyProvider());
+
+describe('RequestRules', function () {
     it('accepts a plain track from a member', function () {
         $party = reqParty(['allow_requests' => true]);
 
@@ -100,7 +119,7 @@ describe('RequestCheckService rules', function () {
     it('rejects the reserved context playlist track', function () {
         $party = reqParty(['allow_requests' => true]);
 
-        $response = reqCheck($party, reqMember($party), reqTrack(RequestCheckService::CONTEXT_PLAYLIST_TRACK));
+        $response = reqCheck($party, reqMember($party), reqTrack(ContextPlaylistTrackRule::TRACK_ID));
 
         expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('This song is not available');
     });
@@ -372,12 +391,12 @@ describe('RequestCheckService rules', function () {
             expect(reqCheck($party, reqMember($party), $track)->allowed)->toBeTrue();
         });
 
-        it('throws on a track with no external ids when an isrc rule exists', function () {
+        it('accepts a track with no external ids when an isrc rule exists', function () {
             $party = reqParty(['allow_requests' => true]);
             reqModeration($party, PartyModerationType::mtISRC, 'USABC1234567');
 
-            reqCheck($party, reqMember($party), reqTrack());
-        })->throws(ErrorException::class, 'Undefined property: stdClass::$external_ids');
+            expect(reqCheck($party, reqMember($party), reqTrack())->allowed)->toBeTrue();
+        });
 
         it('matches wildcards case insensitively on names', function () {
             $party = reqParty(['allow_requests' => true]);
@@ -446,15 +465,13 @@ describe('RequestCheckService rules', function () {
         });
     });
 
-    describe('checkCollection', function () {
+    describe('checkMany', function () {
         it('returns a response per track keyed by spotify id, mixing accepted and rejected', function () {
             $party = reqParty(['allow_requests' => true, 'explicit' => false]);
-            $service = new RequestCheckService($party->refresh(), reqMember($party)->refresh());
-
-            $result = $service->checkCollection(collect([
-                reqTrack('clean'),
-                reqTrack('dirty', ['explicit' => true]),
-            ]));
+            $result = app(RequestRules::class)->checkMany($party->refresh(), reqMember($party)->refresh(), [
+                reqSpotifyTrack(reqTrack('clean')),
+                reqSpotifyTrack(reqTrack('dirty', ['explicit' => true])),
+            ]);
 
             expect($result['clean']->allowed)->toBeTrue()
                 ->and($result['dirty']->allowed)->toBeFalse()
@@ -467,7 +484,7 @@ describe('RequestCheckService rules', function () {
         $member = reqMember($party);
         reqThrowingSpotify(new SpotifyWebAPIException('invalid id'));
 
-        $response = (new RequestCheckService($party->refresh(), $member))->checkSong('nope');
+        $response = app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
 
         expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('Song is not found in Spotify');
     });
@@ -477,7 +494,7 @@ describe('RequestCheckService rules', function () {
         $member = reqMember($party);
         reqThrowingSpotify(new SpotifyWebAPIException('Service unavailable', 503));
 
-        (new RequestCheckService($party->refresh(), $member))->checkSong('nope');
+        app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
     })->throws(SpotifyWebAPIException::class, 'Service unavailable');
 });
 
@@ -498,7 +515,7 @@ describe('UpcomingSongController::store', function () {
             ->and(Vote::first()->value)->toBe(1);
     });
 
-    it('returns 400 with the reason in the message and spotify_id errors for a rejected track', function () {
+    it('returns 400 with the reason in the message and provider_track_id errors for a rejected track', function () {
         $party = reqParty(['allow_requests' => true, 'explicit' => false]);
         $member = reqMember($party);
         FakeSpotify::install()->respond('getTrack', reqTrack('dirty', ['explicit' => true]));
@@ -507,7 +524,7 @@ describe('UpcomingSongController::store', function () {
             ->assertBadRequest()
             ->assertExactJson([
                 'message' => 'Explicit songs are not allowed',
-                'errors' => ['spotify_id' => ['Explicit songs are not allowed']],
+                'errors' => ['provider_track_id' => ['Explicit songs are not allowed']],
             ]);
 
         expect(UpcomingSong::count())->toBe(0)->and(Vote::count())->toBe(0);
@@ -586,20 +603,20 @@ describe('UpcomingSongController::store', function () {
         expect(UpcomingSong::count())->toBe(0);
     });
 
-    it('returns 422 validation error when spotify_id is missing', function () {
+    it('returns 422 validation error when provider_track_id is missing', function () {
         $party = reqParty(['allow_requests' => true]);
         $member = reqMember($party);
         Sanctum::actingAs($member->user);
 
         $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('spotify_id');
+            ->assertJsonValidationErrors('provider_track_id');
     });
 
     it('returns 401 for an unauthenticated post', function () {
         $party = reqParty(['allow_requests' => true]);
 
-        $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['spotify_id' => 'track1'])->assertUnauthorized();
+        $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['provider_track_id' => 'track1'])->assertUnauthorized();
     });
 
     it('adds a vote to an existing waiting request without re-running checks or creating a second request', function () {

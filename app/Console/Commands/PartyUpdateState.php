@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Party;
+use App\Services\PlaybackSync;
 use Illuminate\Console\Command;
 
 class PartyUpdateState extends Command
@@ -33,7 +34,7 @@ class PartyUpdateState extends Command
 
             return self::FAILURE;
         }
-        $party->updateState();
+        app(PlaybackSync::class)->sync($party);
 
         return self::SUCCESS;
     }

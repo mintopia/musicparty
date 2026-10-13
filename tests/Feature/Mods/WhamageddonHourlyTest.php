@@ -2,6 +2,7 @@
 
 use App\Models\UpcomingSong;
 use App\Mods\Whamageddon\Whamageddon;
+use App\Services\ModSettingsStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Tests\Support\WhamageddonFixtures;
@@ -49,7 +50,7 @@ it('pins that a stored boolean false reads back as the truthy string b:0; so hou
 
     (new Whamageddon($party))->hourly();
 
-    expect($party->fresh()->getModSettingValue('whamageddon', 'enabled'))->toBe('b:0;')
+    expect(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'enabled'))->toBe('b:0;')
         ->and($upcoming->fresh()->score_adjustment)->toBe(1);
 });
 
@@ -112,9 +113,9 @@ it('adds the song to the party when there is no upcoming song', function () {
     (new Whamageddon($party))->hourly();
 
     $upcoming = $party->upcoming()->sole();
-    expect($upcoming->song->spotify_id)->toBe(WhamageddonFixtures::TRACK_ID)
+    expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
         ->and($upcoming->score_adjustment)->toBe(0)
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($upcoming->id);
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($upcoming->id);
 });
 
 it('adds nothing in the quiet window even when there is no upcoming song', function () {
@@ -198,7 +199,7 @@ it('waits without re-adding until two hours after the upcoming song was queued',
 
     expect($party->upcoming()->count())->toBe(1)
         ->and($upcoming->fresh()->score_adjustment)->toBe(0)
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($upcoming->id)
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($upcoming->id)
         ->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
@@ -215,7 +216,7 @@ it('re-adds a new upcoming row two hours after the previous one was queued', fun
         ->and($new->score_adjustment)->toBe(0)
         ->and($new->user_id)->toBeNull()
         ->and($old->fresh()->score_adjustment)->toBe(0)
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($new->id);
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($new->id);
 });
 
 it('still runs delayPlayback against the old queued upcoming after re-adding', function () {

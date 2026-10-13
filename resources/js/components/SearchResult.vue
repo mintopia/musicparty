@@ -127,7 +127,7 @@
             add() {
                 this.state.sending = true;
                 axios.post(`/api/v1/parties/${this.party}/upcomingsongs`, {
-                    spotify_id: this.state.id
+                    provider_track_id: this.state.id
                 }).then((response) => {
                     this.updateResponseFromData(response.data.data);
                 }).catch((error) => {

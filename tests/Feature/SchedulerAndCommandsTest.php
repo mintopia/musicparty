@@ -8,10 +8,15 @@ use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Music\Data\Device;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Mockery\MockInterface;
+use Tests\Support\FakeFallbackPlaylist;
 use Tests\Support\FakeSpotify;
 
 /**
@@ -116,10 +121,8 @@ it('party:force fails for a valid code whose party is ineligible', function () {
 });
 
 it('party:force starts a forced party whose device is online without taking a sync lock (E5 R2)', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    $fake->withBackupPlaylist(['bk1']);
+    FakeSpotify::install();
+    $fake = FakeFallbackPlaylist::seed(['bk1'], 'backup')->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)]);
 
     $this->artisan('party:force')
@@ -130,8 +133,7 @@ it('party:force starts a forced party whose device is online without taking a sy
 });
 
 it('party:force skips a party whose device is offline', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('other')]]);
+    app(FakeMusicProvider::class)->withDevices([new Device('other', 'Other', 'Speaker', true)]);
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20)]);
     $before = $party->last_updated_at;
 
@@ -141,8 +143,7 @@ it('party:force skips a party whose device is offline', function () {
 });
 
 it('party:force ignores polling, unforced, inactive, deviceless and recently updated parties', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
+    app(FakeMusicProvider::class)->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $old = now()->subMinutes(20);
     activeParty(['poll' => true, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => $old]);
     activeParty(['poll' => false, 'force' => false, 'device_id' => 'dev1', 'last_updated_at' => $old]);
@@ -154,10 +155,8 @@ it('party:force ignores polling, unforced, inactive, deviceless and recently upd
 });
 
 it('party:force with a code processes only that party', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    $fake->withBackupPlaylist(['bk1']);
+    FakeSpotify::install();
+    $fake = FakeFallbackPlaylist::seed(['bk1'], 'backup')->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $attributes = ['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)];
     $target = activeParty($attributes);
     $other = activeParty($attributes);
@@ -174,7 +173,7 @@ it('party:refreshaccesstokens reports when there is no spotify provider', functi
         ->assertSuccessful();
 });
 
-it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via getSpotifyApi with no lock or result check (E5 R5, R6)', function () {
+it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway with no lock or result check (E5 R5, R6)', function () {
     $provider = SocialProvider::factory()->create(['code' => 'spotify']);
     $expiring = User::factory()->create();
     $fresh = User::factory()->create();
@@ -182,15 +181,12 @@ it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via get
     LinkedAccount::factory()->create(['user_id' => $fresh->id, 'social_provider_id' => $provider->id, 'access_token_expires_at' => now()->addMinutes(10)]);
 
     $refreshed = [];
-    Event::listen('eloquent.retrieved: '.LinkedAccount::class, function (LinkedAccount $account) use (&$refreshed) {
-        $user = Mockery::mock(User::class)->makePartial();
-        $user->forceFill($account->user->getAttributes());
-        $user->shouldReceive('getSpotifyApi')->andReturnUsing(function () use (&$refreshed, $user) {
+    $this->mock(SpotifyGateway::class, function (MockInterface $mock) use (&$refreshed) {
+        $mock->shouldReceive('client')->andReturnUsing(function (User $user) use (&$refreshed) {
             $refreshed[] = $user->id;
 
             return null;
         });
-        $account->setRelation('user', $user);
     });
 
     $this->artisan('party:refreshaccesstokens')->assertSuccessful();

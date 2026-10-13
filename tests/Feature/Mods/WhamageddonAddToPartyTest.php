@@ -3,6 +3,7 @@
 use App\Models\PartyModSetting;
 use App\Models\UpcomingSong;
 use App\Mods\Whamageddon\Whamageddon;
+use App\Services\ModSettingsStore;
 use Tests\Support\WhamageddonFixtures;
 
 beforeEach(function () {
@@ -16,11 +17,11 @@ it('adds the configured track to the party on enable', function () {
     (new Whamageddon($party))->enable();
 
     $upcoming = $party->upcoming()->sole();
-    expect($upcoming->song->spotify_id)->toBe(WhamageddonFixtures::TRACK_ID)
+    expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
         ->and($upcoming->user_id)->toBeNull()
         ->and($upcoming->fallback_override)->toBe('Whamageddon')
         ->and($upcoming->css_classes)->toBe('whamageddon')
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($upcoming->id)
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($upcoming->id)
         ->and($this->fake->callsTo('getTrack'))->toBe([[WhamageddonFixtures::TRACK_ID]]);
 });
 
@@ -81,7 +82,7 @@ it('reuses an existing unqueued upcoming for the same track', function () {
     expect($upcoming->id)->toBe($existing->id)
         ->and($upcoming->score_adjustment)->toBe(1)
         ->and($upcoming->css_classes)->toBe('whamageddon')
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($existing->id)
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($existing->id)
         ->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
@@ -93,7 +94,7 @@ it('does not reuse an existing queued upcoming and creates a new row', function 
 
     expect($party->upcoming()->count())->toBe(2);
     $new = $party->upcoming()->whereKeyNot($queued->id)->sole();
-    expect($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe($new->id);
+    expect(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($new->id);
 });
 
 it('deletes the upcoming song and the upcoming_song_id setting on disable', function () {
@@ -105,7 +106,7 @@ it('deletes the upcoming song and the upcoming_song_id setting on disable', func
 
     expect(UpcomingSong::find($id))->toBeNull()
         ->and(PartyModSetting::whereParty_id($party->id)->whereHas('setting', fn ($q) => $q->where('code', 'upcoming_song_id'))->exists())->toBeFalse()
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe(0);
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe(0);
 });
 
 it('disable is safe when nothing was added', function () {

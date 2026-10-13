@@ -5,6 +5,8 @@ namespace App\Mods\Whamageddon;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\ModSettingsStore;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
@@ -15,7 +17,12 @@ class Whamageddon
 
     protected bool $isEnabled = false;
 
-    public function __construct(protected Party $party) {}
+    protected ModSettingsStore $settings;
+
+    public function __construct(protected Party $party, ?ModSettingsStore $settings = null)
+    {
+        $this->settings = $settings ?? app(ModSettingsStore::class);
+    }
 
     public function hourly(): void
     {
@@ -24,7 +31,7 @@ class Whamageddon
 
             return;
         }
-        if (! $this->party->getModSettingValue(self::CODE, 'enabled')) {
+        if (! $this->settings->value($this->party, self::CODE, 'enabled')) {
             Log::info("{$this->party} Whamageddon: Whamageddon is not enabled");
 
             return;
@@ -90,12 +97,12 @@ class Whamageddon
             Log::info("{$this->party} Whamageddon: Upcoming song found, removing from party");
             $upcoming->delete();
         }
-        $this->party->deleteModSetting(self::CODE, 'upcoming_song_id');
+        $this->settings->delete($this->party, self::CODE, 'upcoming_song_id');
     }
 
     protected function addToParty(): void
     {
-        $trackId = $this->party->getModSettingValue(self::CODE, 'spotify_id');
+        $trackId = $this->settings->value($this->party, self::CODE, 'spotify_id');
         if ($trackId === null) {
             Log::warning("{$this->party} Whamageddon: No Spotify track ID to add");
 
@@ -104,10 +111,10 @@ class Whamageddon
         $upcoming = $this->party->upcoming()
             ->whereNull('queued_at')
             ->whereHas('song', function ($query) use ($trackId) {
-                $query->where('spotify_id', $trackId);
+                $query->where('provider_track_id', $trackId);
             })->first();
         if ($upcoming === null) {
-            $response = $this->party->user->requireSpotifyApi()->getTrack($trackId);
+            $response = app(SpotifyGateway::class)->requireClient($this->party->user)->getTrack($trackId);
             if (! $response) {
                 Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} in Spotify");
 
@@ -120,8 +127,8 @@ class Whamageddon
             $upcoming->party()->associate($this->party);
         }
         $upcoming->user_id = null;
-        $upcoming->fallback_override = $this->party->getModSettingValue(self::CODE, 'fallback_name');
-        $upcoming->css_classes = $this->party->getModSettingValue(self::CODE, 'css_classes');
+        $upcoming->fallback_override = $this->settings->value($this->party, self::CODE, 'fallback_name');
+        $upcoming->css_classes = $this->settings->value($this->party, self::CODE, 'css_classes');
         if ($upcoming->score_adjustment === 0) {
             $upcoming->score_adjustment = 1;
         }
@@ -132,7 +139,7 @@ class Whamageddon
             return;
         }
         Log::info("{$this->party} Whamageddon: Added song to party");
-        $this->party->setModSetting(self::CODE, 'upcoming_song_id', $upcoming->id);
+        $this->settings->set($this->party, self::CODE, 'upcoming_song_id', $upcoming->id);
     }
 
     protected function addUpvote(UpcomingSong $upcoming): void
@@ -140,7 +147,7 @@ class Whamageddon
         if ($upcoming->queued_at !== null) {
             Log::info("{$this->party} Whamageddon: The song has already been played");
         }
-        $upcoming->score_adjustment += $this->party->getModSettingValue(self::CODE, 'score_adjustment', 1);
+        $upcoming->score_adjustment += $this->settings->value($this->party, self::CODE, 'score_adjustment', 1);
         $upcoming->updateScore();
         $sign = '';
         if ($upcoming->score_adjustment > 0) {
@@ -151,7 +158,7 @@ class Whamageddon
 
     protected function getUpcomingSong(): ?UpcomingSong
     {
-        $upcoming = $this->party->getModSettingValue(self::CODE, 'upcoming_song_id');
+        $upcoming = $this->settings->value($this->party, self::CODE, 'upcoming_song_id');
         if ($upcoming === null || ! $upcoming) {
             return null;
         }

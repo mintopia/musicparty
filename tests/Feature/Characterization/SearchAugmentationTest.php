@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Purpose;
 use App\Enums\SettingType;
 use App\Models\LinkedAccount;
 use App\Models\Party;
@@ -11,7 +12,11 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
-use App\Services\SpotifySearchService;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\Requests\TrackEligibility;
+use App\Services\Spotify\SpotifyGateway;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Str;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Tests\Support\FakeSpotify;
@@ -75,14 +80,23 @@ function searchResults(FakeSpotify $fake, object ...$tracks): void
     $fake->respond('search', (object) ['tracks' => (object) ['items' => $tracks, 'total' => 57, 'limit' => 20, 'offset' => 0]]);
 }
 
+function searchPaginator(Party $party, PartyMember $member, string $query = 'q', int $page = 1, int $perPage = 20): LengthAwarePaginator
+{
+    $found = app(MusicProviderFactory::class)->forParty($party, Purpose::Search)->searchTracks($query, $page, $perPage);
+    $items = app(TrackEligibility::class)->annotate($party, $member, $found->items);
+
+    return new LengthAwarePaginator($items, $found->total, $perPage, $page);
+}
+
 function searchFor(Party $party, PartyMember $member, string $query = 'q', int $page = 1, int $perPage = 20): array
 {
-    $paginator = (new SpotifySearchService($party, $member))->search($query, $page, $perPage);
+    $paginator = searchPaginator($party, $member, $query, $page, $perPage);
 
-    return collect($paginator->items())->map(fn (object $item) => clone $item)->keyBy('id')->all();
+    return collect($paginator->items())->map(fn ($item) => (object) $item->toSearchResult())->keyBy('id')->all();
 }
 
 beforeEach(function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
     $this->fake = FakeSpotify::install();
     $this->owner = User::factory()->create();
     searchLinkAccount($this->owner, 'spotify', 'control-token');
@@ -253,7 +267,7 @@ it('blocks a track with the same name and artist as a waiting request', function
 it('skips the upcoming lookup and returns an empty page when Spotify returns no tracks', function () {
     searchResults($this->fake);
 
-    $paginator = (new SpotifySearchService($this->party, $this->member))->search('nothing');
+    $paginator = searchPaginator($this->party, $this->member, 'nothing');
 
     expect($paginator->items())->toBe([])->and($paginator->total())->toBe(57);
 });
@@ -263,7 +277,7 @@ it('passes market, limit and offset to Spotify and paginates with the reported t
     $this->party->refresh();
     searchResults($this->fake, FakeSpotify::track('a'));
 
-    $paginator = (new SpotifySearchService($this->party, $this->member))->search('daft punk', 3, 10);
+    $paginator = searchPaginator($this->party, $this->member, 'daft punk', 3, 10);
 
     expect($this->fake->callsTo('search'))->toBe([['daft punk', 'track', ['market' => 'GB', 'limit' => 10, 'offset' => 20]]])
         ->and($paginator->total())->toBe(57)
@@ -309,6 +323,6 @@ it('throws a RuntimeException when the owner has neither a spotifysearch nor a c
     $party = searchParty($bare, ['name' => 'Bare']);
     $member = searchMember($party);
 
-    expect(fn () => (new SpotifySearchService($party, $member))->search('q'))->toThrow(RuntimeException::class);
+    expect(fn () => searchPaginator($party, $member))->toThrow(RuntimeException::class);
     expect($this->fake->callsTo('search'))->toBeEmpty();
 });

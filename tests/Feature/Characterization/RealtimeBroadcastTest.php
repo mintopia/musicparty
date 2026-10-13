@@ -15,6 +15,14 @@ use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
+use App\Services\Music\Data\Track;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
+use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -153,47 +161,48 @@ it('broadcasts Party UpdatedEvent once when a rendered field changes', function 
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
 });
 
-it('broadcasts once per sync when the track, playback status and device change', function () {
-    $fake = FakeSpotify::install();
+function broadcastSyncParty(bool $playing): array
+{
+    FakeSpotify::install();
     $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
-    $playback = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), true, 1000);
-    $playback->device = FakeSpotify::device('device1');
-    $fake->respond('getMyCurrentPlaybackInfo', $playback);
+    $fake = app(FakeMusicProvider::class);
+    $fake->withTrack(new Track('fake', 'SYNCED', 'Name SYNCED', 200000, false, true, new AlbumRef('album-SYNCED', 'Test Album', null), [new ArtistRef('artist1', 'Test Artist')]));
+    $fake->withPlayback(broadcastPlayback($playing));
+
+    return [$party, $fake];
+}
+
+function broadcastPlayback(bool $playing): PlaybackState
+{
+    return new PlaybackState($playing, 'SYNCED', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'device1', 'Test Speaker', PlaybackSource::Polling);
+}
+
+it('broadcasts once per sync when the track, playback status and device change', function () {
+    [$party] = broadcastSyncParty(true);
     Event::fake([PartyUpdatedEvent::class]);
 
-    $party->updateState();
+    app(PlaybackSync::class)->sync($party);
 
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
 });
 
 it('broadcasts when only the playback status changes during a sync', function () {
-    $fake = FakeSpotify::install();
-    $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
-    $playing = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), true, 1000);
-    $playing->device = FakeSpotify::device('device1');
-    $fake->respond('getMyCurrentPlaybackInfo', $playing);
-    $party->updateState();
-
-    $paused = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), false, 1000);
-    $paused->device = FakeSpotify::device('device1');
-    $fake->respond('getMyCurrentPlaybackInfo', $paused);
+    [$party, $fake] = broadcastSyncParty(true);
+    app(PlaybackSync::class)->sync($party);
+    $fake->withPlayback(broadcastPlayback(false));
     Event::fake([PartyUpdatedEvent::class]);
 
-    $party->updateState();
+    app(PlaybackSync::class)->sync($party);
 
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
 });
 
 it('does not broadcast when a sync changes nothing that clients render', function () {
-    $fake = FakeSpotify::install();
-    $party = Party::factory()->create(['active' => true, 'backup_playlist_id' => 'BACKUP']);
-    $playback = FakeSpotify::playback(FakeSpotify::track('SYNCED', 'Name SYNCED'), false, 1000);
-    $playback->device = FakeSpotify::device('device1');
-    $fake->respond('getMyCurrentPlaybackInfo', $playback);
-    $party->updateState();
+    [$party] = broadcastSyncParty(false);
+    app(PlaybackSync::class)->sync($party);
     Event::fake([PartyUpdatedEvent::class]);
 
-    $party->updateState();
+    app(PlaybackSync::class)->sync($party);
 
     Event::assertNotDispatched(PartyUpdatedEvent::class);
 });

@@ -20,6 +20,13 @@ class FakeSpotify extends SpotifyWebAPI
         return $fake;
     }
 
+    public static function installUnlessBound(): void
+    {
+        if (! app()->bound(SpotifyWebAPI::class)) {
+            self::install();
+        }
+    }
+
     public function respond(string $method, mixed $response): self
     {
         $this->responses[$method] = $response;
@@ -156,6 +163,26 @@ class FakeSpotify extends SpotifyWebAPI
         return $this->record(__FUNCTION__, func_get_args());
     }
 
+    public function getAlbum(string $albumId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtist(string $artistId): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtistTopTracks(string $artistId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtistAlbums(string $artistId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
     public function getTrack(string $trackId, array|object $options = []): array|object
     {
         return $this->record(__FUNCTION__, func_get_args());
@@ -177,6 +204,11 @@ class FakeSpotify extends SpotifyWebAPI
     }
 
     public function play(string $deviceId = '', array|object $options = []): bool
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function previous(string $deviceId = ''): bool
     {
         return $this->record(__FUNCTION__, func_get_args());
     }

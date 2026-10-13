@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Party;
+use App\Services\PlaybackSync;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Illuminate\Bus\Queueable;
@@ -53,7 +54,7 @@ class PartyUpdate implements ShouldQueue
     public function handle(): void
     {
         try {
-            $this->update();
+            $this->update(app(PlaybackSync::class));
         } catch (SpotifyBackoffException $e) {
             Log::info("{$this->party}: Spotify backoff active, releasing for {$e->retryAfterSeconds}s");
             $this->release($e->retryAfterSeconds);
@@ -62,7 +63,7 @@ class PartyUpdate implements ShouldQueue
         }
     }
 
-    protected function update(): void
+    protected function update(PlaybackSync $sync): void
     {
         if ($this->party->user->spotifyNeedsRelink()) {
             Log::warning("{$this->party}: Spotify needs re-linking, stopping poll chain");
@@ -72,7 +73,7 @@ class PartyUpdate implements ShouldQueue
 
         if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
-            if (! $this->party->tryUpdateState()) {
+            if (! $sync->sync($this->party)) {
                 $this->release(2);
             }
 
@@ -87,13 +88,13 @@ class PartyUpdate implements ShouldQueue
         }
 
         Log::debug("{$this->party}: Updating from PartyUpdate job");
-        if (! $this->party->tryUpdateState()) {
+        if (! $sync->sync($this->party)) {
             $this->release(2);
 
             return;
         }
 
-        $delay = $this->party->getNextUpdateDelay();
+        $delay = $sync->nextUpdateDelay($this->party);
         if ($delay === null) {
             Log::debug("{$this->party}: No further update required");
         } else {

@@ -4,8 +4,11 @@ namespace App\Http\Requests;
 
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Spotify\SpotifyLibrary;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class PartyRequest extends FormRequest
 {
@@ -19,6 +22,13 @@ class PartyRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if (! $this->route('party') instanceof Party && ! $this->has('provider_id')) {
+            $this->merge(['provider_id' => MusicProviderFactory::DEFAULT_PROVIDER_ID]);
+        }
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -29,13 +39,16 @@ class PartyRequest extends FormRequest
         $party = $this->route('party');
         if ($party instanceof Party) {
             // We have a party, use the party owner's playlist
-            $playlists = $party->user->getPlaylists();
+            $playlists = app(SpotifyLibrary::class)->playlists($party->user);
         } else {
             // We don't have a party, use our playlists
-            $playlists = $this->resolveAuthenticatedUser($this)->getPlaylists();
+            $playlists = app(SpotifyLibrary::class)->playlists($this->resolveAuthenticatedUser($this));
         }
 
         return [
+            'provider_id' => $party instanceof Party
+                ? 'prohibited'
+                : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
             'name' => 'required|string|max:50',
             'backup_playlist_id' => [
                 'required',

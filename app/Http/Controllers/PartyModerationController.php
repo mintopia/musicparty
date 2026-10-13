@@ -6,11 +6,10 @@ use App\Enums\PartyModerationType;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
-use App\Support\SpotifyPayload;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use SpotifyWebAPI\SpotifyWebAPIException;
 
 class PartyModerationController extends Controller
 {
@@ -39,14 +38,9 @@ class PartyModerationController extends Controller
 
     public function create(Party $party, Request $request): View
     {
-        $spotifyData = null;
-        if ($request->has('track')) {
-            try {
-                $spotifyData = SpotifyPayload::object($party->user->requireSpotifyApi()->getTrack($request->input('track')));
-            } catch (SpotifyWebAPIException) {
-                // Do Nothing
-            }
-        }
+        $spotifyData = $request->has('track')
+            ? app(SpotifyGateway::class)->findTrack($party->user, (string) $request->input('track'))
+            : null;
 
         $moderation = new PartyModeration;
         $moderation->party()->associate($party);

@@ -2,18 +2,24 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Purpose;
 use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
+use App\Jobs\PartyUpdate;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Services\ModSettingsStore;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\PlaybackControl;
+use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyBackoffException;
+use App\Services\Spotify\SpotifyLibrary;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
-use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -39,8 +45,9 @@ class PartyController extends Controller
         return view('parties.create', [
             'party' => $party,
             'mods' => Mod::all(),
-            'playlists' => $this->resolveAuthenticatedUser($request)->getPlaylists(),
-            'devices' => $this->resolveAuthenticatedUser($request)->getDevices(),
+            'playlists' => app(SpotifyLibrary::class)->playlists($this->resolveAuthenticatedUser($request)),
+            'devices' => app(SpotifyLibrary::class)->devices($this->resolveAuthenticatedUser($request)),
+            'providerIds' => app(MusicProviderFactory::class)->selectableIds(),
         ]);
     }
 
@@ -48,7 +55,9 @@ class PartyController extends Controller
     {
         $party = new Party;
         $party->user()->associate($this->resolveAuthenticatedUser($request));
+        $party->provider_id = $request->string('provider_id')->toString();
         $this->updateObject($party, $request);
+        PartyUpdate::dispatch($party);
 
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
@@ -121,7 +130,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party): View
+    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): View
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
@@ -136,9 +145,10 @@ class PartyController extends Controller
 
         $results = null;
         if ($params['query']) {
-            $searchService = new SpotifySearchService($party, $member);
             try {
-                $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+                $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
+                $items = $eligibility->annotate($party, $member, $found->items);
+                $results = (new LengthAwarePaginator($items, $found->total, (int) $perPage, $page))->setPath(route('parties.search', $party->code))->appends($params);
             } catch (SpotifyRelinkRequiredException) {
                 session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
             } catch (SpotifyBackoffException) {
@@ -161,8 +171,8 @@ class PartyController extends Controller
             'party' => $party,
             'mods' => Mod::all(),
             'canManage' => true,
-            'playlists' => $party->user->getPlaylists(),
-            'devices' => $party->user->getDevices(),
+            'playlists' => app(SpotifyLibrary::class)->playlists($party->user),
+            'devices' => app(SpotifyLibrary::class)->devices($party->user),
         ]);
     }
 
@@ -189,8 +199,14 @@ class PartyController extends Controller
         $party->force = (bool) $request->input('force');
         $party->poll = (bool) $request->input('poll');
         $party->show_qrcode = (bool) $request->input('show_qrcode');
-        $party->device_name = null;
-        $party->device_id = $request->input('device_id');
+        $deviceId = $request->input('device_id') ?: null;
+        if ($deviceId === null) {
+            $party->device_name = null;
+        } elseif ($deviceId !== $party->device_id || $party->device_name === null) {
+            $party->device_id = $deviceId;
+            $party->device_name = app(PlaybackControl::class)->deviceName($party, $deviceId);
+        }
+        $party->device_id = $deviceId;
         $party->weighted = (bool) $request->input('weighted');
         if ($request->input('downvotes_per_hour')) {
             $party->downvotes_per_hour = $request->input('downvotes_per_hour');
@@ -218,12 +234,13 @@ class PartyController extends Controller
         }
         $party->save();
 
+        $store = app(ModSettingsStore::class);
         $modSettings = ModSetting::wherePrivate(false)->with('mod')->get();
         foreach ($modSettings as $modSetting) {
-            $currentValue = $party->getModSetting($modSetting->mod, $modSetting->code);
+            $currentValue = $store->value($party, $modSetting->mod, $modSetting->code);
             $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
             if ($value !== $currentValue) {
-                $party->setModSetting($modSetting->mod, $modSetting->code, $value);
+                $store->set($party, $modSetting->mod, $modSetting->code, $value);
             }
         }
     }

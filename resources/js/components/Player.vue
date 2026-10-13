@@ -19,7 +19,7 @@
                                         <i class="icon ti ti-vinyl"></i>
                                         {{ state.now.album.name }}
                                     </div>
-                                    <div class="pb-3 overflow-hidden" v-if="state.current && state.current.spotify_id === state.now.spotify_id">
+                                    <div class="pb-3 overflow-hidden" v-if="state.current && state.current.provider_track_id === state.now.provider_track_id">
                                         <i class="icon ti ti-music-question"></i>
                                         <template v-if="state.current.user !== null">
                                             Requested by {{ state.current.user }}

@@ -8,12 +8,19 @@ use App\Models\SocialProvider;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
-use App\Services\SpotifySearchService;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
+use App\Services\QueueSelector;
+use App\Services\Spotify\SpotifyGateway;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
 use SpotifyWebAPI\SpotifyWebAPI;
+use Tests\Support\FakeFallbackPlaylist;
 use Tests\Support\FakeSpotify;
 
 function seamSpotifyUser(): User
@@ -59,7 +66,7 @@ function seamUpcoming(Party $party, string $spotifyId, int $score = 5): Upcoming
 
 function seamQueueTracks(Party $party): void
 {
-    (new ReflectionMethod($party, 'addTracksToQueue'))->invoke($party);
+    app(QueueSelector::class)->sendNext($party);
 }
 
 it('blocks stray http requests', function () {
@@ -69,16 +76,15 @@ it('blocks stray http requests', function () {
 it('resolves the user spotify client from the container', function () {
     $fake = FakeSpotify::install();
 
-    expect(seamSpotifyUser()->getSpotifyApi())->toBe($fake);
+    expect(app(SpotifyGateway::class)->client(seamSpotifyUser()))->toBe($fake);
 });
 
-it('falls back to the container client in the search service', function () {
+it('falls back to the container client for the search client', function () {
     $fake = FakeSpotify::install();
     $user = seamSpotifyUser();
     $party = seamParty($user);
 
-    $service = new SpotifySearchService($party, $party->members()->firstOrNew());
-    $api = (new ReflectionMethod($service, 'getApi'))->invoke($service);
+    $api = app(SpotifyGateway::class)->searchClient($party->user);
 
     expect($api)->toBe($fake);
 });
@@ -92,30 +98,35 @@ it('builds a real client when nothing is bound', function () {
 it('serves sdk-shaped fixtures that Song can consume', function () {
     $song = Song::fromSpotify(FakeSpotify::track('abc'));
 
-    expect($song->spotify_id)->toBe('abc')->and($song->artists)->toHaveCount(1);
+    expect($song->provider_track_id)->toBe('abc')->and($song->artists)->toHaveCount(1);
 });
 
 it('lets the fake be bound before a party is created', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
+    FakeSpotify::install();
+    $fake = app(FakeMusicProvider::class)
+        ->withTrack(FakeFallbackPlaylist::track('now'))
+        ->withPlayback(new PlaybackState(true, 'now', null, 180000, 0, CarbonImmutable::now(), false, 'off', 'dev', 'Dev', PlaybackSource::Polling));
     $user = seamSpotifyUser();
 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
+    app(PlaybackSync::class)->sync($party);
 
-    expect($party->fresh()->song->spotify_id)->toBe('now')
-        ->and($fake->callsTo('getMyCurrentPlaybackInfo'))->not->toBeEmpty();
+    expect($party->fresh()->song->provider_track_id)->toBe('now')
+        ->and($fake->callsTo('currentPlayback'))->not->toBeEmpty();
 });
 
 it('orders the fallback playlist exactly with a seeded randomizer', function () {
     $ids = ['a', 'b', 'c', 'd', 'e'];
     $expected = (new Randomizer(new Mt19937(42)))->shuffleArray($ids);
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(42)));
-    FakeSpotify::install()->withBackupPlaylist($ids);
+    FakeSpotify::install();
+    FakeFallbackPlaylist::seed($ids, 'backup');
     $user = seamSpotifyUser();
 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
+    app(PlaybackSync::class)->sync($party);
 
-    $added = $party->upcoming()->orderBy('id')->get()->map(fn (UpcomingSong $u) => $u->song->spotify_id)->all();
+    $added = $party->upcoming()->orderBy('id')->get()->map(fn (UpcomingSong $u) => $u->song->provider_track_id)->all();
     expect($added)->toBe(array_slice($expected, 0, count($added)))->not->toBeEmpty();
 });
 
@@ -128,17 +139,19 @@ it('selects weighted queue songs exactly with a seeded randomizer', function () 
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(7)));
 
     seamQueueTracks($party->refresh());
-    $first = $fake->callsTo('queue');
+    $first = array_map(fn ($track) => $track->id, app(FakeMusicProvider::class)->sentToPlayer());
 
     foreach ($songs as $s) {
         $s->queued_at = null;
         $s->save();
     }
     $fake->calls = [];
+    app()->forgetInstance(FakeMusicProvider::class);
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(7)));
     seamQueueTracks($party->refresh());
 
-    expect($first)->not->toBeEmpty()->and($fake->callsTo('queue'))->toBe($first);
+    $second = array_map(fn ($track) => $track->id, app(FakeMusicProvider::class)->sentToPlayer());
+    expect($first)->not->toBeEmpty()->and($second)->toBe($first);
 });
 
 it('freezes time with travelTo, which is reset after each test', function () {

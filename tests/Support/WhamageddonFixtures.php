@@ -7,6 +7,7 @@ use App\Models\Party;
 use App\Models\PartyModSetting;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\ModSettingsStore;
 use Illuminate\Support\Facades\Artisan;
 
 class WhamageddonFixtures
@@ -39,7 +40,7 @@ class WhamageddonFixtures
         $party->refresh();
         PartyModSetting::withoutEvents(function () use ($party, $settings): void {
             foreach ($settings as $code => $value) {
-                $party->setModSetting('whamageddon', $code, $value);
+                app(ModSettingsStore::class)->set($party, 'whamageddon', $code, $value);
             }
         });
 
@@ -51,7 +52,7 @@ class WhamageddonFixtures
      */
     public static function upcoming(Party $party, array $attributes = [], bool $track = true): UpcomingSong
     {
-        $song = Song::whereSpotifyId(self::TRACK_ID)->first() ?? Song::factory()->create(['spotify_id' => self::TRACK_ID]);
+        $song = Song::where('provider_track_id', self::TRACK_ID)->first() ?? Song::factory()->create(['provider_track_id' => self::TRACK_ID]);
         $upcoming = UpcomingSong::factory()->waiting()->create(array_merge([
             'party_id' => $party->id,
             'song_id' => $song->id,
@@ -59,7 +60,7 @@ class WhamageddonFixtures
             'score_adjustment' => 0,
         ], $attributes));
         if ($track) {
-            PartyModSetting::withoutEvents(fn () => $party->setModSetting('whamageddon', 'upcoming_song_id', $upcoming->id));
+            PartyModSetting::withoutEvents(fn () => app(ModSettingsStore::class)->set($party, 'whamageddon', 'upcoming_song_id', $upcoming->id));
         }
 
         return $upcoming;

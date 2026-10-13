@@ -54,7 +54,20 @@ class SettingsSeeder extends Seeder
                 'validation' => 'sometimes|nullable|string|max:100|min:4',
                 'description' => 'If specified, users will be automatically taken to this party',
             ],
-
+            'provider-spotify-enabled' => (object) [
+                'name' => 'Spotify Music Provider',
+                'type' => SettingType::stBoolean,
+                'default' => true,
+                'validation' => 'sometimes|boolean',
+                'description' => 'Allow Parties to use Spotify as their Music Provider',
+            ],
+            'provider-fake-enabled' => (object) [
+                'name' => 'Fake Music Provider',
+                'type' => SettingType::stBoolean,
+                'default' => true,
+                'validation' => 'sometimes|boolean',
+                'description' => 'Allow Parties to use the Fake Music Provider (local environment only)',
+            ],
         ];
         foreach ($settings as $code => $setting) {
             $this->updateSetting($code, $setting);

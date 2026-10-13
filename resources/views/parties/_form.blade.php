@@ -1,6 +1,24 @@
 {{ csrf_field() }}
 <div class="card-body">
     <div class="mb-3">
+        <label class="form-label required">Music Provider</label>
+        <div>
+            @if($party->exists)
+                <input type="text" class="form-control" value="{{ ucfirst($party->provider_id) }}" disabled>
+                <small class="form-hint">The Music Provider cannot be changed after creation</small>
+            @else
+                <select name="provider_id" class="form-control @error('provider_id') is-invalid @enderror">
+                    @foreach($providerIds as $providerId)
+                        <option value="{{ $providerId }}" @if(old('provider_id') === $providerId) selected @endif>{{ ucfirst($providerId) }}</option>
+                    @endforeach
+                </select>
+                @error('provider_id')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            @endif
+        </div>
+    </div>
+    <div class="mb-3">
         <label class="form-label required">Name</label>
         <div>
             <input type="text" name="name" class="form-control @error('name') is-invalid @enderror"
@@ -211,7 +229,7 @@
                 @if ($setting->type === \App\Enums\SettingType::stBoolean)
                     <label class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" name="mods_{{ $mod->code }}_{{ $setting->code }}" value="1"
-                               @if(old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code))) checked @endif>
+                               @if(old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code))) checked @endif>
                         {{ $setting->name }}
                     </label>
                     @if ($setting->description)
@@ -224,7 +242,7 @@
                     <label class="form-label required">{{ $setting->name }}</label>
                     <div>
                         <input type="text" name="mods_{{ $mod->code }}_{{ $setting->code }}" class="form-control @error("mods_{$mod->code}_{$setting->code}") is-invalid @enderror"
-                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code) ?? '') }}">
+                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code) ?? '') }}">
                         @if ($setting->description)
                             <small class="form-hint">{{ $setting->description }}</small>
                         @endif

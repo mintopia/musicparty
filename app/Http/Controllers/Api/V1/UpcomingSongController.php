@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Enums\Purpose;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
@@ -11,9 +12,9 @@ use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
-use App\Services\RequestCheckService;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
-use App\Support\SpotifyPayload;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -70,36 +71,34 @@ class UpcomingSongController extends Controller
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
                 ->block((int) config('musicparty.request_lock_wait_seconds'), function () use ($request, $party, $member): UpcomingSong|JsonResponse {
                     $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
-                        $query->whereSpotifyId($request->input('spotify_id'));
+                        $query->where(['provider_id' => 'spotify', 'provider_track_id' => $request->input('provider_track_id')]);
                     })->first();
                     if (! $upcoming) {
-                        $response = $party->user->requireSpotifyApi()->getTrack($request->input('spotify_id'));
-                        if (! $response) {
+                        $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('provider_track_id'));
+                        if (! $track) {
                             return response()->json([
                                 'message' => 'Unable to find the song in Spotify.',
                                 'errors' => [
-                                    'spotify_id' => [
+                                    'provider_track_id' => [
                                         'Unable to find the song in Spotify.',
                                     ],
                                 ],
                             ], 422);
                         }
 
-                        $spotifySong = SpotifyPayload::object($response);
-                        $checkService = new RequestCheckService($party, $member);
-                        $checkResponse = $checkService->checkSong($spotifySong);
+                        $checkResponse = app(RequestRules::class)->check($party, $member, $track);
                         if (! $checkResponse->allowed) {
                             return response()->json([
                                 'message' => $checkResponse->reason,
                                 'errors' => [
-                                    'spotify_id' => [
+                                    'provider_track_id' => [
                                         $checkResponse->reason,
                                     ],
                                 ],
                             ])->setStatusCode(400);
                         }
 
-                        $song = Song::fromSpotify($spotifySong);
+                        $song = Song::fromTrack($track);
                         $upcoming = new UpcomingSong;
                         $upcoming->party()->associate($party);
                         $upcoming->user()->associate($this->resolveAuthenticatedUser($request));
@@ -120,7 +119,7 @@ class UpcomingSongController extends Controller
         if ($denial) {
             return response()->json([
                 'message' => $denial,
-                'errors' => ['spotify_id' => [$denial]],
+                'errors' => ['provider_track_id' => [$denial]],
             ], 400);
         }
         $vote = $upcoming->votes()->whereUserId($this->resolveAuthenticatedUser($request)->id)->first();

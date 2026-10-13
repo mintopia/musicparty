@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Mods\Whamageddon\Listeners\HourTickListener;
 use App\Mods\Whamageddon\Listeners\ModSettingDeletedListener;
 use App\Mods\Whamageddon\Listeners\ModSettingUpdatedListener;
+use App\Services\ModSettingsStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
@@ -47,7 +48,7 @@ it('registers the three whamageddon listeners', function () {
 it('enables whamageddon when the enabled setting changes to true', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'enabled' => 0]);
 
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
 
     expect($party->upcoming()->count())->toBe(1);
 });
@@ -55,17 +56,17 @@ it('enables whamageddon when the enabled setting changes to true', function () {
 it('pins that creating the enabled row for the first time does not trigger enable because getChanges is empty on insert', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
 
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
 
     expect($party->upcoming()->count())->toBe(0)->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
 it('disables whamageddon when the enabled setting changes to a falsy value', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'enabled' => 0]);
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
     expect($party->upcoming()->count())->toBe(1);
 
-    $party->setModSetting('whamageddon', 'enabled', 0);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', 0);
 
     expect($party->upcoming()->count())->toBe(0);
 });
@@ -73,7 +74,7 @@ it('disables whamageddon when the enabled setting changes to a falsy value', fun
 it('pins that setting enabled to boolean false enables rather than disables because b:0; reads as truthy', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'enabled' => 0]);
 
-    $party->setModSetting('whamageddon', 'enabled', false);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', false);
 
     expect($party->upcoming()->count())->toBe(1);
 });
@@ -81,7 +82,7 @@ it('pins that setting enabled to boolean false enables rather than disables beca
 it('ignores an unchanged enabled value', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'enabled' => true]);
 
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
 
     expect($party->upcoming()->count())->toBe(0)->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
@@ -89,7 +90,7 @@ it('ignores an unchanged enabled value', function () {
 it('ignores other whamageddon settings', function () {
     $party = WhamageddonFixtures::party();
 
-    $party->setModSetting('whamageddon', 'css_classes', 'other');
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'css_classes', 'other');
 
     expect($party->upcoming()->count())->toBe(0)->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
@@ -113,20 +114,20 @@ it('ignores settings from other mods named enabled', function () {
 
 it('disables whamageddon when the enabled setting is deleted', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'enabled' => 0]);
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
     expect($party->upcoming()->count())->toBe(1);
 
-    $party->deleteModSetting('whamageddon', 'enabled');
+    app(ModSettingsStore::class)->delete($party, 'whamageddon', 'enabled');
 
     expect($party->upcoming()->count())->toBe(0)
-        ->and($party->fresh()->getModSettingValue('whamageddon', 'upcoming_song_id'))->toBe(0);
+        ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe(0);
 });
 
 it('ignores deletion of other whamageddon settings', function () {
     $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID, 'css_classes' => 'x', 'enabled' => 0]);
-    $party->setModSetting('whamageddon', 'enabled', true);
+    app(ModSettingsStore::class)->set($party, 'whamageddon', 'enabled', true);
 
-    $party->deleteModSetting('whamageddon', 'css_classes');
+    app(ModSettingsStore::class)->delete($party, 'whamageddon', 'css_classes');
 
     expect($party->upcoming()->count())->toBe(1);
 });

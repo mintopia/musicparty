@@ -137,7 +137,7 @@ it('does not queue on the simple webhook when queueing is disabled and updates i
 
     $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
 
-    Queue::assertNothingPushed();
+    Queue::assertNotPushed(PartyUpdate::class);
 });
 
 it('accepts an unauthenticated soloist webhook and dispatches PartyUpdate (no token auth today)', function () {

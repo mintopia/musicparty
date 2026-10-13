@@ -15,7 +15,8 @@ use stdClass;
 /**
  * @property int $id
  * @property string $name
- * @property string $spotify_id
+ * @property string $provider_id
+ * @property string $provider_album_id
  * @property string $image_url
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -55,28 +56,29 @@ class Album extends Model
 
     public static function fromSpotify(stdClass $spotifyAlbum): Album
     {
-        $album = Album::whereSpotifyId($spotifyAlbum->id)->first();
+        $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->first();
         if ($album) {
             return $album;
         }
         try {
             $album = new Album;
-            $album->spotify_id = $spotifyAlbum->id;
+            $album->provider_id = 'spotify';
+            $album->provider_album_id = $spotifyAlbum->id;
             $album->name = $spotifyAlbum->name;
             $album->image_url = $spotifyAlbum->images[0]->url;
             $album->save();
         } catch (UniqueConstraintViolationException) {
-            $album = Album::whereSpotifyId($spotifyAlbum->id)->firstOrFail();
+            $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->firstOrFail();
         }
 
         return $album;
     }
 
-    /** @return array{spotify_id: string, name: string, image_url: string} */
+    /** @return array{provider_album_id: string, name: string, image_url: string} */
     public function toApi(): array
     {
         return [
-            'spotify_id' => $this->spotify_id,
+            'provider_album_id' => $this->provider_album_id,
             'name' => $this->name,
             'image_url' => $this->image_url,
         ];
