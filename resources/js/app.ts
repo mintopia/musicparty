@@ -17,7 +17,7 @@ import.meta.glob([
     '../fonts/**',
 ], {eager: true, query: '?url', import: 'default'});
 
-const app = createApp()
+const app = createApp({})
 
 app.component('player', Player)
 app.component('next', Next)

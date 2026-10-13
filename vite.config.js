@@ -8,7 +8,7 @@ export default defineConfig({
     plugins: [
         wayfinder(),
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js', 'resources/js/inertia.ts'],
+            input: ['resources/css/app.css', 'resources/js/app.ts', 'resources/js/inertia.ts'],
             refresh: true,
         }),
         vue({
