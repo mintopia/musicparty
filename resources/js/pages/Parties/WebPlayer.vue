@@ -308,13 +308,23 @@ onBeforeUnmount(() => {
                                 Click to resume
                             </button>
                             <div class="mt-3 d-flex gap-2">
-                                <button type="button" class="btn btn-outline-secondary" data-test="previous" @click="command((sdk) => sdk.previousTrack())">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-test="previous"
+                                    @click="command((sdk) => sdk.previousTrack())"
+                                >
                                     Previous
                                 </button>
                                 <button type="button" class="btn btn-primary" data-test="start" @click="startPlayback">
                                     {{ paused ? 'Play' : 'Pause' }}
                                 </button>
-                                <button type="button" class="btn btn-outline-secondary" data-test="next" @click="command((sdk) => sdk.nextTrack())">
+                                <button
+                                    type="button"
+                                    class="btn btn-outline-secondary"
+                                    data-test="next"
+                                    @click="command((sdk) => sdk.nextTrack())"
+                                >
                                     Next
                                 </button>
                             </div>
