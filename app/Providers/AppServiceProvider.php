@@ -18,6 +18,7 @@ use App\Observers\ThemeObserver;
 use App\Observers\UpcomingSongObserver;
 use App\Observers\UserObserver;
 use App\Observers\VoteObserver;
+use App\Services\ActiveTheme;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\ModSettingsStore;
@@ -50,6 +51,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        $this->app->scoped(ActiveTheme::class);
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
@@ -95,14 +97,10 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::directive('setting', fn (string $expression, $default = null) => "<?php echo App\Models\Setting::fetch($expression, $default); ?>");
 
-        view()->composer(['layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
-            $currentTheme = Theme::whereActive(true)->first();
-            $darkMode = false;
-            if ($currentTheme) {
-                $darkMode = $currentTheme->dark_mode;
-            }
-            $view->with('currentTheme', $currentTheme);
-            $view->with('darkMode', $darkMode);
+        view()->composer(['app', 'layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
+            $activeTheme = $this->app->make(ActiveTheme::class);
+            $view->with('currentTheme', $activeTheme->current());
+            $view->with('darkMode', $activeTheme->darkMode());
         });
 
         Pulse::user(fn ($user) => [

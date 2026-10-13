@@ -17,8 +17,7 @@ class ThemesSeeder extends Seeder
                 'name' => 'Default',
                 'code' => 'default',
                 'readonly' => true,
-                'primary' => '#0054a6',
-                'nav_background' => '#182433',
+                'tokens' => ['primary' => '#0054a6', 'nav-background' => '#182433'],
                 'css' => '',
             ],
         ];

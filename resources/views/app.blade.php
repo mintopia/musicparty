@@ -7,9 +7,10 @@
     @include('partials._pusher-config')
 
     @vite(['resources/css/app.css', 'resources/js/inertia.ts'])
+    @include('partials._theme')
     @inertiaHead
 </head>
-<body>
+<body @if($darkMode) data-bs-theme="dark" @endif>
 @inertia
 </body>
 </html>
