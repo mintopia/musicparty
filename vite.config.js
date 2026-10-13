@@ -9,7 +9,7 @@ export default defineConfig({
     plugins: [
         wayfinder(),
         laravel({
-            input: ['resources/js/app.ts', 'resources/js/inertia.ts'],
+            input: ['resources/js/inertia.ts'],
             refresh: true,
         }),
         vue({

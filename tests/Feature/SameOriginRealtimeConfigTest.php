@@ -2,26 +2,16 @@
 
 use App\Services\RealtimeConfig;
 use Illuminate\Http\Request;
+use Inertia\Testing\AssertableInertia as Assert;
 
-it('renders the same-origin realtime config into pusherConfig', function () {
-    config(['reverb.apps.apps.0.key' => 'party-key']);
-    $this->app->instance('request', Request::create('https://party.example.test:8443/login'));
-
-    $html = (string) view('partials._pusher-config');
-
-    expect($html)->toContain('"appKey":"party-key"')
-        ->toContain('"host":"party.example.test"')
-        ->toContain('"port":8443')
-        ->toContain('"forceTLS":true')
-        ->not->toContain('env(');
-});
-
-it('shares the identical config through Inertia and the Blade partial', function () {
+it('shares the same-origin realtime config through Inertia', function () {
     config(['reverb.apps.apps.0.key' => 'party-key']);
     $expected = ['appKey' => 'party-key', 'host' => 'party.example.test', 'port' => 8443, 'forceTLS' => true];
 
     expect(app(RealtimeConfig::class)->forRequest(Request::create('https://party.example.test:8443/login')))->toBe($expected);
-    $this->withoutVite()->get('https://party.example.test:8443/login')->assertSee(json_encode($expected), false);
+    $this->withoutVite()->get('https://party.example.test:8443/login')
+        ->assertInertia(fn (Assert $page) => $page->where('reverb', $expected))
+        ->assertDontSee('window.pusherConfig', false);
 });
 
 it('does not call env() in any Blade view', function () {
@@ -56,6 +46,6 @@ it('renders the realtime config after config is cached', function () {
 
     $this->withoutVite()->get('/login')
         ->assertOk()
-        ->assertSee('window.pusherConfig = {"appKey":'.json_encode($cached['reverb']['apps']['apps'][0]['key']), false)
+        ->assertInertia(fn (Assert $page) => $page->where('reverb.appKey', $cached['reverb']['apps']['apps'][0]['key']))
         ->assertDontSee('VITE_REVERB', false);
 });
