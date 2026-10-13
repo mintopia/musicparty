@@ -6,7 +6,6 @@ import type Pusher from 'pusher-js';
 declare global {
     interface Window {
         _: LoDashStatic;
-        Popper: typeof import('@popperjs/core');
         axios: AxiosStatic;
         Echo: Echo<'reverb'>;
         Pusher: typeof Pusher;

@@ -24,7 +24,7 @@
     <div class="row mb-3">
         <div class="col">
             <label class="form-label">Custom CSS</label>
-            <textarea class="form-control text-monospace @error('css') is-invalid @enderror" placeholder="Custom CSS Code" name="css" rows="5" @if($theme->readonly) disabled="" @endif>{{ old('css', $theme->css ?? '') }}</textarea>
+            <textarea class="form-control font-monospace @error('css') is-invalid @enderror" placeholder="Custom CSS Code" name="css" rows="5" @if($theme->readonly) disabled="" @endif>{{ old('css', $theme->css ?? '') }}</textarea>
 
             @error('css')
             <p class="invalid-feedback">{{ $message }}</p>
@@ -41,9 +41,7 @@
                     <label class="form-label @if($required) required @endif">{{ $label }} Colour</label>
                     <div class="col-md-5">
                         <div class="input-group">
-                            <span class="input-group-prepend">
-                                <input type="color" class="form-control form-control-color" value="{{ $value ?: '#000000' }}" title="{{ $label }} Colour" @if($theme->readonly) disabled="" @endif>
-                            </span>
+                            <input type="color" class="form-control form-control-color" value="{{ $value ?: '#000000' }}" title="{{ $label }} Colour" @if($theme->readonly) disabled="" @endif>
                             <input type="text" name="tokens[{{ $token }}]" class="form-control @error("tokens.{$token}") is-invalid @enderror"
                                    placeholder="Colour" value="{{ $value }}" @if($theme->readonly) disabled="" @endif>
                         </div>

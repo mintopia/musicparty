@@ -1,5 +1,4 @@
 import '~tabler/dist/css/tabler.css';
-import '../css/app.css';
 import '../sass/app.scss';
 import '@tabler/icons-webfont/dist/tabler-icons.css';
 import '../sass/tabler-icons-filled.scss';

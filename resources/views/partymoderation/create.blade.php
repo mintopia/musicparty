@@ -38,48 +38,48 @@
                 <h3>Track Data</h3>
 
                 <div class="datagrid">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Track ID</div>
-                        <div class="datagrid-content">{{ $track->id ?? 'None' }}</div>
+                        <div>{{ $track->id ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Track Name</div>
-                        <div class="datagrid-content">{{ $track->name ?? 'None' }}</div>
+                        <div>{{ $track->name ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Album ID</div>
-                        <div class="datagrid-content">{{ $track->album->id ?? 'None' }}</div>
+                        <div>{{ $track->album->id ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Album Name</div>
-                        <div class="datagrid-content">{{ $track->album->name ?? 'None' }}</div>
+                        <div>{{ $track->album->name ?? 'None' }}</div>
                     </div>
                 </div>
                 @foreach ($track->artists as $artist)
                     <div class="datagrid mt-3">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Artist ID</div>
-                            <div class="datagrid-content">{{ $artist->id ?? 'None' }}</div>
+                            <div>{{ $artist->id ?? 'None' }}</div>
                         </div>
                     </div>
                     <div class="datagrid mt-3">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Artist Name</div>
-                            <div class="datagrid-content">{{ $artist->name ?? 'None' }}</div>
+                            <div>{{ $artist->name ?? 'None' }}</div>
                         </div>
                     </div>
                 @endforeach
 
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">ISRC Code</div>
-                        <div class="datagrid-content">{{ $track->isrc ?? 'None' }}</div>
+                        <div>{{ $track->isrc ?? 'None' }}</div>
                     </div>
                 </div>
             </div>

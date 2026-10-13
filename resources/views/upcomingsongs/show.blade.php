@@ -26,43 +26,43 @@
                         </div>
                         <div class="col-lg-10">
                             <div class="datagrid">
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Artists</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         @foreach($song->song->artists as $artist)
                                             <a href="{{ route('parties.songs.index', [$party->code, 'artist' => $artist->name]) }}">{{ $artist->name }}</a>@if($artist->id != $song->song->artists->last()->id), @endif
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Album</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         <a href="{{ route('parties.songs.index', [$party->code, 'album' => $song->song->album->name]) }}">{{ $song->song->album->name }}</a>
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Duration</div>
-                                    <div class="datagrid-content">{{ format_ms($song->song->length) }}</div>
+                                    <div>{{ format_ms($song->song->length) }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Votes</div>
-                                    <div class="datagrid-content">{{ $song->votes()->count() }}</div>
+                                    <div>{{ $song->votes()->count() }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Score</div>
-                                    <div class="datagrid-content">{{ $song->score }}</div>
+                                    <div>{{ $song->score }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Requested</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         <span title="{{ $song->created_at->format('Y-m-d H:i:s') }}">
                                             {{ $song->created_at->diffForHumans() }}
                                         </span>
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Requested By</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         @if($song->user)
                                             <a href="{{ route('parties.users.show', [$party->code, $song->user->getPartyMember($party)]) }}">{{ $song->user->nickname }}</a>
                                         @else
@@ -70,15 +70,15 @@
                                         @endif
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Sent to {{ $providerName }}</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         @if($song->queued_at)
                                             <span title="{{ $song->queued_at->format('Y-m-d H:i:s') }}">
                                                 {{ $song->queued_at->diffForHumans() }}
                                             </span>
                                         @else
-                                            <span class="text-mute">Not Sent</span>
+                                            <span class="text-muted">Not Sent</span>
                                         @endif
                                     </div>
                                 </div>
