@@ -8,6 +8,7 @@ use App\Models\Party;
 use App\Models\Role;
 use App\Models\User;
 use App\Mods\Foo\FooMod;
+use App\Mods\ModRegistry;
 use App\Mods\PartyMods;
 use App\Mods\Whamageddon\Listeners\HourTickListener;
 use App\Services\Music\Data\Playlist;
@@ -75,7 +76,7 @@ it('treats a removed mod as not enabled', function () {
 });
 
 it('has no effect on the hourly tick while disabled and does once enabled', function () {
-    app()->instance(\App\Mods\ModRegistry::class, tap(new \App\Mods\ModRegistry(app_path('Mods')))->discover());
+    app()->instance(ModRegistry::class, tap(new ModRegistry(app_path('Mods')))->discover());
     WhamageddonFixtures::fake();
     WhamageddonFixtures::install();
     Carbon::setTestNow('2026-12-24 12:00:00');

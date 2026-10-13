@@ -2,8 +2,8 @@
 
 namespace App\Mods\Contracts;
 
-use App\Mods\SettingDefinition;
 use App\Models\Party;
+use App\Mods\SettingDefinition;
 
 interface Mod
 {

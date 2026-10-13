@@ -3,9 +3,9 @@
 namespace App\Mods\Whamageddon;
 
 use App\Enums\SettingType;
+use App\Models\Party;
 use App\Mods\Contracts\Mod;
 use App\Mods\SettingDefinition;
-use App\Models\Party;
 
 class WhamageddonMod implements Mod
 {

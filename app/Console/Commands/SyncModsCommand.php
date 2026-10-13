@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Mods\ModRegistry;
 use App\Models\Mod;
 use App\Models\ModSetting;
+use App\Mods\ModRegistry;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
 
