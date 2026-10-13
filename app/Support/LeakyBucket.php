@@ -2,8 +2,11 @@
 
 namespace App\Support;
 
+use Illuminate\Cache\Repository as CacheRepository;
+use Illuminate\Contracts\Cache\LockProvider;
 use Illuminate\Contracts\Cache\Repository;
 use Illuminate\Support\Facades\Cache;
+use LogicException;
 
 class LeakyBucket
 {
@@ -20,7 +23,11 @@ class LeakyBucket
     public function attempt(): bool
     {
         $store = $this->cache ?? Cache::store();
-        $lock = $store->lock("leaky-bucket-lock:{$this->key}", 5);
+        $lockProvider = $store instanceof CacheRepository ? $store->getStore() : null;
+        if (! $lockProvider instanceof LockProvider) {
+            throw new LogicException('The cache store does not support atomic locks.');
+        }
+        $lock = $lockProvider->lock("leaky-bucket-lock:{$this->key}", 5);
 
         return $lock->block(5, function () use ($store): bool {
             $now = now()->getPreciseTimestamp(6) / 1_000_000;

@@ -26,7 +26,7 @@ class PartyFallback extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $parties = Party::wherePoll(true)->whereActive(true)->where(function ($query) {
             $cutoff = now()->subSeconds(90);

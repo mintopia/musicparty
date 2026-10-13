@@ -2,6 +2,7 @@
 
 namespace App\Services\Contracts;
 
+use App\Enums\SettingType;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
@@ -15,6 +16,8 @@ interface SocialProviderContract
 
     /**
      * Fetch configuration information for the provider.
+     *
+     * @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}>
      */
     public function configMapping(): array;
 

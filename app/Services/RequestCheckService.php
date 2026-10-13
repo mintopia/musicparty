@@ -5,8 +5,10 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
+use App\Support\SpotifyPayload;
 use Illuminate\Support\Collection;
 use SpotifyWebAPI\SpotifyWebAPIException;
+use stdClass;
 
 class RequestCheckService
 {
@@ -19,6 +21,10 @@ class RequestCheckService
         $this->userHasTooManyRequests = $this->userHasTooManyRequests();
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return Collection<string, RequestCheckResponse>
+     */
     public function checkCollection(Collection $input): Collection
     {
         $output = [];
@@ -37,12 +43,12 @@ class RequestCheckService
         return collect($output);
     }
 
-    public function checkSong(object|string $input): RequestCheckResponse
+    public function checkSong(stdClass|string $input): RequestCheckResponse
     {
         if (is_string($input)) {
             // Get the song from Spotify
             try {
-                $spotifyData = $this->party->user->getSpotifyApi()->getTrack($input);
+                $spotifyData = SpotifyPayload::object($this->party->user->requireSpotifyApi()->getTrack($input));
             } catch (SpotifyWebAPIException $ex) {
                 if ($ex->getMessage() === 'invalid id') {
                     return new RequestCheckResponse(false, 'Song is not found in Spotify');
@@ -57,14 +63,18 @@ class RequestCheckService
         if ($response) {
             return $response;
         }
-        $response = $this->bulkCheck(collect([$spotifyData]));
-        if ($response->count() > 0) {
-            return $response->first();
+        $bulkResponse = $this->bulkCheck(collect([$spotifyData]))->first();
+        if ($bulkResponse !== null) {
+            return $bulkResponse;
         }
 
         return new RequestCheckResponse(true);
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return Collection<string, RequestCheckResponse>
+     */
     protected function bulkCheck(Collection $input): Collection
     {
         $output = [];
@@ -102,7 +112,7 @@ class RequestCheckService
         return collect($output);
     }
 
-    protected function singleCheck(object $spotifyData): ?RequestCheckResponse
+    protected function singleCheck(stdClass $spotifyData): ?RequestCheckResponse
     {
         if ($spotifyData->id === self::CONTEXT_PLAYLIST_TRACK) {
             return new RequestCheckResponse(false, 'This song is not available');
@@ -115,7 +125,7 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
         }
 
-        if ($this->member->role?->code === 'banned') {
+        if ($this->member->role->code === 'banned') {
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
@@ -148,7 +158,7 @@ class RequestCheckService
             return false;
         }
 
-        if ($this->member->role?->code === 'vip') {
+        if ($this->member->role->code === 'vip') {
             return false;
         }
 
@@ -160,6 +170,10 @@ class RequestCheckService
         return $count >= $this->party->max_requests;
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return array<string, RequestCheckResponse>
+     */
     protected function checkSimilarSongs(Collection $input): array
     {
         $names = [];
@@ -176,7 +190,9 @@ class RequestCheckService
             }
             $compositeIndex[$compositeKey][] = $track;
             $names[] = $track->name;
-            $artists = array_merge($artists, collect($track->artists)->pluck('name')->toArray());
+            foreach ($track->artists ?? [] as $artist) {
+                $artists[] = $artist->name;
+            }
         }
         $output = [];
 

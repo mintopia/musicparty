@@ -304,11 +304,11 @@ it('falls back to the control account session when the owner has no spotifysearc
         ->and($items['a']->allowed)->toBeTrue();
 });
 
-it('throws an Error when the owner has neither a spotifysearch nor a control account', function () {
+it('throws a RuntimeException when the owner has neither a spotifysearch nor a control account', function () {
     $bare = User::factory()->create();
     $party = searchParty($bare, ['name' => 'Bare']);
     $member = searchMember($party);
 
-    expect(fn () => (new SpotifySearchService($party, $member))->search('q'))->toThrow(Error::class);
+    expect(fn () => (new SpotifySearchService($party, $member))->search('q'))->toThrow(RuntimeException::class);
     expect($this->fake->callsTo('search'))->toBeEmpty();
 });

@@ -3,6 +3,8 @@
 namespace App\Services\SocialProviders;
 
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use SocialiteProviders\Twitch\Provider;
 
 class TwitchProvider extends AbstractSocialProvider
@@ -15,16 +17,16 @@ class TwitchProvider extends AbstractSocialProvider
 
     protected bool $supportsAuth = true;
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): AbstractProvider
     {
         return Socialite::buildProvider(Provider::class, [
-            'client_id' => $this->provider->getSetting('client_id'),
-            'client_secret' => $this->provider->getSetting('client_secret'),
+            'client_id' => $this->getSetting('client_id'),
+            'client_secret' => $this->getSetting('client_secret'),
             'redirect' => $this->redirectUrl,
         ]);
     }
 
-    protected function emailIsVerified($remoteUser): bool
+    protected function emailIsVerified(SocialiteUser $remoteUser): bool
     {
         return true;
     }

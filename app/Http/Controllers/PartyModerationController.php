@@ -6,12 +6,15 @@ use App\Enums\PartyModerationType;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
+use App\Support\SpotifyPayload;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
 class PartyModerationController extends Controller
 {
-    public function index(Request $request, Party $party)
+    public function index(Request $request, Party $party): View
     {
         $query = $party->moderations();
         $params = [
@@ -34,12 +37,12 @@ class PartyModerationController extends Controller
         ]);
     }
 
-    public function create(Party $party, Request $request)
+    public function create(Party $party, Request $request): View
     {
         $spotifyData = null;
         if ($request->has('track')) {
             try {
-                $spotifyData = $party->user->getSpotifyApi()->getTrack($request->input('track'));
+                $spotifyData = SpotifyPayload::object($party->user->requireSpotifyApi()->getTrack($request->input('track')));
             } catch (SpotifyWebAPIException) {
                 // Do Nothing
             }
@@ -57,7 +60,7 @@ class PartyModerationController extends Controller
         ]);
     }
 
-    public function store(PartyModerationRequest $request, Party $party)
+    public function store(PartyModerationRequest $request, Party $party): RedirectResponse
     {
         $moderation = new PartyModeration;
         $moderation->party()->associate($party);
@@ -68,7 +71,7 @@ class PartyModerationController extends Controller
             ->with('successMessage', 'The filter has been created');
     }
 
-    public function edit(Party $party, PartyModeration $moderation)
+    public function edit(Party $party, PartyModeration $moderation): View
     {
         return view('partymoderation.edit', [
             'party' => $party,
@@ -78,7 +81,7 @@ class PartyModerationController extends Controller
         ]);
     }
 
-    public function delete(Party $party, PartyModeration $moderation)
+    public function delete(Party $party, PartyModeration $moderation): View
     {
         return view('partymoderation.delete', [
             'party' => $party,
@@ -88,7 +91,7 @@ class PartyModerationController extends Controller
         ]);
     }
 
-    public function update(PartyModerationRequest $request, Party $party, PartyModeration $moderation)
+    public function update(PartyModerationRequest $request, Party $party, PartyModeration $moderation): RedirectResponse
     {
         $this->updateObject($moderation, $request);
 
@@ -112,7 +115,7 @@ class PartyModerationController extends Controller
         $moderation->save();
     }
 
-    public function destroy(Party $party, PartyModeration $moderation)
+    public function destroy(Party $party, PartyModeration $moderation): RedirectResponse
     {
         $moderation->delete();
 

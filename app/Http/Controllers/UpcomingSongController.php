@@ -6,11 +6,12 @@ use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class UpcomingSongController extends Controller
 {
-    public function index(UpcomingSongSearchRequest $request, Party $party)
+    public function index(UpcomingSongSearchRequest $request, Party $party): View
     {
         $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
         $params = [
@@ -90,7 +91,7 @@ class UpcomingSongController extends Controller
         ]);
     }
 
-    public function show(PaginationRequest $request, Party $party, UpcomingSong $song)
+    public function show(PaginationRequest $request, Party $party, UpcomingSong $song): View
     {
         $params = [];
         $perPage = $request->input('per_page', 20);

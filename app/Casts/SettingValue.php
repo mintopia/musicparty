@@ -8,6 +8,9 @@ use Illuminate\Contracts\Database\Eloquent\CastsAttributes;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Crypt;
 
+/**
+ * @implements CastsAttributes<mixed, mixed>
+ */
 class SettingValue implements CastsAttributes
 {
     /**
@@ -17,20 +20,16 @@ class SettingValue implements CastsAttributes
      */
     public function get(Model $model, string $key, mixed $value, array $attributes): mixed
     {
-        if ($model->encrypted && $value !== null) {
+        if ($model->getAttribute('encrypted') && $value !== null) {
             $value = Crypt::decrypt($value);
         }
         if (is_string($value)) {
-            try {
-                $unserialized = @unserialize($value);
-                if ($unserialized !== false) {
-                    $value = $unserialized;
-                }
-            } catch (\Exception) {
-                // Do nothing, assume it's OK!
+            $unserialized = @unserialize($value);
+            if ($unserialized !== false) {
+                $value = $unserialized;
             }
         }
-        switch ($model->type) {
+        switch ($model->getAttribute('type')) {
             case SettingType::stBoolean:
                 return (bool) $value;
             case SettingType::stInteger:
@@ -56,7 +55,7 @@ class SettingValue implements CastsAttributes
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
         $value = serialize($value);
-        if ($model->encrypted && $value !== null) {
+        if ($model->getAttribute('encrypted')) {
             $value = Crypt::encrypt($value);
         }
 

@@ -4,6 +4,7 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Random\Engine\Mt19937;
@@ -274,11 +275,11 @@ it('also treats a future not_before as eligible because the string NOW() sorts a
     expect(sentIds($fake))->toBe(['FUTURE']);
 });
 
-it('leaves the not_before cast malformed so the attribute stays a raw string (E5 R10)', function () {
+it('casts not_before to a Carbon instance', function () {
     [$party] = selectionParty();
     $request = waitingRequest($party, 'A', 0, ['not_before' => '2999-01-01 00:00:00']);
 
-    expect($request->fresh()->not_before)->toBeString();
+    expect($request->fresh()->not_before)->toBeInstanceOf(Carbon::class);
 });
 
 it('excludes zero and negative scored requests from the weighted draw and fills from them in score order', function () {

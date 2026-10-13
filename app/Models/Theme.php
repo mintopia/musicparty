@@ -2,12 +2,51 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property string $name
+ * @property string $code
+ * @property bool $readonly
+ * @property bool $active
+ * @property string $primary
+ * @property bool $dark_mode
+ * @property string $nav_background
+ * @property string|null $css
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereCss($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereDarkMode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereNavBackground($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme wherePrimary($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereReadonly($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Theme whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class Theme extends Model
 {
+    /** @use HasFactory<Factory<Theme>> */
     use HasFactory;
+
+    protected $casts = [
+        'readonly' => 'boolean',
+        'active' => 'boolean',
+        'dark_mode' => 'boolean',
+    ];
 
     public function rgb(string $property): string
     {

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Enums\SettingType;
 use App\Models\Setting;
 use Illuminate\Database\Seeder;
+use stdClass;
 
 class SettingsSeeder extends Seeder
 {
@@ -60,7 +61,7 @@ class SettingsSeeder extends Seeder
         }
     }
 
-    protected function updateSetting(string $code, object $data): void
+    protected function updateSetting(string $code, stdClass $data): void
     {
         $setting = Setting::whereCode($code)->first();
         if (! $setting) {

@@ -16,9 +16,6 @@ use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
-use Laravel\Reverb\Contracts\Logger as ReverbLogger;
-use Laravel\Reverb\Loggers\Log as ReverbLog;
-use Mockery\MockInterface;
 use Tests\Support\WhamageddonFixtures;
 
 beforeEach(function () {
@@ -29,22 +26,11 @@ beforeEach(function () {
 afterEach(function () {
     Carbon::setTestNow();
     CarbonImmutable::setTestNow();
-    $property = new ReflectionProperty(ReverbLog::class, 'logger');
-    $property->setValue(null, null);
 });
 
 function whamTick(): void
 {
     (new HourTickListener)->handle(new HourTickEvent);
-}
-
-function whamReverbLogger(): MockInterface
-{
-    $logger = Mockery::mock(ReverbLogger::class)->shouldIgnoreMissing();
-    $property = new ReflectionProperty(ReverbLog::class, 'logger');
-    $property->setValue(null, $logger);
-
-    return $logger;
 }
 
 it('registers the three whamageddon listeners', function () {
@@ -188,19 +174,17 @@ it('E5: pins current behaviour (HourTickListener lacks per-party isolation)', fu
     $healthy = WhamageddonFixtures::party(['enabled' => true]);
     $upcoming = WhamageddonFixtures::upcoming($healthy);
 
-    expect(fn () => whamTick())->toThrow(Error::class)
+    expect(fn () => whamTick())->toThrow(RuntimeException::class)
         ->and($upcoming->fresh()->score_adjustment)->toBe(0);
 });
 
-it('E5: pins current behaviour (HourTickListener logs through Reverb Log, not the app logger)', function () {
+it('logs the hourly tick through the app logger', function () {
     Carbon::setTestNow('2026-12-24 12:00:00');
     $party = WhamageddonFixtures::party(['enabled' => true]);
     WhamageddonFixtures::upcoming($party);
-    $reverb = whamReverbLogger();
-    $reverb->shouldReceive('info')->withArgs(fn ($title) => str_contains($title, 'Whamageddon: Processing hourly tick'))->once();
     Log::spy();
 
     whamTick();
 
-    Log::shouldNotHaveReceived('info', [Mockery::on(fn ($m) => str_contains((string) $m, 'Processing hourly tick'))]);
+    Log::shouldHaveReceived('info')->withArgs(fn ($message) => str_contains((string) $message, 'Whamageddon: Processing hourly tick'))->once();
 });

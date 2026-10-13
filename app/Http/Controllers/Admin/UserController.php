@@ -7,12 +7,13 @@ use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Models\Role;
 use App\Models\User;
-use Carbon\Carbon;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request): View
     {
         $filters = (object) [];
         $query = User::query();
@@ -63,14 +64,14 @@ class UserController extends Controller
         ]);
     }
 
-    public function show(User $user)
+    public function show(User $user): View
     {
         return view('admin.users.show', [
             'user' => $user,
         ]);
     }
 
-    public function edit(User $user)
+    public function edit(User $user): View
     {
         return view('admin.users.edit', [
             'user' => $user,
@@ -79,19 +80,19 @@ class UserController extends Controller
         ]);
     }
 
-    public function update(UserUpdateRequest $request, User $user)
+    public function update(UserUpdateRequest $request, User $user): RedirectResponse
     {
         $this->updateObject($user, $request);
 
         return response()->redirectToRoute('admin.users.show', $user->id)->with('successMessage', 'The user has been updated');
     }
 
-    protected function updateObject(User $user, Request $request)
+    protected function updateObject(User $user, Request $request): void
     {
         $user->nickname = $request->input('nickname');
 
         if ($request->input('terms', false)) {
-            $user->terms_agreed_at ??= Carbon::now();
+            $user->terms_agreed_at ??= now();
         } else {
             $user->terms_agreed_at = null;
         }
@@ -119,23 +120,23 @@ class UserController extends Controller
         $user->save();
     }
 
-    public function destroy(DeleteRequest $request, User $user)
+    public function destroy(DeleteRequest $request, User $user): RedirectResponse
     {
         $user->delete();
 
         return response()->redirectToRoute('admin.users.index')->with('successMessage', 'The user has been deleted');
     }
 
-    public function delete(User $user)
+    public function delete(User $user): View
     {
         return view('admin.users.delete', [
             'user' => $user,
         ]);
     }
 
-    public function impersonate(Request $request, User $user)
+    public function impersonate(Request $request, User $user): RedirectResponse
     {
-        $originalUser = $request->user();
+        $originalUser = $this->resolveAuthenticatedUser($request);
         $request->session()->flush();
         $request->session()->regenerate(true);
         auth('web')->login($user);

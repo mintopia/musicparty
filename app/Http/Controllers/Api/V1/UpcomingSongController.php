@@ -13,7 +13,10 @@ use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Services\RequestCheckService;
 use App\Services\UpcomingSongAugmentService;
+use App\Support\SpotifyPayload;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 
 class UpcomingSongController extends Controller
 {
@@ -22,7 +25,7 @@ class UpcomingSongController extends Controller
         $this->authorizeResource(UpcomingSong::class, 'upcomingsong');
     }
 
-    public function index(UpcomingSongAugmentService $augmentService, Request $request, Party $party)
+    public function index(UpcomingSongAugmentService $augmentService, Request $request, Party $party): UpcomingSongResourceCollection
     {
         $params = [];
         if ($request->has('per_page')) {
@@ -37,24 +40,24 @@ class UpcomingSongController extends Controller
             ->paginate($params['per_page'] ?? 20)->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 
-        $augmentedData = $augmentService->augmentCollection(collect($page->items()), $request->user());
+        $augmentedData = $augmentService->augmentCollection(collect($page->items()), $this->resolveAuthenticatedUser($request));
         $collection->augment($augmentedData->toArray());
 
         return $collection;
     }
 
-    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party, UpcomingSong $upcomingsong)
+    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party, UpcomingSong $upcomingsong): UpcomingSongResource
     {
         $resource = new UpcomingSongResource($upcomingsong);
-        $data = $augmentService->augment($upcomingsong, $request->user());
+        $data = $augmentService->augment($upcomingsong, $this->resolveAuthenticatedUser($request));
         $resource->augment($data);
 
         return $resource;
     }
 
-    public function store(UpcomingSongAugmentService $augmentService, UpcomingSongRequest $request, Party $party)
+    public function store(UpcomingSongAugmentService $augmentService, UpcomingSongRequest $request, Party $party): JsonResponse|UpcomingSongResource
     {
-        $member = $party->members()->whereUserId($request->user()->id)->first();
+        $member = $party->members()->whereUserId($this->resolveAuthenticatedUser($request)->id)->first();
         if (! $member instanceof PartyMember) {
             abort(403);
         }
@@ -63,8 +66,8 @@ class UpcomingSongController extends Controller
             $query->whereSpotifyId($request->input('spotify_id'));
         })->first();
         if (! $upcoming) {
-            $spotifySong = $party->user->getSpotifyApi()->getTrack($request->input('spotify_id'));
-            if (! $spotifySong) {
+            $response = $party->user->requireSpotifyApi()->getTrack($request->input('spotify_id'));
+            if (! $response) {
                 return response()->json([
                     'message' => 'Unable to find the song in Spotify.',
                     'errors' => [
@@ -75,6 +78,7 @@ class UpcomingSongController extends Controller
                 ], 422);
             }
 
+            $spotifySong = SpotifyPayload::object($response);
             $checkService = new RequestCheckService($party, $member);
             $checkResponse = $checkService->checkSong($spotifySong);
             if (! $checkResponse->allowed) {
@@ -91,7 +95,7 @@ class UpcomingSongController extends Controller
             $song = Song::fromSpotify($spotifySong);
             $upcoming = new UpcomingSong;
             $upcoming->party()->associate($party);
-            $upcoming->user()->associate($request->user());
+            $upcoming->user()->associate($this->resolveAuthenticatedUser($request));
             $upcoming->song()->associate($song);
             $upcoming->save();
         }
@@ -102,23 +106,23 @@ class UpcomingSongController extends Controller
                 'errors' => ['spotify_id' => [$denial]],
             ], 400);
         }
-        $vote = $upcoming->votes()->whereUserId($request->user()->id)->first();
+        $vote = $upcoming->votes()->whereUserId($this->resolveAuthenticatedUser($request)->id)->first();
         if (! $vote) {
             $vote = new Vote;
-            $vote->user()->associate($request->user());
+            $vote->user()->associate($this->resolveAuthenticatedUser($request));
             $vote->upcomingSong()->associate($upcoming);
         }
         $vote->value = 1;
         $vote->save();
 
         $resource = new UpcomingSongResource($upcoming);
-        $data = $augmentService->augment($upcoming, $request->user());
+        $data = $augmentService->augment($upcoming, $this->resolveAuthenticatedUser($request));
         $resource->augment($data);
 
         return $resource;
     }
 
-    public function destroy(Party $party, UpcomingSong $upcomingsong)
+    public function destroy(Party $party, UpcomingSong $upcomingsong): Response
     {
         if ($upcomingsong->queued_at) {
             abort(400, 'Unable to delete an upcoming song that has been queued');
@@ -133,7 +137,7 @@ class UpcomingSongController extends Controller
         if (! $party->allow_requests) {
             return 'Party is not accepting requests';
         }
-        if ($member->role?->code === 'banned') {
+        if ($member->role->code === 'banned') {
             return 'You are not allowed to request any more songs';
         }
 

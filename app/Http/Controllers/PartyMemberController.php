@@ -7,11 +7,13 @@ use App\Http\Requests\PartyMemberUpdateRequest;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class PartyMemberController extends Controller
 {
-    public function index(PartyMemberSearchRequest $request, Party $party)
+    public function index(PartyMemberSearchRequest $request, Party $party): View
     {
         $query = $party->members()->with(['user', 'role']);
         $params = [
@@ -54,7 +56,9 @@ class PartyMemberController extends Controller
                 $query = $query->orderBy('role_id', $params['order_direction']);
                 break;
             case 'nickname':
-                $query = $query->join('users', 'users.id', '=', 'party_members.user_id')->orderBy('users.nickname', $params['direction']);
+                $query = $query->join('users', 'users.id', '=', 'party_members.user_id')
+                    ->select('party_members.*')
+                    ->orderBy('users.nickname', $params['order_direction']);
                 break;
         }
 
@@ -70,7 +74,7 @@ class PartyMemberController extends Controller
         ]);
     }
 
-    public function show(Request $request, Party $party, PartyMember $user)
+    public function show(Request $request, Party $party, PartyMember $user): View
     {
         $query = $user->user->votes()->whereHas('upcomingSong', function ($query) use ($party) {
             $query->wherePartyId($party->id);
@@ -119,7 +123,7 @@ class PartyMemberController extends Controller
         ]);
     }
 
-    public function edit(Request $request, Party $party, PartyMember $user)
+    public function edit(Request $request, Party $party, PartyMember $user): View
     {
         return view('partymembers.edit', [
             'party' => $party,
@@ -129,7 +133,7 @@ class PartyMemberController extends Controller
         ]);
     }
 
-    public function update(PartyMemberUpdateRequest $request, Party $party, PartyMember $user)
+    public function update(PartyMemberUpdateRequest $request, Party $party, PartyMember $user): RedirectResponse
     {
         $role = PartyMemberRole::whereCode($request->input('role'))->first();
         $user->role()->associate($role);

@@ -13,6 +13,7 @@ class PartyModSettingUpdatedEvent
     use InteractsWithSockets;
     use SerializesModels;
 
+    /** @var array<string, mixed> */
     public array $changed = [];
 
     /**

@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('linked_accounts', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-            $table->foreignId('social_provider_id')->nullable()->default(null)->contrained()->cascadeOnDelete();
+            $table->foreignId('social_provider_id')->nullable()->default(null)->constrained()->cascadeOnDelete();
             $table->string('external_id')->nullable()->default(null);
             $table->string('name')->nullable()->default(null);
             $table->longText('avatar_url')->nullable()->default(null);

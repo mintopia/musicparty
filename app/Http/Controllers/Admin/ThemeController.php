@@ -5,11 +5,13 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\ThemeUpdateRequest;
 use App\Models\Theme;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class ThemeController extends Controller
 {
-    public function create()
+    public function create(): View
     {
         $default = Theme::whereCode('default')->first();
         if ($default) {
@@ -17,7 +19,7 @@ class ThemeController extends Controller
         } else {
             $theme = new Theme;
         }
-        $theme->name = null;
+        $theme->name = '';
         $theme->readonly = false;
         $theme->active = false;
 
@@ -26,7 +28,7 @@ class ThemeController extends Controller
         ]);
     }
 
-    public function store(ThemeUpdateRequest $request)
+    public function store(ThemeUpdateRequest $request): RedirectResponse
     {
         $theme = new Theme;
         $this->updateObject($theme, $request);
@@ -34,21 +36,21 @@ class ThemeController extends Controller
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
     }
 
-    public function edit(Theme $theme)
+    public function edit(Theme $theme): View
     {
         return view('admin.themes.edit', [
             'theme' => $theme,
         ]);
     }
 
-    public function update(ThemeUpdateRequest $request, Theme $theme)
+    public function update(ThemeUpdateRequest $request, Theme $theme): RedirectResponse
     {
         $this->updateObject($theme, $request);
 
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
     }
 
-    public function delete(Theme $theme)
+    public function delete(Theme $theme): View
     {
         if ($theme->readonly) {
             abort(400);
@@ -59,7 +61,7 @@ class ThemeController extends Controller
         ]);
     }
 
-    public function destroy(Theme $theme)
+    public function destroy(Theme $theme): RedirectResponse
     {
         if ($theme->readonly) {
             abort(400);
@@ -69,7 +71,7 @@ class ThemeController extends Controller
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
     }
 
-    protected function updateObject(Theme $theme, Request $request)
+    protected function updateObject(Theme $theme, Request $request): void
     {
         $theme->active = (bool) $request->input('active');
         $theme->dark_mode = (bool) $request->input('dark_mode');

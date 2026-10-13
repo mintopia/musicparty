@@ -14,6 +14,9 @@ enum PartyModerationType
     case mtAlbumId;
     case mtISRC;
 
+    /**
+     * @return Collection<string, string>
+     */
     public static function getHumanReadableTypes(): Collection
     {
         return collect([

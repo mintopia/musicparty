@@ -6,17 +6,19 @@ use App\Enums\SettingType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SocialProviderUpdateRequest;
 use App\Models\SocialProvider;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class SocialProviderController extends Controller
 {
-    public function edit(SocialProvider $provider)
+    public function edit(SocialProvider $provider): View
     {
         return view('admin.socialproviders.edit', [
             'provider' => $provider,
         ]);
     }
 
-    public function update(SocialProviderUpdateRequest $request, SocialProvider $provider)
+    public function update(SocialProviderUpdateRequest $request, SocialProvider $provider): RedirectResponse
     {
         $settings = $provider->settings()->get();
         foreach ($settings as $setting) {

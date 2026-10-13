@@ -8,12 +8,12 @@ use App\Models\UpcomingSong;
 
 class UpcomingSongObserver
 {
-    public function created(UpcomingSong $upcomingSong)
+    public function created(UpcomingSong $upcomingSong): void
     {
         UpdatedEvent::dispatch($upcomingSong);
     }
 
-    public function updated(UpcomingSong $upcomingSong)
+    public function updated(UpcomingSong $upcomingSong): void
     {
         if ($upcomingSong->queued_at) {
             RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
@@ -22,7 +22,7 @@ class UpcomingSongObserver
         }
     }
 
-    public function deleted(UpcomingSong $upcomingSong)
+    public function deleted(UpcomingSong $upcomingSong): void
     {
         RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
     }

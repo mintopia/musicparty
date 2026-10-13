@@ -178,15 +178,14 @@ it('clears the hold from 10:00 onwards', function (string $time) {
     expect($upcoming->getRawOriginal('not_before'))->toBeNull()->and($upcoming->score_adjustment)->toBe(1);
 })->with(['2026-12-25 10:00:00', '2026-12-25 18:00:00', '2026-12-25 22:00:00']);
 
-it('pins the not_before cast typo so it is a plain string and not a Carbon instance until E5 fixes the cast', function () {
+it('casts not_before to a Carbon instance', function () {
     $party = WhamageddonFixtures::party(['enabled' => true]);
     $upcoming = WhamageddonFixtures::upcoming($party, ['not_before' => '2026-12-25 10:00:00']);
 
     $fresh = UpcomingSong::find($upcoming->id);
 
-    expect($fresh->not_before)->toBeString()
-        ->and($fresh->not_before)->not->toBeInstanceOf(CarbonImmutable::class)
-        ->and($fresh->hasCast('not_before'))->toBeFalse()
+    expect($fresh->not_before)->toBeInstanceOf(Carbon::class)
+        ->and($fresh->hasCast('not_before'))->toBeTrue()
         ->and($fresh->hasCast('queued_at'))->toBeTrue();
 });
 
