@@ -139,6 +139,15 @@ class Party extends Model
         'song_started_at' => 'datetime',
     ];
 
+    /** @var array<int, string> */
+    public const array RENDERED_ATTRIBUTES = [
+        'code', 'name', 'backup_playlist_id', 'show_qrcode', 'song_id', 'song_started_at',
+    ];
+
+    protected bool $coalescingBroadcasts = false;
+
+    protected bool $broadcastPending = false;
+
     /** @var Collection<string, PartyModSetting>|null */
     protected ?Collection $_modSettings = null;
 
@@ -257,10 +266,21 @@ class Party extends Model
             return false;
         }
 
+        $this->coalescingBroadcasts = true;
+        $queueHeadBefore = $this->next()?->id;
+
         try {
             $this->runStateUpdate();
         } finally {
+            $this->coalescingBroadcasts = false;
             $lock->release();
+            if ($this->next()?->id !== $queueHeadBefore) {
+                $this->broadcastPending = true;
+            }
+            if ($this->broadcastPending) {
+                $this->broadcastPending = false;
+                UpdatedEvent::dispatch($this);
+            }
         }
 
         return true;
@@ -863,6 +883,16 @@ class Party extends Model
 
     public function pushUpdate(): void
     {
+        UpdatedEvent::dispatch($this);
+    }
+
+    public function broadcastRenderedChange(): void
+    {
+        if ($this->coalescingBroadcasts) {
+            $this->broadcastPending = true;
+
+            return;
+        }
         UpdatedEvent::dispatch($this);
     }
 

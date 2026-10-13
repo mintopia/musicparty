@@ -132,14 +132,53 @@ it('declares the placeholder channel-name channel on the cron ticks and mod sett
         ->and($channels[0]->name)->toBe('private-channel-name');
 })->with([MinuteTickEvent::class, HourTickEvent::class, DayTickEvent::class, PartyModSettingDeletedEvent::class]);
 
-it('pins E5 R9: every Party save broadcasts Party UpdatedEvent, including bookkeeping bumps to last_updated_at', function () {
+it('does not broadcast Party UpdatedEvent for bookkeeping bumps to last_updated_at', function () {
     $party = realtimeParty();
     Event::fake([PartyUpdatedEvent::class]);
 
     $party->last_updated_at = now()->addMinute();
     $party->save();
 
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+});
+
+it('broadcasts Party UpdatedEvent once when a rendered field changes', function () {
+    $party = realtimeParty();
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $party->name = 'Renamed';
+    $party->save();
+
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+it('coalesces several rendered changes within one sync into a single broadcast', function () {
+    $party = realtimeParty();
+    Event::fake([PartyUpdatedEvent::class]);
+
+    $sync = new ReflectionProperty(Party::class, 'coalescingBroadcasts');
+    $sync->setValue($party, true);
+    $party->name = 'One';
+    $party->save();
+    $party->name = 'Two';
+    $party->save();
+    $party->last_updated_at = now()->addMinute();
+    $party->save();
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+
+    $sync->setValue($party, false);
+    $party->broadcastRenderedChange();
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+it('builds the broadcast payload from state at dispatch time', function () {
+    $party = realtimeParty();
+    $event = new PartyUpdatedEvent($party);
+
+    $party->name = 'Changed After Dispatch';
+    $party->save();
+
+    expect($event->broadcastWith()['name'])->not->toBe('Changed After Dispatch');
 });
 
 it('allows any authenticated user, member or not, onto the party channel (pins today: returns true)', function () {
