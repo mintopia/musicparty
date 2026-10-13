@@ -9,6 +9,7 @@ use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Console\Scheduling\Schedule;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Tests\Support\FakeSpotify;
@@ -195,4 +196,18 @@ it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via get
     $this->artisan('party:refreshaccesstokens')->assertSuccessful();
 
     expect($refreshed)->toBe([$expiring->id]);
+});
+
+it('does not register party:check (E5 R12)', function () {
+    expect(array_keys(Artisan::all()))->not->toContain('party:check');
+});
+
+it('lets the party owner manage the party and not a stranger (E5 R13)', function () {
+    $party = Party::factory()->create();
+    $owner = $party->user;
+    $stranger = User::factory()->create();
+
+    expect($party->canBeManagedBy($owner))->toBeTrue()
+        ->and($party->canBeManagedBy($stranger))->toBeFalse()
+        ->and($party->canBeManagedBy(null))->toBeFalse();
 });
