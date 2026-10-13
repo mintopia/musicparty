@@ -9,6 +9,7 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Str;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeSpotify;
 
 beforeEach(function () {
@@ -43,10 +44,12 @@ it('shows Spotify track details including ISRC through the Music Provider', func
 
     $this->get(route('parties.moderation.create', ['party' => $party->code, 'track' => 'abc']))
         ->assertOk()
-        ->assertSee('Spotify Song')
-        ->assertSee('USRC17607839')
-        ->assertSee('Test Album')
-        ->assertSee('Test Artist');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parties/Moderation/Create')
+            ->where('track.name', 'Spotify Song')
+            ->where('track.isrc', 'USRC17607839')
+            ->where('track.album.name', 'Test Album')
+            ->where('track.artists.0.name', 'Test Artist'));
 });
 
 it('shows Fake provider track details with no ISRC', function () {
@@ -54,15 +57,16 @@ it('shows Fake provider track details with no ISRC', function () {
 
     $this->get(route('parties.moderation.create', ['party' => $party->code, 'track' => 'fake-track-1']))
         ->assertOk()
-        ->assertSee('Fake Track 1')
-        ->assertSee('Fake Album 1')
-        ->assertSee('Fake Artist 1')
-        ->assertSee('ISRC Code');
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('track.name', 'Fake Track 1')
+            ->where('track.album.name', 'Fake Album 1')
+            ->where('track.artists.0.name', 'Fake Artist 1')
+            ->where('track.isrc', null));
 });
 
 it('renders the create page without track data when none is requested or found', function () {
     $party = moderationParty($this->owner, 'fake');
 
-    $this->get(route('parties.moderation.create', $party->code))->assertOk()->assertDontSee('Track Data');
-    $this->get(route('parties.moderation.create', ['party' => $party->code, 'track' => 'nope']))->assertOk()->assertDontSee('Track Data');
+    $this->get(route('parties.moderation.create', $party->code))->assertOk()->assertInertia(fn (Assert $page) => $page->where('track', null));
+    $this->get(route('parties.moderation.create', ['party' => $party->code, 'track' => 'nope']))->assertOk()->assertInertia(fn (Assert $page) => $page->where('track', null));
 });
