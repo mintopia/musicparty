@@ -13,7 +13,7 @@ let timer: ReturnType<typeof setInterval> | null = null;
 
 const status = computed(() => (state.value.status?.isPlaying ? state.value.status : null));
 const startedAt = computed(() =>
-    status.value === null ? null : new Date(status.value.updatedAt).getTime() - status.value.progress,
+    status.value === null ? null : new Date(status.value.sampledAt).getTime() - status.value.progressMs,
 );
 const elapsedMs = computed(() =>
     status.value === null || startedAt.value === null ? 0 : Math.min(now.value - startedAt.value, status.value.length),

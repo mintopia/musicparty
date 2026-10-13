@@ -177,7 +177,14 @@ describe('Search withdraw', () => {
             props: {
                 party: {...party, downvotes: false, canManage: false},
                 params: {query: 'q', perPage: 20},
-                results: {data: [awaiting], current_page: 1, last_page: 1, prev_page_url: null, next_page_url: null, links: []},
+                results: {
+                    data: [awaiting],
+                    current_page: 1,
+                    last_page: 1,
+                    prev_page_url: null,
+                    next_page_url: null,
+                    links: [],
+                },
                 playerState: idle,
             },
         });

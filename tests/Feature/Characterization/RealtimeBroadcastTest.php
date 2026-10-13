@@ -61,7 +61,7 @@ it('shapes the party update payload as the party state', function () {
         ->and($payload['code'])->toBe('RTPT')
         ->and($payload['status'])->toBeObject()
         ->and((array) $payload['status'])->toHaveKeys([
-            'device', 'repeat', 'shuffle', 'active', 'isPlaying', 'progress', 'length', 'updatedAt',
+            'device', 'repeat', 'shuffle', 'active', 'isPlaying', 'progress', 'progressMs', 'length', 'updatedAt', 'sampledAt',
         ]);
 });
 

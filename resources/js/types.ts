@@ -106,8 +106,8 @@ export interface LegacyTrack {
 
 export interface LegacyPlaybackStatus {
     isPlaying: boolean;
-    updatedAt: string;
-    progress: number;
+    sampledAt: string;
+    progressMs: number;
     length: number;
 }
 
@@ -161,14 +161,7 @@ export interface PlaybackState {
 }
 
 export type ModSettingType =
-    | 'string'
-    | 'boolean'
-    | 'integer'
-    | 'float'
-    | 'datetime'
-    | 'track'
-    | 'time_of_day'
-    | 'secret';
+    'string' | 'boolean' | 'integer' | 'float' | 'datetime' | 'track' | 'time_of_day' | 'secret';
 
 export interface ModSetting {
     code: string;
