@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
+use App\Services\Spotify\BackoffRequest;
 use App\Support\SpotifyPayload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,7 +21,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 use RuntimeException;
-use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 use stdClass;
@@ -231,7 +231,7 @@ class User extends Authenticatable
         if (! $this->api) {
             // Create new API
             Log::debug("{$this}: Creating new API connection");
-            $request = new Request;
+            $request = new BackoffRequest('spotify');
             $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
         }
 

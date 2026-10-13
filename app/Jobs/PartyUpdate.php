@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Models\Party;
+use App\Services\Spotify\SpotifyBackoffException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -43,6 +44,16 @@ class PartyUpdate implements ShouldQueue
      * Execute the job.
      */
     public function handle(): void
+    {
+        try {
+            $this->update();
+        } catch (SpotifyBackoffException $e) {
+            Log::info("{$this->party}: Spotify backoff active, releasing for {$e->retryAfterSeconds}s");
+            $this->release($e->retryAfterSeconds);
+        }
+    }
+
+    protected function update(): void
     {
         if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
