@@ -232,16 +232,16 @@ it('does not attribute a play to a Request in another party or one never sent (E
     expect(PlayedSong::query()->where('party_id', $party->id)->sole()->upcoming_song_id)->toBeNull();
 });
 
-it('prefers the most recently queued Request when several exist for the same track (E5 R14)', function () {
+it('links the earliest queued Request when several exist for the same track (E5 R14)', function () {
     [$party, $fake] = syncParty();
     $song = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
-    UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(20)]);
-    $newer = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(2)]);
+    $older = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(20)]);
+    UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(2)]);
     nowPlaying($fake, 'PLAYED');
 
     app(PlaybackSync::class)->sync($party);
 
-    expect(PlayedSong::query()->sole()->upcoming_song_id)->toBe($newer->id);
+    expect(PlayedSong::query()->sole()->upcoming_song_id)->toBe($older->id);
 });
 
 it('still updates the current song, sends nothing and stamps last_updated_at when the party is inactive', function () {
