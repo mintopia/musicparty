@@ -8,6 +8,8 @@ use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\SocialProviders\SpotifyProvider;
+use App\Services\Spotify\BackoffRequest;
+use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Database\Seeders\PartyMemberRoleSeeder;
@@ -200,4 +202,37 @@ it('falls back to the control account when the search account needs re-link', fu
     $api = app(SpotifyGateway::class)->searchClient($party->user);
 
     expect($api)->toBe($fake)->and($search->fresh()->needsRelink())->toBeTrue();
+});
+
+it('records the shared backoff on a 429 from the accounts service and fails fast while it lasts', function () {
+    Cache::forget('spotify:backoff:spotify');
+    $account = expiringSpotifyAccount();
+    $request = new class extends BackoffRequest
+    {
+        public int $httpCalls = 0;
+
+        public function __construct()
+        {
+            parent::__construct('spotify');
+        }
+
+        protected function transport(string $method, string $url, string|array|object $parameters, array $headers): array
+        {
+            $this->httpCalls++;
+            throw new SpotifyWebAPIException('rate limited', 429);
+        }
+
+        public function getLastResponse(): array
+        {
+            return ['headers' => ['retry-after' => '9']];
+        }
+    };
+    $session = new Session('id', 'secret', '', $request);
+    $gateway = app(SpotifyGateway::class);
+
+    expect(fn () => $gateway->refreshToken($account, $session))->toThrow(SpotifyWebAPIException::class);
+    expect(BackoffRequest::backoffRemaining('spotify'))->toBeBetween(8, 9);
+
+    expect(fn () => $gateway->refreshToken($account, $session))->toThrow(SpotifyBackoffException::class);
+    expect($request->httpCalls)->toBe(1)->and($account->fresh()->needsRelink())->toBeFalse();
 });
