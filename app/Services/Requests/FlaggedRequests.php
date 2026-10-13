@@ -1,0 +1,73 @@
+<?php
+
+namespace App\Services\Requests;
+
+use App\Enums\Purpose;
+use App\Events\FlaggedRequestAdded;
+use App\Http\Resources\TrackAnnotationResource;
+use App\Models\Party;
+use App\Models\Song;
+use App\Models\UpcomingSong;
+use App\Models\User;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\QueueSelector;
+
+class FlaggedRequests
+{
+    public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue) {}
+
+    public function flag(Party $party, Song $song, User $user, string $reason): UpcomingSong
+    {
+        $request = $this->queue->addRequest($party, $song, $user, ['flagged_at' => now(), 'flag_reason' => $reason]);
+        FlaggedRequestAdded::dispatch($party, $this->item($request->load(['party', 'user', 'song.album', 'song.artists'])));
+
+        return $request;
+    }
+
+    /**
+     * @return list<array<string, mixed>>
+     */
+    public function listFor(Party $party): array
+    {
+        return $party->upcoming()
+            ->whereNull('queued_at')
+            ->whereNotNull('flagged_at')
+            ->with(['user', 'song.album', 'song.artists'])
+            ->orderBy('flagged_at')
+            ->orderBy('id')
+            ->get()
+            ->map(fn (UpcomingSong $request): array => $this->item($request))
+            ->all();
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    public function item(UpcomingSong $request): array
+    {
+        $party = $request->party;
+        $provider = $this->providers->forParty($party, Purpose::Search);
+        $track = $request->song->toTrack();
+        $annotation = new TrackAnnotation(
+            track: $track,
+            upcoming: false,
+            upcomingId: $request->id,
+            score: 0,
+            vote: null,
+            user: $request->user->nickname ?? null,
+            allowed: true,
+            reason: $request->flag_reason,
+            externalUrl: $provider->trackUrl($track->id),
+            providerName: $provider->displayName(),
+            flagged: true,
+        );
+
+        return [
+            'id' => $request->id,
+            'reason' => $request->flag_reason,
+            'flagged_at' => $request->flagged_at?->toIso8601String(),
+            'requester' => ['id' => $request->user_id, 'name' => $request->user->nickname ?? 'Unknown'],
+            'track' => new TrackAnnotationResource($annotation)->resolve(),
+        ];
+    }
+}

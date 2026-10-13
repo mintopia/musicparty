@@ -2,6 +2,7 @@
 
 namespace App\Services\Requests\Rules;
 
+use App\Enums\PartyModerationAction;
 use App\Services\Music\Data\Track;
 use App\Services\Requests\RequestContext;
 use App\Services\Requests\RequestDecision;
@@ -13,7 +14,9 @@ final class ModerationRule implements RequestRule
     {
         foreach ($context->party->moderations as $moderation) {
             if ($moderation->match($track)) {
-                return RequestDecision::reject($moderation->getMessage());
+                return $moderation->action === PartyModerationAction::Flag
+                    ? RequestDecision::flag($moderation->getMessage())
+                    : RequestDecision::reject($moderation->getMessage());
             }
         }
 

@@ -51,6 +51,7 @@ class TrackAnnotationResource extends JsonResource
                 'outcome' => $annotation->flagged ? 'flag' : ($annotation->allowed ? 'allow' : 'reject'),
                 'reason' => $annotation->reason,
             ],
+            'awaiting_approval' => $annotation->awaitingApproval,
         ];
     }
 }

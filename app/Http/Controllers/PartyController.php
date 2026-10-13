@@ -79,6 +79,7 @@ class PartyController extends Controller
         $upcomingSongs = $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
             ->whereNull('queued_at')
+            ->whereNull('flagged_at')
             ->orderBy('score', 'desc')
             ->orderBy('created_at', 'asc')
             ->orderBy('id', 'asc')
@@ -233,6 +234,7 @@ class PartyController extends Controller
         $party->force = (bool) $request->input('force');
         $party->poll = (bool) $request->input('poll');
         $party->show_qrcode = (bool) $request->input('show_qrcode');
+        $party->flag_requests = (bool) $request->input('flag_requests');
         $deviceId = $request->input('device_id') ?: null;
         if ($deviceId === null) {
             $party->device_name = null;

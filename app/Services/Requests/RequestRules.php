@@ -99,6 +99,6 @@ class RequestRules
             }
         }
 
-        return $flag ?? RequestDecision::allow();
+        return $flag !== null && $context->party->flag_requests ? $flag : RequestDecision::allow();
     }
 }

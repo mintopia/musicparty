@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PartyModerationAction;
 use App\Enums\PartyModerationType;
 use App\Services\Music\Data\Track;
 use Database\Factories\PartyModerationFactory;
@@ -15,6 +16,7 @@ use Illuminate\Support\Facades\Log;
  * @property int $id
  * @property int $party_id
  * @property PartyModerationType $type
+ * @property PartyModerationAction $action
  * @property string $value
  * @property string|null $notes
  * @property bool $enabled
@@ -48,6 +50,11 @@ class PartyModeration extends Model
         'enabled' => 'boolean',
         'regex' => 'boolean',
         'type' => PartyModerationType::class,
+        'action' => PartyModerationAction::class,
+    ];
+
+    protected $attributes = [
+        'action' => 'reject',
     ];
 
     /** @return BelongsTo<Party, $this> */

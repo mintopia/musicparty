@@ -19,6 +19,7 @@ use Illuminate\Support\Carbon;
  * @property int $song_id
  * @property Carbon|null $not_before
  * @property Carbon|null $flagged_at
+ * @property string|null $flag_reason
  * @property int $score
  * @property int $score_adjustment
  * @property string|null $fallback_override
@@ -127,6 +128,9 @@ class UpcomingSong extends Model
 
     protected function addVote(User $user, int $value): Vote
     {
+        if ($this->flagged_at !== null) {
+            throw new VoteException('This request is awaiting approval and cannot be voted on');
+        }
         $member = $this->party->getMember($user);
         if ($member->role->code === 'banned') {
             throw new VoteException('You are banned from voting for songs');

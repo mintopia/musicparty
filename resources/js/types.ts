@@ -49,6 +49,16 @@ export interface TrackAnnotation {
         requested_by: string | null;
     };
     eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
+    awaiting_approval?: boolean;
+    flagged_request_id?: number | null;
+}
+
+export interface FlaggedRequest {
+    id: number;
+    reason: string | null;
+    flagged_at: string;
+    requester: {id: number; name: string};
+    track: TrackAnnotation;
 }
 
 export interface TrackDecoration {
