@@ -5,6 +5,7 @@ import {computed, ref} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackList from '@/components/TrackList.vue';
+import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
@@ -29,6 +30,7 @@ const props = defineProps<{
     playerState: LegacyPartyState;
 }>();
 
+useQueueSync(props.party.code, ['tracks']);
 const message = ref<string | null>(null);
 const {status, reason, request} = useRequestTrack(() => props.party.code);
 
