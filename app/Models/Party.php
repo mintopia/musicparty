@@ -105,6 +105,8 @@ use stdClass;
  */
 class Party extends Model
 {
+    public const SYNC_LOCK_SECONDS = 30;
+
     /** @use HasFactory<PartyFactory> */
     use HasFactory;
 
@@ -232,13 +234,47 @@ class Party extends Model
 
     public function updateState(): Party
     {
+        $this->tryUpdateState();
+
+        return $this;
+    }
+
+    /**
+     * Runs a state update under the per-Party sync lock. Returns false when another sync holds the lock.
+     */
+    public function tryUpdateState(): bool
+    {
+        if (! config('musicparty.prevent_overlapping_updates')) {
+            $this->runStateUpdate();
+
+            return true;
+        }
+
+        $lock = Cache::lock("party-sync:{$this->id}", self::SYNC_LOCK_SECONDS);
+        if (! $lock->get()) {
+            Log::debug("{$this}: Sync already running, skipping");
+
+            return false;
+        }
+
+        try {
+            $this->runStateUpdate();
+        } finally {
+            $lock->release();
+        }
+
+        return true;
+    }
+
+    protected function runStateUpdate(): void
+    {
         Log::info("{$this}: Updating state");
         if ($this->poll) {
             $cutoff = Carbon::now()->subSeconds(5);
             if ($this->last_updated_at > $cutoff) {
                 Log::debug("{$this}: Already updated state recently");
 
-                return $this;
+                return;
             }
         }
 
@@ -247,17 +283,18 @@ class Party extends Model
             // Still update current song, in case they're using it manually and still want it reflected on screen
             $this->updateCurrentSong();
 
-            return $this;
+            return;
         }
 
-        $this->updateCurrentSong();
-        $this->addTracksToQueue();
-        $this->backfillUpcomingSongs();
-        $this->last_updated_at = Carbon::now();
-        $this->save();
+        try {
+            $this->updateCurrentSong();
+            $this->addTracksToQueue();
+            $this->backfillUpcomingSongs();
+        } finally {
+            $this->last_updated_at = Carbon::now();
+            $this->save();
+        }
         Log::info("{$this}: Finished updating state");
-
-        return $this;
     }
 
     protected function loadModSettings(): void
