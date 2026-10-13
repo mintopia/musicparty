@@ -5,6 +5,7 @@ namespace App\Mods\Foo;
 use App\Enums\SettingType;
 use App\Models\Party;
 use App\Mods\Contracts\Mod;
+use App\Mods\ScheduledAction;
 use App\Mods\SettingDefinition;
 
 class FooMod implements Mod
@@ -38,6 +39,14 @@ class FooMod implements Mod
     public function extensionPoints(): array
     {
         return [];
+    }
+
+    /** @var list<ScheduledAction> */
+    public static array $actions = [];
+
+    public function scheduledActions(): array
+    {
+        return self::$actions;
     }
 
     public function onEnable(Party $party): void

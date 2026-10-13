@@ -3,6 +3,7 @@
 namespace App\Mods\Contracts;
 
 use App\Models\Party;
+use App\Mods\ScheduledAction;
 use App\Mods\SettingDefinition;
 
 interface Mod
@@ -18,6 +19,9 @@ interface Mod
 
     /** @return list<string> */
     public function extensionPoints(): array;
+
+    /** @return list<ScheduledAction> */
+    public function scheduledActions(): array;
 
     public function onEnable(Party $party): void;
 
