@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Purpose;
+use App\Events\Party\PlayerCommand;
 use App\Models\Party;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
@@ -19,8 +20,12 @@ class PlaybackControl
         protected QueueSelector $selector,
     ) {}
 
-    public function perform(Party $party, string $action, ?string $deviceId = null): void
+    public function perform(Party $party, string $action, ?string $deviceId = null, ?int $positionMs = null): void
     {
+        if ($this->sendToCurrentPlayer($party, $action, $deviceId, $positionMs)) {
+            return;
+        }
+
         $provider = $this->providers->forParty($party, Purpose::Control);
         Log::debug("{$party}: Playback control -> {$action}()");
 
@@ -29,8 +34,39 @@ class PlaybackControl
             'pause' => $provider->pause(),
             'next' => $provider->next(),
             'previous' => $provider->seek(0),
+            'seek' => $provider->seek($positionMs ?? throw new InvalidArgumentException('Seek requires a position.')),
             default => throw new InvalidArgumentException('Unsupported party control action.'),
         };
+    }
+
+    protected function sendToCurrentPlayer(Party $party, string $action, ?string $deviceId, ?int $positionMs): bool
+    {
+        $player = $party->playback_source;
+        if ($player === null || ! $party->hasFreshPushedPlayback()) {
+            return false;
+        }
+
+        // Device transfer is a Web API concept; pushed Players cannot honour it.
+        if ($action === 'play' && $deviceId !== null) {
+            return false;
+        }
+
+        $command = match ($action) {
+            'play' => ['type' => 'play'],
+            'pause' => ['type' => 'pause'],
+            'next' => ['type' => 'next'],
+            'previous' => ['type' => 'skip_prev'],
+            'seek' => $positionMs === null ? null : ['type' => 'seek', 'position_ms' => $positionMs],
+            default => null,
+        };
+        if ($command === null) {
+            return false;
+        }
+
+        Log::debug("{$party}: Playback control -> {$action}() via {$player->value}");
+        PlayerCommand::dispatch($party, $player, $command);
+
+        return true;
     }
 
     /**

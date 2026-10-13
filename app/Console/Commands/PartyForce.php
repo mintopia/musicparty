@@ -61,6 +61,14 @@ class PartyForce extends Command
         }
 
         $this->output->writeln("{$party}: Checking to see if we can play this party");
+        if ($party->hasFreshPushedPlayback()) {
+            $this->output->writeln('A pushed Player is active, sending play');
+            app(PlaybackControl::class)->perform($party, 'play');
+            $this->output->writeln("{$party}: Done");
+
+            return self::SUCCESS;
+        }
+
         foreach (app(PlaybackControl::class)->devices($party) as $device) {
             if ($device->id === $party->device_id) {
                 $this->output->writeln('Device is online, starting party');

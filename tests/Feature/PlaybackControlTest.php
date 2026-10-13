@@ -1,5 +1,6 @@
 <?php
 
+use App\Events\Party\PlayerCommand;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Role;
@@ -9,6 +10,7 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
 use Tests\Support\FakeFallbackPlaylist;
@@ -144,4 +146,52 @@ it('re-resolves the device name when the device changes on update', function () 
     expect($party->device_id)->toBe('dev2')
         ->and($party->device_name)->toBe('Dev Two')
         ->and($fake->callsTo('play'))->toBeEmpty();
+});
+
+it('sends commands to Encore as Soloist commands when Encore is the Player', function (string $action, array $expected) {
+    Event::fake([PlayerCommand::class]);
+    $fake = app(FakeMusicProvider::class);
+    $party = controlParty(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => $action, 'positionMs' => 4200])->assertOk();
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === PlaybackSource::Encore
+        && $e->command === $expected
+        && $e->broadcastOn()->name === "private-encore.{$party->code}");
+    expect($fake->calls())->not->toContain(fn ($c) => in_array($c['method'], ['pause', 'next', 'seek'], true));
+})->with([
+    ['play', ['type' => 'play']],
+    ['pause', ['type' => 'pause']],
+    ['next', ['type' => 'next']],
+    ['previous', ['type' => 'skip_prev']],
+    ['seek', ['type' => 'seek', 'position_ms' => 4200]],
+]);
+
+it('sends commands to the Web Player when it is the Player', function () {
+    Event::fake([PlayerCommand::class]);
+    $fake = app(FakeMusicProvider::class);
+    $party = controlParty(['playback_source' => PlaybackSource::WebPlayer, 'playback_received_at' => now()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'pause'])->assertOk();
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === PlaybackSource::WebPlayer
+        && $e->broadcastOn()->name === "private-webplayer.{$party->code}");
+    expect($fake->callsTo('pause'))->toBeEmpty();
+});
+
+it('falls back to ProviderPlayback when no pushed Player is fresh', function () {
+    Event::fake([PlayerCommand::class]);
+    $fake = app(FakeMusicProvider::class)->withPlayback(playingState('cur'));
+    $party = controlParty(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subHour()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'seek', 'positionMs' => 5000])->assertOk();
+
+    Event::assertNotDispatched(PlayerCommand::class);
+    expect($fake->callsTo('seek'))->toBe([[5000]]);
+});
+
+it('requires a position to seek', function () {
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'seek'])->assertUnprocessable();
 });

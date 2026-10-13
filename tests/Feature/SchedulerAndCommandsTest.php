@@ -3,12 +3,14 @@
 use App\Events\Cron\DayTickEvent;
 use App\Events\Cron\HourTickEvent;
 use App\Events\Cron\MinuteTickEvent;
+use App\Events\Party\PlayerCommand;
 use App\Jobs\PartyUpdate;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\Music\Data\Device;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Console\Scheduling\Schedule;
@@ -130,6 +132,15 @@ it('party:force starts a forced party whose device is online and stamps last_upd
         ->assertSuccessful();
 
     expect($party->fresh()->last_updated_at->gt(now()->subMinute()))->toBeTrue();
+});
+
+it('party:force sends play to a fresh pushed Player through the transport seam', function () {
+    Event::fake([PlayerCommand::class]);
+    $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
+
+    $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === PlaybackSource::Encore && $e->command === ['type' => 'play']);
 });
 
 it('party:force skips a party whose device is offline', function () {
