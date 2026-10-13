@@ -102,7 +102,7 @@ function reqPost(Party $party, User $user, string $spotifyId)
 {
     Sanctum::actingAs($user);
 
-    return test()->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['spotify_id' => $spotifyId]);
+    return test()->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['provider_track_id' => $spotifyId]);
 }
 
 beforeEach(fn () => reqUseSpotifyProvider());
@@ -515,7 +515,7 @@ describe('UpcomingSongController::store', function () {
             ->and(Vote::first()->value)->toBe(1);
     });
 
-    it('returns 400 with the reason in the message and spotify_id errors for a rejected track', function () {
+    it('returns 400 with the reason in the message and provider_track_id errors for a rejected track', function () {
         $party = reqParty(['allow_requests' => true, 'explicit' => false]);
         $member = reqMember($party);
         FakeSpotify::install()->respond('getTrack', reqTrack('dirty', ['explicit' => true]));
@@ -524,7 +524,7 @@ describe('UpcomingSongController::store', function () {
             ->assertBadRequest()
             ->assertExactJson([
                 'message' => 'Explicit songs are not allowed',
-                'errors' => ['spotify_id' => ['Explicit songs are not allowed']],
+                'errors' => ['provider_track_id' => ['Explicit songs are not allowed']],
             ]);
 
         expect(UpcomingSong::count())->toBe(0)->and(Vote::count())->toBe(0);
@@ -603,20 +603,20 @@ describe('UpcomingSongController::store', function () {
         expect(UpcomingSong::count())->toBe(0);
     });
 
-    it('returns 422 validation error when spotify_id is missing', function () {
+    it('returns 422 validation error when provider_track_id is missing', function () {
         $party = reqParty(['allow_requests' => true]);
         $member = reqMember($party);
         Sanctum::actingAs($member->user);
 
         $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), [])
             ->assertUnprocessable()
-            ->assertJsonValidationErrors('spotify_id');
+            ->assertJsonValidationErrors('provider_track_id');
     });
 
     it('returns 401 for an unauthenticated post', function () {
         $party = reqParty(['allow_requests' => true]);
 
-        $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['spotify_id' => 'track1'])->assertUnauthorized();
+        $this->postJson(route('api.v1.parties.upcomingsongs.store', [$party]), ['provider_track_id' => 'track1'])->assertUnauthorized();
     });
 
     it('adds a vote to an existing waiting request without re-running checks or creating a second request', function () {

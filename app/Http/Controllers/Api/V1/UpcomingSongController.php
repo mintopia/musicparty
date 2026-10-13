@@ -71,15 +71,15 @@ class UpcomingSongController extends Controller
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
                 ->block((int) config('musicparty.request_lock_wait_seconds'), function () use ($request, $party, $member): UpcomingSong|JsonResponse {
                     $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
-                        $query->where(['provider_id' => 'spotify', 'provider_track_id' => $request->input('spotify_id')]);
+                        $query->where(['provider_id' => 'spotify', 'provider_track_id' => $request->input('provider_track_id')]);
                     })->first();
                     if (! $upcoming) {
-                        $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('spotify_id'));
+                        $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('provider_track_id'));
                         if (! $track) {
                             return response()->json([
                                 'message' => 'Unable to find the song in Spotify.',
                                 'errors' => [
-                                    'spotify_id' => [
+                                    'provider_track_id' => [
                                         'Unable to find the song in Spotify.',
                                     ],
                                 ],
@@ -91,7 +91,7 @@ class UpcomingSongController extends Controller
                             return response()->json([
                                 'message' => $checkResponse->reason,
                                 'errors' => [
-                                    'spotify_id' => [
+                                    'provider_track_id' => [
                                         $checkResponse->reason,
                                     ],
                                 ],
@@ -119,7 +119,7 @@ class UpcomingSongController extends Controller
         if ($denial) {
             return response()->json([
                 'message' => $denial,
-                'errors' => ['spotify_id' => [$denial]],
+                'errors' => ['provider_track_id' => [$denial]],
             ], 400);
         }
         $vote = $upcoming->votes()->whereUserId($this->resolveAuthenticatedUser($request)->id)->first();

@@ -73,11 +73,11 @@ class Artist extends Model
         return $artist;
     }
 
-    /** @return array{spotify_id: string, name: string} */
+    /** @return array{provider_artist_id: string, name: string} */
     public function toApi(): array
     {
         return [
-            'spotify_id' => $this->spotify_id,
+            'provider_artist_id' => $this->provider_artist_id,
             'name' => $this->name,
         ];
     }

@@ -308,8 +308,8 @@ it('reports the current song, queued next request and player status through getS
     app(PlaybackSync::class)->sync($party);
     $state = $party->fresh()->getState();
 
-    expect($state->now['spotify_id'])->toBe('PLAYED')
-        ->and($state->next['spotify_id'])->toBe('NEXT')
+    expect($state->now['provider_track_id'])->toBe('PLAYED')
+        ->and($state->next['provider_track_id'])->toBe('NEXT')
         ->and($state->status->active)->toBeTrue()
         ->and($state->status->isPlaying)->toBeTrue()
         ->and($state->status->progress)->toBe(4000)
