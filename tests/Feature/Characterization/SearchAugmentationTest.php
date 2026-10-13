@@ -13,6 +13,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyGateway;
@@ -42,7 +43,7 @@ function searchLinkAccount(User $user, string $providerCode, string $token): voi
 function searchParty(User $owner, array $attributes = []): Party
 {
     $party = new Party;
-    $party->forceFill(array_merge(['code' => strtoupper(Str::random(4)), 'name' => 'Search Party', 'user_id' => $owner->id, 'active' => false, 'allow_requests' => true, 'explicit' => true], $attributes));
+    $party->forceFill(array_merge(['code' => strtoupper(Str::random(4)), 'name' => 'Search Party', 'user_id' => $owner->id, 'provider_id' => 'spotify', 'active' => false, 'allow_requests' => true, 'explicit' => true], $attributes));
     Party::withoutEvents(fn () => $party->save());
 
     return $party;
@@ -64,7 +65,7 @@ function searchUpcoming(Party $party, object $track, ?User $requester = null, in
 {
     $upcoming = new UpcomingSong;
     $upcoming->party()->associate($party);
-    $upcoming->song()->associate(Song::fromSpotify($track));
+    $upcoming->song()->associate(Song::fromTrack(SpotifyMapper::track($track)));
     if ($requester) {
         $upcoming->user()->associate($requester);
     }

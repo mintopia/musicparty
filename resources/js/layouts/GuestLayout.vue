@@ -22,9 +22,11 @@ useColorMode();
     <Head :title="title ?? name">
         <link v-if="site.favicon" rel="shortcut icon" :href="site.favicon" />
     </Head>
-    <div class="d-flex flex-column login-page min-vh-100">
+    <div class="d-flex flex-column min-vh-100">
         <div class="row g-0 flex-fill">
-            <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+            <div
+                class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center"
+            >
                 <div class="container container-tight mt-auto px-lg-5">
                     <h1 class="mb-4 text-center">
                         <a :href="home().url" class="navbar-brand navbar-brand-autodark">
@@ -41,10 +43,14 @@ useColorMode();
                             <div class="col-5 text-end">
                                 <ul class="list-unstyled mb-0">
                                     <li v-if="site.terms">
-                                        <a :href="site.terms" target="_blank" class="link-secondary">Terms and Conditions</a>
+                                        <a :href="site.terms" target="_blank" class="link-secondary"
+                                            >Terms and Conditions</a
+                                        >
                                     </li>
                                     <li v-if="site.privacyPolicy">
-                                        <a :href="site.privacyPolicy" target="_blank" class="link-secondary">Privacy Policy</a>
+                                        <a :href="site.privacyPolicy" target="_blank" class="link-secondary"
+                                            >Privacy Policy</a
+                                        >
                                     </li>
                                 </ul>
                             </div>
@@ -52,7 +58,8 @@ useColorMode();
                                 <ul class="list-inline list-inline-dots mb-0">
                                     <li class="list-inline-item">
                                         Copyright &copy; {{ new Date().getFullYear() }}
-                                        <a :href="home().url" class="link-secondary">{{ name }}</a>.<br />
+                                        <a :href="home().url" class="link-secondary">{{ name }}</a
+                                        >.<br />
                                         All rights reserved.
                                     </li>
                                 </ul>

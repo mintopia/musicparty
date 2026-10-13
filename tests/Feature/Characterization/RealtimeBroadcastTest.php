@@ -57,7 +57,7 @@ it('broadcasts the party state on the public party channel', function () {
 });
 
 it('shapes the party update payload as the party state', function () {
-    $payload = (new PartyUpdatedEvent(realtimeParty()))->broadcastWith();
+    $payload = new PartyUpdatedEvent(realtimeParty())->broadcastWith();
 
     expect($payload)->toHaveKeys([
         'code', 'name', 'backup_playlist_id', 'status', 'now', 'current', 'next',
@@ -135,7 +135,7 @@ it('does not broadcast the cron tick and mod setting events, which are placehold
 ]);
 
 it('declares the placeholder channel-name channel on the cron ticks and mod setting deletion', function (string $event) {
-    $channels = (new ReflectionClass($event))->newInstanceWithoutConstructor()->broadcastOn();
+    $channels = new ReflectionClass($event)->newInstanceWithoutConstructor()->broadcastOn();
 
     expect($channels[0])->toBeInstanceOf(PrivateChannel::class)
         ->and($channels[0]->name)->toBe('private-channel-name');

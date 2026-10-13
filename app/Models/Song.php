@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
-use stdClass;
 
 /**
  * @property int $id
@@ -96,7 +95,7 @@ class Song extends Model
     public function toTrack(): Track
     {
         return new Track(
-            providerId: 'spotify',
+            providerId: $this->provider_id,
             id: $this->provider_track_id,
             name: $this->name,
             durationMs: (int) $this->length,
@@ -109,35 +108,21 @@ class Song extends Model
 
     public static function fromTrack(Track $track): Song
     {
-        return self::fromSpotify((object) [
-            'id' => $track->id,
-            'name' => $track->name,
-            'duration_ms' => $track->durationMs,
-            'album' => (object) [
-                'id' => $track->album->id,
-                'name' => $track->album->name,
-                'images' => [(object) ['url' => $track->album->imageUrl ?? '']],
-            ],
-            'artists' => array_map(fn (ArtistRef $artist): stdClass => (object) ['id' => $artist->id, 'name' => $artist->name], $track->artists),
-        ]);
-    }
-
-    public static function fromSpotify(stdClass $track): Song
-    {
-        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->first();
+        $identity = ['provider_id' => $track->providerId, 'provider_track_id' => $track->id];
+        $song = Song::where($identity)->first();
         if ($song) {
             return $song;
         }
-        $album = Album::fromSpotify($track->album);
-        $artists = array_map(fn (stdClass $trackArtist) => Artist::fromSpotify($trackArtist), $track->artists);
+        $album = Album::fromRef($track->providerId, $track->album);
+        $artists = array_map(fn (ArtistRef $artist): Artist => Artist::fromRef($track->providerId, $artist), $track->artists);
 
         try {
             return DB::transaction(function () use ($track, $album, $artists): Song {
                 $song = new Song;
-                $song->provider_id = 'spotify';
+                $song->provider_id = $track->providerId;
                 $song->provider_track_id = $track->id;
                 $song->name = $track->name;
-                $song->length = $track->duration_ms;
+                $song->length = $track->durationMs;
                 $song->album()->associate($album);
                 $song->save();
                 foreach ($artists as $artist) {
@@ -147,7 +132,7 @@ class Song extends Model
                 return $song;
             });
         } catch (UniqueConstraintViolationException) {
-            return Song::where(['provider_id' => 'spotify', 'provider_track_id' => $track->id])->firstOrFail();
+            return Song::where($identity)->firstOrFail();
         }
     }
 

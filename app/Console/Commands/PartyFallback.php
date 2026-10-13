@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Services\Music\MusicProviderFactory;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -33,8 +34,9 @@ class PartyFallback extends Command
             $query->where('last_updated_at', '<=', $cutoff)->orWhereNull('last_updated_at');
         })->get();
 
+        $factory = app(MusicProviderFactory::class);
         foreach ($parties as $party) {
-            if ($party->user->spotifyNeedsRelink()) {
+            if ($factory->partyNeedsRelink($party)) {
                 continue;
             }
 

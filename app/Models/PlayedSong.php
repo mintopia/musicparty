@@ -89,13 +89,21 @@ class PlayedSong extends Model
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
+        $lastPlayed = UpcomingSong::where('party_id', $this->party_id)
+            ->whereNotNull('queued_at')
+            ->has('played')
+            ->orderByDesc('queued_at')
+            ->orderByDesc('id')
+            ->first();
         $upcoming = UpcomingSong::where('party_id', $this->party_id)
             ->whereNotNull('queued_at')
-            ->whereHas('song', function ($query) use ($ids) {
-                $query->whereIn('provider_track_id', $ids);
-            })->doesntHave('played')
-            ->orderBy('queued_at', 'desc')
-            ->orderBy('id', 'desc')
+            ->doesntHave('played')
+            ->whereHas('song', fn ($query) => $query->whereIn('provider_track_id', $ids))
+            ->when($lastPlayed, fn ($query, UpcomingSong $lastPlayed) => $query->where(fn ($queuedLater) => $queuedLater
+                ->where('queued_at', '>', $lastPlayed->queued_at)
+                ->orWhere(fn ($sameTime) => $sameTime->where('queued_at', $lastPlayed->queued_at)->where('id', '>', $lastPlayed->id))))
+            ->orderBy('queued_at')
+            ->orderBy('id')
             ->first();
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);

@@ -21,17 +21,17 @@
             <div class="card">
                 <div class="card-body">
                     <div class="datagrid">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Nickname</div>
-                            <div class="datagrid-content">{{ $member->user->nickname }}</div>
+                            <div>{{ $member->user->nickname }}</div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Role</div>
-                            <div class="datagrid-content">{{ $member->role->name }}</div>
+                            <div>{{ $member->role->name }}</div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Joined Party</div>
-                            <div class="datagrid-content">
+                            <div>
                                 <span title="{{ $member->created_at->format('Y-m-d H:i:s') }}">
                                     {{ $member->created_at->diffForHumans() }}
                                 </span>
@@ -81,7 +81,7 @@
         <div class="col-lg-9 col-md-12">
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                    <table class="table table-hover table-vcenter text-nowrap card-table">
                         <thead>
                         <tr>
                             <th>Song</th>

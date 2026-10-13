@@ -113,35 +113,10 @@ body {
     color: var(--tblr-light) !important;
 }
 
-.seating-plan {
-    position: relative;
-    background-repeat: no-repeat;
+.w-7 {
+    width: 5rem !important;
+}
 
-    .seat {
-        position: absolute;
-        width: 1.9em;
-        height: 1.9em;
-        border: 2px solid var(--tblr-gray);
-        border-radius: 2px;
-        padding: 0;
-        overflow: hidden;
-    }
-
-    .seat-clan {
-        background-color: #3d8bfd;
-    }
-
-    .seat-mine {
-        background-color: #ffc107;
-    }
-
-    .seat.taken {
-        background-color: #dc3545;
-    }
-
-    .seat.disabled {
-        background-color: #adb5bd;
-    }
-
-
+.w-8 {
+    width: 8rem !important;
 }

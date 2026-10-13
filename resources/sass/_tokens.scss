@@ -1,15 +1,12 @@
 // Design tokens. Defaults below equal Tabler's own values, so an unthemed page
 // looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
+// Colour defaults are per scope (--mp-default-*) so a theme's :root --mp-* value wins; see ADR 0008.
 
 :root,
 :host {
     --mp-primary: oklch(54.6% 0.1724 254.2deg);
     --mp-primary-rgb: 6, 111, 209;
-    --mp-nav-background: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
-    --mp-surface: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
-    --mp-text: light-dark(var(--tblr-gray-700), var(--tblr-gray-200));
     --mp-muted: oklch(55.55% 0 0deg);
-    --mp-border: light-dark(var(--tblr-gray-200), var(--tblr-gray-700));
     --mp-success: oklch(67.38% 0.1885 145.43deg);
     --mp-danger: oklch(58.29% 0.1941 25.59deg);
     --mp-warning: oklch(77.02% 0.1658 71.02deg);
@@ -19,14 +16,30 @@
 
 :root,
 :host,
+[data-bs-theme=light] {
+    --mp-default-nav-background: #182433;
+    --mp-default-surface: var(--tblr-bg-surface-primary);
+    --mp-default-text: var(--tblr-gray-700);
+    --mp-default-border: var(--tblr-gray-200);
+}
+
+[data-bs-theme=dark] {
+    --mp-default-nav-background: #182433;
+    --mp-default-surface: var(--tblr-gray-800);
+    --mp-default-text: var(--tblr-gray-200);
+    --mp-default-border: var(--tblr-gray-700);
+}
+
+:root,
+:host,
 [data-bs-theme=light],
 [data-bs-theme=dark] {
     --tblr-primary: var(--mp-primary);
     --tblr-primary-rgb: var(--mp-primary-rgb);
-    --tblr-bg-surface: var(--mp-surface);
-    --tblr-body-color: var(--mp-text);
+    --tblr-bg-surface: var(--mp-surface, var(--mp-default-surface));
+    --tblr-body-color: var(--mp-text, var(--mp-default-text));
     --tblr-muted: var(--mp-muted);
-    --tblr-border-color: var(--mp-border);
+    --tblr-border-color: var(--mp-border, var(--mp-default-border));
     --tblr-success: var(--mp-success);
     --tblr-danger: var(--mp-danger);
     --tblr-warning: var(--mp-warning);
@@ -35,5 +48,5 @@
 }
 
 .navbar[data-bs-theme=dark] {
-    --tblr-navbar-bg: var(--mp-nav-background);
+    --tblr-navbar-bg: var(--mp-nav-background, var(--mp-default-nav-background));
 }

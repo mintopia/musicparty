@@ -11,7 +11,6 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
-use App\Models\Vote;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -23,7 +22,7 @@ use Illuminate\Support\Facades\Cache;
 
 class UpcomingSongController extends Controller
 {
-    private const REQUEST_LOCK_SECONDS = 30;
+    private const int REQUEST_LOCK_SECONDS = 30;
 
     public function __construct()
     {
@@ -67,47 +66,61 @@ class UpcomingSongController extends Controller
             abort(403);
         }
 
+        $user = $this->resolveAuthenticatedUser($request);
+        $trackId = (string) $request->input('provider_track_id');
+        $wait = (int) config('musicparty.request_lock_wait_seconds');
+
         try {
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
-                ->block((int) config('musicparty.request_lock_wait_seconds'), function () use ($request, $party, $member): UpcomingSong|JsonResponse {
-                    $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($request) {
-                        $query->where(['provider_id' => 'spotify', 'provider_track_id' => $request->input('provider_track_id')]);
-                    })->first();
-                    if (! $upcoming) {
-                        $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($request->input('provider_track_id'));
-                        if (! $track) {
-                            return response()->json([
-                                'message' => 'Unable to find the song in Spotify.',
-                                'errors' => [
-                                    'provider_track_id' => [
-                                        'Unable to find the song in Spotify.',
+                ->block($wait, fn (): UpcomingSong|JsonResponse => Cache::lock("request-store:{$party->id}:track:{$trackId}", self::REQUEST_LOCK_SECONDS)
+                    ->block($wait, function () use ($party, $member, $user, $trackId): UpcomingSong|JsonResponse {
+                        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
+                            $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
+                        })->first();
+                        if (! $upcoming) {
+                            $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($trackId);
+                            if (! $track) {
+                                return response()->json([
+                                    'message' => 'Unable to find the song in Spotify.',
+                                    'errors' => [
+                                        'provider_track_id' => [
+                                            'Unable to find the song in Spotify.',
+                                        ],
                                     ],
-                                ],
-                            ], 422);
+                                ], 422);
+                            }
+
+                            $checkResponse = app(RequestRules::class)->check($party, $member, $track);
+                            if (! $checkResponse->allowed) {
+                                return response()->json([
+                                    'message' => $checkResponse->reason,
+                                    'errors' => [
+                                        'provider_track_id' => [
+                                            $checkResponse->reason,
+                                        ],
+                                    ],
+                                ])->setStatusCode(400);
+                            }
+
+                            $song = Song::fromTrack($track);
+                            $upcoming = new UpcomingSong;
+                            $upcoming->party()->associate($party);
+                            $upcoming->user()->associate($user);
+                            $upcoming->song()->associate($song);
+                            $upcoming->save();
                         }
 
-                        $checkResponse = app(RequestRules::class)->check($party, $member, $track);
-                        if (! $checkResponse->allowed) {
+                        $denial = $this->voteDenialReason($party, $member);
+                        if ($denial) {
                             return response()->json([
-                                'message' => $checkResponse->reason,
-                                'errors' => [
-                                    'provider_track_id' => [
-                                        $checkResponse->reason,
-                                    ],
-                                ],
-                            ])->setStatusCode(400);
+                                'message' => $denial,
+                                'errors' => ['provider_track_id' => [$denial]],
+                            ], 400);
                         }
+                        $upcoming->upvote($user);
 
-                        $song = Song::fromTrack($track);
-                        $upcoming = new UpcomingSong;
-                        $upcoming->party()->associate($party);
-                        $upcoming->user()->associate($this->resolveAuthenticatedUser($request));
-                        $upcoming->song()->associate($song);
-                        $upcoming->save();
-                    }
-
-                    return $upcoming;
-                });
+                        return $upcoming;
+                    }));
         } catch (LockTimeoutException) {
             abort(429, 'Another request is already being processed');
         }
@@ -115,21 +128,6 @@ class UpcomingSongController extends Controller
             return $outcome;
         }
         $upcoming = $outcome;
-        $denial = $this->voteDenialReason($party, $member);
-        if ($denial) {
-            return response()->json([
-                'message' => $denial,
-                'errors' => ['provider_track_id' => [$denial]],
-            ], 400);
-        }
-        $vote = $upcoming->votes()->whereUserId($this->resolveAuthenticatedUser($request)->id)->first();
-        if (! $vote) {
-            $vote = new Vote;
-            $vote->user()->associate($this->resolveAuthenticatedUser($request));
-            $vote->upcomingSong()->associate($upcoming);
-        }
-        $vote->value = 1;
-        $vote->save();
 
         $resource = new UpcomingSongResource($upcoming);
         $data = $augmentService->augment($upcoming, $this->resolveAuthenticatedUser($request));

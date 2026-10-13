@@ -12,7 +12,7 @@ use Illuminate\Http\Resources\Json\JsonResource;
  */
 class TrackAnnotationResource extends JsonResource
 {
-    public static $wrap = null;
+    public static $wrap;
 
     /**
      * @return array<string, mixed>
@@ -28,6 +28,8 @@ class TrackAnnotationResource extends JsonResource
             'name' => $track->name,
             'duration_ms' => $track->durationMs,
             'explicit' => $track->explicit,
+            'external_url' => $annotation->externalUrl,
+            'provider_name' => $annotation->providerName,
             'album' => [
                 'id' => $track->album->id,
                 'name' => $track->album->name,

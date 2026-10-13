@@ -55,7 +55,7 @@
         <div class="col-lg-9 col-md-12">
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                    <table class="table table-hover table-vcenter text-nowrap card-table">
                         <thead>
                         <tr>
                             <th>Song</th>
@@ -79,7 +79,7 @@
                             </th>
                             <th>
                                 @include('partials._sortheader', [
-                                    'title' => 'Sent to Spotify',
+                                    'title' => "Sent to {$providerName}",
                                     'field' => 'queued_at',
                                 ])
                             </th>
@@ -116,7 +116,7 @@
                                             {{ $song->queued_at->diffForHumans() }}
                                         </span>
                                     @else
-                                        <span class="text-muted">Not Sent to Spotify</span>
+                                        <span class="text-muted">Not Sent to {{ $providerName }}</span>
                                     @endif
                                 </td>
                             </tr>

@@ -6,8 +6,6 @@ use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\Music\MusicProviderFactory;
-use App\Services\Spotify\SpotifyGateway;
-use App\Support\SpotifyPayload;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -19,7 +17,6 @@ class QueueSelector
 
     public function __construct(
         protected MusicProviderFactory $providers,
-        protected SpotifyGateway $gateway,
         protected FallbackPlaylist $fallback,
     ) {}
 
@@ -36,15 +33,10 @@ class QueueSelector
     {
         Log::debug("{$party}: Checking if we need to add tracks to queue");
         $current = $party->fresh() ?? $party;
-        $queue = SpotifyPayload::object($this->gateway->requireClient($party->user)->getMyQueue());
-        $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
-        $count = count($queueItems);
-        $ids = collect($queueItems)->pluck('id')->unique();
-        /* The Spotify queue endpoint returns 10-20 items, and when nothing is queued it pads the result with copies
-         * of the current context. So the number of unique items minus one (the playing track) is the real depth.
-         */
-        Log::debug("{$party}: Queue contains {$count} items, unique: {$ids->count()}");
-        $toAdd = self::QUEUE_LENGTH - ($ids->count() - 1);
+        $provider = $this->providers->forParty($party, Purpose::Control);
+        $depth = $provider->queueDepth();
+        Log::debug("{$party}: Queue contains {$depth} tracks after the current one");
+        $toAdd = self::QUEUE_LENGTH - $depth;
         if ($toAdd < 1) {
             Log::debug("{$party}: No tracks to add");
 
@@ -63,7 +55,6 @@ class QueueSelector
             return;
         }
 
-        $provider = $this->providers->forParty($party, Purpose::Control);
         foreach ($selected as $request) {
             if ($request->fresh()?->queued_at !== null) {
                 Log::debug("{$party}: {$request->song} was already sent to the player");

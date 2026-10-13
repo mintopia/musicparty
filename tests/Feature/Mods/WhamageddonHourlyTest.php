@@ -27,7 +27,7 @@ it('does nothing for an inactive party', function () {
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->score_adjustment)->toBe(0)
         ->and($party->upcoming()->count())->toBe(1);
@@ -38,7 +38,7 @@ it('does nothing when the enabled setting is falsy', function (mixed $value) {
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->score_adjustment)->toBe(0);
 })->with([0, null]);
@@ -48,7 +48,7 @@ it('pins that a stored boolean false reads back as the truthy string b:0; so hou
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'enabled'))->toBe('b:0;')
         ->and($upcoming->fresh()->score_adjustment)->toBe(1);
@@ -59,7 +59,7 @@ it('treats a party with no stored enabled value as enabled because the false def
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->score_adjustment)->toBe(1);
 });
@@ -69,7 +69,7 @@ it('applies the hourly upvote only outside the 2AM to 9AM window', function (str
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt($time);
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->score_adjustment)->toBe($skipped ? 0 : 1);
 })->with([
@@ -101,7 +101,7 @@ it('ignores the votes setting because the code reads score_adjustment', function
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->score_adjustment)->toBe(1);
 });
@@ -110,7 +110,7 @@ it('adds the song to the party when there is no upcoming song', function () {
     $party = WhamageddonFixtures::party(['enabled' => true, 'spotify_id' => WhamageddonFixtures::TRACK_ID]);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     $upcoming = $party->upcoming()->sole();
     expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
@@ -122,7 +122,7 @@ it('adds nothing in the quiet window even when there is no upcoming song', funct
     $party = WhamageddonFixtures::party(['enabled' => true]);
     whamAt('2026-12-24 04:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($party->upcoming()->count())->toBe(0);
 });
@@ -131,7 +131,7 @@ it('treats a stale upcoming_song_id as no upcoming song and adds a new one', fun
     $party = WhamageddonFixtures::party(['enabled' => true, 'upcoming_song_id' => 99999]);
     whamAt('2026-12-24 12:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($party->upcoming()->count())->toBe(1);
 });
@@ -141,7 +141,7 @@ it('holds playback until 10AM the next day from 23:00', function () {
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 23:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     $upcoming->refresh();
     expect($upcoming->score_adjustment)->toBe(1)
@@ -153,7 +153,7 @@ it('does not hold playback at 22:59', function () {
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 22:59:59');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->getRawOriginal('not_before'))->toBeNull();
 });
@@ -163,7 +163,7 @@ it('keeps the hold through hours 0 and 1 and in the quiet window', function (str
     $upcoming = WhamageddonFixtures::upcoming($party, ['not_before' => '2026-12-25 10:00:00']);
     whamAt($time);
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($upcoming->fresh()->getRawOriginal('not_before'))->not->toBeNull();
 })->with(['2026-12-25 00:00:00', '2026-12-25 01:00:00', '2026-12-25 05:00:00', '2026-12-25 09:00:00']);
@@ -173,7 +173,7 @@ it('clears the hold from 10:00 onwards', function (string $time) {
     $upcoming = WhamageddonFixtures::upcoming($party, ['not_before' => '2026-12-25 10:00:00']);
     whamAt($time);
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     $upcoming->refresh();
     expect($upcoming->getRawOriginal('not_before'))->toBeNull()->and($upcoming->score_adjustment)->toBe(1);
@@ -195,7 +195,7 @@ it('waits without re-adding until two hours after the upcoming song was queued',
     $upcoming = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 12:00:00']);
     whamAt('2026-12-24 13:59:59');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($party->upcoming()->count())->toBe(1)
         ->and($upcoming->fresh()->score_adjustment)->toBe(0)
@@ -208,7 +208,7 @@ it('re-adds a new upcoming row two hours after the previous one was queued', fun
     $old = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 12:00:00']);
     whamAt('2026-12-24 14:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect($party->upcoming()->count())->toBe(2);
     $new = $party->upcoming()->whereKeyNot($old->id)->sole();
@@ -224,7 +224,7 @@ it('still runs delayPlayback against the old queued upcoming after re-adding', f
     $old = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 21:00:00']);
     whamAt('2026-12-24 23:00:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     $new = $party->upcoming()->whereKeyNot($old->id)->sole();
     expect($old->fresh()->getRawOriginal('not_before'))->not->toBeNull()
@@ -236,7 +236,7 @@ it('applies the hour of day in the app timezone only', function () {
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 09:30:00');
 
-    (new Whamageddon($party))->hourly();
+    new Whamageddon($party)->hourly();
 
     expect(config('app.timezone'))->toBe('UTC')
         ->and($upcoming->fresh()->score_adjustment)->toBe(0);

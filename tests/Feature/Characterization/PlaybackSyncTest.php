@@ -20,7 +20,7 @@ use Tests\Support\FakeSpotify;
 function syncParty(array $attributes = []): array
 {
     FakeSpotify::install();
-    $party = Party::factory()->create(array_merge(['active' => true, 'backup_playlist_id' => 'BACKUP'], $attributes));
+    $party = Party::factory()->create(array_merge(['provider_id' => 'fake', 'active' => true, 'backup_playlist_id' => 'BACKUP'], $attributes));
     Cache::flush();
     $fake = app(FakeMusicProvider::class);
 
@@ -167,7 +167,7 @@ it('stores the playback linked id as relinked_from', function () {
 
 it('does not resolve a track through the provider when the Song already exists', function () {
     [$party, $fake] = syncParty();
-    Song::factory()->create(['provider_track_id' => 'PLAYED']);
+    Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
     $fake->withPlayback(playbackOf('PLAYED'));
 
     app(PlaybackSync::class)->sync($party);
@@ -187,7 +187,7 @@ it('leaves the current song untouched when the playing track cannot be resolved'
 
 it('links the Played Track to the Sent to Player Request for the same track', function () {
     [$party, $fake] = syncParty();
-    $song = Song::factory()->create(['provider_track_id' => 'PLAYED']);
+    $song = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
     $request = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinute()]);
     nowPlaying($fake, 'PLAYED');
 
@@ -209,7 +209,7 @@ it('links a Played Track to the Request for the relinked track id', function () 
 
 it('does not link a Played Track that already has a Played Track for the Request', function () {
     [$party, $fake] = syncParty();
-    $song = Song::factory()->create(['provider_track_id' => 'PLAYED']);
+    $song = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
     $request = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinute()]);
     PlayedSong::factory()->create(['party_id' => $party->id, 'song_id' => $song->id, 'upcoming_song_id' => $request->id]);
     nowPlaying($fake, 'PLAYED');
@@ -222,7 +222,7 @@ it('does not link a Played Track that already has a Played Track for the Request
 it('does not attribute a play to a Request in another party or one never sent (E5 R14)', function () {
     [$party, $fake] = syncParty();
     $otherParty = Party::factory()->create(['active' => false]);
-    $song = Song::factory()->create(['provider_track_id' => 'PLAYED']);
+    $song = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
     UpcomingSong::factory()->for($otherParty)->create(['song_id' => $song->id, 'queued_at' => now()->subMinute()]);
     UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => null]);
     nowPlaying($fake, 'PLAYED');
@@ -232,19 +232,19 @@ it('does not attribute a play to a Request in another party or one never sent (E
     expect(PlayedSong::query()->where('party_id', $party->id)->sole()->upcoming_song_id)->toBeNull();
 });
 
-it('prefers the most recently queued Request when several exist for the same track (E5 R14)', function () {
+it('links the earliest queued Request when several exist for the same track (E5 R14)', function () {
     [$party, $fake] = syncParty();
-    $song = Song::factory()->create(['provider_track_id' => 'PLAYED']);
-    UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(20)]);
-    $newer = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(2)]);
+    $song = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'PLAYED']);
+    $older = UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(20)]);
+    UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => now()->subMinutes(2)]);
     nowPlaying($fake, 'PLAYED');
 
     app(PlaybackSync::class)->sync($party);
 
-    expect(PlayedSong::query()->sole()->upcoming_song_id)->toBe($newer->id);
+    expect(PlayedSong::query()->sole()->upcoming_song_id)->toBe($older->id);
 });
 
-it('still updates the current song but sends nothing when the party is inactive', function () {
+it('still updates the current song, sends nothing and stamps last_updated_at when the party is inactive', function () {
     [$party, $fake] = syncParty(['active' => false]);
     $song = Song::factory()->create(['provider_track_id' => 'WAITING']);
     UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => null]);
@@ -255,7 +255,7 @@ it('still updates the current song but sends nothing when the party is inactive'
     expect($party->fresh()->song->provider_track_id)->toBe('PLAYED')
         ->and(PlayedSong::query()->count())->toBe(1)
         ->and($fake->callsTo('sendToPlayer'))->toBe([])
-        ->and($party->fresh()->last_updated_at)->toBeNull();
+        ->and($party->fresh()->last_updated_at->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
 it('stamps last_updated_at after a full active update', function () {

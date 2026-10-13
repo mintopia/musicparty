@@ -19,7 +19,7 @@
         <h1>Create Filter</h1>
     </div>
     <div class="row">
-        <div class="{{ $spotifyData ? 'col-12 col-lg-6' : 'col-md-6 col-md-offset-3' }}">
+        <div class="{{ $track ? 'col-12 col-lg-6' : 'col-md-6 col-md-offset-3' }}">
             <form action="{{ route('parties.moderation.store', $party->code) }}" class="card" method="post">
                 {{ csrf_field() }}
                 {{ method_field('POST') }}
@@ -33,53 +33,53 @@
             </form>
         </div>
 
-        @if($spotifyData)
+        @if($track)
             <div class="col-12 col-lg-6">
-                <h3>Spotify Data</h3>
+                <h3>Track Data</h3>
 
                 <div class="datagrid">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Track ID</div>
-                        <div class="datagrid-content">{{ $spotifyData->id ?? 'None' }}</div>
+                        <div>{{ $track->id ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Track Name</div>
-                        <div class="datagrid-content">{{ $spotifyData->name ?? 'None' }}</div>
+                        <div>{{ $track->name ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Album ID</div>
-                        <div class="datagrid-content">{{ $spotifyData->album->id ?? 'None' }}</div>
+                        <div>{{ $track->album->id ?? 'None' }}</div>
                     </div>
                 </div>
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">Album Name</div>
-                        <div class="datagrid-content">{{ $spotifyData->album->name ?? 'None' }}</div>
+                        <div>{{ $track->album->name ?? 'None' }}</div>
                     </div>
                 </div>
-                @foreach ($spotifyData->artists ?? [] as $artist)
+                @foreach ($track->artists as $artist)
                     <div class="datagrid mt-3">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Artist ID</div>
-                            <div class="datagrid-content">{{ $artist->id ?? 'None' }}</div>
+                            <div>{{ $artist->id ?? 'None' }}</div>
                         </div>
                     </div>
                     <div class="datagrid mt-3">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Artist Name</div>
-                            <div class="datagrid-content">{{ $artist->name ?? 'None' }}</div>
+                            <div>{{ $artist->name ?? 'None' }}</div>
                         </div>
                     </div>
                 @endforeach
 
                 <div class="datagrid mt-3">
-                    <div class="datagrid-item">
+                    <div>
                         <div class="datagrid-title">ISRC Code</div>
-                        <div class="datagrid-content">{{ $spotifyData->external_ids->isrc ?? 'None' }}</div>
+                        <div>{{ $track->isrc ?? 'None' }}</div>
                     </div>
                 </div>
             </div>

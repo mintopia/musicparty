@@ -9,6 +9,7 @@ use App\Http\Middleware\TrimStrings;
 use App\Http\Middleware\TrustProxies;
 use App\Http\Middleware\ValidateSignature;
 use App\Http\Middleware\VerifyCsrfToken;
+use App\Services\Spotify\SpotifyBackoffException;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
@@ -19,11 +20,13 @@ use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Laravel\Sanctum\Http\Middleware\CheckAbilities;
 use Laravel\Sanctum\Http\Middleware\CheckForAnyAbility;
 use Laravel\Sanctum\Http\Middleware\EnsureFrontendRequestsAreStateful;
+use SpotifyWebAPI\SpotifyWebAPIException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -84,5 +87,11 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['current_password', 'password', 'password_confirmation']);
+
+        $exceptions->reportable(function (SpotifyWebAPIException $e): void {
+            if ($e->isRateLimited() && ! $e instanceof SpotifyBackoffException) {
+                Log::critical('Spotify Rate Limit Hit');
+            }
+        });
     })
     ->create();

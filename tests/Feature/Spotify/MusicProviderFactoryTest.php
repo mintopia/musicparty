@@ -48,7 +48,7 @@ function recordingGateway(FakeSpotify $api): SpotifyGateway
 
         public function __construct(protected FakeSpotify $api) {}
 
-        public function client(User $user): ?SpotifyWebAPI
+        public function client(User $user): SpotifyWebAPI
         {
             $this->used[] = 'control';
 

@@ -15,6 +15,7 @@ use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Spotify\SpotifyGateway;
+use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Support\SpotifyPayload;
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -24,7 +25,9 @@ use stdClass;
 
 class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 {
-    private const BROWSE_CACHE_SECONDS = 3600;
+    private const int BROWSE_CACHE_SECONDS = 3600;
+
+    public const string CONTEXT_PLAYLIST_TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
 
     public function __construct(
         protected SpotifyGateway $gateway,
@@ -32,9 +35,53 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         protected Purpose $purpose,
     ) {}
 
+    public static function make(User $user, Purpose $purpose): self
+    {
+        return new self(app(SpotifyGateway::class), $user, $purpose);
+    }
+
+    /**
+     * @return bool false when the account must be re-linked
+     */
+    public static function refreshAccessToken(User $user): bool
+    {
+        try {
+            app(SpotifyGateway::class)->client($user);
+        } catch (SpotifyRelinkRequiredException) {
+            return false;
+        }
+
+        return true;
+    }
+
     public function id(): string
     {
         return SpotifyMapper::PROVIDER_ID;
+    }
+
+    public function displayName(): string
+    {
+        return 'Spotify';
+    }
+
+    public function isLinked(): bool
+    {
+        return $this->user->accounts()->whereHas('provider', function ($query) {
+            $query->whereIn('code', ['spotify', 'spotifysearch']);
+        })->count() === 2;
+    }
+
+    public function needsRelink(): bool
+    {
+        return $this->user->accounts()
+            ->whereNotNull('needs_relink_at')
+            ->whereHas('provider', fn ($query) => $query->whereCode('spotify'))
+            ->exists();
+    }
+
+    public function trackUrl(string $trackId): ?string
+    {
+        return "https://open.spotify.com/track/{$trackId}";
     }
 
     public function searchTracks(string $query, int $page, int $perPage): Page
@@ -159,6 +206,20 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         } while ($result->next);
 
         return $playlists;
+    }
+
+    public function isReservedTrack(string $trackId): bool
+    {
+        return $trackId === self::CONTEXT_PLAYLIST_TRACK_ID;
+    }
+
+    public function queueDepth(): int
+    {
+        $queue = SpotifyPayload::object($this->control()->getMyQueue());
+        $ids = collect((array) $queue->queue)->map(fn (mixed $item): mixed => SpotifyPayload::object($item)->id)->unique();
+
+        // With nothing queued Spotify pads the queue with copies of the current context, so unique items minus the playing track is the real depth, or -1 when nothing is playing or queued.
+        return $ids->count() - 1;
     }
 
     public function currentPlayback(): ?PlaybackState

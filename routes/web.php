@@ -21,7 +21,9 @@ use Illuminate\Support\Facades\Route;
 // Always available
 Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
 
-Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
+if (app()->environment('testing')) {
+    Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
+}
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');

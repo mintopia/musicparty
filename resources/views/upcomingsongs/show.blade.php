@@ -26,43 +26,43 @@
                         </div>
                         <div class="col-lg-10">
                             <div class="datagrid">
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Artists</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         @foreach($song->song->artists as $artist)
                                             <a href="{{ route('parties.songs.index', [$party->code, 'artist' => $artist->name]) }}">{{ $artist->name }}</a>@if($artist->id != $song->song->artists->last()->id), @endif
                                         @endforeach
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Album</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         <a href="{{ route('parties.songs.index', [$party->code, 'album' => $song->song->album->name]) }}">{{ $song->song->album->name }}</a>
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Duration</div>
-                                    <div class="datagrid-content">{{ format_ms($song->song->length) }}</div>
+                                    <div>{{ format_ms($song->song->length) }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Votes</div>
-                                    <div class="datagrid-content">{{ $song->votes()->count() }}</div>
+                                    <div>{{ $song->votes()->count() }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Score</div>
-                                    <div class="datagrid-content">{{ $song->score }}</div>
+                                    <div>{{ $song->score }}</div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Requested</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         <span title="{{ $song->created_at->format('Y-m-d H:i:s') }}">
                                             {{ $song->created_at->diffForHumans() }}
                                         </span>
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
+                                <div>
                                     <div class="datagrid-title">Requested By</div>
-                                    <div class="datagrid-content">
+                                    <div>
                                         @if($song->user)
                                             <a href="{{ route('parties.users.show', [$party->code, $song->user->getPartyMember($party)]) }}">{{ $song->user->nickname }}</a>
                                         @else
@@ -70,15 +70,15 @@
                                         @endif
                                     </div>
                                 </div>
-                                <div class="datagrid-item">
-                                    <div class="datagrid-title">Sent to Spotify</div>
-                                    <div class="datagrid-content">
+                                <div>
+                                    <div class="datagrid-title">Sent to {{ $providerName }}</div>
+                                    <div>
                                         @if($song->queued_at)
                                             <span title="{{ $song->queued_at->format('Y-m-d H:i:s') }}">
                                                 {{ $song->queued_at->diffForHumans() }}
                                             </span>
                                         @else
-                                            <span class="text-mute">Not Sent</span>
+                                            <span class="text-muted">Not Sent</span>
                                         @endif
                                     </div>
                                 </div>
@@ -91,10 +91,12 @@
                         <i class="icon ti ti-ban"></i>
                         Moderate
                     </a>
-                    <a href="https://open.spotify.com/track/{{ $song->song->provider_track_id }}" class="btn btn-green text-white" target="_blank">
-                        <i class="icon ti ti-brand-spotify"></i>
-                        View on Spotify
-                    </a>
+                    @if($trackUrl)
+                        <a href="{{ $trackUrl }}" class="btn btn-green text-white" target="_blank">
+                            <i class="icon ti ti-external-link"></i>
+                            View on {{ $providerName }}
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -106,7 +108,7 @@
             @if($votes->count() > 0)
                 <div class="card">
                     <div class="table-responsive">
-                        <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                        <table class="table table-hover table-vcenter text-nowrap card-table">
                             <thead>
                             <tr>
                                 <th>User</th>
@@ -153,13 +155,13 @@
             @if($other->count() > 0)
                 <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                    <table class="table table-hover table-vcenter text-nowrap card-table">
                         <thead>
                         <tr>
                             <th>Requested</th>
                             <th class="text-center">Votes</th>
                             <th class="text-center">Score</th>
-                            <th>Sent to Spotify</th>
+                            <th>Sent to {{ $providerName }}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -176,7 +178,7 @@
                                             {{ $otherSong->queued_at->diffForHumans() }}
                                         </span>
                                     @else
-                                        <span class="text-muted">Not Sent to Spotify</span>
+                                        <span class="text-muted">Not Sent to {{ $providerName }}</span>
                                     @endif
                                 </td>
                             </tr>
@@ -198,7 +200,7 @@
                     @if($ratings->count() > 0)
                         <div class="card">
                             <div class="table-responsive">
-                                <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                                <table class="table table-hover table-vcenter text-nowrap card-table">
                                     <thead>
                                     <tr>
                                         <th>User</th>

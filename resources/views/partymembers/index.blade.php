@@ -45,7 +45,7 @@
         <div class="col-lg-9 col-md-12">
             <div class="card">
                 <div class="table-responsive">
-                    <table class="table table-hover table-outline table-vcenter text-nowrap card-table">
+                    <table class="table table-hover table-vcenter text-nowrap card-table">
                         <thead>
                         <tr>
                             <th>

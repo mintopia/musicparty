@@ -11,11 +11,11 @@
 
     @include('partials._pusher-config')
 
-    @vite(['resources/css/app.css', 'resources/js/app.ts'])
+    @vite(['resources/js/app.ts'])
     <meta name="csrf-token" content="{{ csrf_token() }}">
     @include('partials._theme')
 </head>
-<body class="d-flex flex-column login-page" @if($darkMode) data-bs-theme="dark" @endif>
+<body class="d-flex flex-column" @if($darkMode) data-bs-theme="dark" @endif>
 <div class="row g-0 flex-fill">
     <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
         <div class="container container-tight mt-auto px-lg-5">

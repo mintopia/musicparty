@@ -23,7 +23,7 @@ function webhookParty(): Party
 
 function queuedParty(PartyUpdate $job): int
 {
-    return (new ReflectionProperty($job, 'party'))->getValue($job)->id;
+    return new ReflectionProperty($job, 'party')->getValue($job)->id;
 }
 
 function webhookMember(Party $party, string $roleCode): User

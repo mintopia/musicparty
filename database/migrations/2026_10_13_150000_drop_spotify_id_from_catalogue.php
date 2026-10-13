@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /** @var array<string, string> */
-    private const TABLES = [
+    private const array TABLES = [
         'songs' => 'provider_track_id',
         'albums' => 'provider_album_id',
         'artists' => 'provider_artist_id',

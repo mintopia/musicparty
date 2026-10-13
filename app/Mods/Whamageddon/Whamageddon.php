@@ -6,6 +6,7 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
@@ -121,7 +122,7 @@ class Whamageddon
                 return;
             }
             $track = SpotifyPayload::object($response);
-            $song = Song::fromSpotify($track);
+            $song = Song::fromTrack(SpotifyMapper::track($track));
             $upcoming = new UpcomingSong;
             $upcoming->song()->associate($song);
             $upcoming->party()->associate($this->party);

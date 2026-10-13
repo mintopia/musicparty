@@ -17,7 +17,7 @@ use stdClass;
 
 final class SpotifyMapper
 {
-    public const PROVIDER_ID = 'spotify';
+    public const string PROVIDER_ID = 'spotify';
 
     public static function track(stdClass $payload, ?AlbumRef $fallbackAlbum = null): Track
     {

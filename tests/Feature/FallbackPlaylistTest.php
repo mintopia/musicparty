@@ -95,7 +95,7 @@ it('populates the cache when the refresh job runs', function () {
     $party = fallbackParty();
     FakeFallbackPlaylist::seed(['A', 'B']);
 
-    (new RefreshFallbackPlaylist($party))->handle(app(FallbackPlaylist::class));
+    new RefreshFallbackPlaylist($party)->handle(app(FallbackPlaylist::class));
 
     expect(trackIds(Cache::get("party.{$party->id}.backupplaylist")))->toBe(['A', 'B']);
 });

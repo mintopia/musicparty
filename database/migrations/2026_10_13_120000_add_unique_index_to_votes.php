@@ -39,6 +39,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('votes', function (Blueprint $table) {
+            $table->index('upcoming_song_id', 'votes_upcoming_song_id_foreign');
+        });
+
+        Schema::table('votes', function (Blueprint $table) {
             $table->dropUnique(['upcoming_song_id', 'user_id']);
         });
     }

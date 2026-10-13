@@ -13,7 +13,6 @@ use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Requests\RequestRules;
-use App\Services\Requests\Rules\ContextPlaylistTrackRule;
 use App\Services\Requests\TrackEligibility;
 use Illuminate\Support\Facades\DB;
 
@@ -31,7 +30,7 @@ function rulesVariant(Track $track, array $changes): Track
 
 function rulesParty(array $attributes = []): Party
 {
-    return Party::factory()->create(array_merge(['allow_requests' => true, 'explicit' => true], $attributes))->refresh();
+    return Party::factory()->create(array_merge(['provider_id' => 'fake', 'allow_requests' => true, 'explicit' => true], $attributes))->refresh();
 }
 
 function rulesMember(Party $party, string $role = 'user'): PartyMember
@@ -78,7 +77,8 @@ it('allows a plain track', function () {
 
 it('rejects the context playlist track as unavailable', function () {
     $party = rulesParty();
-    $track = rulesVariant(rulesTrack(), ['id' => ContextPlaylistTrackRule::TRACK_ID]);
+    app(FakeMusicProvider::class)->withReservedTrack('reserved-track');
+    $track = rulesVariant(rulesTrack(), ['id' => 'reserved-track']);
 
     expect(rulesCheck($party, rulesMember($party), $track))->toBe([false, 'This song is not available']);
 });
@@ -403,7 +403,8 @@ describe('TrackEligibility', function () {
             'id' => 'fake-track-1',
             'name' => 'Fake Track 1',
             'duration_ms' => 181000,
-            'external_urls' => ['spotify' => 'https://open.spotify.com/track/fake-track-1'],
+            'external_url' => null,
+            'provider_name' => 'Fake',
             'album' => ['id' => 'fake-album-1', 'name' => 'Fake Album 1', 'images' => [['url' => 'https://fake.test/albums/1.jpg']]],
             'artists' => [['id' => 'fake-artist-1', 'name' => 'Fake Artist 1']],
             'upcoming' => false,

@@ -6,7 +6,7 @@ import {create as createParty, edit, player, search, show, tv, youtube} from '@/
 import {index as moderation} from '@/routes/parties/moderation';
 import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
-import {home, logout, pulse} from '@/routes';
+import {home, login, logout, pulse} from '@/routes';
 import {profile} from '@/routes/user';
 import type {PartyMembership, SharedProps} from '@/types';
 
@@ -69,6 +69,11 @@ export function buildNavigation(props: NavigationProps): NavItem[] {
 
     if (props.auth.can.createParty) {
         items.push({key: 'party.create', title: 'Create Party', icon: 'ti-playlist-add', href: createParty().url});
+    }
+
+    if (!props.auth.user) {
+        items.push({key: 'login', title: 'Login', icon: 'ti-login', href: login().url});
+        return items;
     }
 
     items.push({key: 'profile', title: 'Profile', icon: 'ti-user', href: profile().url});

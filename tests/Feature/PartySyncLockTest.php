@@ -4,9 +4,15 @@ use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\Music\Data\Device;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\PlaybackSync;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -60,7 +66,7 @@ it('releases a queued job back onto the queue while the lock is held', function 
 it('records the attempt time and releases the lock when a sync throws', function () {
     app()->bind(SpotifyWebAPI::class, fn () => new class extends FakeSpotify
     {
-        public function getMyQueue()
+        public function getMyQueue(): never
         {
             throw new RuntimeException('boom');
         }
@@ -74,9 +80,86 @@ it('records the attempt time and releases the lock when a sync throws', function
         ->and(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
 });
 
+it('records the attempt time when a provider call throws at any step', function (string $failingCall) {
+    $party = $this->party;
+    $party->forceFill(['force' => true, 'device_id' => 'dev1'])->saveQuietly();
+    $fake = new class($failingCall) extends FakeMusicProvider
+    {
+        public function __construct(private string $failingCall)
+        {
+            parent::__construct();
+        }
+
+        public function currentPlayback(): ?PlaybackState
+        {
+            $this->failIf('currentPlayback');
+
+            return in_array($this->failingCall, ['play', 'devices'], true) ? null : new PlaybackState(true, 'T1', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev1', 'Dev', PlaybackSource::Polling);
+        }
+
+        public function devices(): array
+        {
+            $this->failIf('devices');
+
+            return [new Device('dev1', 'Dev', 'Speaker', true)];
+        }
+
+        public function play(?string $deviceId = null, ?Track $track = null): void
+        {
+            $this->failIf('play');
+        }
+
+        public function getTrack(string $id): ?Track
+        {
+            $this->failIf('getTrack');
+
+            return null;
+        }
+
+        private function failIf(string $call): void
+        {
+            if ($this->failingCall === $call) {
+                throw new RuntimeException($call);
+            }
+        }
+    };
+    app()->forgetInstance(FakeMusicProvider::class);
+    app()->scoped(FakeMusicProvider::class, fn () => $fake);
+    $before = $party->last_updated_at;
+
+    expect(fn () => app(PlaybackSync::class)->sync(Party::findOrFail($party->id)))->toThrow(RuntimeException::class, $failingCall);
+
+    expect($party->fresh()->last_updated_at->gt($before))->toBeTrue();
+})->with(['current playback' => 'currentPlayback', 'device list' => 'devices', 'force playback' => 'play', 'track lookup' => 'getTrack']);
+
+it('records the attempt time when the relink check throws', function () {
+    $party = Party::findOrFail($this->party->id);
+    $factory = Mockery::mock(MusicProviderFactory::class);
+    $factory->shouldReceive('partyNeedsRelink')->andThrow(new RuntimeException('relink'));
+    app()->instance(MusicProviderFactory::class, $factory);
+    $before = $this->party->last_updated_at;
+
+    expect(fn () => app(PlaybackSync::class)->sync($party))->toThrow(RuntimeException::class, 'relink');
+
+    expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue();
+});
+
+it('records the attempt time for an inactive Party so the debounce holds', function () {
+    $this->party->forceFill(['active' => false])->saveQuietly();
+    $before = $this->party->last_updated_at;
+
+    expect(app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id)))->toBeTrue();
+
+    expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue();
+
+    $calls = count($this->provider->callsTo('currentPlayback'));
+    app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id));
+    expect($this->provider->callsTo('currentPlayback'))->toHaveCount($calls);
+});
+
 it('sends exactly one track when a concurrent sync races the Send to Player', function () {
     $user = $this->party->user;
-    $song = Song::fromSpotify(FakeSpotify::track('raced'));
+    $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('raced')));
     $upcoming = new UpcomingSong;
     $upcoming->party()->associate($this->party);
     $upcoming->song()->associate($song);
@@ -139,12 +222,12 @@ it('succeeds on retry after a transient failure because the lock was released', 
         };
     });
 
-    expect(fn () => (new PartyUpdate(Party::findOrFail($this->party->id)))->handle())
+    expect(fn () => new PartyUpdate(Party::findOrFail($this->party->id))->handle())
         ->toThrow(RuntimeException::class);
 
     $fail = false;
     $this->party->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
-    (new PartyUpdate(Party::findOrFail($this->party->id)))->handle();
+    new PartyUpdate(Party::findOrFail($this->party->id))->handle();
 
     expect(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
 });
@@ -155,7 +238,7 @@ it('releases a retry back to the queue while a sync holds the lock', function ()
 
     $queueJob = Mockery::mock(Job::class)->shouldIgnoreMissing();
     $queueJob->shouldReceive('release')->once()->with(2);
-    $job = (new PartyUpdate($this->party))->setJob($queueJob);
+    $job = new PartyUpdate($this->party)->setJob($queueJob);
     $job->handle();
 
     expect($this->provider->callsTo('currentPlayback'))->toBe([]);
