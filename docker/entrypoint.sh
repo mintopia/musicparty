@@ -4,7 +4,7 @@ set -e
 APP_USER=musicparty
 
 if [ "$(id -u)" = "0" ]; then
-    APP_DIRS="/app/storage /app/bootstrap/cache"
+    APP_DIRS="/app/storage /app/bootstrap/cache /app/public"
     if [ "${RUN_AS_APP_OWNER:-0}" = "1" ]; then
         PUID="$(stat -c %u /app)"
         PGID="$(stat -c %g /app)"
