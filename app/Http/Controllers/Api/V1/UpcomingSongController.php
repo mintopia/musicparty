@@ -120,7 +120,7 @@ class UpcomingSongController extends Controller
 
                             $song = Song::fromTrack($track);
                             if ($checkResponse->isFlagged()) {
-                                $flagged = app(FlaggedRequests::class)->flag($party, $song, $user, (string) $checkResponse->reason);
+                                $flagged = app(FlaggedRequests::class)->flag($party, $song, $user, (string) $checkResponse->reason, $scheduledFor);
 
                                 return response()->json([
                                     'message' => 'Your request is awaiting approval',

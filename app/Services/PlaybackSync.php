@@ -33,9 +33,9 @@ class PlaybackSync
     /**
      * Polls the Music Provider for the Party's playback and applies it. Returns false when another sync holds the lock.
      */
-    public function sync(Party $party): bool
+    public function sync(Party $party, PlaybackSource $source = PlaybackSource::Polling): bool
     {
-        return $this->withLock($party, function () use ($party): void {
+        return $this->withLock($party, function () use ($party, $source): void {
             Log::info("{$party}: Updating state");
             if ($party->hasFreshPushedPlayback()) {
                 Log::debug("{$party}: Pushed playback state is fresh, not polling");
@@ -57,7 +57,7 @@ class PlaybackSync
 
                 $provider = $this->providers->forParty($party, Purpose::Control);
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
-                $this->applyState($party, $provider, $playback ?? PlaybackState::idle(PlaybackSource::Polling));
+                $this->applyState($party, $provider, $playback === null ? PlaybackState::idle($source) : $playback->withSource($source));
             } finally {
                 $party->last_updated_at = now();
                 $party->save();

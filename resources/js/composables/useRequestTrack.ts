@@ -8,14 +8,18 @@ export function useRequestTrack(party: MaybeRefOrGetter<string>) {
     const status = ref<RequestStatus>('idle');
     const reason = ref<string | null>(null);
 
-    async function request(providerTrackId: string): Promise<void> {
+    async function request(providerTrackId: string, scheduledFor?: string | null): Promise<void> {
         status.value = 'pending';
         reason.value = null;
 
         const route = store(toValue(party));
 
         try {
-            await axios.request({url: route.url, method: route.method, data: {provider_track_id: providerTrackId}});
+            await axios.request({
+                url: route.url,
+                method: route.method,
+                data: {provider_track_id: providerTrackId, ...(scheduledFor ? {scheduled_for: scheduledFor} : {})},
+            });
             status.value = 'success';
         } catch (error) {
             if (!axios.isAxiosError(error) || !error.response) {

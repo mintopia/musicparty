@@ -65,6 +65,19 @@ describe('submitting a flagged request', function () {
             && $event->broadcastAs() === 'FlaggedRequestAdded');
     });
 
+    it('keeps the scheduled time when a scheduled request is flagged', function () {
+        PartyMember::factory()->owner()->for($this->party)->for($this->manager)->create();
+        Sanctum::actingAs($this->manager);
+
+        test()->postJson(route('api.v1.parties.upcomingsongs.store', [$this->party]), ['provider_track_id' => 't1', 'scheduled_for' => '2030-01-01T20:00:00+00:00'])
+            ->assertStatus(202);
+
+        $request = UpcomingSong::sole();
+        expect($request->flagged_at)->not->toBeNull()
+            ->and($request->scheduled_for?->toIso8601String())->toBe('2030-01-01T20:00:00+00:00')
+            ->and($request->not_before?->toIso8601String())->toBe('2030-01-01T20:00:00+00:00');
+    });
+
     it('treats a flag as allow when the party does not flag requests', function () {
         $this->party->forceFill(['flag_requests' => false])->save();
         Sanctum::actingAs($this->member->user);

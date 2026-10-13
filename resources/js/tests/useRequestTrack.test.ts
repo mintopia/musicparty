@@ -44,6 +44,19 @@ describe('useRequestTrack', () => {
         ]);
     });
 
+    it('posts scheduled_for only when a time is given', async () => {
+        respondWith((config) => ({data: {}, status: 201, statusText: 'Created', headers: {}, config}));
+        const {request: run} = useRequestTrack('ABC');
+
+        await run('spotify:1', '2030-01-01T20:00');
+        await run('spotify:2', '');
+
+        expect(sent.map((call) => call.data)).toEqual([
+            '{"provider_track_id":"spotify:1","scheduled_for":"2030-01-01T20:00"}',
+            '{"provider_track_id":"spotify:2"}',
+        ]);
+    });
+
     it('reports blocked requests with the server reason', async () => {
         respondWith((config) => {
             throw httpError(400, 'Already queued', config);

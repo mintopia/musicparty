@@ -3,6 +3,7 @@ import {Head, router, usePage} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref, watch} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
+import ScheduleRequestControl from '@/components/ScheduleRequestControl.vue';
 import TrackList from '@/components/TrackList.vue';
 import {useEcho} from '@/composables/useEcho';
 import {useQueueSync} from '@/composables/useQueueSync';
@@ -27,6 +28,7 @@ const query = ref(props.params.query ?? '');
 const message = ref<string | null>(null);
 const tracks = ref<Paginator<TrackAnnotation> | null>(props.results);
 const {status, reason, request} = useRequestTrack(() => props.party.code);
+const scheduledFor = ref('');
 
 watch(
     () => props.results,
@@ -67,7 +69,7 @@ function showMessage(text: string): void {
 }
 
 async function requestTrack(track: TrackAnnotation): Promise<void> {
-    await request(track.id);
+    await request(track.id, props.party.canManage ? scheduledFor.value : null);
     if (status.value === 'success') {
         router.reload({only: ['results']});
     } else if (status.value === 'blocked' || status.value === 'error') {
@@ -141,6 +143,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                     </div>
                 </div>
             </form>
+            <ScheduleRequestControl v-if="party.canManage" v-model="scheduledFor" />
             <template v-if="tracks !== null">
                 <h2 class="mt-5">Results</h2>
                 <div class="card">

@@ -12,14 +12,19 @@ use App\Models\User;
 use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\QueueSelector;
+use Carbon\CarbonInterface;
 
 class FlaggedRequests
 {
     public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue, protected ModExtensions $mods) {}
 
-    public function flag(Party $party, Song $song, User $user, string $reason): UpcomingSong
+    public function flag(Party $party, Song $song, User $user, string $reason, ?CarbonInterface $scheduledFor = null): UpcomingSong
     {
-        $request = $this->queue->addRequest($party, $song, $user, ['flagged_at' => now(), 'flag_reason' => $reason]);
+        $attributes = ['flagged_at' => now(), 'flag_reason' => $reason];
+        if ($scheduledFor !== null) {
+            $attributes += ['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor];
+        }
+        $request = $this->queue->addRequest($party, $song, $user, $attributes);
         FlaggedRequestAdded::dispatch($party, $this->item($request->load(['party', 'user', 'song.album', 'song.artists'])));
 
         return $request;

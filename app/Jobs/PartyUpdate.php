@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
 use App\Models\Party;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackSync;
 use Illuminate\Bus\Queueable;
@@ -44,7 +45,7 @@ class PartyUpdate implements ShouldQueue
     /**
      * Create a new job instance.
      */
-    public function __construct(protected Party $party)
+    public function __construct(protected Party $party, protected PlaybackSource $source = PlaybackSource::Polling)
     {
         $this->onQueue('partyupdates');
     }
@@ -74,7 +75,7 @@ class PartyUpdate implements ShouldQueue
 
         if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
-            if (! $sync->sync($this->party)) {
+            if (! $sync->sync($this->party, $this->source)) {
                 $this->release(2);
             }
 
@@ -89,7 +90,7 @@ class PartyUpdate implements ShouldQueue
         }
 
         Log::debug("{$this->party}: Updating from PartyUpdate job");
-        if (! $sync->sync($this->party)) {
+        if (! $sync->sync($this->party, $this->source)) {
             $this->release(2);
 
             return;

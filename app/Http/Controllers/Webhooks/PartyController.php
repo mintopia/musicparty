@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Webhooks\PartyLibrespotRequest;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\PlaybackSync;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +21,7 @@ class PartyController extends Controller
             case 'paused':
             case 'stopped':
                 Log::debug("{$party}: Received librespot webhook event: {$request->input('event')}");
-                PartyUpdate::dispatch($party)->afterResponse();
+                PartyUpdate::dispatch($party, PlaybackSource::Webhook)->afterResponse();
 
                 break;
             default:
@@ -36,14 +37,14 @@ class PartyController extends Controller
         if (config('musicparty.webhook_should_queue')) {
             if (config('musicparty.webhook_dispatch_after_request')) {
                 Log::debug("{$party}: Dispatching PartyUpdate after request");
-                PartyUpdate::dispatch($party)->afterResponse();
+                PartyUpdate::dispatch($party, PlaybackSource::Webhook)->afterResponse();
             } else {
                 Log::debug("{$party}: Dispatching PartyUpdate");
-                PartyUpdate::dispatch($party);
+                PartyUpdate::dispatch($party, PlaybackSource::Webhook);
             }
         } else {
             Log::debug("{$party}: Updating party directly from webhook");
-            app(PlaybackSync::class)->sync($party);
+            app(PlaybackSync::class)->sync($party, PlaybackSource::Webhook);
         }
 
         return response()->noContent();
@@ -52,7 +53,7 @@ class PartyController extends Controller
     public function soloist(Party $party): Response
     {
         Log::debug("{$party}: Received soloist webhook event");
-        PartyUpdate::dispatch($party);
+        PartyUpdate::dispatch($party, PlaybackSource::Webhook);
 
         return response()->noContent();
     }

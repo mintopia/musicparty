@@ -1,9 +1,13 @@
 <?php
 
+use App\Events\Party\UpdatedEvent as PartyUpdatedEvent;
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Events\WebPlayerTokenRefreshed;
 use App\Jobs\ApplyPushedPlaybackState;
 use App\Models\Party;
+use App\Models\PlayedSong;
+use App\Models\Song;
+use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\Data\AlbumRef;
 use App\Services\Music\Data\ArtistRef;
@@ -108,4 +112,19 @@ it('broadcasts a refreshed token on the private webplayer channel of each Party 
             && $channel->name === "private-webplayer.{$mine->code}"
             && $event->broadcastWith() === ['accessToken' => 'fresh-token'];
     });
+});
+
+it('records the Played Track, tops up the Queue and broadcasts once from a Web Player state', function () {
+    [$party, $fake] = webPlayerParty();
+    $queued = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 'B']);
+    $upcoming = UpcomingSong::factory()->for($party)->create(['song_id' => $queued->id, 'queued_at' => null]);
+    Event::fake([PartyUpdatedEvent::class]);
+
+    (new ApplyPushedPlaybackState("private-webplayer.{$party->code}", 'client-state', json_encode(webPlayerFrame())))
+        ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
+
+    expect(PlayedSong::query()->sole()->song->provider_track_id)->toBe('A')
+        ->and($upcoming->fresh()->queued_at)->not->toBeNull()
+        ->and($fake->callsTo('sendToPlayer'))->toHaveCount(1);
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
 });
