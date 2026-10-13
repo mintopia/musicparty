@@ -171,7 +171,12 @@ class SpotifyGateway
     protected function makeSession(LinkedAccount $account): Session
     {
         $provider = $account->provider;
-        $session = new Session((string) $provider?->getSetting('client_id'), (string) $provider?->getSetting('client_secret'));
+        $session = new Session(
+            (string) $provider?->getSetting('client_id'),
+            (string) $provider?->getSetting('client_secret'),
+            '',
+            new BackoffRequest((string) $provider?->code),
+        );
         $session->setAccessToken($account->access_token ?? '');
 
         return $session;
