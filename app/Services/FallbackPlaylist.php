@@ -73,7 +73,7 @@ class FallbackPlaylist
             })
             ->with('song')
             ->get()
-            ->pluck('song.spotify_id')
+            ->pluck('song.provider_track_id')
             ->toArray();
 
         $tracks = array_values(array_filter($tracks, fn (Track $track) => ! in_array($track->id, $existingIds)));

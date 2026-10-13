@@ -88,10 +88,11 @@ it('de-duplicates catalogue rows and re-points every foreign key', function () {
     $migration = loadMigration('2026_10_13_120100_add_unique_spotify_id_to_catalogue');
     $migration->down();
 
-    $albums = Album::factory()->count(2)->create(['spotify_id' => 'same']);
-    $artists = Artist::factory()->count(2)->create(['spotify_id' => 'same']);
+    $albums = Album::factory()->count(2)->create(['spotify_id' => 'same', 'provider_id' => null]);
+    $artists = Artist::factory()->count(2)->create(['spotify_id' => 'same', 'provider_id' => null]);
     $songs = collect([0, 1])->map(fn ($i) => Song::factory()->create([
         'spotify_id' => 'same',
+        'provider_id' => null,
         'album_id' => $albums[$i]->id,
     ]));
     foreach ($songs as $i => $song) {

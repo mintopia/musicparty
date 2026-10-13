@@ -16,6 +16,8 @@ use stdClass;
  * @property int $id
  * @property string $name
  * @property string $spotify_id
+ * @property string $provider_id
+ * @property string $provider_artist_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Collection<int, Song> $songs
@@ -53,17 +55,19 @@ class Artist extends Model
 
     public static function fromSpotify(stdClass $spotifyArtist): Artist
     {
-        $artist = Artist::whereSpotifyId($spotifyArtist->id)->first();
+        $artist = Artist::where(['provider_id' => 'spotify', 'provider_artist_id' => $spotifyArtist->id])->first();
         if ($artist) {
             return $artist;
         }
         try {
             $artist = new Artist;
+            $artist->provider_id = 'spotify';
+            $artist->provider_artist_id = $spotifyArtist->id;
             $artist->spotify_id = $spotifyArtist->id;
             $artist->name = $spotifyArtist->name;
             $artist->save();
         } catch (UniqueConstraintViolationException) {
-            $artist = Artist::whereSpotifyId($spotifyArtist->id)->firstOrFail();
+            $artist = Artist::where(['provider_id' => 'spotify', 'provider_artist_id' => $spotifyArtist->id])->firstOrFail();
         }
 
         return $artist;

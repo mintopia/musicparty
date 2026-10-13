@@ -16,6 +16,8 @@ use stdClass;
  * @property int $id
  * @property string $name
  * @property string $spotify_id
+ * @property string $provider_id
+ * @property string $provider_album_id
  * @property string $image_url
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
@@ -55,18 +57,20 @@ class Album extends Model
 
     public static function fromSpotify(stdClass $spotifyAlbum): Album
     {
-        $album = Album::whereSpotifyId($spotifyAlbum->id)->first();
+        $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->first();
         if ($album) {
             return $album;
         }
         try {
             $album = new Album;
+            $album->provider_id = 'spotify';
+            $album->provider_album_id = $spotifyAlbum->id;
             $album->spotify_id = $spotifyAlbum->id;
             $album->name = $spotifyAlbum->name;
             $album->image_url = $spotifyAlbum->images[0]->url;
             $album->save();
         } catch (UniqueConstraintViolationException) {
-            $album = Album::whereSpotifyId($spotifyAlbum->id)->firstOrFail();
+            $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->firstOrFail();
         }
 
         return $album;

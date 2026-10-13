@@ -113,7 +113,7 @@ class PlaybackSync
 
     public function trackFor(MusicProvider $provider, string $trackId): ?Track
     {
-        $song = Song::whereSpotifyId($trackId)->first();
+        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $trackId])->first();
 
         return $song?->toTrack() ?? $provider->getTrack($trackId);
     }
@@ -188,7 +188,7 @@ class PlaybackSync
             $party->recent_device_id = $state->deviceId;
         }
 
-        $song = Song::whereSpotifyId($state->trackId)->first();
+        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $state->trackId])->first();
         if ($song === null) {
             $track = $provider->getTrack($state->trackId);
             if ($track === null) {
@@ -228,7 +228,7 @@ class PlaybackSync
             if ($state->isPlaying) {
                 return $state;
             }
-            if ($party->song && $state->trackId === $party->song->spotify_id && $state->deviceId === $party->device_id) {
+            if ($party->song && $state->trackId === $party->song->provider_track_id && $state->deviceId === $party->device_id) {
                 // Our current song, on our device, and it's paused. Let's not play anything - they can control it using the webpage
                 return $state;
             }
@@ -236,7 +236,7 @@ class PlaybackSync
 
         $trackId = $state?->trackId;
         if ($trackId === null && $party->song !== null) {
-            $trackId = $party->song->spotify_id;
+            $trackId = $party->song->provider_track_id;
         }
         foreach ($provider->devices() as $device) {
             if ($device->id === $party->device_id) {

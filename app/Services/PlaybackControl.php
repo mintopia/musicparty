@@ -56,13 +56,13 @@ class PlaybackControl
     {
         $deviceId ??= $party->recent_device_id;
         $trackId = $provider->currentPlayback()->trackId
-            ?? $party->song->spotify_id
-            ?? $party->history()->orderBy('played_at', 'desc')->first()?->song->spotify_id;
+            ?? $party->song->provider_track_id
+            ?? $party->history()->orderBy('played_at', 'desc')->first()?->song->provider_track_id;
 
         if ($trackId === null) {
             // We are stuck, let's add something to the queue and use it
             $this->sync->withLock($party, fn () => $this->selector->sendNext($party));
-            $trackId = $party->upcoming()->orderBy('queued_at', 'desc')->first()?->song->spotify_id;
+            $trackId = $party->upcoming()->orderBy('queued_at', 'desc')->first()?->song->provider_track_id;
         }
 
         $provider->play($deviceId, $trackId === null ? null : $this->sync->trackFor($provider, $trackId));

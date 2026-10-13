@@ -19,6 +19,8 @@ class SongFactory extends Factory
     {
         return [
             'spotify_id' => fake()->unique()->regexify('[A-Za-z0-9]{22}'),
+            'provider_id' => 'spotify',
+            'provider_track_id' => fn (array $attributes): string => $attributes['spotify_id'],
             'name' => fake()->words(3, true),
             'length' => fake()->numberBetween(120000, 300000),
             'album_id' => Album::factory(),

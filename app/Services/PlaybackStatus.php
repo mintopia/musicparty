@@ -39,7 +39,7 @@ class PlaybackStatus
             ];
         }
 
-        $isCurrentSong = $party->song !== null && $state->trackId === $party->song->spotify_id;
+        $isCurrentSong = $party->song !== null && $state->trackId === $party->song->provider_track_id;
 
         return (object) [
             'device' => $state->deviceId === null && $state->deviceName === null ? null : (object) [
