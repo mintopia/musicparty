@@ -49,6 +49,7 @@ class SpotifyProvider extends AbstractSocialProvider
         $account->avatar_url = $remoteUser->getAvatar();
         $account->refresh_token = $remoteUser->refreshToken;
         $account->access_token = $remoteUser->token;
+        $account->needs_relink_at = null;
         $account->name = $remoteUser->getName();
         $account->email = $remoteUser->getEmail();
     }

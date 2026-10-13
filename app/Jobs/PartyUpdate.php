@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Models\Party;
 use App\Services\Spotify\SpotifyBackoffException;
+use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -56,11 +57,19 @@ class PartyUpdate implements ShouldQueue
         } catch (SpotifyBackoffException $e) {
             Log::info("{$this->party}: Spotify backoff active, releasing for {$e->retryAfterSeconds}s");
             $this->release($e->retryAfterSeconds);
+        } catch (SpotifyRelinkRequiredException) {
+            Log::warning("{$this->party}: Spotify needs re-linking, stopping poll chain");
         }
     }
 
     protected function update(): void
     {
+        if ($this->party->user->spotifyNeedsRelink()) {
+            Log::warning("{$this->party}: Spotify needs re-linking, stopping poll chain");
+
+            return;
+        }
+
         if (! $this->party->poll) {
             Log::debug("{$this->party}: Updating from PartyUpdate job");
             if (! $this->party->tryUpdateState()) {

@@ -300,6 +300,12 @@ class Party extends Model
 
     protected function runStateUpdate(): void
     {
+        if ($this->user->spotifyNeedsRelink()) {
+            Log::debug("{$this}: Spotify needs re-linking, skipping update");
+
+            return;
+        }
+
         Log::info("{$this}: Updating state");
         if ($this->poll) {
             $cutoff = Carbon::now()->subSeconds(5);

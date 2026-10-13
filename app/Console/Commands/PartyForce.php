@@ -51,6 +51,12 @@ class PartyForce extends Command
 
     protected function processParty(Party $party): int
     {
+        if ($party->user->spotifyNeedsRelink()) {
+            $this->output->writeln("{$party}: Spotify needs re-linking, skipping");
+
+            return self::SUCCESS;
+        }
+
         $this->output->writeln("{$party}: Checking to see if we can play this party");
         $devices = $party->user->getDevices();
         foreach ($devices as $device) {
