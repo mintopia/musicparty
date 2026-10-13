@@ -54,6 +54,7 @@ class PartyRequest extends FormRequest
                 : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
             'name' => 'required|string|max:50',
             'country' => 'sometimes|string|alpha|size:2',
+            'timezone' => 'sometimes|nullable|string|timezone:all',
             'backup_playlist_id' => [
                 'required',
                 'string',

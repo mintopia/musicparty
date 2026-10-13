@@ -29,6 +29,7 @@ use NumPHP\LinAlg\LinAlg;
  * @property string $code
  * @property string $name
  * @property string $country
+ * @property string|null $timezone
  * @property string $provider_id
  * @property int $user_id
  * @property int|null $song_id

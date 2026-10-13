@@ -269,6 +269,7 @@ class PartyController extends Controller
         } elseif (! $party->exists) {
             $party->country = strtoupper($party->user->market ?: 'GB');
         }
+        $party->timezone = $request->input('timezone') ?: null;
         if ($request->input('backup_playlist_id') === 'other') {
             $party->backup_playlist_id = $request->input('custom_backup_playlist_id');
         } else {

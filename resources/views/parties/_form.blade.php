@@ -41,6 +41,22 @@
         </div>
     </div>
     <div class="mb-3">
+        <label class="form-label">Timezone</label>
+        <div>
+            <input type="text" name="timezone" list="timezone-options" class="form-control @error('timezone') is-invalid @enderror"
+                   placeholder="{{ app(\App\Services\PartyTimezone::class)->instance() }}" value="{{ old('timezone', $party->timezone ?? '') }}">
+            <datalist id="timezone-options">
+                @foreach(\DateTimeZone::listIdentifiers() as $identifier)
+                    <option value="{{ $identifier }}"></option>
+                @endforeach
+            </datalist>
+            <small class="form-hint">Used by time-based mods and scheduled requests. Leave blank to use the instance timezone</small>
+            @error('timezone')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+    <div class="mb-3">
         <label class="form-label required">Backup Playlist</label>
         <div>
             <select id="backup_playlist_id" name="backup_playlist_id" class="form-control @error('backup_playlist_id') is-invalid @enderror">
