@@ -56,13 +56,17 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     class="rounded"
                     width="60"
                     height="60"
-                >
+                />
             </div>
             <div class="col">
                 <div>
                     <span data-test="track-name">{{ displayName }}</span>
-                    <span v-if="track.explicit" class="badge bg-secondary ms-1" data-test="explicit-badge">Explicit</span>
-                    <span v-if="decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{ decoration.label }}</span>
+                    <span v-if="track.explicit" class="badge bg-secondary ms-1" data-test="explicit-badge"
+                        >Explicit</span
+                    >
+                    <span v-if="decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{
+                        decoration.label
+                    }}</span>
                 </div>
                 <div class="text-secondary" data-test="track-artists">
                     <template v-for="(artist, index) in track.artists" :key="artist.id">
@@ -91,16 +95,40 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
             <div class="col-auto text-secondary">{{ duration }}</div>
             <div v-if="track.queue.in_queue" class="col-auto text-center w-8" data-test="queue-state">
                 <template v-if="canDownvote">
-                    <button type="button" class="btn btn-sm btn-link" aria-label="Upvote" data-test="upvote" @click="castVote(vote === 1 ? 0 : 1)">
-                        <i class="icon ti" :class="vote === 1 ? 'ti-arrow-big-up-filled text-success' : 'ti-arrow-big-up'"></i>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-link"
+                        aria-label="Upvote"
+                        data-test="upvote"
+                        @click="castVote(vote === 1 ? 0 : 1)"
+                    >
+                        <i
+                            class="icon ti"
+                            :class="vote === 1 ? 'ti-arrow-big-up-filled text-success' : 'ti-arrow-big-up'"
+                        ></i>
                     </button>
                     <span data-test="score">{{ track.queue.score }}</span>
-                    <button type="button" class="btn btn-sm btn-link" aria-label="Downvote" data-test="downvote" @click="castVote(vote === -1 ? 0 : -1)">
-                        <i class="icon ti" :class="vote === -1 ? 'ti-arrow-big-down-filled text-danger' : 'ti-arrow-big-down'"></i>
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-link"
+                        aria-label="Downvote"
+                        data-test="downvote"
+                        @click="castVote(vote === -1 ? 0 : -1)"
+                    >
+                        <i
+                            class="icon ti"
+                            :class="vote === -1 ? 'ti-arrow-big-down-filled text-danger' : 'ti-arrow-big-down'"
+                        ></i>
                     </button>
                 </template>
                 <template v-else>
-                    <button type="button" class="btn btn-sm btn-link" aria-label="Like" data-test="heart" @click="castVote(vote === 1 ? 0 : 1)">
+                    <button
+                        type="button"
+                        class="btn btn-sm btn-link"
+                        aria-label="Like"
+                        data-test="heart"
+                        @click="castVote(vote === 1 ? 0 : 1)"
+                    >
                         <i class="icon ti" :class="vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"></i>
                     </button>
                     <span data-test="score">{{ track.queue.score }}</span>
@@ -129,6 +157,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 </button>
             </div>
         </div>
-        <div v-if="awaitingApproval && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">Awaiting approval</div>
+        <div v-if="awaitingApproval && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
+            Awaiting approval
+        </div>
     </div>
 </template>

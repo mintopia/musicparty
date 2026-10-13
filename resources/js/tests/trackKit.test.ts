@@ -16,7 +16,10 @@ const make = (overrides: Partial<TrackAnnotation> = {}): TrackAnnotation => ({
     duration_ms: 185000,
     explicit: false,
     album: {id: 'a1', name: 'Album', image_url: 'https://img.test/a.jpg'},
-    artists: [{id: 'r1', name: 'One'}, {id: 'r2', name: 'Two'}],
+    artists: [
+        {id: 'r1', name: 'One'},
+        {id: 'r2', name: 'Two'},
+    ],
     queue: {in_queue: false, upcoming_id: null, score: 0, vote: null, requested_by: null},
     eligibility: {allowed: true, reason: null},
     ...overrides,
@@ -80,17 +83,31 @@ describe('TrackRow', () => {
 
         await wrapper.get('[data-test=upvote]').trigger('click');
         await wrapper.get('[data-test=downvote]').trigger('click');
-        expect(wrapper.emitted('vote')).toEqual([[track, 0], [track, -1]]);
+        expect(wrapper.emitted('vote')).toEqual([
+            [track, 0],
+            [track, -1],
+        ]);
     });
 
     it('shows the explicit badge', () => {
-        expect(mount(TrackRow, {props: {track: make({explicit: true})}}).find('[data-test=explicit-badge]').exists()).toBe(true);
-        expect(mount(TrackRow, {props: {track: make()}}).find('[data-test=explicit-badge]').exists()).toBe(false);
+        expect(
+            mount(TrackRow, {props: {track: make({explicit: true})}})
+                .find('[data-test=explicit-badge]')
+                .exists(),
+        ).toBe(true);
+        expect(
+            mount(TrackRow, {props: {track: make()}})
+                .find('[data-test=explicit-badge]')
+                .exists(),
+        ).toBe(false);
     });
 
     it('applies decoration', () => {
         const wrapper = mount(TrackRow, {
-            props: {track: make(), decoration: {displayName: 'Renamed', label: 'Pick', class: 'is-pick', accent: 'red'}},
+            props: {
+                track: make(),
+                decoration: {displayName: 'Renamed', label: 'Pick', class: 'is-pick', accent: 'red'},
+            },
         });
 
         expect(wrapper.get('[data-test=track-name]').text()).toBe('Renamed');
@@ -103,10 +120,18 @@ describe('TrackRow', () => {
         expect(mount(TrackRow, {props: {track: make()}}).findAll('a')).toHaveLength(0);
 
         const wrapper = mount(TrackRow, {
-            props: {track: make(), albumRoute: (id: string) => `/albums/${id}`, artistRoute: (id: string) => ({url: `/artists/${id}`})},
+            props: {
+                track: make(),
+                albumRoute: (id: string) => `/albums/${id}`,
+                artistRoute: (id: string) => ({url: `/artists/${id}`}),
+            },
         });
 
-        expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual(['/artists/r1', '/artists/r2', '/albums/a1']);
+        expect(wrapper.findAll('a').map((a) => a.attributes('href'))).toEqual([
+            '/artists/r1',
+            '/artists/r2',
+            '/albums/a1',
+        ]);
     });
 });
 
@@ -135,7 +160,11 @@ describe('Pagination', () => {
     });
 
     it('renders nothing for a single page', () => {
-        expect(mount(Pagination, {props: {paginator: page([], 1)}}).find('nav').exists()).toBe(false);
+        expect(
+            mount(Pagination, {props: {paginator: page([], 1)}})
+                .find('nav')
+                .exists(),
+        ).toBe(false);
     });
 });
 

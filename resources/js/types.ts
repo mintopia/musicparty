@@ -39,7 +39,13 @@ export interface TrackAnnotation {
     explicit: boolean;
     album: {id: string; name: string; image_url: string | null};
     artists: {id: string; name: string}[];
-    queue: {in_queue: boolean; upcoming_id: number | null; score: number; vote: number | null; requested_by: string | null};
+    queue: {
+        in_queue: boolean;
+        upcoming_id: number | null;
+        score: number;
+        vote: number | null;
+        requested_by: string | null;
+    };
     eligibility: {allowed: boolean; reason: string | null};
 }
 

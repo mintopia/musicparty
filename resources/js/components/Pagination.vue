@@ -4,7 +4,11 @@ import type {Paginator} from '@/types';
 
 defineProps<{paginator: Pick<Paginator<unknown>, 'links' | 'last_page'>}>();
 
-const labelText = (label: string): string => label.replace(/&laquo;|&raquo;/g, '').replace(/<[^>]*>/g, '').trim();
+const labelText = (label: string): string =>
+    label
+        .replace(/&laquo;|&raquo;/g, '')
+        .replace(/<[^>]*>/g, '')
+        .trim();
 </script>
 
 <template>
