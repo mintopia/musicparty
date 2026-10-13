@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use stdClass;
 
@@ -58,11 +59,15 @@ class Album extends Model
         if ($album) {
             return $album;
         }
-        $album = new Album;
-        $album->spotify_id = $spotifyAlbum->id;
-        $album->name = $spotifyAlbum->name;
-        $album->image_url = $spotifyAlbum->images[0]->url;
-        $album->save();
+        try {
+            $album = new Album;
+            $album->spotify_id = $spotifyAlbum->id;
+            $album->name = $spotifyAlbum->name;
+            $album->image_url = $spotifyAlbum->images[0]->url;
+            $album->save();
+        } catch (UniqueConstraintViolationException) {
+            $album = Album::whereSpotifyId($spotifyAlbum->id)->firstOrFail();
+        }
 
         return $album;
     }

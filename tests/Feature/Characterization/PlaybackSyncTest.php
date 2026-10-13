@@ -204,16 +204,17 @@ it('does not link a Played Track that already has a Played Track for the Request
     expect(PlayedSong::query()->orderByDesc('id')->first()->upcoming_song_id)->toBeNull();
 });
 
-it('attributes a play to a Request in another party and ignores whether it was ever sent (E5 R14)', function () {
+it('does not attribute a play to a Request in another party or one never sent (E5 R14)', function () {
     [$party, $fake] = syncParty();
     $otherParty = Party::factory()->create(['active' => false]);
     $song = Song::factory()->create(['spotify_id' => 'PLAYED']);
-    $foreign = UpcomingSong::factory()->for($otherParty)->create(['song_id' => $song->id, 'queued_at' => null]);
+    UpcomingSong::factory()->for($otherParty)->create(['song_id' => $song->id, 'queued_at' => now()->subMinute()]);
+    UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => null]);
     nowPlaying($fake, 'PLAYED');
 
     $party->updateState();
 
-    expect(PlayedSong::query()->where('party_id', $party->id)->sole()->upcoming_song_id)->toBe($foreign->id);
+    expect(PlayedSong::query()->where('party_id', $party->id)->sole()->upcoming_song_id)->toBeNull();
 });
 
 it('prefers the most recently queued Request when several exist for the same track (E5 R14)', function () {

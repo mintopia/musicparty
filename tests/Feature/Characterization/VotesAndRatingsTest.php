@@ -9,6 +9,7 @@ use App\Models\SongRating;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Laravel\Sanctum\Sanctum;
 
 function voteParty(array $attributes = []): Party
@@ -166,16 +167,16 @@ describe('votes', function () {
         expect($song->upvote($user))->toBeInstanceOf(Vote::class);
     });
 
-    it('pins E5 R15: nothing prevents duplicate votes for one user and both count toward the score', function () {
+    it('rejects a duplicate vote row for one user on one request', function () {
         $party = voteParty();
         $song = voteSong($party);
         $user = voteMember($party);
 
         Vote::factory()->up()->create(['upcoming_song_id' => $song->id, 'user_id' => $user->id]);
-        Vote::factory()->up()->create(['upcoming_song_id' => $song->id, 'user_id' => $user->id]);
 
-        expect(Vote::count())->toBe(2)
-            ->and($song->fresh()->score)->toBe(2);
+        expect(fn () => Vote::factory()->up()->create(['upcoming_song_id' => $song->id, 'user_id' => $user->id]))
+            ->toThrow(UniqueConstraintViolationException::class)
+            ->and(Vote::count())->toBe(1);
     });
 });
 

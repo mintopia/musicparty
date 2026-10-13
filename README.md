@@ -125,7 +125,7 @@ it, it'll eventually catch up.
 Everything should be logged to the normal Laravel logger, so you should be able to diagnose things based on the logs. If
 you are still having issues, there's some config options in `.env` that you can try.
 
-- `MUSICPARTY_ALLOW_OVERLAPPING_UPDATES=false` - Normally we don't allow party updates to run simultaneously, but this
+- `MUSICPARTY_PREVENT_OVERLAPPING_UPDATES=false` - Normally we don't allow party updates to run simultaneously, but this
   may cause issues with some deployments. Setting this to false turns off this behaviour.
 - `MUSICPARTY_WEBHOOK_DISPATCH_AFTER_REQUEST=false` - When using the Web Player, it will trigger a Party Update after
   request finishes. Set this to false to trigger the update asynchronously immediately before the request has finished.

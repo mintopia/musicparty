@@ -5,11 +5,10 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
+use App\Services\Spotify\BackoffRequest;
 use App\Support\SpotifyPayload;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 use stdClass;
@@ -32,7 +31,7 @@ class SpotifySearchService
             $query->whereCode('spotifysearch');
         })->first();
         $provider = $account?->provider;
-        if ($account === null || $provider === null) {
+        if ($account === null || $provider === null || $account->needsRelink()) {
             Log::warning("{$this->party->user}: No Spotify Search account, using control account");
             $this->api = $this->party->user->requireSpotifyApi();
 
@@ -48,15 +47,12 @@ class SpotifySearchService
 
         // Create new API
         Log::debug("{$this->party->user}: Creating new Search API connection");
-        $request = new Request;
+        $request = new BackoffRequest('spotifysearch');
         $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this->party->user}: Refreshing expiring Search API access token");
-            $this->session->refreshAccessToken($account->refresh_token ?? '');
-            $account->access_token = $this->session->getAccessToken();
-            $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
-            $account->save();
+            $account->refreshSpotifyToken($this->session);
         }
 
         return $this->api;

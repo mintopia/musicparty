@@ -105,6 +105,8 @@ use stdClass;
  */
 class Party extends Model
 {
+    public const SYNC_LOCK_SECONDS = 30;
+
     /** @use HasFactory<PartyFactory> */
     use HasFactory;
 
@@ -136,6 +138,13 @@ class Party extends Model
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
     ];
+
+    /** @var array<int, string> */
+    public const array RENDERED_ATTRIBUTES = [
+        'code', 'name', 'backup_playlist_id', 'show_qrcode', 'song_id', 'song_started_at',
+    ];
+
+    protected bool $coalescingBroadcasts = false;
 
     /** @var Collection<string, PartyModSetting>|null */
     protected ?Collection $_modSettings = null;
@@ -232,13 +241,78 @@ class Party extends Model
 
     public function updateState(): Party
     {
+        $this->tryUpdateState();
+
+        return $this;
+    }
+
+    /**
+     * Runs a state update under the per-Party sync lock. Returns false when another sync holds the lock.
+     */
+    public function tryUpdateState(): bool
+    {
+        return $this->withSyncLock(fn () => $this->runStateUpdate());
+    }
+
+    /**
+     * Runs the callback under the per-Party sync lock. Returns false when another caller holds the lock.
+     *
+     * @param  callable(): mixed  $callback
+     */
+    protected function withSyncLock(callable $callback): bool
+    {
+        if (! config('musicparty.prevent_overlapping_updates')) {
+            $this->runCoalescingBroadcasts($callback);
+
+            return true;
+        }
+
+        $lock = Cache::lock("party-sync:{$this->id}", self::SYNC_LOCK_SECONDS);
+        if (! $lock->get()) {
+            Log::debug("{$this}: Sync already running, skipping");
+
+            return false;
+        }
+
+        try {
+            $this->runCoalescingBroadcasts($callback);
+        } finally {
+            $lock->release();
+        }
+
+        return true;
+    }
+
+    protected function runCoalescingBroadcasts(callable $sync): void
+    {
+        $this->coalescingBroadcasts = true;
+        $stateBefore = $this->renderedStateFingerprint();
+
+        try {
+            $sync();
+        } finally {
+            $this->coalescingBroadcasts = false;
+            if ($this->renderedStateFingerprint() !== $stateBefore) {
+                UpdatedEvent::dispatch($this);
+            }
+        }
+    }
+
+    protected function runStateUpdate(): void
+    {
+        if ($this->user->spotifyNeedsRelink()) {
+            Log::debug("{$this}: Spotify needs re-linking, skipping update");
+
+            return;
+        }
+
         Log::info("{$this}: Updating state");
         if ($this->poll) {
             $cutoff = Carbon::now()->subSeconds(5);
             if ($this->last_updated_at > $cutoff) {
                 Log::debug("{$this}: Already updated state recently");
 
-                return $this;
+                return;
             }
         }
 
@@ -247,17 +321,18 @@ class Party extends Model
             // Still update current song, in case they're using it manually and still want it reflected on screen
             $this->updateCurrentSong();
 
-            return $this;
+            return;
         }
 
-        $this->updateCurrentSong();
-        $this->addTracksToQueue();
-        $this->backfillUpcomingSongs();
-        $this->last_updated_at = Carbon::now();
-        $this->save();
+        try {
+            $this->updateCurrentSong();
+            $this->addTracksToQueue();
+            $this->backfillUpcomingSongs();
+        } finally {
+            $this->last_updated_at = Carbon::now();
+            $this->save();
+        }
         Log::info("{$this}: Finished updating state");
-
-        return $this;
     }
 
     protected function loadModSettings(): void
@@ -415,7 +490,7 @@ class Party extends Model
         }
         if ($trackUri === '') {
             // We are stuck, let's add something to the queue and use it
-            $this->addTracksToQueue();
+            $this->withSyncLock(fn () => $this->addTracksToQueue());
             $song = $this->upcoming()->orderBy('queued_at', 'desc')->first();
             if ($song) {
                 $trackUri = "spotify:track:{$song->song->spotify_id}";
@@ -464,6 +539,9 @@ class Party extends Model
     protected function addTracksToQueue(): void
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
+        $current = $this->fresh() ?? $this;
+        $weighted = $current->weighted;
+        $historyPlaylistId = $current->history_playlist_id;
         $this->user->getSpotifyStatus();
         $queue = SpotifyPayload::object($this->user->requireSpotifyApi()->getMyQueue());
         $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
@@ -500,15 +578,18 @@ class Party extends Model
          *
          */
 
-        if ($this->weighted) {
+        $now = Carbon::now();
+        $released = static function ($query) use ($now): void {
+            $query->whereNull('not_before');
+            $query->orWhere('not_before', '<=', $now);
+        };
+
+        if ($weighted) {
             $randomizer = app(Randomizer::class);
             $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
-                ->where(function ($query) {
-                    $query->whereNull('not_before');
-                    $query->orWhere('not_before', '<=', 'NOW()');
-                })
+                ->where($released)
                 ->where('score', '>', 0)->get();
             $allSongs = collect($randomizer->shuffleArray($allSongs->all()));
 
@@ -532,10 +613,7 @@ class Party extends Model
                 $toAdd = $this->upcoming()
                     ->whereNull('queued_at')
                     ->whereNotIn('id', $ids)
-                    ->where(function ($query) {
-                        $query->whereNull('not_before');
-                        $query->orWhere('not_before', '<=', 'NOW()');
-                    })
+                    ->where($released)
                     ->orderBy('score', 'desc')
                     ->orderBy('created_at', 'asc')
                     ->orderBy('id', 'asc')
@@ -548,6 +626,7 @@ class Party extends Model
         } else {
             $songsToAdd = $this->upcoming()
                 ->whereNull('queued_at')
+                ->where($released)
                 ->orderBy('score', 'desc')
                 ->orderBy('created_at', 'asc')
                 ->orderBy('id', 'asc')
@@ -561,15 +640,20 @@ class Party extends Model
             return;
         }
         foreach ($songsToAdd as $song) {
+            if ($song->fresh()?->queued_at !== null) {
+                Log::debug("{$this}: {$song->song} was already sent to the player");
+
+                continue;
+            }
             Log::info("{$this}: Adding {$song->song} to queue");
             Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
             $this->user->requireSpotifyApi()->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
-            if ($this->history_playlist_id !== null) {
+            if ($historyPlaylistId !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
-                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->requireSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                Log::debug("{$this}: Spotify API -> addPlaylistTracks({$historyPlaylistId}, [{$song->song->spotify_id}])");
+                $this->user->requireSpotifyApi()->addPlaylistTracks($historyPlaylistId, [$song->song->spotify_id]);
             }
         }
     }
@@ -826,6 +910,24 @@ class Party extends Model
     public function pushUpdate(): void
     {
         UpdatedEvent::dispatch($this);
+    }
+
+    public function broadcastRenderedChange(): void
+    {
+        if (! $this->coalescingBroadcasts) {
+            UpdatedEvent::dispatch($this);
+        }
+    }
+
+    protected function renderedStateFingerprint(): string
+    {
+        $state = (array) $this->getState();
+        unset($state['updated_at']);
+        $status = (array) $state['status'];
+        unset($status['updatedAt']);
+        $state['status'] = $status;
+
+        return json_encode($state, JSON_THROW_ON_ERROR);
     }
 
     public function checkDownvotesForUser(User $user): void

@@ -10,7 +10,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use stdClass;
 
 /**
@@ -94,18 +96,25 @@ class Song extends Model
             return $song;
         }
         $album = Album::fromSpotify($track->album);
-        $song = new Song;
-        $song->spotify_id = $track->id;
-        $song->name = $track->name;
-        $song->length = $track->duration_ms;
-        $song->album()->associate($album);
-        $song->save();
-        foreach ($track->artists as $trackArtist) {
-            $artist = Artist::fromSpotify($trackArtist);
-            $song->artists()->attach($artist);
-        }
+        $artists = array_map(fn (stdClass $trackArtist) => Artist::fromSpotify($trackArtist), $track->artists);
 
-        return $song;
+        try {
+            return DB::transaction(function () use ($track, $album, $artists): Song {
+                $song = new Song;
+                $song->spotify_id = $track->id;
+                $song->name = $track->name;
+                $song->length = $track->duration_ms;
+                $song->album()->associate($album);
+                $song->save();
+                foreach ($artists as $artist) {
+                    $song->artists()->attach($artist);
+                }
+
+                return $song;
+            });
+        } catch (UniqueConstraintViolationException) {
+            return Song::whereSpotifyId($track->id)->firstOrFail();
+        }
     }
 
     /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int} */

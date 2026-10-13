@@ -15,17 +15,18 @@ class UpdatedEvent implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
-    /**
-     * Create a new event instance.
-     */
-    public function __construct(protected Party $party) {}
+    /** @var array<string, mixed> */
+    protected array $state;
+
+    public function __construct(protected Party $party)
+    {
+        $this->state = (array) $party->getState();
+    }
 
     /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
-        $state = $this->party->getState();
-
-        return (array) $state;
+        return $this->state;
     }
 
     /**

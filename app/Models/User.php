@@ -4,6 +4,8 @@ namespace App\Models;
 
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
+use App\Services\Spotify\BackoffRequest;
+use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Support\SpotifyPayload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -20,7 +22,6 @@ use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
 use RuntimeException;
-use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 use stdClass;
@@ -221,6 +222,10 @@ class User extends Authenticatable
             return null;
         }
 
+        if ($account->needsRelink()) {
+            throw new SpotifyRelinkRequiredException;
+        }
+
         if ($this->session === null) {
             $clientId = $provider->getSetting('client_id');
             $clientSecret = $provider->getSetting('client_secret');
@@ -231,20 +236,25 @@ class User extends Authenticatable
         if (! $this->api) {
             // Create new API
             Log::debug("{$this}: Creating new API connection");
-            $request = new Request;
+            $request = new BackoffRequest('spotify');
             $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
         }
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this}: Refreshing expiring access token");
-            $this->session->refreshAccessToken($account->refresh_token ?? '');
-            $account->access_token = $this->session->getAccessToken();
-            $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
-            $account->save();
-            SpotifyAccessTokenUpdatedEvent::dispatch($this, $account->access_token);
+            $account->refreshSpotifyToken($this->session);
+            SpotifyAccessTokenUpdatedEvent::dispatch($this, $account->access_token ?? '');
         }
 
         return $this->api;
+    }
+
+    public function spotifyNeedsRelink(): bool
+    {
+        return $this->accounts()
+            ->whereNotNull('needs_relink_at')
+            ->whereHas('provider', fn ($query) => $query->whereCode('spotify'))
+            ->exists();
     }
 
     public function requireSpotifyApi(): SpotifyWebAPI

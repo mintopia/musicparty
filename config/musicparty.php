@@ -1,7 +1,8 @@
 <?php
 
 return [
-    'allow_overlapping_updates' => env('MUSICPARTY_ALLOW_OVERLAPPING_UPDATES', true),
+    'prevent_overlapping_updates' => (bool) env('MUSICPARTY_PREVENT_OVERLAPPING_UPDATES', true),
+    'request_lock_wait_seconds' => (int) env('MUSICPARTY_REQUEST_LOCK_WAIT_SECONDS', 10),
     'webhook_dispatch_after_request' => env('MUSICPARTY_WEBHOOK_DISPATCH_AFTER_REQUEST', true),
     'webhook_should_queue' => env('MUSICPARTY_WEBHOOK_SHOULD_QUEUE', true),
     // Soloist webhook leaky bucket: burst size, and requests per second drained.
