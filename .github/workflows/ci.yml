@@ -225,6 +225,30 @@ jobs:
             -e CADDY_SERVER_SERVER_NAME=:8080 \
             dunglas/frankenphp frankenphp validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
+  websocket-smoke:
+    name: Websocket routing smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          load: true
+          tags: musicparty:smoke
+          cache-from: type=gha,scope=production
+          cache-to: type=gha,scope=production,mode=max
+
+      - name: Check upgrade reaches Reverb and plain GET hits Laravel
+        env:
+          BUILD: '0'
+        run: tests/smoke/websocket-routing.sh
+
   compose:
     name: Production compose validation
     runs-on: ubuntu-latest

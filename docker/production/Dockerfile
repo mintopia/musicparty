@@ -24,8 +24,14 @@ RUN composer install \
         --prefer-dist \
         --ignore-platform-reqs
 
-# Use the node23 image to do an npm install
-FROM node:23 AS npm
+# Build assets with the same Node major as the develop image; PHP is needed
+# because the Wayfinder Vite plugin runs artisan.
+FROM base AS npm
+
+COPY --from=node:24-trixie-slim /usr/local/bin/node /usr/local/bin/
+COPY --from=node:24-trixie-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 
 WORKDIR /app/
 ENV HOME=/tmp
@@ -47,7 +53,7 @@ RUN chmod +x /entrypoint.sh && \
     useradd -u 1000 -g 1000 -m -s /bin/sh musicparty && \
     chmod 755 /home/musicparty && \
     mkdir -p /data/caddy /config/caddy && \
-    chown -R musicparty:musicparty /data /config /app/storage /app/bootstrap/cache && \
+    chown -R musicparty:musicparty /data /config /app/storage /app/bootstrap/cache /app/public && \
     chmod -R a+rwX /data /config && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
