@@ -5,15 +5,17 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
+use App\Models\LinkedAccount;
 use App\Models\Role;
 use App\Models\User;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function index(Request $request): View
+    public function index(Request $request): Response
     {
         $filters = (object) [];
         $query = User::query();
@@ -57,25 +59,65 @@ class UserController extends Controller
 
         $users = $query->paginate($params['perPage'])->appends($params);
 
-        return view('admin.users.index', [
+        $users->through(fn (User $row): array => [
+            'id' => $row->id,
+            'nickname' => $row->nickname,
+            'last_login' => $row->last_login?->format('Y-m-d H:i:s'),
+            'last_login_human' => $row->last_login?->diffForHumans(),
+            'created_at' => $row->created_at?->format('Y-m-d H:i:s'),
+            'created_at_human' => $row->created_at?->diffForHumans(),
+        ]);
+
+        return Inertia::render('Admin/Users/Index', [
             'users' => $users,
-            'filters' => $filters,
-            'params' => $params,
+            'filters' => [
+                'id' => $filters->id ?? null,
+                'nickname' => $filters->nickname ?? null,
+            ],
+            'order' => $params['order'],
+            'order_direction' => $params['order_direction'],
         ]);
     }
 
-    public function show(User $user): View
+    public function show(User $user): Response
     {
-        return view('admin.users.show', [
-            'user' => $user,
+        return Inertia::render('Admin/Users/Show', [
+            'user' => [
+                'id' => $user->id,
+                'nickname' => $user->nickname,
+                'email' => $user->getEmail(),
+                'suspended' => (bool) $user->suspended,
+                'first_login' => (bool) $user->first_login,
+                'terms_agreed' => (bool) $user->terms_agreed_at,
+                'roles' => $user->roles->map(fn (Role $role): array => ['name' => $role->name])->values(),
+                'last_login' => $user->last_login?->format('Y-m-d H:i:s'),
+                'last_login_human' => $user->last_login?->diffForHumans(),
+                'created_at' => $user->created_at?->format('Y-m-d H:i:s'),
+                'created_at_human' => $user->created_at?->diffForHumans(),
+            ],
+            'accounts' => $user->accounts->map(fn (LinkedAccount $account): array => [
+                'id' => $account->id,
+                'provider' => $account->provider?->name,
+                'name' => $account->name,
+                'email' => $account->email,
+                'avatar_url' => $account->avatar_url,
+                'external_id' => $account->external_id,
+                'can_delete' => $account->canDelete(),
+            ])->values(),
         ]);
     }
 
-    public function edit(User $user): View
+    public function edit(User $user): Response
     {
-        return view('admin.users.edit', [
-            'user' => $user,
-            'roles' => Role::all(),
+        return Inertia::render('Admin/Users/Edit', [
+            'user' => [
+                'id' => $user->id,
+                'nickname' => $user->nickname,
+                'terms' => (bool) $user->terms_agreed_at,
+                'first_login_completed' => ! $user->first_login,
+                'suspended' => (bool) $user->suspended,
+            ],
+            'roles' => Role::all()->map(fn (Role $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
             'currentRoles' => $user->roles()->pluck('code')->toArray(),
         ]);
     }
@@ -127,10 +169,10 @@ class UserController extends Controller
         return response()->redirectToRoute('admin.users.index')->with('successMessage', 'The user has been deleted');
     }
 
-    public function delete(User $user): View
+    public function delete(User $user): Response
     {
-        return view('admin.users.delete', [
-            'user' => $user,
+        return Inertia::render('Admin/Users/Delete', [
+            'user' => ['id' => $user->id, 'nickname' => $user->nickname],
         ]);
     }
 
