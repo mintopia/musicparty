@@ -56,7 +56,7 @@ it('keeps the original removed_at on repeated syncs', function () {
     $this->travel(2)->hours();
     Artisan::call('mods:sync');
 
-    expect(Mod::whereCode('whamageddon')->firstOrFail()->removed_at)->toBe($first);
+    expect(Mod::whereCode('whamageddon')->firstOrFail()->removed_at)->toEqual($first);
 });
 
 it('clears removed_at when the mod reappears', function () {
