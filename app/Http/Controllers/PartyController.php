@@ -11,6 +11,7 @@ use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Services\ModSettingsStore;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Services\SpotifySearchService;
@@ -218,12 +219,13 @@ class PartyController extends Controller
         }
         $party->save();
 
+        $store = app(ModSettingsStore::class);
         $modSettings = ModSetting::wherePrivate(false)->with('mod')->get();
         foreach ($modSettings as $modSetting) {
-            $currentValue = $party->getModSetting($modSetting->mod, $modSetting->code);
+            $currentValue = $store->value($party, $modSetting->mod, $modSetting->code);
             $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
             if ($value !== $currentValue) {
-                $party->setModSetting($modSetting->mod, $modSetting->code, $value);
+                $store->set($party, $modSetting->mod, $modSetting->code, $value);
             }
         }
     }

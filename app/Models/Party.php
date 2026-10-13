@@ -146,9 +146,6 @@ class Party extends Model
 
     protected bool $coalescingBroadcasts = false;
 
-    /** @var Collection<string, PartyModSetting>|null */
-    protected ?Collection $_modSettings = null;
-
     public function toStringName(): string
     {
         return $this->code;
@@ -333,78 +330,6 @@ class Party extends Model
             $this->save();
         }
         Log::info("{$this}: Finished updating state");
-    }
-
-    protected function loadModSettings(): void
-    {
-        if ($this->_modSettings !== null) {
-            return;
-        }
-
-        /** @var array<string, PartyModSetting> $settings */
-        $settings = [];
-        foreach ($this->modsettings()->with(['setting', 'setting.mod'])->get() as $setting) {
-            $settings["{$setting->setting->mod->code}:{$setting->setting->code}"] = $setting;
-        }
-        foreach (ModSetting::orderBy('mod_id', 'asc')->orderBy('order', 'asc')->get() as $modSetting) {
-            $key = "{$modSetting->mod->code}:{$modSetting->code}";
-            if (! isset($settings[$key])) {
-                $setting = new PartyModSetting;
-                $setting->setting()->associate($modSetting);
-                $setting->party()->associate($this);
-                $setting->value = $modSetting->default;
-                $settings[$key] = $setting;
-            }
-        }
-        $this->_modSettings = new Collection($settings);
-    }
-
-    public function getModSettingValue(mixed $mod, string $code, mixed $default = null): mixed
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting !== null) {
-            return $setting->value;
-        }
-
-        return $default;
-    }
-
-    public function getModSetting(mixed $mod, string $code): ?PartyModSetting
-    {
-        $this->loadModSettings();
-        if ($this->_modSettings === null) {
-            return null;
-        }
-        if ($mod instanceof Mod) {
-            $mod = $mod->code;
-        }
-        $key = "{$mod}:{$code}";
-
-        return $this->_modSettings->get($key);
-    }
-
-    public function setModSetting(mixed $mod, string $code, mixed $value): self
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting !== null) {
-            $setting->value = $value;
-            $setting->save();
-            $this->load('modsettings');
-        }
-
-        return $this;
-    }
-
-    public function deleteModSetting(mixed $mod, string $code): self
-    {
-        $setting = $this->getModSetting($mod, $code);
-        if ($setting === null) {
-            return $this;
-        }
-        $setting->delete();
-        $this->load('modsettings');
-
-        return $this;
     }
 
     public function getState(): object

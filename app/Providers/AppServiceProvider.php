@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Models\Theme;
+use App\Services\ModSettingsStore;
 use App\Services\PlayedSongAugmentService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\Facades\Blade;
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
+        $this->app->scoped(ModSettingsStore::class);
         $this->app->bind(Randomizer::class, fn () => new Randomizer);
     }
 
