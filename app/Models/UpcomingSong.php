@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $party_id
  * @property int $song_id
  * @property Carbon|null $not_before
+ * @property Carbon|null $flagged_at
  * @property int $score
  * @property int $score_adjustment
  * @property string|null $fallback_override
@@ -64,6 +65,7 @@ class UpcomingSong extends Model
     protected $casts = [
         'queued_at' => 'datetime',
         'not_before' => 'datetime',
+        'flagged_at' => 'datetime',
     ];
 
     /** @return BelongsTo<Party, $this> */
