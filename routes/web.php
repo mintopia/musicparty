@@ -56,7 +56,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
-            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
+            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
             Route::get('parties/{party}/moderation/{moderation}/delete', [PartyModerationController::class, 'delete'])
                 ->scopeBindings()

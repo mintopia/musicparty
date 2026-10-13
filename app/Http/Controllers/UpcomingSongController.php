@@ -5,12 +5,16 @@ namespace App\Http\Controllers;
 use App\Enums\Purpose;
 use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
+use App\Http\Requests\UpdateUpcomingSongScheduleRequest;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyTimezone;
+use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -151,6 +155,10 @@ class UpcomingSongController extends Controller
                 'score' => $song->score,
                 'createdAt' => $this->when($song->created_at),
                 'queuedAt' => $this->when($song->queued_at),
+                'scheduledFor' => $this->when($song->scheduled_for),
+                'scheduledForInput' => $song->scheduled_for
+                    ? $song->scheduled_for->copy()->setTimezone(app(PartyTimezone::class)->dateTimeZone($party))->format('Y-m-d\TH:i')
+                    : '',
                 'requestedBy' => $requester ? [
                     'nickname' => $requester->nickname,
                     'url' => $this->memberUrl($party, $requester),
@@ -169,6 +177,16 @@ class UpcomingSongController extends Controller
             'ratings' => $ratings->through($voteRows),
             'playerState' => $party->getState(),
         ]);
+    }
+
+    public function update(UpdateUpcomingSongScheduleRequest $request, Party $party, UpcomingSong $song): RedirectResponse
+    {
+        $scheduledFor = $request->filled('scheduled_for')
+            ? Carbon::parse((string) $request->input('scheduled_for'), app(PartyTimezone::class)->dateTimeZone($party))->utc()
+            : null;
+        $song->forceFill(['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor])->save();
+
+        return response()->redirectToRoute('parties.songs.show', [$party->code, $song->id])->with('successMessage', 'The song schedule has been updated');
     }
 
     /**

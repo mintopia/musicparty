@@ -46,6 +46,10 @@ it('renders the show page for a member with the upcoming queue', function () {
 });
 
 it('renders the show page for a manager and answers X-Inertia JSON', function () {
+    // A full page visit lets the Inertia middleware register the asset-version resolver, so the
+    // simulated XHR below sends the version the server will compute and does not get a 409 reload.
+    $this->actingAs($this->owner)->get(route('parties.show', $this->party->code))->assertOk();
+
     $this->actingAs($this->owner)->get(route('parties.show', $this->party->code), ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia\Inertia::getVersion()])
         ->assertOk()
         ->assertJsonPath('component', 'Parties/Show')

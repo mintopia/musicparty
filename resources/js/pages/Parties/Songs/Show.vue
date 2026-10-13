@@ -1,11 +1,12 @@
 <script setup lang="ts">
-import {Head, Link} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
+import ScheduleRequestControl from '@/components/ScheduleRequestControl.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {show} from '@/routes/parties';
-import {index} from '@/routes/parties/songs';
+import {index, update} from '@/routes/parties/songs';
 import type {LegacyPartyState, Paginator, When} from '@/types';
 
 interface Reaction {
@@ -15,8 +16,8 @@ interface Reaction {
     createdAt: When;
 }
 
-defineProps<{
-    party: {code: string; name: string};
+const props = defineProps<{
+    party: {code: string; name: string; canManage: boolean};
     playerState: LegacyPartyState;
     providerName: string;
     trackUrl: string | null;
@@ -32,6 +33,8 @@ defineProps<{
         score: number;
         createdAt: When;
         queuedAt: When | null;
+        scheduledFor: When | null;
+        scheduledForInput: string;
         requestedBy: {nickname: string; url: string} | null;
         moderateUrl: string;
     };
@@ -39,6 +42,17 @@ defineProps<{
     other: {id: number; url: string; votes: number; score: number; createdAt: When; queuedAt: When | null}[];
     ratings: Paginator<Reaction> & {total?: number};
 }>();
+
+const form = useForm({scheduled_for: props.song.scheduledForInput});
+
+function saveSchedule(): void {
+    form.put(update({party: props.party.code, song: props.song.id}).url, {preserveScroll: true});
+}
+
+function clearSchedule(): void {
+    form.scheduled_for = '';
+    saveSchedule();
+}
 </script>
 
 <template>
@@ -139,6 +153,41 @@ defineProps<{
                         </a>
                     </div>
                 </div>
+            </div>
+        </div>
+
+        <div v-if="party.canManage" class="row mb-4">
+            <div class="col-12">
+                <form class="card" data-test="schedule-card" @submit.prevent="saveSchedule">
+                    <div class="card-header">
+                        <h3 class="card-title">Schedule</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-3" data-test="schedule-current">
+                            <span class="datagrid-title d-inline me-2">Currently</span>
+                            <span v-if="song.scheduledFor" :title="song.scheduledFor.iso">{{
+                                song.scheduledFor.human
+                            }}</span>
+                            <span v-else class="text-muted">Not scheduled</span>
+                        </p>
+                        <ScheduleRequestControl v-model="form.scheduled_for" label="Scheduled for (party time)" />
+                        <p v-if="form.errors.scheduled_for" class="invalid-feedback d-block">
+                            {{ form.errors.scheduled_for }}
+                        </p>
+                    </div>
+                    <div class="card-footer d-flex btn-list">
+                        <button
+                            type="button"
+                            class="btn btn-outline-secondary"
+                            data-test="schedule-clear"
+                            :disabled="form.processing || !song.scheduledFor"
+                            @click="clearSchedule"
+                        >
+                            Clear
+                        </button>
+                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
+                    </div>
+                </form>
             </div>
         </div>
 

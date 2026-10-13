@@ -4,13 +4,18 @@ import Index from '@/pages/Parties/Songs/Index.vue';
 import ShowSong from '@/pages/Parties/Songs/Show.vue';
 import type {LegacyPartyState} from '@/types';
 
-const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn()}));
+const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn(), put: vi.fn()}));
 
-vi.mock('@inertiajs/vue3', () => ({
-    Head: {render: () => null},
-    Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
-    router: inertia,
-}));
+vi.mock('@inertiajs/vue3', async () => {
+    const {reactive} = await import('vue');
+    return {
+        Head: {render: () => null},
+        Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
+        router: inertia,
+        useForm: (data: Record<string, unknown>) =>
+            reactive({...data, errors: {}, processing: false, put: inertia.put}),
+    };
+});
 vi.mock('@/layouts/AppLayout.vue', () => ({
     default: {template: '<div><slot name="breadcrumbs" /><slot name="header" /><slot /></div>'},
 }));
@@ -18,7 +23,7 @@ vi.mock('@/routes', () => ({home: () => ({url: '/'})}));
 vi.mock('@/components/PartyPlayer.vue', () => ({default: {template: '<div data-test="party-player" />'}}));
 
 const idle: LegacyPartyState = {now: null, next: null, current: null, status: null};
-const party = {code: 'ABCD', name: 'Party'};
+const party = {code: 'ABCD', name: 'Party', canManage: false};
 const when = {iso: '2030-01-01 10:00:00', human: '3 hours ago'};
 
 const row = (id: number, queuedAt: typeof when | null = null) => ({
@@ -102,6 +107,8 @@ describe('Party songs show', () => {
         score: 1,
         createdAt: when,
         queuedAt: null,
+        scheduledFor: null,
+        scheduledForInput: '',
         requestedBy: null,
         moderateUrl: '/parties/ABCD/moderation/create?track=t',
     };
@@ -145,5 +152,52 @@ describe('Party songs show', () => {
         expect(wrapper.get('[data-test="ratings"]').find('.ti-thumb-down-filled').exists()).toBe(true);
         expect(wrapper.get('[data-test="other"]').text()).toContain('3 hours ago');
         expect(wrapper.findAll('a').map((link) => link.attributes('href'))).toContain('/parties/ABCD/users/1');
+    });
+
+    it('hides the schedule editor from non-moderators', () => {
+        const wrapper = mount(ShowSong, {props: base});
+
+        expect(wrapper.find('[data-test="schedule-card"]').exists()).toBe(false);
+    });
+
+    it('shows the current schedule and saves a new one', async () => {
+        const wrapper = mount(ShowSong, {
+            props: {
+                ...base,
+                party: {...party, canManage: true},
+                song: {...song, scheduledFor: when, scheduledForInput: '2030-01-01T20:00'},
+            },
+        });
+
+        expect(wrapper.get('[data-test="schedule-current"]').text()).toContain('3 hours ago');
+        const input = wrapper.get('input[type="datetime-local"]');
+        expect((input.element as HTMLInputElement).value).toBe('2030-01-01T20:00');
+
+        await input.setValue('2030-01-02T21:30');
+        await wrapper.get('[data-test="schedule-card"]').trigger('submit');
+
+        expect(inertia.put).toHaveBeenCalledWith('/parties/ABCD/songs/1', expect.anything());
+        expect(wrapper.get('[data-test="schedule-card"]').text()).not.toContain('Not scheduled');
+    });
+
+    it('clears the schedule by submitting an empty value', async () => {
+        const wrapper = mount(ShowSong, {
+            props: {
+                ...base,
+                party: {...party, canManage: true},
+                song: {...song, scheduledFor: when, scheduledForInput: '2030-01-01T20:00'},
+            },
+        });
+
+        await wrapper.get('[data-test="schedule-clear"]').trigger('click');
+
+        expect((wrapper.get('input[type="datetime-local"]').element as HTMLInputElement).value).toBe('');
+        expect(inertia.put).toHaveBeenCalledTimes(1);
+    });
+
+    it('says when nothing is scheduled', () => {
+        const wrapper = mount(ShowSong, {props: {...base, party: {...party, canManage: true}}});
+
+        expect(wrapper.get('[data-test="schedule-current"]').text()).toContain('Not scheduled');
     });
 });

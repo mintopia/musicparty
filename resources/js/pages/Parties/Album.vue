@@ -4,7 +4,6 @@ import axios from 'axios';
 import {computed, ref} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
-import ScheduleRequestControl from '@/components/ScheduleRequestControl.vue';
 import TrackList from '@/components/TrackList.vue';
 import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
@@ -34,7 +33,6 @@ const props = defineProps<{
 useQueueSync(props.party.code, ['tracks']);
 const message = ref<string | null>(null);
 const {status, reason, request} = useRequestTrack(() => props.party.code);
-const scheduledFor = ref('');
 
 const searchUrl = computed(() => {
     const url = search(props.party.code).url;
@@ -51,7 +49,7 @@ function showMessage(text: string): void {
 }
 
 async function requestTrack(track: TrackAnnotation): Promise<void> {
-    await request(track.id, props.party.canManage ? scheduledFor.value : null);
+    await request(track.id);
     if (status.value === 'success') {
         router.reload({only: ['tracks']});
     } else if (status.value === 'blocked' || status.value === 'error') {
@@ -138,7 +136,6 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         </div>
                     </div>
                 </div>
-                <ScheduleRequestControl v-if="party.canManage" v-model="scheduledFor" />
                 <div v-if="tracks" class="card">
                     <TrackList
                         :tracks="tracks"
