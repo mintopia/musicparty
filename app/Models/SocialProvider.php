@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\SettingType;
 use App\Models\Traits\ToString;
 use App\Services\Contracts\SocialProviderContract;
 use Database\Factories\SocialProviderFactory;
@@ -88,7 +89,7 @@ class SocialProvider extends Model
         return $this->getProvider($redirectUrl)->user();
     }
 
-    /** @return array<string, stdClass> */
+    /** @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}> */
     public function configMapping(): array
     {
         return $this->getProvider()->configMapping();
