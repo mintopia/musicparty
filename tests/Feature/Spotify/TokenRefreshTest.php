@@ -8,8 +8,9 @@ use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\SocialProviders\SpotifyProvider;
+use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
-use App\Services\SpotifySearchService;
+
 use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
@@ -197,8 +198,7 @@ it('falls back to the control account when the search account needs re-link', fu
     ]);
     $party = Party::factory()->create(['user_id' => $control->user_id]);
 
-    $service = new SpotifySearchService($party, $party->members()->firstOrNew());
-    $api = (new ReflectionMethod($service, 'getApi'))->invoke($service);
+    $api = app(SpotifyGateway::class)->searchClient($party->user);
 
     expect($api)->toBe($fake)->and($search->fresh()->needsRelink())->toBeTrue();
 });

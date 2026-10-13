@@ -5,58 +5,14 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
-use App\Services\Spotify\BackoffRequest;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Log;
-use SpotifyWebAPI\Session;
-use SpotifyWebAPI\SpotifyWebAPI;
 use stdClass;
 
 class SpotifySearchService
 {
-    protected ?Session $session = null;
-
-    protected ?SpotifyWebAPI $api = null;
-
     public function __construct(protected Party $party, protected PartyMember $member) {}
-
-    protected function getApi(): SpotifyWebAPI
-    {
-        if ($this->api !== null) {
-            return $this->api;
-        }
-
-        $account = $this->party->user->accounts()->whereHas('provider', function ($query) {
-            $query->whereCode('spotifysearch');
-        })->first();
-        $provider = $account?->provider;
-        if ($account === null || $provider === null || $account->needsRelink()) {
-            Log::warning("{$this->party->user}: No Spotify Search account, using control account");
-            $this->api = $this->party->user->requireSpotifyApi();
-
-            return $this->api;
-        }
-
-        if ($this->session === null) {
-            $clientId = (string) $provider->getSetting('client_id');
-            $clientSecret = (string) $provider->getSetting('client_secret');
-            $this->session = new Session($clientId, $clientSecret);
-            $this->session->setAccessToken($account->access_token ?? '');
-        }
-
-        // Create new API
-        Log::debug("{$this->party->user}: Creating new Search API connection");
-        $request = new BackoffRequest('spotifysearch');
-        $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
-
-        if ($account->access_token_expires_at < now()->addMinutes(5)) {
-            Log::debug("{$this->party->user}: Refreshing expiring Search API access token");
-            $account->refreshSpotifyToken($this->session);
-        }
-
-        return $this->api;
-    }
 
     /**
      * @return LengthAwarePaginator<int, stdClass>
@@ -69,7 +25,7 @@ class SpotifySearchService
             'offset' => ($page - 1) * $perPage,
         ];
 
-        $api = $this->getApi();
+        $api = app(SpotifyGateway::class)->searchClient($this->party->user);
         $result = SpotifyPayload::object($api->search($query, 'track', $options));
 
         $tracks = SpotifyPayload::object($result->tracks);

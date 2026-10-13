@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Database\Factories\PartyFactory;
@@ -496,7 +497,7 @@ class Party extends Model
                 $trackUri = "spotify:track:{$song->song->spotify_id}";
             }
         }
-        $this->user->requireSpotifyApi()->play($playbackDevice, [
+        app(SpotifyGateway::class)->requireClient($this->user)->play($playbackDevice, [
             'uris' => [$trackUri],
         ]);
     }
@@ -504,19 +505,19 @@ class Party extends Model
     public function pause(): void
     {
         Log::debug("{$this}: Spotify API -> pause()");
-        $this->user->requireSpotifyApi()->pause($this->recent_device_id ?? '');
+        app(SpotifyGateway::class)->requireClient($this->user)->pause($this->recent_device_id ?? '');
     }
 
     public function nextTrack(): void
     {
         Log::debug("{$this}: Spotify API -> next()");
-        $this->user->requireSpotifyApi()->next($this->recent_device_id ?? '');
+        app(SpotifyGateway::class)->requireClient($this->user)->next($this->recent_device_id ?? '');
     }
 
     public function previousTrack(): void
     {
         Log::debug("{$this}: Spotify API -> seek()");
-        $this->user->requireSpotifyApi()->seek([
+        app(SpotifyGateway::class)->requireClient($this->user)->seek([
             'position_ms' => 0,
             'device_id' => $this->recent_device_id,
         ]);
@@ -528,7 +529,7 @@ class Party extends Model
 
         return Cache::remember($key, 86400, function () use ($playedId) {
             Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
-            $data = SpotifyPayload::object($this->user->requireSpotifyApi()->getTrack($playedId, [
+            $data = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->user)->getTrack($playedId, [
                 'market',
             ]));
 
@@ -543,7 +544,7 @@ class Party extends Model
         $weighted = $current->weighted;
         $historyPlaylistId = $current->history_playlist_id;
         $this->user->getSpotifyStatus();
-        $queue = SpotifyPayload::object($this->user->requireSpotifyApi()->getMyQueue());
+        $queue = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->user)->getMyQueue());
         $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
         $count = count($queueItems);
         $ids = collect($queueItems)->pluck('id')->unique();
@@ -647,13 +648,13 @@ class Party extends Model
             }
             Log::info("{$this}: Adding {$song->song} to queue");
             Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
-            $this->user->requireSpotifyApi()->queue($song->song->spotify_id);
+            app(SpotifyGateway::class)->requireClient($this->user)->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
             if ($historyPlaylistId !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
                 Log::debug("{$this}: Spotify API -> addPlaylistTracks({$historyPlaylistId}, [{$song->song->spotify_id}])");
-                $this->user->requireSpotifyApi()->addPlaylistTracks($historyPlaylistId, [$song->song->spotify_id]);
+                app(SpotifyGateway::class)->requireClient($this->user)->addPlaylistTracks($historyPlaylistId, [$song->song->spotify_id]);
             }
         }
     }
@@ -752,7 +753,7 @@ class Party extends Model
             if ($device->id == $this->device_id) {
                 Log::info("{$this}: Forcing playback on {$device->name}");
                 Log::debug("{$this}: Spotify API -> play()");
-                $this->user->requireSpotifyApi()->play($this->device_id, [
+                app(SpotifyGateway::class)->requireClient($this->user)->play($this->device_id, [
                     'uris' => [$trackUri],
                 ]);
 
@@ -866,7 +867,7 @@ class Party extends Model
         $offset = 0;
         do {
             Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
-            $response = SpotifyPayload::object($this->user->requireSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
+            $response = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->user)->getPlaylistTracks($this->backup_playlist_id, [
                 'limit' => 50,
                 'offset' => $offset,
                 'market' => $this->user->market,

@@ -5,6 +5,7 @@ namespace App\Mods\Whamageddon;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
@@ -107,7 +108,7 @@ class Whamageddon
                 $query->where('spotify_id', $trackId);
             })->first();
         if ($upcoming === null) {
-            $response = $this->party->user->requireSpotifyApi()->getTrack($trackId);
+            $response = app(SpotifyGateway::class)->requireClient($this->party->user)->getTrack($trackId);
             if (! $response) {
                 Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} in Spotify");
 
