@@ -55,9 +55,9 @@ class PartyController extends Controller
         $upcomingSongs = $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
             ->whereNull('queued_at')
-            ->orderBy('score', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->orderBy('id', 'ASC')
+            ->orderBy('score', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->take(20)
             ->get();
 

@@ -41,7 +41,7 @@ class PartyCalculateTrust extends Command
         $io = new SymfonyStyle($this->input, $this->output);
 
         $scores = [];
-        foreach ($party->members()->with('user')->orderBy('trustscore', 'DESC')->get() as $member) {
+        foreach ($party->members()->with('user')->orderBy('trustscore', 'desc')->get() as $member) {
             $scores[] = [
                 $member->user->nickname,
                 $member->trustscore,

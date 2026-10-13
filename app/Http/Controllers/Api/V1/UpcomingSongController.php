@@ -31,9 +31,9 @@ class UpcomingSongController extends Controller
         $page = $party->upcoming()
             ->with(['user', 'song'])
             ->whereNull('queued_at')
-            ->orderBy('score', 'DESC')
-            ->orderBy('created_at', 'ASC')
-            ->orderBy('id', 'ASC')
+            ->orderBy('score', 'desc')
+            ->orderBy('created_at', 'asc')
+            ->orderBy('id', 'asc')
             ->paginate($params['per_page'] ?? 20)->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 

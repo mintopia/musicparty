@@ -97,10 +97,10 @@ class UpcomingSongController extends Controller
         if ($perPage !== 20) {
             $params['per_page'] = $perPage;
         }
-        $votes = $song->votes()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
-        $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'DESC')->get();
+        $votes = $song->votes()->orderBy('created_at', 'asc')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+        $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'desc')->get();
         if ($song->played) {
-            $ratings = $song->played->ratings()->orderBy('created_at', 'ASC')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
+            $ratings = $song->played->ratings()->orderBy('created_at', 'asc')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
         } else {
             $ratings = new LengthAwarePaginator([], 0, $perPage);
         }

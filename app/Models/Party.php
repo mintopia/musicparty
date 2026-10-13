@@ -44,6 +44,7 @@ class Party extends Model
         'song_started_at' => 'datetime',
     ];
 
+    /** @var Collection<string, PartyModSetting>|null */
     protected ?Collection $_modSettings = null;
 
     public function toStringName(): string
@@ -61,6 +62,7 @@ class Party extends Model
         return $this->hasMany(PartyMember::class);
     }
 
+    /** @return HasMany<PartyModSetting, $this> */
     public function modsettings(): HasMany
     {
         return $this->hasMany(PartyModSetting::class);
@@ -116,14 +118,14 @@ class Party extends Model
 
     public function current()
     {
-        return $this->history()->orderBy('played_at', 'DESC')->first();
+        return $this->history()->orderBy('played_at', 'desc')->first();
     }
 
     public function next()
     {
         return $this->upcoming()
             ->whereNotNull('queued_at')
-            ->orderBy('queued_at', 'DESC')
+            ->orderBy('queued_at', 'desc')
             ->first();
     }
 
@@ -163,21 +165,22 @@ class Party extends Model
             return;
         }
 
-        $this->_modSettings = new Collection;
+        /** @var array<string, PartyModSetting> $settings */
+        $settings = [];
         foreach ($this->modsettings()->with(['setting', 'setting.mod'])->get() as $setting) {
-            $key = "{$setting->setting->mod->code}:{$setting->setting->code}";
-            $this->_modSettings->put($key, $setting);
+            $settings["{$setting->setting->mod->code}:{$setting->setting->code}"] = $setting;
         }
-        foreach (ModSetting::orderBy('mod_id', 'ASC')->orderBy('order', 'ASC')->get() as $modSetting) {
+        foreach (ModSetting::orderBy('mod_id', 'asc')->orderBy('order', 'asc')->get() as $modSetting) {
             $key = "{$modSetting->mod->code}:{$modSetting->code}";
-            if (! $this->_modSettings->has($key)) {
+            if (! isset($settings[$key])) {
                 $setting = new PartyModSetting;
                 $setting->setting()->associate($modSetting);
                 $setting->party()->associate($this);
                 $setting->value = $modSetting->default;
-                $this->_modSettings->put($key, $setting);
+                $settings[$key] = $setting;
             }
         }
+        $this->_modSettings = new Collection($settings);
     }
 
     public function getModSettingValue(mixed $mod, string $code, mixed $default = null): mixed
@@ -435,9 +438,9 @@ class Party extends Model
                         $query->whereNull('not_before');
                         $query->orWhere('not_before', '<=', 'NOW()');
                     })
-                    ->orderBy('score', 'DESC')
-                    ->orderBy('created_at', 'ASC')
-                    ->orderBy('id', 'ASC')
+                    ->orderBy('score', 'desc')
+                    ->orderBy('created_at', 'asc')
+                    ->orderBy('id', 'asc')
                     ->limit($remaining)
                     ->get();
                 foreach ($toAdd as $song) {
@@ -447,9 +450,9 @@ class Party extends Model
         } else {
             $songsToAdd = $this->upcoming()
                 ->whereNull('queued_at')
-                ->orderBy('score', 'DESC')
-                ->orderBy('created_at', 'ASC')
-                ->orderBy('id', 'ASC')
+                ->orderBy('score', 'desc')
+                ->orderBy('created_at', 'asc')
+                ->orderBy('id', 'asc')
                 ->limit($toAdd)
                 ->get();
         }
