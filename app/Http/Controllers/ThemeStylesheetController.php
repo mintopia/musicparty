@@ -9,15 +9,24 @@ use Illuminate\Support\Facades\Cache;
 
 class ThemeStylesheetController extends Controller
 {
+    private const MISS_TTL_SECONDS = 300;
+
     public function __invoke(Request $request, string $code): Response
     {
-        /** @var array{css: string, version: string}|null $rendered */
-        $rendered = Cache::rememberForever("theme.css.{$code}", function () use ($code): ?array {
+        $key = "theme.css.{$code}";
+        /** @var array{css: string, version: string}|false|null $rendered */
+        $rendered = Cache::get($key);
+        if ($rendered === null) {
             $theme = Theme::whereCode($code)->first();
-
-            return $theme ? ['css' => $theme->renderCss(), 'version' => $theme->version()] : null;
-        });
-        abort_if($rendered === null, 404);
+            if ($theme) {
+                $rendered = ['css' => $theme->renderCss(), 'version' => $theme->version()];
+                Cache::forever($key, $rendered);
+            } else {
+                $rendered = false;
+                Cache::put($key, false, self::MISS_TTL_SECONDS);
+            }
+        }
+        abort_if($rendered === false, 404);
 
         $response = response($rendered['css'])
             ->header('Content-Type', 'text/css; charset=UTF-8')

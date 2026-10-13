@@ -1,11 +1,14 @@
 <?php
 
+use App\Enums\PartyModerationType;
 use App\Enums\Purpose;
 use App\Enums\SettingType;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
+use App\Models\PartyModeration;
+use App\Models\PlayedSong;
 use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\Song;
@@ -176,3 +179,47 @@ it('flashes a busy message when Spotify is backing off', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->where('flash.error', 'Spotify is busy right now. Please try again shortly.'));
 });
+
+it('reports every eligibility reason on the search page', function (string $reason, Closure $arrange) {
+    $track = FakeSpotify::track('target');
+    $member = $this->member;
+    $arrange($this->party, $member, $track);
+    pageSearchResults($this->fake, $track);
+
+    $this->actingAs($member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('results.data.0.eligibility.allowed', false)
+            ->where('results.data.0.eligibility.reason', $reason));
+})->with([
+    'not accepting requests' => ['Party is not accepting requests', fn ($party) => $party->forceFill(['allow_requests' => false])->save()],
+    'banned member' => ['You are not allowed to make requests', fn ($party, $member) => $member->forceFill(['role_id' => PartyMemberRole::query()->forceCreate(['code' => 'banned', 'name' => 'Banned'])->id])->save()],
+    'too many requests' => ['You are not allowed to request any more songs', function ($party, $member) {
+        $party->forceFill(['max_requests' => 1])->save();
+        pageSearchUpcoming($party, FakeSpotify::track('mine'), $member->user);
+    }],
+    'too short' => ['Song is too short', fn ($party) => $party->forceFill(['min_song_length' => 300])->save()],
+    'too long' => ['Song is too long', fn ($party) => $party->forceFill(['max_song_length' => 100])->save()],
+    'explicit' => ['Explicit songs are not allowed', function ($party, $member, $track) {
+        $party->forceFill(['explicit' => false])->save();
+        $track->explicit = true;
+    }],
+    'similar song waiting' => ['A similar song is already in the queue', function ($party, $member, $track) {
+        pageSearchUpcoming($party, (object) [...(array) $track, 'id' => 'other-id'], null, 1);
+    }],
+    'played recently' => ['This song has been played recently', function ($party, $member, $track) {
+        $party->forceFill(['no_repeat_interval' => 3600])->save();
+        PlayedSong::factory()->for($party)->for(Song::fromTrack(SpotifyMapper::track($track)))->create(['played_at' => now()->subMinute()]);
+    }],
+    'played next' => ['This song will be played next', function ($party, $member, $track) {
+        UpcomingSong::factory()->for($party)->for(Song::fromTrack(SpotifyMapper::track($track)))->sentToPlayer()->create();
+    }],
+    'moderated track' => ['Track is not allowed', function ($party, $member, $track) {
+        $moderation = new PartyModeration;
+        $moderation->party()->associate($party);
+        $moderation->type = PartyModerationType::mtId;
+        $moderation->value = 'target';
+        $moderation->regex = false;
+        $moderation->save();
+    }],
+]);
