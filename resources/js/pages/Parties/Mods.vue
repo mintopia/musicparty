@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {Head, useForm} from '@inertiajs/vue3';
+import EmptyState from '@/components/EmptyState.vue';
 import ModSettingField from '@/components/ModSettingField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {buildSettings, initialSettingValue, partyModsUrl} from '@/lib/mods';
@@ -72,7 +73,12 @@ function submit(): void {
             <div class="page-header mt-0">
                 <h1>Mods</h1>
             </div>
-            <form @submit.prevent="submit">
+            <EmptyState
+                v-if="mods.length === 0"
+                title="No mods available"
+                description="There are no mods installed on this instance yet."
+            />
+            <form v-else @submit.prevent="submit">
                 <div v-for="mod in mods" :key="mod.code" class="card mb-3" data-test="mod" :data-mod="mod.code">
                     <div class="card-header">
                         <div class="form-check form-switch mb-0">
