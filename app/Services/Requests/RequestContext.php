@@ -45,7 +45,7 @@ final class RequestContext
         return $this->remember('known-songs', function (): array {
             $ids = array_map(fn (Track $track): string => $track->id, $this->tracks);
 
-            return Song::query()->where('provider_id', 'spotify')->whereIn('provider_track_id', $ids)->pluck('id', 'provider_track_id')->all();
+            return Song::query()->where('provider_id', $this->party->provider_id)->whereIn('provider_track_id', $ids)->pluck('id', 'provider_track_id')->all();
         });
     }
 }

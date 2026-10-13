@@ -68,6 +68,6 @@ class PlaybackControl
             $trackId = $party->upcoming()->orderBy('queued_at', 'desc')->first()?->song->provider_track_id;
         }
 
-        $provider->play($deviceId, $trackId === null ? null : $this->sync->trackFor($provider, $trackId));
+        $provider->play($deviceId, $trackId === null ? null : $this->sync->trackFor($party, $provider, $trackId));
     }
 }

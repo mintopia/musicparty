@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\ArtistRef;
 use Database\Factories\ArtistFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
-use stdClass;
 
 /**
  * @property int $id
@@ -52,20 +52,20 @@ class Artist extends Model
         return $this->belongsToMany(Song::class)->withTimestamps();
     }
 
-    public static function fromSpotify(stdClass $spotifyArtist): Artist
+    public static function fromRef(string $providerId, ArtistRef $ref): Artist
     {
-        $artist = Artist::where(['provider_id' => 'spotify', 'provider_artist_id' => $spotifyArtist->id])->first();
+        $artist = Artist::where(['provider_id' => $providerId, 'provider_artist_id' => $ref->id])->first();
         if ($artist) {
             return $artist;
         }
         try {
             $artist = new Artist;
-            $artist->provider_id = 'spotify';
-            $artist->provider_artist_id = $spotifyArtist->id;
-            $artist->name = $spotifyArtist->name;
+            $artist->provider_id = $providerId;
+            $artist->provider_artist_id = $ref->id;
+            $artist->name = $ref->name;
             $artist->save();
         } catch (UniqueConstraintViolationException) {
-            $artist = Artist::where(['provider_id' => 'spotify', 'provider_artist_id' => $spotifyArtist->id])->firstOrFail();
+            $artist = Artist::where(['provider_id' => $providerId, 'provider_artist_id' => $ref->id])->firstOrFail();
         }
 
         return $artist;

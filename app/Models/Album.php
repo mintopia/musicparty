@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\AlbumRef;
 use Database\Factories\AlbumFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -10,7 +11,6 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
-use stdClass;
 
 /**
  * @property int $id
@@ -54,21 +54,21 @@ class Album extends Model
         return $this->hasMany(Song::class);
     }
 
-    public static function fromSpotify(stdClass $spotifyAlbum): Album
+    public static function fromRef(string $providerId, AlbumRef $ref): Album
     {
-        $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->first();
+        $album = Album::where(['provider_id' => $providerId, 'provider_album_id' => $ref->id])->first();
         if ($album) {
             return $album;
         }
         try {
             $album = new Album;
-            $album->provider_id = 'spotify';
-            $album->provider_album_id = $spotifyAlbum->id;
-            $album->name = $spotifyAlbum->name;
-            $album->image_url = $spotifyAlbum->images[0]->url;
+            $album->provider_id = $providerId;
+            $album->provider_album_id = $ref->id;
+            $album->name = $ref->name;
+            $album->image_url = $ref->imageUrl ?? '';
             $album->save();
         } catch (UniqueConstraintViolationException) {
-            $album = Album::where(['provider_id' => 'spotify', 'provider_album_id' => $spotifyAlbum->id])->firstOrFail();
+            $album = Album::where(['provider_id' => $providerId, 'provider_album_id' => $ref->id])->firstOrFail();
         }
 
         return $album;

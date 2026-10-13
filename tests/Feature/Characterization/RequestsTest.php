@@ -79,7 +79,7 @@ function reqModeration(Party $party, PartyModerationType $type, string $value, b
 
 function reqWaiting(Party $party, User $user, string $spotifyId = 'other', string $name = 'Other Track'): UpcomingSong
 {
-    $song = Song::fromSpotify(FakeSpotify::track($spotifyId, $name));
+    $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track($spotifyId, $name)));
 
     return UpcomingSong::factory()->for($party)->for($song)->for($user)->waiting()->create();
 }
@@ -268,7 +268,7 @@ describe('RequestRules', function () {
     describe('no repeat interval', function () {
         it('rejects a track played within the interval', function () {
             $party = reqParty(['allow_requests' => true, 'no_repeat_interval' => 3600]);
-            $song = Song::fromSpotify(reqTrack('played'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('played')));
             PlayedSong::factory()->for($party)->for($song)->create(['played_at' => now()->subMinutes(10)]);
 
             $response = reqCheck($party, reqMember($party), reqTrack('played'));
@@ -278,7 +278,7 @@ describe('RequestRules', function () {
 
         it('accepts a track played before the interval', function () {
             $party = reqParty(['allow_requests' => true, 'no_repeat_interval' => 3600]);
-            $song = Song::fromSpotify(reqTrack('played'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('played')));
             PlayedSong::factory()->for($party)->for($song)->create(['played_at' => now()->subHours(2)]);
 
             expect(reqCheck($party, reqMember($party), reqTrack('played'))->allowed)->toBeTrue();
@@ -286,7 +286,7 @@ describe('RequestRules', function () {
 
         it('ignores play history when the interval is not set', function () {
             $party = reqParty(['allow_requests' => true, 'no_repeat_interval' => null]);
-            $song = Song::fromSpotify(reqTrack('played'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('played')));
             PlayedSong::factory()->for($party)->for($song)->create(['played_at' => now()->subMinute()]);
 
             expect(reqCheck($party, reqMember($party), reqTrack('played'))->allowed)->toBeTrue();
@@ -294,7 +294,7 @@ describe('RequestRules', function () {
 
         it('ignores plays from other parties', function () {
             $party = reqParty(['allow_requests' => true, 'no_repeat_interval' => 3600]);
-            $song = Song::fromSpotify(reqTrack('played'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('played')));
             PlayedSong::factory()->for(reqParty())->for($song)->create(['played_at' => now()->subMinute()]);
 
             expect(reqCheck($party, reqMember($party), reqTrack('played'))->allowed)->toBeTrue();
@@ -304,7 +304,7 @@ describe('RequestRules', function () {
     describe('will be played next', function () {
         it('rejects the track most recently sent to the player', function () {
             $party = reqParty(['allow_requests' => true]);
-            $song = Song::fromSpotify(reqTrack('next'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('next')));
             UpcomingSong::factory()->for($party)->for($song)->sentToPlayer()->create();
 
             $response = reqCheck($party, reqMember($party), reqTrack('next'));
@@ -314,7 +314,7 @@ describe('RequestRules', function () {
 
         it('accepts a track that is not the one sent to the player', function () {
             $party = reqParty(['allow_requests' => true]);
-            $song = Song::fromSpotify(reqTrack('next'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('next')));
             UpcomingSong::factory()->for($party)->for($song)->sentToPlayer()->create();
 
             expect(reqCheck($party, reqMember($party), reqTrack('different'))->allowed)->toBeTrue();
@@ -322,7 +322,7 @@ describe('RequestRules', function () {
 
         it('reports a similar song rather than will be played next for a track only waiting in the queue', function () {
             $party = reqParty(['allow_requests' => true]);
-            $song = Song::fromSpotify(reqTrack('waiting'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('waiting')));
             UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
 
             expect(reqCheck($party, reqMember($party), reqTrack('waiting'))->reason)->toBe('A similar song is already in the queue');
@@ -330,7 +330,7 @@ describe('RequestRules', function () {
 
         it('prefers the played recently reason over the will be played next reason', function () {
             $party = reqParty(['allow_requests' => true, 'no_repeat_interval' => 3600]);
-            $song = Song::fromSpotify(reqTrack('both'));
+            $song = Song::fromTrack(SpotifyMapper::track(reqTrack('both')));
             PlayedSong::factory()->for($party)->for($song)->create(['played_at' => now()->subMinute()]);
             UpcomingSong::factory()->for($party)->for($song)->sentToPlayer()->create();
 
@@ -430,7 +430,7 @@ describe('RequestRules', function () {
     describe('similar song', function () {
         it('blocks a same name same artist waiting request', function () {
             $party = reqParty(['allow_requests' => true]);
-            $song = Song::fromSpotify(FakeSpotify::track('original', 'Same Name'));
+            $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('original', 'Same Name')));
             UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
 
             $response = reqCheck($party, reqMember($party), FakeSpotify::track('remaster', 'Same Name'));
@@ -440,7 +440,7 @@ describe('RequestRules', function () {
 
         it('accepts a differently named track', function () {
             $party = reqParty(['allow_requests' => true]);
-            $song = Song::fromSpotify(FakeSpotify::track('original', 'Same Name'));
+            $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('original', 'Same Name')));
             UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
 
             expect(reqCheck($party, reqMember($party), FakeSpotify::track('different', 'Another Name'))->allowed)->toBeTrue();
@@ -575,7 +575,7 @@ describe('UpcomingSongController::store', function () {
     it('returns 400 for a track that will be played next', function () {
         $party = reqParty(['allow_requests' => true]);
         $member = reqMember($party);
-        $song = Song::fromSpotify(reqTrack('next'));
+        $song = Song::fromTrack(SpotifyMapper::track(reqTrack('next')));
         UpcomingSong::factory()->for($party)->for($song)->sentToPlayer()->create();
         FakeSpotify::install()->respond('getTrack', reqTrack('next'));
 
@@ -680,7 +680,7 @@ describe('UpcomingSongController::store', function () {
     it('blocks a same name same artist request at the endpoint', function () {
         $party = reqParty(['allow_requests' => true]);
         $member = reqMember($party);
-        $song = Song::fromSpotify(FakeSpotify::track('original', 'Same Name'));
+        $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('original', 'Same Name')));
         UpcomingSong::factory()->for($party)->for($song)->waiting()->create();
         FakeSpotify::install()->respond('getTrack', FakeSpotify::track('remaster', 'Same Name'));
 

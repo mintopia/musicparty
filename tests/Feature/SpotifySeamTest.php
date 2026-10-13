@@ -11,6 +11,7 @@ use App\Models\User;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\PlaybackSync;
 use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
@@ -57,7 +58,7 @@ function seamUpcoming(Party $party, string $spotifyId, int $score = 5): Upcoming
 {
     $upcoming = new UpcomingSong;
     $upcoming->party()->associate($party);
-    $upcoming->song()->associate(Song::fromSpotify(FakeSpotify::track($spotifyId)));
+    $upcoming->song()->associate(Song::fromTrack(SpotifyMapper::track(FakeSpotify::track($spotifyId))));
     $upcoming->score = $score;
     $upcoming->save();
 
@@ -96,7 +97,7 @@ it('builds a real client when nothing is bound', function () {
 });
 
 it('serves sdk-shaped fixtures that Song can consume', function () {
-    $song = Song::fromSpotify(FakeSpotify::track('abc'));
+    $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('abc')));
 
     expect($song->provider_track_id)->toBe('abc')->and($song->artists)->toHaveCount(1);
 });

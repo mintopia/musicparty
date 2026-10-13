@@ -6,6 +6,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\PlaybackSync;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
@@ -76,7 +77,7 @@ it('records the attempt time and releases the lock when a sync throws', function
 
 it('sends exactly one track when a concurrent sync races the Send to Player', function () {
     $user = $this->party->user;
-    $song = Song::fromSpotify(FakeSpotify::track('raced'));
+    $song = Song::fromTrack(SpotifyMapper::track(FakeSpotify::track('raced')));
     $upcoming = new UpcomingSong;
     $upcoming->party()->associate($this->party);
     $upcoming->song()->associate($song);
