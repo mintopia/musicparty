@@ -244,7 +244,7 @@ it('prefers the most recently queued Request when several exist for the same tra
     expect(PlayedSong::query()->sole()->upcoming_song_id)->toBe($newer->id);
 });
 
-it('still updates the current song but sends nothing when the party is inactive', function () {
+it('still updates the current song, sends nothing and stamps last_updated_at when the party is inactive', function () {
     [$party, $fake] = syncParty(['active' => false]);
     $song = Song::factory()->create(['provider_track_id' => 'WAITING']);
     UpcomingSong::factory()->for($party)->create(['song_id' => $song->id, 'queued_at' => null]);
@@ -255,7 +255,7 @@ it('still updates the current song but sends nothing when the party is inactive'
     expect($party->fresh()->song->provider_track_id)->toBe('PLAYED')
         ->and(PlayedSong::query()->count())->toBe(1)
         ->and($fake->callsTo('sendToPlayer'))->toBe([])
-        ->and($party->fresh()->last_updated_at)->toBeNull();
+        ->and($party->fresh()->last_updated_at->toDateTimeString())->toBe(now()->toDateTimeString());
 });
 
 it('stamps last_updated_at after a full active update', function () {
