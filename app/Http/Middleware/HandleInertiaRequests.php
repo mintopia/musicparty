@@ -6,6 +6,7 @@ use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
+use App\Services\ActiveTheme;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -33,6 +34,7 @@ class HandleInertiaRequests extends Middleware
             'reverb' => [
                 'appKey' => config('reverb.apps.apps.0.key'),
             ],
+            'theme' => fn (): ?array => app(ActiveTheme::class)->shared(),
             'instanceName' => fn (): ?string => Setting::fetch('name'),
         ];
     }

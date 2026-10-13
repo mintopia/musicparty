@@ -34,38 +34,25 @@
     <div class="row">
         <div class="col-md-6">
             <h3 class="my-4">Site Colours</h3>
-            <div class="mb-3">
-                <label class="form-label required">Primary</label>
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-prepend">
-                            <input type="color" class="form-control form-control-color" value="{{ old('primary', $theme->primary ?? '') }}" title="Primary Colour" @if($theme->readonly) disabled="" @endif>
-                        </span>
-                        <input type="text" name="primary" class="form-control @error('primary') is-invalid @enderror"
-                               placeholder="Colour" value="{{ old('primary', $theme->primary ?? '') }}" @if($theme->readonly) disabled="" @endif>
+            @foreach(App\Models\Theme::COLOUR_TOKENS as $token => $label)
+                @php($required = in_array($token, ['primary', 'nav-background'], true))
+                @php($value = old("tokens.{$token}", $theme->tokens[$token] ?? ''))
+                <div class="mb-3">
+                    <label class="form-label @if($required) required @endif">{{ $label }} Colour</label>
+                    <div class="col-md-5">
+                        <div class="input-group">
+                            <span class="input-group-prepend">
+                                <input type="color" class="form-control form-control-color" value="{{ $value ?: '#000000' }}" title="{{ $label }} Colour" @if($theme->readonly) disabled="" @endif>
+                            </span>
+                            <input type="text" name="tokens[{{ $token }}]" class="form-control @error("tokens.{$token}") is-invalid @enderror"
+                                   placeholder="Colour" value="{{ $value }}" @if($theme->readonly) disabled="" @endif>
+                        </div>
                     </div>
+                    @error("tokens.{$token}")
+                        <p class="invalid-feedback d-block">{{ $message }}</p>
+                    @enderror
                 </div>
-                <small class="form-hint">The primary colour used for links, buttons, etc.</small>
-                @error('primary')
-                    <p class="invalid-feedback">{{ $message }}</p>
-                @enderror
-            </div>
-            <div class="mb-3">
-                <label class="form-label required">Navigation Background Colour</label>
-                <div class="col-md-5">
-                    <div class="input-group">
-                        <span class="input-group-prepend">
-                            <input type="color" class="form-control form-control-color" value="{{ old('nav_background', $theme->nav_background ?? '') }}" title="Navigation Background Colour" @if($theme->readonly) disabled="" @endif>
-                        </span>
-                        <input type="text" name="nav_background" class="form-control @error('nav_background') is-invalid @enderror"
-                               placeholder="Colour" value="{{ old('nav_background', $theme->nav_background ?? '') }}" @if($theme->readonly) disabled="" @endif>
-                    </div>
-                </div>
-                <small class="form-hint">The colour used for the background of the navigation menu</small>
-                @error('nav_background')
-                <p class="invalid-feedback">{{ $message }}</p>
-                @enderror
-            </div>
+            @endforeach
 
             <div class="row">
                 <div class="col-md-6">

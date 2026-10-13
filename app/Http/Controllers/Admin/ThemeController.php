@@ -79,12 +79,14 @@ class ThemeController extends Controller
             $map = [
                 'name',
                 'css',
-                'primary',
-                'nav_background',
             ];
             foreach ($map as $prop) {
                 $theme->{$prop} = $request->input($prop);
             }
+            $theme->tokens = array_filter(
+                array_intersect_key((array) $request->input('tokens', []), Theme::COLOUR_TOKENS),
+                fn (mixed $value): bool => is_string($value) && $value !== '',
+            );
         }
         $theme->save();
     }
