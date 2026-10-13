@@ -2,9 +2,17 @@
 
 namespace App\Providers;
 
+use App\Enums\Purpose;
 use App\Models\Theme;
+use App\Models\User;
+use App\Services\Contracts\MusicProvider;
+use App\Services\Contracts\ProviderPlayback;
 use App\Services\ModSettingsStore;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\PlayedSongAugmentService;
+use App\Services\Spotify\SpotifyGateway;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
@@ -21,6 +29,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
+        $this->app->scoped(FakeMusicProvider::class);
+        $this->app->scoped(MusicProviderFactory::class, function (): MusicProviderFactory {
+            $fake = fn (User $user, Purpose $purpose): FakeMusicProvider => $this->app->make(FakeMusicProvider::class);
+
+            return new MusicProviderFactory([
+                'spotify' => $this->app->environment('testing')
+                    ? $fake
+                    : fn (User $user, Purpose $purpose): SpotifyMusicProvider => new SpotifyMusicProvider($this->app->make(SpotifyGateway::class), $user, $purpose),
+                'fake' => $fake,
+            ]);
+        });
+        if ($this->app->environment('testing')) {
+            $this->app->bind(MusicProvider::class, FakeMusicProvider::class);
+            $this->app->bind(ProviderPlayback::class, FakeMusicProvider::class);
+        }
         $this->app->bind(Randomizer::class, fn () => new Randomizer);
     }
 

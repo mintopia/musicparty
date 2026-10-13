@@ -181,6 +181,11 @@ class FakeSpotify extends SpotifyWebAPI
         return $this->record(__FUNCTION__, func_get_args());
     }
 
+    public function previous(string $deviceId = ''): bool
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
     public function queue(string $trackUri, string $deviceId = ''): bool
     {
         return $this->record(__FUNCTION__, func_get_args());

@@ -1,0 +1,27 @@
+{
+  "relinked": {
+    "id": "relinked-id", "type": "track", "uri": "spotify:track:relinked-id", "name": "Relinked Song",
+    "duration_ms": 215000, "explicit": true, "is_local": false, "is_playable": true,
+    "linked_from": {"id": "original-id", "type": "track", "uri": "spotify:track:original-id"},
+    "album": {"id": "alb1", "name": "An Album", "type": "album", "images": [{"url": "https://i.scdn.co/image/big", "height": 640, "width": 640}, {"url": "https://i.scdn.co/image/small", "height": 64, "width": 64}], "artists": [{"id": "art1", "name": "Artist One", "type": "artist"}]},
+    "artists": [{"id": "art1", "name": "Artist One", "type": "artist"}, {"id": "art2", "name": "Artist Two", "type": "artist"}]
+  },
+  "unplayable": {
+    "id": "gone-id", "type": "track", "uri": "spotify:track:gone-id", "name": "Not In Your Market",
+    "duration_ms": 100000, "explicit": false, "is_local": false, "is_playable": false,
+    "album": {"id": "alb2", "name": "Other Album", "type": "album", "images": [], "artists": []},
+    "artists": [{"id": "art3", "name": "Artist Three", "type": "artist"}]
+  },
+  "local": {
+    "id": null, "type": "track", "uri": "spotify:local:Band:Album:Song:180", "name": "Local Song",
+    "duration_ms": 180000, "explicit": false, "is_local": true,
+    "album": {"id": null, "name": "Album", "type": "album", "images": []},
+    "artists": [{"id": null, "name": "Band", "type": "artist"}]
+  },
+  "playback": {
+    "device": {"id": "dev1", "is_active": true, "name": "Living Room", "type": "Speaker", "volume_percent": 40},
+    "is_playing": true, "progress_ms": 42000, "timestamp": 1760000000000,
+    "repeat_state": "context", "shuffle_state": true, "currently_playing_type": "track",
+    "item": {"id": "relinked-id", "type": "track", "name": "Relinked Song", "duration_ms": 215000, "linked_from": {"id": "original-id"}, "album": {"id": "alb1", "name": "An Album", "images": []}, "artists": []}
+  }
+}
