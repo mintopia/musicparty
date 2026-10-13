@@ -5,23 +5,22 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Carbon\Carbon;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function dashboard(): View
+    public function dashboard(): Response
     {
-        $stats = (object) [
-            'users' => (object) [
-                'total' => User::count(),
-                'lastWeek' => User::where('created_at', '>', Carbon::now()->subWeek())->count(),
+        return Inertia::render('Admin/Dashboard', [
+            'stats' => [
+                'users' => [
+                    'total' => User::count(),
+                    'lastWeek' => User::where('created_at', '>', Carbon::now()->subWeek())->count(),
+                ],
             ],
-        ];
-
-        return view('admin.home.dashboard', [
-            'stats' => $stats,
         ]);
     }
 
