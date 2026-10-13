@@ -25,9 +25,11 @@ class RequestRules
     protected array $rules;
 
     /**
-     * @param  list<RequestRule>|null  $rules
+     * @param  list<RequestRule>|null  $rules  Core stage rules
+     * @param  list<RequestRule>  $modRules
+     * @param  list<RequestRule>  $aiRules
      */
-    public function __construct(?array $rules = null)
+    public function __construct(?array $rules = null, protected array $modRules = [], protected array $aiRules = [])
     {
         $this->rules = $rules ?? self::standardRules();
     }
@@ -52,18 +54,18 @@ class RequestRules
         ];
     }
 
-    public function check(Party $party, PartyMember $member, Track $track): RequestDecision
+    public function check(Party $party, PartyMember $member, Track $track, RequestMode $mode = RequestMode::Submit): RequestDecision
     {
-        return $this->checkMany($party, $member, [$track])[$track->id];
+        return $this->checkMany($party, $member, [$track], $mode)[$track->id];
     }
 
     /**
      * @param  list<Track>  $tracks
      * @return array<string, RequestDecision> keyed by track id
      */
-    public function checkMany(Party $party, PartyMember $member, array $tracks): array
+    public function checkMany(Party $party, PartyMember $member, array $tracks, RequestMode $mode = RequestMode::Submit): array
     {
-        $context = new RequestContext($party, $member, $tracks);
+        $context = new RequestContext($party, $member, $tracks, $mode);
         $decisions = [];
         foreach ($tracks as $track) {
             $decisions[$track->id] = $this->decide($context, $track);
@@ -81,13 +83,22 @@ class RequestRules
 
     protected function decide(RequestContext $context, Track $track): RequestDecision
     {
-        foreach ($this->rules as $rule) {
-            $decision = $rule->decide($context, $track);
-            if (! $decision->allowed) {
-                return $decision;
+        $stages = [$this->rules, $this->modRules];
+        if ($context->mode === RequestMode::Submit) {
+            $stages[] = $this->aiRules;
+        }
+
+        $flag = null;
+        foreach ($stages as $rules) {
+            foreach ($rules as $rule) {
+                $decision = $rule->decide($context, $track);
+                if ($decision->outcome === RequestOutcome::Reject) {
+                    return $decision;
+                }
+                $flag ??= $decision->isFlagged() ? $decision : null;
             }
         }
 
-        return RequestDecision::allow();
+        return $flag ?? RequestDecision::allow();
     }
 }

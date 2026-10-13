@@ -48,7 +48,7 @@ export interface TrackAnnotation {
         vote: number | null;
         requested_by: string | null;
     };
-    eligibility: {allowed: boolean; reason: string | null};
+    eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
 }
 
 export interface TrackDecoration {

@@ -48,6 +48,7 @@ class TrackAnnotationResource extends JsonResource
             ],
             'eligibility' => [
                 'allowed' => $annotation->allowed,
+                'outcome' => $annotation->flagged ? 'flag' : ($annotation->allowed ? 'allow' : 'reject'),
                 'reason' => $annotation->reason,
             ],
         ];

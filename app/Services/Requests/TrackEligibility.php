@@ -25,7 +25,7 @@ class TrackEligibility
 
         $provider = $this->providers->forParty($party, Purpose::Search);
         $waiting = $this->waitingByProviderId($party, $member, $tracks);
-        $decisions = $this->rules->checkMany($party, $member, $tracks);
+        $decisions = $this->rules->checkMany($party, $member, $tracks, RequestMode::Annotate);
 
         $annotations = [];
         foreach ($tracks as $track) {
@@ -42,6 +42,7 @@ class TrackEligibility
                 reason: $decision->reason,
                 externalUrl: $provider->trackUrl($track->id),
                 providerName: $provider->displayName(),
+                flagged: $decision->isFlagged(),
             );
         }
 
