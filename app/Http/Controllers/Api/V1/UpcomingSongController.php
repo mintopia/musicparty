@@ -12,6 +12,7 @@ use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyTimezone;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -19,6 +20,7 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
 class UpcomingSongController extends Controller
@@ -69,13 +71,20 @@ class UpcomingSongController extends Controller
         }
 
         $user = $this->resolveAuthenticatedUser($request);
+        $scheduledFor = null;
+        if ($request->filled('scheduled_for')) {
+            if (! $party->canBeManagedBy($user)) {
+                abort(403, 'Only a party owner or moderator can schedule a request');
+            }
+            $scheduledFor = Carbon::parse((string) $request->input('scheduled_for'), app(PartyTimezone::class)->dateTimeZone($party))->utc();
+        }
         $trackId = (string) $request->input('provider_track_id');
         $wait = (int) config('musicparty.request_lock_wait_seconds');
 
         try {
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
                 ->block($wait, fn (): UpcomingSong|JsonResponse => Cache::lock("request-store:{$party->id}:track:{$trackId}", self::REQUEST_LOCK_SECONDS)
-                    ->block($wait, function () use ($party, $member, $user, $trackId): UpcomingSong|JsonResponse {
+                    ->block($wait, function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
                         $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
                             $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
                         })->first();
@@ -125,6 +134,10 @@ class UpcomingSongController extends Controller
                             $upcoming->user()->associate($user);
                             $upcoming->song()->associate($song);
                             $upcoming->save();
+                        }
+
+                        if ($scheduledFor !== null) {
+                            $upcoming->forceFill(['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor])->save();
                         }
 
                         $denial = $this->voteDenialReason($party, $member);

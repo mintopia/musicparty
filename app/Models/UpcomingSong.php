@@ -18,6 +18,7 @@ use Illuminate\Support\Carbon;
  * @property int $party_id
  * @property int $song_id
  * @property Carbon|null $not_before
+ * @property Carbon|null $scheduled_for
  * @property Carbon|null $flagged_at
  * @property string|null $flag_reason
  * @property int $score
@@ -66,6 +67,7 @@ class UpcomingSong extends Model
     protected $casts = [
         'queued_at' => 'datetime',
         'not_before' => 'datetime',
+        'scheduled_for' => 'datetime',
         'flagged_at' => 'datetime',
     ];
 
@@ -105,6 +107,7 @@ class UpcomingSong extends Model
         $data = $this->song->toApi();
         $data['score'] = $this->score;
         $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
+        $data['scheduled_for'] = $this->scheduled_for?->toIso8601String();
         $data['user'] = $this->user->nickname ?? null;
         $data['fallback_name'] = $this->fallback_override ?? 'Fallback Track';
         $data['css_classes'] = $this->css_classes ?? '';
