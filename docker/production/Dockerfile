@@ -8,7 +8,6 @@ RUN apt-get update && \
     install-php-extensions bcmath pcntl pdo_mysql redis protobuf opentelemetry && \
     pie install pie-extensions/grpc:1.81.1
 
-# Use the base for building/running composer
 FROM base AS composer
 
 WORKDIR /app/
