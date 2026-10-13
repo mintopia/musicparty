@@ -3,6 +3,7 @@ import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
 import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import path from 'path'
+import {cssTarget} from './vite.css-target.ts'
 
 export default defineConfig({
     plugins: [
@@ -30,6 +31,9 @@ export default defineConfig({
             },
         }),
     ],
+    build: {
+        cssTarget,
+    },
     resolve: {
         alias: {
             '@': path.resolve(import.meta.dirname, 'resources/js'),
