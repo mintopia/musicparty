@@ -1,12 +1,5 @@
 # Example single-host production topology. Maintained in step with docker-compose.yml:
 # update both whenever services or environment change.
-#
-# Copy to docker-compose.yml next to a .env holding APP_KEY, APP_URL, DB_*, Spotify/OAuth
-# credentials and any overrides of docker/production/production.env (baked into the image).
-#
-# Point your reverse proxy at the `app` container only, forwarding one hostname with
-# websocket upgrade headers (Connection/Upgrade). `app` proxies /app websocket traffic
-# to `reverb` internally; `reverb` must never be published or exposed.
 
 name: musicparty
 
