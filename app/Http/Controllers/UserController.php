@@ -10,23 +10,42 @@ use App\Models\Setting;
 use App\Models\SocialProvider;
 use Carbon\Carbon;
 use Exception;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UserController extends Controller
 {
-    public function profile(Request $request): View
+    public function profile(Request $request): Response
     {
-        $ids = $this->resolveAuthenticatedUser($request)->accounts->pluck('social_provider_id')->toArray();
+        $user = $this->resolveAuthenticatedUser($request);
+        $user->load('accounts.provider');
+        $ids = $user->accounts->pluck('social_provider_id')->toArray();
         $providers = SocialProvider::whereEnabled(true)
             ->get()
             ->filter(fn ($provider) => ! in_array($provider->id, $ids));
 
-        return view('users.profile', [
-            'availableLinks' => $providers,
+        return Inertia::render('Users/Profile', [
+            'user' => [
+                'nickname' => $user->nickname,
+                'email' => $user->getEmail(),
+                'avatar' => $user->avatarUrl(),
+            ],
+            'accounts' => $user->accounts->map(fn ($account) => [
+                'id' => $account->id,
+                'providerCode' => $account->provider?->code,
+                'providerName' => $account->provider?->name,
+                'name' => $account->name,
+                'avatarUrl' => $account->avatar_url,
+                'canDelete' => $account->canDelete(),
+            ])->values(),
+            'availableLinks' => $providers->map(fn ($provider) => [
+                'code' => $provider->code,
+                'name' => $provider->name,
+            ])->values(),
         ]);
     }
 
@@ -76,19 +95,27 @@ class UserController extends Controller
         return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
     }
 
-    public function login(): View
+    public function login(): Response
     {
         $providers = SocialProvider::whereAuthEnabled(true)->whereEnabled(true)->get();
 
-        return view('users.login', [
-            'providers' => $providers,
+        return Inertia::render('Users/Login', [
+            'providers' => $providers->map(fn ($provider) => [
+                'code' => $provider->code,
+                'name' => $provider->name,
+            ])->values(),
         ]);
     }
 
-    public function signup(Request $request): View
+    public function signup(Request $request): Response
     {
-        return view('users.signup', [
-            'user' => $this->resolveAuthenticatedUser($request),
+        $user = $this->resolveAuthenticatedUser($request);
+
+        return Inertia::render('Users/Signup', [
+            'user' => [
+                'nickname' => $user->nickname,
+                'avatar' => $user->avatarUrl(),
+            ],
             'terms' => Setting::fetch('terms'),
             'privacy' => Setting::fetch('privacypolicy'),
         ]);
@@ -105,10 +132,10 @@ class UserController extends Controller
         return response()->redirectToRoute('home')->with('successMessage', 'Your account has been created');
     }
 
-    public function edit(Request $request): View
+    public function edit(Request $request): Response
     {
-        return view('users.edit', [
-            'user' => $this->resolveAuthenticatedUser($request),
+        return Inertia::render('Users/Edit', [
+            'user' => ['nickname' => $this->resolveAuthenticatedUser($request)->nickname],
         ]);
     }
 
@@ -121,7 +148,7 @@ class UserController extends Controller
         return response()->redirectToRoute('user.profile')->with('successMessage', 'Your profile has been updated');
     }
 
-    public function spotify(Request $request): RedirectResponse|View
+    public function spotify(Request $request): RedirectResponse|Response
     {
         if ($this->resolveAuthenticatedUser($request)->cannot('create', Party::class)) {
             return response()->redirectToRoute('user.profile')->with('errorMessage', 'You are not able to link Spotify accounts');
@@ -129,7 +156,9 @@ class UserController extends Controller
 
         $spotify = null;
         $search = null;
-        foreach ($this->resolveAuthenticatedUser($request)->accounts as $account) {
+        $user = $this->resolveAuthenticatedUser($request);
+        $user->load('accounts.provider');
+        foreach ($user->accounts as $account) {
             if ($account->provider?->code == 'spotify') {
                 $spotify = $account;
             } elseif ($account->provider?->code == 'spotifysearch') {
@@ -137,9 +166,9 @@ class UserController extends Controller
             }
         }
 
-        return view('users.spotify', [
-            'spotify' => $spotify,
-            'search' => $search,
+        return Inertia::render('Users/Spotify', [
+            'spotify' => $spotify ? ['name' => $spotify->name] : null,
+            'search' => $search ? ['name' => $search->name] : null,
         ]);
     }
 }

@@ -3,17 +3,27 @@
 namespace App\Http\Controllers;
 
 use App\Models\Setting;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function home(): RedirectResponse|View
+    public function home(Request $request): RedirectResponse|Response
     {
         if (Setting::fetch('defaultparty')) {
             return response()->redirectToRoute('parties.show', Setting::fetch('defaultparty'));
         }
 
-        return view('home.home');
+        $user = $this->resolveAuthenticatedUser($request);
+
+        return Inertia::render('Home', [
+            'user' => [
+                'nickname' => $user->nickname,
+                'email' => $user->getEmail(),
+                'avatar' => $user->avatarUrl(),
+            ],
+        ]);
     }
 }
