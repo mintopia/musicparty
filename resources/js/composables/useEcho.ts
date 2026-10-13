@@ -36,10 +36,12 @@ const defaultFactory: EchoFactory = (appKey) => {
 
 let factory: EchoFactory = defaultFactory;
 let instance: EchoLike | null = null;
+const channelRefs = new Map<string, number>();
 
 export function setEchoFactory(next: EchoFactory | null): void {
     factory = next ?? defaultFactory;
     instance = null;
+    channelRefs.clear();
 }
 
 export function useEcho() {
@@ -47,25 +49,33 @@ export function useEcho() {
     instance ??= factory(page.props.reverb.appKey);
     const echo = instance;
     const joined = new Set<string>();
+
+    function join(name: string): void {
+        if (joined.has(name)) {
+            return;
+        }
+        joined.add(name);
+        channelRefs.set(name, (channelRefs.get(name) ?? 0) + 1);
+    }
     const reconnectHandlers: Array<(states: {previous: string; current: string}) => void> = [];
     const connection = echo.connector.pusher.connection;
 
     function privateChannel(name: string) {
-        joined.add(`private-${name}`);
+        join(name);
         return echo.private(name);
     }
 
     function publicChannel(name: string) {
-        joined.add(name);
+        join(name);
         return echo.channel(name);
     }
 
     function onReconnect(callback: () => void): void {
         let wasDisconnected = false;
-        const handler = ({previous, current}: {previous: string; current: string}) => {
+        const handler = ({current}: {previous: string; current: string}) => {
             if (current !== 'connected') {
                 wasDisconnected = true;
-            } else if (wasDisconnected || (previous !== 'connecting' && previous !== 'initialized')) {
+            } else if (wasDisconnected) {
                 wasDisconnected = false;
                 callback();
             }
@@ -75,7 +85,15 @@ export function useEcho() {
     }
 
     onBeforeUnmount(() => {
-        joined.forEach((name) => echo.leave(name.replace(/^private-/, '')));
+        joined.forEach((name) => {
+            const remaining = (channelRefs.get(name) ?? 1) - 1;
+            if (remaining > 0) {
+                channelRefs.set(name, remaining);
+                return;
+            }
+            channelRefs.delete(name);
+            echo.leave(name);
+        });
         joined.clear();
         reconnectHandlers.forEach((handler) => connection.unbind('state_change', handler));
         reconnectHandlers.length = 0;

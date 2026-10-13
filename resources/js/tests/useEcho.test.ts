@@ -30,7 +30,7 @@ function fakeEcho() {
 afterEach(() => setEchoFactory(null));
 
 describe('useEcho', () => {
-    it('leaves every joined channel on unmount and shares one instance', () => {
+    it('leaves every joined channel once its last holder unmounts and shares one instance', () => {
         const {echo, handlers} = fakeEcho();
         const factory = vi.fn(() => echo);
         setEchoFactory(factory);
@@ -50,11 +50,13 @@ describe('useEcho', () => {
         expect(factory).toHaveBeenCalledTimes(1);
 
         first.unmount();
-        expect(echo.leave).toHaveBeenCalledWith('party.ABC');
-        expect(echo.leave).toHaveBeenCalledWith('site');
+        expect(echo.leave).not.toHaveBeenCalled();
         expect(handlers).toHaveLength(1);
 
         second.unmount();
+        expect(echo.leave).toHaveBeenCalledTimes(2);
+        expect(echo.leave).toHaveBeenCalledWith('party.ABC');
+        expect(echo.leave).toHaveBeenCalledWith('site');
         expect(handlers).toHaveLength(0);
     });
 
