@@ -33,6 +33,7 @@ use NumPHP\LinAlg\LinAlg;
  * @property bool $weighted
  * @property string|null $history_playlist_id
  * @property int|null $max_requests
+ * @property bool $flag_requests
  * @property bool $trustscore
  * @property int|null $trusted_user_id
  * @property bool $force
@@ -117,6 +118,7 @@ class Party extends Model
         'poll' => false,
         'active' => true,
         'show_qrcode' => false,
+        'flag_requests' => false,
     ];
 
     protected $casts = [
@@ -129,6 +131,7 @@ class Party extends Model
         'explicit' => 'boolean',
         'allow_requests' => 'boolean',
         'downvotes' => 'boolean',
+        'flag_requests' => 'boolean',
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
     ];
@@ -203,6 +206,7 @@ class Party extends Model
     {
         switch ($childType) {
             case 'upcomingsong':
+            case 'upcomingSong':
             case 'song':
                 return $this->upcoming()->whereId($value)->with(['song', 'user'])->first();
 

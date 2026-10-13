@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\PartyModerationAction;
 use App\Enums\PartyModerationType;
 use App\Enums\Purpose;
 use App\Http\Requests\PartyModerationRequest;
@@ -105,6 +106,7 @@ class PartyModerationController extends Controller
                 break;
             }
         }
+        $moderation->action = PartyModerationAction::tryFrom((string) $request->input('action')) ?? PartyModerationAction::Reject;
         $moderation->value = $request->input('value');
         $moderation->notes = $request->input('notes');
         $moderation->save();

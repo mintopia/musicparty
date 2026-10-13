@@ -481,7 +481,7 @@ describe('three-way outcome and stage order', function () {
     });
 
     it('keeps a flag but lets a later reject win', function () {
-        $party = rulesParty();
+        $party = rulesParty(['flag_requests' => true]);
         $calls = [];
         $flagging = new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')], [stubRule(RequestDecision::allow(), $calls, 'mod')]);
         $rejecting = new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')], [stubRule(RequestDecision::reject('No'), $calls, 'mod')]);
@@ -496,7 +496,7 @@ describe('three-way outcome and stage order', function () {
     });
 
     it('annotates a flagged track as flagged but allowed', function () {
-        $party = rulesParty();
+        $party = rulesParty(['flag_requests' => true]);
         $calls = [];
         $this->app->instance(RequestRules::class, new RequestRules([stubRule(RequestDecision::flag('Check'), $calls, 'core')]));
 

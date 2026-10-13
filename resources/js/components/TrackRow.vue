@@ -9,11 +9,12 @@ const props = withDefaults(
         requesting?: boolean;
         needsApproval?: boolean;
         awaitingApproval?: boolean;
+        hideActions?: boolean;
         decoration?: TrackDecoration;
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
     }>(),
-    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false},
+    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false, hideActions: false},
 );
 
 const emit = defineEmits<{
@@ -31,6 +32,7 @@ const duration = computed(() => {
     return `${Math.floor(totalSeconds / 60)}:${seconds < 10 ? '0' : ''}${seconds}`;
 });
 
+const isAwaiting = computed(() => props.awaitingApproval || props.track.awaiting_approval === true);
 const vote = computed(() => props.track.queue.vote ?? 0);
 const displayName = computed(() => props.decoration?.displayName ?? props.track.name);
 const canRequest = computed(() => props.track.eligibility.allowed && !props.requesting);
@@ -135,9 +137,9 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <span data-test="score">{{ track.queue.score }}</span>
                 </template>
             </div>
-            <div v-else class="col-auto text-center w-8">
+            <div v-else-if="!hideActions" class="col-auto text-center w-8">
                 <button
-                    v-if="awaitingApproval"
+                    v-if="isAwaiting"
                     type="button"
                     class="btn btn-outline-secondary ms-2 w-100"
                     data-test="withdraw"
@@ -158,7 +160,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 </button>
             </div>
         </div>
-        <div v-if="awaitingApproval && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
+        <div v-if="isAwaiting && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
             Awaiting approval
         </div>
     </div>

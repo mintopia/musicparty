@@ -47,6 +47,21 @@ class UpcomingSongPolicy
         return $this->update($user, $upcomingSong);
     }
 
+    public function approve(User $user, UpcomingSong $upcomingSong): bool
+    {
+        return $this->update($user, $upcomingSong);
+    }
+
+    public function reject(User $user, UpcomingSong $upcomingSong): bool
+    {
+        return $this->update($user, $upcomingSong);
+    }
+
+    public function withdraw(User $user, UpcomingSong $upcomingSong): bool
+    {
+        return $upcomingSong->flagged_at !== null && $upcomingSong->user_id === $user->id;
+    }
+
     /**
      * Determine whether the user can restore the model.
      */

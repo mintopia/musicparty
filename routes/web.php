@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\FlaggedRequestController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
@@ -58,6 +59,11 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
+
+        Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
+        Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
+        Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->name('parties.flagged.reject');
+        Route::delete('parties/{party}/requests/{upcomingSong}/flag', [FlaggedRequestController::class, 'withdraw'])->scopeBindings()->name('parties.requests.withdraw');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');

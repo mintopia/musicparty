@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\PartyModerationAction;
 use App\Enums\PartyModerationType;
 use App\Models\PartyModeration;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -43,6 +44,7 @@ class PartyModerationRequest extends FormRequest
                 'required',
                 Rule::in(collect(PartyModerationType::cases())->pluck('name')->toArray()),
             ],
+            'action' => ['sometimes', Rule::enum(PartyModerationAction::class)],
             'enabled' => 'boolean',
             'regex' => 'boolean',
             'value' => 'required|string|max:1000',

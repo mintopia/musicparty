@@ -103,6 +103,7 @@ describe('buildNavigation', () => {
             'TV Mode',
             'YouTube Player',
             'Web Player',
+            'Flagged',
             'Moderation',
             'Settings',
         ]);

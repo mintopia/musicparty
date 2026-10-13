@@ -10,14 +10,16 @@ class UpcomingSongObserver
 {
     public function created(UpcomingSong $upcomingSong): void
     {
-        UpdatedEvent::dispatch($upcomingSong);
+        if ($upcomingSong->flagged_at === null) {
+            UpdatedEvent::dispatch($upcomingSong);
+        }
     }
 
     public function updated(UpcomingSong $upcomingSong): void
     {
         if ($upcomingSong->queued_at) {
             RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
-        } else {
+        } elseif ($upcomingSong->flagged_at === null) {
             UpdatedEvent::dispatch($upcomingSong);
         }
     }

@@ -1,15 +1,17 @@
 <script setup lang="ts">
-import {Head, router} from '@inertiajs/vue3';
+import {Head, router, usePage} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref, watch} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackList from '@/components/TrackList.vue';
+import {useEcho} from '@/composables/useEcho';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
+import {flaggedWithdrawUrl} from '@/lib/flagged';
 import {show, search} from '@/routes/parties';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
+import type {LegacyPartyState, Paginator, SharedProps, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean};
@@ -39,6 +41,17 @@ function submit(): void {
     });
 }
 
+const authUser = usePage<SharedProps>().props.auth.user;
+if (authUser) {
+    const userChannel = useEcho().privateChannel(`user.${authUser.id}`) as {
+        listen<T>(event: string, cb: (payload: T) => void): unknown;
+    };
+    userChannel.listen<{message: string; track?: {name?: string}}>('FlaggedRequestRejected', (payload) => {
+        showMessage(`Your request${payload.track?.name ? ` for ${payload.track.name}` : ''} was rejected: ${payload.message}`);
+        router.reload({only: ['results']});
+    });
+}
+
 function showMessage(text: string): void {
     message.value = text;
     setTimeout(() => {
@@ -52,6 +65,15 @@ async function requestTrack(track: TrackAnnotation): Promise<void> {
         router.reload({only: ['results']});
     } else if (status.value === 'blocked' || status.value === 'error') {
         showMessage(reason.value ?? 'This track cannot be requested.');
+    }
+}
+
+async function withdraw(track: TrackAnnotation): Promise<void> {
+    try {
+        await axios.delete(flaggedWithdrawUrl(props.party.code, track.flagged_request_id ?? track.queue.upcoming_id ?? 0));
+        router.reload({only: ['results']});
+    } catch {
+        showMessage('This request could not be withdrawn.');
     }
 }
 
@@ -118,6 +140,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         :can-downvote="party.downvotes"
                         empty-title="No results found"
                         @request="requestTrack"
+                        @withdraw="withdraw"
                         @vote="vote"
                     />
                 </div>

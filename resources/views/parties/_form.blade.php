@@ -90,6 +90,12 @@
             Show QR Code on TV view
         </label>
 
+        <label class="form-check form-switch">
+            <input type="checkbox" class="form-check-input" name="flag_requests" value="1"
+                   @if(old('flag_requests', $party->flag_requests)) checked @endif>
+            Hold flagged requests for manager approval
+        </label>
+
         <h2 class="mt-4">Restrictions</h2>
 
         <label class="form-check form-switch">

@@ -18,6 +18,22 @@
             @enderror
         </div>
     </div>
+    <div class="mb-3 col-md-4">
+        <label class="form-label">Action</label>
+        <div>
+            <select id="action" name="action" class="form-control @error('action') is-invalid @enderror">
+                @foreach(\App\Enums\PartyModerationAction::getHumanReadableActions() as $value => $text)
+                    <option value="{{ $value }}"
+                        @if(old('action', $moderation->action->value ?? 'reject') == $value) selected @endif
+                    >{{ $text }}</option>
+                @endforeach
+            </select>
+            <small class="form-hint">What happens when a request matches this filter</small>
+            @error('action')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
     <div class="mb-3">
         <label class="form-label required">Value</label>
         <div>
