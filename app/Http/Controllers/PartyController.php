@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Purpose;
 use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
@@ -12,9 +13,10 @@ use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
-use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -122,7 +124,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party): View
+    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): View
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
@@ -137,9 +139,10 @@ class PartyController extends Controller
 
         $results = null;
         if ($params['query']) {
-            $searchService = new SpotifySearchService($party, $member);
             try {
-                $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+                $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
+                $items = $eligibility->annotate($party, $member, $found->items);
+                $results = (new LengthAwarePaginator($items, $found->total, (int) $perPage, $page))->setPath(route('parties.search', $party->code))->appends($params);
             } catch (SpotifyRelinkRequiredException) {
                 session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
             } catch (SpotifyBackoffException) {

@@ -9,7 +9,6 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Spotify\SpotifyGateway;
-use App\Services\SpotifySearchService;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Random\Engine\Mt19937;
@@ -73,12 +72,11 @@ it('resolves the user spotify client from the container', function () {
     expect(app(SpotifyGateway::class)->client(seamSpotifyUser()))->toBe($fake);
 });
 
-it('falls back to the container client in the search service', function () {
+it('falls back to the container client for the search client', function () {
     $fake = FakeSpotify::install();
     $user = seamSpotifyUser();
     $party = seamParty($user);
 
-    $service = new SpotifySearchService($party, $party->members()->firstOrNew());
     $api = app(SpotifyGateway::class)->searchClient($party->user);
 
     expect($api)->toBe($fake);

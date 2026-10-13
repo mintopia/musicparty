@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Purpose;
 use App\Enums\SettingType;
 use App\Jobs\PartyUpdate;
 use App\Models\LinkedAccount;
@@ -9,8 +10,11 @@ use App\Models\PartyMemberRole;
 use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\BackoffRequest;
 use App\Services\Spotify\SpotifyBackoffException;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPIException;
@@ -104,6 +108,7 @@ it('releases a party update job until the backoff expires', function () {
 });
 
 it('shows a friendly error instead of a 500 when search hits a backoff', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
     $fake = new class extends FakeSpotify
     {
         public function search(string $query, array|string $type, object|array $options = []): object|array
