@@ -233,6 +233,71 @@ class PartyController extends Controller
         ] + $props);
     }
 
+    public function artist(SearchRequest $request, Party $party, string $artist, MusicProviderFactory $factory, TrackEligibility $eligibility): Response|\Symfony\Component\HttpFoundation\Response
+    {
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
+        $query = $request->input('query');
+
+        $props = [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $party->canBeManagedBy($request->user()),
+            ],
+            'query' => is_string($query) ? $query : null,
+            'artist' => null,
+            'tracks' => null,
+            'albums' => null,
+            'retry' => false,
+            'playerState' => $party->getState(),
+        ];
+
+        if (! $this->withinSearchLimit($party, $member)) {
+            return Inertia::render('Parties/Artist', ['retry' => true] + $props);
+        }
+
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $perPage = 12;
+
+        try {
+            $provider = $factory->forParty($party, Purpose::Search);
+            $found = $provider->getArtist($artist);
+            if ($found !== null) {
+                $topTracks = $provider->getArtistTopTracks($artist);
+                $albumPage = $provider->getArtistAlbums($artist, $page, $perPage);
+            }
+        } catch (ProviderRelinkRequiredException) {
+            session()->now('errorMessage', 'The music provider needs re-linking before artists are available.');
+
+            return Inertia::render('Parties/Artist', $props);
+        } catch (ProviderBackoffException) {
+            return Inertia::render('Parties/Artist', ['retry' => true] + $props);
+        }
+
+        if ($found === null) {
+            return Inertia::render('Parties/Artist', $props)->toResponse($request)->setStatusCode(404);
+        }
+
+        $annotations = $eligibility->annotate($party, $member, $topTracks);
+        $tracks = new LengthAwarePaginator($annotations, count($annotations), max(count($annotations), 1), 1)
+            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+        $albums = new LengthAwarePaginator($albumPage->items, $albumPage->total, $perPage, $page)
+            ->setPath(route('parties.artists.show', ['party' => $party->code, 'artist' => $artist]))
+            ->appends(array_filter(['query' => $props['query']]))
+            ->through(fn ($album): array => ['id' => $album->id, 'name' => $album->name, 'image_url' => $album->imageUrl]);
+
+        return Inertia::render('Parties/Artist', [
+            'artist' => [
+                'id' => $found->ref->id,
+                'name' => $found->ref->name,
+                'image_url' => $found->imageUrl,
+            ],
+            'tracks' => $tracks,
+            'albums' => $albums,
+        ] + $props);
+    }
+
     protected function withinSearchLimit(Party $party, PartyMember $member): bool
     {
         return (new LeakyBucket(

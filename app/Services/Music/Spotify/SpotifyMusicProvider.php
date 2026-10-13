@@ -156,7 +156,14 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     public function getArtist(string $id): ?Artist
     {
         return Cache::remember("music.spotify.artist.{$id}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Artist {
-            $payload = SpotifyPayload::object($this->reader()->getArtist($id));
+            try {
+                $payload = SpotifyPayload::object($this->reader()->getArtist($id));
+            } catch (SpotifyWebAPIException $exception) {
+                if (in_array($exception->getCode(), [400, 404], true)) {
+                    return null;
+                }
+                throw $exception;
+            }
 
             return isset($payload->id) ? SpotifyMapper::artist($payload) : null;
         });
@@ -164,21 +171,26 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function getArtistTopTracks(string $id): array
     {
-        $result = SpotifyPayload::object($this->reader()->getArtistTopTracks($id, ['market' => $this->market()]));
+        return Cache::remember("music.spotify.artist.{$id}.top-tracks.{$this->market()}", self::BROWSE_CACHE_SECONDS, function () use ($id): array {
+            $result = SpotifyPayload::object($this->reader()->getArtistTopTracks($id, ['market' => $this->market()]));
 
-        return $this->mapTracks((array) $result->tracks);
+            return $this->mapTracks((array) $result->tracks);
+        });
     }
 
     public function getArtistAlbums(string $id, int $page, int $perPage): Page
     {
-        $result = SpotifyPayload::object($this->reader()->getArtistAlbums($id, [
-            'market' => $this->market(),
-            'limit' => $perPage,
-            'offset' => ($page - 1) * $perPage,
-        ]));
-        $albums = array_map(fn (mixed $album): AlbumRef => SpotifyMapper::albumRef(SpotifyPayload::object($album)), array_values((array) $result->items));
+        return Cache::remember("music.spotify.artist.{$id}.albums.{$this->market()}.{$page}.{$perPage}", self::BROWSE_CACHE_SECONDS, function () use ($id, $page, $perPage): Page {
+            $result = SpotifyPayload::object($this->reader()->getArtistAlbums($id, [
+                'market' => $this->market(),
+                'include_groups' => 'album,single',
+                'limit' => $perPage,
+                'offset' => ($page - 1) * $perPage,
+            ]));
+            $albums = array_map(fn (mixed $album): AlbumRef => SpotifyMapper::albumRef(SpotifyPayload::object($album)), array_values((array) $result->items));
 
-        return new Page($albums, (int) $result->total, $page, $perPage);
+            return new Page($albums, (int) $result->total, $page, $perPage);
+        });
     }
 
     public function getPlaylistTracks(string $playlistId): array

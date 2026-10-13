@@ -10,6 +10,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
 import {show, search} from '@/routes/parties';
+import {show as showArtist} from '@/routes/parties/artists';
 import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
@@ -131,6 +132,11 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         :tracks="tracks"
                         :can-downvote="party.downvotes"
                         empty-title="No tracks on this album"
+                        :artist-route="
+                            (id: string) =>
+                                showArtist({party: party.code, artist: id}).url +
+                                (query ? `?query=${encodeURIComponent(query)}` : '')
+                        "
                         @request="requestTrack"
                         @vote="vote"
                     />
