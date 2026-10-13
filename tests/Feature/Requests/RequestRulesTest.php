@@ -13,7 +13,6 @@ use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Requests\RequestRules;
-use App\Services\Requests\Rules\ContextPlaylistTrackRule;
 use App\Services\Requests\TrackEligibility;
 use Illuminate\Support\Facades\DB;
 
@@ -78,7 +77,8 @@ it('allows a plain track', function () {
 
 it('rejects the context playlist track as unavailable', function () {
     $party = rulesParty();
-    $track = rulesVariant(rulesTrack(), ['id' => ContextPlaylistTrackRule::TRACK_ID]);
+    app(FakeMusicProvider::class)->withReservedTrack('reserved-track');
+    $track = rulesVariant(rulesTrack(), ['id' => 'reserved-track']);
 
     expect(rulesCheck($party, rulesMember($party), $track))->toBe([false, 'This song is not available']);
 });

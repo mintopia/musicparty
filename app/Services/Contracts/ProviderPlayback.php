@@ -12,6 +12,11 @@ interface ProviderPlayback
 
     public function sendToPlayer(Track $track): void;
 
+    /**
+     * How many tracks are queued to play after the current one, excluding any padding the provider adds to its queue. Negative when nothing is playing.
+     */
+    public function queueDepth(): int;
+
     public function transferPlayback(string $deviceId): void;
 
     public function play(?string $deviceId = null, ?Track $track = null): void;

@@ -11,7 +11,6 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackSync;
 use App\Services\QueueSelector;
-use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -27,6 +26,7 @@ function selectionParty(array $attributes = []): array
     Cache::flush();
     $fake->calls = [];
     app()->forgetInstance(FakeMusicProvider::class);
+    app(FakeMusicProvider::class)->withQueueDepth(-1);
 
     return [$party, $fake];
 }
@@ -55,10 +55,7 @@ function seedRandomness(int $seed): void
 
 function queueWith(FakeSpotify $fake, array $trackIds): void
 {
-    $fake->respond('getMyQueue', (object) [
-        'currently_playing' => null,
-        'queue' => array_map(fn (string $id) => FakeSpotify::track($id), $trackIds),
-    ]);
+    app(FakeMusicProvider::class)->withQueueDepth(count(array_unique($trackIds)) - 1);
 }
 
 function sentIds(?FakeSpotify $fake = null): array
@@ -138,7 +135,7 @@ it('does nothing when the party is inactive', function () {
     runSync($party);
 
     expect(sentIds($fake))->toBe([])
-        ->and($fake->callsTo('getMyQueue'))->toBe([]);
+        ->and(app(FakeMusicProvider::class)->callsTo('queueDepth'))->toBe([]);
 });
 
 it('sends two requests when the Spotify queue is empty because QUEUE_LENGTH minus (unique - 1) is two', function () {
@@ -462,7 +459,7 @@ it('ranks by the overridable Effective Score rather than the stored score', func
     queueWith($fake, ['NOW']);
     waitingRequest($party, 'HIGH', 9);
     waitingRequest($party, 'LOW', 1);
-    app()->bind(QueueSelector::class, fn () => new class(app(MusicProviderFactory::class), app(SpotifyGateway::class), app(FallbackPlaylist::class)) extends QueueSelector
+    app()->bind(QueueSelector::class, fn () => new class(app(MusicProviderFactory::class), app(FallbackPlaylist::class)) extends QueueSelector
     {
         public function effectiveScore(UpcomingSong $request): int
         {

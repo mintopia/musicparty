@@ -132,3 +132,22 @@ it('maps artist top tracks and paged artist albums', function () {
         ->and($albums->total)->toBe(7)->and($albums->items[0]->id)->toBe('alb1')
         ->and($api->callsTo('getArtistAlbums')[0][1])->toMatchArray(['market' => 'GB', 'limit' => 5, 'offset' => 5]);
 });
+
+it('counts only unique queued tracks after the playing one as the queue depth', function (array $queued, int $depth) {
+    $api = FakeSpotify::install();
+    $api->respond('getMyQueue', (object) ['currently_playing' => null, 'queue' => array_map(fn (string $id) => FakeSpotify::track($id), $queued)]);
+
+    expect(spotifyProvider($api)->queueDepth())->toBe($depth);
+})->with([
+    'empty queue' => [[], -1],
+    'one unique track' => [['X'], 0],
+    'padded with context copies' => [array_fill(0, 20, 'CTX'), 0],
+    'two unique tracks' => [['X', 'Y', 'X', 'Y'], 1],
+]);
+
+it('reserves only the context playlist track', function () {
+    $provider = spotifyProvider(FakeSpotify::install());
+
+    expect($provider->isReservedTrack(SpotifyMusicProvider::CONTEXT_PLAYLIST_TRACK_ID))->toBeTrue()
+        ->and($provider->isReservedTrack('abc'))->toBeFalse();
+});
