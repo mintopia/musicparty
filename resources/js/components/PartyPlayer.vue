@@ -1,28 +1,35 @@
 <script setup lang="ts">
 import axios from 'axios';
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {router} from '@inertiajs/vue3';
+import {computed, ref, watch} from 'vue';
 import {useEcho} from '@/composables/useEcho';
+import {useTicker} from '@/composables/useProgress';
 import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
 import type {LegacyArtist, LegacyPartyState} from '@/types';
 
 const props = defineProps<{code: string; initialState: LegacyPartyState}>();
 
 const state = ref<LegacyPartyState>(props.initialState);
-const now = ref(Date.now());
-let timer: ReturnType<typeof setInterval> | null = null;
-
 const status = computed(() => (state.value.status?.isPlaying ? state.value.status : null));
+const now = useTicker(
+    () => status.value !== null,
+    () => state.value.status,
+);
 const startedAt = computed(() =>
     status.value === null ? null : new Date(status.value.sampledAt).getTime() - status.value.progressMs,
 );
 const elapsedMs = computed(() =>
-    status.value === null || startedAt.value === null ? 0 : Math.min(now.value - startedAt.value, status.value.length),
+    status.value === null || startedAt.value === null
+        ? 0
+        : Math.max(0, Math.min(now.value - startedAt.value, status.value.length)),
 );
-const progress = computed(() => (status.value === null ? 0 : (elapsedMs.value / status.value.length) * 100));
+const progress = computed(() =>
+    status.value === null || !status.value.length ? 0 : (elapsedMs.value / status.value.length) * 100,
+);
 const currentTime = computed(() => (status.value === null ? '' : formatMs(elapsedMs.value)));
 const endTime = computed(() => (status.value === null ? '' : formatMs(status.value.length)));
 const backgroundStyle = computed(() =>
-    state.value.now === null ? '' : `background-image: url('${state.value.now.album.image_url}');`,
+    state.value.now?.album?.image_url ? `background-image: url('${state.value.now.album.image_url}');` : '',
 );
 
 function formatMs(ms: number): string {
@@ -32,8 +39,8 @@ function formatMs(ms: number): string {
     return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
 }
 
-function combineArtists(artists: LegacyArtist[]): string {
-    return artists.map((artist) => artist.name).join(', ');
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
 }
 
 function rate(value: number): void {
@@ -45,24 +52,22 @@ function rate(value: number): void {
     void axios.request({url: route.url, method: route.method, data: {rating: value}});
 }
 
-onMounted(() => {
-    timer = setInterval(() => {
-        now.value = Date.now();
-    }, 1000);
-    (
-        useEcho().publicChannel(`party.${props.code}`) as {
-            listen(event: string, cb: (payload: LegacyPartyState) => void): void;
-        }
-    ).listen('Party\\UpdatedEvent', (payload) => {
-        state.value = payload;
-    });
-});
+watch(
+    () => props.initialState,
+    (next) => {
+        state.value = next;
+    },
+);
 
-onBeforeUnmount(() => {
-    if (timer !== null) {
-        clearInterval(timer);
+const echo = useEcho();
+(
+    echo.publicChannel(`party.${props.code}`) as {
+        listen(event: string, cb: (payload: LegacyPartyState) => void): void;
     }
+).listen('Party\\UpdatedEvent', (payload) => {
+    state.value = payload;
 });
+echo.onReconnect(() => router.reload({only: ['playerState']}));
 </script>
 
 <template>
@@ -72,7 +77,7 @@ onBeforeUnmount(() => {
                 <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
                     <div v-if="state.now !== null" class="row">
                         <div class="col-auto">
-                            <img class="albumart" :src="state.now.album.image_url" alt="" />
+                            <img class="albumart" :src="state.now.album?.image_url" alt="" />
                         </div>
                         <div class="col">
                             <div class="fs-2 pb-3 overflow-hidden" data-test="now-name">
@@ -84,7 +89,7 @@ onBeforeUnmount(() => {
                             </div>
                             <div class="pb-2 overflow-hidden">
                                 <i class="icon ti ti-vinyl"></i>
-                                {{ state.now.album.name }}
+                                {{ state.now.album?.name }}
                             </div>
                             <div
                                 v-if="state.current && state.current.provider_track_id === state.now.provider_track_id"

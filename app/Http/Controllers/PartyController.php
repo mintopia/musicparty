@@ -15,6 +15,7 @@ use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
+use App\Services\PartyTimezone;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
@@ -67,7 +68,7 @@ class PartyController extends Controller
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
 
-    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): View
+    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
         $upcomingSongs = $party->upcoming()
@@ -88,12 +89,23 @@ class PartyController extends Controller
             return $resource->toArray($request);
         });
 
-        return view('parties.show', [
-            'party' => $party,
-            'member' => $member,
-            'upcoming' => $upcoming->toArray(),
-            'canManage' => $party->canBeManagedBy($request->user()),
-            'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && app(MusicProviderFactory::class)->partyNeedsRelink($party),
+        $canManage = $party->canBeManagedBy($request->user());
+
+        return Inertia::render('Parties/Show', [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $canManage,
+                'weighted' => (bool) $party->weighted,
+            ],
+            'member' => $member ? ['id' => $member->id] : null,
+            'upcoming' => $upcoming->values()->all(),
+            'timezone' => app(PartyTimezone::class)->for($party),
+            'spotifyNeedsRelink' => $canManage && app(MusicProviderFactory::class)->partyNeedsRelink($party),
+            'relinkUrl' => route('linkedaccounts.create', 'spotify'),
+            'searchUrl' => route('parties.search', $party->code),
+            'playerState' => $party->getState(),
         ]);
     }
 

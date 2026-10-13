@@ -1,7 +1,7 @@
 import {computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter} from 'vue';
 import type {PlaybackState} from '@/types';
 
-function useTicker(active: MaybeRefOrGetter<boolean>, restartOn: MaybeRefOrGetter<unknown>) {
+export function useTicker(active: MaybeRefOrGetter<boolean>, restartOn: MaybeRefOrGetter<unknown>) {
     const now = ref(Date.now());
     let timer: ReturnType<typeof setInterval> | null = null;
 

@@ -1,0 +1,86 @@
+<?php
+
+use App\Enums\Purpose;
+use App\Models\Song;
+use App\Models\UpcomingSong;
+use App\Models\User;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMapper;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\Spotify\SpotifyGateway;
+use Database\Seeders\PartyMemberRoleSeeder;
+use Inertia\Testing\AssertableInertia as Assert;
+use Tests\Support\FakeSpotify;
+
+require_once __DIR__.'/../Support/PartyPageHelpers.php';
+
+beforeEach(function () {
+    $this->withoutVite();
+    $this->seed(PartyMemberRoleSeeder::class);
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
+    $this->fake = FakeSpotify::install();
+    $this->owner = User::factory()->create();
+    pageSearchLinkAccount($this->owner, 'spotify', 'control-token');
+    $this->party = pageSearchParty($this->owner);
+    $this->member = pageSearchMember($this->party);
+    $upcoming = new UpcomingSong;
+    $upcoming->party()->associate($this->party);
+    $upcoming->song()->associate(Song::fromTrack(SpotifyMapper::track($this->fake->getTrack('t1'))));
+    $upcoming->user()->associate($this->member->user);
+    $upcoming->score = 4;
+    $upcoming->save();
+    $this->upcoming = $upcoming;
+});
+
+it('renders the show page for a member with the upcoming queue', function () {
+    $this->actingAs($this->member->user)->get(route('parties.show', $this->party->code))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Show')
+            ->where('party.code', $this->party->code)
+            ->where('party.canManage', false)
+            ->where('member.id', $this->member->id)
+            ->where('spotifyNeedsRelink', false)
+            ->has('upcoming', 1)
+            ->has('playerState')
+            ->has('timezone'));
+});
+
+it('renders the show page for a manager and answers X-Inertia JSON', function () {
+    $this->actingAs($this->owner)->get(route('parties.show', $this->party->code), ['X-Inertia' => 'true', 'X-Inertia-Version' => Inertia\Inertia::getVersion()])
+        ->assertOk()
+        ->assertJsonPath('component', 'Parties/Show')
+        ->assertJsonPath('props.party.canManage', true);
+});
+
+it('lists songs for a manager with sorting and name filter', function () {
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'order' => 'votes', 'name' => 'nomatch']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Index')
+            ->where('filters.order', 'votes')
+            ->where('songs.total', 0));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', $this->party->code))
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Index')
+            ->where('songs.total', 1)
+            ->where('songs.data.0.id', $this->upcoming->id)
+            ->where('songs.data.0.score', 4)
+            ->where('types.0.code', 'queued')
+            ->has('playerState'));
+});
+
+it('shows a song detail page for a manager', function () {
+    $this->actingAs($this->owner)->get(route('parties.songs.show', [$this->party->code, $this->upcoming->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Show')
+            ->where('song.id', $this->upcoming->id)
+            ->where('song.requestedBy.nickname', $this->member->user->nickname)
+            ->has('votes.data', 0)
+            ->has('other', 0)
+            ->has('ratings.data', 0)
+            ->has('playerState'));
+});
+
+it('forbids non-managers from the songs pages', function () {
+    $this->actingAs($this->member->user)->get(route('parties.songs.index', $this->party->code))->assertForbidden();
+    $this->actingAs($this->member->user)->get(route('parties.songs.show', [$this->party->code, $this->upcoming->id]))->assertForbidden();
+});

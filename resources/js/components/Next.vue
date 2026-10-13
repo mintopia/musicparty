@@ -1,3 +1,39 @@
+<script setup lang="ts">
+import {ref, watch} from 'vue';
+import {useEcho} from '@/composables/useEcho';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
+import type {LegacyArtist, LegacyPartyState} from '@/types';
+
+const props = defineProps<{code: string; initialState: LegacyPartyState}>();
+
+const state = ref<LegacyPartyState>(props.initialState);
+
+watch(
+    () => props.initialState,
+    (next) => {
+        state.value = next;
+    },
+);
+
+function formatMs(ms: number): string {
+    const minutes = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+
+    return `${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+}
+
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
+}
+
+(
+    useEcho().publicChannel(`party.${props.code}`) as {
+        listen(event: string, cb: (payload: LegacyPartyState) => void): void;
+    }
+).listen('Party\\UpdatedEvent', (payload) => {
+    state.value = payload;
+});
+</script>
 <template>
     <div>
         <template v-if="state !== null && state.next">
@@ -6,12 +42,12 @@
             <div class="card mb-3">
                 <div class="list-group card-list-group">
                     <div class="list-group-item">
-                        <div v-bind:class="legacyRowClasses(state.next)" v-bind:style="legacyAccentStyle(state.next)">
+                        <div :class="legacyRowClasses(state.next)" :style="legacyAccentStyle(state.next)">
                             <div class="col-auto">
                                 <img
-                                    v-bind:src="state.next.album.image_url"
+                                    :src="state.next.album.image_url"
                                     class="rounded"
-                                    v-bind:title="state.next.album.name"
+                                    :title="state.next.album.name"
                                     width="60"
                                     height="60"
                                 />
@@ -70,57 +106,3 @@
     background-color: #990000;
 }
 </style>
-<script lang="ts">
-import {defineComponent} from 'vue';
-import type {LegacyArtist, LegacyPartyState} from '../types';
-import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
-
-export default defineComponent({
-    props: {
-        code: {type: String, required: true},
-        initialstate: {type: String, required: true},
-    },
-    data() {
-        return {
-            state: null as LegacyPartyState | null,
-            currentTime: '',
-            endTime: '',
-            progress: '',
-            startedAt: null as number | null,
-            intervalId: null as ReturnType<typeof setInterval> | null,
-        };
-    },
-
-    methods: {
-        legacyRowClasses,
-        legacyAccentStyle,
-        legacyFallbackName,
-
-        updateState(state: LegacyPartyState): void {
-            this.state = state;
-        },
-
-        formatMs(ms: number): string {
-            const mins = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-        },
-
-        combineArtists(artists: LegacyArtist[]): string {
-            return artists.map((artist) => artist.name).join(', ');
-        },
-    },
-
-    mounted() {
-        this.updateState(JSON.parse(this.initialstate));
-        let channel = `party.${this.code}`;
-        window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
-            this.updateState(payload);
-        });
-    },
-
-    created() {},
-
-    beforeDestroy() {},
-});
-</script>
