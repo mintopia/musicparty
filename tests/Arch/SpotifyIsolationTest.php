@@ -19,6 +19,7 @@ arch('the Spotify SDK, gateway and payload helper are only used by the Spotify M
         'App\Services\Music\Spotify',
         'App\Services\Spotify',
         'App\Support\SpotifyPayload',
+        'App\Http\Controllers\WebPlayerController',
     ]);
 
 arch('Party and User hold no Spotify client code')
