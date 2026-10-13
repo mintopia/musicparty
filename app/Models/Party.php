@@ -27,6 +27,7 @@ use NumPHP\LinAlg\LinAlg;
  * @property Carbon|null $playback_sampled_at
  * @property string $code
  * @property string $name
+ * @property string $country
  * @property string $provider_id
  * @property int $user_id
  * @property int|null $song_id

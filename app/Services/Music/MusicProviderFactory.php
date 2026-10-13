@@ -16,12 +16,12 @@ class MusicProviderFactory
     public const DEFAULT_PROVIDER_ID = 'spotify';
 
     /**
-     * @param  array<string, Closure(User, Purpose): (MusicProvider&ProviderPlayback)>  $registry
+     * @param  array<string, Closure(User, Purpose, ?string): (MusicProvider&ProviderPlayback)>  $registry
      */
     public function __construct(protected array $registry = []) {}
 
     /**
-     * @param  Closure(User, Purpose): (MusicProvider&ProviderPlayback)  $resolver
+     * @param  Closure(User, Purpose, ?string): (MusicProvider&ProviderPlayback)  $resolver
      */
     public function register(string $id, Closure $resolver): void
     {
@@ -62,14 +62,14 @@ class MusicProviderFactory
         $id = $this->providerIdFor($party);
         $resolver = $this->registry[$id] ?? throw new InvalidArgumentException("Unknown music provider [{$id}]");
 
-        return $resolver($party->user, $purpose);
+        return $resolver($party->user, $purpose, $party->country);
     }
 
     public function forUser(string $id, User $user, Purpose $purpose): MusicProvider&ProviderPlayback
     {
         $resolver = $this->registry[$id] ?? throw new InvalidArgumentException("Unknown music provider [{$id}]");
 
-        return $resolver($user, $purpose);
+        return $resolver($user, $purpose, null);
     }
 
     public function partyNeedsRelink(Party $party): bool

@@ -9,4 +9,7 @@ return [
     // Defaults allow a 20 call burst then a sustained 5/s, well above Encore's webhooks.delay_ms cadence.
     'webhook_burst' => (int) env('MUSICPARTY_WEBHOOK_BURST', 20),
     'webhook_leak_per_second' => (float) env('MUSICPARTY_WEBHOOK_LEAK_PER_SECOND', 5),
+    // Per-member search/browse leaky bucket: burst size, and calls per second drained.
+    'search_burst' => (int) env('MUSICPARTY_SEARCH_BURST', 10),
+    'search_leak_per_second' => (float) env('MUSICPARTY_SEARCH_LEAK_PER_SECOND', 1),
 ];

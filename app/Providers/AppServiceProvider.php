@@ -56,12 +56,12 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ModSettingsStore::class);
         $this->app->scoped(FakeMusicProvider::class);
         $this->app->scoped(MusicProviderFactory::class, function (): MusicProviderFactory {
-            $fake = fn (User $user, Purpose $purpose): FakeMusicProvider => $this->app->make(FakeMusicProvider::class);
+            $fake = fn (User $user, Purpose $purpose, ?string $market = null): FakeMusicProvider => $this->app->make(FakeMusicProvider::class);
 
             return new MusicProviderFactory([
                 'spotify' => $this->app->environment('testing')
                     ? $fake
-                    : fn (User $user, Purpose $purpose): SpotifyMusicProvider => SpotifyMusicProvider::make($user, $purpose),
+                    : fn (User $user, Purpose $purpose, ?string $market = null): SpotifyMusicProvider => SpotifyMusicProvider::make($user, $purpose, $market),
                 'fake' => $fake,
             ]);
         });

@@ -53,6 +53,7 @@ class PartyRequest extends FormRequest
                 ? 'prohibited'
                 : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
             'name' => 'required|string|max:50',
+            'country' => 'sometimes|string|alpha|size:2',
             'backup_playlist_id' => [
                 'required',
                 'string',
