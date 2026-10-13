@@ -18,6 +18,9 @@ final readonly class PlaybackState
         public ?string $deviceId,
         public ?string $deviceName,
         public PlaybackSource $source,
+        /** @var list<string> */
+        public array $upcomingTrackIds = [],
+        public ?PlaybackConnectionStatus $connectionStatus = null,
     ) {}
 
     public static function idle(PlaybackSource $source): self

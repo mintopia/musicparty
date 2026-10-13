@@ -2,9 +2,11 @@
 
 namespace App\Models;
 
+use App\Casts\MillisecondTimestamp;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\PlaybackStatus;
 use Carbon\CarbonImmutable;
 use Database\Factories\PartyFactory;
@@ -20,6 +22,9 @@ use NumPHP\LinAlg\LinAlg;
 
 /**
  * @property int $id
+ * @property PlaybackSource|null $playback_source
+ * @property Carbon|null $playback_received_at
+ * @property Carbon|null $playback_sampled_at
  * @property string $code
  * @property string $name
  * @property string $provider_id
@@ -110,6 +115,8 @@ class Party extends Model
 
     const MINIMUM_UPCOMING = 5;
 
+    const PUSHED_PLAYBACK_FRESH_SECONDS = 30;
+
     protected $attributes = [
         'allow_requests' => true,
         'explicit' => true,
@@ -131,6 +138,9 @@ class Party extends Model
         'downvotes' => 'boolean',
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
+        'playback_source' => PlaybackSource::class,
+        'playback_received_at' => MillisecondTimestamp::class,
+        'playback_sampled_at' => MillisecondTimestamp::class,
     ];
 
     /** @var array<int, string> */
@@ -268,6 +278,13 @@ class Party extends Model
         $member->save();
 
         return $member;
+    }
+
+    public function hasFreshPushedPlayback(): bool
+    {
+        return $this->playback_source?->isPushed() === true
+            && $this->playback_received_at !== null
+            && $this->playback_received_at->greaterThan(now()->subSeconds(self::PUSHED_PLAYBACK_FRESH_SECONDS));
     }
 
     public function canBeManagedBy(?User $user): bool

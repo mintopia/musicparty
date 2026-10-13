@@ -20,6 +20,11 @@
     @endif
 
     <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        @if ($canManage)
+            <div class="text-secondary small mb-1" data-testid="current-player">
+                Player: {{ $party->playback_source ? Str::headline($party->playback_source->value) : 'None' }}
+            </div>
+        @endif
         <next
             code="{{ $party->code }}"
             can_manage="{{ $canManage }}"
