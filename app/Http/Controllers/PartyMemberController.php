@@ -127,7 +127,7 @@ class PartyMemberController extends Controller
     {
         return view('partymembers.edit', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
+            'canManage' => $party->canBeManagedBy($request->user()),
             'member' => $user,
             'roles' => PartyMemberRole::all(),
         ]);

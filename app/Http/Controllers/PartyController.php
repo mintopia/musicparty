@@ -75,7 +75,7 @@ class PartyController extends Controller
             'party' => $party,
             'member' => $member,
             'upcoming' => $upcoming->toArray(),
-            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
+            'canManage' => $party->canBeManagedBy($request->user()),
         ]);
     }
 
@@ -83,7 +83,7 @@ class PartyController extends Controller
     {
         return view('parties.player', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
+            'canManage' => $party->canBeManagedBy($request->user()),
         ]);
     }
 
@@ -98,7 +98,7 @@ class PartyController extends Controller
     {
         return view('parties.youtube', [
             'party' => $party,
-            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
+            'canManage' => $party->canBeManagedBy($request->user()),
         ]);
     }
 
@@ -140,7 +140,7 @@ class PartyController extends Controller
         return view('parties.search', [
             'party' => $party,
             'member' => $member,
-            'canManage' => $party->canBeManagedBy($this->resolveAuthenticatedUser($request)),
+            'canManage' => $party->canBeManagedBy($request->user()),
             'params' => (object) $params,
             'results' => $results,
         ]);
