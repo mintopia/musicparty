@@ -13,5 +13,5 @@
         "types": ["vite/client"],
         "paths": {"@/*": ["./resources/js/*"]}
     },
-    "include": ["resources/js/inertia.ts", "resources/js/types.ts", "resources/js/pages/**/*", "resources/js/routes/**/*", "resources/js/wayfinder/**/*", "resources/js/actions/**/*"]
+    "include": ["resources/js/inertia.ts", "resources/js/types.ts", "resources/js/pages/**/*", "resources/js/tests/**/*", "resources/js/routes/**/*", "resources/js/wayfinder/**/*", "resources/js/actions/**/*"]
 }

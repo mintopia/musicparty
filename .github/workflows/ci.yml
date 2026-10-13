@@ -112,10 +112,38 @@ jobs:
           node-version: '22'
           cache: npm
 
-      - name: Install and build
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, opentelemetry
+          coverage: none
+          tools: composer:v2
+
+      - name: Install PHP dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+
+      - name: Prepare environment
         run: |
-          npm ci
-          npm run build
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Install
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Build
+        run: npm run build
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Vitest
+        run: npm test
 
   phpstan:
     name: PHPStan
