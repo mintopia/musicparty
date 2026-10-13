@@ -185,6 +185,60 @@ class PartyController extends Controller
         ]);
     }
 
+    public function album(SearchRequest $request, Party $party, string $album, MusicProviderFactory $factory, TrackEligibility $eligibility): Response|\Symfony\Component\HttpFoundation\Response
+    {
+        $member = $party->getMember($this->resolveAuthenticatedUser($request));
+        $query = $request->input('query');
+
+        $props = [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $party->canBeManagedBy($request->user()),
+            ],
+            'query' => is_string($query) ? $query : null,
+            'album' => null,
+            'tracks' => null,
+            'retry' => false,
+            'playerState' => $party->getState(),
+        ];
+
+        if (! $this->withinSearchLimit($party, $member)) {
+            return Inertia::render('Parties/Album', ['retry' => true] + $props);
+        }
+
+        try {
+            $found = $factory->forParty($party, Purpose::Search)->getAlbum($album);
+        } catch (ProviderRelinkRequiredException) {
+            session()->now('errorMessage', 'The music provider needs re-linking before albums are available.');
+
+            return Inertia::render('Parties/Album', $props);
+        } catch (ProviderBackoffException) {
+            return Inertia::render('Parties/Album', ['retry' => true] + $props);
+        }
+
+        if ($found === null) {
+            return Inertia::render('Parties/Album', $props)->toResponse($request)->setStatusCode(404);
+        }
+
+        $annotations = $eligibility->annotate($party, $member, $found->tracks);
+        $tracks = new LengthAwarePaginator($annotations, count($annotations), max(count($annotations), 1), 1)
+            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+
+        return Inertia::render('Parties/Album', [
+            'album' => [
+                'id' => $found->ref->id,
+                'name' => $found->ref->name,
+                'image_url' => $found->ref->imageUrl,
+                'artists' => array_map(fn ($artist): array => ['id' => $artist->id, 'name' => $artist->name], $found->artists),
+                'release_year' => $found->releaseDate !== null ? substr($found->releaseDate, 0, 4) : null,
+                'track_count' => $found->totalTracks,
+            ],
+            'tracks' => $tracks,
+        ] + $props);
+    }
+
     protected function withinSearchLimit(Party $party, PartyMember $member): bool
     {
         return (new LeakyBucket(

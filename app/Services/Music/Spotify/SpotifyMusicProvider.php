@@ -140,7 +140,14 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     public function getAlbum(string $id): ?Album
     {
         return Cache::remember("music.spotify.album.{$id}.{$this->market()}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Album {
-            $payload = SpotifyPayload::object($this->reader()->getAlbum($id, ['market' => $this->market()]));
+            try {
+                $payload = SpotifyPayload::object($this->reader()->getAlbum($id, ['market' => $this->market()]));
+            } catch (SpotifyWebAPIException $exception) {
+                if (in_array($exception->getCode(), [400, 404], true)) {
+                    return null;
+                }
+                throw $exception;
+            }
 
             return isset($payload->id) ? SpotifyMapper::album($payload) : null;
         });

@@ -58,6 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');
         Route::get('/profile/accounts/{socialprovider:code}/return', [LinkedAccountController::class, 'store'])->name('linkedaccounts.store');
