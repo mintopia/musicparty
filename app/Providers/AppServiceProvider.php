@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use App\Enums\Purpose;
+use App\Listeners\DispatchPushedPlaybackState;
 use App\Listeners\MessageLoggedListener;
 use App\Models\Party;
 use App\Models\Setting;
@@ -25,6 +26,7 @@ use App\Services\ModSettingsStore;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\Playback\PushedStateRouter;
 use App\Services\PlayedSongAugmentService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -35,6 +37,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use Laravel\Reverb\Events\MessageReceived;
 use Random\Randomizer;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
 use SocialiteProviders\LaravelPassport\LaravelPassportExtendSocialite;
@@ -51,6 +54,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActiveTheme::class);
+        $this->app->bind(PushedStateRouter::class, fn (): PushedStateRouter => new PushedStateRouter($this->app->tagged('pushed-state-mappers')));
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
@@ -91,6 +95,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(SocialiteWasCalled::class, LaravelPassportExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, SpotifyExtendSocialite::class.'@handle');
         Event::listen(MessageLogged::class, MessageLoggedListener::class);
+        Event::listen(MessageReceived::class, DispatchPushedPlaybackState::class);
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
 

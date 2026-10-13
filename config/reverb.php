@@ -82,6 +82,7 @@ return [
                 'allowed_origins' => array_filter([parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)]),
                 'ping_interval' => env('REVERB_APP_PING_INTERVAL', 60),
                 'max_message_size' => env('REVERB_APP_MAX_MESSAGE_SIZE', 10_000),
+                'accept_client_events_from' => env('REVERB_APP_ACCEPT_CLIENT_EVENTS_FROM', 'members'),
             ],
         ],
 
