@@ -91,6 +91,7 @@ Goal: build the shared Request and playback foundations on the E6 seams, then gi
 ### Whamageddon
 26. Ported to the mod layout with current behaviour: it keeps the configured track in the Queue as a system Request, adds Score each hour until it plays, re-adds it 2 hours after it played, holds it from 23:00 until 10:00, skips the hourly bump between 02:00 and 10:00, and shows the configured display name and CSS class as a decoration. All times use the Party timezone.
 27. The hourly bump uses the configured setting. The `votes` vs `score_adjustment` mismatch is resolved to one setting, migrating existing values. The track setting migrates from `spotify_id` to a track setting.
+27a. Whamageddon talks to the Music Provider, not the Spotify gateway, SDK or `SpotifyPayload`. Porting it removes its exemption from `tests/Arch/SpotifyIsolationTest.php`.
 
 ### Trust (Eigenkarma)
 28. A research ticket (Opus) comes first. It analyses the intended algorithm and the NumPHP code, and produces a short design for the user's sign-off: what Trust means, what it affects, behaviour for small or no-vote Parties, whether eigenvector centrality is the right model, and whether NumPHP stays.
