@@ -94,8 +94,8 @@ class PlayedSong extends Model
             ->whereHas('song', function ($query) use ($ids) {
                 $query->whereIn('provider_track_id', $ids);
             })->doesntHave('played')
-            ->orderBy('queued_at', 'desc')
-            ->orderBy('id', 'desc')
+            ->orderBy('queued_at')
+            ->orderBy('id')
             ->first();
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);

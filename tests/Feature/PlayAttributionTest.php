@@ -15,18 +15,29 @@ it('never attributes a play to a Request from another Party', function () {
     expect($played->findRequestedSong())->toBeNull();
 });
 
-it('prefers the most recently sent unplayed Request for the track', function () {
+it('links repeated plays of a track to Requests in the order they were sent', function () {
     $song = Song::factory()->create();
     $party = Party::factory()->create();
-    $mk = fn (array $state) => UpcomingSong::factory()->for($party)->for($song)->create($state);
-    $mk(['queued_at' => now()->subMinutes(30)]);
-    $latest = $mk(['queued_at' => now()->subMinutes(5)]);
-    $mk(['queued_at' => null]);
-    $alreadyPlayed = $mk(['queued_at' => now()->subMinute()]);
-    PlayedSong::factory()->for($party)->for($song)->create(['upcoming_song_id' => $alreadyPlayed->id]);
-    $played = PlayedSong::factory()->for($party)->for($song)->create();
+    $first = UpcomingSong::factory()->for($party)->for($song)->create(['queued_at' => now()->subMinutes(10)]);
+    $second = UpcomingSong::factory()->for($party)->for($song)->create(['queued_at' => now()->subMinutes(5)]);
+    UpcomingSong::factory()->for($party)->for($song)->create(['queued_at' => null]);
 
-    expect($played->findRequestedSong()?->id)->toBe($latest->id);
+    foreach ([$first, $second] as $expected) {
+        $played = PlayedSong::factory()->for($party)->for($song)->create();
+        $played->findRequestedSong();
+        $played->save();
+
+        expect($played->upcoming_song_id)->toBe($expected->id);
+    }
+});
+
+it('leaves a track played outside Music Party unlinked', function () {
+    $party = Party::factory()->create();
+    UpcomingSong::factory()->for($party)->sentToPlayer()->create();
+    $played = PlayedSong::factory()->for($party)->for(Song::factory()->create())->create();
+
+    expect($played->findRequestedSong())->toBeNull()
+        ->and($played->upcoming_song_id)->toBeNull();
 });
 
 it('keeps an existing link without searching', function () {
