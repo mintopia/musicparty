@@ -2,12 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Concerns\ResolvesAuthenticatedUser;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
 class ProfileUpdateRequest extends FormRequest
 {
+    use ResolvesAuthenticatedUser;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -29,7 +32,7 @@ class ProfileUpdateRequest extends FormRequest
                 'string',
                 'max:255',
                 'min:2',
-                Rule::unique('users', 'nickname')->ignore($this->user()->id),
+                Rule::unique('users', 'nickname')->ignore($this->resolveAuthenticatedUser($this)->id),
             ],
         ];
     }

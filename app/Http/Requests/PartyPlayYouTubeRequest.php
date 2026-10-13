@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use Closure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Validator;
 
@@ -29,6 +30,9 @@ class PartyPlayYouTubeRequest extends FormRequest
         ];
     }
 
+    /**
+     * @return array<int, Closure(Validator): void>
+     */
     public function after(): array
     {
         return [

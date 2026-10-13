@@ -2,11 +2,15 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Concerns\ResolvesAuthenticatedUser;
+use App\Models\Party;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class PartyRequest extends FormRequest
 {
+    use ResolvesAuthenticatedUser;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -22,12 +26,13 @@ class PartyRequest extends FormRequest
      */
     public function rules(): array
     {
-        if ($this->party !== null) {
+        $party = $this->route('party');
+        if ($party instanceof Party) {
             // We have a party, use the party owner's playlist
-            $playlists = $this->party->user->getPlaylists();
+            $playlists = $party->user->getPlaylists();
         } else {
             // We don't have a party, use our playlists
-            $playlists = $this->user()->getPlaylists();
+            $playlists = $this->resolveAuthenticatedUser($this)->getPlaylists();
         }
 
         return [

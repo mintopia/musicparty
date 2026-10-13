@@ -15,12 +15,12 @@ class PartyController extends Controller
         $this->authorizeResource(Party::class, 'party');
     }
 
-    public function show(Party $party)
+    public function show(Party $party): PartyResource
     {
         return new PartyResource($party);
     }
 
-    public function control(PartyControlRequest $request, Party $party)
+    public function control(PartyControlRequest $request, Party $party): PartyResource
     {
         $this->authorize('update', $party);
         match ($request->input('action')) {

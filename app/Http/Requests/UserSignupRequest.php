@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Setting;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -9,6 +10,8 @@ use Illuminate\Validation\Rule;
 
 class UserSignupRequest extends FormRequest
 {
+    use ResolvesAuthenticatedUser;
+
     /**
      * Determine if the user is authorized to make this request.
      */
@@ -56,7 +59,7 @@ class UserSignupRequest extends FormRequest
                 'string',
                 'max:255',
                 'min:2',
-                Rule::unique('users', 'nickname')->ignore($this->user()->id),
+                Rule::unique('users', 'nickname')->ignore($this->resolveAuthenticatedUser($this)->id),
             ],
         ];
 

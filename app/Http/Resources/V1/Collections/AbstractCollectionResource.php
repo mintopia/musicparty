@@ -7,10 +7,15 @@ use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * @mixin LengthAwarePaginator
+ * @mixin LengthAwarePaginator<int, mixed>
  */
 abstract class AbstractCollectionResource extends ResourceCollection
 {
+    /**
+     * @param  array<string, mixed>  $paginated
+     * @param  array{meta: array{total: int, per_page: int, current_page: int, last_page: int}, links: array{first: ?string, last: ?string, prev: ?string, next: ?string}}  $default
+     * @return array{pagination: object, links: object}
+     */
     public function paginationInformation(Request $request, array $paginated, array $default): array
     {
         return [

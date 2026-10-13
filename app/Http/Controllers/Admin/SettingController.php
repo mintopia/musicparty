@@ -8,10 +8,12 @@ use App\Http\Requests\Admin\SettingUpdateRequest;
 use App\Models\Setting;
 use App\Models\SocialProvider;
 use App\Models\Theme;
+use Illuminate\Contracts\View\View;
+use Illuminate\Http\RedirectResponse;
 
 class SettingController extends Controller
 {
-    public function index()
+    public function index(): View
     {
         $socialProviders = SocialProvider::get();
         $settings = Setting::whereHidden(false)->ordered()->get();
@@ -24,7 +26,7 @@ class SettingController extends Controller
         ]);
     }
 
-    public function update(SettingUpdateRequest $request)
+    public function update(SettingUpdateRequest $request): RedirectResponse
     {
         $settings = Setting::whereHidden(false)->get();
         foreach ($settings as $setting) {
