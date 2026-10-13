@@ -194,7 +194,7 @@ jobs:
             -e CADDY_SERVER_ADMIN_PORT=2019 \
             -e CADDY_SERVER_LOG_LEVEL=INFO \
             -e CADDY_SERVER_LOGGER=json \
-            -e CADDY_SERVER_SERVER_NAME=:80 \
+            -e CADDY_SERVER_SERVER_NAME=:8080 \
             dunglas/frankenphp frankenphp validate --config /etc/caddy/Caddyfile --adapter caddyfile
 
   compose:

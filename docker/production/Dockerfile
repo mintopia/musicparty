@@ -40,12 +40,23 @@ FROM base
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
 COPY --from=npm /app /app
-COPY docker/production/entrypoint.sh /entrypoint.sh
+COPY docker/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
+    setcap -r /usr/local/bin/frankenphp && \
+    groupadd -g 1000 musicparty && \
+    useradd -u 1000 -g 1000 -m -s /bin/sh musicparty && \
+    chmod 755 /home/musicparty && \
+    mkdir -p /data/caddy /config/caddy && \
+    chown -R musicparty:musicparty /data /config /app/storage /app/bootstrap/cache && \
+    chmod -R a+rwX /data /config && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
 
 COPY docker/Caddyfile /
 
+ENV PUID=1000 \
+    PGID=1000 \
+    ENTRYPOINT_OPTIMIZE=1
+
 ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php",  "artisan",  "octane:frankenphp", "--caddyfile=/Caddyfile", "--admin-host=0.0.0.0", "--port=80"]
+CMD ["php", "artisan", "octane:frankenphp", "--caddyfile=/Caddyfile", "--host=0.0.0.0", "--admin-host=0.0.0.0", "--port=8080"]

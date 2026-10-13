@@ -1,6 +1,10 @@
 # Keep docker-compose.production.example.yml in step with this file whenever services or env change.
 name: musicparty
 
+x-user-env: &user-env
+  PUID: "${PUID:-1000}"
+  PGID: "${PGID:-1000}"
+
 services:
   musicparty:
     build:
@@ -11,12 +15,13 @@ services:
       - ./:/app
     env_file: .env
     environment:
-      - XDEBUG_CONFIG=client_host=host.docker.internal
-      - PHP_IDE_CONFIG=serverName=musicparty
-      - XDEBUG_MODE=debug
-      - XDEBUG_SESSION=start
-      - CADDY_SERVER_FRANKENPHP_OPTIONS=
-      - APP_INDEX_FILE=index.php
+      <<: *user-env
+      XDEBUG_CONFIG: client_host=host.docker.internal
+      PHP_IDE_CONFIG: serverName=musicparty
+      XDEBUG_MODE: debug
+      XDEBUG_SESSION: start
+      CADDY_SERVER_FRANKENPHP_OPTIONS: ""
+      APP_INDEX_FILE: index.php
     depends_on:
       - redis
       - db
@@ -26,12 +31,13 @@ services:
       context: .
       dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
+    environment: *user-env
     volumes:
       - ./:/app
     depends_on:
       - redis
       - db
-    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug" ]
+    command: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080", "--debug" ]
     healthcheck:
       disable: true
 
@@ -40,8 +46,9 @@ services:
       context: .
       dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
-    entrypoint: [ "php", "artisan", "horizon" ]
+    command: [ "php", "artisan", "horizon" ]
     env_file: .env
+    environment: *user-env
     volumes:
       - ./:/app
     depends_on:
@@ -55,8 +62,9 @@ services:
       context: .
       dockerfile: docker/develop/Dockerfile
     restart: unless-stopped
-    entrypoint: [ "php", "artisan", "schedule:work" ]
+    command: [ "php", "artisan", "schedule:work" ]
     env_file: .env
+    environment: *user-env
     volumes:
       - ./:/app
     depends_on:
@@ -85,8 +93,9 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "composer" ]
+    entrypoint: [ "/entrypoint.sh", "composer" ]
     command: [ "--version" ]
+    environment: *user-env
     volumes:
       - ./:/app
     healthcheck:
@@ -97,7 +106,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "php", "vendor/bin/phpunit" ]
+    entrypoint: [ "/entrypoint.sh", "php", "vendor/bin/phpunit" ]
+    environment: *user-env
     volumes:
       - ./:/app
     healthcheck:
@@ -106,6 +116,9 @@ services:
   vite:
     profiles: [ "vite" ]
     image: node:23
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      HOME: /tmp
     entrypoint: [ "npm" ]
     command: [ "run", "dev" ]
     working_dir: /app
@@ -117,6 +130,9 @@ services:
   npm:
     profiles: [ "npm" ]
     image: node:23
+    user: "${PUID:-1000}:${PGID:-1000}"
+    environment:
+      HOME: /tmp
     entrypoint: [ "npm" ]
     command: [ "" ]
     working_dir: /app
@@ -128,7 +144,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "php", "/app/artisan" ]
+    entrypoint: [ "/entrypoint.sh", "php", "/app/artisan" ]
+    environment: *user-env
     volumes:
       - ./:/app/
     depends_on:
@@ -142,7 +159,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/bin/sh" ]
+    command: [ "/bin/sh" ]
+    environment: *user-env
     volumes:
       - ./:/app/
     depends_on:
