@@ -3,14 +3,12 @@
 use App\Enums\ScheduleFrequency;
 use App\Models\Mod;
 use App\Models\Party;
-use App\Models\User;
 use App\Mods\ModScheduler;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
-use Tests\Support\FakeSpotify;
 use Tests\Support\WhamageddonFixtures;
 
 beforeEach(function () {
@@ -29,7 +27,7 @@ function whamTick(): void
 }
 
 it('enabling the mod for a party adds the configured track', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
 
     app(PartyMods::class)->enable($party, 'whamageddon');
 
@@ -38,7 +36,7 @@ it('enabling the mod for a party adds the configured track', function () {
 });
 
 it('disabling the mod removes the upcoming song and its tracking setting', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     app(PartyMods::class)->enable($party, 'whamageddon');
     expect($party->upcoming()->count())->toBe(1);
 
@@ -50,9 +48,8 @@ it('disabling the mod removes the upcoming song and its tracking setting', funct
 });
 
 it('enabling an already enabled mod does not re-run the enable hook', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     app(PartyMods::class)->enable($party, 'whamageddon');
-    $this->fake->respond('getTrack', FakeSpotify::track(WhamageddonFixtures::TRACK_ID, 'Last Christmas'));
     $calls = count($this->fake->callsTo('getTrack'));
 
     app(PartyMods::class)->enable($party, 'whamageddon');
@@ -98,7 +95,7 @@ it('hourly tick ignores a removed whamageddon mod', function () {
 it('isolates a throwing party so the next party still ticks and the failure is logged', function () {
     Carbon::setTestNow('2026-12-24 12:00:00');
     $broken = WhamageddonFixtures::party(['enabled' => true]);
-    Party::whereKey($broken->id)->update(['user_id' => User::factory()->create()->id]);
+    Party::whereKey($broken->id)->update(['provider_id' => 'unknown']);
     $healthy = WhamageddonFixtures::party(['enabled' => true]);
     $upcoming = WhamageddonFixtures::upcoming($healthy);
     Log::spy();

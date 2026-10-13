@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Mods\Whamageddon\Whamageddon;
 use App\Services\ModSettingsStore;
@@ -75,18 +76,19 @@ it('increments the score by score_adjustment and recalculates the score', functi
     expect($upcoming->score_adjustment)->toBe(2)->and($upcoming->score)->toBe(2);
 });
 
-it('ignores the votes setting because the code reads score_adjustment', function () {
-    $party = WhamageddonFixtures::party(['enabled' => true, 'votes' => 5]);
+it('bumps the score by the configured score_per_hour value', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true, 'score_per_hour' => 5]);
     $upcoming = WhamageddonFixtures::upcoming($party);
     whamAt('2026-12-24 12:00:00');
 
     new Whamageddon($party)->hourly();
 
-    expect($upcoming->fresh()->score_adjustment)->toBe(1);
+    $upcoming->refresh();
+    expect($upcoming->score_adjustment)->toBe(5)->and($upcoming->score)->toBe(5);
 });
 
 it('adds the song to the party when there is no upcoming song', function () {
-    $party = WhamageddonFixtures::party(['enabled' => true, 'spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
     whamAt('2026-12-24 12:00:00');
 
     new Whamageddon($party)->hourly();
@@ -170,7 +172,7 @@ it('casts not_before to a Carbon instance', function () {
 });
 
 it('waits without re-adding until two hours after the upcoming song was queued', function () {
-    $party = WhamageddonFixtures::party(['enabled' => true, 'spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
     $upcoming = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 12:00:00']);
     whamAt('2026-12-24 13:59:59');
 
@@ -183,7 +185,7 @@ it('waits without re-adding until two hours after the upcoming song was queued',
 });
 
 it('re-adds a new upcoming row two hours after the previous one was queued', function () {
-    $party = WhamageddonFixtures::party(['enabled' => true, 'spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
     $old = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 12:00:00']);
     whamAt('2026-12-24 14:00:00');
 
@@ -199,7 +201,7 @@ it('re-adds a new upcoming row two hours after the previous one was queued', fun
 });
 
 it('still runs delayPlayback against the old queued upcoming after re-adding', function () {
-    $party = WhamageddonFixtures::party(['enabled' => true, 'spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
     $old = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 21:00:00']);
     whamAt('2026-12-24 23:00:00');
 
@@ -210,13 +212,40 @@ it('still runs delayPlayback against the old queued upcoming after re-adding', f
         ->and($new->not_before)->toBeNull();
 });
 
-it('applies the hour of day in the app timezone only', function () {
+it('applies the quiet window in the party timezone', function (string $utc, int $expected) {
     $party = WhamageddonFixtures::party(['enabled' => true]);
+    Party::whereKey($party->id)->update(['timezone' => 'America/New_York']);
     $upcoming = WhamageddonFixtures::upcoming($party);
-    whamAt('2026-12-24 09:30:00');
+    whamAt($utc);
 
-    new Whamageddon($party)->hourly();
+    new Whamageddon($party->fresh())->hourly();
 
     expect(config('app.timezone'))->toBe('UTC')
-        ->and($upcoming->fresh()->score_adjustment)->toBe(0);
+        ->and($upcoming->fresh()->score_adjustment)->toBe($expected);
+})->with([
+    '09:30 UTC is 04:30 in New York: quiet' => ['2026-12-24 09:30:00', 0],
+    '15:30 UTC is 10:30 in New York: active' => ['2026-12-24 15:30:00', 1],
+    '03:00 UTC is 22:00 in New York: active' => ['2026-12-25 03:00:00', 1],
+]);
+
+it('holds playback until 10AM party time the next day, stored as UTC', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true]);
+    Party::whereKey($party->id)->update(['timezone' => 'America/New_York']);
+    $upcoming = WhamageddonFixtures::upcoming($party);
+    whamAt('2026-12-25 04:00:00');
+
+    new Whamageddon($party->fresh())->hourly();
+
+    expect($upcoming->fresh()->getRawOriginal('not_before'))->toBe('2026-12-25 15:00:00');
+});
+
+it('does not hold playback at 23:00 UTC when it is only 18:00 party time', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true]);
+    Party::whereKey($party->id)->update(['timezone' => 'America/New_York']);
+    $upcoming = WhamageddonFixtures::upcoming($party);
+    whamAt('2026-12-24 23:00:00');
+
+    new Whamageddon($party->fresh())->hourly();
+
+    expect($upcoming->fresh()->getRawOriginal('not_before'))->toBeNull();
 });

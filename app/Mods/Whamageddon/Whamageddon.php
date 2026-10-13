@@ -2,17 +2,18 @@
 
 namespace App\Mods\Whamageddon;
 
+use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Mods\PartyMods;
 use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
-use App\Services\Music\Spotify\SpotifyMapper;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyTimezone;
 use App\Services\QueueSelector;
-use App\Services\Spotify\SpotifyGateway;
-use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
 class Whamageddon
@@ -40,9 +41,9 @@ class Whamageddon
 
             return;
         }
-        $hour = CarbonImmutable::now()->hour;
+        $hour = $this->partyNow()->hour;
         if ($hour >= 2 && $hour < 10) {
-            Log::info("{$this->party} Whamageddon: Skipping upvote because it's between 1AM and 9AM");
+            Log::info("{$this->party} Whamageddon: Skipping upvote because it's between 2AM and 10AM");
 
             return;
         }
@@ -70,9 +71,10 @@ class Whamageddon
 
     protected function delayPlayback(UpcomingSong $upcoming): void
     {
-        $hour = CarbonImmutable::now()->hour;
+        $now = $this->partyNow();
+        $hour = $now->hour;
         if ($hour >= 23) {
-            $upcoming->not_before = now()->startOfDay()->addDay()->hour(10);
+            $upcoming->not_before = Carbon::instance($now->startOfDay()->addDay()->hour(10))->utc();
             Log::info("{$this->party} Whamageddon: Delaying Playback until 10AM tomorrow");
             $upcoming->save();
         } elseif ($upcoming->not_before && $hour >= 10) {
@@ -80,6 +82,11 @@ class Whamageddon
             $upcoming->save();
             Log::info("{$this->party} Whamageddon: After 10AM, allowing playback");
         }
+    }
+
+    protected function partyNow(): CarbonImmutable
+    {
+        return CarbonImmutable::now(app(PartyTimezone::class)->for($this->party));
     }
 
     public function enable(): void
@@ -108,9 +115,9 @@ class Whamageddon
 
     protected function addToParty(): void
     {
-        $trackId = $this->settings->value($this->party, self::CODE, 'spotify_id');
+        $trackId = $this->settings->value($this->party, self::CODE, 'track');
         if ($trackId === null) {
-            Log::warning("{$this->party} Whamageddon: No Spotify track ID to add");
+            Log::warning("{$this->party} Whamageddon: No track configured to add");
 
             return;
         }
@@ -120,14 +127,13 @@ class Whamageddon
                 $query->where('provider_track_id', $trackId);
             })->first();
         if ($upcoming === null) {
-            $response = app(SpotifyGateway::class)->requireClient($this->party->user)->getTrack($trackId);
-            if (! $response) {
-                Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} in Spotify");
+            $track = app(MusicProviderFactory::class)->forParty($this->party, Purpose::Search)->getTrack($trackId);
+            if ($track === null) {
+                Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} on the music provider");
 
                 return;
             }
-            $track = SpotifyPayload::object($response);
-            $song = Song::fromTrack(SpotifyMapper::track($track));
+            $song = Song::fromTrack($track);
         } else {
             $song = $upcoming->song;
         }
@@ -157,7 +163,7 @@ class Whamageddon
         if ($upcoming->queued_at !== null) {
             Log::info("{$this->party} Whamageddon: The song has already been played");
         }
-        $upcoming->score_adjustment += $this->settings->value($this->party, self::CODE, 'score_adjustment', 1);
+        $upcoming->score_adjustment += $this->settings->value($this->party, self::CODE, 'score_per_hour', 1);
         $upcoming->updateScore();
         $sign = '';
         if ($upcoming->score_adjustment > 0) {
