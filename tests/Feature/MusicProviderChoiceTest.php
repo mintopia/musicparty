@@ -113,3 +113,30 @@ it('lets admins toggle providers on the settings page', function () {
 
     expect(app(MusicProviderFactory::class)->isEnabled('spotify'))->toBeFalse();
 });
+
+it('round-trips a provider toggle through the settings page and the party form', function () {
+    $this->seed(SettingsSeeder::class);
+    $admin = adminUser();
+    $search = Model::unguarded(fn () => SocialProvider::factory()->create(['code' => 'spotifysearch']));
+    LinkedAccount::factory()->create(['user_id' => $admin->id, 'social_provider_id' => $search->id]);
+    $factory = app(MusicProviderFactory::class);
+
+    $this->actingAs($admin)->put(route('admin.settings.update'), ['name' => 'Music Party'])->assertRedirect();
+    Setting::query()->get()->each->clearCache();
+
+    expect($factory->isEnabled('spotify'))->toBeFalse();
+    $this->actingAs($admin)->get(route('parties.create'))
+        ->assertOk()->assertDontSee('value="spotify"', false);
+    $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
+        ->assertSessionHasErrors('provider_id');
+
+    $this->actingAs($admin)->put(route('admin.settings.update'), ['name' => 'Music Party', 'provider-spotify-enabled' => '1'])->assertRedirect();
+    Setting::query()->get()->each->clearCache();
+
+    expect($factory->isEnabled('spotify'))->toBeTrue();
+    $this->actingAs($admin)->get(route('parties.create'))
+        ->assertOk()->assertSee('value="spotify"', false);
+    $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
+        ->assertSessionHasNoErrors();
+    expect(Party::count())->toBe(1);
+});
