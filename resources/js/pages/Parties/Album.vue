@@ -132,7 +132,11 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         :tracks="tracks"
                         :can-downvote="party.downvotes"
                         empty-title="No tracks on this album"
-                        :artist-route="(id: string) => showArtist({party: party.code, artist: id}).url + (query ? `?query=${encodeURIComponent(query)}` : '')"
+                        :artist-route="
+                            (id: string) =>
+                                showArtist({party: party.code, artist: id}).url +
+                                (query ? `?query=${encodeURIComponent(query)}` : '')
+                        "
                         @request="requestTrack"
                         @vote="vote"
                     />

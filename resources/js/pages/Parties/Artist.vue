@@ -19,7 +19,7 @@ const props = defineProps<{
     query: string | null;
     artist: {id: string; name: string; image_url: string | null} | null;
     tracks: Paginator<TrackAnnotation> | null;
-    albums: (Paginator<{id: string; name: string; image_url: string | null}>) | null;
+    albums: Paginator<{id: string; name: string; image_url: string | null}> | null;
     retry: boolean;
     playerState: LegacyPartyState;
 }>();
@@ -127,8 +127,16 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                 <template v-else-if="albums">
                     <div class="row row-cards" data-test="artist-albums">
                         <div v-for="album in albums.data" :key="album.id" class="col-6 col-md-4 col-lg-3">
-                            <a :href="showAlbum({party: party.code, album: album.id}).url + queryString" class="card card-link">
-                                <img v-if="album.image_url" :src="album.image_url" :alt="album.name" class="card-img-top" />
+                            <a
+                                :href="showAlbum({party: party.code, album: album.id}).url + queryString"
+                                class="card card-link"
+                            >
+                                <img
+                                    v-if="album.image_url"
+                                    :src="album.image_url"
+                                    :alt="album.name"
+                                    class="card-img-top"
+                                />
                                 <div class="card-body">{{ album.name }}</div>
                             </a>
                         </div>

@@ -48,7 +48,9 @@ if (authUser) {
         listen<T>(event: string, cb: (payload: T) => void): unknown;
     };
     userChannel.listen<{message: string; track?: {name?: string}}>('FlaggedRequestRejected', (payload) => {
-        showMessage(`Your request${payload.track?.name ? ` for ${payload.track.name}` : ''} was rejected: ${payload.message}`);
+        showMessage(
+            `Your request${payload.track?.name ? ` for ${payload.track.name}` : ''} was rejected: ${payload.message}`,
+        );
         router.reload({only: ['results']});
     });
 }
@@ -71,7 +73,9 @@ async function requestTrack(track: TrackAnnotation): Promise<void> {
 
 async function withdraw(track: TrackAnnotation): Promise<void> {
     try {
-        await axios.delete(flaggedWithdrawUrl(props.party.code, track.flagged_request_id ?? track.queue.upcoming_id ?? 0));
+        await axios.delete(
+            flaggedWithdrawUrl(props.party.code, track.flagged_request_id ?? track.queue.upcoming_id ?? 0),
+        );
         router.reload({only: ['results']});
     } catch {
         showMessage('This request could not be withdrawn.');
@@ -140,7 +144,11 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         :tracks="tracks"
                         :can-downvote="party.downvotes"
                         empty-title="No results found"
-                        :artist-route="(id: string) => showArtist({party: party.code, artist: id}).url + (query ? `?query=${encodeURIComponent(query)}` : '')"
+                        :artist-route="
+                            (id: string) =>
+                                showArtist({party: party.code, artist: id}).url +
+                                (query ? `?query=${encodeURIComponent(query)}` : '')
+                        "
                         @request="requestTrack"
                         @withdraw="withdraw"
                         @vote="vote"
