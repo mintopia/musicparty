@@ -13,7 +13,7 @@ class SongRatingController extends Controller
     public function store(SongRatingRequest $request, Party $party, PlayedSong $playedsong): PlayedSongResource
     {
         $current = $playedsong->party->current();
-        if ($current->id != $playedsong->id) {
+        if ($current === null || ! $current->is($playedsong)) {
             abort(400);
         }
         $rating = null;
