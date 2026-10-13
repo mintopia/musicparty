@@ -24,17 +24,17 @@
             <div class="card">
                 <div class="card-body">
                     <div class="datagrid">
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">ID</div>
-                            <div class="datagrid-content">{{ $user->id }}</div>
+                            <div>{{ $user->id }}</div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Nickname</div>
-                            <div class="datagrid-content">{{ $user->nickname }}</div>
+                            <div>{{ $user->nickname }}</div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Email</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @if($email = $user->getEmail())
                                     <a href="mailto:{{ $email }}">{{ $email }}</a>
                                 @else
@@ -42,9 +42,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Roles</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @forelse($user->roles as $role)
                                     <span class="badge bg-primary text-primary-fg">{{ $role->name }}
                                         @empty
@@ -52,9 +52,9 @@
                                 @endforelse
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Completed Signup?</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @if($user->first_login)
                                     <span class="status status-red">
                                         No
@@ -66,9 +66,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Agreed Terms and Conditions</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @if($user->terms_agreed_at)
                                     <span class="status status-green">
                                         Yes
@@ -80,9 +80,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Suspended</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @if($user->suspended)
                                     <span class="status status-red">
                                         Yes
@@ -94,9 +94,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Last Login</div>
-                            <div class="datagrid-content">
+                            <div>
                                 @if($user->last_login)
                                     <span title="{{ $user->last_login->format('Y-m-d H:i:s') }}">
                                         {{ $user->last_login->diffForHumans() }}
@@ -106,9 +106,9 @@
                                 @endif
                             </div>
                         </div>
-                        <div class="datagrid-item">
+                        <div>
                             <div class="datagrid-title">Created</div>
-                            <div class="datagrid-content">
+                            <div>
                                 <span title="{{ $user->created_at->format('Y-m-d H:i:s') }}">
                                     {{ $user->created_at->diffForHumans() }}
                                 </span>
@@ -122,7 +122,7 @@
                         Delete
                     </a>
                     <a href="{{ route('admin.users.impersonate', $user->id) }}"
-                       class="btn btn-primary-outline ms-auto">
+                       class="btn btn-outline-primary ms-auto">
                         <i class="icon ti ti-spy"></i>
                         Impersonate
                     </a>
@@ -161,7 +161,7 @@
                                         <span class="avatar me-2"
                                               style="background-image: url('{{ $account->avatar_url }}')"></span>
                                         <div class="flex-fill">
-                                            <div class="font-weight-medium">{{ $account->name }}</div>
+                                            <div class="fw-medium">{{ $account->name }}</div>
                                             <div class="text-secondary">{{ $account->email ?? '' }}</div>
                                         </div>
                                     </div>

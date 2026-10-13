@@ -1,4 +1,4 @@
-<div class="form-group mb-3">
+<div class="mb-3">
     <label class="form-label" for="{{ $property }}">{{ $name }}</label>
     <select class="form-select @error($property) is-invalid @enderror" name="{{ $property }}">
         <option value="" @if(($filters->{$property} ?? '') == '') selected @endif>All</option>

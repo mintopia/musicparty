@@ -59,12 +59,12 @@
                                     </div>
                                     <div class="mt-3 text-center">
                                         <i
-                                            class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4"
+                                            class="icon ti ti-thumb-down cursor-pointer d-inline-block me-4"
                                             @click="rate(-1)"
                                         ></i>
                                         <span class="d-inline-block mx-2">{{ state.current!.rating }}</span>
                                         <i
-                                            class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4"
+                                            class="icon ti ti-thumb-up cursor-pointer d-inline-block ms-4"
                                             @click="rate(1)"
                                         ></i>
                                     </div>

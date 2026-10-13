@@ -41,7 +41,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 
 <template>
     <div
-        class="list-group-item track-row"
+        class="list-group-item"
         :class="decoration?.class"
         :style="decoration?.accent ? {borderLeft: `4px solid ${decoration.accent}`} : undefined"
         data-test="track-row"

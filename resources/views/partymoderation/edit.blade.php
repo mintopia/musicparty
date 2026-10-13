@@ -31,7 +31,7 @@
                     <a href="{{ route('parties.moderation.delete', [$party->code, $moderation->id]) }}" class="btn btn-link text-danger">
                         Delete
                     </a>
-                    <button type="submit" class="btn ms-auto btn-primary btn-out">Save</button>
+                    <button type="submit" class="btn ms-auto btn-primary">Save</button>
                 </div>
             </div>
         </form>

@@ -6,7 +6,7 @@
 
     @include('partials._pusher-config')
 
-    @vite(['resources/css/app.css', 'resources/js/inertia.ts'])
+    @vite(['resources/js/inertia.ts'])
     @include('partials._theme')
     @inertiaHead
 </head>

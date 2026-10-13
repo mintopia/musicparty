@@ -22,7 +22,6 @@ async function builtCss(input: string): Promise<string> {
         resolve: {
             alias: {
                 '~tabler': new URL('../../../node_modules/@tabler/core', import.meta.url).pathname,
-                '~bootstrap': new URL('../../../node_modules/bootstrap', import.meta.url).pathname,
             },
         },
         build: {

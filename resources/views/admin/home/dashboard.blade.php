@@ -22,7 +22,7 @@
                             </span>
                         </div>
                         <div class="col">
-                            <div class="font-weight-medium"><a href="{{ route('admin.users.index') }}"
+                            <div class="fw-medium"><a href="{{ route('admin.users.index') }}"
                                                                class="text-body text-decoration-none stretched-link">{{ $stats->users->total }}
                                     Users</a></div>
                             <div class="text-secondary">
