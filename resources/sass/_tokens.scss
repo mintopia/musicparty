@@ -1,38 +1,30 @@
-// Design tokens. Override --mp-* (theme partial, dev tools); the block at the
-// bottom maps them onto Tabler's --tblr-* variables for Blade and Inertia pages.
+// Design tokens. Defaults below equal Tabler's own values, so an unthemed page
+// looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
 
 :root,
-[data-bs-theme=light] {
-    --mp-primary: #0054a6;
-    --mp-primary-rgb: 0, 84, 166;
-    --mp-nav-background: #182433;
-    --mp-surface: #ffffff;
-    --mp-text: #182433;
-    --mp-muted: #667382;
-    --mp-border: #dadfe5;
-    --mp-success: #2fb344;
-    --mp-danger: #d63939;
-    --mp-warning: #f76707;
-    --mp-radius: 4px;
+:host,
+[data-bs-theme=light],
+[data-bs-theme=dark] {
+    --mp-primary: oklch(54.6% 0.1724 254.2deg);
+    --mp-primary-rgb: 6, 111, 209;
+    --mp-nav-background: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
+    --mp-surface: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
+    --mp-text: light-dark(var(--tblr-gray-700), var(--tblr-gray-200));
+    --mp-muted: oklch(55.55% 0 0deg);
+    --mp-border: light-dark(var(--tblr-gray-200), var(--tblr-gray-700));
+    --mp-success: oklch(67.38% 0.1885 145.43deg);
+    --mp-danger: oklch(58.29% 0.1941 25.59deg);
+    --mp-warning: oklch(77.02% 0.1658 71.02deg);
+    --mp-radius: calc(6px * var(--tblr-border-radius-scale, 1));
     --mp-font-family: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
 }
 
-[data-bs-theme=dark] {
-    --mp-surface: #182433;
-    --mp-text: #fcfdfe;
-    --mp-muted: #9ba9b9;
-    --mp-border: #243448;
-}
-
 :root,
+:host,
 [data-bs-theme=light],
 [data-bs-theme=dark] {
     --tblr-primary: var(--mp-primary);
     --tblr-primary-rgb: var(--mp-primary-rgb);
-    --tblr-link-color: var(--mp-primary);
-    --tblr-link-color-rgb: var(--mp-primary-rgb);
-    --tblr-link-hover-color: var(--mp-primary);
-    --tblr-link-hover-color-rgb: var(--mp-primary-rgb);
     --tblr-bg-surface: var(--mp-surface);
     --tblr-body-color: var(--mp-text);
     --tblr-muted: var(--mp-muted);
@@ -46,17 +38,4 @@
 
 .navbar[data-bs-theme=dark] {
     --tblr-navbar-bg: var(--mp-nav-background);
-}
-
-.breadcrumb a {
-    --tblr-breadcrumb-link-color: var(--mp-primary);
-}
-
-.btn-link,
-.btn-link:hover {
-    color: var(--mp-primary);
-}
-
-.border-primary {
-    border-color: var(--mp-primary) !important;
 }
