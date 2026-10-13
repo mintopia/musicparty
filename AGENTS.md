@@ -91,6 +91,16 @@ Cleanup branches and worktrees when they are finished and merged or abandoned.
 Where there is a first-party Laravel package to achieve something, it should be
 used or there should be an explicit ADR why not.
 
+### Laravel Boost MCP
+
+`.mcp.json` starts `laravel-boost` with `docker compose -p musicparty exec -T musicparty php artisan boost:mcp`,
+so it runs in the dev container (PHP 8.5, vendor installed, DB and Redis reachable).
+The host PHP is older than the `^8.5` requirement and worktrees have no `vendor/`,
+so `php artisan boost:mcp` on the host fails and the client times out after 30 s.
+
+Requirements: the dev stack is up (`docker compose -p musicparty up -d`) and the
+`musicparty` service is running. `XDEBUG_MODE=off` avoids Xdebug's connect delay on stdio.
+
 ## Code exploration policy
 
 Always use jCodeMunch-MCP for code navigation. Never fall back to Read, Grep, Glob, or Bash for code exploration.
