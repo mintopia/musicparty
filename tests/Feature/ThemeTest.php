@@ -116,3 +116,48 @@ it('rejects theme names that slug to nothing or collide with another theme', fun
     $this->post(route('admin.settings.themes.store'), ['name' => 'taken', 'tokens' => $tokens])
         ->assertSessionHasErrors('name');
 });
+
+it('renders the token form with a field per colour token and the saved values', function () {
+    $admin = themeAdmin();
+    $theme = Theme::factory()->create(['name' => 'Form', 'tokens' => ['primary' => '#abcdef', 'nav-background' => '#123456', 'danger' => '#ff0000'], 'dark_mode' => true]);
+
+    $create = $this->actingAs($admin)->get(route('admin.settings.themes.create'))->assertOk();
+    $edit = $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk();
+
+    foreach (array_keys(Theme::COLOUR_TOKENS) as $token) {
+        $create->assertSee("name=\"tokens[{$token}]\"", false);
+        $edit->assertSee("name=\"tokens[{$token}]\"", false);
+    }
+    $edit->assertSee('value="#abcdef"', false)->assertSee('value="#ff0000"', false)->assertSee('name="dark_mode"', false);
+});
+
+it('serves an edited theme stylesheet instead of the cached one', function () {
+    $theme = Theme::factory()->create(['name' => 'Bust', 'tokens' => ['primary' => '#111111', 'nav-background' => '#222222']]);
+    $this->get($theme->stylesheetUrl())->assertSee('--mp-primary: #111111;', false);
+    $oldVersion = $theme->version();
+
+    $this->actingAs(themeAdmin())->put(route('admin.settings.themes.update', $theme), [
+        'name' => 'Bust', 'tokens' => ['primary' => '#999999', 'nav-background' => '#222222'],
+    ])->assertRedirect();
+
+    $response = $this->get(route('theme.css', 'bust'))->assertOk()
+        ->assertSee('--mp-primary: #999999;', false)
+        ->assertDontSee('--mp-primary: #111111;', false);
+    expect($response->headers->get('ETag'))->not->toContain($oldVersion);
+});
+
+it('answers unknown theme codes from cache and serves them once the theme exists', function () {
+    $this->get('/theme/ghost.css')->assertNotFound();
+
+    DB::enableQueryLog();
+    $this->get('/theme/ghost.css')->assertNotFound();
+    $themeQueries = collect(DB::getQueryLog())->filter(fn ($q) => str_contains($q['query'], 'themes'));
+    DB::disableQueryLog();
+    expect($themeQueries)->toHaveCount(0);
+
+    $this->actingAs(themeAdmin())->post(route('admin.settings.themes.store'), [
+        'name' => 'Ghost', 'tokens' => ['primary' => '#abcdef', 'nav-background' => '#123456'],
+    ])->assertRedirect();
+
+    $this->get('/theme/ghost.css')->assertOk();
+});
