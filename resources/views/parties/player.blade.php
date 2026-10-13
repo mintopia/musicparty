@@ -38,7 +38,7 @@
             });
         });
 
-        window.accessToken = '{{ $party->user->getSpotifyAccessToken() }}';
+        window.accessToken = '{{ app(\App\Services\Spotify\SpotifyGateway::class)->accessToken($party->user) }}';
         window.currentTrack = null;
 
         // Spotify Player

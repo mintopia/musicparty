@@ -2,10 +2,8 @@
 
 namespace App\Models;
 
-use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
-use App\Services\Spotify\BackoffRequest;
-use App\Services\Spotify\SpotifyRelinkRequiredException;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
@@ -21,9 +19,6 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
-use RuntimeException;
-use SpotifyWebAPI\Session;
-use SpotifyWebAPI\SpotifyWebAPI;
 use stdClass;
 
 /**
@@ -95,10 +90,6 @@ class User extends Authenticatable
     ];
 
     protected ?string $email = null;
-
-    protected ?SpotifyWebAPI $api = null;
-
-    protected ?Session $session = null;
 
     /** @var array<int, stdClass>|null */
     protected ?array $playlists = null;
@@ -202,64 +193,12 @@ class User extends Authenticatable
         return $count === 2;
     }
 
-    public function getSpotifyAccessToken(): ?string
-    {
-        $this->getSpotifyApi();
-        if ($this->session !== null) {
-            return $this->session->getAccessToken();
-        }
-
-        return null;
-    }
-
-    public function getSpotifyApi(): ?SpotifyWebAPI
-    {
-        $account = $this->accounts()->with('provider')->whereHas('provider', function ($query) {
-            $query->whereCode('spotify');
-        })->first();
-        $provider = $account?->provider;
-        if ($account === null || $provider === null) {
-            return null;
-        }
-
-        if ($account->needsRelink()) {
-            throw new SpotifyRelinkRequiredException;
-        }
-
-        if ($this->session === null) {
-            $clientId = $provider->getSetting('client_id');
-            $clientSecret = $provider->getSetting('client_secret');
-            $this->session = new Session($clientId, $clientSecret);
-            $this->session->setAccessToken($account->access_token ?? '');
-        }
-
-        if (! $this->api) {
-            // Create new API
-            Log::debug("{$this}: Creating new API connection");
-            $request = new BackoffRequest('spotify');
-            $this->api = app(SpotifyWebAPI::class, ['options' => [], 'session' => $this->session, 'request' => $request]);
-        }
-
-        if ($account->access_token_expires_at < now()->addMinutes(5)) {
-            Log::debug("{$this}: Refreshing expiring access token");
-            $account->refreshSpotifyToken($this->session);
-            SpotifyAccessTokenUpdatedEvent::dispatch($this, $account->access_token ?? '');
-        }
-
-        return $this->api;
-    }
-
     public function spotifyNeedsRelink(): bool
     {
         return $this->accounts()
             ->whereNotNull('needs_relink_at')
             ->whereHas('provider', fn ($query) => $query->whereCode('spotify'))
             ->exists();
-    }
-
-    public function requireSpotifyApi(): SpotifyWebAPI
-    {
-        return $this->getSpotifyApi() ?? throw new RuntimeException("{$this}: No linked Spotify account");
     }
 
     /**
@@ -270,7 +209,7 @@ class User extends Authenticatable
         if ($this->devices !== null) {
             return $this->devices;
         }
-        $api = $this->getSpotifyApi();
+        $api = app(SpotifyGateway::class)->client($this);
         if (! $api) {
             return [];
         }
@@ -294,7 +233,7 @@ class User extends Authenticatable
         if ($this->playlists !== null) {
             return $this->playlists;
         }
-        $api = $this->getSpotifyApi();
+        $api = app(SpotifyGateway::class)->client($this);
         if (! $api) {
             return [];
         }
@@ -314,7 +253,7 @@ class User extends Authenticatable
     public function getSpotifyStatus(): ?stdClass
     {
         Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
-        $playback = $this->requireSpotifyApi()->getMyCurrentPlaybackInfo([
+        $playback = app(SpotifyGateway::class)->requireClient($this)->getMyCurrentPlaybackInfo([
             'market' => $this->market,
         ]);
         $status = $playback === null ? null : SpotifyPayload::object($playback);
@@ -343,7 +282,7 @@ class User extends Authenticatable
         }
 
         Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
-        $this->recentTracks = SpotifyPayload::object($this->requireSpotifyApi()->getMyRecentTracks([
+        $this->recentTracks = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this)->getMyRecentTracks([
             'limit' => 20,
             'market' => $this->market,
         ]));
@@ -358,7 +297,7 @@ class User extends Authenticatable
         }
 
         Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
-        $this->playlistCache[$id] = SpotifyPayload::object($this->requireSpotifyApi()->getPlaylist($id, [
+        $this->playlistCache[$id] = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this)->getPlaylist($id, [
             'market' => $this->market,
         ]));
 

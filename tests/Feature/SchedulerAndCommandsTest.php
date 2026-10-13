@@ -8,10 +8,12 @@ use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
+use Mockery\MockInterface;
 use Tests\Support\FakeSpotify;
 
 /**
@@ -174,7 +176,7 @@ it('party:refreshaccesstokens reports when there is no spotify provider', functi
         ->assertSuccessful();
 });
 
-it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via getSpotifyApi with no lock or result check (E5 R5, R6)', function () {
+it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway with no lock or result check (E5 R5, R6)', function () {
     $provider = SocialProvider::factory()->create(['code' => 'spotify']);
     $expiring = User::factory()->create();
     $fresh = User::factory()->create();
@@ -182,15 +184,12 @@ it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via get
     LinkedAccount::factory()->create(['user_id' => $fresh->id, 'social_provider_id' => $provider->id, 'access_token_expires_at' => now()->addMinutes(10)]);
 
     $refreshed = [];
-    Event::listen('eloquent.retrieved: '.LinkedAccount::class, function (LinkedAccount $account) use (&$refreshed) {
-        $user = Mockery::mock(User::class)->makePartial();
-        $user->forceFill($account->user->getAttributes());
-        $user->shouldReceive('getSpotifyApi')->andReturnUsing(function () use (&$refreshed, $user) {
+    $this->mock(SpotifyGateway::class, function (MockInterface $mock) use (&$refreshed) {
+        $mock->shouldReceive('client')->andReturnUsing(function (User $user) use (&$refreshed) {
             $refreshed[] = $user->id;
 
             return null;
         });
-        $account->setRelation('user', $user);
     });
 
     $this->artisan('party:refreshaccesstokens')->assertSuccessful();

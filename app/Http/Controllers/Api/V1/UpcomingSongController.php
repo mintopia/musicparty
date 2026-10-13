@@ -12,6 +12,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Services\RequestCheckService;
+use App\Services\Spotify\SpotifyGateway;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\SpotifyPayload;
 use Illuminate\Contracts\Cache\LockTimeoutException;
@@ -73,7 +74,7 @@ class UpcomingSongController extends Controller
                         $query->whereSpotifyId($request->input('spotify_id'));
                     })->first();
                     if (! $upcoming) {
-                        $response = $party->user->requireSpotifyApi()->getTrack($request->input('spotify_id'));
+                        $response = app(SpotifyGateway::class)->requireClient($party->user)->getTrack($request->input('spotify_id'));
                         if (! $response) {
                             return response()->json([
                                 'message' => 'Unable to find the song in Spotify.',

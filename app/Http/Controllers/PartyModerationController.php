@@ -6,6 +6,7 @@ use App\Enums\PartyModerationType;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -42,7 +43,7 @@ class PartyModerationController extends Controller
         $spotifyData = null;
         if ($request->has('track')) {
             try {
-                $spotifyData = SpotifyPayload::object($party->user->requireSpotifyApi()->getTrack($request->input('track')));
+                $spotifyData = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($party->user)->getTrack($request->input('track')));
             } catch (SpotifyWebAPIException) {
                 // Do Nothing
             }

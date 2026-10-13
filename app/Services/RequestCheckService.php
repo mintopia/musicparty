@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
+use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Illuminate\Support\Collection;
 use SpotifyWebAPI\SpotifyWebAPIException;
@@ -48,7 +49,7 @@ class RequestCheckService
         if (is_string($input)) {
             // Get the song from Spotify
             try {
-                $spotifyData = SpotifyPayload::object($this->party->user->requireSpotifyApi()->getTrack($input));
+                $spotifyData = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->party->user)->getTrack($input));
             } catch (SpotifyWebAPIException $ex) {
                 if ($ex->getMessage() === 'invalid id') {
                     return new RequestCheckResponse(false, 'Song is not found in Spotify');
