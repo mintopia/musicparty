@@ -26,6 +26,8 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 {
     private const int BROWSE_CACHE_SECONDS = 3600;
 
+    public const string CONTEXT_PLAYLIST_TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
+
     public function __construct(
         protected SpotifyGateway $gateway,
         protected User $user,
@@ -184,6 +186,20 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         } while ($result->next);
 
         return $playlists;
+    }
+
+    public function isReservedTrack(string $trackId): bool
+    {
+        return $trackId === self::CONTEXT_PLAYLIST_TRACK_ID;
+    }
+
+    public function queueDepth(): int
+    {
+        $queue = SpotifyPayload::object($this->control()->getMyQueue());
+        $ids = collect((array) $queue->queue)->map(fn (mixed $item): mixed => SpotifyPayload::object($item)->id)->unique();
+
+        // With nothing queued Spotify pads the queue with copies of the current context, so unique items minus the playing track is the real depth, or -1 when nothing is playing or queued.
+        return $ids->count() - 1;
     }
 
     public function currentPlayback(): ?PlaybackState

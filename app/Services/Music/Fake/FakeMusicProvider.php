@@ -36,6 +36,11 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
 
     protected ?PlaybackState $playback = null;
 
+    protected int $queueDepth = 0;
+
+    /** @var list<string> */
+    protected array $reservedTrackIds = [];
+
     protected bool $requiresActiveDevice = false;
 
     protected ?string $activeDeviceId = null;
@@ -108,6 +113,20 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return $this;
     }
 
+    public function withQueueDepth(int $depth): self
+    {
+        $this->queueDepth = $depth;
+
+        return $this;
+    }
+
+    public function withReservedTrack(string $trackId): self
+    {
+        $this->reservedTrackIds[] = $trackId;
+
+        return $this;
+    }
+
     public function withPlayback(?PlaybackState $playback): self
     {
         $this->playback = $playback;
@@ -148,6 +167,11 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function trackUrl(string $trackId): ?string
     {
         return null;
+    }
+
+    public function isReservedTrack(string $trackId): bool
+    {
+        return in_array($trackId, $this->reservedTrackIds, true);
     }
 
     public function searchTracks(string $query, int $page, int $perPage): Page
@@ -250,6 +274,13 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         $this->record(__FUNCTION__, func_get_args());
         $this->assertActiveDevice();
         $this->sentToPlayer[] = $track;
+    }
+
+    public function queueDepth(): int
+    {
+        $this->record(__FUNCTION__, func_get_args());
+
+        return $this->queueDepth;
     }
 
     public function transferPlayback(string $deviceId): void

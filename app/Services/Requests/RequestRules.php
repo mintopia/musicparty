@@ -6,15 +6,16 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Music\Data\Track;
+use App\Services\Music\MusicProviderFactory;
 use App\Services\Requests\Rules\AcceptingRequestsRule;
 use App\Services\Requests\Rules\BannedMemberRule;
-use App\Services\Requests\Rules\ContextPlaylistTrackRule;
 use App\Services\Requests\Rules\ExplicitRule;
 use App\Services\Requests\Rules\MaxLengthRule;
 use App\Services\Requests\Rules\MinLengthRule;
 use App\Services\Requests\Rules\ModerationRule;
 use App\Services\Requests\Rules\NextTrackRule;
 use App\Services\Requests\Rules\RecentlyPlayedRule;
+use App\Services\Requests\Rules\ReservedTrackRule;
 use App\Services\Requests\Rules\SimilarTrackRule;
 use App\Services\Requests\Rules\TooManyRequestsRule;
 
@@ -37,7 +38,7 @@ class RequestRules
     public static function standardRules(): array
     {
         return [
-            new ContextPlaylistTrackRule,
+            new ReservedTrackRule(app(MusicProviderFactory::class)),
             new AcceptingRequestsRule,
             new TooManyRequestsRule,
             new BannedMemberRule,

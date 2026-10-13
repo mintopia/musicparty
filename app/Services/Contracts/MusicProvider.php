@@ -31,6 +31,11 @@ interface MusicProvider
     public function trackUrl(string $trackId): ?string;
 
     /**
+     * Whether the provider reserves this track for its own use, so it can never be requested.
+     */
+    public function isReservedTrack(string $trackId): bool;
+
+    /**
      * @return Page<Track>
      */
     public function searchTracks(string $query, int $page, int $perPage): Page;

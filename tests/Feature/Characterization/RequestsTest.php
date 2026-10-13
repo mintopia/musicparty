@@ -15,7 +15,6 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Requests\RequestRules;
-use App\Services\Requests\Rules\ContextPlaylistTrackRule;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -118,9 +117,10 @@ describe('RequestRules', function () {
     });
 
     it('rejects the reserved context playlist track', function () {
+        reqUseSpotifyProvider();
         $party = reqParty(['allow_requests' => true]);
 
-        $response = reqCheck($party, reqMember($party), reqTrack(ContextPlaylistTrackRule::TRACK_ID));
+        $response = reqCheck($party, reqMember($party), reqTrack(SpotifyMusicProvider::CONTEXT_PLAYLIST_TRACK_ID));
 
         expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('This song is not available');
     });
