@@ -7,7 +7,6 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 
 class Whamageddon
@@ -15,8 +14,6 @@ class Whamageddon
     protected const CODE = 'whamageddon';
 
     protected bool $isEnabled = false;
-
-    protected Collection $settings;
 
     public function __construct(protected Party $party) {}
 

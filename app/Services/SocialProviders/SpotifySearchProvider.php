@@ -3,6 +3,7 @@
 namespace App\Services\SocialProviders;
 
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
 use SocialiteProviders\Spotify\Provider;
 
 class SpotifySearchProvider extends SpotifyProvider
@@ -13,11 +14,11 @@ class SpotifySearchProvider extends SpotifyProvider
 
     protected bool $supportsAuth = false;
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): AbstractProvider
     {
         return Socialite::buildProvider(Provider::class, [
-            'client_id' => $this->provider->getSetting('client_id'),
-            'client_secret' => $this->provider->getSetting('client_secret'),
+            'client_id' => $this->getSetting('client_id'),
+            'client_secret' => $this->getSetting('client_secret'),
             'redirect' => $this->redirectUrl,
         ]);
     }

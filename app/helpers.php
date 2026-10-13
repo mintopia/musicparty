@@ -1,7 +1,7 @@
 <?php
 
 if (! defined('format_ms')) {
-    function format_ms($input): string
+    function format_ms(int|float|string $input): string
     {
         $input = (int) $input;
         $mins = floor($input / 60000);
