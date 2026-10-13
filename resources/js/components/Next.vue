@@ -80,7 +80,7 @@
 
         methods: {
             updateState(state: LegacyPartyState): void {
-                state = state;
+                this.state = state;
             },
 
             formatMs(ms: number): string {
