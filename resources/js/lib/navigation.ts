@@ -2,7 +2,7 @@ import {dashboard as adminDashboard} from '@/routes/admin';
 import {index as adminSettings} from '@/routes/admin/settings';
 import {index as adminUsers} from '@/routes/admin/users';
 import {index as horizon} from '@/routes/horizon';
-import {create as createParty, edit, player, search, show, tv, youtube} from '@/routes/parties';
+import {create as createParty, edit, player, search, show, tv} from '@/routes/parties';
 import {index as moderation} from '@/routes/parties/moderation';
 import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
@@ -36,7 +36,6 @@ export function partyLinks(party: PartyMembership): NavLink[] {
             {title: 'Songs', href: songs(party.code).url},
             {title: 'Users', href: partyUsers(party.code).url},
             {title: 'TV Mode', href: tv(party.code).url},
-            {title: 'YouTube Player', href: youtube(party.code).url},
             {title: 'Web Player', href: player(party.code).url},
             {title: 'Flagged', href: flaggedUrl(party.code)},
             {title: 'Moderation', href: moderation(party.code).url},

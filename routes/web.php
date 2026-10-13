@@ -30,8 +30,6 @@ if (app()->environment('testing')) {
 }
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
-Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');
-Route::get('parties/{party}/youtube/player', [PartyController::class, 'ytplayer'])->name('parties.ytplayer');
 
 // Authenticated routes
 Route::middleware('auth:sanctum')->group(function () {
@@ -55,7 +53,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('parties/{party}/player/activate', [WebPlayerController::class, 'activate'])->name('parties.player.activate');
         });
         Route::middleware('can:update,party')->group(function () {
-            Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();

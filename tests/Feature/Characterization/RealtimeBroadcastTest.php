@@ -1,6 +1,5 @@
 <?php
 
-use App\Events\Party\PlayYouTubeVideoEvent;
 use App\Events\Party\UpdatedEvent as PartyUpdatedEvent;
 use App\Events\UpcomingSong\RemovedEvent;
 use App\Events\UpcomingSong\UpdatedEvent as UpcomingSongUpdatedEvent;
@@ -63,18 +62,6 @@ it('shapes the party update payload as the party state', function () {
         ->and((array) $payload['status'])->toHaveKeys([
             'device', 'repeat', 'shuffle', 'active', 'isPlaying', 'progress', 'progressMs', 'length', 'updatedAt', 'sampledAt',
         ]);
-});
-
-it('broadcasts the YouTube video on the public party channel with a video payload', function () {
-    $event = new PlayYouTubeVideoEvent(realtimeParty(), 'abc123');
-
-    $channels = $event->broadcastOn();
-
-    expect($event)->toBeInstanceOf(ShouldBroadcast::class)
-        ->and($channels)->toHaveCount(1)
-        ->and($channels[0])->not->toBeInstanceOf(PrivateChannel::class)
-        ->and($channels[0]->name)->toBe('party.RTPT')
-        ->and($event->broadcastWith())->toBe(['video' => 'abc123']);
 });
 
 it('broadcasts an upcoming song update on the private party channel with the song shape', function () {
