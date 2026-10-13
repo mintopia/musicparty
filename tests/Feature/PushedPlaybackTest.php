@@ -2,6 +2,7 @@
 
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Models\Role;
 use App\Models\Song;
 use App\Models\User;
 use App\Services\Music\Data\AlbumRef;
@@ -154,11 +155,15 @@ it('regains fresh pushed state once Encore reports connected again', function ()
 });
 
 it('shows relay settings to the operator and the app secret only to admins', function () {
+    config(['reverb.apps.apps.0.secret' => 'encore-secret-value']);
     $party = Party::factory()->create();
-    $secret = config('reverb.apps.apps.0.secret');
-    $owner = User::factory()->create();
+    $owner = User::factory()->withSpotify()->create(['first_login' => false]);
     $party->forceFill(['user_id' => $owner->id])->save();
 
     $this->withoutVite()->actingAs($owner)->get(route('parties.edit', $party->code))
-        ->assertOk()->assertSee("private-encore.{$party->code}")->assertDontSee($secret);
+        ->assertOk()->assertSee("private-encore.{$party->code}")->assertDontSee('encore-secret-value');
+
+    $owner->roles()->attach(Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']));
+    $this->withoutVite()->actingAs($owner->fresh())->get(route('parties.edit', $party->code))
+        ->assertOk()->assertSee('encore-secret-value');
 });
