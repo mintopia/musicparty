@@ -68,6 +68,7 @@ application key (a [random Laravel key](https://generate-random.org/laravel-key-
 docker compose up -d database redis
 docker compose run --rm --entrypoint php app artisan migrate
 docker compose run --rm --entrypoint php app artisan db:seed
+docker compose run --rm --entrypoint php app artisan setup:discord
 docker compose up -d
 ```
 
