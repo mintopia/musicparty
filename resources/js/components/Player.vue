@@ -1,13 +1,13 @@
 <template>
     <div>
         <div class="player p-0">
-            <div class="blur-bg py-3 border-bottom border-primary text-white" v-bind:style="getBackgroundImageStyle()">
+            <div class="blur-bg py-3 border-bottom border-primary text-white" v-bind:style="backgroundImageStyle">
                 <div class="container-xl">
                     <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-                        <template v-if="state && state.now !== null">
+                        <template v-if="state && state.now">
                             <div class="row">
                                 <div class="col-auto">
-                                    <img class="albumart" v-bind:src="state.now.album.image_url" />
+                                    <img class="albumart" v-bind:src="state.now.album?.image_url" />
                                 </div>
                                 <div class="col">
                                     <div class="fs-2 pb-3 overflow-hidden">
@@ -19,7 +19,7 @@
                                     </div>
                                     <div class="pb-2 overflow-hidden">
                                         <i class="icon ti ti-vinyl"></i>
-                                        {{ state.now.album.name }}
+                                        {{ state.now.album?.name }}
                                     </div>
                                     <div
                                         class="pb-3 overflow-hidden"
@@ -62,7 +62,7 @@
                                             class="icon ti ti-thumb-down cursor-pointer d-inline-block me-4"
                                             @click="rate(-1)"
                                         ></i>
-                                        <span class="d-inline-block mx-2">{{ state.current!.rating }}</span>
+                                        <span class="d-inline-block mx-2">{{ state.current?.rating ?? 0 }}</span>
                                         <i
                                             class="icon ti ti-thumb-up cursor-pointer d-inline-block ms-4"
                                             @click="rate(1)"
@@ -111,117 +111,93 @@ img.albumart {
     transition: width 1s linear;
 }
 </style>
-<script lang="ts">
-import {defineComponent} from 'vue';
+<script setup lang="ts">
+import {computed, ref} from 'vue';
+import {useEcho} from '@/composables/useEcho';
+import {useTicker} from '@/composables/useProgress';
 import type {LegacyArtist, LegacyPartyState} from '../types';
 
-export default defineComponent({
-    props: {
-        code: {type: String, required: true},
-        initialstate: {type: String, required: true},
-        can_manage: {type: null, default: undefined},
-    },
-    data() {
-        return {
-            state: null as LegacyPartyState | null,
-            currentTime: '',
-            endTime: '',
-            progress: '' as string | number,
-            startedAt: null as number | null,
-            intervalId: null as ReturnType<typeof setInterval> | null,
-        };
-    },
+const props = defineProps<{
+    code: string;
+    initialstate: string;
+    can_manage?: unknown;
+}>();
 
-    methods: {
-        updateState(state: LegacyPartyState): void {
-            this.state = state;
-            this.updateProgressBar();
-        },
+const state = ref<LegacyPartyState | null>(null);
 
-        formatMs(ms: number): string {
-            const mins = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-        },
+const status = computed(() => (state.value?.status?.isPlaying ? state.value.status : null));
+const now = useTicker(
+    () => status.value !== null,
+    () => state.value,
+);
 
-        isPlaying(): boolean {
-            if (this.state === null || this.state!.status === null || this.state!.status!.isPlaying === false) {
-                return false;
-            }
-            return true;
-        },
+function formatMs(ms: number): string {
+    const mins = Math.floor(ms / 60000);
+    const seconds = Math.floor((ms % 60000) / 1000);
+    return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+}
 
-        control(action: string): void {
-            window.axios
-                .post(`/api/v1/parties/${this.code}/control`, {
-                    action: action,
-                })
-                .then((response) => {
-                    this.updateState(response.data.data.status);
-                });
-        },
-
-        rate(value: number): void {
-            window.axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state!.current!.id}/rate`, {
-                rating: value,
-            });
-        },
-
-        getBackgroundImageStyle() {
-            if (this.state === null || this.state!.now === null) {
-                return '';
-            }
-            return `background-image: url('${this.state!.now.album.image_url}');`;
-        },
-
-        updateProgressBar() {
-            if (this.isPlaying()) {
-                this.startedAt = new Date(this.state!.status!.sampledAt).getTime() - this.state!.status!.progressMs;
-                this.endTime = this.formatMs(this.state!.status!.length);
-                this.moveProgressBar();
-                if (this.intervalId === null) {
-                    this.intervalId = setInterval(this.moveProgressBar, 1000);
-                }
-            } else {
-                this.progress = 0;
-                this.currentTime = '';
-                this.endTime = '';
-                this.startedAt = null;
-                if (this.intervalId !== null) {
-                    clearInterval(this.intervalId);
-                }
-            }
-        },
-
-        moveProgressBar() {
-            if (!this.isPlaying() || this.startedAt === null) {
-                return;
-            }
-
-            const progress = new Date().getTime() - this.startedAt;
-            this.progress = Math.min((progress / this.state!.status!.length) * 100, 100);
-            this.currentTime = this.formatMs(Math.min(progress, this.state!.status!.length));
-        },
-
-        combineArtists(artists: LegacyArtist[]): string {
-            return artists.map((artist) => artist.name).join(', ');
-        },
-    },
-
-    mounted() {
-        this.updateState(JSON.parse(this.initialstate));
-        let channel = `party.${this.code}`;
-        window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
-            this.updateState(payload);
-        });
-    },
-
-    created() {},
-
-    beforeDestroy() {
-        if (this.intervalId !== null) {
-            clearInterval(this.intervalId);
-        }
-    },
+const elapsedMs = computed(() => {
+    if (status.value === null) {
+        return null;
+    }
+    return Math.max(0, now.value - (new Date(status.value.sampledAt).getTime() - status.value.progressMs));
 });
+
+const progress = computed(() =>
+    status.value === null || elapsedMs.value === null || !status.value.length
+        ? 0
+        : Math.min((elapsedMs.value / status.value.length) * 100, 100),
+);
+const currentTime = computed(() =>
+    status.value === null || elapsedMs.value === null ? '' : formatMs(Math.min(elapsedMs.value, status.value.length)),
+);
+const endTime = computed(() => (status.value === null ? '' : formatMs(status.value.length)));
+
+const backgroundImageStyle = computed(() => {
+    const image = state.value?.now?.album?.image_url;
+    return image ? `background-image: url('${image}');` : '';
+});
+
+function updateState(next: LegacyPartyState): void {
+    state.value = next;
+}
+
+function control(action: string): void {
+    void window.axios.post(`/api/v1/parties/${props.code}/control`, {action}).then((response) => {
+        updateState(response.data.data.status);
+    });
+}
+
+function rate(value: number): void {
+    const id = state.value?.current?.id;
+    if (id === undefined) {
+        return;
+    }
+    void window.axios.post(`/api/v1/parties/${props.code}/playedsongs/${id}/rate`, {rating: value});
+}
+
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
+}
+
+async function resync(): Promise<void> {
+    try {
+        const response = await window.axios.get(`/api/v1/parties/${props.code}`);
+        updateState(response.data.data.status);
+    } catch {
+    }
+}
+
+updateState(JSON.parse(props.initialstate));
+
+const echo = useEcho();
+(
+    echo.publicChannel(`party.${props.code}`) as {
+        listen(event: string, cb: (payload: LegacyPartyState) => void): void;
+    }
+).listen('Party\\UpdatedEvent', updateState);
+echo.onReconnect(() => void resync());
+
+defineExpose({control});
 </script>
