@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\PartyControlRequest;
 use App\Http\Resources\V1\PartyResource;
 use App\Models\Party;
+use InvalidArgumentException;
 
 class PartyController extends Controller
 {
@@ -27,6 +28,7 @@ class PartyController extends Controller
             'pause' => $party->pause(),
             'next' => $party->nextTrack(),
             'previous' => $party->previousTrack(),
+            default => throw new InvalidArgumentException('Unsupported party control action.'),
         };
 
         $party->updateState();

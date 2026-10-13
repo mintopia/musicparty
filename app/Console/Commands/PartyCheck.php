@@ -27,7 +27,7 @@ class PartyCheck extends Command
     public function handle()
     {
         $code = $this->argument('code');
-        if ($code !== null) {
+        if (is_string($code)) {
             $party = Party::whereCode($code)->first();
             if (! $party) {
                 $this->error("Unable to find party with code {$code}");

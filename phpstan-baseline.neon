@@ -379,12 +379,6 @@ parameters:
 			path: app/Http/Controllers/Admin/UserController.php
 
 		-
-			message: '#^Match expression does not handle remaining value\: mixed$#'
-			identifier: match.unhandled
-			count: 1
-			path: app/Http/Controllers/Api/V1/PartyController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Api\\V1\\PartyController\:\:control\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -889,12 +883,6 @@ parameters:
 			path: app/Http/Controllers/Webhooks/PartyController.php
 
 		-
-			message: '#^Call to static method startSpan\(\) on an unknown class App\\Services\\OpenTelemetry\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Http/Middleware/MeasureRequest.php
-
-		-
 			message: '#^Cannot access property \$first_login on App\\Models\\User\|null\.$#'
 			identifier: property.nonObject
 			count: 1
@@ -1045,12 +1033,6 @@ parameters:
 			path: app/Models/Album.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperAlbum\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/Album.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$id\.$#'
 			identifier: property.notFound
 			count: 2
@@ -1077,12 +1059,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Artist\:\:toApi\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/Artist.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperArtist\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/Artist.php
 
@@ -1117,12 +1093,6 @@ parameters:
 			path: app/Models/LinkedAccount.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperLinkedAccount\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/LinkedAccount.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Mod\:\:\$_settings\.$#'
 			identifier: property.notFound
 			count: 2
@@ -1147,12 +1117,6 @@ parameters:
 			path: app/Models/Mod.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperMod\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/Mod.php
-
-		-
 			message: '#^Class App\\Models\\ModSetting uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -1173,12 +1137,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\ModSetting\:\:partysettings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/ModSetting.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperModSetting\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/ModSetting.php
 
@@ -1429,12 +1387,6 @@ parameters:
 			path: app/Models/Party.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperParty\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
 			message: '#^Property App\\Models\\PlayedSong\:\:\$played_at \(Carbon\\Carbon\) does not accept Carbon\\Carbon\|null\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -1471,12 +1423,6 @@ parameters:
 			path: app/Models/PartyMember.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPartyMember\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/PartyMember.php
-
-		-
 			message: '#^Class App\\Models\\PartyMemberRole uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -1485,12 +1431,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\PartyMemberRole\:\:member\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMemberRole.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPartyMemberRole\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/PartyMemberRole.php
 
@@ -1525,12 +1465,6 @@ parameters:
 			path: app/Models/PartyModSetting.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPartyModSetting\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/PartyModSetting.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$external_ids\.$#'
 			identifier: property.notFound
 			count: 1
@@ -1557,12 +1491,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\PartyModeration\:\:regexTest\(\) has parameter \$caseInsensitive with no type specified\.$#'
 			identifier: missingType.parameter
-			count: 1
-			path: app/Models/PartyModeration.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPartyModeration\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/PartyModeration.php
 
@@ -1639,12 +1567,6 @@ parameters:
 			path: app/Models/PlayedSong.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperPlayedSong\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
 			message: '#^Property App\\Models\\PlayedSong\:\:\$rating \(int\) does not accept float\|int\|string\.$#'
 			identifier: assign.propertyType
 			count: 1
@@ -1675,12 +1597,6 @@ parameters:
 			path: app/Models/ProviderSetting.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperProviderSetting\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/ProviderSetting.php
-
-		-
 			message: '#^Class App\\Models\\Role uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
@@ -1689,12 +1605,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Role\:\:users\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/Role.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperRole\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/Role.php
 
@@ -1719,12 +1629,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Setting\:\:getValue\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Models/Setting.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperSetting\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/Setting.php
 
@@ -1779,12 +1683,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\SocialProvider\:\:user\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Models/SocialProvider.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperSocialProvider\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/SocialProvider.php
 
@@ -1873,12 +1771,6 @@ parameters:
 			path: app/Models/Song.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperSong\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/Song.php
-
-		-
 			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(App\\Models\\Artist\)\: array given\.$#'
 			identifier: argument.type
 			count: 1
@@ -1903,20 +1795,8 @@ parameters:
 			path: app/Models/SongRating.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperSongRating\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/SongRating.php
-
-		-
 			message: '#^Class App\\Models\\Theme uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/Theme.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperTheme\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/Theme.php
 
@@ -1995,12 +1875,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\UpcomingSong\:\:votes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperUpcomingSong\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/UpcomingSong.php
 
@@ -2155,12 +2029,6 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperUser\.$#'
-			identifier: class.notFound
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Parameter \#1 \$accessToken of method SpotifyWebAPI\\Session\:\:setAccessToken\(\) expects string, string\|null given\.$#'
 			identifier: argument.type
 			count: 1
@@ -2229,12 +2097,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\Vote\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
-			count: 1
-			path: app/Models/Vote.php
-
-		-
-			message: '#^PHPDoc tag @mixin contains unknown class App\\Models\\IdeHelperVote\.$#'
-			identifier: class.notFound
 			count: 1
 			path: app/Models/Vote.php
 
@@ -2969,36 +2831,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: config/session.php
-
-		-
-			message: '#^Class BeyondCode\\LaravelWebSockets\\Apps\\ConfigAppProvider not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/websockets.php
-
-		-
-			message: '#^Class BeyondCode\\LaravelWebSockets\\Dashboard\\Http\\Middleware\\Authorize not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/websockets.php
-
-		-
-			message: '#^Class BeyondCode\\LaravelWebSockets\\Statistics\\Logger\\HttpStatisticsLogger not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/websockets.php
-
-		-
-			message: '#^Class BeyondCode\\LaravelWebSockets\\Statistics\\Models\\WebSocketsStatisticsEntry not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/websockets.php
-
-		-
-			message: '#^Class BeyondCode\\LaravelWebSockets\\WebSockets\\Channels\\ChannelManagers\\ArrayChannelManager not found\.$#'
-			identifier: class.notFound
-			count: 1
-			path: config/websockets.php
 
 		-
 			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:contrained\(\)\.$#'
