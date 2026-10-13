@@ -6,6 +6,7 @@ use App\Services\Music\Data\Track;
 use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
+use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Tests\Support\FakeSpotify;
 
@@ -81,4 +82,40 @@ it('transports through the control client', function () {
 
     expect($api->callsTo('seek'))->toBe([[['position_ms' => 5000]]])
         ->and($provider->devices()[0]->name)->toBe('Test Speaker');
+});
+
+it('maps and caches album and artist metadata so repeat lookups skip the API', function () {
+    Cache::flush();
+    $api = FakeSpotify::install()
+        ->respond('getAlbum', (object) ['id' => 'alb1', 'name' => 'Album One', 'images' => [], 'artists' => [FakeSpotify::artist()], 'total_tracks' => 1, 'tracks' => (object) ['items' => [FakeSpotify::track('t1')]]])
+        ->respond('getArtist', (object) ['id' => 'artist1', 'name' => 'Test Artist', 'images' => []]);
+    $provider = spotifyProvider($api);
+
+    $album = $provider->getAlbum('alb1');
+    $provider->getAlbum('alb1');
+    $artist = $provider->getArtist('artist1');
+    $provider->getArtist('artist1');
+
+    expect($album->ref->name)->toBe('Album One')->and($album->tracks)->toHaveCount(1)
+        ->and($artist->ref->id)->toBe('artist1')
+        ->and($api->callsTo('getAlbum'))->toHaveCount(1)
+        ->and($api->callsTo('getArtist'))->toHaveCount(1);
+
+    $this->travel(61)->minutes();
+    expect($provider->getAlbum('alb1'))->not->toBeNull()
+        ->and($api->callsTo('getAlbum'))->toHaveCount(2);
+});
+
+it('maps artist top tracks and paged artist albums', function () {
+    $api = FakeSpotify::install()
+        ->respond('getArtistTopTracks', (object) ['tracks' => [FakeSpotify::track('a'), FakeSpotify::track('b')]])
+        ->respond('getArtistAlbums', (object) ['items' => [(object) ['id' => 'alb1', 'name' => 'One', 'images' => []]], 'total' => 7]);
+    $provider = spotifyProvider($api);
+
+    $tracks = $provider->getArtistTopTracks('artist1');
+    $albums = $provider->getArtistAlbums('artist1', 2, 5);
+
+    expect(array_map(fn (Track $t) => $t->id, $tracks))->toBe(['a', 'b'])
+        ->and($albums->total)->toBe(7)->and($albums->items[0]->id)->toBe('alb1')
+        ->and($api->callsTo('getArtistAlbums')[0][1])->toMatchArray(['market' => 'GB', 'limit' => 5, 'offset' => 5]);
 });
