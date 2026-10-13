@@ -1,23 +1,26 @@
 <?php
 
-$themedTokens = ['nav-background', 'surface', 'text', 'border'];
+function tokenSource(): string
+{
+    return (string) file_get_contents(base_path('resources/sass/_tokens.scss'));
+}
 
 it('does not use light-dark() in the token source', function () {
-    expect(file_get_contents(base_path('resources/sass/_tokens.scss')))->not->toContain('light-dark(');
+    expect(tokenSource())->not->toContain('light-dark(');
 });
 
-it('defines no themeable colour default at :root', function () use ($themedTokens) {
-    $source = file_get_contents(base_path('resources/sass/_tokens.scss'));
-    preg_match_all('/([^{}]+)\{([^{}]*)\}/', $source, $blocks, PREG_SET_ORDER);
+it('defines no themeable colour default at :root', function () {
+    preg_match_all('/([^{}]+)\{([^{}]*)\}/', tokenSource(), $blocks, PREG_SET_ORDER);
 
+    $offending = [];
     foreach ($blocks as [, $selector, $body]) {
-        $atRoot = preg_match('/(^|,)\s*(:root|:host)\s*(,|$)/', trim($selector));
-        foreach ($themedTokens as $token) {
-            if ($atRoot && preg_match('/--mp-'.$token.'\s*:/', $body)) {
-                $this->fail("--mp-{$token} must not be defined at :root; a saved theme could not override it per scope.");
-            }
+        if (preg_match('/(^|,)\s*(:root|:host)\s*(,|$)/', trim($selector)) !== 1) {
+            continue;
         }
+        preg_match_all('/--mp-(nav-background|surface|text|border)\s*:/', $body, $found);
+        $offending = [...$offending, ...$found[1]];
     }
 
-    expect($source)->toContain('[data-bs-theme=dark]');
+    expect($offending)->toBe([])
+        ->and(tokenSource())->toContain('[data-bs-theme=dark]');
 });

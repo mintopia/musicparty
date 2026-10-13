@@ -14,7 +14,11 @@ async function builtTokensCss(): Promise<string> {
             rollupOptions: {input: 'resources/sass/_tokens.scss'},
         },
     });
-    const outputs = Array.isArray(result) ? result.flatMap((r) => ('output' in r ? r.output : [])) : 'output' in result ? result.output : [];
+    const outputs = Array.isArray(result)
+        ? result.flatMap((r) => ('output' in r ? r.output : []))
+        : 'output' in result
+          ? result.output
+          : [];
     return outputs.map((o) => ('source' in o ? String(o.source) : '')).join('\n');
 }
 
