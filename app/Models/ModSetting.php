@@ -26,6 +26,7 @@ use Spatie\EloquentSortable\SortableTrait;
  * @property bool $private
  * @property string|null $validation
  * @property bool $instance_only
+ * @property array<string, string>|null $options
  * @property mixed|null $default
  * @property mixed|null $instance_value
  * @property int $order
@@ -67,6 +68,7 @@ class ModSetting extends Model implements Sortable
         'encrypted' => 'boolean',
         'private' => 'boolean',
         'instance_only' => 'boolean',
+        'options' => 'array',
         'instance_value' => SettingValue::class,
         'default' => SettingValue::class,
         'type' => SettingType::class,

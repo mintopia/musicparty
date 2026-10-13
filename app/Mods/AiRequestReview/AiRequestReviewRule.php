@@ -2,6 +2,7 @@
 
 namespace App\Mods\AiRequestReview;
 
+use App\Models\Party;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
 use App\Services\Music\Data\ArtistRef;
@@ -32,7 +33,7 @@ class AiRequestReviewRule implements RequestRule
             return RequestDecision::allow();
         }
 
-        $model = $this->instance('model');
+        $model = $this->setting($context->party, 'model');
         if (! is_string($model) || $model === '') {
             return RequestDecision::allow();
         }
@@ -40,9 +41,9 @@ class AiRequestReviewRule implements RequestRule
         try {
             $guidelines = $this->settings->value($context->party, AiRequestReviewMod::CODE, 'guidelines');
             $guidelines = is_string($guidelines) ? $guidelines : null;
-            $timeout = max(1, (int) ($this->instance('timeout') ?? 10));
-            $provider = $this->providerName();
-            [$verdict, $reason] = $this->isJev()
+            $timeout = max(1, (int) ($this->setting($context->party, 'timeout') ?? 10));
+            $provider = $this->providerName($context->party);
+            [$verdict, $reason] = $this->isJev($context->party)
                 ? $this->classify($track, $guidelines, $provider, $model, $timeout)
                 : $this->prompt($track, $guidelines, $provider, $model, $timeout);
 
@@ -87,9 +88,9 @@ class AiRequestReviewRule implements RequestRule
         return [$response['verdict'] ?? null, $response['reason'] ?? null];
     }
 
-    protected function isJev(): bool
+    protected function isJev(Party $party): bool
     {
-        return $this->instance('driver') !== self::DRIVER_OPENAI_COMPATIBLE;
+        return $this->setting($party, 'driver') !== self::DRIVER_OPENAI_COMPATIBLE;
     }
 
     protected function interpret(mixed $verdict, mixed $reason): RequestDecision
@@ -103,11 +104,11 @@ class AiRequestReviewRule implements RequestRule
         };
     }
 
-    protected function providerName(): string
+    protected function providerName(Party $party): string
     {
-        $driver = $this->isJev() ? self::DRIVER_TYPESAFE : self::DRIVER_OPENAI_COMPATIBLE;
-        $config = ['driver' => $driver, 'key' => $this->instance('api_key')];
-        $endpoint = $this->instance('endpoint');
+        $driver = $this->isJev($party) ? self::DRIVER_TYPESAFE : self::DRIVER_OPENAI_COMPATIBLE;
+        $config = ['driver' => $driver, 'key' => $this->setting($party, 'api_key')];
+        $endpoint = $this->setting($party, 'endpoint');
         if ($driver === self::DRIVER_OPENAI_COMPATIBLE && is_string($endpoint) && $endpoint !== '') {
             $config['url'] = $endpoint;
         }
@@ -115,9 +116,9 @@ class AiRequestReviewRule implements RequestRule
         return Ai::build($config)->name();
     }
 
-    protected function instance(string $code): mixed
+    protected function setting(Party $party, string $code): mixed
     {
-        return $this->settings->instanceValue(AiRequestReviewMod::CODE, $code);
+        return $this->settings->value($party, AiRequestReviewMod::CODE, $code);
     }
 
     protected function describe(Track $track): string

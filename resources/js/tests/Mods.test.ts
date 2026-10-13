@@ -2,6 +2,7 @@ import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import AdminMods from '@/pages/Admin/Mods.vue';
 import PartyMods from '@/pages/Parties/Mods.vue';
+import ModSettingField from '@/components/ModSettingField.vue';
 import type {ModSetting} from '@/types';
 
 const inertia = vi.hoisted(() => ({put: vi.fn(), errors: {} as Record<string, string>}));
@@ -112,6 +113,33 @@ describe('Mods pages', () => {
         expect(second.mods.m.enabled).toBe(false);
         expect(second.mods.m.settings.sec).toBe('hunter2');
         expect(second.mods.m.settings.i).toBe(7);
+    });
+
+    it('renders choice settings as radios and submits the chosen key', async () => {
+        const driver = setting('driver', 'choice', {
+            value: 'typesafe',
+            has_value: true,
+            options: {typesafe: 'TypeSafe (Jev)', 'openai-compatible': 'OpenAI-compatible'},
+        });
+        const w = mount(PartyMods, {
+            props: {party, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings: [driver]}]},
+        });
+        const radios = w.findAll('[data-setting="driver"] input[type="radio"]');
+        expect(radios).toHaveLength(2);
+        expect((radios[0].element as HTMLInputElement).checked).toBe(true);
+        expect(w.find('[data-setting="driver"]').text()).toContain('OpenAI-compatible');
+        await radios[1].setValue(true);
+        await w.find('form').trigger('submit');
+        expect(inertia.put.mock.calls[0][1].mods.m.settings.driver).toBe('openai-compatible');
+    });
+
+    it('ModSettingField emits the option key on selection', async () => {
+        const field = setting('driver', 'choice', {options: {a: 'A', b: 'B'}});
+        const w = mount(ModSettingField, {props: {setting: field, modelValue: 'b', id: 'x'}});
+        const radios = w.findAll('[data-test="setting-input"]');
+        expect(radios.map((r) => (r.element as HTMLInputElement).checked)).toEqual([false, true]);
+        await radios[0].setValue(true);
+        expect(w.emitted('update:modelValue')?.[0]).toEqual(['a']);
     });
 
     it('shows validation errors keyed by mod and setting', () => {

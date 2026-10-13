@@ -30,11 +30,11 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
     public function settings(): array
     {
         return [
-            new SettingDefinition('driver', 'Driver', SettingType::stString, AiRequestReviewRule::DRIVER_TYPESAFE, 'Either "typesafe" (Jev) or "openai-compatible".', validation: ['in:typesafe,openai-compatible'], instanceOnly: true),
-            new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not needed for Jev.', validation: ['url'], instanceOnly: true),
-            new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null, instanceOnly: true),
-            new SettingDefinition('model', 'Model', SettingType::stString, null, instanceOnly: true),
-            new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60'], instanceOnly: true),
+            new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_TYPESAFE, 'Either "typesafe" (Jev) or "openai-compatible".', options: [AiRequestReviewRule::DRIVER_TYPESAFE => 'TypeSafe (Jev)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible']),
+            new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not needed for Jev.', validation: ['url']),
+            new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null),
+            new SettingDefinition('model', 'Model', SettingType::stString, null),
+            new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stString, null, 'What this Party does and does not want to hear, passed to the model.'),
         ];
     }

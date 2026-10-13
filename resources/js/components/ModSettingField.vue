@@ -51,6 +51,23 @@ function onInput(event: Event): void {
             />
             <label :for="id" class="form-check-label">{{ setting.name }}</label>
         </div>
+        <template v-else-if="setting.type === 'choice'">
+            <div class="form-label">{{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span></div>
+            <div v-for="[key, label] in Object.entries(setting.options ?? {})" :key="key" class="form-check">
+                <input
+                    :id="`${id}-${key}`"
+                    type="radio"
+                    class="form-check-input"
+                    :class="{'is-invalid': error}"
+                    :name="id"
+                    :value="key"
+                    :checked="modelValue === key"
+                    data-test="setting-input"
+                    @change="emit('update:modelValue', key)"
+                />
+                <label :for="`${id}-${key}`" class="form-check-label">{{ label }}</label>
+            </div>
+        </template>
         <template v-else>
             <label :for="id" class="form-label">
                 {{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span>

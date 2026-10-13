@@ -37,6 +37,7 @@ class SyncModsCommand extends Command
                     $setting->encrypted = $definition->encrypted || $definition->type === SettingType::stSecret;
                     $setting->instance_only = $definition->instanceOnly;
                     $setting->validation = is_array($definition->validation) ? implode('|', array_map(strval(...), $definition->validation)) : $definition->validation;
+                    $setting->options = $definition->options === [] ? null : $definition->options;
                     $setting->default = $definition->default;
                     $setting->save();
                 }

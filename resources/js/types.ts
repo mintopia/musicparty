@@ -168,7 +168,7 @@ export interface PlaybackState {
 }
 
 export type ModSettingType =
-    'string' | 'boolean' | 'integer' | 'float' | 'datetime' | 'track' | 'time_of_day' | 'secret';
+    'string' | 'boolean' | 'integer' | 'float' | 'datetime' | 'track' | 'time_of_day' | 'secret' | 'choice';
 
 export interface ModSetting {
     code: string;
@@ -179,6 +179,7 @@ export interface ModSetting {
     has_value: boolean;
     default: unknown;
     required: boolean;
+    options?: Record<string, string>;
 }
 
 export interface PartyMod {

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\SettingType;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -15,6 +16,7 @@ use App\Services\Requests\RequestOutcome;
 use App\Services\Requests\RequestRules;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
 
@@ -29,10 +31,10 @@ function aiReviewSetup(bool $flagRequests = true, bool $enabled = true, string $
     $party = Party::factory()->create(['provider_id' => 'fake', 'allow_requests' => true, 'explicit' => true, 'flag_requests' => $flagRequests])->refresh();
     $member = PartyMember::factory()->for($party)->for(User::factory())->create();
     $store = app(ModSettingsStore::class);
-    $store->setInstance(AiRequestReviewMod::CODE, 'driver', $driver);
-    $store->setInstance(AiRequestReviewMod::CODE, 'endpoint', 'https://llm.example.test/v1');
-    $store->setInstance(AiRequestReviewMod::CODE, 'model', 'review-1');
-    $store->setInstance(AiRequestReviewMod::CODE, 'api_key', 'secret');
+    $store->set($party, AiRequestReviewMod::CODE, 'driver', $driver);
+    $store->set($party, AiRequestReviewMod::CODE, 'endpoint', 'https://llm.example.test/v1');
+    $store->set($party, AiRequestReviewMod::CODE, 'model', 'review-1');
+    $store->set($party, AiRequestReviewMod::CODE, 'api_key', 'secret');
     if ($enabled) {
         app(PartyMods::class)->enable($party, AiRequestReviewMod::CODE);
     }
@@ -92,7 +94,7 @@ it('allows when the model errors or answers nonsense', function (Closure|array $
 it('allows without calling the model when it is not configured', function () {
     RequestReviewAgent::fake()->preventStrayPrompts();
     [$party, $member] = aiReviewSetup();
-    app(ModSettingsStore::class)->setInstance(AiRequestReviewMod::CODE, 'model', null);
+    app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'model', null);
 
     expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
     RequestReviewAgent::assertNeverPrompted();
@@ -116,11 +118,49 @@ it('does not call the model during annotation', function () {
     RequestReviewAgent::assertNeverPrompted();
 });
 
-it('registers the instance-only secret settings', function () {
+it('registers per-party settings with an encrypted api key and a driver choice', function () {
     Artisan::call('mods:sync');
     $mod = Mod::whereCode(AiRequestReviewMod::CODE)->firstOrFail();
 
-    expect($mod->settings()->whereCode('api_key')->sole())->encrypted->toBeTrue()->instance_only->toBeTrue();
+    expect($mod->settings()->whereCode('api_key')->sole())->encrypted->toBeTrue()->instance_only->toBeFalse()
+        ->and($mod->settings()->whereCode('driver')->sole())->type->toBe(SettingType::stChoice)->instance_only->toBeFalse()
+        ->options->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible']);
+});
+
+it('presents the settings per party with the driver as a choice', function () {
+    [$party] = aiReviewSetup();
+
+    $mod = collect(app(ModSettingsStore::class)->presentFor($party))->firstWhere('code', AiRequestReviewMod::CODE);
+    $settings = collect($mod['settings'])->keyBy('code');
+    $driver = $settings['driver'];
+
+    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'timeout', 'guidelines'])
+        ->and($driver['type'])->toBe('choice')
+        ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible'])
+        ->and($settings['model']['value'])->toBe('review-1');
+});
+
+it('only accepts a driver from the options', function () {
+    [$party] = aiReviewSetup();
+    $store = app(ModSettingsStore::class);
+
+    $store->set($party, AiRequestReviewMod::CODE, 'driver', 'typesafe');
+    expect($store->value($party, AiRequestReviewMod::CODE, 'driver'))->toBe('typesafe');
+
+    expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'driver', 'bogus'))->toThrow(ValidationException::class);
+});
+
+it('reads the driver and model from the party that is being reviewed', function () {
+    Classification::fake([['verdict' => new ChoiceAnswer('reject', ['reject' => 1.0])]]);
+    RequestReviewAgent::fake([['verdict' => 'allow', 'reason' => 'Fine']]);
+    [$jevParty, $jevMember] = aiReviewSetup(driver: 'typesafe');
+    [$otherParty, $otherMember] = aiReviewSetup(driver: 'openai-compatible');
+    app(ModSettingsStore::class)->set($otherParty, AiRequestReviewMod::CODE, 'model', null);
+
+    expect(app(RequestRules::class)->check($jevParty, $jevMember, aiReviewTrack())->allowed)->toBeFalse()
+        ->and(app(RequestRules::class)->check($otherParty, $otherMember, aiReviewTrack())->allowed)->toBeTrue();
+    Classification::assertClassified(fn () => true);
+    RequestReviewAgent::assertNeverPrompted();
 });
 
 describe('Jev classification', function () {

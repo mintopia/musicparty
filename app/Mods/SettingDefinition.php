@@ -8,6 +8,7 @@ final readonly class SettingDefinition
 {
     /**
      * @param  string|array<int|string, mixed>|null  $validation
+     * @param  array<string, string>  $options  Ordered value => label map for stChoice settings
      */
     public function __construct(
         public string $code,
@@ -19,5 +20,6 @@ final readonly class SettingDefinition
         public bool $encrypted = false,
         public string|array|null $validation = null,
         public bool $instanceOnly = false,
+        public array $options = [],
     ) {}
 }

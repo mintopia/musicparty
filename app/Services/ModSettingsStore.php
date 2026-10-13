@@ -12,6 +12,7 @@ use App\Services\Music\MusicProviderFactory;
 use Carbon\CarbonInterface;
 use Closure;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 use InvalidArgumentException;
 use Throwable;
 
@@ -102,6 +103,7 @@ class ModSettingsStore
                     }
                 },
             ],
+            SettingType::stChoice => ['string', Rule::in(array_keys($definition->options ?? []))],
             default => ['string'],
         });
         $extra = $definition->validation;
@@ -227,6 +229,7 @@ class ModSettingsStore
             'has_value' => $secret ? $stored : $value !== null,
             'default' => $secret ? null : $this->presentValue($definition->default),
             'required' => $definition->isRequired(),
+            'options' => (object) ($definition->options ?? []),
         ];
     }
 
