@@ -1,3 +1,4 @@
+# Keep docker-compose.production.example.yml in step with this file whenever services or env change.
 name: musicparty
 
 services:

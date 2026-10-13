@@ -1,0 +1,62 @@
+# Example single-host production topology. Maintained in step with docker-compose.yml:
+# update both whenever services or environment change.
+#
+# Copy to docker-compose.yml next to a .env holding APP_KEY, APP_URL, DB_*, Spotify/OAuth
+# credentials and any overrides of docker/production/production.env (baked into the image).
+#
+# Point your reverse proxy at the `app` container only, forwarding one hostname with
+# websocket upgrade headers (Connection/Upgrade). `app` proxies /app websocket traffic
+# to `reverb` internally; `reverb` must never be published or exposed.
+
+name: musicparty
+
+x-app: &app
+  image: ghcr.io/mintopia/musicparty:latest
+  restart: unless-stopped
+  env_file: .env
+  depends_on:
+    - database
+    - redis
+
+services:
+  app:
+    <<: *app
+    expose:
+      - "80"
+
+  reverb:
+    <<: *app
+    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0" ]
+    healthcheck:
+      disable: true
+
+  horizon:
+    <<: *app
+    entrypoint: [ "php", "artisan", "horizon" ]
+    healthcheck:
+      disable: true
+
+  scheduler:
+    <<: *app
+    entrypoint: [ "php", "artisan", "schedule:work" ]
+    healthcheck:
+      disable: true
+
+  database:
+    image: mariadb:10.5-focal
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
+      MYSQL_DATABASE: "${DB_DATABASE:?set DB_DATABASE}"
+      MYSQL_USER: "${DB_USERNAME:?set DB_USERNAME}"
+      MYSQL_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
+    volumes:
+      - dbdata:/var/lib/mysql
+
+  redis:
+    image: redis:6.2.6
+    restart: unless-stopped
+
+volumes:
+  dbdata:
+    driver: local
