@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 
 /**
@@ -134,9 +135,15 @@ class UpcomingSong extends Model
         }
         $vote = $this->votes()->whereUserId($user->id)->first();
         if (! $vote) {
-            $vote = new Vote;
-            $vote->upcomingSong()->associate($this);
-            $vote->user()->associate($user);
+            try {
+                $vote = new Vote;
+                $vote->upcomingSong()->associate($this);
+                $vote->user()->associate($user);
+                $vote->value = $value;
+                $vote->save();
+            } catch (UniqueConstraintViolationException) {
+                $vote = $this->votes()->whereUserId($user->id)->firstOrFail();
+            }
         }
         $vote->value = $value;
         $vote->save();

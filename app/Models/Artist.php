@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use stdClass;
 
@@ -56,10 +57,14 @@ class Artist extends Model
         if ($artist) {
             return $artist;
         }
-        $artist = new Artist;
-        $artist->spotify_id = $spotifyArtist->id;
-        $artist->name = $spotifyArtist->name;
-        $artist->save();
+        try {
+            $artist = new Artist;
+            $artist->spotify_id = $spotifyArtist->id;
+            $artist->name = $spotifyArtist->name;
+            $artist->save();
+        } catch (UniqueConstraintViolationException) {
+            $artist = Artist::whereSpotifyId($spotifyArtist->id)->firstOrFail();
+        }
 
         return $artist;
     }

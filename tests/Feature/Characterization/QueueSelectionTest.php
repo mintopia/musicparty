@@ -317,6 +317,7 @@ it('weighted draw is repeatable: the same seed yields the same sends', function 
     foreach ([1, 2] as $run) {
         Cache::flush();
         DB::table('upcoming_songs')->delete();
+        DB::table('songs')->delete();
         [$party, $fake] = selectionParty(['weighted' => true]);
         foreach (['A' => 1, 'B' => 2, 'C' => 3, 'D' => 10] as $id => $score) {
             waitingRequest($party, $id, $score);
