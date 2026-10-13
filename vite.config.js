@@ -1,12 +1,14 @@
 import {defineConfig} from 'vite';
 import laravel from 'laravel-vite-plugin';
 import vue from '@vitejs/plugin-vue';
+import {wayfinder} from '@laravel/vite-plugin-wayfinder';
 import path from 'path'
 
 export default defineConfig({
     plugins: [
+        wayfinder(),
         laravel({
-            input: ['resources/css/app.css', 'resources/js/app.js'],
+            input: ['resources/css/app.css', 'resources/js/app.ts', 'resources/js/inertia.ts'],
             refresh: true,
         }),
         vue({
@@ -30,6 +32,7 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
+            '@': path.resolve(import.meta.dirname, 'resources/js'),
             '~tabler': path.resolve(import.meta.dirname, 'node_modules/@tabler/core'),
             '~bootstrap': path.resolve(import.meta.dirname, 'node_modules/bootstrap'),
             vue: 'vue/dist/vue.esm-bundler.js',

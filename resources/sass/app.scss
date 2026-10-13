@@ -1,10 +1,7 @@
-@import '~tabler/src/scss/tabler';
+@use 'tokens';
 @import url('https://rsms.me/inter/inter.css');
 
-
-
 :root {
-    --tblr-font-sans-serif: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
     --control-color-discord: #5865F2;
     --control-color-discord-rgb: '88, 101, 242';
 }
@@ -47,7 +44,7 @@ body {
     --tblr-btn-active-bg: rgba(88, 101, 242, .8);
     --tblr-btn-disabled-bg: #5865F2;
     --tblr-btn-disabled-color: var(--tblr-primary-fg);
-    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
+    --tblr-btn-box-shadow: var(--tblr-shadow-input);
 }
 
 .bg-discord {
@@ -80,7 +77,7 @@ body {
     --tblr-btn-active-bg: rgba(0, 173, 238, .8);
     --tblr-btn-disabled-bg: #00adee;
     --tblr-btn-disabled-color: var(--tblr-primary-fg);
-    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
+    --tblr-btn-box-shadow: var(--tblr-shadow-input);
 }
 
 .bg-steam {
@@ -104,7 +101,7 @@ body {
     --tblr-btn-active-bg: rgba(145, 70, 255, .8);
     --tblr-btn-disabled-bg: #9146FF;
     --tblr-btn-disabled-color: var(--tblr-primary-fg);
-    --tblr-btn-box-shadow: var(--tblr-box-shadow-input);
+    --tblr-btn-box-shadow: var(--tblr-shadow-input);
 }
 
 .bg-twitch {

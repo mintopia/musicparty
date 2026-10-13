@@ -134,31 +134,34 @@
         background-color: #990000;
     }
 </style>
-<script>
+<script lang="ts">
+import {defineComponent} from 'vue';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
+import type {LoadAction} from '@ts-pro/vue-eternal-loading';
+import type {LegacyArtist, LegacyUpcomingSong} from '../types';
 
-export default {
+export default defineComponent({
         components: {
             VueEternalLoading,
         },
-        props: [
-            'can_manage',
-            'can_downvote',
-            'party',
-            'initialstate',
-        ],
+        props: {
+            can_manage: {type: [String, Number, Boolean]},
+            can_downvote: {type: [String, Number, Boolean]},
+            party: {type: String},
+            initialstate: {type: String, required: true},
+        },
         data() {
             return {
                 page: 1,
-                code: null,
-                upcoming: [],
-                message: '',
+                code: null as string | null,
+                upcoming: [] as LegacyUpcomingSong[],
+                message: '' as string,
             }
         },
 
         methods: {
-            vote(song_id, value) {
-                axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {
+            vote(song_id: number, value: number): void {
+                window.axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {
                     vote: value,
                 }).then((response) => {
                     this.addOrUpdateItem(response.data.data);
@@ -174,35 +177,34 @@ export default {
                 });
             },
 
-            deleteSong(song_id) {
+            deleteSong(song_id: number): void {
                 this.removeItem(song_id);
-                axios.delete(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}`);
+                window.axios.delete(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}`);
             },
 
-            getPage({ loaded }) {
-                axios.get(`/api/v1/parties/${this.party}/upcomingsongs`, {
+            getPage({ loaded }: LoadAction): void {
+                window.axios.get(`/api/v1/parties/${this.party}/upcomingsongs`, {
                     params: {
                         page: this.page
                     }
                 }).then(response => {
                     if (response.data.data.length > 0) {
                         this.page += 1;
-                        response.data.data.forEach((newItem) => {
+                        response.data.data.forEach((newItem: LegacyUpcomingSong) => {
                             this.addOrUpdateItem(newItem);
                         });
                         this.sortUpcoming();
                     }
                     loaded(response.data.data.length, 20);
-                }).catch((error) => {
-                    // Do Nothing
+                }).catch(() => {
                 });
             },
 
-            combineArtists(artists) {
+            combineArtists(artists: LegacyArtist[]): string {
                 return artists.map(artist => artist.name).join(', ');
             },
 
-            sortUpcoming() {
+            sortUpcoming(): void {
                 this.upcoming.sort((alpha, bravo) => {
                     if (alpha.score === bravo.score) {
                         let diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
@@ -216,7 +218,7 @@ export default {
                 });
             },
 
-            addOrUpdateItem(newItem, fromPubSub = false) {
+            addOrUpdateItem(newItem: LegacyUpcomingSong, fromPubSub: boolean = false): void {
                 let result = this.upcoming.some((existing, index) => {
                     if (existing.id === newItem.id) {
                         if (fromPubSub) {
@@ -232,26 +234,26 @@ export default {
                 }
             },
 
-            removeItem(id) {
+            removeItem(id: number): void {
                 this.upcoming = this.upcoming.filter(song => song.id !== id);
             },
 
-            formatMs(ms) {
+            formatMs(ms: number): string {
                 const mins = Math.floor(ms / 60000);
                 const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
             },
         },
 
         mounted() {
-            Echo.private(`party.${this.party}`).listen('UpcomingSong\\UpdatedEvent', (payload) => {
+            window.Echo.private(`party.${this.party}`).listen('UpcomingSong\\UpdatedEvent', (payload: LegacyUpcomingSong) => {
                 this.addOrUpdateItem(payload, true);
                 this.sortUpcoming();
             });
-            Echo.private(`party.${this.party}`).listen('UpcomingSong\\RemovedEvent', (payload) => {
+            window.Echo.private(`party.${this.party}`).listen('UpcomingSong\\RemovedEvent', (payload: {id: number}) => {
                 this.removeItem(payload.id);
             });
-            const initial = JSON.parse(this.initialstate);
+            const initial = JSON.parse(this.initialstate) as LegacyUpcomingSong[] | null;
             if (initial) {
                 initial.forEach((item) => {
                     this.addOrUpdateItem(item);
@@ -261,5 +263,5 @@ export default {
 
         created() {
         }
-    }
+    })
 </script>

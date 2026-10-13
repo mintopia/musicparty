@@ -32,7 +32,7 @@ trait CreatesApplication
         $environment = [
             'APP_ENV' => 'testing',
             'BCRYPT_ROUNDS' => '4',
-            'CACHE_DRIVER' => 'array',
+            'CACHE_STORE' => 'array',
             'DB_CONNECTION' => 'sqlite',
             'DB_DATABASE' => ':memory:',
             'DB_URL' => '',

@@ -1,15 +1,6 @@
 <?php
 
-use App\Mods\Whamageddon\WhammageddonServiceProvider;
-use App\Providers\AppServiceProvider;
-use App\Providers\AuthServiceProvider;
-use App\Providers\BroadcastServiceProvider;
-use App\Providers\EventServiceProvider;
-use App\Providers\HorizonServiceProvider;
-use App\Providers\PrometheusServiceProvider;
-use App\Providers\RouteServiceProvider;
 use Illuminate\Support\Facades\Facade;
-use Illuminate\Support\ServiceProvider;
 
 return [
 
@@ -67,6 +58,8 @@ return [
 
     'url' => env('APP_URL', 'http://localhost'),
 
+    'frontend_url' => env('FRONTEND_URL', 'http://localhost:3000'),
+
     'asset_url' => env('ASSET_URL'),
 
     /*
@@ -93,7 +86,7 @@ return [
     |
     */
 
-    'locale' => 'en',
+    'locale' => env('APP_LOCALE', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -106,7 +99,7 @@ return [
     |
     */
 
-    'fallback_locale' => 'en',
+    'fallback_locale' => env('APP_FALLBACK_LOCALE', 'en'),
 
     /*
     |--------------------------------------------------------------------------
@@ -119,7 +112,7 @@ return [
     |
     */
 
-    'faker_locale' => 'en_US',
+    'faker_locale' => env('APP_FAKER_LOCALE', 'en_US'),
 
     /*
     |--------------------------------------------------------------------------
@@ -136,6 +129,12 @@ return [
 
     'cipher' => 'AES-256-CBC',
 
+    'previous_keys' => [
+        ...array_filter(
+            explode(',', (string) env('APP_PREVIOUS_KEYS', ''))
+        ),
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Maintenance Mode Driver
@@ -145,44 +144,14 @@ return [
     | manage Laravel's "maintenance mode" status. The "cache" driver will
     | allow maintenance mode to be controlled across multiple machines.
     |
-    | Supported drivers: "file", "cache"
+    | Supported drivers: "file", "cache", "array"
     |
     */
 
     'maintenance' => [
-        'driver' => 'file',
-        // 'store' => 'redis',
+        'driver' => env('APP_MAINTENANCE_DRIVER', 'file'),
+        'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
-
-    /*
-    |--------------------------------------------------------------------------
-    | Autoloaded Service Providers
-    |--------------------------------------------------------------------------
-    |
-    | The service providers listed here will be automatically loaded on the
-    | request to your application. Feel free to add your own services to
-    | this array to grant expanded functionality to your applications.
-    |
-    */
-
-    'providers' => ServiceProvider::defaultProviders()->merge([
-        /*
-         * Package Service Providers...
-         */
-        WhammageddonServiceProvider::class,
-
-        /*
-         * Application Service Providers...
-         */
-        AppServiceProvider::class,
-        AuthServiceProvider::class,
-        BroadcastServiceProvider::class,
-        PrometheusServiceProvider::class,
-        EventServiceProvider::class,
-        HorizonServiceProvider::class,
-        RouteServiceProvider::class,
-        SocialiteProviders\Manager\ServiceProvider::class,
-    ])->toArray(),
 
     /*
     |--------------------------------------------------------------------------

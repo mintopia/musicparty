@@ -49,7 +49,7 @@
                                     </div>
                                     <div class="mt-3 text-center">
                                         <i class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4" @click="rate(-1)"></i>
-                                        <span class="d-inline-block mx-2">{{ state.current.rating }}</span>
+                                        <span class="d-inline-block mx-2">{{ state.current!.rating }}</span>
                                         <i class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4" @click="rate(1)"></i>
                                     </div>
                                 </div>
@@ -95,68 +95,71 @@
         transition: width 1s linear;
     }
 </style>
-<script>
-    export default {
-        props: [
-            'code',
-            'initialstate',
-            'can_manage',
-        ],
+<script lang="ts">
+    import {defineComponent} from 'vue';
+    import type {LegacyArtist, LegacyPartyState} from '../types';
+
+    export default defineComponent({
+        props: {
+            code: {type: String, required: true},
+            initialstate: {type: String, required: true},
+            can_manage: {type: null, default: undefined},
+        },
         data() {
             return {
-                state: null,
+                state: null as LegacyPartyState | null,
                 currentTime: '',
                 endTime: '',
-                progress: '',
-                startedAt: null,
-                intervalId: null,
+                progress: '' as string | number,
+                startedAt: null as number | null,
+                intervalId: null as ReturnType<typeof setInterval> | null,
             }
         },
 
         methods: {
-            updateState(state) {
+            updateState(state: LegacyPartyState): void {
                 this.state = state;
                 this.updateProgressBar();
             },
 
-            formatMs(ms) {
+            formatMs(ms: number): string {
                 const mins = Math.floor(ms / 60000);
                 const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (seconds < 10 ? '0' : '') + seconds;
+                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
             },
 
-            isPlaying() {
-                if (this.state === null || this.state.status === null || this.state.status.isPlaying === false) {
+            isPlaying(): boolean {
+                if (this.state === null || this.state!.status === null || this.state!.status!.isPlaying === false) {
                     return false;
                 }
                 return true;
             },
 
-            control(action) {
-                axios.post(`/api/v1/parties/${this.code}/control`, {
+            control(action: string): void {
+                window.axios.post(`/api/v1/parties/${this.code}/control`, {
                     action: action,
                 }).then((response) => {
                     this.updateState(response.data.data.status);
                 });
             },
 
-            rate(value) {
-                axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state.current.id}/rate`, {
+            rate(value: number): void {
+                window.axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state!.current!.id}/rate`, {
                     rating: value
                 });
             },
 
             getBackgroundImageStyle() {
-                if (this.state === null || this.state.now === null) {
+                if (this.state === null || this.state!.now === null) {
                     return '';
                 }
-                return `background-image: url('${this.state.now.album.image_url}');`;
+                return `background-image: url('${this.state!.now.album.image_url}');`;
             },
 
             updateProgressBar() {
                 if (this.isPlaying()) {
-                    this.startedAt = new Date(this.state.status.updatedAt).getTime() - this.state.status.progress;
-                    this.endTime = this.formatMs(this.state.status.length);
+                    this.startedAt = new Date(this.state!.status!.updatedAt).getTime() - this.state!.status!.progress;
+                    this.endTime = this.formatMs(this.state!.status!.length);
                     this.moveProgressBar();
                     if (this.intervalId === null) {
                         this.intervalId = setInterval(this.moveProgressBar, 1000);
@@ -178,11 +181,11 @@
                 }
 
                 const progress = new Date().getTime() - this.startedAt;
-                this.progress = Math.min((progress / this.state.status.length) * 100, 100);
-                this.currentTime = this.formatMs(Math.min(progress, this.state.status.length));
+                this.progress = Math.min((progress / this.state!.status!.length) * 100, 100);
+                this.currentTime = this.formatMs(Math.min(progress, this.state!.status!.length));
             },
 
-            combineArtists(artists) {
+            combineArtists(artists: LegacyArtist[]): string {
                 return artists.map(artist => artist.name).join(', ');
             },
         },
@@ -190,7 +193,7 @@
         mounted() {
             this.updateState(JSON.parse(this.initialstate));
             let channel = `party.${this.code}`;
-            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload) => {
+            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
                 this.updateState(payload);
             });
         },
@@ -203,5 +206,5 @@
                 clearInterval(this.intervalId);
             }
         }
-    }
+    })
 </script>

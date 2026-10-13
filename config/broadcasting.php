@@ -11,11 +11,11 @@ return [
     | framework when an event needs to be broadcast. You may set this to
     | any of the connections defined in the "connections" array below.
     |
-    | Supported: "pusher", "ably", "redis", "log", "null"
+    | Supported: "reverb", "pusher", "ably", "mercure", "redis", "log", "null"
     |
     */
 
-    'default' => env('BROADCAST_DRIVER', 'null'),
+    'default' => env('BROADCAST_CONNECTION', 'null'),
 
     /*
     |--------------------------------------------------------------------------
@@ -23,7 +23,7 @@ return [
     |--------------------------------------------------------------------------
     |
     | Here you may define all of the broadcast connections that will be used
-    | to broadcast events to other systems or over websockets. Samples of
+    | to broadcast events to other systems or over WebSockets. Samples of
     | each available type of connection are provided inside this array.
     |
     */
@@ -53,16 +53,34 @@ return [
             'app_id' => env('PUSHER_APP_ID'),
             'options' => [
                 'cluster' => env('PUSHER_APP_CLUSTER'),
+                'host' => env('PUSHER_HOST') ?: 'api-'.env('PUSHER_APP_CLUSTER', 'mt1').'.pusher.com',
+                'port' => env('PUSHER_PORT', 443),
+                'scheme' => env('PUSHER_SCHEME', 'https'),
                 'encrypted' => true,
-                'host' => env('PUSHER_HOST'),
-                'port' => env('PUSHER_PORT'),
-                'scheme' => env('PUSHER_SCHEME'),
+                'useTLS' => env('PUSHER_SCHEME', 'https') === 'https',
+            ],
+            'client_options' => [
+                // Guzzle client options: https://docs.guzzlephp.org/en/stable/request-options.html
             ],
         ],
 
         'ably' => [
             'driver' => 'ably',
             'key' => env('ABLY_KEY'),
+        ],
+
+        'mercure' => [
+            'driver' => 'mercure',
+            'url' => env('MERCURE_URL'),
+            'public_url' => env('MERCURE_PUBLIC_URL'),
+            'secret' => env('MERCURE_JWT_SECRET'),
+            'encryption_key' => env('MERCURE_ENCRYPTION_KEY'),
+            'claims' => [
+                'iss' => env('MERCURE_JWT_ISSUER'),
+                'client_id' => env('APP_NAME'),
+            ],
+            'cookie_name' => env('MERCURE_COOKIE_NAME'),
+            'subscribe_expiration' => (int) env('MERCURE_SUBSCRIBE_EXPIRATION', 5),
         ],
 
         'redis' => [

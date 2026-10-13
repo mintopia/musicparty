@@ -2,8 +2,11 @@
 
 namespace App\Http\Requests\Admin;
 
+use App\Models\Theme;
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Str;
 
 class ThemeUpdateRequest extends FormRequest
 {
@@ -28,10 +31,22 @@ class ThemeUpdateRequest extends FormRequest
         ];
         if (! $this->theme || ! $this->theme->readonly) {
             $rules = array_merge($rules, [
-                'name' => 'required|string|max:100',
+                'name' => [
+                    'required', 'string', 'max:100',
+                    function (string $attribute, mixed $value, Closure $fail): void {
+                        $code = Str::slug((string) $value);
+                        if ($code === '') {
+                            $fail('The name must contain letters or numbers.');
+                        } elseif (Theme::whereCode($code)->where('id', '<>', $this->theme?->id)->exists()) {
+                            $fail('A theme with this name already exists.');
+                        }
+                    },
+                ],
                 'css' => 'sometimes|string|nullable',
-                'primary' => 'required|hex_color',
-                'nav_background' => 'required|hex_color',
+                'tokens' => 'required|array',
+                'tokens.primary' => 'required|hex_color',
+                'tokens.nav-background' => 'required|hex_color',
+                'tokens.*' => 'nullable|hex_color',
             ]);
         }
 
