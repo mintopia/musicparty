@@ -2,8 +2,10 @@
 
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\RedirectIfAuthenticated;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Contracts\Debug\ExceptionHandler;
 use Illuminate\Foundation\Exceptions\Handler;
+use Illuminate\Log\Events\MessageLogged;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Route;
 
@@ -45,4 +47,11 @@ it('renders JSON errors for unknown api routes and HTML 404 for web routes', fun
 
 it('resolves the framework exception handler', function () {
     expect(app(ExceptionHandler::class))->toBeInstanceOf(Handler::class);
+});
+
+it('registers each listener once', function () {
+    $dispatcher = app('events');
+
+    expect($dispatcher->getListeners(MessageLogged::class))->toHaveCount(1)
+        ->and($dispatcher->getListeners(Registered::class))->toHaveCount(1);
 });
