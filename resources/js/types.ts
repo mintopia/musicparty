@@ -30,3 +30,17 @@ export interface SharedProps {
     errors: Record<string, string>;
     [key: string]: unknown;
 }
+
+export interface PlaybackState {
+    isPlaying: boolean;
+    trackId: string | null;
+    linkedFromId: string | null;
+    durationMs: number | null;
+    progressMs: number;
+    sampledAt: string;
+    shuffle: boolean;
+    repeat: string;
+    deviceId: string | null;
+    deviceName: string | null;
+    source: string;
+}
