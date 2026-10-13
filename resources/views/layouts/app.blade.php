@@ -59,7 +59,8 @@
                     @foreach(Auth::user()->partyMembers()->with(['party'])->get() as $member)
                         <li class="nav-item dropdown @if(($activenav ?? null) === "party:{$member->party->code}") active @endif">
                             <a class="nav-link dropdown-toggle @if(($activenav ?? null) === "party:{$member->party->code}") show @endif"
-                               href="#navbar-party-{{ $member->party->code }}" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                               href="#navbar-party-{{ $member->party->code }}" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
+                               aria-expanded="{{ ($activenav ?? null) === "party:{$member->party->code}" ? 'true' : 'false' }}">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="icon ti ti-playlist"></i>
                                 </span>
@@ -96,6 +97,19 @@
                             </a>
                         </li>
                     @endcan
+                    @guest
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('login') }}">
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <i class="icon ti ti-login"></i>
+                                </span>
+                                <span class="nav-link-title">
+                                    Login
+                                </span>
+                            </a>
+                        </li>
+                    @endguest
+                    @auth
                     <li class="nav-item @if(($activenav ?? null) === 'profile') active @endif">
                         <a class="nav-link" href="{{ route('user.profile') }}">
                             <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -106,10 +120,12 @@
                             </span>
                         </a>
                     </li>
+                    @endauth
                     @can('admin')
                         <li class="nav-item dropdown @if(($activenav ?? null) === 'admin') active @endif">
                             <a class="nav-link dropdown-toggle  @if(($activenav ?? null) === 'admin') show @endif"
-                               href="#navbar-admin" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button">
+                               href="#navbar-admin" data-bs-toggle="dropdown" data-bs-auto-close="false" role="button"
+                               aria-expanded="{{ ($activenav ?? null) === 'admin' ? 'true' : 'false' }}">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="icon ti ti-settings"></i>
                                 </span>
@@ -128,6 +144,7 @@
                             </div>
                         </li>
                     @endcan
+                    @auth
                     <li class="nav-item">
                         <a class="nav-link" href="{{ route('logout') }}">
                         <span class="nav-link-icon d-md-none d-lg-inline-block">
@@ -138,6 +155,7 @@
                         </span>
                         </a>
                     </li>
+                    @endauth
                 </ul>
             </div>
         </div>
