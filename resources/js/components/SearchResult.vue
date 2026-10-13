@@ -2,10 +2,21 @@
     <div v-if="state" class="list-group-item">
         <div class="row g-2 align-items-center">
             <div class="col-auto">
-                <img v-bind:src="state.album.images[0].url" v-bind:title="state.album.name" class="rounded" width="60" height="60">
+                <img
+                    v-bind:src="state.album.images[0].url"
+                    v-bind:title="state.album.name"
+                    class="rounded"
+                    width="60"
+                    height="60"
+                />
             </div>
             <div class="col">
-                <a v-bind:href="state.external_urls.spotify" title="View on Spotify" class="link-underline-opacity-0" target="_blank">
+                <a
+                    v-bind:href="state.external_urls.spotify"
+                    title="View on Spotify"
+                    class="link-underline-opacity-0"
+                    target="_blank"
+                >
                     {{ state.name }}
                 </a>
                 <div class="text-secondary">
@@ -13,12 +24,8 @@
                 </div>
                 <div class="text-muted">
                     <template v-if="state.upcoming">
-                        <template v-if="state.user">
-                            Requested by {{ state.user }}
-                        </template>
-                        <template v-else>
-                            Fallback Track
-                        </template>
+                        <template v-if="state.user"> Requested by {{ state.user }} </template>
+                        <template v-else> Fallback Track </template>
                     </template>
                     <template v-else-if="state.allowed === false">
                         <span class="text-warning">
@@ -29,8 +36,16 @@
                     <template v-else>
                         <span class="text-yellow">
                             <template v-for="index in 5">
-                                <i v-if="Math.round(state.popularity / 20) >= index" class="icon ti ti-star-filled" v-bind:title="'Rating: ' + state.popularity + ' / 100'"></i>
-                                <i v-else class="icon ti ti-star" v-bind:title="'Popularity: ' + state.popularity + ' / 100'"></i>
+                                <i
+                                    v-if="Math.round(state.popularity / 20) >= index"
+                                    class="icon ti ti-star-filled"
+                                    v-bind:title="'Rating: ' + state.popularity + ' / 100'"
+                                ></i>
+                                <i
+                                    v-else
+                                    class="icon ti ti-star"
+                                    v-bind:title="'Popularity: ' + state.popularity + ' / 100'"
+                                ></i>
                             </template>
                         </span>
                     </template>
@@ -43,21 +58,41 @@
                 <div class="row">
                     <template v-if="can_downvote == 1">
                         <div class="col-5 text-end">
-                            <i v-if="state.vote! <= 0" class="icon ti ti-arrow-big-up cursor-pointer" @click="vote(1)"></i>
-                            <i v-if="state.vote === 1" class="icon ti ti-arrow-big-up-filled cursor-pointer text-success" @click="vote(0)"></i>
+                            <i
+                                v-if="state.vote! <= 0"
+                                class="icon ti ti-arrow-big-up cursor-pointer"
+                                @click="vote(1)"
+                            ></i>
+                            <i
+                                v-if="state.vote === 1"
+                                class="icon ti ti-arrow-big-up-filled cursor-pointer text-success"
+                                @click="vote(0)"
+                            ></i>
                         </div>
                         <div class="col-3 ps-0 pe-0">
                             {{ state.score }}
                         </div>
                         <div class="col-4 text-start">
-                            <i v-if="state.vote! >= 0" class="icon ti ti-arrow-big-down cursor-pointer" @click="vote(-1)"></i>
-                            <i v-if="state.vote === -1" class="icon ti ti-arrow-big-down-filled cursor-pointer text-danger" @click="vote(0)"></i>
+                            <i
+                                v-if="state.vote! >= 0"
+                                class="icon ti ti-arrow-big-down cursor-pointer"
+                                @click="vote(-1)"
+                            ></i>
+                            <i
+                                v-if="state.vote === -1"
+                                class="icon ti ti-arrow-big-down-filled cursor-pointer text-danger"
+                                @click="vote(0)"
+                            ></i>
                         </div>
                     </template>
                     <template v-else>
                         <div class="col-7 text-end">
                             <i v-if="state.vote! <= 0" class="icon ti ti-heart cursor-pointer" @click="vote(1)"></i>
-                            <i v-if="state.vote === 1" class="icon ti ti-heart-filled cursor-pointer text-success" @click="vote(0)"></i>
+                            <i
+                                v-if="state.vote === 1"
+                                class="icon ti ti-heart-filled cursor-pointer text-success"
+                                @click="vote(0)"
+                            ></i>
                         </div>
                         <div class="col-5 text-start">
                             {{ state.score }}
@@ -67,7 +102,7 @@
             </div>
             <div class="col-auto text-center w-8" v-else>
                 <template v-if="state.added">
-                    <button class="btn btn-primary ms-2 w-100" >
+                    <button class="btn btn-primary ms-2 w-100">
                         <i class="icon ti ti-music-check"></i>
                         Added
                     </button>
@@ -97,7 +132,7 @@
         <div class="alert alert-important alert-danger" role="alert">
             <div class="d-flex">
                 <div>
-                    <i class="icon ti ti-exclamation-circle "></i>
+                    <i class="icon ti ti-exclamation-circle"></i>
                 </div>
                 <div class="px-2">
                     {{ message }}
@@ -106,113 +141,117 @@
         </div>
     </div>
 </template>
-<style>
-
-</style>
+<style></style>
 <script lang="ts">
-    import {defineComponent, type PropType} from 'vue';
-    import type {AxiosError} from 'axios';
-    import type {LegacyArtist} from '../types';
+import {defineComponent, type PropType} from 'vue';
+import type {AxiosError} from 'axios';
+import type {LegacyArtist} from '../types';
 
-    interface LegacySearchTrack {
-        id: string;
-        name: string;
-        artists: LegacyArtist[];
-        album: {name: string; images: {url: string}[]};
-        external_urls: {spotify: string};
-        duration_ms: number;
-        popularity: number;
-        allowed?: boolean;
-        reason?: string;
-        added?: boolean;
-        sending?: boolean;
-        upcoming?: boolean;
-        upcoming_id?: number;
-        user?: string | null;
-        score?: number;
-        vote?: number;
-    }
+interface LegacySearchTrack {
+    id: string;
+    name: string;
+    artists: LegacyArtist[];
+    album: {name: string; images: {url: string}[]};
+    external_urls: {spotify: string};
+    duration_ms: number;
+    popularity: number;
+    allowed?: boolean;
+    reason?: string;
+    added?: boolean;
+    sending?: boolean;
+    upcoming?: boolean;
+    upcoming_id?: number;
+    user?: string | null;
+    score?: number;
+    vote?: number;
+}
 
-    interface LegacyVoteResponse {
-        user: string | null;
-        score: number;
-        vote: number;
-        id: number;
-    }
+interface LegacyVoteResponse {
+    user: string | null;
+    score: number;
+    vote: number;
+    id: number;
+}
 
-    export default defineComponent({
-        props: {
-            can_downvote: {type: [Number, String, Boolean] as PropType<number | string | boolean>},
-            party: {type: String},
-            initialstate: {type: String, required: true},
-        },
-        data() {
-            return {
-                state: null as LegacySearchTrack | null,
-                message: '' as string,
-            }
-        },
+export default defineComponent({
+    props: {
+        can_downvote: {type: [Number, String, Boolean] as PropType<number | string | boolean>},
+        party: {type: String},
+        initialstate: {type: String, required: true},
+    },
+    data() {
+        return {
+            state: null as LegacySearchTrack | null,
+            message: '' as string,
+        };
+    },
 
-        methods: {
-            add(): void {
-                this.state!.sending = true;
-                window.axios.post(`/api/v1/parties/${this.party}/upcomingsongs`, {
-                    provider_track_id: this.state!.id
-                }).then((response) => {
+    methods: {
+        add(): void {
+            this.state!.sending = true;
+            window.axios
+                .post(`/api/v1/parties/${this.party}/upcomingsongs`, {
+                    provider_track_id: this.state!.id,
+                })
+                .then((response) => {
                     this.updateResponseFromData(response.data.data);
-                }).catch((error: AxiosError<{message: string}>) => {
+                })
+                .catch((error: AxiosError<{message: string}>) => {
                     if (error.response?.status !== 400) {
                         return;
                     }
-                    this.message = error.response.data.message
+                    this.message = error.response.data.message;
                     setTimeout(() => {
                         this.message = '';
                     }, 5000);
-                }).finally(() => {
+                })
+                .finally(() => {
                     this.state!.sending = false;
                 });
-            },
+        },
 
-            vote(value: number): void {
-                window.axios.post(`/api/v1/parties/${this.party}/upcomingsongs/${this.state!.upcoming_id}/vote`, {
+        vote(value: number): void {
+            window.axios
+                .post(`/api/v1/parties/${this.party}/upcomingsongs/${this.state!.upcoming_id}/vote`, {
                     vote: value,
-                }).then((response) => {
+                })
+                .then((response) => {
                     this.updateResponseFromData(response.data.data);
-                }).catch((error: AxiosError<{message: string}>) => {
+                })
+                .catch((error: AxiosError<{message: string}>) => {
                     if (error.response?.status !== 400) {
                         return;
                     }
-                    this.message = error.response.data.message
+                    this.message = error.response.data.message;
                     setTimeout(() => {
                         this.message = '';
                     }, 5000);
                 });
-            },
-
-            updateResponseFromData(data: LegacyVoteResponse): void {
-                this.state!.user = data.user;
-                this.state!.score = data.score;
-                this.state!.vote = data.vote;
-                this.state!.upcoming = true;
-                this.state!.upcoming_id = data.id;
-            },
-
-            combineArtists(artists: LegacyArtist[]): string {
-                return artists.map(artist => artist.name).join(', ');
-            },
-
-            formatMs(ms: number): string {
-                const mins = Math.floor(ms / 60000);
-                const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-            },
         },
 
-        mounted(): void {
-            this.state = JSON.parse(this.initialstate);
+        updateResponseFromData(data: LegacyVoteResponse): void {
+            this.state!.user = data.user;
+            this.state!.score = data.score;
+            this.state!.vote = data.vote;
+            this.state!.upcoming = true;
+            this.state!.upcoming_id = data.id;
         },
 
-        created(): void {
-        }
-    })
+        combineArtists(artists: LegacyArtist[]): string {
+            return artists.map((artist) => artist.name).join(', ');
+        },
+
+        formatMs(ms: number): string {
+            const mins = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
+            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
+        },
+    },
+
+    mounted(): void {
+        this.state = JSON.parse(this.initialstate);
+    },
+
+    created(): void {},
+});
 </script>

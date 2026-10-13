@@ -1,8 +1,6 @@
 <template>
     <div>
         <template v-if="state !== null && state.next">
-
-
             <h3>Up Next</h3>
 
             <div class="card mb-3">
@@ -10,7 +8,13 @@
                     <div class="list-group-item">
                         <div v-bind:class="'row g-2 align-items-center ' + state.next.css_classes">
                             <div class="col-auto">
-                                <img v-bind:src="state.next.album.image_url" class="rounded" v-bind:title="state.next.album.name" width="60" height="60">
+                                <img
+                                    v-bind:src="state.next.album.image_url"
+                                    class="rounded"
+                                    v-bind:title="state.next.album.name"
+                                    width="60"
+                                    height="60"
+                                />
                             </div>
                             <div class="col">
                                 {{ state.next.name }}
@@ -23,9 +27,11 @@
                                 </div>
                             </div>
                             <div class="col-auto text-secondary text-center">
-                                {{formatMs(state.next.length) }}
+                                {{ formatMs(state.next.length) }}
                                 <div class="text-muted mt-2">
-                                    <template v-if="state.next.score === 1 || state.next.score === -1">{{ state.next.score }} vote</template>
+                                    <template v-if="state.next.score === 1 || state.next.score === -1"
+                                        >{{ state.next.score }} vote</template
+                                    >
                                     <template v-else>{{ state.next.score }} votes</template>
                                 </div>
                             </div>
@@ -43,7 +49,7 @@
 
 .whamageddon::before {
     content: 'Whamageddon!';
-    white-space:nowrap;
+    white-space: nowrap;
     position: absolute;
     padding: 5px 100px;
     width: 100%;
@@ -59,53 +65,51 @@
 }
 </style>
 <script lang="ts">
-    import {defineComponent} from 'vue';
-    import type {LegacyArtist, LegacyPartyState} from '../types';
+import {defineComponent} from 'vue';
+import type {LegacyArtist, LegacyPartyState} from '../types';
 
-    export default defineComponent({
-        props: {
-            code: {type: String, required: true},
-            initialstate: {type: String, required: true},
-        },
-        data() {
-            return {
-                state: null as LegacyPartyState | null,
-                currentTime: '',
-                endTime: '',
-                progress: '',
-                startedAt: null as number | null,
-                intervalId: null as ReturnType<typeof setInterval> | null,
-            }
-        },
+export default defineComponent({
+    props: {
+        code: {type: String, required: true},
+        initialstate: {type: String, required: true},
+    },
+    data() {
+        return {
+            state: null as LegacyPartyState | null,
+            currentTime: '',
+            endTime: '',
+            progress: '',
+            startedAt: null as number | null,
+            intervalId: null as ReturnType<typeof setInterval> | null,
+        };
+    },
 
-        methods: {
-            updateState(state: LegacyPartyState): void {
-                this.state = state;
-            },
-
-            formatMs(ms: number): string {
-                const mins = Math.floor(ms / 60000);
-                const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-            },
-
-            combineArtists(artists: LegacyArtist[]): string {
-                return artists.map(artist => artist.name).join(', ');
-            },
+    methods: {
+        updateState(state: LegacyPartyState): void {
+            this.state = state;
         },
 
-        mounted() {
-            this.updateState(JSON.parse(this.initialstate));
-            let channel = `party.${this.code}`;
-            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
-                this.updateState(payload);
-            });
+        formatMs(ms: number): string {
+            const mins = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
+            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
         },
 
-        created() {
+        combineArtists(artists: LegacyArtist[]): string {
+            return artists.map((artist) => artist.name).join(', ');
         },
+    },
 
-        beforeDestroy() {
-        }
-    })
+    mounted() {
+        this.updateState(JSON.parse(this.initialstate));
+        let channel = `party.${this.code}`;
+        window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
+            this.updateState(payload);
+        });
+    },
+
+    created() {},
+
+    beforeDestroy() {},
+});
 </script>

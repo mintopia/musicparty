@@ -1,13 +1,13 @@
-import loadash from 'lodash'
-import * as Popper from '@popperjs/core'
+import loadash from 'lodash';
+import * as Popper from '@popperjs/core';
 import axios from 'axios';
 import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
 
-window._ = loadash
+window._ = loadash;
 
-window.Popper = Popper
+window.Popper = Popper;
 
 /**
  * We'll load the axios HTTP library which allows us to easily issue requests
@@ -28,11 +28,11 @@ window.Pusher = Pusher;
 const forceTLS = window.location.protocol === 'https:';
 
 window.Echo = new Echo({
-     broadcaster: 'reverb',
-     key: window.pusherConfig.appKey as string,
-     wsHost: window.location.hostname,
-     wsPort: Number(window.location.port) || (forceTLS ? 443 : 80),
-     wssPort: Number(window.location.port) || 443,
-     forceTLS,
-     enabledTransports: ['ws', 'wss'],
+    broadcaster: 'reverb',
+    key: window.pusherConfig.appKey as string,
+    wsHost: window.location.hostname,
+    wsPort: Number(window.location.port) || (forceTLS ? 443 : 80),
+    wssPort: Number(window.location.port) || 443,
+    forceTLS,
+    enabledTransports: ['ws', 'wss'],
 });

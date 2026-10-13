@@ -64,13 +64,17 @@ describe('Party search page', () => {
     });
 
     it('shows no results section until a search has run', () => {
-        const wrapper = mount(Search, {props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle}});
+        const wrapper = mount(Search, {
+            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+        });
 
         expect(wrapper.text()).not.toContain('Results');
     });
 
     it('renders the party player above the search and follows live updates', async () => {
-        const wrapper = mount(Search, {props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle}});
+        const wrapper = mount(Search, {
+            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+        });
 
         expect(wrapper.find('[data-test="nothing-playing"]').exists()).toBe(true);
 
@@ -84,7 +88,9 @@ describe('Party search page', () => {
     });
 
     it('submits the query through Inertia', async () => {
-        const wrapper = mount(Search, {props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle}});
+        const wrapper = mount(Search, {
+            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+        });
 
         await wrapper.get('#query').setValue('abba');
         await wrapper.get('form').trigger('submit');
@@ -93,8 +99,11 @@ describe('Party search page', () => {
     });
 
     it('requests a track and reloads the results', async () => {
-        axios.defaults.adapter = () => Promise.resolve({data: {}, status: 201, statusText: 'Created', headers: {}, config: {}} as never);
-        const wrapper = mount(Search, {props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle}});
+        axios.defaults.adapter = () =>
+            Promise.resolve({data: {}, status: 201, statusText: 'Created', headers: {}, config: {}} as never);
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
 
         await wrapper.get('[data-test="request"]').trigger('click');
         await flushPromises();
@@ -111,7 +120,9 @@ describe('Party search page', () => {
                     response: {status: 400, data: {message: 'Already requested'}},
                 }),
             );
-        const wrapper = mount(Search, {props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle}});
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
 
         await wrapper.get('[data-test="request"]').trigger('click');
         await flushPromises();
@@ -122,9 +133,17 @@ describe('Party search page', () => {
 
     it('updates the score after voting on a queued track', async () => {
         axios.defaults.adapter = () =>
-            Promise.resolve({data: {data: {score: 4, vote: 1, user: 'Sam'}}, status: 200, statusText: 'OK', headers: {}, config: {}} as never);
+            Promise.resolve({
+                data: {data: {score: 4, vote: 1, user: 'Sam'}},
+                status: 200,
+                statusText: 'OK',
+                headers: {},
+                config: {},
+            } as never);
         const queued = track('t1', {in_queue: true, upcoming_id: 9, score: 3, requested_by: 'Sam'});
-        const wrapper = mount(Search, {props: {party, params: {query: 'q', perPage: 20}, results: results([queued]), playerState: idle}});
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, results: results([queued]), playerState: idle},
+        });
 
         await wrapper.get('[data-test="heart"]').trigger('click');
         await flushPromises();

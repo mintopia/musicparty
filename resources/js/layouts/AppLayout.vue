@@ -55,7 +55,12 @@ useColorMode();
                 <h1 class="navbar-brand navbar-brand-autodark mt-1 px-2">
                     <a :href="home().url">
                         <template v-if="site.logoLight">
-                            <img :src="site.logoLight" :alt="name" style="max-height: 40px" class="d-inline d-lg-none" />
+                            <img
+                                :src="site.logoLight"
+                                :alt="name"
+                                style="max-height: 40px"
+                                class="d-inline d-lg-none"
+                            />
                             <img :src="site.logoLight" :alt="name" class="d-none d-lg-inline" />
                         </template>
                         <template v-else>{{ name }}</template>
@@ -88,7 +93,12 @@ useColorMode();
                                     :class="{show: isOpen(item.key, item.active)}"
                                     data-bs-popper="static"
                                 >
-                                    <a v-for="child in item.children" :key="child.href" class="dropdown-item" :href="child.href">
+                                    <a
+                                        v-for="child in item.children"
+                                        :key="child.href"
+                                        class="dropdown-item"
+                                        :href="child.href"
+                                    >
                                         {{ child.title }}
                                     </a>
                                 </div>
@@ -147,10 +157,14 @@ useColorMode();
                         <div class="col-lg-auto ms-lg-auto">
                             <ul class="list-inline list-inline-dots mb-0">
                                 <li v-if="site.terms" class="list-inline-item">
-                                    <a :href="site.terms" target="_blank" class="link-secondary">Terms and Conditions</a>
+                                    <a :href="site.terms" target="_blank" class="link-secondary"
+                                        >Terms and Conditions</a
+                                    >
                                 </li>
                                 <li v-if="site.privacyPolicy" class="list-inline-item">
-                                    <a :href="site.privacyPolicy" target="_blank" class="link-secondary">Privacy Policy</a>
+                                    <a :href="site.privacyPolicy" target="_blank" class="link-secondary"
+                                        >Privacy Policy</a
+                                    >
                                 </li>
                             </ul>
                         </div>
@@ -158,14 +172,18 @@ useColorMode();
                             <ul class="list-inline list-inline-dots mb-0">
                                 <li class="list-inline-item">
                                     Copyright &copy; {{ new Date().getFullYear() }}
-                                    <a :href="home().url" class="link-secondary">{{ name }}</a>. All rights reserved
+                                    <a :href="home().url" class="link-secondary">{{ name }}</a
+                                    >. All rights reserved
                                 </li>
                                 <li class="list-inline-item">
                                     Made with <i class="icon ti ti-heart-filled text-pink"></i> by
                                     <a class="link-muted" href="https://github.com/mintopia">Mintopia</a>
                                 </li>
                                 <li class="list-inline-item">
-                                    <a href="https://github.com/mintopia/musicparty" class="link-muted link-underline-opacity-0">
+                                    <a
+                                        href="https://github.com/mintopia/musicparty"
+                                        class="link-muted link-underline-opacity-0"
+                                    >
                                         <i class="icon ti ti-brand-github-filled"></i>GitHub
                                     </a>
                                 </li>

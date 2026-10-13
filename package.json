@@ -8,7 +8,7 @@
         "lint": "eslint .",
         "test": "vitest run",
         "format": "prettier --write resources/js",
-        "format:check": "prettier --check resources/js/inertia.ts resources/js/types.ts resources/js/pages resources/js/tests"
+        "format:check": "prettier --check resources/js"
     },
     "devDependencies": {
         "@eslint/js": "^10.0.1",
@@ -31,19 +31,15 @@
         "laravel-echo": "^2.6.1",
         "laravel-vite-plugin": "^3.2.0",
         "lodash": "^4.18.1",
-        "postcss": "^8.5.30",
         "prettier": "^3.9.10",
         "pusher-js": "^8.6.0",
-        "resolve-url-loader": "^5.0.0",
         "sass": "^1.105.1",
-        "sass-loader": "^17.0.1",
         "typescript": "^6.0.3",
         "typescript-eslint": "^8.71.2",
         "vite": "^8.3.4",
         "vitest": "^5.0.4",
         "vue": "^3.5.43",
         "vue-eslint-parser": "^10.4.1",
-        "vue-loader": "^17.4.2",
         "vue-tsc": "^3.3.13"
     }
 }

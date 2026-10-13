@@ -8,6 +8,8 @@ export default tseslint.config(
     {
         ignores: [
             'vendor/**',
+            'docker/**',
+            'node_modules/**',
             'public/**',
             'storage/**',
             'resources/js/routes/**',
