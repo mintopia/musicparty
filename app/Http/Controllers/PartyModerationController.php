@@ -3,10 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Enums\PartyModerationType;
+use App\Enums\Purpose;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
-use App\Services\Spotify\SpotifyGateway;
+use App\Services\Music\MusicProviderFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -38,8 +39,8 @@ class PartyModerationController extends Controller
 
     public function create(Party $party, Request $request): View
     {
-        $spotifyData = $request->has('track')
-            ? app(SpotifyGateway::class)->findTrack($party->user, (string) $request->input('track'))
+        $track = $request->has('track')
+            ? app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->findTrack((string) $request->input('track'))
             : null;
 
         $moderation = new PartyModeration;
@@ -49,7 +50,7 @@ class PartyModerationController extends Controller
             'party' => $party,
             'canManage' => true,
             'types' => PartyModerationType::getHumanReadableTypes(),
-            'spotifyData' => $spotifyData,
+            'track' => $track,
             'moderation' => $moderation,
         ]);
     }
