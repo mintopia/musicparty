@@ -156,6 +156,26 @@ class FakeSpotify extends SpotifyWebAPI
         return $this->record(__FUNCTION__, func_get_args());
     }
 
+    public function getAlbum(string $albumId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtist(string $artistId): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtistTopTracks(string $artistId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function getArtistAlbums(string $artistId, array|object $options = []): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
     public function getTrack(string $trackId, array|object $options = []): array|object
     {
         return $this->record(__FUNCTION__, func_get_args());
