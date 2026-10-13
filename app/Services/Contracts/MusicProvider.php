@@ -31,6 +31,11 @@ interface MusicProvider
     public function trackUrl(string $trackId): ?string;
 
     /**
+     * Resolve a Player-reported track reference to a provider_track_id, or null when unrecognised.
+     */
+    public function resolveTrackReference(string $reference): ?string;
+
+    /**
      * Whether the provider reserves this track for its own use, so it can never be requested.
      */
     public function isReservedTrack(string $trackId): bool;
