@@ -18,6 +18,7 @@ use App\Services\Requests\RequestRules;
 use App\Services\Requests\Rules\ContextPlaylistTrackRule;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIException;
@@ -740,6 +741,58 @@ describe('Request store lock', function () {
         reqPost($party, $other->user, 'free')->assertSuccessful();
 
         $held->release();
+    });
+
+    it('rejects a different member requesting the same track while it is in flight', function () {
+        config(['musicparty.request_lock_wait_seconds' => 0]);
+        $party = reqParty(['allow_requests' => true]);
+        $other = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('shared'));
+        $held = Cache::lock("request-store:{$party->id}:track:shared", 30);
+        $held->get();
+
+        reqPost($party, $other->user, 'shared')->assertStatus(429);
+
+        $held->release();
+        expect(UpcomingSong::count())->toBe(0);
+    });
+
+    it('records one vote when a concurrent post wins the vote insert', function () {
+        $party = reqParty(['allow_requests' => true]);
+        $member = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('double'));
+        $raced = false;
+        Vote::creating(function (Vote $vote) use (&$raced) {
+            if ($raced) {
+                return;
+            }
+            $raced = true;
+            DB::table('votes')->insert([
+                'upcoming_song_id' => $vote->upcoming_song_id,
+                'user_id' => $vote->user_id,
+                'value' => 1,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        });
+
+        reqPost($party, $member->user, 'double')->assertSuccessful();
+
+        expect(UpcomingSong::count())->toBe(1);
+        expect(Vote::count())->toBe(1);
+    });
+
+    it('records each member vote against a single request for the same track', function () {
+        $party = reqParty(['allow_requests' => true]);
+        $first = reqMember($party);
+        $second = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('same'));
+
+        reqPost($party, $first->user, 'same')->assertSuccessful();
+        reqPost($party, $second->user, 'same')->assertSuccessful();
+
+        expect(UpcomingSong::count())->toBe(1);
+        expect(Vote::pluck('user_id')->sort()->values()->all())->toBe(collect([$first->user_id, $second->user_id])->sort()->values()->all());
     });
 
     it('enforces max_requests on back-to-back posts', function () {
