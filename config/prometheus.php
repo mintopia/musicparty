@@ -16,7 +16,7 @@ return [
      * Only these IP's will be allowed to visit the above urls.
      * All IP's are allowed when empty.
      */
-    'allowed_ips' => array_filter(explode(',', env('PROMETHEUS_ALLOWED_IPS', ''))),
+    'allowed_ips' => array_filter(explode(',', (string) env('PROMETHEUS_ALLOWED_IPS', ''))),
 
     /*
      * This is the default namespace that will be

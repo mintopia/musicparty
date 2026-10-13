@@ -17,7 +17,8 @@ class RemovedEvent implements ShouldBroadcast
 
     public function __construct(protected Party $party, protected int $id) {}
 
-    public function broadcastWith()
+    /** @return array{id: int} */
+    public function broadcastWith(): array
     {
         return [
             'id' => $this->id,

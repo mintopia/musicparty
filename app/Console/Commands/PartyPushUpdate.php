@@ -24,7 +24,7 @@ class PartyPushUpdate extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $code = $this->input->getArgument('party');
         $party = Party::whereCode($code)->first();

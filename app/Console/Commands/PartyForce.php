@@ -24,7 +24,7 @@ class PartyForce extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $cutoff = now()->subMinutes(15);
         $query = Party::whereActive(true)->wherePoll(false)->whereForce(true)->whereNotNull('device_id')->where('last_updated_at', '<', $cutoff);
