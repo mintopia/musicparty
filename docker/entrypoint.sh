@@ -4,6 +4,12 @@ set -e
 APP_USER=musicparty
 
 if [ "$(id -u)" = "0" ]; then
+    APP_DIRS="/app/storage /app/bootstrap/cache"
+    if [ "${RUN_AS_APP_OWNER:-0}" = "1" ]; then
+        PUID="$(stat -c %u /app)"
+        PGID="$(stat -c %g /app)"
+        APP_DIRS=""
+    fi
     PUID="${PUID:-$(stat -c %u /app)}"
     PGID="${PGID:-$(stat -c %g /app)}"
     [ "$PUID" != "0" ] || PUID=1000
@@ -16,7 +22,7 @@ if [ "$(id -u)" = "0" ]; then
         usermod -o -u "$PUID" -g "$PGID" "$APP_USER"
     fi
 
-    for dir in /data /config "/home/$APP_USER" /app/storage /app/bootstrap/cache; do
+    for dir in /data /config "/home/$APP_USER" $APP_DIRS; do
         if [ -d "$dir" ]; then
             find "$dir" \( ! -uid "$PUID" -o ! -gid "$PGID" \) -exec chown -h "$PUID:$PGID" {} +
         fi

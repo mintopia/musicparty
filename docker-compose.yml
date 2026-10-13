@@ -113,23 +113,38 @@ services:
 
   vite:
     profiles: [ "vite" ]
-    image: node:23
-    entrypoint: [ "npm" ]
-    command: [ "run", "dev" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "/entrypoint.sh", "npm" ]
+    command: [ "run", "dev", "--", "--host=0.0.0.0" ]
     working_dir: /app
+    environment:
+      RUN_AS_APP_OWNER: "1"
     volumes:
       - ./:/app
     ports:
       - 5173:5173
+    healthcheck:
+      disable: true
 
   npm:
     profiles: [ "npm" ]
-    image: node:23
-    entrypoint: [ "npm" ]
-    command: [ "" ]
+    build:
+      context: .
+      dockerfile: docker/develop/Dockerfile
+    entrypoint: [ "/entrypoint.sh", "npm" ]
+    command: [ "--version" ]
     working_dir: /app
+    environment:
+      RUN_AS_APP_OWNER: "1"
     volumes:
       - ./:/app
+    depends_on:
+      - redis
+      - db
+    healthcheck:
+      disable: true
 
   artisan:
     profiles: [ "artisan" ]
