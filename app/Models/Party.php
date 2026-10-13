@@ -537,15 +537,18 @@ class Party extends Model
          *
          */
 
+        $now = Carbon::now();
+        $released = static function ($query) use ($now): void {
+            $query->whereNull('not_before');
+            $query->orWhere('not_before', '<=', $now);
+        };
+
         if ($this->weighted) {
             $randomizer = app(Randomizer::class);
             $songsToAdd = new Collection;
             $allSongs = $this->upcoming()
                 ->whereNull('queued_at')
-                ->where(function ($query) {
-                    $query->whereNull('not_before');
-                    $query->orWhere('not_before', '<=', 'NOW()');
-                })
+                ->where($released)
                 ->where('score', '>', 0)->get();
             $allSongs = collect($randomizer->shuffleArray($allSongs->all()));
 
@@ -569,10 +572,7 @@ class Party extends Model
                 $toAdd = $this->upcoming()
                     ->whereNull('queued_at')
                     ->whereNotIn('id', $ids)
-                    ->where(function ($query) {
-                        $query->whereNull('not_before');
-                        $query->orWhere('not_before', '<=', 'NOW()');
-                    })
+                    ->where($released)
                     ->orderBy('score', 'desc')
                     ->orderBy('created_at', 'asc')
                     ->orderBy('id', 'asc')
@@ -585,6 +585,7 @@ class Party extends Model
         } else {
             $songsToAdd = $this->upcoming()
                 ->whereNull('queued_at')
+                ->where($released)
                 ->orderBy('score', 'desc')
                 ->orderBy('created_at', 'asc')
                 ->orderBy('id', 'asc')
