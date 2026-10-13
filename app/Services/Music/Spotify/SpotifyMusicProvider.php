@@ -42,6 +42,21 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         return 'Spotify';
     }
 
+    public function isLinked(): bool
+    {
+        return $this->user->accounts()->whereHas('provider', function ($query) {
+            $query->whereIn('code', ['spotify', 'spotifysearch']);
+        })->count() === 2;
+    }
+
+    public function needsRelink(): bool
+    {
+        return $this->user->accounts()
+            ->whereNotNull('needs_relink_at')
+            ->whereHas('provider', fn ($query) => $query->whereCode('spotify'))
+            ->exists();
+    }
+
     public function trackUrl(string $trackId): ?string
     {
         return "https://open.spotify.com/track/{$trackId}";

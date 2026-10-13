@@ -43,8 +43,8 @@ class PlaybackSync
             }
 
             try {
-                if ($party->user->spotifyNeedsRelink()) {
-                    Log::debug("{$party}: Spotify needs re-linking, skipping update");
+                if ($this->providers->partyNeedsRelink($party)) {
+                    Log::debug("{$party}: Provider needs re-linking, skipping update");
 
                     return;
                 }

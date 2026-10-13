@@ -65,6 +65,18 @@ class MusicProviderFactory
         return $resolver($party->user, $purpose);
     }
 
+    public function forUser(string $id, User $user, Purpose $purpose): MusicProvider&ProviderPlayback
+    {
+        $resolver = $this->registry[$id] ?? throw new InvalidArgumentException("Unknown music provider [{$id}]");
+
+        return $resolver($user, $purpose);
+    }
+
+    public function partyNeedsRelink(Party $party): bool
+    {
+        return $this->forParty($party, Purpose::Control)->needsRelink();
+    }
+
     protected function providerIdFor(Party $party): string
     {
         $id = $party->getAttribute('provider_id');

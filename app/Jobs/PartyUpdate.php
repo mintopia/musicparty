@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
 use App\Models\Party;
+use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackSync;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -65,8 +66,8 @@ class PartyUpdate implements ShouldQueue
 
     protected function update(PlaybackSync $sync): void
     {
-        if ($this->party->user->spotifyNeedsRelink()) {
-            Log::warning("{$this->party}: Spotify needs re-linking, stopping poll chain");
+        if (app(MusicProviderFactory::class)->partyNeedsRelink($this->party)) {
+            Log::warning("{$this->party}: Provider needs re-linking, stopping poll chain");
 
             return;
         }

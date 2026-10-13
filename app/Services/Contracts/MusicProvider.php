@@ -16,6 +16,16 @@ interface MusicProvider
     public function displayName(): string;
 
     /**
+     * Whether the user has linked everything this provider needs to act for them.
+     */
+    public function isLinked(): bool;
+
+    /**
+     * Whether the user must re-authorise this provider before it can act for them.
+     */
+    public function needsRelink(): bool;
+
+    /**
      * Public web link for a track on this provider, or null when it has none.
      */
     public function trackUrl(string $trackId): ?string;
