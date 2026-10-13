@@ -33,7 +33,10 @@ watch(
 const searchUrl = computed(() => search(props.party.code).url);
 
 function submit(): void {
-    router.get(searchUrl.value, {query: query.value, perPage: props.params.perPage === 20 ? undefined : props.params.perPage});
+    router.get(searchUrl.value, {
+        query: query.value,
+        perPage: props.params.perPage === 20 ? undefined : props.params.perPage,
+    });
 }
 
 function showMessage(text: string): void {

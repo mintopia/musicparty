@@ -10,7 +10,9 @@
                                     <img class="albumart" v-bind:src="state.now.album.image_url" />
                                 </div>
                                 <div class="col">
-                                    <div class="fs-2 pb-3 overflow-hidden"><strong>{{ state.now.name }}</strong></div>
+                                    <div class="fs-2 pb-3 overflow-hidden">
+                                        <strong>{{ state.now.name }}</strong>
+                                    </div>
                                     <div class="pb-2 overflow-hidden">
                                         <i class="icon ti ti-users"></i>
                                         {{ combineArtists(state.now.artists) }}
@@ -19,17 +21,25 @@
                                         <i class="icon ti ti-vinyl"></i>
                                         {{ state.now.album.name }}
                                     </div>
-                                    <div class="pb-3 overflow-hidden" v-if="state.current && state.current.provider_track_id === state.now.provider_track_id">
+                                    <div
+                                        class="pb-3 overflow-hidden"
+                                        v-if="
+                                            state.current &&
+                                            state.current.provider_track_id === state.now.provider_track_id
+                                        "
+                                    >
                                         <i class="icon ti ti-music-question"></i>
                                         <template v-if="state.current.user !== null">
                                             Requested by {{ state.current.user }}
                                         </template>
-                                        <template v-else>
-                                            Fallback Track
-                                        </template>
+                                        <template v-else> Fallback Track </template>
                                     </div>
                                     <div class="progress">
-                                        <div class="progress-bar smooth-progress-bar" role="progressbar" v-bind:style="`width: ${progress}%;`"></div>
+                                        <div
+                                            class="progress-bar smooth-progress-bar"
+                                            role="progressbar"
+                                            v-bind:style="`width: ${progress}%;`"
+                                        ></div>
                                     </div>
                                     <div class="d-flex">
                                         <div class="w-25">
@@ -44,13 +54,19 @@
                                             -->
                                         </div>
                                         <div class="w-25 text-end">
-                                            {{  endTime }}
+                                            {{ endTime }}
                                         </div>
                                     </div>
                                     <div class="mt-3 text-center">
-                                        <i class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4" @click="rate(-1)"></i>
+                                        <i
+                                            class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4"
+                                            @click="rate(-1)"
+                                        ></i>
                                         <span class="d-inline-block mx-2">{{ state.current!.rating }}</span>
-                                        <i class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4" @click="rate(1)"></i>
+                                        <i
+                                            class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4"
+                                            @click="rate(1)"
+                                        ></i>
                                     </div>
                                 </div>
                             </div>
@@ -68,143 +84,144 @@
     </div>
 </template>
 <style>
-    .player {
-        overflow: hidden;
-        padding: 1em;
-    }
+.player {
+    overflow: hidden;
+    padding: 1em;
+}
 
-    .blur-bg {
-        backdrop-filter: blur(2px);
-        background-repeat: no-repeat;
-        background-size: 100%;
-        background-position: center center;
-        background-blend-mode: darken;
-        background-color: rgba(0, 0, 0, 0.9);
-    }
+.blur-bg {
+    backdrop-filter: blur(2px);
+    background-repeat: no-repeat;
+    background-size: 100%;
+    background-position: center center;
+    background-blend-mode: darken;
+    background-color: rgba(0, 0, 0, 0.9);
+}
 
-    img.albumart {
-        max-width: 11em;
-    }
+img.albumart {
+    max-width: 11em;
+}
 
-    .progress {
-        height: 5px;
-        margin-bottom: 5px;
-    }
+.progress {
+    height: 5px;
+    margin-bottom: 5px;
+}
 
-    .smooth-progress-bar {
-        transition: width 1s linear;
-    }
+.smooth-progress-bar {
+    transition: width 1s linear;
+}
 </style>
 <script lang="ts">
-    import {defineComponent} from 'vue';
-    import type {LegacyArtist, LegacyPartyState} from '../types';
+import {defineComponent} from 'vue';
+import type {LegacyArtist, LegacyPartyState} from '../types';
 
-    export default defineComponent({
-        props: {
-            code: {type: String, required: true},
-            initialstate: {type: String, required: true},
-            can_manage: {type: null, default: undefined},
+export default defineComponent({
+    props: {
+        code: {type: String, required: true},
+        initialstate: {type: String, required: true},
+        can_manage: {type: null, default: undefined},
+    },
+    data() {
+        return {
+            state: null as LegacyPartyState | null,
+            currentTime: '',
+            endTime: '',
+            progress: '' as string | number,
+            startedAt: null as number | null,
+            intervalId: null as ReturnType<typeof setInterval> | null,
+        };
+    },
+
+    methods: {
+        updateState(state: LegacyPartyState): void {
+            this.state = state;
+            this.updateProgressBar();
         },
-        data() {
-            return {
-                state: null as LegacyPartyState | null,
-                currentTime: '',
-                endTime: '',
-                progress: '' as string | number,
-                startedAt: null as number | null,
-                intervalId: null as ReturnType<typeof setInterval> | null,
+
+        formatMs(ms: number): string {
+            const mins = Math.floor(ms / 60000);
+            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
+            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
+        },
+
+        isPlaying(): boolean {
+            if (this.state === null || this.state!.status === null || this.state!.status!.isPlaying === false) {
+                return false;
             }
+            return true;
         },
 
-        methods: {
-            updateState(state: LegacyPartyState): void {
-                this.state = state;
-                this.updateProgressBar();
-            },
-
-            formatMs(ms: number): string {
-                const mins = Math.floor(ms / 60000);
-                const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-                return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-            },
-
-            isPlaying(): boolean {
-                if (this.state === null || this.state!.status === null || this.state!.status!.isPlaying === false) {
-                    return false;
-                }
-                return true;
-            },
-
-            control(action: string): void {
-                window.axios.post(`/api/v1/parties/${this.code}/control`, {
+        control(action: string): void {
+            window.axios
+                .post(`/api/v1/parties/${this.code}/control`, {
                     action: action,
-                }).then((response) => {
+                })
+                .then((response) => {
                     this.updateState(response.data.data.status);
                 });
-            },
-
-            rate(value: number): void {
-                window.axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state!.current!.id}/rate`, {
-                    rating: value
-                });
-            },
-
-            getBackgroundImageStyle() {
-                if (this.state === null || this.state!.now === null) {
-                    return '';
-                }
-                return `background-image: url('${this.state!.now.album.image_url}');`;
-            },
-
-            updateProgressBar() {
-                if (this.isPlaying()) {
-                    this.startedAt = new Date(this.state!.status!.updatedAt).getTime() - this.state!.status!.progress;
-                    this.endTime = this.formatMs(this.state!.status!.length);
-                    this.moveProgressBar();
-                    if (this.intervalId === null) {
-                        this.intervalId = setInterval(this.moveProgressBar, 1000);
-                    }
-                } else {
-                    this.progress = 0;
-                    this.currentTime = '';
-                    this.endTime = '';
-                    this.startedAt = null;
-                    if (this.intervalId !== null) {
-                        clearInterval(this.intervalId);
-                    }
-                }
-            },
-
-            moveProgressBar() {
-                if (!this.isPlaying() || this.startedAt === null) {
-                    return;
-                }
-
-                const progress = new Date().getTime() - this.startedAt;
-                this.progress = Math.min((progress / this.state!.status!.length) * 100, 100);
-                this.currentTime = this.formatMs(Math.min(progress, this.state!.status!.length));
-            },
-
-            combineArtists(artists: LegacyArtist[]): string {
-                return artists.map(artist => artist.name).join(', ');
-            },
         },
 
-        mounted() {
-            this.updateState(JSON.parse(this.initialstate));
-            let channel = `party.${this.code}`;
-            window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
-                this.updateState(payload);
+        rate(value: number): void {
+            window.axios.post(`/api/v1/parties/${this.code}/playedsongs/${this.state!.current!.id}/rate`, {
+                rating: value,
             });
         },
 
-        created() {
+        getBackgroundImageStyle() {
+            if (this.state === null || this.state!.now === null) {
+                return '';
+            }
+            return `background-image: url('${this.state!.now.album.image_url}');`;
         },
 
-        beforeDestroy() {
-            if (this.intervalId !== null) {
-                clearInterval(this.intervalId);
+        updateProgressBar() {
+            if (this.isPlaying()) {
+                this.startedAt = new Date(this.state!.status!.updatedAt).getTime() - this.state!.status!.progress;
+                this.endTime = this.formatMs(this.state!.status!.length);
+                this.moveProgressBar();
+                if (this.intervalId === null) {
+                    this.intervalId = setInterval(this.moveProgressBar, 1000);
+                }
+            } else {
+                this.progress = 0;
+                this.currentTime = '';
+                this.endTime = '';
+                this.startedAt = null;
+                if (this.intervalId !== null) {
+                    clearInterval(this.intervalId);
+                }
             }
+        },
+
+        moveProgressBar() {
+            if (!this.isPlaying() || this.startedAt === null) {
+                return;
+            }
+
+            const progress = new Date().getTime() - this.startedAt;
+            this.progress = Math.min((progress / this.state!.status!.length) * 100, 100);
+            this.currentTime = this.formatMs(Math.min(progress, this.state!.status!.length));
+        },
+
+        combineArtists(artists: LegacyArtist[]): string {
+            return artists.map((artist) => artist.name).join(', ');
+        },
+    },
+
+    mounted() {
+        this.updateState(JSON.parse(this.initialstate));
+        let channel = `party.${this.code}`;
+        window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyPartyState) => {
+            this.updateState(payload);
+        });
+    },
+
+    created() {},
+
+    beforeDestroy() {
+        if (this.intervalId !== null) {
+            clearInterval(this.intervalId);
         }
-    })
+    },
+});
 </script>

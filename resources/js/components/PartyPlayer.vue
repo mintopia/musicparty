@@ -16,9 +16,7 @@ const startedAt = computed(() =>
     status.value === null ? null : new Date(status.value.updatedAt).getTime() - status.value.progress,
 );
 const elapsedMs = computed(() =>
-    status.value === null || startedAt.value === null
-        ? 0
-        : Math.min(now.value - startedAt.value, status.value.length),
+    status.value === null || startedAt.value === null ? 0 : Math.min(now.value - startedAt.value, status.value.length),
 );
 const progress = computed(() => (status.value === null ? 0 : (elapsedMs.value / status.value.length) * 100));
 const currentTime = computed(() => (status.value === null ? '' : formatMs(elapsedMs.value)));
@@ -51,12 +49,13 @@ onMounted(() => {
     timer = setInterval(() => {
         now.value = Date.now();
     }, 1000);
-    (useEcho().publicChannel(`party.${props.code}`) as {listen(event: string, cb: (payload: LegacyPartyState) => void): void}).listen(
-        'Party\\UpdatedEvent',
-        (payload) => {
-            state.value = payload;
-        },
-    );
+    (
+        useEcho().publicChannel(`party.${props.code}`) as {
+            listen(event: string, cb: (payload: LegacyPartyState) => void): void;
+        }
+    ).listen('Party\\UpdatedEvent', (payload) => {
+        state.value = payload;
+    });
 });
 
 onBeforeUnmount(() => {
@@ -108,7 +107,10 @@ onBeforeUnmount(() => {
                                 <div class="w-25 text-end">{{ endTime }}</div>
                             </div>
                             <div v-if="state.current" class="mt-3 text-center">
-                                <i class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4" @click="rate(-1)"></i>
+                                <i
+                                    class="icon ti ti-thumb-down cursor-pointer d-inline-block mr-4"
+                                    @click="rate(-1)"
+                                ></i>
                                 <span class="d-inline-block mx-2">{{ state.current.rating }}</span>
                                 <i class="icon ti ti-thumb-up cursor-pointer d-inline-block ml-4" @click="rate(1)"></i>
                             </div>
