@@ -36,6 +36,11 @@ class PlaybackSync
     {
         return $this->withLock($party, function () use ($party): void {
             Log::info("{$party}: Updating state");
+            if ($party->hasFreshPushedPlayback()) {
+                Log::debug("{$party}: Pushed playback state is fresh, not polling");
+
+                return;
+            }
             if ($party->poll && $party->last_updated_at > now()->subSeconds(self::POLL_DEBOUNCE_SECONDS)) {
                 Log::debug("{$party}: Already updated state recently");
 
@@ -65,7 +70,16 @@ class PlaybackSync
      */
     public function apply(Party $party, PlaybackState $state): bool
     {
-        return $this->withLock($party, fn () => $this->applyState($party, $this->providers->forParty($party, Purpose::Control), $state));
+        return $this->withLock($party, function () use ($party, $state): void {
+            $party->refresh();
+            if ($party->playback_sampled_at !== null && $state->sampledAt->lessThan($party->playback_sampled_at)) {
+                Log::debug("{$party}: Dropping stale-ordered playback state from {$state->source->value}");
+
+                return;
+            }
+
+            $this->applyState($party, $this->providers->forParty($party, Purpose::Control), $state);
+        });
     }
 
     /**
@@ -155,11 +169,15 @@ class PlaybackSync
     protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): void
     {
         $this->status->remember($party, $state);
+        $party->playback_source = $state->source;
+        $party->playback_received_at = now();
+        $party->playback_sampled_at = Carbon::instance($state->sampledAt);
 
         if (! $party->active) {
             Log::debug("{$party}: Party is not active");
             // Still update current song, in case they're using it manually and still want it reflected on screen
             $this->updateCurrentTrack($party, $provider, $state);
+            $party->save();
 
             return;
         }
