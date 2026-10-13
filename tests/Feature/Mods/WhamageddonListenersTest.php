@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Laravel\Reverb\Contracts\Logger as ReverbLogger;
 use Laravel\Reverb\Loggers\Log as ReverbLog;
+use Mockery\MockInterface;
 use Tests\Support\WhamageddonFixtures;
 
 beforeEach(function () {
@@ -37,7 +38,7 @@ function whamTick(): void
     (new HourTickListener)->handle(new HourTickEvent);
 }
 
-function whamReverbLogger(): Mockery\MockInterface
+function whamReverbLogger(): MockInterface
 {
     $logger = Mockery::mock(ReverbLogger::class)->shouldIgnoreMissing();
     $property = new ReflectionProperty(ReverbLog::class, 'logger');
