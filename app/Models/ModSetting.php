@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
+use Database\Factories\ModSettingFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -55,7 +56,9 @@ use Spatie\EloquentSortable\SortableTrait;
  */
 class ModSetting extends Model implements Sortable
 {
+    /** @use HasFactory<ModSettingFactory> */
     use HasFactory;
+
     use SortableTrait;
 
     protected $casts = [
@@ -65,9 +68,10 @@ class ModSetting extends Model implements Sortable
         'type' => SettingType::class,
     ];
 
+    /** @return Builder<ModSetting> */
     public function buildSortQuery(): Builder
     {
-        return static::query()->where('mod_id', $this->mod_id);
+        return self::where('mod_id', $this->mod_id);
     }
 
     /** @return BelongsTo<Mod, $this> */

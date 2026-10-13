@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use Database\Factories\ArtistFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,7 +34,9 @@ use stdClass;
  */
 class Artist extends Model
 {
+    /** @use HasFactory<ArtistFactory> */
     use HasFactory;
+
     use ToString;
 
     public function toStringName(): string
@@ -61,6 +64,7 @@ class Artist extends Model
         return $artist;
     }
 
+    /** @return array{spotify_id: string, name: string} */
     public function toApi(): array
     {
         return [

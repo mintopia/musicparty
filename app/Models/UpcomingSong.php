@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Exceptions\VoteException;
+use Database\Factories\UpcomingSongFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -56,6 +57,7 @@ use Illuminate\Support\Carbon;
  */
 class UpcomingSong extends Model
 {
+    /** @use HasFactory<UpcomingSongFactory> */
     use HasFactory;
 
     protected $casts = [
@@ -93,6 +95,7 @@ class UpcomingSong extends Model
         return $this->hasOne(PlayedSong::class);
     }
 
+    /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int, score: int, queued_at: string|null, user: string|null, fallback_name: string, css_classes: string} */
     public function toApi(): array
     {
         $data = $this->song->toApi();
@@ -143,7 +146,7 @@ class UpcomingSong extends Model
 
     public function updateScore(): void
     {
-        $this->score = $this->votes()->sum('value') + $this->score_adjustment;
+        $this->score = (int) $this->votes()->sum('value') + $this->score_adjustment;
         if ($this->isDirty()) {
             $this->save();
         }

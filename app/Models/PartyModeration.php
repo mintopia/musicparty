@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\PartyModerationType;
+use Database\Factories\PartyModerationFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -40,6 +41,7 @@ use stdClass;
  */
 class PartyModeration extends Model
 {
+    /** @use HasFactory<PartyModerationFactory> */
     use HasFactory;
 
     protected $casts = [
@@ -171,7 +173,7 @@ class PartyModeration extends Model
         return @preg_match($pattern, '') !== false;
     }
 
-    protected function regexTest(mixed $toCheck, $caseInsensitive = true): bool
+    protected function regexTest(mixed $toCheck, bool $caseInsensitive = true): bool
     {
         $toCheck = (string) $toCheck;
         if ($this->regex) {

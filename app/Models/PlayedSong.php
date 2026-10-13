@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PlayedSongFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -47,6 +48,7 @@ use Illuminate\Support\Carbon;
  */
 class PlayedSong extends Model
 {
+    /** @use HasFactory<PlayedSongFactory> */
     use HasFactory;
 
     protected $casts = [
@@ -129,12 +131,13 @@ class PlayedSong extends Model
 
     public function updateRating(): void
     {
-        $this->rating = $this->ratings()->sum('value');
+        $this->rating = (int) $this->ratings()->sum('value');
         if ($this->isDirty()) {
             $this->save();
         }
     }
 
+    /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int, id: int, rating: int, played_at: string, user: string|null} */
     public function toApi(): array
     {
         $data = $this->song->toApi();

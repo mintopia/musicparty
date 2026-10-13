@@ -7,6 +7,7 @@ use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
+use Database\Factories\PartyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -104,7 +105,9 @@ use stdClass;
  */
 class Party extends Model
 {
+    /** @use HasFactory<PartyFactory> */
     use HasFactory;
+
     use ToString;
 
     const MINIMUM_UPCOMING = 5;
@@ -214,12 +217,12 @@ class Party extends Model
         }
     }
 
-    public function current()
+    public function current(): ?PlayedSong
     {
         return $this->history()->orderBy('played_at', 'desc')->first();
     }
 
-    public function next()
+    public function next(): ?UpcomingSong
     {
         return $this->upcoming()
             ->whereNotNull('queued_at')
@@ -444,11 +447,6 @@ class Party extends Model
         ]);
     }
 
-    protected function getPlaylist(bool $force = false): object
-    {
-        return $this->user->getPlaylist($this->playlist_id, $force);
-    }
-
     protected function getRelinkedTrackId(string $playedId): ?string
     {
         $key = "party.{$this->id}.relinkedtrackid.{$playedId}";
@@ -468,8 +466,9 @@ class Party extends Model
         Log::debug("{$this}: Checking if we need to add tracks to queue");
         $this->user->getSpotifyStatus();
         $queue = SpotifyPayload::object($this->user->requireSpotifyApi()->getMyQueue());
-        $count = count($queue->queue);
-        $ids = collect($queue->queue)->pluck('id')->unique();
+        $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
+        $count = count($queueItems);
+        $ids = collect($queueItems)->pluck('id')->unique();
         /* So let's talk about the Spotify queue. The Queue endpoint will return up to a maximum of 20 items, and a
          * minimum of 10. If the queue doesn't actually have anything, it will fill it up with multiple copies of
          * whatever is in the current context. This is utterly stupid.
@@ -680,7 +679,7 @@ class Party extends Model
         return $current;
     }
 
-    protected function updateCurrentSong()
+    protected function updateCurrentSong(): bool
     {
         Log::debug("{$this}: Updating current song");
         $current = $this->user->getSpotifyStatus();
@@ -724,7 +723,7 @@ class Party extends Model
         return false;
     }
 
-    protected function backfillUpcomingSongs()
+    protected function backfillUpcomingSongs(): void
     {
         Log::debug("{$this}: Backfilling upcoming songs");
         $toAdd = self::MINIMUM_UPCOMING - $this->upcoming()->whereNull('queued_at')->count();
@@ -766,6 +765,7 @@ class Party extends Model
         }
     }
 
+    /** @return array<int, stdClass> */
     public function getBackupPlaylistTracks(bool $force = false): array
     {
         $cacheKey = "party.{$this->id}.backupplaylist";

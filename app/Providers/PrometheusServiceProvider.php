@@ -37,6 +37,7 @@ class PrometheusServiceProvider extends ServiceProvider
             ->value(fn () => Redis::get('metrics.exceptions') ?? 0);
     }
 
+    /** @return array<int, array{mixed, array<int, string>}> */
     protected function getMultipleFromRedis(string $prefix): array
     {
         $keys = Redis::keys("{$prefix}.*");

@@ -21,6 +21,7 @@ class SpotifyAccessTokenUpdatedEvent implements ShouldBroadcast
         //
     }
 
+    /** @return array{accessToken: string} */
     public function broadcastWith(): array
     {
         return [

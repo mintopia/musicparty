@@ -3,8 +3,10 @@
 namespace App\Models;
 
 use App\Casts\SettingValue;
+use App\Enums\SettingType;
 use App\Events\Mods\PartyModSettingDeletedEvent;
 use App\Events\Mods\PartyModSettingUpdatedEvent;
+use Database\Factories\PartyModSettingFactory;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -37,6 +39,7 @@ use Illuminate\Support\Carbon;
  */
 class PartyModSetting extends Model
 {
+    /** @use HasFactory<PartyModSettingFactory> */
     use HasFactory;
 
     protected $casts = [
@@ -48,6 +51,7 @@ class PartyModSetting extends Model
         'deleted' => PartyModSettingDeletedEvent::class,
     ];
 
+    /** @return Attribute<SettingType, never> */
     protected function getType(): Attribute
     {
         return Attribute::make(

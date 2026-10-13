@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\PartyMemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -39,6 +40,7 @@ use Illuminate\Support\Carbon;
  */
 class PartyMember extends Model
 {
+    /** @use HasFactory<PartyMemberFactory> */
     use HasFactory;
 
     protected $casts = [

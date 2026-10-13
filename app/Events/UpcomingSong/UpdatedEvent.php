@@ -23,7 +23,8 @@ class UpdatedEvent implements ShouldBroadcast
         //
     }
 
-    public function broadcastWith()
+    /** @return array<string, mixed> */
+    public function broadcastWith(): array
     {
         $data = $this->song->toApi();
         $data['id'] = $this->song->id;

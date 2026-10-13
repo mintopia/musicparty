@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\SettingValue;
 use App\Enums\SettingType;
 use App\Models\Traits\ToString;
+use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Carbon;
@@ -49,10 +50,13 @@ use Spatie\EloquentSortable\SortableTrait;
  */
 class Setting extends Model implements Sortable
 {
+    /** @use HasFactory<Factory<Setting>> */
     use HasFactory;
+
     use SortableTrait;
     use ToString;
 
+    /** @var array<string, mixed> */
     protected static array $cached = [];
 
     protected $casts = [
@@ -62,7 +66,7 @@ class Setting extends Model implements Sortable
         'type' => SettingType::class,
     ];
 
-    public static function fetch(string $code, $default = null)
+    public static function fetch(string $code, mixed $default = null): mixed
     {
         if (isset(static::$cached[$code])) {
             return static::$cached[$code];
@@ -101,7 +105,8 @@ class Setting extends Model implements Sortable
         Cache::forget("settings.{$this->code}");
     }
 
-    public function getValue()
+    /** @return object{code: string, encrypted: bool, value: mixed} */
+    public function getValue(): object
     {
         return (object) [
             'code' => $this->code,

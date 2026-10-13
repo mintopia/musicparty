@@ -24,7 +24,7 @@ class PartyRefreshAccessTokens extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $provider = SocialProvider::where('code', 'spotify')->first();
         if (! $provider) {
@@ -38,5 +38,7 @@ class PartyRefreshAccessTokens extends Command
                 $account->user->getSpotifyApi();
             }
         });
+
+        return self::SUCCESS;
     }
 }

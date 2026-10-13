@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use Database\Factories\LinkedAccountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -47,7 +48,9 @@ use Illuminate\Support\Carbon;
  */
 class LinkedAccount extends Model
 {
+    /** @use HasFactory<LinkedAccountFactory> */
     use HasFactory;
+
     use ToString;
 
     protected $hidden = [

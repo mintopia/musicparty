@@ -20,6 +20,7 @@ class UpdatedEvent implements ShouldBroadcast
      */
     public function __construct(protected Party $party) {}
 
+    /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
         $state = $this->party->getState();

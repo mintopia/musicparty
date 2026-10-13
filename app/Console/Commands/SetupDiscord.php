@@ -30,7 +30,7 @@ class SetupDiscord extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): int
     {
         $provider = SocialProvider::whereCode('discord')->first();
         if (! $provider) {
@@ -74,5 +74,7 @@ class SetupDiscord extends Command
                 [route('linkedaccounts.store', 'discord')],
             ],
         );
+
+        return self::SUCCESS;
     }
 }

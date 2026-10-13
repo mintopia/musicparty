@@ -2,14 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\SettingType;
 use App\Models\Traits\ToString;
 use App\Services\Contracts\SocialProviderContract;
+use Database\Factories\SocialProviderFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Carbon;
+use stdClass;
 
 /**
  * @property int $id
@@ -46,9 +50,12 @@ use Illuminate\Support\Carbon;
  */
 class SocialProvider extends Model
 {
+    /** @use HasFactory<SocialProviderFactory> */
     use HasFactory;
+
     use ToString;
 
+    /** @var array<string, mixed> */
     protected array $_settings = [];
 
     protected $casts = [
@@ -64,7 +71,7 @@ class SocialProvider extends Model
         return $this->hasMany(LinkedAccount::class);
     }
 
-    public function redirect(?string $redirectUrl = null)
+    public function redirect(?string $redirectUrl = null): RedirectResponse
     {
         return $this->getProvider($redirectUrl)->redirect();
     }
@@ -77,11 +84,12 @@ class SocialProvider extends Model
         return new $providerClass($this, $redirectUrl);
     }
 
-    public function user(?string $redirectUrl = null)
+    public function user(?string $redirectUrl = null): mixed
     {
         return $this->getProvider($redirectUrl)->user();
     }
 
+    /** @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}> */
     public function configMapping(): array
     {
         return $this->getProvider()->configMapping();

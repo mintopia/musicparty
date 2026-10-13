@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Database\Factories\ModFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -33,6 +34,7 @@ use Illuminate\Support\Carbon;
  */
 class Mod extends Model
 {
+    /** @use HasFactory<ModFactory> */
     use HasFactory;
 
     /** @return HasMany<ModSetting, $this> */

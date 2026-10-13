@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
 use App\Support\SpotifyPayload;
+use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -76,7 +77,10 @@ use stdClass;
 class User extends Authenticatable
 {
     use HasApiTokens;
+
+    /** @use HasFactory<UserFactory> */
     use HasFactory;
+
     use Notifiable;
     use ToString;
 
@@ -95,8 +99,10 @@ class User extends Authenticatable
 
     protected ?Session $session = null;
 
+    /** @var array<int, stdClass>|null */
     protected ?array $playlists = null;
 
+    /** @var array<int, stdClass>|null */
     protected ?array $devices = null;
 
     protected ?stdClass $recentTracks = null;
