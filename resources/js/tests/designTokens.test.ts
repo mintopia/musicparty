@@ -1,17 +1,35 @@
 // @vitest-environment node
 import {build} from 'vite';
-import path from 'path';
+import {cssTarget} from '../../../vite.css-target';
 import {describe, expect, it} from 'vitest';
 
-async function builtTokensCss(): Promise<string> {
+const appCssEntry = 'virtual:app-css';
+
+async function builtCss(input: string): Promise<string> {
     const result = await build({
         configFile: false,
         logLevel: 'silent',
-        root: path.resolve(import.meta.dirname, '../../..'),
+        plugins: [
+            {
+                name: 'app-css-entry',
+                resolveId: (id) => (id === appCssEntry ? `\0${appCssEntry}` : null),
+                load: (id) =>
+                    id === `\0${appCssEntry}`
+                        ? "import '~tabler/dist/css/tabler.css'; import '/resources/sass/app.scss';"
+                        : null,
+            },
+        ],
+        resolve: {
+            alias: {
+                '~tabler': new URL('../../../node_modules/@tabler/core', import.meta.url).pathname,
+                '~bootstrap': new URL('../../../node_modules/bootstrap', import.meta.url).pathname,
+            },
+        },
         build: {
             write: false,
             cssMinify: 'lightningcss',
-            rollupOptions: {input: 'resources/sass/_tokens.scss'},
+            cssTarget,
+            rollupOptions: {input},
         },
     });
     const outputs = Array.isArray(result)
@@ -24,12 +42,18 @@ async function builtTokensCss(): Promise<string> {
 
 describe('design token defaults in the built CSS', () => {
     it('resolves colour defaults per theme scope, never once at :root', async () => {
-        const css = await builtTokensCss();
+        const css = await builtCss('resources/sass/_tokens.scss');
 
         expect(css).not.toMatch(/--mp-[a-z-]*:[^;}]*lightningcss/);
         for (const token of ['nav-background', 'surface', 'text', 'border']) {
             expect(css).not.toMatch(new RegExp(`(^|[},])\\s*:(root|host)[^{]*\\{[^}]*--mp-${token}\\s*:`));
         }
         expect(css).toMatch(/\[data-bs-theme=dark\][^{]*\{[^}]*--mp-default-surface:/);
+    });
+
+    it('leaves no frozen light/dark fallbacks anywhere in the app stylesheet', async () => {
+        const css = await builtCss(appCssEntry);
+
+        expect(css).not.toContain('--lightningcss-');
     });
 });

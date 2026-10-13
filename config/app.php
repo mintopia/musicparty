@@ -43,6 +43,8 @@ return [
     |
     */
 
+    'dev_login' => (bool) env('DEV_LOGIN_ENABLED', false),
+
     'debug' => (bool) env('APP_DEBUG', false),
 
     /*

@@ -6,6 +6,7 @@ use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
+use App\Http\Controllers\DevLoginController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
@@ -99,3 +100,7 @@ Route::middleware('guest')->group(function () {
     Route::get('login/{socialprovider:code}', [UserController::class, 'login_redirect'])->name('login.redirect');
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
 });
+
+if (DevLoginController::enabled()) {
+    Route::get('dev/login/{nickname}', DevLoginController::class)->name('dev.login');
+}
