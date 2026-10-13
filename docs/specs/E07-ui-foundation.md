@@ -90,7 +90,7 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 ## Suggested ticket slices
 
 0. **E7-0** Migrate to the streamlined Laravel skeleton (#348). This redoes E3's #304, whose work never reached `feature/v3-rewrite`. blocked_by: none. Every other E7 ticket is blocked by it.
-1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADRs 0005 (TypeScript and Wayfinder), 0006 (Inertia) and 0007 (Tabler upgrade). blocked_by: E7-0.
+1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADRs 0005 (TypeScript and Wayfinder), 0006 (Inertia) and 0007 (Tabler 1.6 upgrade). blocked_by: E7-0.
 2. **E7-2** Front-end lint (ESLint, Prettier) and Vitest tooling, plus lint, type-check and test steps in CI (R12). blocked_by: E7-1.
 3. **E7-3** Tabler upgrade and Blade visual fixes (R4). blocked_by: E7-0.
 4. **E7-4** Token stylesheet mapped onto Tabler (R5). blocked_by: E7-3.
