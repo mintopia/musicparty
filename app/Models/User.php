@@ -17,9 +17,6 @@ use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
 
-/**
- * @mixin IdeHelperUser
- */
 class User extends Authenticatable
 {
     use HasApiTokens;

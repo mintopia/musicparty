@@ -12,9 +12,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
-/**
- * @mixin IdeHelperModSetting
- */
 class ModSetting extends Model implements Sortable
 {
     use HasFactory;

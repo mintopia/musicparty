@@ -13,9 +13,6 @@ use Illuminate\Support\Facades\Log;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
-/**
- * @mixin IdeHelperSetting
- */
 class Setting extends Model implements Sortable
 {
     use HasFactory;
