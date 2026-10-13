@@ -3,6 +3,7 @@ import axios from 'axios';
 import Echo from 'laravel-echo';
 
 import Pusher from 'pusher-js';
+import {echoOptions} from '@/lib/realtime';
 
 window._ = loadash;
 
@@ -22,14 +23,4 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 window.Pusher = Pusher;
 
-const forceTLS = window.location.protocol === 'https:';
-
-window.Echo = new Echo({
-    broadcaster: 'reverb',
-    key: window.pusherConfig.appKey as string,
-    wsHost: window.location.hostname,
-    wsPort: Number(window.location.port) || (forceTLS ? 443 : 80),
-    wssPort: Number(window.location.port) || 443,
-    forceTLS,
-    enabledTransports: ['ws', 'wss'],
-});
+window.Echo = new Echo(echoOptions(window.pusherConfig));

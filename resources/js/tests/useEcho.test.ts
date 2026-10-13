@@ -4,7 +4,7 @@ import {defineComponent} from 'vue';
 import {setEchoFactory, useEcho} from '@/composables/useEcho';
 
 vi.mock('@inertiajs/vue3', () => ({
-    usePage: () => ({props: {reverb: {appKey: 'key'}}}),
+    usePage: () => ({props: {reverb: {appKey: 'key', host: 'example.test', port: 443, forceTLS: true}}}),
 }));
 
 type StateHandler = (states: {previous: string; current: string}) => void;
@@ -48,6 +48,7 @@ describe('useEcho', () => {
         const first = mount(Host);
         const second = mount(Host);
         expect(factory).toHaveBeenCalledTimes(1);
+        expect(factory).toHaveBeenCalledWith({appKey: 'key', host: 'example.test', port: 443, forceTLS: true});
 
         first.unmount();
         expect(echo.leave).not.toHaveBeenCalled();

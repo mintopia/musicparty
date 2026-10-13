@@ -16,6 +16,11 @@ it('renders the Shell page with guest shared props', function () {
             ->where('auth.parties', [])
             ->has('flash')
             ->has('reverb.appKey')
+            ->where('reverb.host', parse_url(route('inertia.shell'), PHP_URL_HOST))
+            ->has('reverb.port')
+            ->where('reverb.forceTLS', str_starts_with(route('inertia.shell'), 'https'))
+            ->where('theme.tokens', [])
+            ->where('theme.stylesheet', null)
             ->has('instanceName'));
 });
 
