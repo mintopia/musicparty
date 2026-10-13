@@ -13,6 +13,13 @@ interface MusicProvider
 {
     public function id(): string;
 
+    public function displayName(): string;
+
+    /**
+     * Public web link for a track on this provider, or null when it has none.
+     */
+    public function trackUrl(string $trackId): ?string;
+
     /**
      * @return Page<Track>
      */

@@ -79,7 +79,7 @@
                             </th>
                             <th>
                                 @include('partials._sortheader', [
-                                    'title' => 'Sent to Spotify',
+                                    'title' => "Sent to {$providerName}",
                                     'field' => 'queued_at',
                                 ])
                             </th>
@@ -116,7 +116,7 @@
                                             {{ $song->queued_at->diffForHumans() }}
                                         </span>
                                     @else
-                                        <span class="text-muted">Not Sent to Spotify</span>
+                                        <span class="text-muted">Not Sent to {{ $providerName }}</span>
                                     @endif
                                 </td>
                             </tr>

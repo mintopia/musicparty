@@ -2,17 +2,20 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\Purpose;
 use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Services\Music\MusicProviderFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 class UpcomingSongController extends Controller
 {
-    public function index(UpcomingSongSearchRequest $request, Party $party): View
+    public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers): View
     {
+        $providerName = $providers->forParty($party, Purpose::Control)->displayName();
         $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
         $params = [
             'order' => 'created_at',
@@ -77,6 +80,7 @@ class UpcomingSongController extends Controller
 
         return view('upcomingsongs.index', [
             'party' => $party,
+            'providerName' => $providerName,
             'canManage' => true,
             'songs' => $songs,
             'types' => [(object) [
@@ -84,15 +88,16 @@ class UpcomingSongController extends Controller
                 'name' => 'Queued',
             ], (object) [
                 'code' => 'spotify',
-                'name' => 'Sent to Spotify',
+                'name' => "Sent to {$providerName}",
             ]],
             'filters' => (object) $params,
             'params' => $params,
         ]);
     }
 
-    public function show(PaginationRequest $request, Party $party, UpcomingSong $song): View
+    public function show(PaginationRequest $request, Party $party, UpcomingSong $song, MusicProviderFactory $providers): View
     {
+        $provider = $providers->forParty($party, Purpose::Control);
         $params = [];
         $perPage = $request->input('per_page', 20);
         if ($perPage !== 20) {
@@ -110,6 +115,8 @@ class UpcomingSongController extends Controller
             'party' => $party,
             'canManage' => true,
             'song' => $song,
+            'providerName' => $provider->displayName(),
+            'trackUrl' => $provider->trackUrl($song->song->provider_track_id),
             'votes' => $votes,
             'other' => $other,
             'ratings' => $ratings,

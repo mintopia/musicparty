@@ -16,6 +16,8 @@ final readonly class TrackAnnotation
         public ?string $user,
         public bool $allowed,
         public ?string $reason,
+        public ?string $externalUrl = null,
+        public string $providerName = '',
     ) {}
 
     /**
@@ -31,7 +33,8 @@ final readonly class TrackAnnotation
             'duration_ms' => $track->durationMs,
             'explicit' => $track->explicit,
             'popularity' => $track->popularity,
-            'external_urls' => ['spotify' => "https://open.spotify.com/track/{$track->id}"],
+            'external_url' => $this->externalUrl,
+            'provider_name' => $this->providerName,
             'album' => [
                 'id' => $track->album->id,
                 'name' => $track->album->name,

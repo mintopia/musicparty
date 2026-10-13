@@ -12,13 +12,15 @@
             </div>
             <div class="col">
                 <a
-                    v-bind:href="state.external_urls.spotify"
-                    title="View on Spotify"
+                    v-if="state.external_url"
+                    v-bind:href="state.external_url"
+                    v-bind:title="'View on ' + state.provider_name"
                     class="link-underline-opacity-0"
                     target="_blank"
                 >
                     {{ state.name }}
                 </a>
+                <template v-else>{{ state.name }}</template>
                 <div class="text-secondary">
                     {{ combineArtists(state.artists) }}
                 </div>
@@ -152,7 +154,8 @@ interface LegacySearchTrack {
     name: string;
     artists: LegacyArtist[];
     album: {name: string; images: {url: string}[]};
-    external_urls: {spotify: string};
+    external_url: string | null;
+    provider_name: string;
     duration_ms: number;
     popularity: number;
     allowed?: boolean;

@@ -15,6 +15,8 @@ const make = (overrides: Partial<TrackAnnotation> = {}): TrackAnnotation => ({
     name: 'Song',
     duration_ms: 185000,
     explicit: false,
+    external_url: null,
+    provider_name: 'Fake',
     album: {id: 'a1', name: 'Album', image_url: 'https://img.test/a.jpg'},
     artists: [
         {id: 'r1', name: 'One'},
