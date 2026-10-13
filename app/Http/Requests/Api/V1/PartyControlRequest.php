@@ -23,7 +23,8 @@ class PartyControlRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'action' => 'required|string|in:play,pause,next,previous',
+            'action' => 'required|string|in:play,pause,next,previous,seek',
+            'positionMs' => 'required_if:action,seek|integer|min:0',
             'deviceId' => 'sometimes|string',
         ];
     }
