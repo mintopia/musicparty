@@ -14,6 +14,7 @@ use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\Track;
+use Throwable;
 
 class FakeMusicProvider implements MusicProvider, ProviderPlayback
 {
@@ -37,6 +38,8 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     protected ?PlaybackState $playback = null;
 
     protected int $queueDepth = 0;
+
+    protected ?Throwable $queueDepthFailure = null;
 
     /** @var list<string> */
     protected array $reservedTrackIds = [];
@@ -116,6 +119,13 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function withQueueDepth(int $depth): self
     {
         $this->queueDepth = $depth;
+
+        return $this;
+    }
+
+    public function failingQueueDepthWith(?Throwable $failure): self
+    {
+        $this->queueDepthFailure = $failure;
 
         return $this;
     }
@@ -284,6 +294,9 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function queueDepth(): int
     {
         $this->record(__FUNCTION__, func_get_args());
+        if ($this->queueDepthFailure !== null) {
+            throw $this->queueDepthFailure;
+        }
 
         return $this->queueDepth;
     }

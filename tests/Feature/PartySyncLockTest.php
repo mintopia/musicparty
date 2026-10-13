@@ -15,7 +15,6 @@ use App\Services\PlaybackSync;
 use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
-use SpotifyWebAPI\SpotifyWebAPI;
 use Tests\Support\FakeSpotify;
 
 beforeEach(function () {
@@ -64,13 +63,7 @@ it('releases a queued job back onto the queue while the lock is held', function 
 });
 
 it('records the attempt time and releases the lock when a sync throws', function () {
-    app()->bind(SpotifyWebAPI::class, fn () => new class extends FakeSpotify
-    {
-        public function getMyQueue(): never
-        {
-            throw new RuntimeException('boom');
-        }
-    });
+    $this->provider->failingQueueDepthWith(new RuntimeException('boom'));
     $before = $this->party->last_updated_at;
     $party = Party::findOrFail($this->party->id);
 
@@ -205,27 +198,12 @@ it('declares bounded retries with exponential backoff', function () {
 });
 
 it('succeeds on retry after a transient failure because the lock was released', function () {
-    $fail = true;
-    app()->bind(SpotifyWebAPI::class, function () use (&$fail) {
-        return new class($fail) extends FakeSpotify
-        {
-            public function __construct(public bool &$fail) {}
-
-            public function getMyQueue()
-            {
-                if ($this->fail) {
-                    throw new RuntimeException('transient');
-                }
-
-                return parent::getMyQueue();
-            }
-        };
-    });
+    $this->provider->failingQueueDepthWith(new RuntimeException('transient'));
 
     expect(fn () => new PartyUpdate(Party::findOrFail($this->party->id))->handle())
         ->toThrow(RuntimeException::class);
 
-    $fail = false;
+    $this->provider->failingQueueDepthWith(null);
     $this->party->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
     new PartyUpdate(Party::findOrFail($this->party->id))->handle();
 
