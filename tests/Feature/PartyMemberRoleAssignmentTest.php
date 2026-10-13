@@ -6,6 +6,7 @@ use App\Models\PartyMemberRole;
 use App\Models\Role;
 use App\Models\User;
 use Database\Seeders\PartyMemberRoleSeeder;
+use Illuminate\Testing\TestResponse;
 
 function memberRole(string $code): PartyMemberRole
 {
@@ -54,7 +55,7 @@ function admin(): User
     return $user;
 }
 
-function assignRole(User $actor, Party $party, PartyMember $target, ?string $role): Illuminate\Testing\TestResponse
+function assignRole(User $actor, Party $party, PartyMember $target, ?string $role): TestResponse
 {
     return test()->actingAs($actor)->put(route('parties.users.update', [$party->code, $target->id]), ['role' => $role]);
 }

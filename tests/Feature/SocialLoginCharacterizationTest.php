@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use App\Models\User;
 use App\Services\SocialProviders\DiscordProvider;
@@ -85,7 +86,7 @@ it('refuses to link an account already owned by another user', function () {
     $this->actingAs($user)->get(route('linkedaccounts.store', 'discord'));
 
     expect($user->accounts()->count())->toBe(0);
-})->throws(App\Exceptions\SocialProviderException::class);
+})->throws(SocialProviderException::class);
 
 it('refuses login when the provider has login disabled', function (array $flags) {
     providerFor(DiscordProvider::class, 'discord')->forceFill($flags)->save();

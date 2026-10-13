@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\Queue;
 use Tests\Support\FakeSpotify;
 
 /**
- * @return array<string, \Illuminate\Console\Scheduling\Event>
+ * @return array<string, Illuminate\Console\Scheduling\Event>
  */
 function scheduledEvents(): array
 {
