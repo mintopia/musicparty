@@ -35,6 +35,12 @@ Websockets are served from the same hostname (see ADR 0004); there is no separat
 It is linked with Discord for auth and Spotify for music.
 It is running in docker with Reverb, Horizon, MariaDB, Redis.
 
+### Worktree Development
+
+When working in a worktree you can use docker to create an environment using docker-compose.
+Ensure you set the compose project name correctly to avoid clashes.
+You may need to do a vite build to create a vite manifest within the worktree.
+
 ### Testing
 
 While editing, run specific unit tests only. CI will be configured to do full
