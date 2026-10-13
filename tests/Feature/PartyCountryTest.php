@@ -2,16 +2,21 @@
 
 use App\Models\Party;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
+use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Schema;
 
-it('copies the owner market onto existing Parties', function () {
-    $owner = User::factory()->create(['market' => 'se']);
-    $party = Party::factory()->create(['user_id' => $owner->id]);
-    DB::table('parties')->where('id', $party->id)->update(['country' => 'GB']);
+uses(RefreshDatabase::class);
 
-    DB::table('parties')->update([
-        'country' => DB::raw("COALESCE((SELECT UPPER(users.market) FROM users WHERE users.id = parties.user_id), 'GB')"),
-    ]);
+it('sets existing Parties from the owner market when the migration runs', function () {
+    $swedish = Party::factory()->create(['user_id' => User::factory()->create(['market' => 'se'])->id]);
+    $blank = Party::factory()->create(['user_id' => User::factory()->create(['market' => ''])->id]);
 
-    expect($party->fresh()->country)->toBe('SE');
+    Schema::dropColumns('parties', 'country');
+    expect(Schema::hasColumn('parties', 'country'))->toBeFalse();
+
+    (require database_path('migrations/2026_10_13_180000_add_country_to_parties.php'))->up();
+
+    expect(Schema::hasColumn('parties', 'country'))->toBeTrue()
+        ->and($swedish->fresh()->country)->toBe('SE')
+        ->and($blank->fresh()->country)->toBe('GB');
 });

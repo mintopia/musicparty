@@ -14,7 +14,7 @@ return new class extends Migration
         });
 
         DB::table('parties')->update([
-            'country' => DB::raw("COALESCE((SELECT UPPER(users.market) FROM users WHERE users.id = parties.user_id), 'GB')"),
+            'country' => DB::raw("COALESCE((SELECT UPPER(NULLIF(TRIM(users.market), '')) FROM users WHERE users.id = parties.user_id), 'GB')"),
         ]);
     }
 
