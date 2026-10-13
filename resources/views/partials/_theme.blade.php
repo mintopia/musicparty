@@ -1,29 +1,26 @@
 @if($currentTheme)
     <style>
         :root {
-            --tblr-primary: {{ $currentTheme->primary }};
-            --tblr-primary-rgb: {{ $currentTheme->rgb('primary') }};
+            --mp-primary: {{ $currentTheme->primary }};
+            --mp-primary-rgb: {{ $currentTheme->rgb('primary') }};
+            --mp-nav-background: {{ $currentTheme->nav_background }};
 
-            --tblr-link-color: {{ $currentTheme->primary }};
-            --tblr-link-color-rgb: {{ $currentTheme->rgb('primary') }};
-            --tblr-link-hover-color: {{ $currentTheme->primary }};
-            --tblr-link-hover-color-rgb: {{ $currentTheme->rgb('primary') }};
-        }
-
-        .navbar[data-bs-theme=dark] {
-            --tblr-navbar-bg: {{ $currentTheme->nav_background }};
+            --tblr-link-color: var(--mp-primary);
+            --tblr-link-color-rgb: var(--mp-primary-rgb);
+            --tblr-link-hover-color: var(--mp-primary);
+            --tblr-link-hover-color-rgb: var(--mp-primary-rgb);
         }
 
         .breadcrumb a {
-            --tblr-breadcrumb-link-color: {{ $currentTheme->primary }};
+            --tblr-breadcrumb-link-color: var(--mp-primary);
         }
 
         .btn-link, .btn-link:hover {
-            color: {{ $currentTheme->primary }};
+            color: var(--mp-primary);
         }
 
         .border-primary {
-            border-color: {{ $currentTheme->primary }} !important;
+            border-color: var(--mp-primary) !important;
         }
 
         .seating-plan .seat.available {

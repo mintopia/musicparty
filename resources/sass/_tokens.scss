@@ -1,0 +1,39 @@
+// Design tokens. Defaults below equal Tabler's own values, so an unthemed page
+// looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
+
+:root,
+:host {
+    --mp-primary: oklch(54.6% 0.1724 254.2deg);
+    --mp-primary-rgb: 6, 111, 209;
+    --mp-nav-background: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
+    --mp-surface: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
+    --mp-text: light-dark(var(--tblr-gray-700), var(--tblr-gray-200));
+    --mp-muted: oklch(55.55% 0 0deg);
+    --mp-border: light-dark(var(--tblr-gray-200), var(--tblr-gray-700));
+    --mp-success: oklch(67.38% 0.1885 145.43deg);
+    --mp-danger: oklch(58.29% 0.1941 25.59deg);
+    --mp-warning: oklch(77.02% 0.1658 71.02deg);
+    --mp-radius: calc(6px * var(--tblr-border-radius-scale, 1));
+    --mp-font-family: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+}
+
+:root,
+:host,
+[data-bs-theme=light],
+[data-bs-theme=dark] {
+    --tblr-primary: var(--mp-primary);
+    --tblr-primary-rgb: var(--mp-primary-rgb);
+    --tblr-bg-surface: var(--mp-surface);
+    --tblr-body-color: var(--mp-text);
+    --tblr-muted: var(--mp-muted);
+    --tblr-border-color: var(--mp-border);
+    --tblr-success: var(--mp-success);
+    --tblr-danger: var(--mp-danger);
+    --tblr-warning: var(--mp-warning);
+    --tblr-border-radius: var(--mp-radius);
+    --tblr-font-sans-serif: var(--mp-font-family);
+}
+
+.navbar[data-bs-theme=dark] {
+    --tblr-navbar-bg: var(--mp-nav-background);
+}
