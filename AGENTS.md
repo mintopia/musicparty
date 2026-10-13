@@ -136,6 +136,53 @@ Single-context: `GLOSSARY.md` and `docs/adr/` at the repo root. See `docs/agents
 ===
 
 <laravel-boost-guidelines>
+=== .ai/installed-versions rules ===
+
+## Installed Versions
+
+Versions below are taken from `composer.lock` and `package-lock.json`. Use the APIs for these versions.
+
+- php - ^8.5 (`composer.json`)
+- laravel/framework - v13.35.0
+- laravel/horizon - v5.50.0
+- laravel/octane - v2.21.0
+- laravel/prompts - v0.3.25
+- laravel/pulse - v1.8.1
+- laravel/reverb - v1.12.0
+- laravel/sanctum - v4.3.3
+- laravel/socialite - v5.31.0
+- laravel/tinker - v3.0.2
+- laravel/boost - v2.10.3 (dev)
+- laravel/pint - v1.32.1 (dev)
+- pestphp/pest - v5.3.2 (dev)
+- phpunit/phpunit - 13.4.2 (dev)
+- larastan/larastan - v3.13.0 (dev)
+- rector/rector - 2.7.0 (dev)
+- vue - 3.5.43
+- vite - 8.3.4
+- laravel-vite-plugin - 3.2.0
+- @vitejs/plugin-vue - 6.0.10
+- laravel-echo - 2.6.1
+- pusher-js - 8.6.0
+- axios - 1.20.0
+- sass - 1.105.1
+- @tabler/core - 1.0.0-beta20
+
+=== .ai/laravel-structure rules ===
+
+## Laravel 13 Streamlined Structure
+
+This application targets the streamlined Laravel 11+ skeleton, not the Laravel 10 layout.
+
+- Application configuration lives in `bootstrap/app.php` via `Application::configure()`: `withRouting`, `withMiddleware`, `withExceptions`.
+- Register middleware (global, groups, aliases) in `withMiddleware`; there is no `app/Http/Kernel.php`.
+- Handle exceptions in `withExceptions`; there is no `app/Exceptions/Handler.php`.
+- Define the schedule in `routes/console.php` (or `withSchedule`); there is no `app/Console/Kernel.php`.
+- Register service providers in `bootstrap/providers.php`, not `config/app.php`.
+- Use current env names such as `BROADCAST_CONNECTION` and `CACHE_STORE`.
+- Rate limits are defined in a service provider's `boot()` method.
+- Until the E3 skeleton migration lands, the legacy `Kernel`/`Handler` classes may still exist; do not add new registrations to them when working on the migration.
+
 === foundation rules ===
 
 # Laravel Boost Guidelines
