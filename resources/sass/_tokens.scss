@@ -1,6 +1,6 @@
 // Design tokens. Defaults below equal Tabler's own values, so an unthemed page
 // looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
-// Avoid the light-dark function: Lightning CSS resolves it on :root, so dark scopes inherit light values.
+// Colour defaults are per scope (--mp-default-*) so a theme's :root --mp-* value wins; see ADR 0008.
 
 :root,
 :host {
