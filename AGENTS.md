@@ -28,8 +28,9 @@ can view the queue, search for tracks, upvote and downvote.
 
 There is a local deployment for development/user verification using .env.
 
- - Application URL: https://musicparty-old.sailing-coyote.ws.cloudagent.mintopia.net
- - Reverb URL: https://musicparty-old-ws.sailing-coyote.ws.cloudagent.mintopia.net
+ - Application URL: https://musicparty.sailing-coyote.ws.cloudagent.mintopia.net
+
+Websockets are served from the same hostname (see ADR 0004); there is no separate Reverb URL.
 
 It is linked with Discord for auth and Spotify for music.
 It is running in docker with Reverb, Horizon, MariaDB, Redis.

@@ -9,14 +9,7 @@
         <link rel="shortcut icon" href="@setting('favicon')"/>
     @endif
 
-    <script>
-        window.pusherConfig = {
-            appKey: '{{ env('VITE_REVERB_APP_KEY') }}',
-            host: '{{ env('VITE_REVERB_HOST') }}',
-            port: {{ env('VITE_REVERB_PORT') }},
-            scheme: '{{ env('VITE_REVERB_SCHEME') }}',
-        };
-    </script>
+    @include('partials._pusher-config')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <meta name="csrf-token" content="{{ csrf_token() }}">

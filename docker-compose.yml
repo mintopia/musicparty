@@ -1,3 +1,4 @@
+# Keep docker-compose.production.example.yml in step with this file whenever services or env change.
 name: musicparty
 
 services:
@@ -30,7 +31,7 @@ services:
     depends_on:
       - redis
       - db
-    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug", "--port=80" ]
+    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug" ]
     healthcheck:
       disable: true
 

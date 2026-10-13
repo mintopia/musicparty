@@ -5,14 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
     <meta http-equiv="X-UA-Compatible" content="ie=edge"/>
 
-    <script>
-        window.pusherConfig = {
-            appKey: '{{ env('VITE_REVERB_APP_KEY') }}',
-            host: '{{ env('VITE_REVERB_HOST') }}',
-            port: {{ env('VITE_REVERB_PORT') }},
-            scheme: '{{ env('VITE_REVERB_SCHEME') }}',
-        };
-    </script>
+    @include('partials._pusher-config')
 
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 
