@@ -2,6 +2,7 @@
 
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\Role;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -38,4 +39,28 @@ it('reads the Reverb key from config', function () {
 
     $this->get(route('inertia.shell'))
         ->assertInertia(fn (Assert $page) => $page->where('reverb.appKey', 'party-key'));
+});
+
+it('shares navigation abilities, site settings and flash levels', function () {
+    $admin = User::factory()->create();
+    $admin->roles()->attach(Role::forceCreate(['code' => 'admin', 'name' => 'Admin']));
+
+    $this->actingAs($admin, 'sanctum')
+        ->withSession(['infoMessage' => 'Heads up', 'warningMessage' => 'Careful'])
+        ->get(route('inertia.shell'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.can.admin', true)
+            ->where('auth.can.createParty', true)
+            ->where('flash.info', 'Heads up')
+            ->where('flash.warning', 'Careful')
+            ->where('theme.darkMode', false)
+            ->has('site.defaultParty'));
+});
+
+it('does not grant admin or party creation to ordinary members', function () {
+    $this->actingAs(User::factory()->create(), 'sanctum')
+        ->get(route('inertia.shell'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('auth.can.admin', false)
+            ->where('auth.can.createParty', false));
 });
