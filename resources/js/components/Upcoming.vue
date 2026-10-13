@@ -4,7 +4,7 @@
             <div class="list-group card-list-group">
                 <TransitionGroup name="list" tag="div">
                     <div class="list-group-item" v-for="song in upcoming" :key="song.id">
-                        <div v-bind:class="legacyRowClasses(song)">
+                        <div v-bind:class="legacyRowClasses(song)" v-bind:style="legacyAccentStyle(song)">
                             <div class="col-auto">
                                 <img
                                     v-bind:src="song.album.image_url"
@@ -16,6 +16,7 @@
                             </div>
                             <div class="col">
                                 {{ song.name }}
+                                <span v-if="song.decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{ song.decoration.label }}</span>
                                 <div class="text-secondary">
                                     {{ combineArtists(song.artists) }}
                                 </div>
@@ -165,7 +166,7 @@ import {defineComponent} from 'vue';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import type {LegacyArtist, LegacyUpcomingSong} from '../types';
-import {legacyFallbackName, legacyRowClasses} from '../lib/decoration';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     components: {
@@ -189,6 +190,7 @@ export default defineComponent({
 
     methods: {
         legacyRowClasses,
+        legacyAccentStyle,
         legacyFallbackName,
 
         vote(song_id: number, value: number): void {

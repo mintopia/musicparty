@@ -62,13 +62,18 @@
                             </div>
                         </div>
                         <h2 v-if="state.next !== null" class="mt-4">Next</h2>
-                        <div v-if="state.next !== null" class="row text-muted">
+                        <div
+                            v-if="state.next !== null"
+                            v-bind:class="`${legacyRowClasses(state.next)} text-muted`"
+                            v-bind:style="legacyAccentStyle(state.next)"
+                        >
                             <div class="col-auto">
                                 <img class="albumart-small" v-bind:src="state.next.album.image_url" />
                             </div>
                             <div class="col fs-1 pt-4">
                                 <div class="fs-0 pb-3 overflow-hidden">
                                     <strong>{{ state.next.name }}</strong>
+                                    <span v-if="state.next.decoration?.label" class="badge bg-azure-lt ms-2" data-test="decoration-label">{{ state.next.decoration.label }}</span>
                                 </div>
                                 <div class="pb-2 overflow-hidden">
                                     <i class="icon-lg ti ti-users fs-1"></i>
@@ -83,7 +88,7 @@
                                     <template v-if="state.next.user !== null">
                                         Requested by {{ state.next.user }}
                                     </template>
-                                    <template v-else> Fallback Track </template>
+                                    <template v-else>{{ legacyFallbackName(state.next) }}</template>
                                 </div>
                             </div>
                         </div>
@@ -147,6 +152,7 @@ img.albumart-small {
 <script lang="ts">
 import {defineComponent} from 'vue';
 import type {LegacyArtist, LegacyTvPartyState} from '../types';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     props: {
@@ -167,6 +173,9 @@ export default defineComponent({
     },
 
     methods: {
+        legacyRowClasses,
+        legacyAccentStyle,
+        legacyFallbackName,
         updateState(state: LegacyTvPartyState): void {
             this.state = state;
             this.updateProgressBar();
@@ -195,7 +204,7 @@ export default defineComponent({
         updateProgressBar(): void {
             if (this.isPlaying()) {
                 const status = this.state!.status!;
-                this.startedAt = new Date(status.updatedAt).getTime() - status.progress;
+                this.startedAt = new Date(status.sampledAt).getTime() - status.progressMs;
                 this.endTime = this.formatMs(status.length);
                 this.moveProgressBar();
                 if (this.intervalId === null) {

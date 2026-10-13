@@ -6,7 +6,7 @@
             <div class="card mb-3">
                 <div class="list-group card-list-group">
                     <div class="list-group-item">
-                        <div v-bind:class="legacyRowClasses(state.next)">
+                        <div v-bind:class="legacyRowClasses(state.next)" v-bind:style="legacyAccentStyle(state.next)">
                             <div class="col-auto">
                                 <img
                                     v-bind:src="state.next.album.image_url"
@@ -18,6 +18,7 @@
                             </div>
                             <div class="col">
                                 {{ state.next.name }}
+                                <span v-if="state.next.decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{ state.next.decoration.label }}</span>
                                 <div class="text-secondary">
                                     {{ combineArtists(state.next.artists) }}
                                 </div>
@@ -67,7 +68,7 @@
 <script lang="ts">
 import {defineComponent} from 'vue';
 import type {LegacyArtist, LegacyPartyState} from '../types';
-import {legacyFallbackName, legacyRowClasses} from '../lib/decoration';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     props: {
@@ -87,6 +88,7 @@ export default defineComponent({
 
     methods: {
         legacyRowClasses,
+        legacyAccentStyle,
         legacyFallbackName,
 
         updateState(state: LegacyPartyState): void {

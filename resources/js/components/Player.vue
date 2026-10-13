@@ -176,7 +176,7 @@ export default defineComponent({
 
         updateProgressBar() {
             if (this.isPlaying()) {
-                this.startedAt = new Date(this.state!.status!.updatedAt).getTime() - this.state!.status!.progress;
+                this.startedAt = new Date(this.state!.status!.sampledAt).getTime() - this.state!.status!.progressMs;
                 this.endTime = this.formatMs(this.state!.status!.length);
                 this.moveProgressBar();
                 if (this.intervalId === null) {

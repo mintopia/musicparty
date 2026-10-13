@@ -106,8 +106,8 @@ export interface LegacyTrack {
 
 export interface LegacyPlaybackStatus {
     isPlaying: boolean;
-    updatedAt: string;
-    progress: number;
+    sampledAt: string;
+    progressMs: number;
     length: number;
 }
 
