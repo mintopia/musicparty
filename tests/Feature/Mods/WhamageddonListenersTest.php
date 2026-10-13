@@ -167,15 +167,18 @@ it('dispatching the hour tick event runs the listener through the registered bin
     expect($upcoming->fresh()->score_adjustment)->toBe(1);
 });
 
-it('E5: pins current behaviour (HourTickListener lacks per-party isolation)', function () {
+it('isolates a throwing party so the next party still ticks and the failure is logged', function () {
     Carbon::setTestNow('2026-12-24 12:00:00');
     $broken = WhamageddonFixtures::party(['enabled' => true]);
     Party::whereKey($broken->id)->update(['user_id' => User::factory()->create()->id]);
     $healthy = WhamageddonFixtures::party(['enabled' => true]);
     $upcoming = WhamageddonFixtures::upcoming($healthy);
+    Log::spy();
 
-    expect(fn () => whamTick())->toThrow(RuntimeException::class)
-        ->and($upcoming->fresh()->score_adjustment)->toBe(0);
+    whamTick();
+
+    expect($upcoming->fresh()->score_adjustment)->toBe(1);
+    Log::shouldHaveReceived('error')->withArgs(fn ($message) => str_contains((string) $message, 'Hourly tick failed'))->once();
 });
 
 it('logs the hourly tick through the app logger', function () {

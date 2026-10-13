@@ -7,6 +7,7 @@ use App\Models\PartyModSetting;
 use App\Mods\Whamageddon\Whamageddon;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class HourTickListener implements ShouldQueue
 {
@@ -22,9 +23,13 @@ class HourTickListener implements ShouldQueue
         })->with('party')->get();
 
         foreach ($settings as $setting) {
-            Log::info("{$setting->party} Whamageddon: Processing hourly tick");
-            $whamageddon = new Whamageddon($setting->party);
-            $whamageddon->hourly();
+            try {
+                Log::info("{$setting->party} Whamageddon: Processing hourly tick");
+                $whamageddon = new Whamageddon($setting->party);
+                $whamageddon->hourly();
+            } catch (Throwable $e) {
+                Log::error("{$setting->party_id} Whamageddon: Hourly tick failed", ['exception' => $e]);
+            }
         }
     }
 }
