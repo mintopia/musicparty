@@ -46,42 +46,61 @@ You should now be able to login. The first user will be given the admin role.
 
 ## Production Deployment
 
-In the `example` directory there is a docker compose file and some .env example files. These are for the setup I use.
-Just rename the .env files and edit them accordingly. You can get a [random Laravel application key here](https://generate-random.org/laravel-key-generator).
+Music Party runs on a single host as one image (`ghcr.io/mintopia/musicparty`) started as several services. See
+[`docker-compose.production.example.yml`](docker-compose.production.example.yml) for a complete, maintained example,
+and [ADR 0004](docs/adr/0004-single-hostname-websockets-same-origin.md) for why everything shares one hostname.
 
-You need to expose the `musicparty` and `reverb` containers to the public. They are both configured to listen on port 80
-in the docker compose, so you probably want something like Traefik or Caddy in-front as a reverse proxy.
+### Topology
 
-I'm running this with an external docker network called `frontend` with Caddy running as HTTP/HTTPS ingress. You will
-need to add a network section for the `reverb` and `musicparty` services to add them to the `frontend` network if you
-want to do this.
+| Service     | Purpose                                                                  |
+|-------------|--------------------------------------------------------------------------|
+| `app`       | Web app (FrankenPHP/Octane). Also proxies websocket upgrades to `reverb` |
+| `reverb`    | Websocket server. Not published; reached only through `app`              |
+| `horizon`   | Queue workers                                                            |
+| `scheduler` | Runs scheduled tasks                                                     |
+| `database`  | MariaDB                                                                  |
+| `redis`     | Cache, queues and sessions                                               |
 
-The Caddyfile config I'm using for this is:
-
-```
-musicparty.example.com {
-  @websockets {
-    header Connection *Upgrade*
-    header Upgrade    websocket
-  }
-  reverse_proxy @websockets musicparty-reverb-1
-  reverse_proxy musicparty-musicparty-1
-}
-```
-
-You will need to make a logs directory and chmod it 777 as I still need to sort permissions out.
-
-To bring up the site, run the following:
+Copy the compose file to `docker-compose.yml`, create a `.env` from `docker/production/production.env`, set your
+application key (a [random Laravel key](https://generate-random.org/laravel-key-generator) works) and `APP_URL`, then:
 
 ```bash
-docker compose up -d redis database
-docker compose run --rm artisan migrate
-docker compose run --rm artisan db:seed
-docker compose run --rm artisan setup:discord
+docker compose up -d database redis
+docker compose run --rm --entrypoint php app artisan migrate
+docker compose run --rm --entrypoint php app artisan db:seed
 docker compose up -d
 ```
 
-You should now be able to visit the site and login. From here you can use the admin menu to configure the site.
+You should now be able to visit the site and login. The first user is given the admin role; use the admin menu to
+configure the site.
+
+### Reverse proxy
+
+Only the `app` container is exposed. Put your own reverse proxy (Caddy, Traefik, nginx...) in front of it and forward a
+single hostname to it. The proxy must:
+
+ - Pass the `Upgrade` and `Connection` headers through, so websocket connections reach the app.
+ - Allow long-lived connections. Websockets stay open for the whole party, so make sure read/idle timeouts are long
+   enough (or disabled); a short idle timeout will drop clients periodically and force them to reconnect.
+
+Caddy example:
+
+```
+musicparty.example.com {
+  reverse_proxy musicparty-app-1:80
+}
+```
+
+Caddy forwards upgrade headers automatically. For nginx, set `proxy_http_version 1.1`, `proxy_set_header Upgrade
+$http_upgrade`, `proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`.
+
+### Encore relay URL
+
+Encore connects to an instance's Pusher-compatible relay on the same hostname as the app:
+
+```
+wss://<app host>/app/<REVERB_APP_KEY>
+```
 
 ## Usage Tips
 
