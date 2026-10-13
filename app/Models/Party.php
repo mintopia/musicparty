@@ -6,10 +6,8 @@ use App\Casts\MillisecondTimestamp;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
-use App\Services\ModDataStore;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\PlaybackStatus;
-use Carbon\CarbonImmutable;
 use Database\Factories\PartyFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -18,9 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use NumPHP\LinAlg\LinAlg;
 
 /**
  * @property int $id
@@ -187,13 +182,6 @@ class Party extends Model
         return $this->belongsTo(User::class);
     }
 
-    public function trustedUser(): ?User
-    {
-        $id = app(ModDataStore::class)->get($this, 'trust', 'trusted_user_id');
-
-        return $id === null ? null : User::whereKey($id)->first();
-    }
-
     /** @return HasMany<UpcomingSong, $this> */
     public function upcoming(): HasMany
     {
@@ -340,92 +328,5 @@ class Party extends Model
         if ($downvotes >= $this->downvotes_per_hour) {
             throw new VoteException('You have downvoted too many songs');
         }
-    }
-
-    public function calculateTrustScores(?CarbonImmutable $after = null): void
-    {
-        $trustedUser = $this->trustedUser();
-        if ($trustedUser === null) {
-            Log::debug('No trusted user, unable to calculate trust score');
-
-            return;
-        }
-
-        $voteMap = [];
-        $userIds = $this->members()->pluck('user_id');
-        $userIds->push(0);
-        $fill = [];
-        foreach ($userIds as $id) {
-            $fill[$id] = 0;
-        }
-        foreach ($userIds as $id) {
-            $voteMap[$id] = $fill;
-        }
-
-        // Votes
-        $query = Vote::whereHas('upcomingSong', function ($query) {
-            $query->wherePartyId($this->id);
-        })->where('value', '>', 0);
-        if ($after !== null) {
-            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
-        }
-        $votes = $query->with(['user', 'upcomingSong', 'upcomingSong.user'])->get();
-        foreach ($votes as $vote) {
-            $songUserId = $vote->upcomingSong->user->id ?? 0;
-            $voteMap[$songUserId][$vote->user->id] += $vote->value;
-        }
-
-        // Ratings
-        $query = SongRating::whereHas('song', function ($query) {
-            $query->wherePartyId($this->id);
-        })->where('value', '>', 0);
-        if ($after !== null) {
-            $query = $query->where('created_at', '>', $after->format('Y-m-d H:i:s'));
-        }
-        $ratings = $query->with(['user', 'song', 'song.upcoming', 'song.upcoming.user'])->get();
-        foreach ($ratings as $rating) {
-            if ($rating->song->upcoming) {
-                $songUserId = $rating->song->upcoming->user->id ?? 0;
-                $voteMap[$songUserId][$rating->user->id] += $rating->value;
-            }
-        }
-
-        $userMap = array_keys($voteMap);
-        $voteMap = array_values($voteMap);
-        foreach ($voteMap as $i => $row) {
-            $voteMap[$i] = array_values($row);
-            $voteMap[$i][$i] = -1;
-            if ($userMap[$i] === $trustedUser->id) {
-                $voteMap[$i][$i] = 1;
-            }
-        }
-
-        $trustedUserMatrix = array_fill(0, count($voteMap), 0);
-        $trustedUserIndex = array_search($trustedUser->id, $userMap);
-        $trustedUserMatrix[$trustedUserIndex] = 1;
-
-        $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
-        $scores = $solved->getData();
-
-        DB::transaction(function () use ($userMap, $scores) {
-            $store = app(ModDataStore::class);
-            $membersIndexed = [];
-            $members = $this->members()->with('user')->get();
-            foreach ($members as $member) {
-                $membersIndexed[$member->user->id] = $member;
-                $store->forget($member, 'trust', 'trustscore');
-            }
-            foreach ($scores as $index => $score) {
-                $userId = $userMap[$index] ?? null;
-                if ($userId === null) {
-                    continue;
-                }
-                if (! isset($membersIndexed[$userId])) {
-                    continue;
-                }
-                $membersIndexed[$userId]->setTrustScore($score);
-            }
-        });
-        Log::debug('Finished calculating trust scores');
     }
 }
