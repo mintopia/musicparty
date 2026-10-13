@@ -61,11 +61,15 @@ it('returns the existing catalogue rows when the insert loses a race', function 
     Song::flushEventListeners();
 });
 
-it('enforces unique spotify ids on catalogue tables', function (string $model) {
-    $model::factory()->create(['spotify_id' => 'dup']);
+it('enforces unique provider identity on catalogue tables', function (string $model, string $column) {
+    $model::factory()->create([$column => 'dup']);
 
-    $model::factory()->create(['spotify_id' => 'dup']);
-})->with([Song::class, Album::class, Artist::class])->throws(UniqueConstraintViolationException::class);
+    $model::factory()->create([$column => 'dup']);
+})->with([
+    [Song::class, 'provider_track_id'],
+    [Album::class, 'provider_album_id'],
+    [Artist::class, 'provider_artist_id'],
+])->throws(UniqueConstraintViolationException::class);
 
 it('de-duplicates votes keeping the latest and recomputes the score', function () {
     $migration = loadMigration('2026_10_13_120000_add_unique_index_to_votes');
@@ -85,16 +89,19 @@ it('de-duplicates votes keeping the latest and recomputes the score', function (
 });
 
 it('de-duplicates catalogue rows and re-points every foreign key', function () {
+    loadMigration('2026_10_13_150000_drop_spotify_id_from_catalogue')->down();
     $migration = loadMigration('2026_10_13_120100_add_unique_spotify_id_to_catalogue');
     $migration->down();
 
-    $albums = Album::factory()->count(2)->create(['spotify_id' => 'same', 'provider_id' => null]);
-    $artists = Artist::factory()->count(2)->create(['spotify_id' => 'same', 'provider_id' => null]);
+    $albums = Album::factory()->count(2)->create(['provider_id' => null]);
+    $artists = Artist::factory()->count(2)->create(['provider_id' => null]);
     $songs = collect([0, 1])->map(fn ($i) => Song::factory()->create([
-        'spotify_id' => 'same',
         'provider_id' => null,
         'album_id' => $albums[$i]->id,
     ]));
+    foreach (['songs', 'albums', 'artists'] as $table) {
+        DB::table($table)->update(['spotify_id' => 'same']);
+    }
     foreach ($songs as $i => $song) {
         $song->artists()->attach($artists[$i]);
         $song->artists()->attach($artists[0]);
@@ -107,9 +114,9 @@ it('de-duplicates catalogue rows and re-points every foreign key', function () {
     $migration->up();
 
     $survivor = $songs[0]->id;
-    expect(Song::where('spotify_id', 'same')->count())->toBe(1)
-        ->and(Album::where('spotify_id', 'same')->count())->toBe(1)
-        ->and(Artist::where('spotify_id', 'same')->count())->toBe(1)
+    expect(DB::table('songs')->where('spotify_id', 'same')->count())->toBe(1)
+        ->and(DB::table('albums')->where('spotify_id', 'same')->count())->toBe(1)
+        ->and(DB::table('artists')->where('spotify_id', 'same')->count())->toBe(1)
         ->and(Song::find($survivor)->album_id)->toBe($albums[0]->id)
         ->and($party->fresh()->song_id)->toBe($survivor)
         ->and($upcoming->fresh()->song_id)->toBe($survivor)

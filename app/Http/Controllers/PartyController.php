@@ -18,6 +18,7 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyBackoffException;
+use App\Services\Spotify\SpotifyLibrary;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
@@ -44,8 +45,8 @@ class PartyController extends Controller
         return view('parties.create', [
             'party' => $party,
             'mods' => Mod::all(),
-            'playlists' => $this->resolveAuthenticatedUser($request)->getPlaylists(),
-            'devices' => $this->resolveAuthenticatedUser($request)->getDevices(),
+            'playlists' => app(SpotifyLibrary::class)->playlists($this->resolveAuthenticatedUser($request)),
+            'devices' => app(SpotifyLibrary::class)->devices($this->resolveAuthenticatedUser($request)),
             'providerIds' => app(MusicProviderFactory::class)->selectableIds(),
         ]);
     }
@@ -170,8 +171,8 @@ class PartyController extends Controller
             'party' => $party,
             'mods' => Mod::all(),
             'canManage' => true,
-            'playlists' => $party->user->getPlaylists(),
-            'devices' => $party->user->getDevices(),
+            'playlists' => app(SpotifyLibrary::class)->playlists($party->user),
+            'devices' => app(SpotifyLibrary::class)->devices($party->user),
         ]);
     }
 

@@ -66,7 +66,7 @@ it('backfills up to the minimum upcoming and creates songs', function () {
 
     $upcoming = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect($upcoming)->toHaveCount(Party::MINIMUM_UPCOMING)
-        ->and($upcoming->pluck('song.spotify_id')->unique()->all())->each->toBeIn(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+        ->and($upcoming->pluck('song.provider_track_id')->unique()->all())->each->toBeIn(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
 });
 
 it('dispatches a refresh job without fetching when the backup playlist id changes', function () {

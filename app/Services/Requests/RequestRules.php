@@ -17,7 +17,6 @@ use App\Services\Requests\Rules\NextTrackRule;
 use App\Services\Requests\Rules\RecentlyPlayedRule;
 use App\Services\Requests\Rules\SimilarTrackRule;
 use App\Services\Requests\Rules\TooManyRequestsRule;
-use SpotifyWebAPI\SpotifyWebAPIException;
 
 class RequestRules
 {
@@ -74,14 +73,7 @@ class RequestRules
 
     public function checkById(Party $party, PartyMember $member, MusicProvider $provider, string $id): RequestDecision
     {
-        try {
-            $track = $provider->getTrack($id);
-        } catch (SpotifyWebAPIException $exception) {
-            if ($exception->getMessage() === 'invalid id') {
-                return RequestDecision::reject('Song is not found in Spotify');
-            }
-            throw $exception;
-        }
+        $track = $provider->findTrack($id);
 
         return $track === null ? RequestDecision::reject('Song is not found in Spotify') : $this->check($party, $member, $track);
     }

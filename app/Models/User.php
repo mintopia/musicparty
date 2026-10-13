@@ -3,8 +3,6 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
-use App\Services\Spotify\SpotifyGateway;
-use App\Support\SpotifyPayload;
 use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -15,11 +13,8 @@ use Illuminate\Notifications\DatabaseNotification;
 use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
 use Laravel\Sanctum\PersonalAccessToken;
-use stdClass;
 
 /**
  * @property int $id
@@ -90,17 +85,6 @@ class User extends Authenticatable
     ];
 
     protected ?string $email = null;
-
-    /** @var array<int, stdClass>|null */
-    protected ?array $playlists = null;
-
-    /** @var array<int, stdClass>|null */
-    protected ?array $devices = null;
-
-    protected ?stdClass $recentTracks = null;
-
-    /** @var array<string, stdClass> */
-    protected array $playlistCache = [];
 
     /** @return HasMany<LinkedAccount, $this> */
     public function accounts(): HasMany
@@ -201,55 +185,6 @@ class User extends Authenticatable
             ->exists();
     }
 
-    /**
-     * @return array<int, stdClass>
-     */
-    public function getDevices(): array
-    {
-        if ($this->devices !== null) {
-            return $this->devices;
-        }
-        $api = app(SpotifyGateway::class)->client($this);
-        if (! $api) {
-            return [];
-        }
-
-        /** @var array<int, stdClass> $devices */
-        $devices = Cache::remember("users.{$this->id}.devices", 300, function () use ($api): array {
-            Log::debug("{$this}: Spotify API -> getMyDevices()");
-
-            return (array) SpotifyPayload::object($api->getMyDevices())->devices;
-        });
-        $this->devices = $devices;
-
-        return $devices;
-    }
-
-    /**
-     * @return array<int, stdClass>
-     */
-    public function getPlaylists(): array
-    {
-        if ($this->playlists !== null) {
-            return $this->playlists;
-        }
-        $api = app(SpotifyGateway::class)->client($this);
-        if (! $api) {
-            return [];
-        }
-
-        $this->playlists = [];
-        $offset = 0;
-        do {
-            Log::debug("{$this}: Spotify API -> getMyPlaylists({$offset})");
-            $result = SpotifyPayload::object($api->getMyPlaylists(['limit' => 50, 'offset' => $offset]));
-            $this->playlists = array_merge($this->playlists, $result->items);
-            $offset += 50;
-        } while ($result->next);
-
-        return $this->playlists;
-    }
-
     public function getPartyMember(Party $party): ?PartyMember
     {
         foreach ($this->partyMembers as $member) {
@@ -259,34 +194,5 @@ class User extends Authenticatable
         }
 
         return null;
-    }
-
-    public function getRecentTracks(bool $force = false): stdClass
-    {
-        if (! $force && $this->recentTracks !== null) {
-            return $this->recentTracks;
-        }
-
-        Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
-        $this->recentTracks = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this)->getMyRecentTracks([
-            'limit' => 20,
-            'market' => $this->market,
-        ]));
-
-        return $this->recentTracks;
-    }
-
-    public function getPlaylist(string $id, bool $force = false): stdClass
-    {
-        if (! $force && isset($this->playlistCache[$id])) {
-            return $this->playlistCache[$id];
-        }
-
-        Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
-        $this->playlistCache[$id] = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this)->getPlaylist($id, [
-            'market' => $this->market,
-        ]));
-
-        return $this->playlistCache[$id];
     }
 }

@@ -20,7 +20,6 @@ use stdClass;
 
 /**
  * @property int $id
- * @property string $spotify_id
  * @property string $provider_id
  * @property string $provider_track_id
  * @property string $name
@@ -137,7 +136,6 @@ class Song extends Model
                 $song = new Song;
                 $song->provider_id = 'spotify';
                 $song->provider_track_id = $track->id;
-                $song->spotify_id = $track->id;
                 $song->name = $track->name;
                 $song->length = $track->duration_ms;
                 $song->album()->associate($album);

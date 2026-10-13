@@ -5,7 +5,6 @@ namespace Database\Factories;
 use App\Models\Party;
 use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
-use SpotifyWebAPI\SpotifyWebAPI;
 use Tests\Support\FakeSpotify;
 
 /**
@@ -29,9 +28,7 @@ class PartyFactory extends Factory
     public function configure(): static
     {
         return $this->afterMaking(function (): void {
-            if (! app()->bound(SpotifyWebAPI::class)) {
-                FakeSpotify::install();
-            }
+            FakeSpotify::installUnlessBound();
         });
     }
 }

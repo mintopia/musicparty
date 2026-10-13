@@ -17,6 +17,7 @@ use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
+use SpotifyWebAPI\SpotifyWebAPIException;
 use stdClass;
 
 class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
@@ -51,6 +52,18 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         $payload = SpotifyPayload::object($this->reader()->getTrack($id, ['market' => $this->user->market]));
 
         return isset($payload->id) ? SpotifyMapper::track($payload) : null;
+    }
+
+    public function findTrack(string $id): ?Track
+    {
+        try {
+            return $this->getTrack($id);
+        } catch (SpotifyWebAPIException $exception) {
+            if ($exception->getMessage() === 'invalid id') {
+                return null;
+            }
+            throw $exception;
+        }
     }
 
     public function getTracks(array $ids): array

@@ -3,16 +3,11 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
-use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Database\Factories\LinkedAccountFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Log;
-use SpotifyWebAPI\Session;
-use SpotifyWebAPI\SpotifyWebAPIException;
 
 /**
  * @property int $id
@@ -106,59 +101,5 @@ class LinkedAccount extends Model
     public function needsRelink(): bool
     {
         return $this->needs_relink_at !== null;
-    }
-
-    /**
-     * Refreshes the Spotify access token under a per-account lock, re-reading the stored
-     * token inside it so concurrent callers reuse a refresh that already happened.
-     *
-     * @throws SpotifyRelinkRequiredException when Spotify rejects the refresh token
-     */
-    public function refreshSpotifyToken(Session $session): void
-    {
-        Cache::lock("linked-account-refresh:{$this->id}", 30)->block(10, function () use ($session): void {
-            $this->refresh();
-
-            if ($this->needsRelink()) {
-                throw new SpotifyRelinkRequiredException;
-            }
-
-            if ($this->access_token_expires_at !== null && $this->access_token_expires_at >= now()->addMinutes(5)) {
-                $session->setAccessToken($this->access_token ?? '');
-
-                return;
-            }
-
-            try {
-                $refreshed = $session->refreshAccessToken($this->refresh_token ?? '');
-            } catch (SpotifyWebAPIException $e) {
-                if ($this->isRevokedRefresh($e)) {
-                    Log::warning("Linked account {$this->id}: Spotify refresh revoked, marking for re-link");
-                    $this->needs_relink_at = now();
-                    $this->save();
-
-                    throw new SpotifyRelinkRequiredException;
-                }
-
-                throw $e;
-            }
-
-            if (! $refreshed) {
-                throw new SpotifyWebAPIException('Spotify token refresh returned no access token');
-            }
-
-            $this->access_token = $session->getAccessToken();
-            $this->access_token_expires_at = new Carbon($session->getTokenExpiration());
-            $rotated = $session->getRefreshToken();
-            if ($rotated !== '' && $rotated !== $this->refresh_token) {
-                $this->refresh_token = $rotated;
-            }
-            $this->save();
-        });
-    }
-
-    private function isRevokedRefresh(SpotifyWebAPIException $e): bool
-    {
-        return in_array($e->getCode(), [400, 401], true) || str_contains($e->getMessage(), 'invalid_grant');
     }
 }

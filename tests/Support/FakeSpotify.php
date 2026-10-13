@@ -20,6 +20,13 @@ class FakeSpotify extends SpotifyWebAPI
         return $fake;
     }
 
+    public static function installUnlessBound(): void
+    {
+        if (! app()->bound(SpotifyWebAPI::class)) {
+            self::install();
+        }
+    }
+
     public function respond(string $method, mixed $response): self
     {
         $this->responses[$method] = $response;

@@ -87,11 +87,11 @@
                     </div>
                 </div>
                 <div class="card-footer align-content-end d-flex btn-list">
-                    <a href="{{ route('parties.moderation.create', ['party' => $party->code, 'track' => $song->song->spotify_id]) }}" class="ms-auto btn btn-outline-danger">
+                    <a href="{{ route('parties.moderation.create', ['party' => $party->code, 'track' => $song->song->provider_track_id]) }}" class="ms-auto btn btn-outline-danger">
                         <i class="icon ti ti-ban"></i>
                         Moderate
                     </a>
-                    <a href="https://open.spotify.com/track/{{ $song->song->spotify_id }}" class="btn btn-green text-white" target="_blank">
+                    <a href="https://open.spotify.com/track/{{ $song->song->provider_track_id }}" class="btn btn-green text-white" target="_blank">
                         <i class="icon ti ti-brand-spotify"></i>
                         View on Spotify
                     </a>

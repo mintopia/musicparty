@@ -135,6 +135,11 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return $this->tracks[$id] ?? null;
     }
 
+    public function findTrack(string $id): ?Track
+    {
+        return $this->getTrack($id);
+    }
+
     public function getTracks(array $ids): array
     {
         $this->record(__FUNCTION__, func_get_args());

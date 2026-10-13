@@ -19,6 +19,11 @@ function providerIdentityMigration(): object
     return require database_path('migrations/'.PROVIDER_IDENTITY_MIGRATION.'.php');
 }
 
+function loadDropSpotifyIdMigration(): object
+{
+    return require database_path('migrations/2026_10_13_150000_drop_spotify_id_from_catalogue.php');
+}
+
 function seedLegacyCatalogue(int $count): void
 {
     foreach (range(1, $count) as $i) {
@@ -36,6 +41,7 @@ function seedLegacyCatalogue(int $count): void
 
 it('backfills provider identity from spotify_id across chunk boundaries and enforces the pair', function () {
     $migration = providerIdentityMigration();
+    loadDropSpotifyIdMigration()->down();
     $migration->down();
     expect(Schema::hasColumn('songs', 'provider_track_id'))->toBeFalse()
         ->and(Schema::hasColumn('parties', 'provider_id'))->toBeFalse();
@@ -65,6 +71,7 @@ it('backfills provider identity from spotify_id across chunk boundaries and enfo
 
 it('keeps requests, played songs, votes and moderation rules resolving against backfilled rows', function () {
     $migration = providerIdentityMigration();
+    loadDropSpotifyIdMigration()->down();
     $migration->down();
     seedLegacyCatalogue(2);
     $party = Party::factory()->create();
@@ -93,5 +100,23 @@ it('keeps requests, played songs, votes and moderation rules resolving against b
         expect($rule->match($track))->toBeTrue();
         $rule->value = 'nomatch';
         expect($rule->match($track))->toBeFalse();
+    }
+});
+
+it('drops spotify_id and restores it from provider identity on rollback', function () {
+    $migration = loadDropSpotifyIdMigration();
+    foreach (['songs', 'albums', 'artists'] as $table) {
+        expect(Schema::hasColumn($table, 'spotify_id'))->toBeFalse();
+    }
+
+    $song = Song::factory()->create();
+    $migration->down();
+
+    expect(DB::table('songs')->where('id', $song->id)->value('spotify_id'))->toBe($song->provider_track_id);
+
+    $migration->up();
+
+    foreach (['songs', 'albums', 'artists'] as $table) {
+        expect(Schema::hasColumn($table, 'spotify_id'))->toBeFalse();
     }
 });

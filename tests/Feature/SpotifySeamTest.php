@@ -98,7 +98,7 @@ it('builds a real client when nothing is bound', function () {
 it('serves sdk-shaped fixtures that Song can consume', function () {
     $song = Song::fromSpotify(FakeSpotify::track('abc'));
 
-    expect($song->spotify_id)->toBe('abc')->and($song->artists)->toHaveCount(1);
+    expect($song->provider_track_id)->toBe('abc')->and($song->artists)->toHaveCount(1);
 });
 
 it('lets the fake be bound before a party is created', function () {
@@ -111,7 +111,7 @@ it('lets the fake be bound before a party is created', function () {
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
     app(PlaybackSync::class)->sync($party);
 
-    expect($party->fresh()->song->spotify_id)->toBe('now')
+    expect($party->fresh()->song->provider_track_id)->toBe('now')
         ->and($fake->callsTo('currentPlayback'))->not->toBeEmpty();
 });
 
@@ -126,7 +126,7 @@ it('orders the fallback playlist exactly with a seeded randomizer', function () 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
     app(PlaybackSync::class)->sync($party);
 
-    $added = $party->upcoming()->orderBy('id')->get()->map(fn (UpcomingSong $u) => $u->song->spotify_id)->all();
+    $added = $party->upcoming()->orderBy('id')->get()->map(fn (UpcomingSong $u) => $u->song->provider_track_id)->all();
     expect($added)->toBe(array_slice($expected, 0, count($added)))->not->toBeEmpty();
 });
 
