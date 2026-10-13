@@ -6,9 +6,17 @@ use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
+use App\Services\Music\Data\Track;
+use App\Services\Music\Fake\FakeMusicProvider;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
+use Tests\Support\FakeSpotify;
 
 function webhookParty(): Party
 {
@@ -153,4 +161,40 @@ it('returns 404 for an unknown party code on the soloist webhook', function () {
     $this->postJson(route('webhooks.parties.soloist', 'NOPE'))->assertNotFound();
 
     Queue::assertNothingPushed();
+});
+
+it('serves the webhooks at their literal paths', function () {
+    expect(route('webhooks.parties.update', 'ABCD', false))->toBe('/webhooks/parties/ABCD/librespot')
+        ->and(route('webhooks.parties.simple', 'ABCD', false))->toBe('/webhooks/parties/ABCD/simple')
+        ->and(route('webhooks.parties.soloist', 'ABCD', false))->toBe('/webhooks/parties/ABCD/soloist');
+});
+
+it('queues webhook-triggered updates with the Webhook source', function (string $routeName, array $body, bool $auth) {
+    $party = webhookParty();
+    if ($auth) {
+        Sanctum::actingAs($party->user);
+    }
+
+    $this->postJson(route($routeName, $party), $body)->assertNoContent();
+
+    Queue::assertPushed(PartyUpdate::class, fn (PartyUpdate $job) => new ReflectionProperty($job, 'source')->getValue($job) === PlaybackSource::Webhook);
+})->with([
+    'librespot' => ['webhooks.parties.update', ['event' => 'playing'], true],
+    'simple' => ['webhooks.parties.simple', [], true],
+    'soloist' => ['webhooks.parties.soloist', [], false],
+]);
+
+it('records the Webhook source when a webhook update syncs and Polling for the poll chain', function () {
+    FakeSpotify::install();
+    $party = Party::factory()->create(['provider_id' => 'fake', 'active' => true, 'poll' => false, 'backup_playlist_id' => 'BACKUP']);
+    Cache::flush();
+    $fake = app(FakeMusicProvider::class);
+    $fake->withTrack(new Track('fake', 'W', 'W', 200000, false, true, new AlbumRef('album-w', 'Album', null), [new ArtistRef('artist1', 'Artist')]));
+    $fake->withPlayback(new PlaybackState(true, 'W', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev', 'Dev', PlaybackSource::Polling));
+
+    (new PartyUpdate($party->fresh(), PlaybackSource::Webhook))->handle();
+    expect($party->fresh()->playback_source)->toBe(PlaybackSource::Webhook);
+
+    (new PartyUpdate($party->fresh()))->handle();
+    expect($party->fresh()->playback_source)->toBe(PlaybackSource::Polling);
 });

@@ -125,3 +125,52 @@ describe('TvPlayer progress', () => {
         expect(wrapper.text()).toContain('0:40');
     });
 });
+
+describe('legacy player channel subscriptions', () => {
+    afterEach(() => {
+        delete (window as unknown as {Echo?: unknown}).Echo;
+    });
+
+    it('subscribes the queue to the private party.{code} channel', async () => {
+        const privateChannel = vi.fn(() => ({listen: () => {}}));
+        (window as unknown as {Echo: unknown}).Echo = {channel: vi.fn(), private: privateChannel};
+
+        mount(Upcoming, {props: {party: 'ABC', timezone: 'UTC', initialstate: JSON.stringify([])}});
+
+        expect(privateChannel).toHaveBeenCalledWith('party.ABC');
+    });
+
+    it('subscribes up next to party.{code} and updates on Party\\UpdatedEvent', async () => {
+        let handler: ((payload: unknown) => void) | undefined;
+        const channel = vi.fn(() => ({
+            listen: (event: string, cb: (payload: unknown) => void) => {
+                expect(event).toBe('Party\\UpdatedEvent');
+                handler = cb;
+            },
+        }));
+        (window as unknown as {Echo: unknown}).Echo = {channel, private: vi.fn()};
+
+        const wrapper = mount(Next, {props: {code: 'ABC', initialstate: JSON.stringify({next: track()})}});
+        expect(channel).toHaveBeenCalledWith('party.ABC');
+
+        handler?.({next: track({name: 'Pushed Song'})});
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.text()).toContain('Pushed Song');
+    });
+
+    it('subscribes the TV player to party.{code}', () => {
+        const channel = vi.fn(() => ({listen: () => {}}));
+        (window as unknown as {Echo: unknown}).Echo = {channel, private: vi.fn()};
+
+        mount(TvPlayer, {
+            props: {
+                code: 'ABC',
+                partyurl: 'x',
+                initialstate: JSON.stringify({name: 'P', now: track(), next: track(), current: {id: 1, provider_track_id: 't1', user: null, rating: 0}, status: null}),
+            },
+        });
+
+        expect(channel).toHaveBeenCalledWith('party.ABC');
+    });
+});

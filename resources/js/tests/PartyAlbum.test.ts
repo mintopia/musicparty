@@ -60,4 +60,39 @@ describe('Party album page', () => {
         ]);
         expect(links.map((link) => link.text())).toEqual(['ABBA', 'Guest']);
     });
+
+    it('runs breadcrumbs from the Party to the last search to the album', () => {
+        const wrapper = mount(Album, {
+            props: {
+                party: {code: 'ABCD', name: 'Party', downvotes: false, canManage: false},
+                query: 'abba',
+                album: {id: 'alb', name: 'Arrival', image_url: null, artists: [], release_year: null, track_count: 1},
+                tracks: null,
+                retry: false,
+                playerState: idle,
+            },
+        });
+
+        const items = wrapper.findAll('.breadcrumb-item');
+
+        expect(items.map((item) => item.text())).toEqual(['Home', 'Party', 'Search', 'Arrival']);
+        expect(items[1].get('a').attributes('href')).toBe('/parties/ABCD');
+        expect(items[2].get('a').attributes('href')).toBe('/parties/ABCD/search?query=abba');
+    });
+
+    it('offers a way back to the search when the album is missing', () => {
+        const wrapper = mount(Album, {
+            props: {
+                party: {code: 'ABCD', name: 'Party', downvotes: false, canManage: false},
+                query: 'abba',
+                album: null,
+                tracks: null,
+                retry: false,
+                playerState: idle,
+            },
+        });
+
+        expect(wrapper.findAll('.breadcrumb-item').at(-1)?.text()).toBe('Album');
+        expect(wrapper.get('a.btn').attributes('href')).toBe('/parties/ABCD/search?query=abba');
+    });
 });

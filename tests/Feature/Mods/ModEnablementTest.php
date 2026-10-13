@@ -3,11 +3,14 @@
 use App\Enums\ScheduleFrequency;
 use App\Models\Mod;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\User;
 use App\Mods\Foo\FooMod;
 use App\Mods\ModRegistry;
 use App\Mods\ModScheduler;
 use App\Mods\PartyMods;
+use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Requests\RequestRules;
 use Illuminate\Support\Carbon;
 use Tests\Support\FooModFixture;
 use Tests\Support\WhamageddonFixtures;
@@ -109,4 +112,27 @@ describe('party mods screen', function () {
             ->assertOk()
             ->assertInertia(fn ($page) => $page->component('Parties/Mods')->has('mods', 1)->where('mods.0.code', 'foo'));
     });
+});
+
+it('applies a mod request rule only to parties that enabled the mod', function () {
+    require_once __DIR__.'/../../Fixtures/RuleMods/Gate/GateMod.php';
+    $registry = new ModRegistry(__DIR__.'/../../Fixtures/RuleMods');
+    $registry->discover();
+    app()->instance(ModRegistry::class, $registry);
+    $this->artisan('mods:sync')->assertSuccessful();
+    $track = app(FakeMusicProvider::class)->getTrack('fake-track-1');
+    $partyA = Party::factory()->create(['provider_id' => 'fake', 'allow_requests' => true, 'explicit' => true])->refresh();
+    $partyB = Party::factory()->create(['provider_id' => 'fake', 'allow_requests' => true, 'explicit' => true])->refresh();
+    $memberA = PartyMember::factory()->for($partyA)->for(User::factory())->create();
+    $memberB = PartyMember::factory()->for($partyB)->for(User::factory())->create();
+    $rules = fn () => app(RequestRules::class);
+
+    app(PartyMods::class)->enable($partyA, 'gate');
+
+    expect($rules()->check($partyA, $memberA, $track)->reason)->toBe('Gate says no')
+        ->and($rules()->check($partyB, $memberB, $track)->allowed)->toBeTrue();
+
+    app(PartyMods::class)->disable($partyA, 'gate');
+
+    expect($rules()->check($partyA, $memberA, $track)->allowed)->toBeTrue();
 });

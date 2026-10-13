@@ -1,13 +1,20 @@
 <?php
 
 use App\Events\Party\PlayerCommand;
+use App\Events\Party\UpdatedEvent as PartyUpdatedEvent;
 use App\Jobs\ApplyPushedPlaybackState;
 use App\Jobs\RequestEncoreState;
 use App\Listeners\DispatchPushedPlaybackState;
 use App\Models\Party;
+use App\Models\PlayedSong;
+use App\Models\Song;
+use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\PlaybackConnectionStatus;
 use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
@@ -162,4 +169,20 @@ it('leaves Web Player commands unchanged', function () {
     $event = new PlayerCommand(encoreParty(), PlaybackSource::WebPlayer, ['type' => 'pause']);
 
     expect($event->broadcastAs())->toBe('pause')->and($event->broadcastWith())->toBe(['type' => 'pause']);
+});
+
+it('records the Played Track, tops up the Queue and broadcasts once from an Encore state', function () {
+    $party = Party::factory()->create(['provider_id' => 'fake', 'active' => true, 'backup_playlist_id' => 'BACKUP']);
+    $provider = app(FakeMusicProvider::class);
+    $provider->withTrack(new Track('fake', 't1', 'T', 180000, false, true, new AlbumRef('album-t1', 'Album', null), [new ArtistRef('artist1', 'Artist')]));
+    $queued = Song::factory()->create(['provider_id' => 'fake', 'provider_track_id' => 't2']);
+    $upcoming = UpcomingSong::factory()->for($party)->create(['song_id' => $queued->id, 'queued_at' => null]);
+    Event::fake([PartyUpdatedEvent::class]);
+
+    ingestEncore($party, 'playback_state_playing');
+
+    expect(PlayedSong::query()->sole()->song->provider_track_id)->toBe('t1')
+        ->and($upcoming->fresh()->queued_at)->not->toBeNull()
+        ->and($provider->callsTo('sendToPlayer'))->toHaveCount(1);
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
 });

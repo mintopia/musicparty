@@ -70,18 +70,18 @@ class WhamageddonMod implements DecoratesTracks, Mod
         return [
             new ScheduledAction('hourly', ScheduleFrequency::Hour, function (Party $party): void {
                 Log::info("{$party} Whamageddon: Processing hourly tick");
-                (new Whamageddon($party))->hourly();
+                app(Whamageddon::class, ['party' => $party])->hourly();
             }),
         ];
     }
 
     public function onEnable(Party $party): void
     {
-        (new Whamageddon($party))->enable();
+        app(Whamageddon::class, ['party' => $party])->enable();
     }
 
     public function onDisable(Party $party): void
     {
-        (new Whamageddon($party))->disable();
+        app(Whamageddon::class, ['party' => $party])->disable();
     }
 }

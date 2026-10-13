@@ -153,4 +153,26 @@ describe('Party search page', () => {
 
         expect(wrapper.get('[data-test="score"]').text()).toBe('4');
     });
+
+    it('links track albums and artists to their pages, preserving the query', () => {
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'ab ba', perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
+
+        const hrefs = wrapper.findAll('a').map((link) => link.attributes('href'));
+
+        expect(hrefs).toContain('/parties/ABCD/artists/x?query=ab%20ba');
+        expect(hrefs).toContain('/parties/ABCD/albums/a?query=ab%20ba');
+    });
+
+    it('links without a query string when nothing was searched', () => {
+        const wrapper = mount(Search, {
+            props: {party, params: {query: null, perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
+
+        const hrefs = wrapper.findAll('a').map((link) => link.attributes('href'));
+
+        expect(hrefs).toContain('/parties/ABCD/artists/x');
+        expect(hrefs).toContain('/parties/ABCD/albums/a');
+    });
 });

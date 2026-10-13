@@ -23,6 +23,11 @@ final readonly class PlaybackState
         public ?PlaybackConnectionStatus $connectionStatus = null,
     ) {}
 
+    public function withSource(PlaybackSource $source): self
+    {
+        return new self($this->isPlaying, $this->trackId, $this->linkedFromId, $this->durationMs, $this->progressMs, $this->sampledAt, $this->shuffle, $this->repeat, $this->deviceId, $this->deviceName, $source, $this->upcomingTrackIds, $this->connectionStatus);
+    }
+
     public static function idle(PlaybackSource $source): self
     {
         return new self(false, null, null, null, 0, CarbonImmutable::now(), false, 'off', null, null, $source);
