@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Head, router} from '@inertiajs/vue3';
+import {Head, Link, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
@@ -120,7 +120,14 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         <div class="text-secondary" data-test="album-artists">
                             <template v-for="(artist, index) in album.artists" :key="artist.id">
                                 <template v-if="index > 0">, </template>
-                                <span>{{ artist.name }}</span>
+                                <Link
+                                    :href="
+                                        showArtist({party: party.code, artist: artist.id}).url +
+                                        (query ? `?query=${encodeURIComponent(query)}` : '')
+                                    "
+                                    class="text-reset"
+                                    >{{ artist.name }}</Link
+                                >
                             </template>
                         </div>
                         <div class="text-secondary" data-test="album-meta">
