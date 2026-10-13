@@ -7,6 +7,7 @@ use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
@@ -17,6 +18,7 @@ use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
 use Illuminate\Support\Facades\Route;
 
 // Always available
+Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 Route::get('parties/{party}/youtube', [PartyController::class, 'youtube'])->name('parties.youtube');
