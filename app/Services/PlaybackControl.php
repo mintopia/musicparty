@@ -54,6 +54,9 @@ class PlaybackControl
 
     protected function play(Party $party, MusicProvider&ProviderPlayback $provider, ?string $deviceId): void
     {
+        if ($deviceId !== null) {
+            $provider->transferPlayback($deviceId);
+        }
         $deviceId ??= $party->recent_device_id;
         $trackId = $provider->currentPlayback()->trackId
             ?? $party->song->provider_track_id

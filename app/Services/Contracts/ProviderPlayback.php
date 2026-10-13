@@ -12,6 +12,8 @@ interface ProviderPlayback
 
     public function sendToPlayer(Track $track): void;
 
+    public function transferPlayback(string $deviceId): void;
+
     public function play(?string $deviceId = null, ?Track $track = null): void;
 
     public function pause(): void;

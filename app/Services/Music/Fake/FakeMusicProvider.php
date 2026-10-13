@@ -2,6 +2,7 @@
 
 namespace App\Services\Music\Fake;
 
+use App\Exceptions\NoActiveDeviceException;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\Data\Album;
@@ -34,6 +35,10 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     protected array $sentToPlayer = [];
 
     protected ?PlaybackState $playback = null;
+
+    protected bool $requiresActiveDevice = false;
+
+    protected ?string $activeDeviceId = null;
 
     /** @var list<Device> */
     protected array $devices = [];
@@ -75,6 +80,14 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function sentToPlayer(): array
     {
         return $this->sentToPlayer;
+    }
+
+    public function withoutActiveDevice(): self
+    {
+        $this->requiresActiveDevice = true;
+        $this->activeDeviceId = null;
+
+        return $this;
     }
 
     public function withTrack(Track $track): self
@@ -215,12 +228,20 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function sendToPlayer(Track $track): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->assertActiveDevice();
         $this->sentToPlayer[] = $track;
+    }
+
+    public function transferPlayback(string $deviceId): void
+    {
+        $this->record(__FUNCTION__, func_get_args());
+        $this->activeDeviceId = $deviceId;
     }
 
     public function play(?string $deviceId = null, ?Track $track = null): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->assertActiveDevice();
     }
 
     public function pause(): void
@@ -264,5 +285,15 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     protected function record(string $method, array $args): void
     {
         $this->calls[] = ['method' => $method, 'args' => array_values($args)];
+    }
+
+    /**
+     * @throws NoActiveDeviceException
+     */
+    protected function assertActiveDevice(): void
+    {
+        if ($this->requiresActiveDevice && $this->activeDeviceId === null) {
+            throw new NoActiveDeviceException('Player command failed: No active device found');
+        }
     }
 }

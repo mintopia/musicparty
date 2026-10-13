@@ -3,6 +3,7 @@
 namespace App\Services\Music\Spotify;
 
 use App\Enums\Purpose;
+use App\Exceptions\NoActiveDeviceException;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
@@ -15,6 +16,7 @@ use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
+use Closure;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIException;
@@ -171,33 +173,38 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function sendToPlayer(Track $track): void
     {
-        $this->control()->queue($track->id);
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->queue($track->id));
     }
 
     public function play(?string $deviceId = null, ?Track $track = null): void
     {
         $options = $track === null ? [] : ['uris' => ["spotify:track:{$track->id}"]];
-        $this->control()->play($deviceId ?? '', $options);
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->play($deviceId ?? '', $options));
+    }
+
+    public function transferPlayback(string $deviceId): void
+    {
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->changeMyDevice(['device_ids' => [$deviceId]]));
     }
 
     public function pause(): void
     {
-        $this->control()->pause();
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->pause());
     }
 
     public function next(): void
     {
-        $this->control()->next();
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->next());
     }
 
     public function previous(): void
     {
-        $this->control()->previous();
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->previous());
     }
 
     public function seek(int $positionMs): void
     {
-        $this->control()->seek(['position_ms' => $positionMs]);
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->seek(['position_ms' => $positionMs]));
     }
 
     public function devices(): array
@@ -208,6 +215,24 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
             fn (mixed $device): Device => SpotifyMapper::device(SpotifyPayload::object($device)),
             array_values((array) ($result->devices ?? [])),
         );
+    }
+
+    /**
+     * @param  Closure(SpotifyWebAPI): bool  $command
+     *
+     * @throws NoActiveDeviceException
+     */
+    protected function playerCommand(Closure $command): void
+    {
+        try {
+            $command($this->control());
+        } catch (SpotifyWebAPIException $exception) {
+            if ($exception->getCode() === 404) {
+                throw new NoActiveDeviceException($exception->getMessage(), 404, $exception);
+            }
+
+            throw $exception;
+        }
     }
 
     protected function reader(): SpotifyWebAPI

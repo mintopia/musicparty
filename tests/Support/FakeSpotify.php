@@ -193,6 +193,11 @@ class FakeSpotify extends SpotifyWebAPI
         return $this->record(__FUNCTION__, func_get_args());
     }
 
+    public function changeMyDevice(array|object $options): bool
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
     public function next(string $deviceId = ''): bool
     {
         return $this->record(__FUNCTION__, func_get_args());
@@ -227,7 +232,12 @@ class FakeSpotify extends SpotifyWebAPI
     {
         $this->calls[] = ['method' => $method, 'args' => $args];
 
-        return $this->responses[$method] ?? $this->defaultResponse($method);
+        $response = $this->responses[$method] ?? $this->defaultResponse($method);
+        if ($response instanceof \Throwable) {
+            throw $response;
+        }
+
+        return $response;
     }
 
     protected function defaultResponse(string $method): mixed
