@@ -18,16 +18,16 @@
 :host,
 [data-bs-theme=light] {
     --mp-default-nav-background: #182433;
-    --mp-default-surface: #fff;
-    --mp-default-text: #354052;
-    --mp-default-border: #e6e7e9;
+    --mp-default-surface: var(--tblr-bg-surface-primary);
+    --mp-default-text: var(--tblr-gray-700);
+    --mp-default-border: var(--tblr-gray-200);
 }
 
 [data-bs-theme=dark] {
     --mp-default-nav-background: #182433;
-    --mp-default-surface: #1a2234;
-    --mp-default-text: #dce1e7;
-    --mp-default-border: #2c3a4f;
+    --mp-default-surface: var(--tblr-gray-800);
+    --mp-default-text: var(--tblr-gray-200);
+    --mp-default-border: var(--tblr-gray-700);
 }
 
 :root,
