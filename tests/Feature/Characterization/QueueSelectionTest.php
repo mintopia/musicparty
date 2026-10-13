@@ -106,13 +106,14 @@ it('also sends requests with a zero or negative score when not weighted', functi
     expect(sentIds($fake))->toBe(['ZERO', 'NEG']);
 });
 
-it('ignores not_before entirely on the non-weighted path (E5 R10)', function () {
+it('excludes a future not_before and includes a past one on the non-weighted path (E5 R10)', function () {
     [$party, $fake] = selectionParty();
     waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
+    waitingRequest($party, 'PAST', 1, ['not_before' => '2020-01-01 00:00:00']);
 
     $party->updateState();
 
-    expect(sentIds($fake))->toBe(['FUTURE']);
+    expect(sentIds($fake))->toBe(['PAST']);
 });
 
 it('does nothing when the party is inactive', function () {
@@ -239,7 +240,7 @@ it('derives the score from votes plus score_adjustment in updateScore and then p
     expect(sentIds($fake))->toBe(['ADJUSTED', 'PLAIN']);
 });
 
-it('compares not_before against the literal string NOW() in the weighted query (E5 R10)', function () {
+it('binds a datetime rather than the string NOW() when comparing not_before (E5 R10)', function () {
     [$party, $fake] = selectionParty(['weighted' => true]);
     waitingRequest($party, 'A', 1);
     seedRandomness(1);
@@ -250,9 +251,9 @@ it('compares not_before against the literal string NOW() in the weighted query (
 
     $party->updateState();
 
-    $matching = array_filter($queries, fn (array $q) => in_array('NOW()', $q['bindings'], true));
+    $matching = array_filter($queries, fn (array $q) => str_contains($q['sql'], 'not_before" <= ?'));
     expect($matching)->not->toBeEmpty()
-        ->and(array_values($matching)[0]['sql'])->toContain('not_before" <= ?');
+        ->and(collect($matching)->flatMap(fn (array $q) => $q['bindings'])->contains('NOW()'))->toBeFalse();
 });
 
 it('treats a past not_before as eligible in the weighted pass', function () {
@@ -265,14 +266,14 @@ it('treats a past not_before as eligible in the weighted pass', function () {
     expect(sentIds($fake))->toBe(['PAST']);
 });
 
-it('also treats a future not_before as eligible because the string NOW() sorts after any date on SQLite (E5 R10)', function () {
+it('excludes a future not_before from the weighted pass and its fallback (E5 R10)', function () {
     [$party, $fake] = selectionParty(['weighted' => true]);
     waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
     seedRandomness(1);
 
     $party->updateState();
 
-    expect(sentIds($fake))->toBe(['FUTURE']);
+    expect(sentIds($fake))->toBe([]);
 });
 
 it('casts not_before to a Carbon instance', function () {
