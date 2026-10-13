@@ -1,19 +1,13 @@
 <?php
 
-use App\Enums\Purpose;
 use App\Events\Cron\HourTickEvent;
-use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\Mod;
 use App\Models\Party;
-use App\Models\Role;
 use App\Models\User;
 use App\Mods\Foo\FooMod;
 use App\Mods\ModRegistry;
 use App\Mods\PartyMods;
 use App\Mods\Whamageddon\Listeners\HourTickListener;
-use App\Services\Music\Data\Playlist;
-use App\Services\Music\Fake\FakeMusicProvider;
-use App\Services\Music\MusicProviderFactory;
 use Illuminate\Support\Carbon;
 use Tests\Support\FooModFixture;
 use Tests\Support\WhamageddonFixtures;
@@ -91,43 +85,28 @@ it('has no effect on the hourly tick while disabled and does once enabled', func
     expect($upcoming->fresh()->score_adjustment)->toBe(1);
 });
 
-describe('party form', function () {
+describe('party mods screen', function () {
     beforeEach(function () {
         $this->withoutVite();
-        $this->withoutMiddleware(VerifyCsrfToken::class);
         $this->owner = User::factory()->withSpotify()->create();
         $this->owner->forceFill(['first_login' => false])->save();
-        $this->owner->roles()->attach(Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']));
-        $provider = new class extends FakeMusicProvider
-        {
-            public function listPlaylists(): array
-            {
-                return [new Playlist('sp-list', 'Spotify List', 'me', 1)];
-            }
-        };
-        app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => $provider);
-        $this->party = Party::factory()->for($this->owner)->create(['provider_id' => 'spotify']);
+        $this->party = Party::factory()->for($this->owner)->create();
     });
 
-    function updatePayload(array $extra = []): array
-    {
-        return array_merge(['name' => 'Test', 'backup_playlist_id' => 'sp-list'], $extra);
-    }
-
-    it('toggles a mod through mods_enabled[]', function () {
-        $this->actingAs($this->owner)->put(route('parties.update', $this->party->code), updatePayload(['mods_enabled' => ['foo']]))->assertSessionHasNoErrors()->assertRedirect();
+    it('toggles a mod through the Mods screen', function () {
+        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), ['mods' => ['foo' => ['enabled' => true]]])
+            ->assertSessionHasNoErrors()->assertRedirect();
         expect(app(PartyMods::class)->isEnabled($this->party, 'foo'))->toBeTrue();
 
-        $this->actingAs($this->owner)->put(route('parties.update', $this->party->code), updatePayload());
+        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), ['mods' => ['foo' => ['enabled' => false]]]);
         expect(app(PartyMods::class)->isEnabled($this->party, 'foo'))->toBeFalse();
     });
 
-    it('offers the enable checkbox on the edit form and hides removed mods', function () {
+    it('lists mods on the Mods screen and hides removed mods', function () {
         Mod::factory()->create(['code' => 'gone', 'name' => 'Gone Mod', 'removed_at' => now()]);
 
-        $this->actingAs($this->owner)->get(route('parties.edit', $this->party->code))
+        $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
             ->assertOk()
-            ->assertSee('name="mods_enabled[]" value="foo"', false)
-            ->assertDontSee('Gone Mod');
+            ->assertInertia(fn ($page) => $page->component('Parties/Mods')->has('mods', 1)->where('mods.0.code', 'foo'));
     });
 });

@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Enums\SettingType;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Mods\ModRegistry;
@@ -32,9 +33,11 @@ class SyncModsCommand extends Command
                     $setting->name = $definition->name;
                     $setting->description = $definition->description;
                     $setting->type = $definition->type;
-                    $setting->default = $definition->default;
                     $setting->private = $definition->private;
-                    $setting->encrypted = $definition->encrypted;
+                    $setting->encrypted = $definition->encrypted || $definition->type === SettingType::stSecret;
+                    $setting->instance_only = $definition->instanceOnly;
+                    $setting->validation = is_array($definition->validation) ? implode('|', array_map(strval(...), $definition->validation)) : $definition->validation;
+                    $setting->default = $definition->default;
                     $setting->save();
                 }
             }

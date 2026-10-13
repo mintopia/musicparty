@@ -14,5 +14,7 @@ final readonly class SettingDefinition
         public ?string $description = null,
         public bool $private = false,
         public bool $encrypted = false,
+        public string|array|null $validation = null,
+        public bool $instanceOnly = false,
     ) {}
 }

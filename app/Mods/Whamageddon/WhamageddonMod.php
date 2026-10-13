@@ -29,7 +29,7 @@ class WhamageddonMod implements Mod
     public function settings(): array
     {
         return [
-            new SettingDefinition('spotify_id', 'Spotify Track ID', SettingType::stString, '2FRnf9qhLbvw8fu4IBXx78'),
+            new SettingDefinition('spotify_id', 'Track', SettingType::stTrack, '2FRnf9qhLbvw8fu4IBXx78'),
             new SettingDefinition('votes', 'Votes per Hour', SettingType::stInteger, 1),
             new SettingDefinition('fallback_name', 'Fallback Name Override', SettingType::stString, 'Whamageddon'),
             new SettingDefinition('css_classes', 'CSS Classes', SettingType::stString, 'whamageddon'),
