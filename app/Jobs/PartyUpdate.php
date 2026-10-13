@@ -30,7 +30,7 @@ class PartyUpdate implements ShouldQueue
     {
         $middleware = [];
         if (config('musicparty.allow_overlapping_updates')) {
-            $middleware[] = (new WithoutOverlapping($this->party->id))->dontRelease()->expireAfter(4);
+            $middleware[] = (new WithoutOverlapping("party-update:{$this->party->id}"))->dontRelease()->expireAfter(4);
         }
 
         return $middleware;
