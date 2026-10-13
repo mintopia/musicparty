@@ -91,7 +91,7 @@ it('releases a party update job until the backoff expires', function () {
     $party = Mockery::mock(Party::class)->makePartial();
     $party->code = 'ABCD';
     $party->poll = false;
-    $party->shouldReceive('updateState')->andThrow(new SpotifyBackoffException(9));
+    $party->shouldReceive('tryUpdateState')->andThrow(new SpotifyBackoffException(9));
 
     $queueJob = Mockery::mock(Job::class);
     $queueJob->shouldReceive('release')->once()->with(9);

@@ -15,9 +15,6 @@ class UpdatedEvent implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
-    /**
-     * Create a new event instance.
-     */
     /** @var array<string, mixed> */
     protected array $state;
 

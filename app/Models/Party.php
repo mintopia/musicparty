@@ -7,6 +7,7 @@ use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
+use Closure;
 use Database\Factories\PartyFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -146,8 +147,6 @@ class Party extends Model
 
     protected bool $coalescingBroadcasts = false;
 
-    protected bool $broadcastPending = false;
-
     /** @var Collection<string, PartyModSetting>|null */
     protected ?Collection $_modSettings = null;
 
@@ -254,7 +253,7 @@ class Party extends Model
     public function tryUpdateState(): bool
     {
         if (! config('musicparty.prevent_overlapping_updates')) {
-            $this->runStateUpdate();
+            $this->runCoalescingBroadcasts(fn () => $this->runStateUpdate());
 
             return true;
         }
@@ -266,24 +265,28 @@ class Party extends Model
             return false;
         }
 
-        $this->coalescingBroadcasts = true;
-        $queueHeadBefore = $this->next()?->id;
-
         try {
-            $this->runStateUpdate();
+            $this->runCoalescingBroadcasts(fn () => $this->runStateUpdate());
         } finally {
-            $this->coalescingBroadcasts = false;
             $lock->release();
-            if ($this->next()?->id !== $queueHeadBefore) {
-                $this->broadcastPending = true;
-            }
-            if ($this->broadcastPending) {
-                $this->broadcastPending = false;
-                UpdatedEvent::dispatch($this);
-            }
         }
 
         return true;
+    }
+
+    protected function runCoalescingBroadcasts(Closure $sync): void
+    {
+        $this->coalescingBroadcasts = true;
+        $stateBefore = $this->renderedStateFingerprint();
+
+        try {
+            $sync();
+        } finally {
+            $this->coalescingBroadcasts = false;
+            if ($this->renderedStateFingerprint() !== $stateBefore) {
+                UpdatedEvent::dispatch($this);
+            }
+        }
     }
 
     protected function runStateUpdate(): void
@@ -888,12 +891,20 @@ class Party extends Model
 
     public function broadcastRenderedChange(): void
     {
-        if ($this->coalescingBroadcasts) {
-            $this->broadcastPending = true;
-
-            return;
+        if (! $this->coalescingBroadcasts) {
+            UpdatedEvent::dispatch($this);
         }
-        UpdatedEvent::dispatch($this);
+    }
+
+    protected function renderedStateFingerprint(): string
+    {
+        $state = (array) $this->getState();
+        unset($state['updated_at']);
+        $status = (array) $state['status'];
+        unset($status['updatedAt']);
+        $state['status'] = $status;
+
+        return json_encode($state, JSON_THROW_ON_ERROR);
     }
 
     public function checkDownvotesForUser(User $user): void
