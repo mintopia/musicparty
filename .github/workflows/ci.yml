@@ -174,3 +174,25 @@ jobs:
           push: false
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
+
+  caddyfile:
+    name: Caddyfile validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate Caddyfile
+        run: |
+          mkdir -p "$RUNNER_TEMP/public"
+          touch "$RUNNER_TEMP/public/frankenphp-worker.php"
+          docker run --rm \
+            -v "$PWD/docker/Caddyfile:/etc/caddy/Caddyfile:ro" \
+            -v "$RUNNER_TEMP/public:/app/public:ro" \
+            -e APP_PUBLIC_PATH=/app/public \
+            -e CADDY_SERVER_WORKER_COUNT=1 \
+            -e CADDY_SERVER_ADMIN_HOST=localhost \
+            -e CADDY_SERVER_ADMIN_PORT=2019 \
+            -e CADDY_SERVER_LOG_LEVEL=INFO \
+            -e CADDY_SERVER_LOGGER=json \
+            -e CADDY_SERVER_SERVER_NAME=:80 \
+            dunglas/frankenphp frankenphp validate --config /etc/caddy/Caddyfile --adapter caddyfile

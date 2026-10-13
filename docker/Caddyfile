@@ -31,7 +31,14 @@
 		}
 	}
 
+	@websocket {
+		header_regexp Connection (?i)upgrade
+		header Upgrade websocket
+	}
+
 	route {
+		reverse_proxy @websocket {$REVERB_UPSTREAM_HOST:reverb}:{$REVERB_UPSTREAM_PORT:8080}
+
 		root * "{$APP_PUBLIC_PATH}"
 		encode zstd br gzip
 
