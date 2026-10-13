@@ -1,0 +1,17 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "strict": true,
+        "jsx": "preserve",
+        "noEmit": true,
+        "skipLibCheck": true,
+        "isolatedModules": true,
+        "verbatimModuleSyntax": true,
+        "lib": ["ESNext", "DOM"],
+        "types": ["vite/client"],
+        "paths": {"@/*": ["./resources/js/*"]}
+    },
+    "include": ["resources/js/inertia.ts", "resources/js/types.ts", "resources/js/pages/**/*", "resources/js/routes/**/*", "resources/js/wayfinder/**/*", "resources/js/actions/**/*"]
+}

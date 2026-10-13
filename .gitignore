@@ -30,3 +30,7 @@ frankenphp-worker.php
 
 /.claude/worktrees/
 /docker/dbdata
+
+/resources/js/actions
+/resources/js/routes
+/resources/js/wayfinder

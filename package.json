@@ -3,9 +3,12 @@
     "type": "module",
     "scripts": {
         "dev": "vite",
-        "build": "vite build"
+        "build": "vite build",
+        "typecheck": "vue-tsc --noEmit"
     },
     "devDependencies": {
+        "@inertiajs/vue3": "^3.9.1",
+        "@laravel/vite-plugin-wayfinder": "^0.1.10",
         "@tabler/core": "^1.6.1",
         "@tabler/icons-webfont": "^3.49.0",
         "@ts-pro/vue-eternal-loading": "github:ts-pro/vue-eternal-loading",
@@ -22,8 +25,10 @@
         "resolve-url-loader": "^5.0.0",
         "sass": "^1.105.1",
         "sass-loader": "^17.0.1",
+        "typescript": "^6.0.3",
         "vite": "^8.3.4",
         "vue": "^3.5.43",
-        "vue-loader": "^17.4.2"
+        "vue-loader": "^17.4.2",
+        "vue-tsc": "^3.3.13"
     }
 }
