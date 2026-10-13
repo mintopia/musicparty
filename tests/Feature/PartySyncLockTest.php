@@ -4,10 +4,14 @@ use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Services\Music\Data\Device;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\PlaybackSync;
+use Carbon\CarbonImmutable;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -73,6 +77,83 @@ it('records the attempt time and releases the lock when a sync throws', function
 
     expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue()
         ->and(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
+});
+
+it('records the attempt time when a provider call throws at any step', function (string $failingCall) {
+    $party = $this->party;
+    $party->forceFill(['force' => true, 'device_id' => 'dev1'])->saveQuietly();
+    $fake = new class($failingCall) extends FakeMusicProvider
+    {
+        public function __construct(private string $failingCall)
+        {
+            parent::__construct();
+        }
+
+        public function currentPlayback(): ?PlaybackState
+        {
+            $this->failIf('currentPlayback');
+
+            return in_array($this->failingCall, ['play', 'devices'], true) ? null : new PlaybackState(true, 'T1', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev1', 'Dev', PlaybackSource::Polling);
+        }
+
+        public function devices(): array
+        {
+            $this->failIf('devices');
+
+            return [new Device('dev1', 'Dev', 'Speaker', true)];
+        }
+
+        public function play(?string $deviceId = null, ?Track $track = null): void
+        {
+            $this->failIf('play');
+        }
+
+        public function getTrack(string $id): ?Track
+        {
+            $this->failIf('getTrack');
+
+            return null;
+        }
+
+        private function failIf(string $call): void
+        {
+            if ($this->failingCall === $call) {
+                throw new RuntimeException($call);
+            }
+        }
+    };
+    app()->forgetInstance(FakeMusicProvider::class);
+    app()->scoped(FakeMusicProvider::class, fn () => $fake);
+    $before = $party->last_updated_at;
+
+    expect(fn () => app(PlaybackSync::class)->sync(Party::findOrFail($party->id)))->toThrow(RuntimeException::class, $failingCall);
+
+    expect($party->fresh()->last_updated_at->gt($before))->toBeTrue();
+})->with(['current playback' => 'currentPlayback', 'device list' => 'devices', 'force playback' => 'play', 'track lookup' => 'getTrack']);
+
+it('records the attempt time when the relink check throws', function () {
+    $user = Mockery::mock($this->party->user)->makePartial();
+    $user->shouldReceive('spotifyNeedsRelink')->andThrow(new RuntimeException('relink'));
+    $party = Party::findOrFail($this->party->id);
+    $party->setRelation('user', $user);
+    $before = $this->party->last_updated_at;
+
+    expect(fn () => app(PlaybackSync::class)->sync($party))->toThrow(RuntimeException::class, 'relink');
+
+    expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue();
+});
+
+it('records the attempt time for an inactive Party so the debounce holds', function () {
+    $this->party->forceFill(['active' => false])->saveQuietly();
+    $before = $this->party->last_updated_at;
+
+    expect(app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id)))->toBeTrue();
+
+    expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue();
+
+    $calls = count($this->provider->callsTo('currentPlayback'));
+    app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id));
+    expect($this->provider->callsTo('currentPlayback'))->toHaveCount($calls);
 });
 
 it('sends exactly one track when a concurrent sync races the Send to Player', function () {

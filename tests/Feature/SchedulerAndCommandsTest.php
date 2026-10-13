@@ -120,7 +120,7 @@ it('party:force fails for a valid code whose party is ineligible', function () {
         ->assertFailed();
 });
 
-it('party:force starts a forced party whose device is online without taking a sync lock (E5 R2)', function () {
+it('party:force starts a forced party whose device is online and stamps last_updated_at (E5 R2)', function () {
     FakeSpotify::install();
     $fake = FakeFallbackPlaylist::seed(['bk1'], 'backup')->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)]);
@@ -173,7 +173,7 @@ it('party:refreshaccesstokens reports when there is no spotify provider', functi
         ->assertSuccessful();
 });
 
-it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway with no lock or result check (E5 R5, R6)', function () {
+it('party:refreshaccesstokens refreshes expiring spotify accounts lazily via the SpotifyGateway, which owns the refresh lock, and ignores the result (E5 R5, R6)', function () {
     $provider = SocialProvider::factory()->create(['code' => 'spotify']);
     $expiring = User::factory()->create();
     $fresh = User::factory()->create();

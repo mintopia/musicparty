@@ -35,12 +35,6 @@ class PlaybackSync
     public function sync(Party $party): bool
     {
         return $this->withLock($party, function () use ($party): void {
-            if ($party->user->spotifyNeedsRelink()) {
-                Log::debug("{$party}: Spotify needs re-linking, skipping update");
-
-                return;
-            }
-
             Log::info("{$party}: Updating state");
             if ($party->poll && $party->last_updated_at > now()->subSeconds(self::POLL_DEBOUNCE_SECONDS)) {
                 Log::debug("{$party}: Already updated state recently");
@@ -48,9 +42,20 @@ class PlaybackSync
                 return;
             }
 
-            $provider = $this->providers->forParty($party, Purpose::Control);
-            $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
-            $this->applyState($party, $provider, $playback ?? PlaybackState::idle(PlaybackSource::Polling));
+            try {
+                if ($party->user->spotifyNeedsRelink()) {
+                    Log::debug("{$party}: Spotify needs re-linking, skipping update");
+
+                    return;
+                }
+
+                $provider = $this->providers->forParty($party, Purpose::Control);
+                $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
+                $this->applyState($party, $provider, $playback ?? PlaybackState::idle(PlaybackSource::Polling));
+            } finally {
+                $party->last_updated_at = now();
+                $party->save();
+            }
         });
     }
 
