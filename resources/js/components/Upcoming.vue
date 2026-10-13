@@ -19,6 +19,10 @@
                                 <div class="text-secondary">
                                     {{ combineArtists(song.artists) }}
                                 </div>
+                                <div v-if="song.scheduled_for" class="text-info scheduled-time">
+                                    <i class="icon ti ti-clock"></i>
+                                    Scheduled for {{ formatScheduled(song.scheduled_for) }}
+                                </div>
                                 <div class="text-muted">
                                     <template v-if="song.user">Requested by {{ song.user }}</template>
                                     <template v-else>{{ song.fallback_name }}</template>
@@ -170,6 +174,7 @@ export default defineComponent({
         can_manage: {type: [String, Number, Boolean]},
         can_downvote: {type: [String, Number, Boolean]},
         party: {type: String},
+        timezone: {type: String, default: 'UTC'},
         initialstate: {type: String, required: true},
     },
     data() {
@@ -263,6 +268,14 @@ export default defineComponent({
 
         removeItem(id: number): void {
             this.upcoming = this.upcoming.filter((song) => song.id !== id);
+        },
+
+        formatScheduled(iso: string): string {
+            return new Intl.DateTimeFormat(undefined, {
+                dateStyle: 'medium',
+                timeStyle: 'short',
+                timeZone: this.timezone,
+            }).format(new Date(iso));
         },
 
         formatMs(ms: number): string {

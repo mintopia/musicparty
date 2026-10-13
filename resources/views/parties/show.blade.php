@@ -69,6 +69,7 @@
             party="{{ $party->code }}"
             can_manage="{{ $canManage }}"
             can_downvote="{{ $party->downvotes }}"
+            timezone="{{ app(\App\Services\PartyTimezone::class)->for($party) }}"
             initialstate='@json($upcoming)'
         ></upcoming>
     </div>

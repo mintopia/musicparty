@@ -141,6 +141,7 @@ export interface LegacyUpcomingSong extends LegacyTrack {
     id: number;
     vote: number;
     created_at: string;
+    scheduled_for?: string | null;
 }
 
 export interface PlaybackState {
