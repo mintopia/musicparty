@@ -4,6 +4,9 @@ namespace App\Services\Requests;
 
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Mods\Contracts\ContributesRequestRules;
+use App\Mods\ModRegistry;
+use App\Mods\PartyMods;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
@@ -26,10 +29,10 @@ class RequestRules
 
     /**
      * @param  list<RequestRule>|null  $rules  Core stage rules
-     * @param  list<RequestRule>  $modRules
-     * @param  list<RequestRule>  $aiRules
+     * @param  list<RequestRule>|null  $modRules  Defaults to the rules of mods enabled for the Party
+     * @param  list<RequestRule>|null  $aiRules  Defaults to the AI rules of mods enabled for the Party
      */
-    public function __construct(?array $rules = null, protected array $modRules = [], protected array $aiRules = [])
+    public function __construct(?array $rules = null, protected ?array $modRules = null, protected ?array $aiRules = null)
     {
         $this->rules = $rules ?? self::standardRules();
     }
@@ -83,9 +86,9 @@ class RequestRules
 
     protected function decide(RequestContext $context, Track $track): RequestDecision
     {
-        $stages = [$this->rules, $this->modRules];
+        $stages = [$this->rules, $this->modRules ?? $context->remember('mod-rules', fn (): array => $this->enabledModRules($context->party, false))];
         if ($context->mode === RequestMode::Submit) {
-            $stages[] = $this->aiRules;
+            $stages[] = $this->aiRules ?? $context->remember('ai-rules', fn (): array => $this->enabledModRules($context->party, true));
         }
 
         $flag = null;
@@ -100,5 +103,21 @@ class RequestRules
         }
 
         return $flag !== null && $context->party->flag_requests ? $flag : RequestDecision::allow();
+    }
+
+    /**
+     * @return list<RequestRule>
+     */
+    protected function enabledModRules(Party $party, bool $ai): array
+    {
+        $partyMods = app(PartyMods::class);
+        $rules = [];
+        foreach (app(ModRegistry::class)->all() as $mod) {
+            if ($mod instanceof ContributesRequestRules && $partyMods->isEnabled($party, $mod->code())) {
+                array_push($rules, ...($ai ? $mod->aiRequestRules() : $mod->modRequestRules()));
+            }
+        }
+
+        return $rules;
     }
 }

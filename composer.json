@@ -8,6 +8,7 @@
         "guzzlehttp/guzzle": "^7.2",
         "inertiajs/inertia-laravel": "^3.5",
         "jwilsson/spotify-web-api-php": "^6.0",
+        "laravel/ai": "^1.2",
         "laravel/framework": "^13.0",
         "laravel/horizon": "^5.31",
         "laravel/octane": "^2.9",

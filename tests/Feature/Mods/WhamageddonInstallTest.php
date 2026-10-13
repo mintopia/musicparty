@@ -54,7 +54,7 @@ it('is idempotent and restores edited names and defaults on re-run', function ()
 
     expect(Mod::whereCode('whamageddon')->count())->toBe(1)
         ->and(Mod::whereCode('whamageddon')->first()->name)->toBe('Whamageddon')
-        ->and(ModSetting::count())->toBe(5);
+        ->and(ModSetting::whereMod_id(Mod::whereCode('whamageddon')->value('id'))->count())->toBe(5);
     $setting->refresh();
     expect($setting->name)->toBe('Fallback Name Override')
         ->and($setting->default)->toBe('Whamageddon');
