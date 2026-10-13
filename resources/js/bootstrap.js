@@ -25,13 +25,14 @@ window.axios.defaults.headers.common['X-Requested-With'] = 'XMLHttpRequest';
  */
 window.Pusher = Pusher;
 
+const forceTLS = window.location.protocol === 'https:';
+
 window.Echo = new Echo({
      broadcaster: 'reverb',
      key: window.pusherConfig.appKey,
-     wsHost: window.pusherConfig.host,
-     wsPort: window.pusherConfig.port,
-     wssHost: window.pusherConfig.host,
-     wssPort: window.pusherConfig.port,
-     forceTLS: window.pusherConfig.scheme === 'https',
+     wsHost: window.location.hostname,
+     wsPort: window.location.port || (forceTLS ? 443 : 80),
+     wssPort: window.location.port || 443,
+     forceTLS,
      enabledTransports: ['ws', 'wss'],
 });
