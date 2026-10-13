@@ -14,7 +14,7 @@ beforeEach(function () {
 });
 
 it('adds the configured track to the party on enable', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
 
     new Whamageddon($party)->enable();
 
@@ -44,7 +44,7 @@ it('uses the overridden fallback name and css classes', function () {
 });
 
 it('adds nothing when the spotify id is null', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => null]);
+    $party = WhamageddonFixtures::party(['track' => null]);
 
     new Whamageddon($party)->enable();
 
@@ -52,9 +52,8 @@ it('adds nothing when the spotify id is null', function () {
         ->and($this->fake->callsTo('getTrack'))->toBe([]);
 });
 
-it('adds nothing when spotify returns no track', function () {
-    $this->fake->respond('getTrack', []);
-    $party = WhamageddonFixtures::party();
+it('adds nothing when the music provider has no such track', function () {
+    $party = WhamageddonFixtures::party(['track' => 'missing-track']);
 
     new Whamageddon($party)->enable();
 
@@ -74,7 +73,7 @@ it('does nothing on enable when an upcoming song is already tracked', function (
 });
 
 it('reuses an existing unqueued upcoming for the same track', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     $existing = WhamageddonFixtures::upcoming($party, ['user_id' => null], track: false);
 
     new Whamageddon($party)->enable();
@@ -88,7 +87,7 @@ it('reuses an existing unqueued upcoming for the same track', function () {
 });
 
 it('does not reuse an existing queued upcoming and creates a new row', function () {
-    $party = WhamageddonFixtures::party(['spotify_id' => WhamageddonFixtures::TRACK_ID]);
+    $party = WhamageddonFixtures::party(['track' => WhamageddonFixtures::TRACK_ID]);
     $queued = WhamageddonFixtures::upcoming($party, ['queued_at' => now()], track: false);
 
     new Whamageddon($party)->enable();

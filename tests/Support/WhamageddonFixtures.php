@@ -8,6 +8,7 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
+use App\Services\Music\Fake\FakeMusicProvider;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 
@@ -20,12 +21,15 @@ class WhamageddonFixtures
         Artisan::call('mods:sync');
     }
 
-    public static function fake(): FakeSpotify
-    {
-        $fake = FakeSpotify::install();
-        $fake->respond('getTrack', FakeSpotify::track(self::TRACK_ID, 'Last Christmas'));
+    public const DEFAULT_TRACK_ID = '2FRnf9qhLbvw8fu4IBXx78';
 
-        return $fake;
+    public static function fake(): FakeMusicProvider
+    {
+        app()->forgetInstance(FakeMusicProvider::class);
+
+        return app(FakeMusicProvider::class)
+            ->withTrack(FakeFallbackPlaylist::track(self::TRACK_ID))
+            ->withTrack(FakeFallbackPlaylist::track(self::DEFAULT_TRACK_ID));
     }
 
     /**
@@ -33,7 +37,7 @@ class WhamageddonFixtures
      */
     public static function party(array $settings = [], bool $active = true): Party
     {
-        $party = Party::factory()->create();
+        $party = Party::factory()->create(['provider_id' => 'fake']);
         if ($active) {
             Party::whereKey($party->id)->update(['active' => true]);
         }

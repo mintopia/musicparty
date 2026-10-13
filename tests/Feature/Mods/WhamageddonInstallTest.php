@@ -13,8 +13,8 @@ it('creates the whamageddon mod with its settings and defaults', function () {
     expect($mod->name)->toBe('Whamageddon')->and($mod->removed_at)->toBeNull();
 
     $expected = [
-        'spotify_id' => [SettingType::stTrack, '2FRnf9qhLbvw8fu4IBXx78', false],
-        'votes' => [SettingType::stInteger, 1, false],
+        'track' => [SettingType::stTrack, '2FRnf9qhLbvw8fu4IBXx78', false],
+        'score_per_hour' => [SettingType::stInteger, 1, false],
         'fallback_name' => [SettingType::stString, 'Whamageddon', false],
         'css_classes' => [SettingType::stString, 'whamageddon', false],
         'upcoming_song_id' => [SettingType::stInteger, 0, true],
@@ -35,11 +35,13 @@ it('no longer defines an enabled setting', function () {
     expect(ModSetting::whereCode('enabled')->exists())->toBeFalse();
 });
 
-it('does not define a score_adjustment setting even though the mod reads one', function () {
+it('defines a single hourly bump setting and no legacy votes or spotify_id settings', function () {
     WhamageddonFixtures::install();
 
     expect(ModSetting::whereCode('score_adjustment')->exists())->toBeFalse()
-        ->and(ModSetting::whereCode('votes')->exists())->toBeTrue();
+        ->and(ModSetting::whereCode('votes')->exists())->toBeFalse()
+        ->and(ModSetting::whereCode('spotify_id')->exists())->toBeFalse()
+        ->and(ModSetting::whereCode('score_per_hour')->exists())->toBeTrue();
 });
 
 it('is idempotent and restores edited names and defaults on re-run', function () {
