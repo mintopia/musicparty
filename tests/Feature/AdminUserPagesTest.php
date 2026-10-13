@@ -69,7 +69,7 @@ it('renders the edit form and updates the user', function () {
             ->has('roles'));
 
     $this->actingAs($this->admin)
-        ->patch(route('admin.users.update', $this->target), ['nickname' => 'Renamed', 'name' => 'Re Named', 'roles' => ['admin'], 'suspended' => 1, 'first_login' => 1])
+        ->patch(route('admin.users.update', $this->target), ['nickname' => 'Renamed', 'roles' => ['admin'], 'suspended' => 1, 'first_login' => 1])
         ->assertRedirect(route('admin.users.show', $this->target))
         ->assertSessionHas('successMessage');
 
