@@ -5,7 +5,7 @@ use App\Services\SocialProviders\DiscordProvider;
 use Illuminate\Support\Facades\Crypt;
 
 it('stores encrypted provider settings so the value can be read back', function () {
-    $provider = (new DiscordProvider(null, 'https://example.test/callback'))->install();
+    $provider = new DiscordProvider(null, 'https://example.test/callback')->install();
 
     $secret = ProviderSetting::query()
         ->where('code', 'client_secret')

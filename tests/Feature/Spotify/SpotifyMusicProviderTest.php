@@ -18,7 +18,7 @@ function spotifyProvider(FakeSpotify $api): SpotifyMusicProvider
     {
         public function __construct(protected FakeSpotify $api) {}
 
-        public function client(User $user): ?SpotifyWebAPI
+        public function client(User $user): SpotifyWebAPI
         {
             return $this->api;
         }
@@ -38,7 +38,7 @@ it('sends tracks to the player by id and plays with a track uri', function () {
 
     $provider->sendToPlayer(mappedTrack('abc'));
     $provider->play('dev1', mappedTrack('abc'));
-    $provider->play(null, null);
+    $provider->play();
 
     expect($api->callsTo('queue'))->toBe([['abc']])
         ->and($api->callsTo('play'))->toBe([['dev1', ['uris' => ['spotify:track:abc']]], ['', []]]);

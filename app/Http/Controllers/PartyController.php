@@ -151,10 +151,10 @@ class PartyController extends Controller
             try {
                 $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
                 $items = $eligibility->annotate($party, $member, $found->items);
-                $results = (new LengthAwarePaginator($items, $found->total, (int) $perPage, $page))
+                $results = new LengthAwarePaginator($items, $found->total, (int) $perPage, $page)
                     ->setPath(route('parties.search', $party->code))
                     ->appends($params)
-                    ->through(fn ($annotation): array => (new TrackAnnotationResource($annotation))->resolve());
+                    ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
             } catch (SpotifyRelinkRequiredException) {
                 session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
             } catch (SpotifyBackoffException) {

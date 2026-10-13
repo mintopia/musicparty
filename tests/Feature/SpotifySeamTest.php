@@ -117,7 +117,7 @@ it('lets the fake be bound before a party is created', function () {
 
 it('orders the fallback playlist exactly with a seeded randomizer', function () {
     $ids = ['a', 'b', 'c', 'd', 'e'];
-    $expected = (new Randomizer(new Mt19937(42)))->shuffleArray($ids);
+    $expected = new Randomizer(new Mt19937(42))->shuffleArray($ids);
     app()->bind(Randomizer::class, fn () => new Randomizer(new Mt19937(42)));
     FakeSpotify::install();
     FakeFallbackPlaylist::seed($ids, 'backup');

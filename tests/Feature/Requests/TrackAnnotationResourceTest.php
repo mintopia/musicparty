@@ -19,7 +19,7 @@ function annotationFor(bool $upcoming, bool $allowed, ?string $reason = null): a
         $reason,
     );
 
-    return (new TrackAnnotationResource($annotation))->resolve();
+    return new TrackAnnotationResource($annotation)->resolve();
 }
 
 it('describes a track that is not in the queue and allowed', function () {

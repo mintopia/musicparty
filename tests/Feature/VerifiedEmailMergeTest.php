@@ -79,7 +79,7 @@ it('refuses to link an account whose email belongs to another user', function (b
     $spotify = providerFor(SpotifyProvider::class, 'spotify');
     fakeRemoteUser('s1', 'a@example.com');
 
-    expect(fn () => (new SpotifyProvider($spotify))->user($me))
+    expect(fn () => new SpotifyProvider($spotify)->user($me))
         ->toThrow(SocialProviderException::class, 'Account is already associated with another user');
     expect($other->user_id)->not->toBe($me->id);
 })->with([true, false]);
@@ -89,7 +89,7 @@ it('links an unverified-provider account for a logged in user with a fresh email
     $spotify = providerFor(SpotifyProvider::class, 'spotify');
     fakeRemoteUser('s1', 'new@example.com');
 
-    (new SpotifyProvider($spotify))->user($me);
+    new SpotifyProvider($spotify)->user($me);
 
     expect($me->accounts()->count())->toBe(1);
 });

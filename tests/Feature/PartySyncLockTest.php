@@ -60,7 +60,7 @@ it('releases a queued job back onto the queue while the lock is held', function 
 it('records the attempt time and releases the lock when a sync throws', function () {
     app()->bind(SpotifyWebAPI::class, fn () => new class extends FakeSpotify
     {
-        public function getMyQueue()
+        public function getMyQueue(): never
         {
             throw new RuntimeException('boom');
         }
@@ -139,12 +139,12 @@ it('succeeds on retry after a transient failure because the lock was released', 
         };
     });
 
-    expect(fn () => (new PartyUpdate(Party::findOrFail($this->party->id)))->handle())
+    expect(fn () => new PartyUpdate(Party::findOrFail($this->party->id))->handle())
         ->toThrow(RuntimeException::class);
 
     $fail = false;
     $this->party->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
-    (new PartyUpdate(Party::findOrFail($this->party->id)))->handle();
+    new PartyUpdate(Party::findOrFail($this->party->id))->handle();
 
     expect(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
 });
@@ -155,7 +155,7 @@ it('releases a retry back to the queue while a sync holds the lock', function ()
 
     $queueJob = Mockery::mock(Job::class)->shouldIgnoreMissing();
     $queueJob->shouldReceive('release')->once()->with(2);
-    $job = (new PartyUpdate($this->party))->setJob($queueJob);
+    $job = new PartyUpdate($this->party)->setJob($queueJob);
     $job->handle();
 
     expect($this->provider->callsTo('currentPlayback'))->toBe([]);

@@ -150,7 +150,7 @@ it('stops the poll chain and the fallback for a party that needs re-link', funct
     $party = Party::factory()->create(['user_id' => $account->user_id]);
     $party->forceFill(['active' => true, 'poll' => true, 'last_updated_at' => null])->saveQuietly();
 
-    (new PartyUpdate($party->fresh()))->handle();
+    new PartyUpdate($party->fresh())->handle();
     $this->artisan('party:fallback')->assertSuccessful();
 
     Queue::assertNothingPushed();
@@ -173,7 +173,7 @@ it('shows the re-link banner to managers but not guests, and re-linking clears i
     $remote->token = 'tok';
     $remote->refreshToken = 'ref';
     $provider = app(SpotifyProvider::class);
-    (new ReflectionMethod($provider, 'updateAccount'))->invoke($provider, $account, $remote);
+    new ReflectionMethod($provider, 'updateAccount')->invoke($provider, $account, $remote);
     $account->save();
 
     $this->actingAs($account->user)->get(route('parties.show', $party->code))

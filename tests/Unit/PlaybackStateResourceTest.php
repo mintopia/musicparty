@@ -13,7 +13,7 @@ it('serialises the PlaybackState JSON contract with an ISO 8601 sampledAt', func
         true, 'context', 'dev-1', 'Kitchen', PlaybackSource::Webhook,
     );
 
-    expect((new PlaybackStateResource($state))->toArray(new Request))->toBe([
+    expect(new PlaybackStateResource($state)->toArray(new Request))->toBe([
         'isPlaying' => true,
         'trackId' => 'track-1',
         'linkedFromId' => 'linked-1',
@@ -31,7 +31,7 @@ it('serialises the PlaybackState JSON contract with an ISO 8601 sampledAt', func
 it('keeps every key for an idle state', function () {
     $state = PlaybackState::idle(PlaybackSource::Polling);
 
-    $json = (new PlaybackStateResource($state))->toArray(new Request);
+    $json = new PlaybackStateResource($state)->toArray(new Request);
 
     expect($json)->toHaveKeys(['isPlaying', 'trackId', 'durationMs', 'progressMs', 'sampledAt', 'source'])
         ->and($json['isPlaying'])->toBeFalse()

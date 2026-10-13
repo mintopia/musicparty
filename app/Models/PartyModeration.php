@@ -78,24 +78,12 @@ class PartyModeration extends Model
 
     protected function checkArtist(Track $track): bool
     {
-        foreach ($track->artists as $artist) {
-            if ($this->regexTest($artist->name)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($track->artists, fn ($artist) => $this->regexTest($artist->name));
     }
 
     protected function checkArtistId(Track $track): bool
     {
-        foreach ($track->artists as $artist) {
-            if ($this->regexTest($artist->id, false)) {
-                return true;
-            }
-        }
-
-        return false;
+        return array_any($track->artists, fn ($artist) => $this->regexTest($artist->id, false));
     }
 
     protected function checkId(Track $track): bool

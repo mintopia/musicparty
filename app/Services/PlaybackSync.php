@@ -21,7 +21,7 @@ class PlaybackSync
 {
     public const LOCK_SECONDS = 30;
 
-    private const POLL_DEBOUNCE_SECONDS = 5;
+    private const int POLL_DEBOUNCE_SECONDS = 5;
 
     public function __construct(
         protected MusicProviderFactory $providers,
