@@ -9,7 +9,7 @@
                     {{ code }}
                 </div>
             </h1>
-            <div class="container-xl-fluid d-flex">
+            <div class="container-fluid d-flex">
                 <div class="col-xl-8 offset-xl-2 mt-auto">
                     <template v-if="state && state.now !== null">
                         <div class="row">

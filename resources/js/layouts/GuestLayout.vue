@@ -22,7 +22,7 @@ useColorMode();
     <Head :title="title ?? name">
         <link v-if="site.favicon" rel="shortcut icon" :href="site.favicon" />
     </Head>
-    <div class="d-flex flex-column login-page min-vh-100">
+    <div class="d-flex flex-column min-vh-100">
         <div class="row g-0 flex-fill">
             <div
                 class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center"
