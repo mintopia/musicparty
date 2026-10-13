@@ -196,3 +196,18 @@ jobs:
             -e CADDY_SERVER_LOGGER=json \
             -e CADDY_SERVER_SERVER_NAME=:80 \
             dunglas/frankenphp frankenphp validate --config /etc/caddy/Caddyfile --adapter caddyfile
+
+  compose:
+    name: Production compose validation
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate example production compose
+        env:
+          DB_DATABASE: musicparty
+          DB_USERNAME: musicparty
+          DB_PASSWORD: musicparty
+        run: |
+          touch .env
+          docker compose -f docker-compose.production.example.yml config --quiet
