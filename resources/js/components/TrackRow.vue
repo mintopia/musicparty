@@ -34,7 +34,8 @@ const duration = computed(() => {
 const vote = computed(() => props.track.queue.vote ?? 0);
 const displayName = computed(() => props.decoration?.displayName ?? props.track.name);
 const canRequest = computed(() => props.track.eligibility.allowed && !props.requesting);
-const requestLabel = computed(() => (props.needsApproval ? 'Request approval' : 'Add'));
+const flagged = computed(() => props.needsApproval || props.track.eligibility.outcome === 'flag');
+const requestLabel = computed(() => (flagged.value ? 'Request approval' : 'Add'));
 
 const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 </script>
@@ -88,7 +89,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <i class="icon ti ti-alert-triangle"></i>
                         {{ track.eligibility.reason }}
                     </span>
-                    <span v-else-if="needsApproval" data-test="needs-approval">Needs approval</span>
+                    <span v-else-if="flagged" data-test="needs-approval">Needs approval</span>
                 </div>
                 <slot name="decoration" />
             </div>

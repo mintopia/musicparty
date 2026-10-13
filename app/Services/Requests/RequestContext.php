@@ -20,6 +20,7 @@ final class RequestContext
         public readonly Party $party,
         public readonly PartyMember $member,
         public readonly array $tracks,
+        public readonly RequestMode $mode = RequestMode::Submit,
     ) {}
 
     /**
