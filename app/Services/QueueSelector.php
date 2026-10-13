@@ -48,9 +48,12 @@ class QueueSelector
 
         Log::debug("{$party}: Adding {$toAdd} tracks to the queue");
         $candidates = $this->candidates($party);
-        $selected = $current->weighted
-            ? $this->selectWeighted($candidates, $toAdd)
-            : $this->selectRanked($candidates, $toAdd);
+        $due = $candidates->filter(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->take($toAdd)->values();
+        $rest = $candidates->reject(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->values();
+        $remaining = $toAdd - $due->count();
+        $selected = $due->concat($remaining < 1 ? [] : ($current->weighted
+            ? $this->selectWeighted($rest, $remaining)
+            : $this->selectRanked($rest, $remaining)))->values();
 
         if ($selected->isEmpty()) {
             Log::debug("{$party}: Found no songs in the upcoming songs list to backfill");
@@ -104,7 +107,7 @@ class QueueSelector
     }
 
     /**
-     * Waiting, unflagged, released Requests that pass every tagged candidate filter, ranked by Effective Score, then age.
+     * Waiting, unflagged, released Requests that pass every tagged candidate filter, Scheduled Requests first by time, then ranked by Effective Score and age.
      *
      * @return Collection<int, UpcomingSong>
      */
@@ -125,7 +128,7 @@ class QueueSelector
             ->get()
             ->filter(fn (UpcomingSong $request): bool => collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))
             ->map(fn (UpcomingSong $request): array => [$request, $this->effectiveScore($request)])
-            ->sort(fn (array $a, array $b): int => [$b[1], $a[0]->created_at, $a[0]->id] <=> [$a[1], $b[0]->created_at, $b[0]->id])
+            ->sort(fn (array $a, array $b): int => [$a[0]->scheduled_for === null ? 1 : 0, $a[0]->scheduled_for, $b[1], $a[0]->created_at, $a[0]->id] <=> [$b[0]->scheduled_for === null ? 1 : 0, $b[0]->scheduled_for, $a[1], $b[0]->created_at, $b[0]->id])
             ->map(fn (array $pair): UpcomingSong => $pair[0])
             ->values();
     }

@@ -24,6 +24,7 @@ class UpcomingSongRequest extends FormRequest
     {
         return [
             'provider_track_id' => 'required|string',
+            'scheduled_for' => 'nullable|date',
         ];
     }
 }
