@@ -44,7 +44,7 @@ jobs:
           restore-keys: composer-
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Prepare environment
         run: |
@@ -96,7 +96,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Pint
         run: vendor/bin/pint --test
@@ -131,7 +131,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: PHPStan
         run: composer analyse
@@ -150,7 +150,7 @@ jobs:
           tools: composer:v2
 
       - name: Install dependencies
-        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
 
       - name: Rector dry run
         run: composer rector
