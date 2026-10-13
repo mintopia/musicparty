@@ -4,8 +4,11 @@ namespace App\Services;
 
 use App\Enums\Purpose;
 use App\Models\Party;
+use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Queue\CandidateFilter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -82,21 +85,45 @@ class QueueSelector
     }
 
     /**
-     * Waiting, released Requests ranked by Effective Score, then age.
+     * Adds a Request to the Party's Queue; the entry point for core features and mods. Reuses a waiting Request for the Song.
+     *
+     * @param  array<string, mixed>  $attributes  Request attributes such as not_before, score_adjustment, css_classes.
+     */
+    public function addRequest(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
+    {
+        $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
+        if (! $request->exists) {
+            $request->party()->associate($party);
+            $request->song()->associate($song);
+            $request->user()->associate($user);
+        }
+        $request->forceFill($attributes)->save();
+        $request->updateScore();
+
+        return $request;
+    }
+
+    /**
+     * Waiting, unflagged, released Requests that pass every tagged candidate filter, ranked by Effective Score, then age.
      *
      * @return Collection<int, UpcomingSong>
      */
     protected function candidates(Party $party): Collection
     {
+        /** @var list<CandidateFilter> $filters */
+        $filters = iterator_to_array(app()->tagged('queue.candidate-filters'), false);
+
         $now = Carbon::now();
 
         return $party->upcoming()
             ->whereNull('queued_at')
+            ->whereNull('flagged_at')
             ->where(function ($query) use ($now): void {
                 $query->whereNull('not_before')->orWhere('not_before', '<=', $now);
             })
             ->with('song')
             ->get()
+            ->filter(fn (UpcomingSong $request): bool => collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))
             ->map(fn (UpcomingSong $request): array => [$request, $this->effectiveScore($request)])
             ->sort(fn (array $a, array $b): int => [$b[1], $a[0]->created_at, $a[0]->id] <=> [$a[1], $b[0]->created_at, $b[0]->id])
             ->map(fn (array $pair): UpcomingSong => $pair[0])
