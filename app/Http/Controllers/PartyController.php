@@ -45,7 +45,6 @@ class PartyController extends Controller
             ? $providerId
             : MusicProviderFactory::DEFAULT_PROVIDER_ID;
 
-        // Check they have a link for the chosen provider
         if ($providerId === MusicProviderFactory::DEFAULT_PROVIDER_ID && ! $user->hasSpotifyLinks()) {
             return response()->redirectToRoute('user.spotify');
         }
@@ -163,9 +162,9 @@ class PartyController extends Controller
                     ->appends($params)
                     ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
             } catch (ProviderRelinkRequiredException) {
-                session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
+                session()->now('errorMessage', 'The music provider needs re-linking before search is available.');
             } catch (ProviderBackoffException) {
-                session()->now('errorMessage', 'Spotify is busy right now. Please try again shortly.');
+                session()->now('errorMessage', 'The music provider is busy right now. Please try again shortly.');
             }
         }
 

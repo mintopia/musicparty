@@ -59,7 +59,7 @@ class PartyUpdate implements ShouldQueue
             Log::info("{$this->party}: provider backoff active, releasing for {$e->retryAfterSeconds()}s");
             $this->release($e->retryAfterSeconds());
         } catch (ProviderRelinkRequiredException) {
-            Log::warning("{$this->party}: Spotify needs re-linking, stopping poll chain");
+            Log::warning("{$this->party}: provider needs re-linking, stopping poll chain");
         }
     }
 

@@ -168,8 +168,11 @@ it('swallows a provider-neutral relink in both party jobs', function () {
     $sync->shouldReceive('sync')->andThrow($relink);
     app()->instance(PlaybackSync::class, $sync);
 
-    (new RefreshFallbackPlaylist($party))->handle($fallback);
-    (new PartyUpdate($party))->handle();
+    $refresh = new RefreshFallbackPlaylist($party);
+    $refresh->handle($fallback);
+    $update = new PartyUpdate($party);
+    $update->handle();
 
-    expect(true)->toBeTrue();
+    $fallback->shouldHaveReceived('refresh')->once();
+    $sync->shouldHaveReceived('sync')->once();
 });

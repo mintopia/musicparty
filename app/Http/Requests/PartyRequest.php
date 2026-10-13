@@ -39,10 +39,8 @@ class PartyRequest extends FormRequest
         $party = $this->route('party');
         $options = app(PartyProviderOptions::class);
         if ($party instanceof Party) {
-            // We have a party, use the party owner's playlists on its provider
             $playlists = $options->playlists($party);
         } else {
-            // We don't have a party, use our playlists on the chosen provider
             $providerId = $this->input('provider_id');
             $playlists = $options->playlists($options->draft(
                 $this->resolveAuthenticatedUser($this),
