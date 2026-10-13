@@ -2,6 +2,7 @@
 
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Models\Role;
 use App\Models\Song;
 use App\Models\User;
 use App\Services\Music\Data\AlbumRef;
@@ -129,4 +130,40 @@ it('shows the Host the current Player on the Party page but not guests', functio
 
     $this->actingAs($host)->get(route('parties.show', $party->code))->assertOk()->assertSee('Player: Encore');
     $this->actingAs(User::factory()->create(['first_login' => false]))->get(route('parties.show', $party->code))->assertOk()->assertDontSee('current-player');
+});
+
+it('lets polling take over when Encore reports logged out or an error', function (PlaybackConnectionStatus $status) {
+    [$party, $fake] = pushedParty();
+    $fake->withPlayback(pushedState('B', PlaybackSource::Polling));
+    $state = new PlaybackState(true, 'A', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'device1', 'Speaker', PlaybackSource::Encore, [], $status);
+    app(PlaybackSync::class)->apply($party, $state);
+
+    expect($party->fresh()->hasFreshPushedPlayback())->toBeFalse();
+    $this->travel(5)->seconds();
+    app(PlaybackSync::class)->sync($party->fresh());
+
+    expect($fake->callsTo('currentPlayback'))->toHaveCount(1);
+})->with([PlaybackConnectionStatus::LoggedOut, PlaybackConnectionStatus::Error]);
+
+it('regains fresh pushed state once Encore reports connected again', function () {
+    [$party] = pushedParty();
+    $make = fn (PlaybackConnectionStatus $s, int $offset) => new PlaybackState(true, 'A', null, 200000, 1000, CarbonImmutable::now()->addSeconds($offset), false, 'off', 'device1', 'Speaker', PlaybackSource::Encore, [], $s);
+    app(PlaybackSync::class)->apply($party, $make(PlaybackConnectionStatus::LoggedOut, 0));
+    app(PlaybackSync::class)->apply($party->fresh(), $make(PlaybackConnectionStatus::Connected, 1));
+
+    expect($party->fresh()->hasFreshPushedPlayback())->toBeTrue();
+});
+
+it('shows relay settings to the operator and the app secret only to admins', function () {
+    config(['reverb.apps.apps.0.secret' => 'encore-secret-value']);
+    $party = Party::factory()->create();
+    $owner = User::factory()->withSpotify()->create(['first_login' => false]);
+    $party->forceFill(['user_id' => $owner->id])->save();
+
+    $this->withoutVite()->actingAs($owner)->get(route('parties.edit', $party->code))
+        ->assertOk()->assertSee("private-encore.{$party->code}")->assertDontSee('encore-secret-value');
+
+    $owner->roles()->attach(Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']));
+    $this->withoutVite()->actingAs($owner->fresh())->get(route('parties.edit', $party->code))
+        ->assertOk()->assertSee('encore-secret-value');
 });

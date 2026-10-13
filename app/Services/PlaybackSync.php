@@ -9,6 +9,7 @@ use App\Models\PlayedSong;
 use App\Models\Song;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
+use App\Services\Music\Data\PlaybackConnectionStatus;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
@@ -170,7 +171,7 @@ class PlaybackSync
     {
         $this->status->remember($party, $state);
         $party->playback_source = $state->source;
-        $party->playback_received_at = now();
+        $party->playback_received_at = $state->connectionStatus === null || $state->connectionStatus === PlaybackConnectionStatus::Connected ? now() : null;
         $party->playback_sampled_at = Carbon::instance($state->sampledAt);
 
         if (! $party->active) {

@@ -28,5 +28,6 @@
                 </div>
             </div>
         </form>
+        @include('parties._encore', ['party' => $party])
     </div>
 @endsection
