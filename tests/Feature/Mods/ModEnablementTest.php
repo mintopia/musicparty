@@ -1,8 +1,6 @@
 <?php
 
-use App\Enums\Purpose;
 use App\Enums\ScheduleFrequency;
-use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\User;
@@ -10,9 +8,6 @@ use App\Mods\Foo\FooMod;
 use App\Mods\ModRegistry;
 use App\Mods\ModScheduler;
 use App\Mods\PartyMods;
-use App\Services\Music\Data\Playlist;
-use App\Services\Music\Fake\FakeMusicProvider;
-use App\Services\Music\MusicProviderFactory;
 use Illuminate\Support\Carbon;
 use Tests\Support\FooModFixture;
 use Tests\Support\WhamageddonFixtures;

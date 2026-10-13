@@ -54,6 +54,11 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
         return [app(AiRequestReviewRule::class)];
     }
 
+    public function scheduledActions(): array
+    {
+        return [];
+    }
+
     public function onEnable(Party $party): void {}
 
     public function onDisable(Party $party): void {}

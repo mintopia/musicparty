@@ -6,6 +6,7 @@ use App\Casts\MillisecondTimestamp;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
+use App\Services\ModDataStore;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\PlaybackStatus;
 use Carbon\CarbonImmutable;
@@ -42,8 +43,6 @@ use NumPHP\LinAlg\LinAlg;
  * @property string|null $history_playlist_id
  * @property int|null $max_requests
  * @property bool $flag_requests
- * @property bool $trustscore
- * @property int|null $trusted_user_id
  * @property bool $force
  * @property bool $explicit
  * @property bool $allow_requests
@@ -70,7 +69,6 @@ use NumPHP\LinAlg\LinAlg;
  * @property-read Collection<int, PartyModSetting> $modsettings
  * @property-read int|null $modsettings_count
  * @property-read Song|null $song
- * @property-read User|null $trustedUser
  * @property-read Collection<int, UpcomingSong> $upcoming
  * @property-read int|null $upcoming_count
  * @property-read User $user
@@ -104,8 +102,6 @@ use NumPHP\LinAlg\LinAlg;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereShowQrcode($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereSongStartedAt($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereTrustedUserId($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereTrustscore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereUserId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereWeighted($value)
@@ -138,7 +134,6 @@ class Party extends Model
         'poll' => 'boolean',
         'show_qrcode' => 'boolean',
         'weighted' => 'boolean',
-        'trustscore' => 'boolean',
         'force' => 'boolean',
         'explicit' => 'boolean',
         'allow_requests' => 'boolean',
@@ -192,10 +187,11 @@ class Party extends Model
         return $this->belongsTo(User::class);
     }
 
-    /** @return BelongsTo<User, $this> */
-    public function trustedUser(): BelongsTo
+    public function trustedUser(): ?User
     {
-        return $this->belongsTo(User::class, 'trusted_user_id');
+        $id = app(ModDataStore::class)->get($this, 'trust', 'trusted_user_id');
+
+        return $id === null ? null : User::whereKey($id)->first();
     }
 
     /** @return HasMany<UpcomingSong, $this> */
@@ -348,7 +344,8 @@ class Party extends Model
 
     public function calculateTrustScores(?CarbonImmutable $after = null): void
     {
-        if ($this->trustedUser === null) {
+        $trustedUser = $this->trustedUser();
+        if ($trustedUser === null) {
             Log::debug('No trusted user, unable to calculate trust score');
 
             return;
@@ -398,26 +395,25 @@ class Party extends Model
         foreach ($voteMap as $i => $row) {
             $voteMap[$i] = array_values($row);
             $voteMap[$i][$i] = -1;
-            if ($userMap[$i] === $this->trustedUser->id) {
+            if ($userMap[$i] === $trustedUser->id) {
                 $voteMap[$i][$i] = 1;
             }
         }
 
         $trustedUserMatrix = array_fill(0, count($voteMap), 0);
-        $trustedUserIndex = array_search($this->trustedUser->id, $userMap);
+        $trustedUserIndex = array_search($trustedUser->id, $userMap);
         $trustedUserMatrix[$trustedUserIndex] = 1;
 
         $solved = LinAlg::solve($voteMap, $trustedUserMatrix);
         $scores = $solved->getData();
 
         DB::transaction(function () use ($userMap, $scores) {
-            $this->members()->update([
-                'trustscore' => 0,
-            ]);
+            $store = app(ModDataStore::class);
             $membersIndexed = [];
             $members = $this->members()->with('user')->get();
             foreach ($members as $member) {
                 $membersIndexed[$member->user->id] = $member;
+                $store->forget($member, 'trust', 'trustscore');
             }
             foreach ($scores as $index => $score) {
                 $userId = $userMap[$index] ?? null;
@@ -427,8 +423,7 @@ class Party extends Model
                 if (! isset($membersIndexed[$userId])) {
                     continue;
                 }
-                $membersIndexed[$userId]->trustscore = $score;
-                $membersIndexed[$userId]->save();
+                $membersIndexed[$userId]->setTrustScore($score);
             }
         });
         Log::debug('Finished calculating trust scores');

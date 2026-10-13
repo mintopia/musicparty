@@ -4,7 +4,7 @@
             <div class="list-group card-list-group">
                 <TransitionGroup name="list" tag="div">
                     <div class="list-group-item" v-for="song in upcoming" :key="song.id">
-                        <div v-bind:class="'row g-2 align-items-center ' + song.css_classes">
+                        <div v-bind:class="legacyRowClasses(song)">
                             <div class="col-auto">
                                 <img
                                     v-bind:src="song.album.image_url"
@@ -25,7 +25,7 @@
                                 </div>
                                 <div class="text-muted">
                                     <template v-if="song.user">Requested by {{ song.user }}</template>
-                                    <template v-else>{{ song.fallback_name }}</template>
+                                    <template v-else>{{ legacyFallbackName(song) }}</template>
                                 </div>
                             </div>
                             <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
@@ -165,6 +165,7 @@ import {defineComponent} from 'vue';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import type {LegacyArtist, LegacyUpcomingSong} from '../types';
+import {legacyFallbackName, legacyRowClasses} from '../lib/decoration';
 
 export default defineComponent({
     components: {
@@ -187,6 +188,9 @@ export default defineComponent({
     },
 
     methods: {
+        legacyRowClasses,
+        legacyFallbackName,
+
         vote(song_id: number, value: number): void {
             window.axios
                 .post(`/api/v1/parties/${this.party}/upcomingsongs/${song_id}/vote`, {

@@ -7,16 +7,24 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Mods\Contracts\ModifiesScore;
+use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Queue\CandidateFilter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Random\Randomizer;
+use Throwable;
 
 class QueueSelector
 {
     public const QUEUE_LENGTH = 1;
+
+    /** @var array<int, list<ModifiesScore>> */
+    protected array $modifiers = [];
+
+    protected bool $selecting = false;
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -33,6 +41,18 @@ class QueueSelector
     }
 
     public function sendNext(Party $party): void
+    {
+        $this->modifiers = [];
+        $this->selecting = true;
+        try {
+            $this->sendNextRequests($party);
+        } finally {
+            $this->selecting = false;
+            $this->modifiers = [];
+        }
+    }
+
+    protected function sendNextRequests(Party $party): void
     {
         Log::debug("{$party}: Checking if we need to add tracks to queue");
         $current = $party->fresh() ?? $party;
@@ -80,17 +100,39 @@ class QueueSelector
     }
 
     /**
-     * The single step that turns a Request into the score used for selection. Mods (E8) override this.
+     * The single step that turns a Request into the score used for selection: the stored score passed through
+     * every ModifiesScore mod enabled for the Request's Party. Modifiers are resolved once per Party while a selection runs.
      */
     public function effectiveScore(UpcomingSong $request): int
     {
-        return $request->score;
+        $score = $request->score;
+        foreach ($this->scoreModifiers($request->party) as $modifier) {
+            try {
+                $score = $modifier->modifyScore($request->party, $request, $score);
+            } catch (Throwable $exception) {
+                Log::warning("{$request->party}: Mod ".$modifier::class." failed to modify a score: {$exception->getMessage()}");
+            }
+        }
+
+        return $score;
+    }
+
+    /**
+     * @return list<ModifiesScore>
+     */
+    protected function scoreModifiers(Party $party): array
+    {
+        if (! $this->selecting) {
+            return app(ModExtensions::class)->for($party, ModifiesScore::class);
+        }
+
+        return $this->modifiers[$party->id] ??= app(ModExtensions::class)->for($party, ModifiesScore::class);
     }
 
     /**
      * Adds a Request to the Party's Queue; the entry point for core features and mods. Reuses a waiting Request for the Song.
      *
-     * @param  array<string, mixed>  $attributes  Request attributes such as not_before, score_adjustment, css_classes.
+     * @param  array<string, mixed>  $attributes  Request attributes such as not_before, score_adjustment. A null $user makes a system Request.
      */
     public function addRequest(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
     {
@@ -126,6 +168,7 @@ class QueueSelector
             })
             ->with('song')
             ->get()
+            ->each(fn (UpcomingSong $request): UpcomingSong => $request->setRelation('party', $party))
             ->filter(fn (UpcomingSong $request): bool => collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))
             ->map(fn (UpcomingSong $request): array => [$request, $this->effectiveScore($request)])
             ->sort(fn (array $a, array $b): int => [$a[0]->scheduled_for === null ? 1 : 0, $a[0]->scheduled_for, $b[1], $a[0]->created_at, $a[0]->id] <=> [$b[0]->scheduled_for === null ? 1 : 0, $b[0]->scheduled_for, $a[1], $b[0]->created_at, $b[0]->id])

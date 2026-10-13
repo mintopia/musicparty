@@ -5,12 +5,17 @@ namespace App\Mods\Whamageddon;
 use App\Enums\ScheduleFrequency;
 use App\Enums\SettingType;
 use App\Models\Party;
+use App\Models\Song;
+use App\Models\UpcomingSong;
+use App\Mods\Contracts\DecoratesTracks;
 use App\Mods\Contracts\Mod;
 use App\Mods\ScheduledAction;
 use App\Mods\SettingDefinition;
+use App\Mods\TrackDecoration;
+use App\Services\ModDataStore;
 use Illuminate\Support\Facades\Log;
 
-class WhamageddonMod implements Mod
+class WhamageddonMod implements DecoratesTracks, Mod
 {
     public const CODE = 'whamageddon';
 
@@ -42,7 +47,22 @@ class WhamageddonMod implements Mod
 
     public function extensionPoints(): array
     {
-        return ['scheduled-actions', 'decorations'];
+        return ['scheduled-actions', 'queue-additions', 'decorations'];
+    }
+
+    public function decorate(Party $party, Song $song, ?UpcomingSong $request): ?TrackDecoration
+    {
+        if ($request === null) {
+            return null;
+        }
+        $data = app(ModDataStore::class)->all($request, self::CODE);
+        $displayName = $data['fallback_override'] ?? null;
+        $cssClass = $data['css_classes'] ?? null;
+        if ($displayName === null && $cssClass === null) {
+            return null;
+        }
+
+        return new TrackDecoration(displayName: $displayName, cssClass: $cssClass);
     }
 
     public function scheduledActions(): array

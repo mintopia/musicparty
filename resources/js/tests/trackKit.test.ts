@@ -42,6 +42,22 @@ describe('TrackRow', () => {
         expect(wrapper.emitted('request')?.[0]).toEqual([track]);
     });
 
+    it('uses track.decoration and lets the decoration prop take precedence', () => {
+        const track = make({decoration: {displayName: 'Mod Name', label: 'Mod', class: 'mod-row', accent: '#ff0000'}});
+        const row = mount(TrackRow, {props: {track}});
+
+        expect(row.get('[data-test=track-name]').text()).toBe('Mod Name');
+        expect(row.get('[data-test=decoration-label]').text()).toBe('Mod');
+        expect(row.classes()).toContain('mod-row');
+        expect(row.attributes('style')).toContain('border-left');
+
+        const override = mount(TrackRow, {props: {track, decoration: {displayName: 'Prop Name'}}});
+
+        expect(override.get('[data-test=track-name]').text()).toBe('Prop Name');
+        expect(override.find('[data-test=decoration-label]').exists()).toBe(false);
+        expect(override.classes()).not.toContain('mod-row');
+    });
+
     it('disables request and shows the reason when blocked', async () => {
         const wrapper = mount(TrackRow, {props: {track: make({eligibility: {allowed: false, outcome: 'reject', reason: 'Too long'}})}});
 

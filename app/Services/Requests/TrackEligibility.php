@@ -6,12 +6,13 @@ use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
+use App\Mods\ModExtensions;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 
 class TrackEligibility
 {
-    public function __construct(protected RequestRules $rules, protected MusicProviderFactory $providers) {}
+    public function __construct(protected RequestRules $rules, protected MusicProviderFactory $providers, protected ModExtensions $mods) {}
 
     /**
      * @param  list<Track>  $tracks
@@ -44,6 +45,7 @@ class TrackEligibility
                 providerName: $provider->displayName(),
                 flagged: $decision->isFlagged(),
                 awaitingApproval: $entry['awaiting'] ?? false,
+                decoration: $entry['decoration'] ?? null,
             );
         }
 
@@ -52,7 +54,7 @@ class TrackEligibility
 
     /**
      * @param  list<Track>  $tracks
-     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null, awaiting: bool}>
+     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null, awaiting: bool, decoration: array<string, string>|null}>
      */
     protected function waitingByProviderId(Party $party, PartyMember $member, array $tracks): array
     {
@@ -78,6 +80,7 @@ class TrackEligibility
                 'vote' => $votes[$upcoming->id] ?? null,
                 'user' => $upcoming->user->nickname ?? null,
                 'awaiting' => $awaiting,
+                'decoration' => $this->mods->decorationFor($party, $upcoming->song, $upcoming)?->toArray(),
             ];
         }
 
