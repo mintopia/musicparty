@@ -8,12 +8,14 @@ use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
+use App\Jobs\PartyUpdate;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
@@ -52,6 +54,7 @@ class PartyController extends Controller
         $party = new Party;
         $party->user()->associate($this->resolveAuthenticatedUser($request));
         $this->updateObject($party, $request);
+        PartyUpdate::dispatch($party);
 
         return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
     }
@@ -193,8 +196,14 @@ class PartyController extends Controller
         $party->force = (bool) $request->input('force');
         $party->poll = (bool) $request->input('poll');
         $party->show_qrcode = (bool) $request->input('show_qrcode');
-        $party->device_name = null;
-        $party->device_id = $request->input('device_id');
+        $deviceId = $request->input('device_id') ?: null;
+        if ($deviceId === null) {
+            $party->device_name = null;
+        } elseif ($deviceId !== $party->device_id || $party->device_name === null) {
+            $party->device_id = $deviceId;
+            $party->device_name = app(PlaybackControl::class)->deviceName($party, $deviceId);
+        }
+        $party->device_id = $deviceId;
         $party->weighted = (bool) $request->input('weighted');
         if ($request->input('downvotes_per_hour')) {
             $party->downvotes_per_hour = $request->input('downvotes_per_hour');

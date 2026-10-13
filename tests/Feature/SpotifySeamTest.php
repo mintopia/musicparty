@@ -8,9 +8,13 @@ use App\Models\SocialProvider;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
 use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Http;
 use Random\Engine\Mt19937;
@@ -98,14 +102,17 @@ it('serves sdk-shaped fixtures that Song can consume', function () {
 });
 
 it('lets the fake be bound before a party is created', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
+    FakeSpotify::install();
+    $fake = app(FakeMusicProvider::class)
+        ->withTrack(FakeFallbackPlaylist::track('now'))
+        ->withPlayback(new PlaybackState(true, 'now', null, 180000, 0, CarbonImmutable::now(), false, 'off', 'dev', 'Dev', PlaybackSource::Polling));
     $user = seamSpotifyUser();
 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
+    app(PlaybackSync::class)->sync($party);
 
     expect($party->fresh()->song->spotify_id)->toBe('now')
-        ->and($fake->callsTo('getMyCurrentPlaybackInfo'))->not->toBeEmpty();
+        ->and($fake->callsTo('currentPlayback'))->not->toBeEmpty();
 });
 
 it('orders the fallback playlist exactly with a seeded randomizer', function () {
@@ -117,6 +124,7 @@ it('orders the fallback playlist exactly with a seeded randomizer', function () 
     $user = seamSpotifyUser();
 
     $party = seamParty($user, ['active' => true, 'backup_playlist_id' => 'backup']);
+    app(PlaybackSync::class)->sync($party);
 
     $added = $party->upcoming()->orderBy('id')->get()->map(fn (UpcomingSong $u) => $u->song->spotify_id)->all();
     expect($added)->toBe(array_slice($expected, 0, count($added)))->not->toBeEmpty();

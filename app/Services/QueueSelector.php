@@ -5,9 +5,6 @@ namespace App\Services;
 use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\UpcomingSong;
-use App\Services\Music\Data\AlbumRef;
-use App\Services\Music\Data\ArtistRef;
-use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
@@ -39,7 +36,6 @@ class QueueSelector
     {
         Log::debug("{$party}: Checking if we need to add tracks to queue");
         $current = $party->fresh() ?? $party;
-        $party->user->getSpotifyStatus();
         $queue = SpotifyPayload::object($this->gateway->requireClient($party->user)->getMyQueue());
         $queueItems = array_map(SpotifyPayload::object(...), (array) $queue->queue);
         $count = count($queueItems);
@@ -75,7 +71,7 @@ class QueueSelector
                 continue;
             }
             Log::info("{$party}: Adding {$request->song} to queue");
-            $track = $this->trackFor($request);
+            $track = $request->song->toTrack();
             $provider->sendToPlayer($track);
             $request->queued_at = Carbon::now();
             $request->save();
@@ -161,21 +157,5 @@ class QueueSelector
         }
 
         return $selected->values();
-    }
-
-    protected function trackFor(UpcomingSong $request): Track
-    {
-        $song = $request->song;
-
-        return new Track(
-            providerId: MusicProviderFactory::DEFAULT_PROVIDER_ID,
-            id: $song->spotify_id,
-            name: $song->name,
-            durationMs: (int) $song->length,
-            explicit: false,
-            isPlayable: true,
-            album: new AlbumRef(id: $song->album->spotify_id, name: $song->album->name, imageUrl: $song->album->image_url),
-            artists: array_values($song->artists->map(fn ($artist): ArtistRef => new ArtistRef(id: $artist->spotify_id, name: $artist->name))->all()),
-        );
     }
 }

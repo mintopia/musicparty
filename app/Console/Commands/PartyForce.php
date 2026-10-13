@@ -3,6 +3,8 @@
 namespace App\Console\Commands;
 
 use App\Models\Party;
+use App\Services\PlaybackControl;
+use App\Services\PlaybackSync;
 use Illuminate\Console\Command;
 
 class PartyForce extends Command
@@ -58,11 +60,10 @@ class PartyForce extends Command
         }
 
         $this->output->writeln("{$party}: Checking to see if we can play this party");
-        $devices = $party->user->getDevices();
-        foreach ($devices as $device) {
-            if ($device->id == $party->device_id) {
+        foreach (app(PlaybackControl::class)->devices($party) as $device) {
+            if ($device->id === $party->device_id) {
                 $this->output->writeln('Device is online, starting party');
-                $party->updateState();
+                app(PlaybackSync::class)->sync($party);
             }
         }
         $this->output->writeln("{$party}: Done");

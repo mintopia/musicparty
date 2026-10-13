@@ -8,6 +8,8 @@ use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Music\Data\Device;
+use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Support\Facades\Artisan;
@@ -119,10 +121,8 @@ it('party:force fails for a valid code whose party is ineligible', function () {
 });
 
 it('party:force starts a forced party whose device is online without taking a sync lock (E5 R2)', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    FakeFallbackPlaylist::seed(['bk1'], 'backup');
+    FakeSpotify::install();
+    $fake = FakeFallbackPlaylist::seed(['bk1'], 'backup')->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)]);
 
     $this->artisan('party:force')
@@ -133,8 +133,7 @@ it('party:force starts a forced party whose device is online without taking a sy
 });
 
 it('party:force skips a party whose device is offline', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('other')]]);
+    app(FakeMusicProvider::class)->withDevices([new Device('other', 'Other', 'Speaker', true)]);
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20)]);
     $before = $party->last_updated_at;
 
@@ -144,8 +143,7 @@ it('party:force skips a party whose device is offline', function () {
 });
 
 it('party:force ignores polling, unforced, inactive, deviceless and recently updated parties', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
+    app(FakeMusicProvider::class)->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $old = now()->subMinutes(20);
     activeParty(['poll' => true, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => $old]);
     activeParty(['poll' => false, 'force' => false, 'device_id' => 'dev1', 'last_updated_at' => $old]);
@@ -157,10 +155,8 @@ it('party:force ignores polling, unforced, inactive, deviceless and recently upd
 });
 
 it('party:force with a code processes only that party', function () {
-    $fake = FakeSpotify::install();
-    $fake->respond('getMyDevices', (object) ['devices' => [FakeSpotify::device('dev1')]]);
-    $fake->respond('getMyCurrentPlaybackInfo', FakeSpotify::playback(FakeSpotify::track('now')));
-    FakeFallbackPlaylist::seed(['bk1'], 'backup');
+    FakeSpotify::install();
+    $fake = FakeFallbackPlaylist::seed(['bk1'], 'backup')->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $attributes = ['poll' => false, 'force' => true, 'device_id' => 'dev1', 'backup_playlist_id' => 'backup', 'last_updated_at' => now()->subMinutes(20)];
     $target = activeParty($attributes);
     $other = activeParty($attributes);

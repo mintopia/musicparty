@@ -15,24 +15,11 @@ class PartyObserver
         }
     }
 
-    /**
-     * Handle the Party "created" event.
-     */
-    public function created(Party $party): void
-    {
-        $party->updateState();
-    }
-
     public function saved(Party $party): void
     {
         if ($party->isDirty('backup_playlist_id')) {
             RefreshFallbackPlaylist::dispatch($party);
         }
-    }
-
-    public function saving(Party $party): void
-    {
-        $party->updateDeviceName();
     }
 
     /**

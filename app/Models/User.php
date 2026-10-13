@@ -250,20 +250,6 @@ class User extends Authenticatable
         return $this->playlists;
     }
 
-    public function getSpotifyStatus(): ?stdClass
-    {
-        Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
-        $playback = app(SpotifyGateway::class)->requireClient($this)->getMyCurrentPlaybackInfo([
-            'market' => $this->market,
-        ]);
-        $status = $playback === null ? null : SpotifyPayload::object($playback);
-        $this->status = $status;
-        $this->status_updated_at = Carbon::now();
-        $this->save();
-
-        return $status;
-    }
-
     public function getPartyMember(Party $party): ?PartyMember
     {
         foreach ($this->partyMembers as $member) {
