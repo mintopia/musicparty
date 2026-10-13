@@ -163,7 +163,7 @@ it('flashes a relink message when Spotify needs re-linking', function () {
     $this->actingAs($this->member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('flash.error', 'Spotify needs re-linking before search is available.')
+            ->where('flash.error', 'The music provider needs re-linking before search is available.')
             ->where('results', null));
 });
 
@@ -177,7 +177,7 @@ it('flashes a busy message when Spotify is backing off', function () {
     $this->actingAs($this->member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('flash.error', 'Spotify is busy right now. Please try again shortly.'));
+            ->where('flash.error', 'The music provider is busy right now. Please try again shortly.'));
 });
 
 it('reports every eligibility reason on the search page', function (string $reason, Closure $arrange) {

@@ -5,7 +5,7 @@ namespace App\Http\Requests;
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
-use App\Services\Spotify\SpotifyLibrary;
+use App\Services\PartyProviderOptions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -37,12 +37,15 @@ class PartyRequest extends FormRequest
     public function rules(): array
     {
         $party = $this->route('party');
+        $options = app(PartyProviderOptions::class);
         if ($party instanceof Party) {
-            // We have a party, use the party owner's playlist
-            $playlists = app(SpotifyLibrary::class)->playlists($party->user);
+            $playlists = $options->playlists($party);
         } else {
-            // We don't have a party, use our playlists
-            $playlists = app(SpotifyLibrary::class)->playlists($this->resolveAuthenticatedUser($this));
+            $providerId = $this->input('provider_id');
+            $playlists = $options->playlists($options->draft(
+                $this->resolveAuthenticatedUser($this),
+                is_string($providerId) ? $providerId : null,
+            ));
         }
 
         return [
