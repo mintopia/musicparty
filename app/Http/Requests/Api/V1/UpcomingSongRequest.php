@@ -23,7 +23,7 @@ class UpcomingSongRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'spotify_id' => 'required|string',
+            'provider_track_id' => 'required|string',
         ];
     }
 }

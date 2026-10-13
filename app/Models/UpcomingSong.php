@@ -96,7 +96,7 @@ class UpcomingSong extends Model
         return $this->hasOne(PlayedSong::class);
     }
 
-    /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int, score: int, queued_at: string|null, user: string|null, fallback_name: string, css_classes: string} */
+    /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int, score: int, queued_at: string|null, user: string|null, fallback_name: string, css_classes: string} */
     public function toApi(): array
     {
         $data = $this->song->toApi();

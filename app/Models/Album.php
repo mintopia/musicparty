@@ -76,11 +76,11 @@ class Album extends Model
         return $album;
     }
 
-    /** @return array{spotify_id: string, name: string, image_url: string} */
+    /** @return array{provider_album_id: string, name: string, image_url: string} */
     public function toApi(): array
     {
         return [
-            'spotify_id' => $this->spotify_id,
+            'provider_album_id' => $this->provider_album_id,
             'name' => $this->name,
             'image_url' => $this->image_url,
         ];

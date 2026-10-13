@@ -141,7 +141,7 @@ class PlayedSong extends Model
         }
     }
 
-    /** @return array{spotify_id: string, name: string, album: array{spotify_id: string, name: string, image_url: string}, artists: array<int, array{spotify_id: string, name: string}>, length: int, id: int, rating: int, played_at: string, user: string|null} */
+    /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int, id: int, rating: int, played_at: string, user: string|null} */
     public function toApi(): array
     {
         $data = $this->song->toApi();
