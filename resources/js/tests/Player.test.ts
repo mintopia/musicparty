@@ -38,8 +38,7 @@ const stateOf = (extra: Record<string, unknown> = {}) => ({
     status: playing,
     ...extra,
 });
-const build = (state: unknown) =>
-    mount(Player, {props: {code: 'ABC', initialstate: JSON.stringify(state)}});
+const build = (state: unknown) => mount(Player, {props: {code: 'ABC', initialstate: JSON.stringify(state)}});
 
 describe('Player', () => {
     const get = vi.fn();

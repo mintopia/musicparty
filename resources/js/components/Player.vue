@@ -185,7 +185,8 @@ async function resync(): Promise<void> {
     try {
         const response = await window.axios.get(`/api/v1/parties/${props.code}`);
         updateState(response.data.data.status);
-    } catch {
+    } catch (error) {
+        console.error('Player resync failed', error);
     }
 }
 
