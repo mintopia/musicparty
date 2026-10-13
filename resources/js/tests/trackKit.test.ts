@@ -59,7 +59,9 @@ describe('TrackRow', () => {
     });
 
     it('disables request and shows the reason when blocked', async () => {
-        const wrapper = mount(TrackRow, {props: {track: make({eligibility: {allowed: false, outcome: 'reject', reason: 'Too long'}})}});
+        const wrapper = mount(TrackRow, {
+            props: {track: make({eligibility: {allowed: false, outcome: 'reject', reason: 'Too long'}})},
+        });
 
         expect(wrapper.get('[data-test=reason]').text()).toContain('Too long');
         expect(wrapper.get('[data-test=request]').attributes('disabled')).toBeDefined();

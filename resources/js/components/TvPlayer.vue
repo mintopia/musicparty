@@ -73,7 +73,12 @@
                             <div class="col fs-1 pt-4">
                                 <div class="fs-0 pb-3 overflow-hidden">
                                     <strong>{{ state.next.name }}</strong>
-                                    <span v-if="state.next.decoration?.label" class="badge bg-azure-lt ms-2" data-test="decoration-label">{{ state.next.decoration.label }}</span>
+                                    <span
+                                        v-if="state.next.decoration?.label"
+                                        class="badge bg-azure-lt ms-2"
+                                        data-test="decoration-label"
+                                        >{{ state.next.decoration.label }}</span
+                                    >
                                 </div>
                                 <div class="pb-2 overflow-hidden">
                                     <i class="icon-lg ti ti-users fs-1"></i>

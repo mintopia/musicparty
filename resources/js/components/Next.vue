@@ -18,7 +18,12 @@
                             </div>
                             <div class="col">
                                 {{ state.next.name }}
-                                <span v-if="state.next.decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{ state.next.decoration.label }}</span>
+                                <span
+                                    v-if="state.next.decoration?.label"
+                                    class="badge bg-azure-lt ms-1"
+                                    data-test="decoration-label"
+                                    >{{ state.next.decoration.label }}</span
+                                >
                                 <div class="text-secondary">
                                     {{ combineArtists(state.next.artists) }}
                                 </div>

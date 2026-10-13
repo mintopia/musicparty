@@ -16,7 +16,12 @@
                             </div>
                             <div class="col">
                                 {{ song.name }}
-                                <span v-if="song.decoration?.label" class="badge bg-azure-lt ms-1" data-test="decoration-label">{{ song.decoration.label }}</span>
+                                <span
+                                    v-if="song.decoration?.label"
+                                    class="badge bg-azure-lt ms-1"
+                                    data-test="decoration-label"
+                                    >{{ song.decoration.label }}</span
+                                >
                                 <div class="text-secondary">
                                     {{ combineArtists(song.artists) }}
                                 </div>
