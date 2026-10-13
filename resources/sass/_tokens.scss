@@ -2,9 +2,7 @@
 // looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
 
 :root,
-:host,
-[data-bs-theme=light],
-[data-bs-theme=dark] {
+:host {
     --mp-primary: oklch(54.6% 0.1724 254.2deg);
     --mp-primary-rgb: 6, 111, 209;
     --mp-nav-background: light-dark(var(--tblr-bg-surface-primary), var(--tblr-gray-800));
