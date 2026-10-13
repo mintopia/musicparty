@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-use App\Services\ModDataStore;
 use Database\Factories\PartyMemberFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -63,15 +62,5 @@ class PartyMember extends Model
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
-    }
-
-    public function trustScore(): float
-    {
-        return (float) app(ModDataStore::class)->get($this, 'trust', 'trustscore', 0);
-    }
-
-    public function setTrustScore(float $score): void
-    {
-        app(ModDataStore::class)->set($this, 'trust', 'trustscore', $score);
     }
 }
