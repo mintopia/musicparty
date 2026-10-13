@@ -16,7 +16,7 @@ class WhammageddonServiceProvider extends ServiceProvider
 {
     public function register(): void {}
 
-    public function boot()
+    public function boot(): void
     {
         $this->registerCommands();
         $this->registerListeners();

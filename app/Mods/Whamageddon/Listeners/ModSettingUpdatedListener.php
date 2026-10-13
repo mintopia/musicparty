@@ -20,6 +20,9 @@ class ModSettingUpdatedListener implements ShouldQueue
         $this->handleEnabled($event->partyModSetting, $event->changed);
     }
 
+    /**
+     * @param  array<string, mixed>  $changed
+     */
     protected function handleEnabled(PartyModSetting $setting, array $changed): void
     {
         if ($setting->setting->code !== 'enabled') {

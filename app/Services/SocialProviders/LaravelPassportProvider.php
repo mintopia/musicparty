@@ -2,8 +2,12 @@
 
 namespace App\Services\SocialProviders;
 
+use App\Enums\SettingType;
+use App\Exceptions\SocialProviderException;
 use App\Models\SocialProvider;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
 use SocialiteProviders\LaravelPassport\Provider;
 use SocialiteProviders\Manager\Config;
 
@@ -27,19 +31,26 @@ class LaravelPassportProvider extends AbstractSocialProvider
         }
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): AbstractProvider
     {
         $config = new Config(
-            $this->provider->getSetting('client_id'),
-            $this->provider->getSetting('client_secret'),
+            $this->getSetting('client_id'),
+            $this->getSetting('client_secret'),
             $this->redirectUrl,
-            ['host' => $this->provider->getSetting('host')]
+            ['host' => $this->getSetting('host')]
         );
 
-        return Socialite::buildProvider(Provider::class, $config->get())
-            ->setConfig($config)->with(['prompt' => 'none']);
+        $provider = Socialite::buildProvider(Provider::class, $config->get());
+        if (! $provider instanceof ManagerProvider) {
+            throw new SocialProviderException('Unexpected Socialite provider');
+        }
+
+        return $provider->setConfig($config)->with(['prompt' => 'none']);
     }
 
+    /**
+     * @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}>
+     */
     public function configMapping(): array
     {
         return array_merge(

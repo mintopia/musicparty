@@ -13,6 +13,8 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use Laravel\Socialite\Two\User as SocialiteUser;
 
 abstract class AbstractSocialProvider implements SocialProviderContract
 {
@@ -26,24 +28,35 @@ abstract class AbstractSocialProvider implements SocialProviderContract
 
     protected bool $canBeRenamed = false;
 
-    public function __construct(protected ?SocialProvider $provider = null, protected ?string $redirectUrl = null)
+    protected string $redirectUrl;
+
+    public function __construct(protected ?SocialProvider $provider = null, ?string $redirectUrl = null)
     {
-        $this->resolveRedirectUrl();
+        $this->redirectUrl = $redirectUrl ?? $this->defaultRedirectUrl();
     }
 
-    protected function resolveRedirectUrl(?string $redirectUrl = null): void
+    protected function defaultRedirectUrl(): string
     {
-        if ($this->redirectUrl !== null) {
-            return;
-        }
         if (Auth::guest() && $this->provider && $this->provider->auth_enabled) {
-            // Probably login
-            $this->redirectUrl = route('login.return', $this->code);
-        } else {
-            $this->redirectUrl = route('linkedaccounts.store', $this->code);
+            return route('login.return', $this->code);
         }
+
+        return route('linkedaccounts.store', $this->code);
     }
 
+    protected function requireProvider(): SocialProvider
+    {
+        return $this->provider ?? throw new SocialProviderException('Social provider has not been installed');
+    }
+
+    protected function getSetting(string $code): string
+    {
+        return (string) $this->requireProvider()->getSetting($code);
+    }
+
+    /**
+     * @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}>
+     */
     public function configMapping(): array
     {
         return [
@@ -88,12 +101,12 @@ abstract class AbstractSocialProvider implements SocialProviderContract
     public function installSettings(): void
     {
         foreach ($this->configMapping() as $code => $config) {
-            $setting = $this->provider->settings()->whereCode($code)->first();
+            $setting = $this->requireProvider()->settings()->whereCode($code)->first();
             $isNew = false;
             if (! $setting) {
                 $isNew = true;
                 $setting = new ProviderSetting;
-                $setting->provider()->associate($this->provider);
+                $setting->provider()->associate($this->requireProvider());
                 $setting->code = $code;
             }
             $setting->name = $config->name;
@@ -115,19 +128,27 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         return $this->getSocialiteProvider()->redirect();
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): AbstractProvider
     {
-        return Socialite::driver($this->socialiteProviderCode);
+        $driver = Socialite::driver($this->socialiteProviderCode);
+        if (! $driver instanceof AbstractProvider) {
+            throw new SocialProviderException('Unexpected Socialite provider');
+        }
+
+        return $driver;
     }
 
     public function user(?User $localUser = null)
     {
         $localUser ??= Auth::user();
         $remoteUser = $this->getSocialiteProvider()->user();
+        if (! $remoteUser instanceof SocialiteUser) {
+            throw new SocialProviderException('Unexpected Socialite user');
+        }
 
         DB::transaction(function () use ($localUser, $remoteUser) {
             // Find the account
-            $account = $this->provider->accounts()->whereExternalId($remoteUser->getId())->first();
+            $account = $this->requireProvider()->accounts()->whereExternalId($remoteUser->getId())->first();
             if ($account && ($localUser !== null && $localUser->id != $account->user_id)) {
                 throw new SocialProviderException('Account is already associated with another user');
             }
@@ -155,18 +176,18 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             if ($localUser === null) {
                 if ($account) {
                     $localUser = $account->user;
-                } elseif (! $this->provider->auth_enabled) {
+                } elseif (! $this->requireProvider()->auth_enabled) {
                     throw new SocialProviderException('Unable to login with this account');
                 } else {
                     $localUser = new User;
-                    $localUser->nickname = $remoteUser->getNickname();
+                    $localUser->nickname = $remoteUser->getNickname() ?? throw new SocialProviderException('Unable to login with this account');
                     $localUser->save();
                 }
             }
 
             if ($account === null) {
                 $account = new LinkedAccount;
-                $account->provider()->associate($this->provider);
+                $account->provider()->associate($this->requireProvider());
                 $account->user()->associate($localUser);
                 $account->external_id = $remoteUser->getId();
                 $account->save();
@@ -178,17 +199,17 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $localUser->save();
         });
 
-        $localUser ??= $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->firstOrFail()->user;
+        $localUser ??= $this->requireProvider()->accounts()->whereExternalId($remoteUser->getId())->with('user')->firstOrFail()->user;
 
         return $localUser;
     }
 
-    protected function emailIsVerified($remoteUser): bool
+    protected function emailIsVerified(SocialiteUser $remoteUser): bool
     {
         return false;
     }
 
-    protected function updateAccount(LinkedAccount $account, $remoteUser): void
+    protected function updateAccount(LinkedAccount $account, SocialiteUser $remoteUser): void
     {
         $account->avatar_url = $remoteUser->getAvatar();
         $account->refresh_token = $remoteUser->refreshToken;

@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
-use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use App\Support\SpotifyPayload;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
+use stdClass;
 
 class SpotifySearchService
 {
@@ -20,7 +22,7 @@ class SpotifySearchService
 
     public function __construct(protected Party $party, protected PartyMember $member) {}
 
-    protected function getApi()
+    protected function getApi(): SpotifyWebAPI
     {
         if ($this->api !== null) {
             return $this->api;
@@ -38,8 +40,8 @@ class SpotifySearchService
         }
 
         if ($this->session === null) {
-            $clientId = $provider->getSetting('client_id');
-            $clientSecret = $provider->getSetting('client_secret');
+            $clientId = (string) $provider->getSetting('client_id');
+            $clientSecret = (string) $provider->getSetting('client_secret');
             $this->session = new Session($clientId, $clientSecret);
             $this->session->setAccessToken($account->access_token ?? '');
         }
@@ -60,6 +62,9 @@ class SpotifySearchService
         return $this->api;
     }
 
+    /**
+     * @return LengthAwarePaginator<int, stdClass>
+     */
     public function search(string $query, int $page = 1, int $perPage = 20): LengthAwarePaginator
     {
         $options = [
@@ -69,16 +74,21 @@ class SpotifySearchService
         ];
 
         $api = $this->getApi();
-        $result = $api->search($query, 'track', $options);
+        $result = SpotifyPayload::object($api->search($query, 'track', $options));
 
-        $tracks = $this->augmentResults($result->tracks);
+        $tracks = SpotifyPayload::object($result->tracks);
+        $items = $this->augmentResults(array_values(array_map(SpotifyPayload::object(...), $tracks->items)));
 
-        return new \Illuminate\Pagination\LengthAwarePaginator($tracks->items, $tracks->total, $perPage, $page);
+        return new LengthAwarePaginator($items, $tracks->total, $perPage, $page);
     }
 
-    protected function augmentResults(object $results): object
+    /**
+     * @param  list<stdClass>  $items
+     * @return list<stdClass>
+     */
+    protected function augmentResults(array $items): array
     {
-        $ids = array_map(fn ($track) => $track->id, $results->items);
+        $ids = array_map(fn (stdClass $track) => $track->id, $items);
 
         $augmented = [];
 
@@ -108,9 +118,9 @@ class SpotifySearchService
         }
 
         $service = new RequestCheckService($this->party, $this->member);
-        $checkResponses = $service->checkCollection(collect($results->items));
+        $checkResponses = $service->checkCollection(collect($items));
 
-        foreach ($results->items as $item) {
+        foreach ($items as $item) {
             if (array_key_exists($item->id, $augmented)) {
                 $item->upcoming = true;
                 $item->upcoming_id = $augmented[$item->id]->upcoming_id;
@@ -129,6 +139,6 @@ class SpotifySearchService
             $item->reason = $checkResponses[$item->id]->reason ?? null;
         }
 
-        return $results;
+        return $items;
     }
 }

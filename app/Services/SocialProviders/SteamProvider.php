@@ -2,8 +2,13 @@
 
 namespace App\Services\SocialProviders;
 
+use App\Enums\SettingType;
+use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Two\AbstractProvider;
+use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
+use Laravel\Socialite\Two\User as SocialiteUser;
 use SocialiteProviders\Manager\Config;
 use SocialiteProviders\Steam\Provider;
 
@@ -17,6 +22,9 @@ class SteamProvider extends AbstractSocialProvider
 
     protected bool $supportsAuth = true;
 
+    /**
+     * @return array<string, object{name: string, validation?: string, encrypted?: bool, description?: string, type?: SettingType, value?: mixed}>
+     */
     public function configMapping(): array
     {
         return [
@@ -28,22 +36,27 @@ class SteamProvider extends AbstractSocialProvider
         ];
     }
 
-    protected function getSocialiteProvider()
+    protected function getSocialiteProvider(): AbstractProvider
     {
         $host = request()->getHost();
         $config = new Config(
-            null,
-            $this->provider->getSetting('client_secret'),
+            '',
+            $this->getSetting('client_secret'),
             $this->redirectUrl,
             [
                 'allowed_hosts' => $host,
             ]
         );
 
-        return Socialite::buildProvider(Provider::class, $config->get())->setConfig($config);
+        $provider = Socialite::buildProvider(Provider::class, $config->get());
+        if (! $provider instanceof ManagerProvider) {
+            throw new SocialProviderException('Unexpected Socialite provider');
+        }
+
+        return $provider->setConfig($config);
     }
 
-    protected function updateAccount(LinkedAccount $account, $remoteUser): void
+    protected function updateAccount(LinkedAccount $account, SocialiteUser $remoteUser): void
     {
         $account->avatar_url = $remoteUser->getAvatar();
         $account->name = $remoteUser->getNickname();

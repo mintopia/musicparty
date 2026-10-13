@@ -21,6 +21,10 @@ class RequestCheckService
         $this->userHasTooManyRequests = $this->userHasTooManyRequests();
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return Collection<string, RequestCheckResponse>
+     */
     public function checkCollection(Collection $input): Collection
     {
         $output = [];
@@ -59,14 +63,18 @@ class RequestCheckService
         if ($response) {
             return $response;
         }
-        $response = $this->bulkCheck(collect([$spotifyData]));
-        if ($response->count() > 0) {
-            return $response->first();
+        $bulkResponse = $this->bulkCheck(collect([$spotifyData]))->first();
+        if ($bulkResponse !== null) {
+            return $bulkResponse;
         }
 
         return new RequestCheckResponse(true);
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return Collection<string, RequestCheckResponse>
+     */
     protected function bulkCheck(Collection $input): Collection
     {
         $output = [];
@@ -162,6 +170,10 @@ class RequestCheckService
         return $count >= $this->party->max_requests;
     }
 
+    /**
+     * @param  Collection<int, stdClass>  $input
+     * @return array<string, RequestCheckResponse>
+     */
     protected function checkSimilarSongs(Collection $input): array
     {
         $names = [];
@@ -178,7 +190,9 @@ class RequestCheckService
             }
             $compositeIndex[$compositeKey][] = $track;
             $names[] = $track->name;
-            $artists = array_merge($artists, collect($track->artists)->pluck('name')->toArray());
+            foreach ($track->artists ?? [] as $artist) {
+                $artists[] = $artist->name;
+            }
         }
         $output = [];
 

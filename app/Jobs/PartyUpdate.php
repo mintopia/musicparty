@@ -26,6 +26,9 @@ class PartyUpdate implements ShouldQueue
         $this->onQueue('partyupdates');
     }
 
+    /**
+     * @return list<WithoutOverlapping>
+     */
     public function middleware(): array
     {
         $middleware = [];
