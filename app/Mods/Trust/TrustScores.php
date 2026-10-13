@@ -2,6 +2,7 @@
 
 namespace App\Mods\Trust;
 
+use App\Models\ModData;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\User;
@@ -9,6 +10,7 @@ use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
 use Carbon\CarbonImmutable;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -22,8 +24,14 @@ class TrustScores
 
     public function trustedUser(Party $party): ?User
     {
-        $id = $this->settings->value($party, TrustMod::CODE, 'trusted_user_id');
-        if ($id !== null && $id !== '') {
+        $candidates = [
+            $this->settings->value($party, TrustMod::CODE, 'trusted_user_id'),
+            $this->store->get($party, TrustMod::CODE, 'trusted_user_id'),
+        ];
+        foreach ($candidates as $id) {
+            if ($id === null || $id === '') {
+                continue;
+            }
             $user = User::find((int) $id);
             if ($user !== null) {
                 return $user;
@@ -50,7 +58,7 @@ class TrustScores
         } else {
             $cutoff = $now->subDays((int) $this->settings->value($party, TrustMod::CODE, 'window_days', 7));
             $scores = $this->calculator->calculate($memberIds, $trustedUser->id, $this->endorsements($party, $cutoff));
-            if (array_sum($scores) == 0.0) {
+            if (array_filter($scores) === []) {
                 Log::debug("{$party} Trust: not enough signal, scores are zero");
             }
         }
@@ -79,22 +87,30 @@ class TrustScores
 
     public function scoreFor(Party $party, int $userId): float
     {
-        $member = PartyMember::where('party_id', $party->id)->where('user_id', $userId)->first();
-        if ($member === null) {
-            return 0.0;
-        }
-
-        return (float) $this->store->get($member, TrustMod::CODE, 'trustscore', 0.0);
+        return (float) $this->memberScores($party, $userId)->value('value');
     }
 
     public function forget(Party $party): void
     {
         DB::transaction(function () use ($party): void {
-            foreach (PartyMember::where('party_id', $party->id)->get() as $member) {
-                $this->store->forget($member, TrustMod::CODE, 'trustscore');
-            }
+            $this->memberScores($party)->delete();
             $this->store->forget($party, TrustMod::CODE, 'calculated_at');
         });
+    }
+
+    /**
+     * @return Builder<ModData>
+     */
+    protected function memberScores(Party $party, ?int $userId = null): Builder
+    {
+        return ModData::query()
+            ->where('mod_code', TrustMod::CODE)
+            ->where('owner_type', (new PartyMember)->getMorphClass())
+            ->where('key', 'trustscore')
+            ->whereIn('owner_id', PartyMember::query()
+                ->select('id')
+                ->where('party_id', $party->id)
+                ->when($userId !== null, fn (Builder $query): Builder => $query->where('user_id', $userId)));
     }
 
     /**

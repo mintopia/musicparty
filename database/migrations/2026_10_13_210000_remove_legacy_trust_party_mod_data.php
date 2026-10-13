@@ -11,7 +11,7 @@ return new class extends Migration
         DB::table('mod_data')
             ->where('mod_code', 'trust')
             ->where('owner_type', (new Party)->getMorphClass())
-            ->whereIn('key', ['trustscore', 'trusted_user_id'])
+            ->where('key', 'trustscore')
             ->delete();
     }
 

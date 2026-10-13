@@ -151,6 +151,18 @@ it('lets the trusted user setting override the party owner', function () {
         ->and(trustScore($party, $users['b']))->toBe(0.0);
 });
 
+it('falls back to the migrated legacy trusted user when no setting is present', function () {
+    [$party, $users] = trustParty();
+    app(ModDataStore::class)->set($party, TrustMod::CODE, 'trusted_user_id', $users['b']->id);
+    $scores = app(TrustScores::class);
+
+    expect($scores->trustedUser($party)?->id)->toBe($users['b']->id);
+
+    app(ModSettingsStore::class)->set($party, TrustMod::CODE, 'trusted_user_id', $users['a']->id);
+
+    expect($scores->trustedUser($party)?->id)->toBe($users['a']->id);
+});
+
 it('adds the trust bonus to member requests only while enabled', function () {
     [$party, $users] = trustParty();
     app(ModSettingsStore::class)->set($party, TrustMod::CODE, 'max_bonus', 10);
