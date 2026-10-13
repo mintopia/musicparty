@@ -51,7 +51,7 @@ class PlayedSong extends Model
         }
         $upcoming = UpcomingSong::whereHas('song', function ($query) use ($ids) {
             $query->whereIn('spotify_id', $ids);
-        })->doesntHave('played')->orderBy('queued_at', 'DESC')->first();
+        })->doesntHave('played')->orderBy('queued_at', 'desc')->first();
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);
         }

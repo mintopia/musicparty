@@ -48,7 +48,6 @@ it('lets an owner-role member open the web player', function () {
 
 it('lets an instance admin open the web player', function () {
     $this->withoutVite();
-    Route::get('/telescope', fn () => '')->name('telescope');
     Route::getRoutes()->refreshNameLookups();
     [$party] = partyWithMember('user');
     $admin = User::factory()->create();

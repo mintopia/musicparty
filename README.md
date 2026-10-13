@@ -18,7 +18,7 @@ These are using Laravel Socialite, so any provider supported by Socialite can be
 This project is written in PHP 8.4 using the Laravel 12 framework. It was migrated from Laravel 10 and 11 so has some
 legacy project structure - but this is the intended upgrade path.
 
-Horizon and Telescope are installed and enabled, with access limited to the admin role. The application itself is
+Horizon and Pulse are installed and enabled, with access limited to the admin role. The application itself is
 served using Laravel Octane and FrankenPHP.
 
 Websocket communications are handled using Laravel Reverb.
@@ -129,7 +129,7 @@ The docker container already sets `OTEL_PHP_EXCLUDED_URLS` to remove common URLs
 to monitoring. The default value is:
 
 ```dotenv
-OTEL_PHP_EXCLUDED_URLS="pulse,telescope/.*,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*"
+OTEL_PHP_EXCLUDED_URLS="pulse,horizon/.*,api/v1/ping,_ignition/.*,_debugbar/.*"
 ```
 
 For the container:

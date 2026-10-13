@@ -30,8 +30,8 @@ export default defineConfig({
     ],
     resolve: {
         alias: {
-            '~tabler': path.resolve(__dirname, 'node_modules/@tabler/core'),
-            '~bootstrap': path.resolve(__dirname, 'node_modules/bootstrap'),
+            '~tabler': path.resolve(import.meta.dirname, 'node_modules/@tabler/core'),
+            '~bootstrap': path.resolve(import.meta.dirname, 'node_modules/bootstrap'),
             vue: 'vue/dist/vue.esm-bundler.js',
         }
     }

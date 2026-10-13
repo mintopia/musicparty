@@ -1,6 +1,18 @@
-FROM ghcr.io/mintopia/php-frankenphp-base:8.4.10
+FROM dunglas/frankenphp:php8.5 AS base
 
-RUN apk add --update nodejs npm && \
+COPY --from=ghcr.io/php/pie:bin /pie /usr/local/bin/pie
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends git unzip && \
+    rm -rf /var/lib/apt/lists/* && \
+    install-php-extensions bcmath pcntl pdo_mysql redis protobuf opentelemetry && \
+    pie install pie-extensions/grpc:1.81.1
+
+FROM base
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends nodejs npm && \
+    rm -rf /var/lib/apt/lists/* && \
     npm install -g chokidar && \
     install-php-extensions xdebug && \
     echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
