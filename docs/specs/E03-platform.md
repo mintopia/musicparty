@@ -32,7 +32,7 @@ Move to PHP 8.5, the latest stable Laravel and first-party packages, the streaml
 ## Requirements
 
 ### Image and runtime
-1. The PHP 8.5 FrankenPHP base is a build stage inside this repo's Dockerfiles, not a separately published image. It has every PHP extension the app uses today (at least those needed by MariaDB, Redis, Octane/FrankenPHP worker mode, intl, zip, bcmath, pcntl, OPcache, and the OpenTelemetry gRPC transport). The extension list is taken from `php -m` on the current base image.
+1. The PHP 8.5 FrankenPHP base is a build stage inside this repo's Dockerfiles, not a separately published image. It has every PHP extension the app uses today (at least those needed by MariaDB (pdo_mysql), Redis, Octane/FrankenPHP worker mode, bcmath, pcntl, OPcache, and the OpenTelemetry gRPC transport (grpc, protobuf, opentelemetry)). intl and zip are not installed and nothing in the app uses them. The extension list is taken from `php -m` on the current base image.
 2. `docker/develop/Dockerfile` and `docker/production/Dockerfile` build on that base. Dev keeps xdebug, Node and Composer; production keeps the 3-stage build.
 3. `composer.json` requires `php ^8.5`. Octane keeps FrankenPHP worker mode with the current Caddyfile.
 4. The image build runs in CI so a broken base fails the PR.

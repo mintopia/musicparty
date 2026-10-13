@@ -45,7 +45,7 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
    - the instance name
 
    Lazy props are used where data is per-page.
-3. **R3 Both entry points.** Vite builds both entry points: the legacy `app.js` (global mounts for Blade) and an Inertia `inertia.js`, sharing one stylesheet. Blade pages render unchanged apart from the Tabler upgrade.
+3. **R3 Both entry points.** Vite builds both entry points: the legacy `app.ts` (global mounts for Blade) and an Inertia `inertia.ts`, sharing one stylesheet. Blade pages render unchanged apart from the Tabler upgrade.
 4. **R4 Tabler.** Upgrade `@tabler/core` from 1.0.0-beta20 to the latest stable 1.x, along with the icons. Fix the Blade pages the upgrade breaks visually, without a redesign.
 5. **R5 Design tokens.**
    - Define an `--mp-*` token set (at least primary, primary-rgb, nav-background, surface, text, muted, border, success, danger, warning, radius, font family) in one SCSS/CSS file.
@@ -57,7 +57,7 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
    - The admin theme form edits tokens, using colour inputs for known tokens, plus the custom stylesheet.
 7. **R7 Custom stylesheet safety.** Admins still supply arbitrary CSS. It is served as `text/css` from the R6 route, never inlined in HTML, so it cannot break out of a `<style>` tag.
 8. **R8 Layout.** `AppLayout.vue` with sidebar nav, Party dropdown (manager-only links gated on `canManage`), admin dropdown (Dashboard, Users, Settings, Pulse, Horizon; Telescope is gone after E3), Profile, Logout and impersonation banner. It has page title and breadcrumb slots. A `GuestLayout.vue` covers login. A `BareLayout.vue` covers TV, YouTube player and popup pages, for E8.
-9. **R9 Shared kit** (`resources/js/Components`, `resources/js/Composables`):
+9. **R9 Shared kit** (`resources/js/components`, `resources/js/composables`):
    - `TrackRow`: album art, name, artists, duration, explicit badge, an in-Queue state with Score and Vote, and a request button with allowed/reason. It is ported from `SearchResult.vue` and accepts the E6 `TrackAnnotation` (a `Track` plus its eligibility, as produced by `TrackEligibility`) via a JSON resource, not the legacy `toSearchResult()` array. Album and artist names render as links when the caller passes a route; E8 fills these in.
    - `TrackRow` also has a decoration slot (display name override, label, CSS class, accent) for mod decorations, a "needs approval" state for a track that would be flagged, and an "awaiting approval" state for the member's own Flagged Request, with a withdraw action. E8 wires these to real data.
    - `TrackList` (paginated), `Pagination`, `EmptyState`, `ConfirmDialog` and `Toast`/flash.
@@ -90,7 +90,7 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 ## Suggested ticket slices
 
 0. **E7-0** Migrate to the streamlined Laravel skeleton (#348). This redoes E3's #304, whose work never reached `feature/v3-rewrite`. blocked_by: none. Every other E7 ticket is blocked by it.
-1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADR (R1-R3, R11, R13 tooling). blocked_by: E7-0.
+1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADRs 0005 (TypeScript and Wayfinder), 0006 (Inertia) and 0007 (Tabler 1.6 upgrade). blocked_by: E7-0.
 2. **E7-2** Front-end lint (ESLint, Prettier) and Vitest tooling, plus lint, type-check and test steps in CI (R12). blocked_by: E7-1.
 3. **E7-3** Tabler upgrade and Blade visual fixes (R4). blocked_by: E7-0.
 4. **E7-4** Token stylesheet mapped onto Tabler (R5). blocked_by: E7-3.
