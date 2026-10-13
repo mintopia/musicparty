@@ -85,14 +85,18 @@ class PlayedSong extends Model
             return $this->upcoming;
         }
 
-        // Attempt to find most recent song matching this one
         $ids = [$this->song->spotify_id];
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
-        $upcoming = UpcomingSong::whereHas('song', function ($query) use ($ids) {
-            $query->whereIn('spotify_id', $ids);
-        })->doesntHave('played')->orderBy('queued_at', 'desc')->first();
+        $upcoming = UpcomingSong::where('party_id', $this->party_id)
+            ->whereNotNull('queued_at')
+            ->whereHas('song', function ($query) use ($ids) {
+                $query->whereIn('spotify_id', $ids);
+            })->doesntHave('played')
+            ->orderBy('queued_at', 'desc')
+            ->orderBy('id', 'desc')
+            ->first();
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);
         }
