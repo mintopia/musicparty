@@ -11,6 +11,14 @@
 @endpush
 @section('content')
 
+    @if ($spotifyNeedsRelink)
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="alert alert-warning" role="alert" id="spotify-relink-banner">
+                Spotify needs re-linking. <a href="{{ route('linkedaccounts.create', 'spotify') }}">Re-link your Spotify account</a> to resume playback updates.
+            </div>
+        </div>
+    @endif
+
     <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
         <next
             code="{{ $party->code }}"

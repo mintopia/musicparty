@@ -12,6 +12,7 @@ use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\Spotify\SpotifyBackoffException;
+use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Services\SpotifySearchService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
@@ -77,6 +78,7 @@ class PartyController extends Controller
             'member' => $member,
             'upcoming' => $upcoming->toArray(),
             'canManage' => $party->canBeManagedBy($request->user()),
+            'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && $party->user->spotifyNeedsRelink(),
         ]);
     }
 
@@ -137,6 +139,8 @@ class PartyController extends Controller
             $searchService = new SpotifySearchService($party, $member);
             try {
                 $results = $searchService->search($request->input('query'), $page, $perPage)->setPath(route('parties.search', $party->code))->appends($params);
+            } catch (SpotifyRelinkRequiredException) {
+                session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
             } catch (SpotifyBackoffException) {
                 session()->now('errorMessage', 'Spotify is busy right now. Please try again shortly.');
             }

@@ -214,6 +214,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
         $account->avatar_url = $remoteUser->getAvatar();
         $account->refresh_token = $remoteUser->refreshToken;
         $account->access_token = $remoteUser->token;
+        $account->needs_relink_at = null;
         $account->name = $remoteUser->getNickname();
         $account->email = $remoteUser->getEmail();
     }

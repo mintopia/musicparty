@@ -34,6 +34,10 @@ class PartyFallback extends Command
         })->get();
 
         foreach ($parties as $party) {
+            if ($party->user->spotifyNeedsRelink()) {
+                continue;
+            }
+
             Log::info("{$party}: Overdue an update, triggering fallback");
             PartyUpdate::dispatch($party);
         }
