@@ -37,6 +37,16 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         return SpotifyMapper::PROVIDER_ID;
     }
 
+    public function displayName(): string
+    {
+        return 'Spotify';
+    }
+
+    public function trackUrl(string $trackId): ?string
+    {
+        return "https://open.spotify.com/track/{$trackId}";
+    }
+
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
         $result = SpotifyPayload::object($this->reader()->search($query, 'track', [

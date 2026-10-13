@@ -71,7 +71,7 @@
                                     </div>
                                 </div>
                                 <div class="datagrid-item">
-                                    <div class="datagrid-title">Sent to Spotify</div>
+                                    <div class="datagrid-title">Sent to {{ $providerName }}</div>
                                     <div class="datagrid-content">
                                         @if($song->queued_at)
                                             <span title="{{ $song->queued_at->format('Y-m-d H:i:s') }}">
@@ -91,10 +91,12 @@
                         <i class="icon ti ti-ban"></i>
                         Moderate
                     </a>
-                    <a href="https://open.spotify.com/track/{{ $song->song->provider_track_id }}" class="btn btn-green text-white" target="_blank">
-                        <i class="icon ti ti-brand-spotify"></i>
-                        View on Spotify
-                    </a>
+                    @if($trackUrl)
+                        <a href="{{ $trackUrl }}" class="btn btn-green text-white" target="_blank">
+                            <i class="icon ti ti-external-link"></i>
+                            View on {{ $providerName }}
+                        </a>
+                    @endif
                 </div>
             </div>
         </div>
@@ -159,7 +161,7 @@
                             <th>Requested</th>
                             <th class="text-center">Votes</th>
                             <th class="text-center">Score</th>
-                            <th>Sent to Spotify</th>
+                            <th>Sent to {{ $providerName }}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -176,7 +178,7 @@
                                             {{ $otherSong->queued_at->diffForHumans() }}
                                         </span>
                                     @else
-                                        <span class="text-muted">Not Sent to Spotify</span>
+                                        <span class="text-muted">Not Sent to {{ $providerName }}</span>
                                     @endif
                                 </td>
                             </tr>

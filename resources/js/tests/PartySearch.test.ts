@@ -38,6 +38,8 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
         name: `Track ${id}`,
         duration_ms: 180000,
         explicit: false,
+        external_url: null,
+        provider_name: 'Spotify',
         album: {id: 'a', name: 'Album', image_url: null},
         artists: [{id: 'x', name: 'Artist'}],
         queue: {in_queue: false, upcoming_id: null, score: 0, vote: null, requested_by: null, ...queue},

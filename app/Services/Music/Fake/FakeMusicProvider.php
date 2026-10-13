@@ -130,6 +130,16 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return 'fake';
     }
 
+    public function displayName(): string
+    {
+        return 'Fake';
+    }
+
+    public function trackUrl(string $trackId): ?string
+    {
+        return null;
+    }
+
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
         $this->record(__FUNCTION__, func_get_args());

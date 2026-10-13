@@ -37,6 +37,8 @@ export interface TrackAnnotation {
     name: string;
     duration_ms: number;
     explicit: boolean;
+    external_url: string | null;
+    provider_name: string;
     album: {id: string; name: string; image_url: string | null};
     artists: {id: string; name: string}[];
     queue: {

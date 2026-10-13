@@ -2,14 +2,16 @@
 
 namespace App\Services\Requests;
 
+use App\Enums\Purpose;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
 use App\Services\Music\Data\Track;
+use App\Services\Music\MusicProviderFactory;
 
 class TrackEligibility
 {
-    public function __construct(protected RequestRules $rules) {}
+    public function __construct(protected RequestRules $rules, protected MusicProviderFactory $providers) {}
 
     /**
      * @param  list<Track>  $tracks
@@ -21,6 +23,7 @@ class TrackEligibility
             return [];
         }
 
+        $provider = $this->providers->forParty($party, Purpose::Search);
         $waiting = $this->waitingByProviderId($party, $member, $tracks);
         $decisions = $this->rules->checkMany($party, $member, $tracks);
 
@@ -37,6 +40,8 @@ class TrackEligibility
                 user: $entry['user'] ?? null,
                 allowed: $decision->allowed,
                 reason: $decision->reason,
+                externalUrl: $provider->trackUrl($track->id),
+                providerName: $provider->displayName(),
             );
         }
 
