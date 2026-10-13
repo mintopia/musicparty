@@ -13,9 +13,6 @@ enum SettingType
     case stTimeOfDay;
     case stSecret;
 
-    /**
-     * Lowercase identifier used by the Inertia screens.
-     */
     public function label(): string
     {
         return match ($this) {
