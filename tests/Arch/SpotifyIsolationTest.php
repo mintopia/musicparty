@@ -9,11 +9,18 @@ function phpFilesUnder(array $dirs): Finder
     return Finder::create()->files()->name('*.php')->in(array_map(fn (string $dir) => dirname(__DIR__, 2).'/'.$dir, $dirs));
 }
 
-arch('the Spotify SDK is only used by the Spotify Music Provider and the gateway')
-    ->expect('SpotifyWebAPI')
+arch('the Spotify SDK, gateway and payload helper are only used by the Spotify Music Provider and its gateway')
+    ->expect([
+        'SpotifyWebAPI',
+        'App\Services\Spotify',
+        'App\Support\SpotifyPayload',
+    ])
     ->toOnlyBeUsedIn([
         'App\Services\Music\Spotify',
         'App\Services\Spotify',
+        'App\Support\SpotifyPayload',
+        // Exempt until E8 ports Whamageddon onto the Music Provider; porting it removes this line.
+        'App\Mods\Whamageddon',
     ]);
 
 arch('Party and User hold no Spotify client code')

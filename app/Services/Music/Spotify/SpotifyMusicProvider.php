@@ -15,6 +15,7 @@ use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Spotify\SpotifyGateway;
+use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Support\SpotifyPayload;
 use Closure;
 use Illuminate\Support\Facades\Cache;
@@ -33,6 +34,25 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         protected User $user,
         protected Purpose $purpose,
     ) {}
+
+    public static function make(User $user, Purpose $purpose): self
+    {
+        return new self(app(SpotifyGateway::class), $user, $purpose);
+    }
+
+    /**
+     * @return bool false when the account must be re-linked
+     */
+    public static function refreshAccessToken(User $user): bool
+    {
+        try {
+            app(SpotifyGateway::class)->client($user);
+        } catch (SpotifyRelinkRequiredException) {
+            return false;
+        }
+
+        return true;
+    }
 
     public function id(): string
     {

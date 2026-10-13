@@ -26,7 +26,6 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\PlayedSongAugmentService;
-use App\Services\Spotify\SpotifyGateway;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -62,7 +61,7 @@ class AppServiceProvider extends ServiceProvider
             return new MusicProviderFactory([
                 'spotify' => $this->app->environment('testing')
                     ? $fake
-                    : fn (User $user, Purpose $purpose): SpotifyMusicProvider => new SpotifyMusicProvider($this->app->make(SpotifyGateway::class), $user, $purpose),
+                    : fn (User $user, Purpose $purpose): SpotifyMusicProvider => SpotifyMusicProvider::make($user, $purpose),
                 'fake' => $fake,
             ]);
         });
