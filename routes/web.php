@@ -59,6 +59,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
         Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
