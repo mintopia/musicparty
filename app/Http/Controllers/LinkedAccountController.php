@@ -5,9 +5,10 @@ namespace App\Http\Controllers;
 use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use App\Models\SocialProvider;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class LinkedAccountController extends Controller
 {
@@ -38,14 +39,19 @@ class LinkedAccountController extends Controller
         }
     }
 
-    public function delete(LinkedAccount $linkedaccount): RedirectResponse|View
+    public function delete(LinkedAccount $linkedaccount): RedirectResponse|Response
     {
         if (! $linkedaccount->canDelete()) {
             return response()->redirectToRoute('user.profile')->with('errorMessage', 'It is not possible to remove this account');
         }
 
-        return view('users.linkedaccounts.delete', [
-            'account' => $linkedaccount,
+        $linkedaccount->loadMissing('provider');
+
+        return Inertia::render('Users/LinkedAccountDelete', [
+            'account' => [
+                'id' => $linkedaccount->id,
+                'providerName' => $linkedaccount->provider?->name,
+            ],
         ]);
     }
 

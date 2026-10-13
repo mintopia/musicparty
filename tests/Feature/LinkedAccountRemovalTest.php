@@ -18,7 +18,7 @@ it('shows a confirmation to the owner of the linked account', function () {
     $this->actingAs($user)
         ->get(route('linkedaccounts.delete', $account))
         ->assertOk()
-        ->assertSee(route('linkedaccounts.destroy', $account), false);
+        ->assertInertia(fn ($page) => $page->component('Users/LinkedAccountDelete', false)->where('account.id', $account->id));
 });
 
 it('removes the linked account for its owner', function () {

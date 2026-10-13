@@ -108,7 +108,7 @@ class AppServiceProvider extends ServiceProvider
 
         Blade::directive('setting', fn (string $expression, $default = null) => "<?php echo App\Models\Setting::fetch($expression, $default); ?>");
 
-        view()->composer(['app', 'layouts.app', 'layouts.login', 'parties.tv', 'parties.ytplayer'], function ($view) {
+        view()->composer(['app', 'layouts.app', 'parties.tv', 'parties.ytplayer'], function ($view) {
             $activeTheme = $this->app->make(ActiveTheme::class);
             $view->with('currentTheme', $activeTheme->current());
             $view->with('darkMode', $activeTheme->darkMode());
