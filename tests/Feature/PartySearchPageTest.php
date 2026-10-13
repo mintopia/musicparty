@@ -14,6 +14,7 @@ use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMapper;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
@@ -43,7 +44,7 @@ function pageSearchLinkAccount(User $user, string $providerCode, string $token):
 function pageSearchParty(User $owner, array $attributes = []): Party
 {
     $party = new Party;
-    $party->forceFill(array_merge(['code' => strtoupper(Str::random(4)), 'name' => 'Search Party', 'user_id' => $owner->id, 'active' => false, 'allow_requests' => true, 'explicit' => true], $attributes));
+    $party->forceFill(array_merge(['code' => strtoupper(Str::random(4)), 'name' => 'Search Party', 'user_id' => $owner->id, 'provider_id' => 'spotify', 'active' => false, 'allow_requests' => true, 'explicit' => true], $attributes));
     Party::withoutEvents(fn () => $party->save());
 
     return $party;
@@ -65,7 +66,7 @@ function pageSearchUpcoming(Party $party, object $track, ?User $requester = null
 {
     $upcoming = new UpcomingSong;
     $upcoming->party()->associate($party);
-    $upcoming->song()->associate(Song::fromSpotify($track));
+    $upcoming->song()->associate(Song::fromTrack(SpotifyMapper::track($track)));
     if ($requester) {
         $upcoming->user()->associate($requester);
     }

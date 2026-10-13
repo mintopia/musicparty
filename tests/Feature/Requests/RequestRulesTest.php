@@ -31,7 +31,7 @@ function rulesVariant(Track $track, array $changes): Track
 
 function rulesParty(array $attributes = []): Party
 {
-    return Party::factory()->create(array_merge(['allow_requests' => true, 'explicit' => true], $attributes))->refresh();
+    return Party::factory()->create(array_merge(['provider_id' => 'fake', 'allow_requests' => true, 'explicit' => true], $attributes))->refresh();
 }
 
 function rulesMember(Party $party, string $role = 'user'): PartyMember

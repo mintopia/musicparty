@@ -111,9 +111,9 @@ class PlaybackSync
         return max(5, (int) floor($remaining / 2));
     }
 
-    public function trackFor(MusicProvider $provider, string $trackId): ?Track
+    public function trackFor(Party $party, MusicProvider $provider, string $trackId): ?Track
     {
-        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $trackId])->first();
+        $song = Song::where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId])->first();
 
         return $song?->toTrack() ?? $provider->getTrack($trackId);
     }
@@ -188,7 +188,7 @@ class PlaybackSync
             $party->recent_device_id = $state->deviceId;
         }
 
-        $song = Song::where(['provider_id' => 'spotify', 'provider_track_id' => $state->trackId])->first();
+        $song = Song::where(['provider_id' => $party->provider_id, 'provider_track_id' => $state->trackId])->first();
         if ($song === null) {
             $track = $provider->getTrack($state->trackId);
             if ($track === null) {
@@ -241,7 +241,7 @@ class PlaybackSync
         foreach ($provider->devices() as $device) {
             if ($device->id === $party->device_id) {
                 Log::info("{$party}: Forcing playback on {$device->name}");
-                $track = $trackId === null ? null : $this->trackFor($provider, $trackId);
+                $track = $trackId === null ? null : $this->trackFor($party, $provider, $trackId);
                 $provider->play($party->device_id, $track);
 
                 return $provider->currentPlayback();

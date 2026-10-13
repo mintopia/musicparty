@@ -9,6 +9,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use App\Services\Music\Spotify\SpotifyMapper;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\FakeSpotify;
@@ -49,12 +50,12 @@ it('yields one vote row when a concurrent insert wins the race', function () {
 
 it('returns the existing catalogue rows when the insert loses a race', function () {
     $track = FakeSpotify::track('raced', 'Raced');
-    $created = Song::fromSpotify($track);
+    $created = Song::fromTrack(SpotifyMapper::track($track));
 
     Song::creating(fn () => throw new UniqueConstraintViolationException('sqlite', 'insert', [], new Exception));
     DB::table('songs')->where('id', $created->id)->update(['name' => 'kept']);
 
-    expect(Song::fromSpotify($track)->id)->toBe($created->id)
+    expect(Song::fromTrack(SpotifyMapper::track($track))->id)->toBe($created->id)
         ->and(Song::count())->toBe(1)
         ->and(Album::count())->toBe(1)
         ->and(Artist::count())->toBe(count($track->artists));
