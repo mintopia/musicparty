@@ -25,6 +25,7 @@ use Illuminate\Support\Carbon;
  * @property int $upvotes
  * @property int $downvotes
  * @property Carbon|null $queued_at
+ * @property string|null $sent_track_id
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $user_id

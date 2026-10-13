@@ -188,7 +188,8 @@ it('sends exactly one track when a concurrent sync races the Send to Player', fu
 
     expect($fake->callsTo('sendToPlayer'))->toHaveCount(1)
         ->and($racerResults)->toBe([false])
-        ->and($upcoming->fresh()->queued_at)->not->toBeNull();
+        ->and($upcoming->fresh()->queued_at)->not->toBeNull()
+        ->and($upcoming->fresh()->sent_track_id)->toBe($upcoming->song->provider_track_id);
 
     Party::findOrFail($this->party->id)->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
     expect(app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id)))->toBeTrue()

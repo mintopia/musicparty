@@ -74,6 +74,7 @@ class QueueSelector
             $track = $request->song->toTrack();
             $provider->sendToPlayer($track);
             $request->queued_at = Carbon::now();
+            $request->sent_track_id = $track->id;
             $request->save();
             if ($current->history_playlist_id !== null) {
                 Log::info("{$party}: Adding {$request->song} to history playlist");

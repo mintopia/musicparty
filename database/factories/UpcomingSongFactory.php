@@ -32,6 +32,9 @@ class UpcomingSongFactory extends Factory
 
     public function sentToPlayer(): static
     {
-        return $this->state(fn () => ['queued_at' => now()]);
+        return $this->afterMaking(function (UpcomingSong $request) {
+            $request->queued_at ??= now();
+            $request->sent_track_id ??= $request->song->provider_track_id;
+        });
     }
 }
