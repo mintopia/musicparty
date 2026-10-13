@@ -24,3 +24,5 @@ Broadcast::channel('spotifytoken.{userId}', fn ($user, int $userId) => (int) $us
 Broadcast::channel('party.{party}.managers', fn ($user, Party $party) => $party->canBeManagedBy($user));
 
 Broadcast::channel('user.{userId}', fn ($user, int $userId) => (int) $user->id === (int) $userId);
+
+Broadcast::channel('encore.{code}', fn () => false);

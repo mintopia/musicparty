@@ -27,13 +27,23 @@ class PlayerCommand implements ShouldBroadcastNow
 
     public function broadcastAs(): string
     {
-        return $this->command['type'];
+        return $this->player === PlaybackSource::Encore ? 'command' : $this->command['type'];
     }
 
-    /** @return array{type: string, position_ms?: int} */
+    /**
+     * Encore relays the payload verbatim to Soloist, which only accepts commands shaped {"type":"command","command":"<name>"}.
+     *
+     * @return array<string, mixed>
+     */
     public function broadcastWith(): array
     {
-        return $this->command;
+        if ($this->player !== PlaybackSource::Encore) {
+            return $this->command;
+        }
+
+        ['type' => $name] = $this->command;
+
+        return ['type' => 'command', 'command' => $name, ...array_diff_key($this->command, ['type' => true])];
     }
 
     public function broadcastOn(): PrivateChannel

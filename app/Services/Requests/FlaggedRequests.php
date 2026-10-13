@@ -29,7 +29,7 @@ class FlaggedRequests
      */
     public function listFor(Party $party): array
     {
-        return $party->upcoming()
+        return array_values($party->upcoming()
             ->whereNull('queued_at')
             ->whereNotNull('flagged_at')
             ->with(['user', 'song.album', 'song.artists'])
@@ -37,7 +37,7 @@ class FlaggedRequests
             ->orderBy('id')
             ->get()
             ->map(fn (UpcomingSong $request): array => $this->item($request))
-            ->all();
+            ->all());
     }
 
     /**
