@@ -89,20 +89,21 @@ class PlayedSong extends Model
         if ($this->relinked_from) {
             $ids[] = $this->relinked_from;
         }
-        $sent = UpcomingSong::where('party_id', $this->party_id)
+        $cutoff = UpcomingSong::where('party_id', $this->party_id)
+            ->has('played')
+            ->orderByDesc('queued_at')
+            ->orderByDesc('id')
+            ->first();
+        $upcoming = UpcomingSong::where('party_id', $this->party_id)
             ->whereNotNull('queued_at')
-            ->doesntHave('played');
-        $upcoming = (clone $sent)
-            ->whereIn('sent_track_id', $ids)
+            ->doesntHave('played')
+            ->whereHas('song', fn ($query) => $query->whereIn('provider_track_id', $ids))
+            ->when($cutoff, fn ($query, UpcomingSong $cutoff) => $query->where(fn ($after) => $after
+                ->where('queued_at', '>', $cutoff->queued_at)
+                ->orWhere(fn ($tie) => $tie->where('queued_at', $cutoff->queued_at)->where('id', '>', $cutoff->id))))
             ->orderBy('queued_at')
             ->orderBy('id')
-            ->first()
-            ?? (clone $sent)
-                ->whereNull('sent_track_id')
-                ->whereHas('song', fn ($query) => $query->whereIn('provider_track_id', $ids))
-                ->orderBy('queued_at', 'desc')
-                ->orderBy('id', 'desc')
-                ->first();
+            ->first();
         if ($upcoming) {
             $this->upcoming()->associate($upcoming);
         }
