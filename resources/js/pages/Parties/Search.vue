@@ -2,18 +2,20 @@
 import {Head, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref, watch} from 'vue';
+import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackList from '@/components/TrackList.vue';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {show, search} from '@/routes/parties';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {Paginator, TrackAnnotation} from '@/types';
+import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean};
     params: {query: string | null; perPage: number};
     results: Paginator<TrackAnnotation> | null;
+    playerState: LegacyPartyState;
 }>();
 
 const query = ref(props.params.query ?? '');
@@ -74,6 +76,9 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
             <li class="breadcrumb-item active">
                 <a :href="searchUrl">Search</a>
             </li>
+        </template>
+        <template #header>
+            <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Search - ${party.name}`" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">

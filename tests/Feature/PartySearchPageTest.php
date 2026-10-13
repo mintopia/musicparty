@@ -117,7 +117,9 @@ it('renders the page without results when there is no query', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Search')
             ->where('params.query', null)
-            ->where('results', null));
+            ->where('results', null)
+            ->where('playerState.code', $this->party->code)
+            ->has('playerState.now'));
 });
 
 it('marks queued tracks and reports why a banned member cannot request', function () {

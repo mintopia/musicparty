@@ -6,7 +6,6 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\Setting;
-use App\Models\Theme;
 use App\Models\User;
 use App\Services\ActiveTheme;
 use Illuminate\Http\Request;
@@ -47,13 +46,10 @@ class HandleInertiaRequests extends Middleware
                 'coverImage' => Setting::fetch('cover-image'),
                 'favicon' => Setting::fetch('favicon'),
             ],
-            'theme' => fn (): array => [
-                'darkMode' => (bool) Theme::whereActive(true)->value('dark_mode'),
-            ],
             'reverb' => [
                 'appKey' => config('reverb.apps.apps.0.key'),
             ],
-            'theme' => fn (): ?array => app(ActiveTheme::class)->shared(),
+            'theme' => fn (): array => app(ActiveTheme::class)->shared() ?? ['tokens' => [], 'stylesheet' => null, 'darkMode' => false],
             'instanceName' => fn (): ?string => Setting::fetch('name'),
         ];
     }

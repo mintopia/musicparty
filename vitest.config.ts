@@ -19,6 +19,10 @@ export default defineConfig({
                 replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-vote.ts'),
             },
             {
+                find: '@/routes/api/v1/parties/playedsongs/rate',
+                replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-rate.ts'),
+            },
+            {
                 find: /^@\/routes\/parties$/,
                 replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-parties.ts'),
             },

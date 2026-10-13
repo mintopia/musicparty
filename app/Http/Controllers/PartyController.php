@@ -171,6 +171,7 @@ class PartyController extends Controller
             ],
             'params' => ['query' => $params['query'], 'perPage' => (int) $perPage],
             'results' => $results,
+            'playerState' => $party->getState(),
         ]);
     }
 
