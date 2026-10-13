@@ -6,6 +6,7 @@ use App\Enums\Purpose;
 use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
+use App\Http\Resources\TrackAnnotationResource;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
 use App\Jobs\PartyUpdate;
@@ -25,6 +26,8 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PartyController extends Controller
 {
@@ -130,7 +133,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): View
+    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
@@ -148,7 +151,10 @@ class PartyController extends Controller
             try {
                 $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
                 $items = $eligibility->annotate($party, $member, $found->items);
-                $results = (new LengthAwarePaginator($items, $found->total, (int) $perPage, $page))->setPath(route('parties.search', $party->code))->appends($params);
+                $results = (new LengthAwarePaginator($items, $found->total, (int) $perPage, $page))
+                    ->setPath(route('parties.search', $party->code))
+                    ->appends($params)
+                    ->through(fn ($annotation): array => (new TrackAnnotationResource($annotation))->resolve());
             } catch (SpotifyRelinkRequiredException) {
                 session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
             } catch (SpotifyBackoffException) {
@@ -156,11 +162,14 @@ class PartyController extends Controller
             }
         }
 
-        return view('parties.search', [
-            'party' => $party,
-            'member' => $member,
-            'canManage' => $party->canBeManagedBy($request->user()),
-            'params' => (object) $params,
+        return Inertia::render('Parties/Search', [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'downvotes' => (bool) $party->downvotes,
+                'canManage' => $party->canBeManagedBy($request->user()),
+            ],
+            'params' => ['query' => $params['query'], 'perPage' => (int) $perPage],
             'results' => $results,
         ]);
     }
