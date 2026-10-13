@@ -10,6 +10,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use App\Services\RequestCheckService;
+use Illuminate\Support\Facades\Cache;
 use Laravel\Sanctum\Sanctum;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIException;
@@ -669,5 +670,83 @@ describe('UpcomingSongController::store', function () {
         reqPost($party, $member->user, 'remaster');
 
         expect(UpcomingSong::count())->toBe(1);
+    });
+});
+
+describe('Request store lock', function () {
+    it('runs the checks and insert while holding the per-party-member lock', function () {
+        $party = reqParty(['allow_requests' => true]);
+        $member = reqMember($party);
+        $fake = new class("request-store:{$party->id}:{$member->id}") extends FakeSpotify
+        {
+            public ?bool $lockHeldDuringFetch = null;
+
+            public function __construct(private string $lockKey) {}
+
+            public function getTrack(string $trackId, array|object $options = []): array|object
+            {
+                $this->lockHeldDuringFetch = ! Cache::lock($this->lockKey, 5)->get();
+
+                return FakeSpotify::track($trackId);
+            }
+        };
+        app()->bind(SpotifyWebAPI::class, fn () => $fake);
+
+        reqPost($party, $member->user, 'locked')->assertSuccessful();
+
+        expect($fake->lockHeldDuringFetch)->toBeTrue();
+        expect(Cache::lock("request-store:{$party->id}:{$member->id}", 5)->get())->toBeTrue();
+    });
+
+    it('rejects a post while the same member already has one in flight', function () {
+        config(['musicparty.request_lock_wait_seconds' => 0]);
+        $party = reqParty(['allow_requests' => true]);
+        $member = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('racing'));
+        $held = Cache::lock("request-store:{$party->id}:{$member->id}", 30);
+        $held->get();
+
+        reqPost($party, $member->user, 'racing')->assertStatus(429);
+
+        $held->release();
+        expect(UpcomingSong::count())->toBe(0);
+    });
+
+    it('does not block a different member of the same party', function () {
+        $party = reqParty(['allow_requests' => true]);
+        $busy = reqMember($party);
+        $other = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('free'));
+        $held = Cache::lock("request-store:{$party->id}:{$busy->id}", 30);
+        $held->get();
+
+        reqPost($party, $other->user, 'free')->assertSuccessful();
+
+        $held->release();
+    });
+
+    it('enforces max_requests on back-to-back posts', function () {
+        $party = reqParty(['allow_requests' => true, 'max_requests' => 1]);
+        $member = reqMember($party);
+        FakeSpotify::install()->respond('getTrack', reqTrack('first'));
+
+        reqPost($party, $member->user, 'first')->assertSuccessful();
+        FakeSpotify::install()->respond('getTrack', reqTrack('second', ['name' => 'Second Track']));
+        reqPost($party, $member->user, 'second')->assertStatus(400)
+            ->assertJsonPath('message', 'You are not allowed to request any more songs');
+
+        expect(UpcomingSong::count())->toBe(1);
+    });
+
+    it('still exempts a vip from max_requests', function () {
+        $party = reqParty(['allow_requests' => true, 'max_requests' => 1]);
+        $member = reqMember($party, 'vip');
+        FakeSpotify::install()->respond('getTrack', reqTrack('one'));
+        reqPost($party, $member->user, 'one')->assertSuccessful();
+        FakeSpotify::install()->respond('getTrack', reqTrack('two', ['name' => 'Two Track']));
+
+        reqPost($party, $member->user, 'two')->assertSuccessful();
+
+        expect(UpcomingSong::count())->toBe(2);
     });
 });
