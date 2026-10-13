@@ -71,8 +71,7 @@ it('shows the party form with only selectable providers', function () {
 
     $this->actingAs($user)->get(route('parties.create'))
         ->assertOk()
-        ->assertSee('value="spotify"', false)
-        ->assertDontSee('value="fake"', false);
+        ->assertInertia(fn ($page) => $page->component('Parties/Create', false)->where('providerIds', ['spotify']));
 });
 
 it('rejects a disabled provider when creating a party', function () {
@@ -126,7 +125,7 @@ it('round-trips a provider toggle through the settings page and the party form',
 
     expect($factory->isEnabled('spotify'))->toBeFalse();
     $this->actingAs($admin)->get(route('parties.create'))
-        ->assertOk()->assertDontSee('value="spotify"', false);
+        ->assertOk()->assertInertia(fn ($page) => $page->where('providerIds', []));
     $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
         ->assertSessionHasErrors('provider_id');
 
@@ -135,7 +134,7 @@ it('round-trips a provider toggle through the settings page and the party form',
 
     expect($factory->isEnabled('spotify'))->toBeTrue();
     $this->actingAs($admin)->get(route('parties.create'))
-        ->assertOk()->assertSee('value="spotify"', false);
+        ->assertOk()->assertInertia(fn ($page) => $page->where('providerIds.0', 'spotify'));
     $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
         ->assertSessionHasNoErrors();
     expect(Party::count())->toBe(1);

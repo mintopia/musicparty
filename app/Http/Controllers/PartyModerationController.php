@@ -9,15 +9,15 @@ use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
 use App\Services\Music\MusicProviderFactory;
-use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PartyModerationController extends Controller
 {
-    public function index(Request $request, Party $party): View
+    public function index(Request $request, Party $party): Response
     {
-        $query = $party->moderations();
         $params = [
             'order' => 'id',
             'order_direction' => 'asc',
@@ -27,18 +27,16 @@ class PartyModerationController extends Controller
             $params['per_page'] = $perPage;
         }
 
-        $moderations = $query->paginate($perPage)->appends($params);
+        $moderations = $party->moderations()->paginate($perPage)->appends($params);
+        $moderations->through(fn (PartyModeration $row): array => $this->present($row));
 
-        return view('partymoderation.index', [
-            'party' => $party,
-            'canManage' => true,
+        return Inertia::render('Parties/Moderation/Index', [
+            'party' => $this->partyProps($party),
             'moderations' => $moderations,
-            'filters' => (object) $params,
-            'params' => $params,
         ]);
     }
 
-    public function create(Party $party, Request $request): View
+    public function create(Party $party, Request $request): Response
     {
         $track = $request->has('track')
             ? app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->findTrack((string) $request->input('track'))
@@ -47,12 +45,18 @@ class PartyModerationController extends Controller
         $moderation = new PartyModeration;
         $moderation->party()->associate($party);
 
-        return view('partymoderation.create', [
-            'party' => $party,
-            'canManage' => true,
+        return Inertia::render('Parties/Moderation/Create', [
+            'party' => $this->partyProps($party),
             'types' => PartyModerationType::getHumanReadableTypes(),
-            'track' => $track,
-            'moderation' => $moderation,
+            'actions' => PartyModerationAction::getHumanReadableActions(),
+            'moderation' => $this->present($moderation),
+            'track' => $track === null ? null : [
+                'id' => $track->id,
+                'name' => $track->name,
+                'isrc' => $track->isrc,
+                'album' => ['id' => $track->album->id, 'name' => $track->album->name],
+                'artists' => array_map(fn ($artist): array => ['id' => $artist->id, 'name' => $artist->name], $track->artists),
+            ],
         ]);
     }
 
@@ -67,23 +71,21 @@ class PartyModerationController extends Controller
             ->with('successMessage', 'The filter has been created');
     }
 
-    public function edit(Party $party, PartyModeration $moderation): View
+    public function edit(Party $party, PartyModeration $moderation): Response
     {
-        return view('partymoderation.edit', [
-            'party' => $party,
-            'canManage' => true,
+        return Inertia::render('Parties/Moderation/Edit', [
+            'party' => $this->partyProps($party),
             'types' => PartyModerationType::getHumanReadableTypes(),
-            'moderation' => $moderation,
+            'actions' => PartyModerationAction::getHumanReadableActions(),
+            'moderation' => $this->present($moderation),
         ]);
     }
 
-    public function delete(Party $party, PartyModeration $moderation): View
+    public function delete(Party $party, PartyModeration $moderation): Response
     {
-        return view('partymoderation.delete', [
-            'party' => $party,
-            'canManage' => true,
-            'types' => PartyModerationType::getHumanReadableTypes(),
-            'moderation' => $moderation,
+        return Inertia::render('Parties/Moderation/Delete', [
+            'party' => $this->partyProps($party),
+            'moderation' => $this->present($moderation),
         ]);
     }
 
@@ -110,6 +112,33 @@ class PartyModerationController extends Controller
         $moderation->value = $request->input('value');
         $moderation->notes = $request->input('notes');
         $moderation->save();
+    }
+
+    /**
+     * @return array{code: string, name: string, canManage: bool}
+     */
+    protected function partyProps(Party $party): array
+    {
+        return ['code' => $party->code, 'name' => $party->name, 'canManage' => true];
+    }
+
+    /**
+     * @return array{id: int|null, enabled: bool, regex: bool, type: string|null, type_name: string|null, action: string, value: string|null, notes: string|null}
+     */
+    protected function present(PartyModeration $moderation): array
+    {
+        $type = $moderation->getAttribute('type');
+
+        return [
+            'id' => $moderation->id,
+            'enabled' => (bool) $moderation->enabled,
+            'regex' => (bool) $moderation->regex,
+            'type' => $type instanceof PartyModerationType ? $type->name : null,
+            'type_name' => $type instanceof PartyModerationType ? $type->getHumanReadableName() : null,
+            'action' => $moderation->action->value,
+            'value' => $moderation->value,
+            'notes' => $moderation->notes,
+        ];
     }
 
     public function destroy(Party $party, PartyModeration $moderation): RedirectResponse

@@ -149,9 +149,10 @@ it('shows relay settings to the operator and the app secret only to admins', fun
     $party->forceFill(['user_id' => $owner->id])->save();
 
     $this->withoutVite()->actingAs($owner)->get(route('parties.edit', $party->code))
-        ->assertOk()->assertSee("private-encore.{$party->code}")->assertDontSee('encore-secret-value');
+        ->assertOk()->assertInertia(fn ($page) => $page->component('Parties/Edit', false)
+        ->where('encore.channel', "private-encore.{$party->code}")->where('encore.secret', null));
 
     $owner->roles()->attach(Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']));
     $this->withoutVite()->actingAs($owner->fresh())->get(route('parties.edit', $party->code))
-        ->assertOk()->assertSee('encore-secret-value');
+        ->assertOk()->assertInertia(fn ($page) => $page->where('encore.secret', 'encore-secret-value'));
 });

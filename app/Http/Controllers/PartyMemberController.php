@@ -7,13 +7,16 @@ use App\Http\Requests\PartyMemberUpdateRequest;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
-use Illuminate\Contracts\View\View;
+use App\Models\Vote;
+use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class PartyMemberController extends Controller
 {
-    public function index(PartyMemberSearchRequest $request, Party $party): View
+    public function index(PartyMemberSearchRequest $request, Party $party): Response
     {
         $query = $party->members()->with(['user', 'role']);
         $params = [
@@ -64,17 +67,24 @@ class PartyMemberController extends Controller
 
         $members = $query->paginate($perPage)->appends($params);
 
-        return view('partymembers.index', [
-            'party' => $party,
-            'canManage' => true,
+        $members->through(fn (PartyMember $member): array => [
+            'id' => $member->id,
+            'nickname' => $member->user->nickname,
+            'role' => $member->role->name,
+            'createdAt' => $this->when($member->created_at),
+            'url' => route('parties.users.show', [$party->code, $member->id]),
+        ]);
+
+        return Inertia::render('Parties/Members/Index', [
+            'party' => $this->partyProps($party, true),
+            'playerState' => $party->getState(),
+            'roles' => PartyMemberRole::all()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
+            'filters' => $params,
             'members' => $members,
-            'roles' => PartyMemberRole::all(),
-            'filters' => (object) $params,
-            'params' => $params,
         ]);
     }
 
-    public function show(Request $request, Party $party, PartyMember $user): View
+    public function show(Request $request, Party $party, PartyMember $user): Response
     {
         $query = $user->user->votes()->whereHas('upcomingSong', function ($query) use ($party) {
             $query->wherePartyId($party->id);
@@ -106,30 +116,38 @@ class PartyMemberController extends Controller
 
         $votes = $query->orderBy($params['order'], $params['order_direction'])->paginate($perPage)->appends($params);
 
-        return view('partymembers.show', [
-            'party' => $party,
-            'canManage' => true,
-            'member' => $user,
+        $votes->through(fn (Vote $vote): array => [
+            'id' => $vote->id,
+            'songName' => $vote->upcomingSong->song->name,
+            'albumName' => $vote->upcomingSong->song->album->name,
+            'imageUrl' => $vote->upcomingSong->song->album->image_url,
+            'artists' => $vote->upcomingSong->song->artists->pluck('name')->values()->all(),
+            'url' => route('parties.songs.show', [$party->code, $vote->upcomingSong->id]),
+            'value' => $vote->value,
+            'createdAt' => $this->when($vote->created_at),
+        ]);
+
+        return Inertia::render('Parties/Members/Show', [
+            'party' => $this->partyProps($party, true),
+            'playerState' => $party->getState(),
+            'member' => $this->memberProps($user),
             'votes' => $votes,
-            'filters' => (object) $params,
-            'params' => $params,
-            'types' => [(object) [
-                'code' => 'downvote',
-                'name' => 'Downvote',
-            ], (object) [
-                'code' => 'upvote',
-                'name' => 'Upvote',
-            ]],
+            'filters' => $params,
+            'types' => [
+                ['code' => 'downvote', 'name' => 'Downvote'],
+                ['code' => 'upvote', 'name' => 'Upvote'],
+            ],
         ]);
     }
 
-    public function edit(Request $request, Party $party, PartyMember $user): View
+    public function edit(Request $request, Party $party, PartyMember $user): Response
     {
-        return view('partymembers.edit', [
-            'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
-            'member' => $user,
-            'roles' => PartyMemberRole::all(),
+        return Inertia::render('Parties/Members/Edit', [
+            'party' => $this->partyProps($party, $party->canBeManagedBy($request->user())),
+            'playerState' => $party->getState(),
+            'member' => $this->memberProps($user),
+            'isSelf' => $request->user()?->id === $user->user_id,
+            'roles' => PartyMemberRole::all()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
         ]);
     }
 
@@ -140,5 +158,35 @@ class PartyMemberController extends Controller
         $user->save();
 
         return response()->redirectToRoute('parties.users.show', [$party->code, $user->id])->with('successMessage', 'The user has been updated');
+    }
+
+    /**
+     * @return array{code: string, name: string, canManage: bool}
+     */
+    private function partyProps(Party $party, bool $canManage): array
+    {
+        return ['code' => $party->code, 'name' => $party->name, 'canManage' => $canManage];
+    }
+
+    /**
+     * @return array{id: int, nickname: string, role: string, roleCode: string, createdAt: array{iso: string, human: string}|null}
+     */
+    private function memberProps(PartyMember $member): array
+    {
+        return [
+            'id' => $member->id,
+            'nickname' => $member->user->nickname,
+            'role' => $member->role->name,
+            'roleCode' => $member->role->code,
+            'createdAt' => $this->when($member->created_at),
+        ];
+    }
+
+    /**
+     * @return array{iso: string, human: string}|null
+     */
+    private function when(?CarbonInterface $moment): ?array
+    {
+        return $moment ? ['iso' => $moment->format('Y-m-d H:i:s'), 'human' => $moment->diffForHumans()] : null;
     }
 }
