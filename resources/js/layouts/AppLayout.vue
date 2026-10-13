@@ -81,6 +81,7 @@ useColorMode();
                                     :class="{show: isOpen(item.key, item.active)}"
                                     href="#"
                                     role="button"
+                                    :aria-expanded="isOpen(item.key, item.active)"
                                     @click.prevent="toggleDropdown(item.key, item.active)"
                                 >
                                     <span class="nav-link-icon d-md-none d-lg-inline-block">
