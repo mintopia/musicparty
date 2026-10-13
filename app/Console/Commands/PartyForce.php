@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\Party;
+use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackControl;
 use App\Services\PlaybackSync;
 use Illuminate\Console\Command;
@@ -53,8 +54,8 @@ class PartyForce extends Command
 
     protected function processParty(Party $party): int
     {
-        if ($party->user->spotifyNeedsRelink()) {
-            $this->output->writeln("{$party}: Spotify needs re-linking, skipping");
+        if (app(MusicProviderFactory::class)->partyNeedsRelink($party)) {
+            $this->output->writeln("{$party}: Provider needs re-linking, skipping");
 
             return self::SUCCESS;
         }

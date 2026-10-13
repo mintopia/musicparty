@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\Purpose;
 use App\Enums\SettingType;
 use App\Jobs\PartyUpdate;
 use App\Models\LinkedAccount;
@@ -7,6 +8,8 @@ use App\Models\Party;
 use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\SocialProviders\SpotifyProvider;
 use App\Services\Spotify\BackoffRequest;
 use App\Services\Spotify\SpotifyBackoffException;
@@ -146,6 +149,7 @@ it('skips flagged accounts in the minute refresh command', function () {
 });
 
 it('stops the poll chain and the fallback for a party that needs re-link', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
     Queue::fake();
     $account = expiringSpotifyAccount();
     $account->forceFill(['needs_relink_at' => now()])->save();
@@ -159,6 +163,7 @@ it('stops the poll chain and the fallback for a party that needs re-link', funct
 });
 
 it('shows the re-link banner to managers but not guests, and re-linking clears it', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
     $this->withoutVite();
     $this->seed(PartyMemberRoleSeeder::class);
     $account = expiringSpotifyAccount();

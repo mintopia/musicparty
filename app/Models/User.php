@@ -168,23 +168,6 @@ class User extends Authenticatable
         return $this->nickname;
     }
 
-    public function hasSpotifyLinks(): bool
-    {
-        $count = $this->accounts()->whereHas('provider', function ($query) {
-            $query->whereIn('code', ['spotify', 'spotifysearch']);
-        })->count();
-
-        return $count === 2;
-    }
-
-    public function spotifyNeedsRelink(): bool
-    {
-        return $this->accounts()
-            ->whereNotNull('needs_relink_at')
-            ->whereHas('provider', fn ($query) => $query->whereCode('spotify'))
-            ->exists();
-    }
-
     public function getPartyMember(Party $party): ?PartyMember
     {
         foreach ($this->partyMembers as $member) {

@@ -45,7 +45,7 @@ class PartyController extends Controller
             ? $providerId
             : MusicProviderFactory::DEFAULT_PROVIDER_ID;
 
-        if ($providerId === MusicProviderFactory::DEFAULT_PROVIDER_ID && ! $user->hasSpotifyLinks()) {
+        if (! $factory->forUser($providerId, $user, Purpose::Control)->isLinked()) {
             return response()->redirectToRoute('user.spotify');
         }
 
@@ -96,7 +96,7 @@ class PartyController extends Controller
             'member' => $member,
             'upcoming' => $upcoming->toArray(),
             'canManage' => $party->canBeManagedBy($request->user()),
-            'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && $party->user->spotifyNeedsRelink(),
+            'spotifyNeedsRelink' => $party->canBeManagedBy($request->user()) && app(MusicProviderFactory::class)->partyNeedsRelink($party),
         ]);
     }
 

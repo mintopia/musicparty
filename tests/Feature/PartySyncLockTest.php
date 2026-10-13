@@ -1,5 +1,6 @@
 <?php
 
+use App\Services\Music\MusicProviderFactory;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Song;
@@ -132,10 +133,10 @@ it('records the attempt time when a provider call throws at any step', function 
 })->with(['current playback' => 'currentPlayback', 'device list' => 'devices', 'force playback' => 'play', 'track lookup' => 'getTrack']);
 
 it('records the attempt time when the relink check throws', function () {
-    $user = Mockery::mock($this->party->user)->makePartial();
-    $user->shouldReceive('spotifyNeedsRelink')->andThrow(new RuntimeException('relink'));
     $party = Party::findOrFail($this->party->id);
-    $party->setRelation('user', $user);
+    $factory = Mockery::mock(MusicProviderFactory::class);
+    $factory->shouldReceive('partyNeedsRelink')->andThrow(new RuntimeException('relink'));
+    app()->instance(MusicProviderFactory::class, $factory);
     $before = $this->party->last_updated_at;
 
     expect(fn () => app(PlaybackSync::class)->sync($party))->toThrow(RuntimeException::class, 'relink');

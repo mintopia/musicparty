@@ -135,6 +135,16 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return 'Fake';
     }
 
+    public function isLinked(): bool
+    {
+        return true;
+    }
+
+    public function needsRelink(): bool
+    {
+        return false;
+    }
+
     public function trackUrl(string $trackId): ?string
     {
         return null;
