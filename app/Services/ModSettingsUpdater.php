@@ -30,7 +30,7 @@ class ModSettingsUpdater
         );
 
         $writes = $this->collect($input, $mods->all(), $editable, $party, true);
-        $enabled = $party->mods()->pluck('mods.code')->all();
+        $enabled = array_values(array_map('strval', $party->mods()->pluck('mods.code')->all()));
         foreach ($input as $code => $entry) {
             if (is_array($entry) && array_key_exists('enabled', $entry)) {
                 $enabled = array_values(array_diff($enabled, [(string) $code]));

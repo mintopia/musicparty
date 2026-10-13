@@ -71,13 +71,13 @@ class SettingValue implements CastsAttributes
     {
         $owner = $model instanceof PartyModSetting ? $model->setting : $model;
 
-        return $owner?->getAttribute('type');
+        return $owner->getAttribute('type');
     }
 
     protected function isEncrypted(Model $model): bool
     {
         $owner = $model instanceof PartyModSetting ? $model->setting : $model;
 
-        return $owner !== null && ($owner->getAttribute('encrypted') || $owner->getAttribute('type') === SettingType::stSecret);
+        return $owner->getAttribute('encrypted') || $owner->getAttribute('type') === SettingType::stSecret;
     }
 }

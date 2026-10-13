@@ -6,6 +6,9 @@ use App\Enums\SettingType;
 
 final readonly class SettingDefinition
 {
+    /**
+     * @param  string|array<int|string, mixed>|null  $validation
+     */
     public function __construct(
         public string $code,
         public string $name,

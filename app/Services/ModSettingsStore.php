@@ -195,7 +195,7 @@ class ModSettingsStore
             ->orderBy('order')
             ->get();
         foreach ($definitions->groupBy('mod_id') as $group) {
-            $mod = $group->first()->mod;
+            $mod = $group->firstOrFail()->mod;
             $result[] = [
                 'code' => $mod->code,
                 'name' => $mod->name,
