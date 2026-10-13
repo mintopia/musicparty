@@ -2,10 +2,10 @@
 
 namespace App\Jobs;
 
+use App\Exceptions\ProviderBackoffException;
+use App\Exceptions\ProviderRelinkRequiredException;
 use App\Models\Party;
 use App\Services\FallbackPlaylist;
-use App\Services\Spotify\SpotifyBackoffException;
-use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -44,11 +44,11 @@ class RefreshFallbackPlaylist implements ShouldQueue
     {
         try {
             $fallbackPlaylist->refresh($this->party);
-        } catch (SpotifyBackoffException $e) {
-            Log::info("{$this->party}: Spotify backoff active, releasing for {$e->retryAfterSeconds}s");
-            $this->release($e->retryAfterSeconds);
-        } catch (SpotifyRelinkRequiredException) {
-            Log::warning("{$this->party}: Spotify relink required, fallback playlist not refreshed");
+        } catch (ProviderBackoffException $e) {
+            Log::info("{$this->party}: backoff active, releasing for {$e->retryAfterSeconds()}s");
+            $this->release($e->retryAfterSeconds());
+        } catch (ProviderRelinkRequiredException) {
+            Log::warning("{$this->party}: relink required, fallback playlist not refreshed");
         }
     }
 }

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Enums\Purpose;
+use App\Exceptions\ProviderBackoffException;
+use App\Exceptions\ProviderRelinkRequiredException;
 use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
@@ -16,11 +18,9 @@ use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyProviderOptions;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
-use App\Services\Spotify\SpotifyBackoffException;
-use App\Services\Spotify\SpotifyLibrary;
-use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -36,21 +36,28 @@ class PartyController extends Controller
         $this->authorizeResource(Party::class, 'party');
     }
 
-    public function create(Request $request): RedirectResponse|View
+    public function create(Request $request, PartyProviderOptions $options): RedirectResponse|View
     {
-        // Check if they have Spotify links
-        if (! $this->resolveAuthenticatedUser($request)->hasSpotifyLinks()) {
+        $user = $this->resolveAuthenticatedUser($request);
+        $factory = app(MusicProviderFactory::class);
+        $providerId = $request->query('provider_id');
+        $providerId = is_string($providerId) && in_array($providerId, $factory->selectableIds(), true)
+            ? $providerId
+            : MusicProviderFactory::DEFAULT_PROVIDER_ID;
+
+        // Check they have a link for the chosen provider
+        if ($providerId === MusicProviderFactory::DEFAULT_PROVIDER_ID && ! $user->hasSpotifyLinks()) {
             return response()->redirectToRoute('user.spotify');
         }
 
-        $party = new Party;
+        $draft = $options->draft($user, $providerId);
 
         return view('parties.create', [
-            'party' => $party,
+            'party' => new Party,
             'mods' => Mod::all(),
-            'playlists' => app(SpotifyLibrary::class)->playlists($this->resolveAuthenticatedUser($request)),
-            'devices' => app(SpotifyLibrary::class)->devices($this->resolveAuthenticatedUser($request)),
-            'providerIds' => app(MusicProviderFactory::class)->selectableIds(),
+            'playlists' => $options->playlists($draft),
+            'devices' => $options->devices($draft),
+            'providerIds' => $factory->selectableIds(),
         ]);
     }
 
@@ -155,9 +162,9 @@ class PartyController extends Controller
                     ->setPath(route('parties.search', $party->code))
                     ->appends($params)
                     ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
-            } catch (SpotifyRelinkRequiredException) {
+            } catch (ProviderRelinkRequiredException) {
                 session()->now('errorMessage', 'Spotify needs re-linking before search is available.');
-            } catch (SpotifyBackoffException) {
+            } catch (ProviderBackoffException) {
                 session()->now('errorMessage', 'Spotify is busy right now. Please try again shortly.');
             }
         }
@@ -175,14 +182,14 @@ class PartyController extends Controller
         ]);
     }
 
-    public function edit(Party $party): View
+    public function edit(Party $party, PartyProviderOptions $options): View
     {
         return view('parties.edit', [
             'party' => $party,
             'mods' => Mod::all(),
             'canManage' => true,
-            'playlists' => app(SpotifyLibrary::class)->playlists($party->user),
-            'devices' => app(SpotifyLibrary::class)->devices($party->user),
+            'playlists' => $options->playlists($party),
+            'devices' => $options->devices($party),
         ]);
     }
 
