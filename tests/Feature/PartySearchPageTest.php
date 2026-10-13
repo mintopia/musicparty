@@ -22,6 +22,7 @@ use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeSpotify;
@@ -223,3 +224,38 @@ it('reports every eligibility reason on the search page', function (string $reas
         $moderation->save();
     }],
 ]);
+
+it('searches in the Party country rather than the owner market', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose, ?string $market = null) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose, $market));
+    $this->owner->forceFill(['market' => 'GB'])->save();
+    $this->party->forceFill(['country' => 'DE'])->save();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertOk();
+
+    expect($this->fake->callsTo('search')[0][2]['market'])->toBe('DE');
+});
+
+it('shows the try again shortly state once a member exhausts the search bucket', function () {
+    config(['musicparty.search_burst' => 2, 'musicparty.search_leak_per_second' => 0.001]);
+    Cache::flush();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+
+    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
+    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
+    expect($this->fake->callsTo('search'))->toHaveCount(2);
+
+    $this->actingAs($this->member->user, 'sanctum')->get($url)
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parties/Search')
+            ->where('results', null)
+            ->where('flash.error', 'The music provider is busy right now. Please try again shortly.'));
+    expect($this->fake->callsTo('search'))->toHaveCount(2);
+
+    $other = pageSearchMember($this->party);
+    $this->actingAs($other->user, 'sanctum')->get($url)->assertInertia(fn (Assert $page) => $page->where('results.current_page', 1));
+});

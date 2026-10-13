@@ -15,6 +15,7 @@ use App\Jobs\PartyUpdate;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Services\ModSettingsStore;
 use App\Services\Music\MusicProviderFactory;
@@ -22,6 +23,7 @@ use App\Services\PartyProviderOptions;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
+use App\Support\LeakyBucket;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -153,7 +155,9 @@ class PartyController extends Controller
         }
 
         $results = null;
-        if ($params['query']) {
+        if ($params['query'] && ! $this->withinSearchLimit($party, $member)) {
+            session()->now('errorMessage', 'The music provider is busy right now. Please try again shortly.');
+        } elseif ($params['query']) {
             try {
                 $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
                 $items = $eligibility->annotate($party, $member, $found->items);
@@ -181,6 +185,15 @@ class PartyController extends Controller
         ]);
     }
 
+    protected function withinSearchLimit(Party $party, PartyMember $member): bool
+    {
+        return (new LeakyBucket(
+            "search:{$party->getKey()}:{$member->user_id}",
+            (int) config('musicparty.search_burst'),
+            (float) config('musicparty.search_leak_per_second'),
+        ))->attempt();
+    }
+
     public function edit(Party $party, PartyProviderOptions $options): View
     {
         return view('parties.edit', [
@@ -203,6 +216,11 @@ class PartyController extends Controller
     protected function updateObject(Party $party, Request $request): void
     {
         $party->name = $request->input('name');
+        if ($request->filled('country')) {
+            $party->country = strtoupper($request->string('country')->toString());
+        } elseif (! $party->exists) {
+            $party->country = strtoupper($party->user->market ?: 'GB');
+        }
         if ($request->input('backup_playlist_id') === 'other') {
             $party->backup_playlist_id = $request->input('custom_backup_playlist_id');
         } else {

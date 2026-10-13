@@ -30,6 +30,17 @@
         </div>
     </div>
     <div class="mb-3">
+        <label class="form-label required">Country</label>
+        <div>
+            <input type="text" name="country" maxlength="2" class="form-control @error('country') is-invalid @enderror"
+                   placeholder="GB" value="{{ old('country', $party->country ?? auth()->user()?->market ?? 'GB') }}">
+            <small class="form-hint">Two-letter country code used for search and browse results</small>
+            @error('country')
+            <p class="invalid-feedback">{{ $message }}</p>
+            @enderror
+        </div>
+    </div>
+    <div class="mb-3">
         <label class="form-label required">Backup Playlist</label>
         <div>
             <select id="backup_playlist_id" name="backup_playlist_id" class="form-control @error('backup_playlist_id') is-invalid @enderror">
