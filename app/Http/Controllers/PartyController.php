@@ -12,13 +12,9 @@ use App\Http\Resources\TrackAnnotationResource;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyPlayYouTubeVideo;
 use App\Jobs\PartyUpdate;
-use App\Models\Mod;
-use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
-use App\Mods\PartyMods;
-use App\Services\ModSettingsStore;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
 use App\Services\PlaybackControl;
@@ -56,7 +52,6 @@ class PartyController extends Controller
 
         return view('parties.create', [
             'party' => new Party,
-            'mods' => Mod::whereNull('removed_at')->get(),
             'playlists' => $options->playlists($draft),
             'devices' => $options->devices($draft),
             'providerIds' => $factory->selectableIds(),
@@ -311,7 +306,6 @@ class PartyController extends Controller
     {
         return view('parties.edit', [
             'party' => $party,
-            'mods' => Mod::whereNull('removed_at')->get(),
             'canManage' => true,
             'playlists' => $options->playlists($party),
             'devices' => $options->devices($party),
@@ -382,17 +376,5 @@ class PartyController extends Controller
             $party->history_playlist_id = null;
         }
         $party->save();
-
-        app(PartyMods::class)->sync($party, array_values(array_filter((array) $request->input('mods_enabled', []), 'is_string')));
-
-        $store = app(ModSettingsStore::class);
-        $modSettings = ModSetting::wherePrivate(false)->whereHas('mod', fn ($query) => $query->whereNull('removed_at'))->with('mod')->get();
-        foreach ($modSettings as $modSetting) {
-            $currentValue = $store->value($party, $modSetting->mod, $modSetting->code);
-            $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
-            if ($value !== $currentValue) {
-                $store->set($party, $modSetting->mod, $modSetting->code, $value);
-            }
-        }
     }
 }

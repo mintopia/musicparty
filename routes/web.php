@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\HomeController as AdminHomeController;
 use App\Http\Controllers\Admin\LinkedAccountController as AdminLinkedAccountController;
+use App\Http\Controllers\Admin\ModsController as AdminModsController;
 use App\Http\Controllers\Admin\SettingController as AdminSettingController;
 use App\Http\Controllers\Admin\SocialProviderController;
 use App\Http\Controllers\Admin\ThemeController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
+use App\Http\Controllers\PartyModsController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
@@ -53,6 +55,8 @@ Route::middleware('auth:sanctum')->group(function () {
         });
         Route::middleware('can:update,party')->group(function () {
             Route::post('parties/{party}/youtube', [PartyController::class, 'youtube_play'])->name('parties.youtube_play');
+            Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
+            Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
@@ -89,6 +93,9 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
+
+            Route::get('mods', [AdminModsController::class, 'edit'])->name('mods.edit');
+            Route::match(['PUT', 'PATCH'], 'mods', [AdminModsController::class, 'update'])->name('mods.update');
 
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::match(['PUT', 'PATCH'], 'settings', [AdminSettingController::class, 'update'])->name('settings.update');

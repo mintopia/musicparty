@@ -79,6 +79,7 @@
                                     <a class="dropdown-item" href="{{ route('parties.youtube', $member->party->code) }}">YouTube Player</a>
                                     <a class="dropdown-item" href="{{ route('parties.player', $member->party->code) }}">Web Player</a>
                                     <a class="dropdown-item" href="{{ route('parties.moderation.index', $member->party->code) }}">Moderation</a>
+                                    <a class="dropdown-item" href="{{ route('parties.mods.edit', $member->party->code) }}">Mods</a>
                                     <a class="dropdown-item" href="{{ route('parties.edit', $member->party->code) }}">Settings</a>
                                 @endif
                             </div>
@@ -138,6 +139,7 @@
                                 <a class="dropdown-item" href="{{ route('admin.dashboard') }}">Dashboard</a>
                                 <a class="dropdown-item" href="{{ route('admin.users.index') }}">Users</a>
                                 <a class="dropdown-item" href="{{ route('admin.settings.index') }}">Settings</a>
+                                <a class="dropdown-item" href="{{ route('admin.mods.edit') }}">Mods</a>
                                 <a class="dropdown-item" href="{{ route('pulse') }}">Pulse</a>
                                 <a class="dropdown-item" href="{{ route('horizon.index') }}">Horizon</a>
 

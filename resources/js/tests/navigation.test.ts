@@ -105,6 +105,7 @@ describe('buildNavigation', () => {
             'Web Player',
             'Flagged',
             'Moderation',
+            'Mods',
             'Settings',
         ]);
     });
@@ -117,7 +118,7 @@ describe('buildNavigation', () => {
     it('gates the admin menu on admin permission', () => {
         const admin = buildNavigation(makeProps({can: {admin: true}})).find((item) => item.key === 'admin');
 
-        expect(titles(admin?.children ?? [])).toEqual(['Dashboard', 'Users', 'Settings', 'Pulse', 'Horizon']);
+        expect(titles(admin?.children ?? [])).toEqual(['Dashboard', 'Users', 'Settings', 'Mods', 'Pulse', 'Horizon']);
         expect(titles(buildNavigation(makeProps({})))).not.toContain('Admin');
     });
 });

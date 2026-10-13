@@ -13,7 +13,7 @@ it('creates the whamageddon mod with its settings and defaults', function () {
     expect($mod->name)->toBe('Whamageddon')->and($mod->removed_at)->toBeNull();
 
     $expected = [
-        'spotify_id' => [SettingType::stString, '2FRnf9qhLbvw8fu4IBXx78', false],
+        'spotify_id' => [SettingType::stTrack, '2FRnf9qhLbvw8fu4IBXx78', false],
         'votes' => [SettingType::stInteger, 1, false],
         'fallback_name' => [SettingType::stString, 'Whamageddon', false],
         'css_classes' => [SettingType::stString, 'whamageddon', false],

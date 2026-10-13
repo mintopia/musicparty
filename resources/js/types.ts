@@ -157,3 +157,39 @@ export interface PlaybackState {
     deviceName: string | null;
     source: string;
 }
+
+export type ModSettingType =
+    | 'string'
+    | 'boolean'
+    | 'integer'
+    | 'float'
+    | 'datetime'
+    | 'track'
+    | 'time_of_day'
+    | 'secret';
+
+export interface ModSetting {
+    code: string;
+    name: string;
+    description: string;
+    type: ModSettingType;
+    value: unknown;
+    has_value: boolean;
+    default: unknown;
+    required: boolean;
+}
+
+export interface PartyMod {
+    code: string;
+    name: string;
+    description: string;
+    enabled: boolean;
+    settings: ModSetting[];
+}
+
+export interface AdminMod {
+    code: string;
+    name: string;
+    description: string;
+    settings: ModSetting[];
+}
