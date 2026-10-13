@@ -1,10 +1,6 @@
 // Design tokens. Defaults below equal Tabler's own values, so an unthemed page
 // looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
-//
-// Colour defaults live in --mp-default-* per theme scope and are resolved at the
-// consuming element via var(--mp-x, var(--mp-default-x)). Do not use the light-dark function:
-// Lightning CSS lowers it to custom properties that resolve once on :root, so a
-// [data-bs-theme=dark] scope would inherit the light value.
+// Avoid the light-dark function: Lightning CSS resolves it on :root, so dark scopes inherit light values.
 
 :root,
 :host {

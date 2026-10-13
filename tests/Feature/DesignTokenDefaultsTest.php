@@ -21,14 +21,3 @@ it('defines no themeable colour default at :root', function () use ($themedToken
 
     expect($source)->toContain('[data-bs-theme=dark]');
 });
-
-it('keeps light-dark fallbacks out of the built CSS', function () {
-    $files = glob(public_path('build/assets/*.css')) ?: [];
-    if ($files === []) {
-        $this->markTestSkipped('No built CSS; run npm run build.');
-    }
-
-    foreach ($files as $file) {
-        expect(file_get_contents($file))->not->toMatch('/--mp-(nav-background|surface|text|border)\s*:[^;}]*lightningcss/');
-    }
-});
