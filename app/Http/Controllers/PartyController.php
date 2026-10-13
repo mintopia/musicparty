@@ -5,12 +5,10 @@ namespace App\Http\Controllers;
 use App\Enums\Purpose;
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
-use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\TrackAnnotationResource;
 use App\Http\Resources\V1\UpcomingSongResource;
-use App\Jobs\PartyPlayYouTubeVideo;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -99,34 +97,15 @@ class PartyController extends Controller
         ]);
     }
 
-    public function tv(Party $party): View
+    public function tv(Party $party): Response
     {
-        return view('parties.tv', [
-            'party' => $party,
-        ]);
-    }
-
-    public function youtube(Request $request, Party $party): View
-    {
-        return view('parties.youtube', [
-            'party' => $party,
-            'canManage' => $party->canBeManagedBy($request->user()),
-        ]);
-    }
-
-    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party): RedirectResponse
-    {
-        $videoId = $request->videoId();
-        PartyPlayYouTubeVideo::dispatch($party, (string) $videoId)->afterResponse();
-
-        return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
-            ->with('successMessage', 'Video requested');
-    }
-
-    public function ytplayer(Party $party): View
-    {
-        return view('parties.ytplayer', [
-            'party' => $party,
+        return Inertia::render('Parties/Tv', [
+            'party' => [
+                'code' => $party->code,
+                'name' => $party->name,
+                'url' => route('parties.show', $party->code),
+            ],
+            'state' => fn () => $party->getState(),
         ]);
     }
 

@@ -1,9 +1,9 @@
 <template>
     <div class="player p-0 vh-100 w-100 bg-black text-white">
-        <div class="blur-bg p-3 vh-100 w-100" v-bind:style="getBackgroundImageStyle()">
+        <div class="blur-bg p-3 vh-100 w-100" v-bind:style="backgroundStyle">
             <h1 class="d-flex mb-5">
                 <div class="col">
-                    <template v-if="state !== null">{{ state.name }}</template>
+                    {{ state.name }}
                 </div>
                 <div class="col-auto text-end">
                     {{ code }}
@@ -11,7 +11,7 @@
             </h1>
             <div class="container-fluid d-flex">
                 <div class="col-xl-8 offset-xl-2 mt-auto">
-                    <template v-if="state && state.now !== null">
+                    <template v-if="state.now !== null">
                         <div class="row">
                             <div class="col-auto">
                                 <img class="albumart" v-bind:src="state.now.album.image_url" />
@@ -35,20 +35,20 @@
                                     "
                                 >
                                     <i class="icon-lg ti ti-music-question fs-1"></i>
-                                    <template v-if="state.current.user !== null">
-                                        Requested by {{ state.current.user }}
+                                    <template v-if="state.current?.user != null">
+                                        Requested by {{ state.current?.user }}
                                     </template>
                                     <template v-else> Fallback Track </template>
                                 </div>
                                 <div class="pb-3 overflow-hidden">
                                     <i class="icon-lg fs-1 ti ti-heart"></i>
-                                    {{ state.current.rating }}
+                                    {{ state.current?.rating }}
                                 </div>
                                 <div class="progress">
                                     <div
                                         class="progress-bar smooth-progress-bar"
                                         role="progressbar"
-                                        v-bind:style="`width: ${progress}%;`"
+                                        v-bind:style="`width: ${progressPercent}%;`"
                                     ></div>
                                 </div>
                                 <div class="d-flex">
@@ -106,7 +106,7 @@
                     </template>
                 </div>
             </div>
-            <div class="qr" v-if="state && state.show_qrcode">
+            <div class="qr" v-if="state.show_qrcode">
                 <img v-bind:src="qrCodeUrl" />
             </div>
         </div>
@@ -154,109 +154,53 @@ img.albumart-small {
     font-size: 2rem !important;
 }
 </style>
-<script lang="ts">
-import {defineComponent} from 'vue';
-import type {LegacyArtist, LegacyTvPartyState} from '../types';
-import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '../lib/decoration';
+<script setup lang="ts">
+import {computed} from 'vue';
+import {formatClock, useProgress} from '@/composables/useProgress';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
+import type {LegacyArtist, LegacyTvPartyState, PlaybackState} from '@/types';
 
-export default defineComponent({
-    props: {
-        code: {type: String},
-        partyurl: {type: String},
-        initialstate: {type: String, required: true},
-    },
-    data() {
-        return {
-            state: null as LegacyTvPartyState | null,
-            currentTime: '' as string,
-            endTime: '' as string,
-            progress: '' as string | number,
-            startedAt: null as number | null,
-            intervalId: null as ReturnType<typeof setInterval> | null,
-            qrCodeUrl: null as unknown as string | undefined,
-        };
-    },
+const props = defineProps<{
+    code: string;
+    partyUrl: string;
+    state: LegacyTvPartyState;
+}>();
 
-    methods: {
-        legacyRowClasses,
-        legacyAccentStyle,
-        legacyFallbackName,
-        updateState(state: LegacyTvPartyState): void {
-            this.state = state;
-            this.updateProgressBar();
-        },
+const isPlaying = computed(() => props.state.status?.isPlaying === true);
 
-        formatMs(ms: number): string {
-            const mins = Math.floor(ms / 60000);
-            const seconds = Math.floor((ms % 60000) / 1000).toFixed(0);
-            return mins + ':' + (Number(seconds) < 10 ? '0' : '') + seconds;
-        },
+const playback = computed<PlaybackState | null>(() => {
+    const status = props.state.status;
+    if (!status || !status.isPlaying) {
+        return null;
+    }
 
-        isPlaying(): boolean {
-            if (this.state === null || this.state.status === null || this.state.status.isPlaying === false) {
-                return false;
-            }
-            return true;
-        },
-
-        getBackgroundImageStyle(): string {
-            if (this.state === null || this.state.now === null) {
-                return '';
-            }
-            return `background-image: url('${this.state.now.album.image_url}');`;
-        },
-
-        updateProgressBar(): void {
-            if (this.isPlaying()) {
-                const status = this.state!.status!;
-                this.startedAt = new Date(status.sampledAt).getTime() - status.progressMs;
-                this.endTime = this.formatMs(status.length);
-                this.moveProgressBar();
-                if (this.intervalId === null) {
-                    this.intervalId = setInterval(this.moveProgressBar, 1000);
-                }
-            } else {
-                this.progress = 0;
-                this.currentTime = '';
-                this.endTime = '';
-                this.startedAt = null;
-                if (this.intervalId !== null) {
-                    clearInterval(this.intervalId);
-                }
-            }
-        },
-
-        moveProgressBar(): void {
-            if (!this.isPlaying() || this.startedAt === null) {
-                return;
-            }
-
-            const length = this.state!.status!.length;
-            const progress = new Date().getTime() - this.startedAt;
-            this.progress = Math.min((progress / length) * 100, 100);
-            this.currentTime = this.formatMs(Math.min(progress, length));
-        },
-
-        combineArtists(artists: LegacyArtist[]): string {
-            return artists.map((artist) => artist.name).join(', ');
-        },
-    },
-
-    mounted() {
-        this.updateState(JSON.parse(this.initialstate) as LegacyTvPartyState);
-        let channel = `party.${this.code}`;
-        this.qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${this.partyurl}`;
-        window.Echo.channel(channel).listen('Party\\UpdatedEvent', (payload: LegacyTvPartyState) => {
-            this.updateState(payload);
-        });
-    },
-
-    created() {},
-
-    beforeDestroy() {
-        if (this.intervalId !== null) {
-            clearInterval(this.intervalId);
-        }
-    },
+    return {
+        isPlaying: true,
+        trackId: null,
+        linkedFromId: null,
+        durationMs: status.length,
+        progressMs: status.progressMs,
+        sampledAt: status.sampledAt,
+        shuffle: false,
+        repeat: 'off',
+        deviceId: null,
+        deviceName: null,
+        source: 'tv',
+    };
 });
+
+const {progressMs, progressPercent} = useProgress(playback);
+
+const currentTime = computed(() => (isPlaying.value ? formatClock(progressMs.value) : ''));
+const endTime = computed(() => (isPlaying.value ? formatClock(props.state.status!.length) : ''));
+
+const backgroundStyle = computed(() =>
+    props.state.now === null ? '' : `background-image: url('${props.state.now.album.image_url}');`,
+);
+
+const qrCodeUrl = computed(() => `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${props.partyUrl}`);
+
+function combineArtists(artists: LegacyArtist[]): string {
+    return artists.map((artist) => artist.name).join(', ');
+}
 </script>

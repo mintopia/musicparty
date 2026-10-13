@@ -141,7 +141,7 @@ export interface LegacyTvPartyState {
     name: string;
     now: LegacyTvTrack | null;
     next: LegacyTvTrack | null;
-    current: LegacyTvCurrent;
+    current: LegacyTvCurrent | null;
     status: LegacyPlaybackStatus | null;
     show_qrcode: boolean;
 }

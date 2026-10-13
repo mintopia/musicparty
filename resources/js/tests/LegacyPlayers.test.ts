@@ -71,15 +71,15 @@ describe('legacy decoration rendering', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyurl: 'x',
-                initialstate: JSON.stringify({
+                partyUrl: 'x',
+                state: {
                     name: 'P',
                     now: track(),
                     next: track({decoration}),
                     current: {id: 1, provider_track_id: 't1', user: null, rating: 0},
                     status: null,
                     show_qrcode: false,
-                }),
+                },
             },
         });
 
@@ -103,8 +103,8 @@ describe('TvPlayer progress', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyurl: 'x',
-                initialstate: JSON.stringify({
+                partyUrl: 'x',
+                state: {
                     name: 'P',
                     now: track(),
                     next: null,
@@ -116,7 +116,7 @@ describe('TvPlayer progress', () => {
                         length: 200000,
                     },
                     show_qrcode: false,
-                }),
+                },
             },
         });
 
@@ -157,20 +157,5 @@ describe('legacy player channel subscriptions', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Pushed Song');
-    });
-
-    it('subscribes the TV player to party.{code}', () => {
-        const channel = vi.fn(() => ({listen: () => {}}));
-        (window as unknown as {Echo: unknown}).Echo = {channel, private: vi.fn()};
-
-        mount(TvPlayer, {
-            props: {
-                code: 'ABC',
-                partyurl: 'x',
-                initialstate: JSON.stringify({name: 'P', now: track(), next: track(), current: {id: 1, provider_track_id: 't1', user: null, rating: 0}, status: null}),
-            },
-        });
-
-        expect(channel).toHaveBeenCalledWith('party.ABC');
     });
 });
