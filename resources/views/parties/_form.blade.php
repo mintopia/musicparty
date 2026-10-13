@@ -211,7 +211,7 @@
                 @if ($setting->type === \App\Enums\SettingType::stBoolean)
                     <label class="form-check form-switch">
                         <input type="checkbox" class="form-check-input" name="mods_{{ $mod->code }}_{{ $setting->code }}" value="1"
-                               @if(old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code))) checked @endif>
+                               @if(old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code))) checked @endif>
                         {{ $setting->name }}
                     </label>
                     @if ($setting->description)
@@ -224,7 +224,7 @@
                     <label class="form-label required">{{ $setting->name }}</label>
                     <div>
                         <input type="text" name="mods_{{ $mod->code }}_{{ $setting->code }}" class="form-control @error("mods_{$mod->code}_{$setting->code}") is-invalid @enderror"
-                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code) ?? '') }}">
+                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", app(\App\Services\ModSettingsStore::class)->value($party, $mod, $setting->code) ?? '') }}">
                         @if ($setting->description)
                             <small class="form-hint">{{ $setting->description }}</small>
                         @endif
