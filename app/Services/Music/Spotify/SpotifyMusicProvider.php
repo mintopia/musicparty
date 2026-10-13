@@ -24,7 +24,7 @@ use stdClass;
 
 class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 {
-    private const BROWSE_CACHE_SECONDS = 3600;
+    private const int BROWSE_CACHE_SECONDS = 3600;
 
     public function __construct(
         protected SpotifyGateway $gateway,

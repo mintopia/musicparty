@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Cache;
 
 class UpcomingSongController extends Controller
 {
-    private const REQUEST_LOCK_SECONDS = 30;
+    private const int REQUEST_LOCK_SECONDS = 30;
 
     public function __construct()
     {

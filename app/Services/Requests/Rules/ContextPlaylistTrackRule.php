@@ -9,7 +9,7 @@ use App\Services\Requests\RequestRule;
 
 final class ContextPlaylistTrackRule implements RequestRule
 {
-    public const TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
+    public const string TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
 
     public function decide(RequestContext $context, Track $track): RequestDecision
     {

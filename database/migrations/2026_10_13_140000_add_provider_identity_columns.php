@@ -10,7 +10,7 @@ return new class extends Migration
     public int $chunkSize = 1000;
 
     /** @var array<string, string> */
-    private const TABLES = [
+    private const array TABLES = [
         'songs' => 'provider_track_id',
         'albums' => 'provider_album_id',
         'artists' => 'provider_artist_id',

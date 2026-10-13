@@ -17,7 +17,7 @@ class ModSettingsStore
     {
         $setting = $this->find($party, $mod, $code);
 
-        return $setting !== null ? $setting->value : $default;
+        return $setting->value ?? $default;
     }
 
     public function find(Party $party, Mod|string $mod, string $code): ?PartyModSetting

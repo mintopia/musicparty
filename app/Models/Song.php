@@ -129,7 +129,7 @@ class Song extends Model
             return $song;
         }
         $album = Album::fromSpotify($track->album);
-        $artists = array_map(fn (stdClass $trackArtist) => Artist::fromSpotify($trackArtist), $track->artists);
+        $artists = array_map(Artist::fromSpotify(...), $track->artists);
 
         try {
             return DB::transaction(function () use ($track, $album, $artists): Song {

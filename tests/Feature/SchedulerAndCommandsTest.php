@@ -94,7 +94,7 @@ it('party:fallback dispatches updates for active polling parties never updated o
     $this->artisan('party:fallback')->assertSuccessful();
 
     Queue::assertPushed(PartyUpdate::class, 2);
-    $pushed = Queue::pushed(PartyUpdate::class)->map(fn (PartyUpdate $job) => (new ReflectionProperty($job, 'party'))->getValue($job)->id);
+    $pushed = Queue::pushed(PartyUpdate::class)->map(fn (PartyUpdate $job) => new ReflectionProperty($job, 'party')->getValue($job)->id);
     expect($pushed->all())->toEqualCanonicalizing([$never->id, $stale->id]);
 });
 

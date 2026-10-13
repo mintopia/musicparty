@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Cache;
 
 class PlaybackStatus
 {
-    private const TTL_SECONDS = 86400;
+    private const int TTL_SECONDS = 86400;
 
     public function remember(Party $party, PlaybackState $state): void
     {

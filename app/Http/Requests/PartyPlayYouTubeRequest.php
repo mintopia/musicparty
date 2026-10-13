@@ -8,7 +8,7 @@ use Illuminate\Validation\Validator;
 
 class PartyPlayYouTubeRequest extends FormRequest
 {
-    private const HOSTS = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
+    private const array HOSTS = ['youtube.com', 'www.youtube.com', 'm.youtube.com', 'youtu.be'];
 
     /**
      * @return array<string, array<int, string>>

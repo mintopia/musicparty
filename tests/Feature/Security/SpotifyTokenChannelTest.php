@@ -15,7 +15,7 @@ function tokenChannelAuthorises(User $user, int $channelUserId): bool
 it('broadcasts the token update on a private channel for the owning user', function () {
     $user = User::factory()->create();
 
-    $channels = (new SpotifyAccessTokenUpdatedEvent($user, 'secret'))->broadcastOn();
+    $channels = new SpotifyAccessTokenUpdatedEvent($user, 'secret')->broadcastOn();
 
     expect($channels)->toHaveCount(1)
         ->and($channels[0])->toBeInstanceOf(PrivateChannel::class)

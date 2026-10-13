@@ -13,7 +13,7 @@ use SpotifyWebAPI\SpotifyWebAPIException;
  */
 class BackoffRequest extends Request
 {
-    private const DEFAULT_RETRY_AFTER = 1;
+    private const int DEFAULT_RETRY_AFTER = 1;
 
     /**
      * @param  array<string, mixed>  $options

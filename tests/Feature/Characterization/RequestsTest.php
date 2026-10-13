@@ -700,7 +700,7 @@ describe('Request store lock', function () {
 
             public function __construct(private string $lockKey) {}
 
-            public function getTrack(string $trackId, array|object $options = []): array|object
+            public function getTrack(string $trackId, array|object $options = []): object
             {
                 $this->lockHeldDuringFetch = ! Cache::lock($this->lockKey, 5)->get();
 

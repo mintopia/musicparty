@@ -28,7 +28,7 @@ class PartyController extends Controller
 
         try {
             $control->perform($party, (string) $request->input('action'), $request->deviceId ?? null);
-        } catch (NoActiveDeviceException $ex) {
+        } catch (NoActiveDeviceException) {
             abort(409, 'No active playback device. Open Spotify on a device or pick one and try again.');
         }
 
