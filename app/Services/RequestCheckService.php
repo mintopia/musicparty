@@ -197,7 +197,7 @@ class RequestCheckService
         $output = [];
 
         $existing = $this->party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($names, $artists) {
-            $query->whereIn('name', array_keys($names));
+            $query->whereIn('name', $names);
             $query->whereHas('artists', function ($query) use ($artists) {
                 $query->whereIn('name', $artists);
             });
