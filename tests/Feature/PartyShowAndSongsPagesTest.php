@@ -84,3 +84,8 @@ it('forbids non-managers from the songs pages', function () {
     $this->actingAs($this->member->user)->get(route('parties.songs.index', $this->party->code))->assertForbidden();
     $this->actingAs($this->member->user)->get(route('parties.songs.show', [$this->party->code, $this->upcoming->id]))->assertForbidden();
 });
+
+it('does not serve the show page or songs pages to guests', function () {
+    $this->get(route('parties.show', $this->party->code))->assertRedirect();
+    $this->get(route('parties.songs.index', $this->party->code))->assertRedirect();
+});
