@@ -99,7 +99,7 @@ class PartyController extends Controller
                 'canManage' => $canManage,
                 'weighted' => (bool) $party->weighted,
             ],
-            'member' => $member ? ['id' => $member->id] : null,
+            'member' => ['id' => $member->id],
             'upcoming' => $upcoming->values()->all(),
             'timezone' => app(PartyTimezone::class)->for($party),
             'spotifyNeedsRelink' => $canManage && app(MusicProviderFactory::class)->partyNeedsRelink($party),
