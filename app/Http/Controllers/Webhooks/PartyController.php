@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Webhooks\PartyLibrespotRequest;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
+use App\Services\PlaybackSync;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Log;
 
@@ -42,7 +43,7 @@ class PartyController extends Controller
             }
         } else {
             Log::debug("{$party}: Updating party directly from webhook");
-            $party->updateState();
+            app(PlaybackSync::class)->sync($party);
         }
 
         return response()->noContent();

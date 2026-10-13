@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Traits\ToString;
+use App\Services\Music\Data\AlbumRef;
 use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Track;
 use Database\Factories\SongFactory;
@@ -89,6 +90,20 @@ class Song extends Model
     public function artists(): BelongsToMany
     {
         return $this->belongsToMany(Artist::class)->withTimestamps();
+    }
+
+    public function toTrack(): Track
+    {
+        return new Track(
+            providerId: 'spotify',
+            id: $this->spotify_id,
+            name: $this->name,
+            durationMs: (int) $this->length,
+            explicit: false,
+            isPlayable: true,
+            album: new AlbumRef(id: $this->album->spotify_id, name: $this->album->name, imageUrl: $this->album->image_url),
+            artists: array_values($this->artists->map(fn (Artist $artist): ArtistRef => new ArtistRef(id: $artist->spotify_id, name: $artist->name))->all()),
+        );
     }
 
     public static function fromTrack(Track $track): Song

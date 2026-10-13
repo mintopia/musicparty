@@ -6,6 +6,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
 use SpotifyWebAPI\SpotifyWebAPI;
@@ -16,30 +17,30 @@ beforeEach(function () {
     $this->fake = FakeSpotify::install();
     $this->party = Party::factory()->create(['active' => true, 'poll' => true, 'backup_playlist_id' => 'BACKUP']);
     $this->party->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
-    $this->fake->calls = [];
+    $this->provider = app(FakeMusicProvider::class);
 });
 
 it('skips the sync when another caller holds the per-Party lock', function () {
     $lock = Cache::lock("party-sync:{$this->party->id}", 30);
     expect($lock->get())->toBeTrue();
 
-    expect($this->party->tryUpdateState())->toBeFalse()
-        ->and($this->fake->callsTo('getMyCurrentPlaybackInfo'))->toBe([]);
+    expect(app(PlaybackSync::class)->sync($this->party))->toBeFalse()
+        ->and($this->provider->callsTo('currentPlayback'))->toBe([]);
 
     $lock->release();
-    expect($this->party->tryUpdateState())->toBeTrue()
-        ->and($this->fake->callsTo('getMyCurrentPlaybackInfo'))->not->toBe([]);
+    expect(app(PlaybackSync::class)->sync($this->party))->toBeTrue()
+        ->and($this->provider->callsTo('currentPlayback'))->not->toBe([]);
 });
 
 it('runs the sync when overlap prevention is disabled', function () {
     config(['musicparty.prevent_overlapping_updates' => false]);
     Cache::lock("party-sync:{$this->party->id}", 30)->get();
 
-    expect($this->party->tryUpdateState())->toBeTrue();
+    expect(app(PlaybackSync::class)->sync($this->party))->toBeTrue();
 });
 
 it('releases the lock after a sync', function () {
-    $this->party->updateState();
+    app(PlaybackSync::class)->sync($this->party);
 
     expect(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
 });
@@ -53,7 +54,7 @@ it('releases a queued job back onto the queue while the lock is held', function 
     $job->setJob($queueJob);
     $job->handle();
 
-    expect($this->fake->callsTo('getMyCurrentPlaybackInfo'))->toBe([]);
+    expect($this->provider->callsTo('currentPlayback'))->toBe([]);
 });
 
 it('records the attempt time and releases the lock when a sync throws', function () {
@@ -67,7 +68,7 @@ it('records the attempt time and releases the lock when a sync throws', function
     $before = $this->party->last_updated_at;
     $party = Party::findOrFail($this->party->id);
 
-    expect(fn () => $party->tryUpdateState())->toThrow(RuntimeException::class);
+    expect(fn () => app(PlaybackSync::class)->sync($party))->toThrow(RuntimeException::class);
 
     expect($this->party->fresh()->last_updated_at->gt($before))->toBeTrue()
         ->and(Cache::lock("party-sync:{$this->party->id}", 30)->get())->toBeTrue();
@@ -93,21 +94,21 @@ it('sends exactly one track when a concurrent sync races the Send to Player', fu
 
         public function sendToPlayer(Track $track): void
         {
-            $this->racerResults[] = $this->racer->tryUpdateState();
+            $this->racerResults[] = app(PlaybackSync::class)->sync($this->racer);
             parent::sendToPlayer($track);
         }
     };
     app()->forgetInstance(FakeMusicProvider::class);
     app()->scoped(FakeMusicProvider::class, fn () => $fake);
 
-    expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue();
+    expect(app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id)))->toBeTrue();
 
     expect($fake->callsTo('sendToPlayer'))->toHaveCount(1)
         ->and($racerResults)->toBe([false])
         ->and($upcoming->fresh()->queued_at)->not->toBeNull();
 
     Party::findOrFail($this->party->id)->forceFill(['last_updated_at' => now()->subMinute()])->saveQuietly();
-    expect(Party::findOrFail($this->party->id)->tryUpdateState())->toBeTrue()
+    expect(app(PlaybackSync::class)->sync(Party::findOrFail($this->party->id)))->toBeTrue()
         ->and($fake->callsTo('sendToPlayer'))->toHaveCount(1);
 });
 
@@ -157,5 +158,5 @@ it('releases a retry back to the queue while a sync holds the lock', function ()
     $job = (new PartyUpdate($this->party))->setJob($queueJob);
     $job->handle();
 
-    expect($this->fake->callsTo('getMyCurrentPlaybackInfo'))->toBe([]);
+    expect($this->provider->callsTo('currentPlayback'))->toBe([]);
 });

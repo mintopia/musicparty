@@ -9,6 +9,7 @@ use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PlaybackSync;
 use App\Services\QueueSelector;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Support\Carbon;
@@ -39,6 +40,11 @@ function waitingRequest(Party $party, string $spotifyId, int $score = 0, array $
         'score' => $score,
         'queued_at' => null,
     ], $attributes));
+}
+
+function runSync(Party $party): void
+{
+    app(PlaybackSync::class)->sync($party);
 }
 
 function seedRandomness(int $seed): void
@@ -72,7 +78,7 @@ it('sends the highest scored waiting request first when not weighted, ties broke
     waitingRequest($party, 'TIEA', 5, ['created_at' => now()->subMinutes(8)]);
     waitingRequest($party, 'TOP', 9, ['created_at' => now()->subMinutes(1)]);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['TOP', 'TIEA']);
 });
@@ -81,7 +87,7 @@ it('sends the bare Spotify track id to the queue endpoint and stamps queued_at o
     [$party, $fake] = selectionParty();
     $request = waitingRequest($party, 'ONE');
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['ONE'])
         ->and($request->fresh()->queued_at->toDateTimeString())->toBe(now()->toDateTimeString());
@@ -90,7 +96,7 @@ it('sends the bare Spotify track id to the queue endpoint and stamps queued_at o
 it('sends nothing and does not call queue when there are no waiting requests', function () {
     [$party, $fake] = selectionParty();
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe([]);
 });
@@ -100,7 +106,7 @@ it('does not resend a Request that already has queued_at set', function () {
     waitingRequest($party, 'DONE', 9, ['queued_at' => now()->subMinute()]);
     waitingRequest($party, 'WAIT', 1);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['WAIT']);
 });
@@ -110,7 +116,7 @@ it('also sends requests with a zero or negative score when not weighted', functi
     waitingRequest($party, 'NEG', -3);
     waitingRequest($party, 'ZERO', 0);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['ZERO', 'NEG']);
 });
@@ -120,7 +126,7 @@ it('excludes a future not_before and includes a past one on the non-weighted pat
     waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
     waitingRequest($party, 'PAST', 1, ['not_before' => '2020-01-01 00:00:00']);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['PAST']);
 });
@@ -129,7 +135,7 @@ it('does nothing when the party is inactive', function () {
     [$party, $fake] = selectionParty(['active' => false]);
     waitingRequest($party, 'ONE');
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe([])
         ->and($fake->callsTo('getMyQueue'))->toBe([]);
@@ -141,7 +147,7 @@ it('sends two requests when the Spotify queue is empty because QUEUE_LENGTH minu
     waitingRequest($party, 'B', 2);
     waitingRequest($party, 'C', 1);
 
-    $party->updateState();
+    runSync($party);
 
     expect(QueueSelector::QUEUE_LENGTH)->toBe(1)
         ->and(sentIds($fake))->toBe(['A', 'B']);
@@ -153,7 +159,7 @@ it('sends one request when the Spotify queue holds exactly one unique track', fu
     waitingRequest($party, 'A', 3);
     waitingRequest($party, 'B', 2);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['A']);
 });
@@ -164,7 +170,7 @@ it('treats a queue that repeats its context as empty-ish and counts only unique 
     waitingRequest($party, 'A', 3);
     waitingRequest($party, 'B', 2);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['A']);
 });
@@ -174,7 +180,7 @@ it('sends nothing when the Spotify queue already holds two unique tracks', funct
     queueWith($fake, ['X', 'Y', 'X', 'Y']);
     waitingRequest($party, 'A', 3);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe([])
         ->and(UpcomingSong::query()->whereNotNull('queued_at')->count())->toBe(0);
@@ -185,7 +191,7 @@ it('does not de-duplicate a waiting request against tracks already in the Spotif
     queueWith($fake, ['A']);
     waitingRequest($party, 'A', 3);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['A']);
 });
@@ -195,7 +201,7 @@ it('adds each sent track to the history playlist when one is configured', functi
     waitingRequest($party, 'A', 3);
     waitingRequest($party, 'B', 2);
 
-    $party->updateState();
+    runSync($party);
 
     expect(array_map(fn (array $call) => [$call[0], array_map(fn (Track $track) => $track->id, $call[1])], app(FakeMusicProvider::class)->callsTo('appendToPlaylist')))
         ->toBe([['HIST', ['A']], ['HIST', ['B']]]);
@@ -205,7 +211,7 @@ it('does not touch a history playlist when none is configured', function () {
     [$party, $fake] = selectionParty();
     waitingRequest($party, 'A');
 
-    $party->updateState();
+    runSync($party);
 
     expect(app(FakeMusicProvider::class)->callsTo('appendToPlaylist'))->toBe([]);
 });
@@ -217,8 +223,8 @@ it('sends another waiting request on every run while Spotify still reports an em
     waitingRequest($party, 'C', 3);
     waitingRequest($party, 'D', 2);
 
-    $party->updateState();
-    $party->updateState();
+    runSync($party);
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['A', 'B', 'C', 'D']);
 });
@@ -228,7 +234,7 @@ it('reads the stored score column and ignores score_adjustment until updateScore
     waitingRequest($party, 'PLAIN', 1);
     waitingRequest($party, 'ADJUSTED', 0, ['score_adjustment' => 10]);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['PLAIN', 'ADJUSTED']);
 });
@@ -245,7 +251,7 @@ it('derives the score from votes plus score_adjustment in updateScore and then p
     expect($adjusted->fresh()->score)->toBe(8)
         ->and($plain->fresh()->score)->toBe(0);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['ADJUSTED', 'PLAIN']);
 });
@@ -259,7 +265,7 @@ it('binds a datetime rather than the string NOW() when comparing not_before (E5 
         $queries[] = ['sql' => $query->sql, 'bindings' => $query->bindings];
     });
 
-    $party->updateState();
+    runSync($party);
 
     $matching = array_filter($queries, fn (array $q) => str_contains($q['sql'], 'not_before" <= ?'));
     expect($matching)->not->toBeEmpty()
@@ -271,7 +277,7 @@ it('treats a past not_before as eligible in the weighted pass', function () {
     waitingRequest($party, 'PAST', 5, ['not_before' => '2020-01-01 00:00:00']);
     seedRandomness(1);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['PAST']);
 });
@@ -281,7 +287,7 @@ it('excludes a future not_before from the weighted pass and its fallback (E5 R10
     waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
     seedRandomness(1);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe([]);
 });
@@ -300,7 +306,7 @@ it('excludes zero and negative scored requests from the weighted draw and fills 
     waitingRequest($party, 'POS', 3, ['created_at' => now()->subMinutes(1)]);
     seedRandomness(7);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['POS', 'ZERO']);
 });
@@ -312,7 +318,7 @@ it('weights the draw by score with exact results for a seeded randomizer', funct
     }
     seedRandomness($seed);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe($expected);
 })->with([
@@ -333,7 +339,7 @@ it('weighted draw is repeatable: the same seed yields the same sends', function 
             waitingRequest($party, $id, $score);
         }
         seedRandomness(99);
-        $party->updateState();
+        runSync($party);
         $runs[] = sentIds($fake);
     }
 
@@ -346,7 +352,7 @@ it('fills a short weighted draw from the remaining requests ordered by score, cr
     waitingRequest($party, 'FILL', 0);
     seedRandomness(5);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['ONLY', 'FILL']);
 });
@@ -356,14 +362,14 @@ it('tops up to five waiting requests from the Fallback Playlist after sending, s
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']);
     seedRandomness(11);
 
-    $party->updateState();
+    runSync($party);
 
     $waiting = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect(sentIds($fake))->toBe([])
         ->and($waiting)->toHaveCount(Party::MINIMUM_UPCOMING)
         ->and($waiting->pluck('song.spotify_id')->all())->toBe(['F7', 'F2', 'F3', 'F6', 'F1']);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds($fake))->toBe(['F7', 'F2']);
 });
@@ -375,7 +381,7 @@ it('tops up after sending, so a freshly sent request counts as recently queued a
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
     seedRandomness(3);
 
-    $party->updateState();
+    runSync($party);
 
     $waiting = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect(sentIds($fake))->toBe(['F1', 'F2'])
@@ -390,7 +396,7 @@ it('tops up only the shortfall from the Fallback Playlist and never duplicates a
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
     seedRandomness(3);
 
-    $party->updateState();
+    runSync($party);
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->whereNull('user_id')->with('song')->get();
     expect($added)->toHaveCount(3)
@@ -406,7 +412,7 @@ it('does not top up when five or more requests are already waiting', function ()
     queueWith($fake, ['X', 'Y']);
     FakeFallbackPlaylist::seed(['F1', 'F2']);
 
-    $party->updateState();
+    runSync($party);
 
     expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toBe([])
         ->and(UpcomingSong::query()->count())->toBe(5);
@@ -420,7 +426,7 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     queueWith($fake, ['X', 'Y']);
     seedRandomness(2);
 
-    $party->updateState();
+    runSync($party);
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->whereNull('user_id')->with('song')->get();
     expect($added->pluck('song.spotify_id')->all())->toBe(['OLD']);
@@ -434,7 +440,7 @@ it('skips fallback entries that are not playable', function () {
     ]);
     seedRandomness(2);
 
-    $party->updateState();
+    runSync($party);
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->with('song')->get();
     expect($added->pluck('song.spotify_id')->all())->toBe(['GOOD']);
@@ -445,8 +451,8 @@ it('caches the fallback playlist for an hour so a second run does not refetch it
     FakeFallbackPlaylist::seed(['F1']);
     seedRandomness(2);
 
-    $party->updateState();
-    $party->updateState();
+    runSync($party);
+    runSync($party);
 
     expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toHaveCount(1);
 });
@@ -464,7 +470,7 @@ it('ranks by the overridable Effective Score rather than the stored score', func
         }
     });
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds())->toBe(['LOW']);
 });
@@ -475,7 +481,7 @@ it('keeps fallback_override as display metadata and does not affect selection', 
     waitingRequest($party, 'A', 1, ['fallback_override' => 'Mystery Gift']);
     waitingRequest($party, 'B', 5);
 
-    $party->updateState();
+    runSync($party);
 
     expect(sentIds())->toBe(['B']);
 });

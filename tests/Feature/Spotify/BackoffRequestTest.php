@@ -12,6 +12,7 @@ use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
+use App\Services\PlaybackSync;
 use App\Services\Spotify\BackoffRequest;
 use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
@@ -92,11 +93,10 @@ it('leaves non-429 exceptions untouched and sets no backoff', function () {
 });
 
 it('releases a party update job until the backoff expires', function () {
-    $party = Mockery::mock(Party::class)->makePartial();
-    $party->code = 'ABCD';
-    $party->poll = false;
-    $party->setRelation('user', User::factory()->create());
-    $party->shouldReceive('tryUpdateState')->andThrow(new SpotifyBackoffException(9));
+    $party = Party::factory()->create(['poll' => false]);
+    $sync = Mockery::mock(PlaybackSync::class);
+    $sync->shouldReceive('sync')->andThrow(new SpotifyBackoffException(9));
+    app()->instance(PlaybackSync::class, $sync);
 
     $queueJob = Mockery::mock(Job::class);
     $queueJob->shouldReceive('release')->once()->with(9);

@@ -19,4 +19,9 @@ final readonly class PlaybackState
         public ?string $deviceName,
         public PlaybackSource $source,
     ) {}
+
+    public static function idle(PlaybackSource $source): self
+    {
+        return new self(false, null, null, null, 0, CarbonImmutable::now(), false, 'off', null, null, $source);
+    }
 }
