@@ -33,7 +33,7 @@ function selectionParty(array $attributes = []): array
 
 function waitingRequest(Party $party, string $spotifyId, int $score = 0, array $attributes = []): UpcomingSong
 {
-    $song = Song::factory()->create(['spotify_id' => $spotifyId]);
+    $song = Song::factory()->create(['provider_track_id' => $spotifyId]);
 
     return UpcomingSong::factory()->for($party)->create(array_merge([
         'song_id' => $song->id,
@@ -367,7 +367,7 @@ it('tops up to five waiting requests from the Fallback Playlist after sending, s
     $waiting = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect(sentIds($fake))->toBe([])
         ->and($waiting)->toHaveCount(Party::MINIMUM_UPCOMING)
-        ->and($waiting->pluck('song.spotify_id')->all())->toBe(['F7', 'F2', 'F3', 'F6', 'F1']);
+        ->and($waiting->pluck('song.provider_track_id')->all())->toBe(['F7', 'F2', 'F3', 'F6', 'F1']);
 
     runSync($party);
 
@@ -385,7 +385,7 @@ it('tops up after sending, so a freshly sent request counts as recently queued a
 
     $waiting = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect(sentIds($fake))->toBe(['F1', 'F2'])
-        ->and($waiting->pluck('song.spotify_id')->sort()->values()->all())->toBe(['F3', 'F4', 'F5', 'F6']);
+        ->and($waiting->pluck('song.provider_track_id')->sort()->values()->all())->toBe(['F3', 'F4', 'F5', 'F6']);
 });
 
 it('tops up only the shortfall from the Fallback Playlist and never duplicates a waiting track', function () {
@@ -400,7 +400,7 @@ it('tops up only the shortfall from the Fallback Playlist and never duplicates a
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->whereNull('user_id')->with('song')->get();
     expect($added)->toHaveCount(3)
-        ->and($added->pluck('song.spotify_id')->intersect(['F1', 'F2'])->all())->toBe([])
+        ->and($added->pluck('song.provider_track_id')->intersect(['F1', 'F2'])->all())->toBe([])
         ->and(UpcomingSong::query()->where('party_id', $party->id)->count())->toBe(5);
 });
 
@@ -429,7 +429,7 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     runSync($party);
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->whereNull('user_id')->with('song')->get();
-    expect($added->pluck('song.spotify_id')->all())->toBe(['OLD']);
+    expect($added->pluck('song.provider_track_id')->all())->toBe(['OLD']);
 });
 
 it('skips fallback entries that are not playable', function () {
@@ -443,7 +443,7 @@ it('skips fallback entries that are not playable', function () {
     runSync($party);
 
     $added = UpcomingSong::query()->where('party_id', $party->id)->with('song')->get();
-    expect($added->pluck('song.spotify_id')->all())->toBe(['GOOD']);
+    expect($added->pluck('song.provider_track_id')->all())->toBe(['GOOD']);
 });
 
 it('caches the fallback playlist for an hour so a second run does not refetch it', function () {

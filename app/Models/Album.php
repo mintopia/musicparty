@@ -15,7 +15,6 @@ use stdClass;
 /**
  * @property int $id
  * @property string $name
- * @property string $spotify_id
  * @property string $provider_id
  * @property string $provider_album_id
  * @property string $image_url
@@ -65,7 +64,6 @@ class Album extends Model
             $album = new Album;
             $album->provider_id = 'spotify';
             $album->provider_album_id = $spotifyAlbum->id;
-            $album->spotify_id = $spotifyAlbum->id;
             $album->name = $spotifyAlbum->name;
             $album->image_url = $spotifyAlbum->images[0]->url;
             $album->save();

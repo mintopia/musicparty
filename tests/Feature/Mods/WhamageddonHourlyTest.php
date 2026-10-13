@@ -113,7 +113,7 @@ it('adds the song to the party when there is no upcoming song', function () {
     (new Whamageddon($party))->hourly();
 
     $upcoming = $party->upcoming()->sole();
-    expect($upcoming->song->spotify_id)->toBe(WhamageddonFixtures::TRACK_ID)
+    expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
         ->and($upcoming->score_adjustment)->toBe(0)
         ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($upcoming->id);
 });

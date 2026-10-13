@@ -17,7 +17,7 @@ it('adds the configured track to the party on enable', function () {
     (new Whamageddon($party))->enable();
 
     $upcoming = $party->upcoming()->sole();
-    expect($upcoming->song->spotify_id)->toBe(WhamageddonFixtures::TRACK_ID)
+    expect($upcoming->song->provider_track_id)->toBe(WhamageddonFixtures::TRACK_ID)
         ->and($upcoming->user_id)->toBeNull()
         ->and($upcoming->fallback_override)->toBe('Whamageddon')
         ->and($upcoming->css_classes)->toBe('whamageddon')

@@ -52,7 +52,7 @@ class WhamageddonFixtures
      */
     public static function upcoming(Party $party, array $attributes = [], bool $track = true): UpcomingSong
     {
-        $song = Song::whereSpotifyId(self::TRACK_ID)->first() ?? Song::factory()->create(['spotify_id' => self::TRACK_ID]);
+        $song = Song::where('provider_track_id', self::TRACK_ID)->first() ?? Song::factory()->create(['provider_track_id' => self::TRACK_ID]);
         $upcoming = UpcomingSong::factory()->waiting()->create(array_merge([
             'party_id' => $party->id,
             'song_id' => $song->id,

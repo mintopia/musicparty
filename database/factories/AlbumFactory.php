@@ -17,9 +17,8 @@ class AlbumFactory extends Factory
     {
         return [
             'name' => fake()->words(3, true),
-            'spotify_id' => fake()->unique()->regexify('[A-Za-z0-9]{22}'),
+            'provider_album_id' => fake()->unique()->regexify('[A-Za-z0-9]{22}'),
             'provider_id' => 'spotify',
-            'provider_album_id' => fn (array $attributes): string => $attributes['spotify_id'],
             'image_url' => fake()->imageUrl(),
         ];
     }

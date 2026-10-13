@@ -15,7 +15,6 @@ use stdClass;
 /**
  * @property int $id
  * @property string $name
- * @property string $spotify_id
  * @property string $provider_id
  * @property string $provider_artist_id
  * @property Carbon|null $created_at
@@ -63,7 +62,6 @@ class Artist extends Model
             $artist = new Artist;
             $artist->provider_id = 'spotify';
             $artist->provider_artist_id = $spotifyArtist->id;
-            $artist->spotify_id = $spotifyArtist->id;
             $artist->name = $spotifyArtist->name;
             $artist->save();
         } catch (UniqueConstraintViolationException) {

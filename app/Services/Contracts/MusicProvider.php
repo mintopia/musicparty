@@ -21,6 +21,11 @@ interface MusicProvider
     public function getTrack(string $id): ?Track;
 
     /**
+     * Like getTrack, but returns null for an id the provider rejects as malformed.
+     */
+    public function findTrack(string $id): ?Track;
+
+    /**
      * @param  list<string>  $ids
      * @return list<Track>
      */
