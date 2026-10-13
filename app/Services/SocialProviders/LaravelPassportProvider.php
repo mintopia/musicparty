@@ -7,9 +7,9 @@ use App\Exceptions\SocialProviderException;
 use App\Models\SocialProvider;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
-use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
 use SocialiteProviders\LaravelPassport\Provider;
 use SocialiteProviders\Manager\Config;
+use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
 
 class LaravelPassportProvider extends AbstractSocialProvider
 {

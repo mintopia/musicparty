@@ -7,9 +7,9 @@ use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Two\AbstractProvider;
-use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use SocialiteProviders\Manager\Config;
+use SocialiteProviders\Manager\OAuth2\AbstractProvider as ManagerProvider;
 use SocialiteProviders\Steam\Provider;
 
 class SteamProvider extends AbstractSocialProvider
