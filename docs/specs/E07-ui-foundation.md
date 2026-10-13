@@ -11,8 +11,9 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 
 - The UI is Blade plus six Vue 3 SFCs mounted into Blade with a global `createApp().mount('#app')` (`resources/js/app.js`). It is not Inertia, and no Inertia package is installed (facts-stack §1).
 - Tabler is `@tabler/core 1.0.0-beta20`, imported as SCSS source (`resources/sass/app.scss:1`), with a custom `tabler-icons.scss`.
-- Themes are rows in `themes` (`primary`, `nav_background`, `dark_mode`, `css`), and one theme is active instance-wide (`AppServiceProvider.php:33-38`). `partials/_theme.blade.php` hand-maps two colours onto a handful of `--tblr-*` variables. It still styles `.seating-plan` classes from another project, and it injects `{!! $currentTheme->css !!}` raw. There are no real design tokens.
-- Reverb config is injected as `window.pusherConfig` from `env('VITE_REVERB_*')` inside Blade (`layouts/app.blade.php:9-13`), which breaks under `config:cache` (facts §4). After E4 the browser connects to the app's own origin.
+- Themes are rows in `themes` (`primary`, `nav_background`, `dark_mode`, `css`), and one theme is active instance-wide. A view composer in `AppServiceProvider` resolves it with an uncached query on every view render. `partials/_theme.blade.php` hand-maps two colours onto a handful of `--tblr-*` variables. It still references `seat_*` columns that do not exist (from another project's seating plan), and it injects `{!! $currentTheme->css !!}` raw. There are no real design tokens.
+- Reverb client config is already read from `config()` (`partials/_pusher-config.blade.php`), and Echo connects to the page's own origin (E4, ADR 0004). The new UI needs only a typed `useEcho` over the same config.
+- The Search page sends a Spotify-shaped legacy array (`TrackAnnotation::toSearchResult()`) to `SearchResult.vue`, which posts to hard-coded API URLs.
 - The navigation (`layouts/app.blade.php:33-145`) is a dark vertical navbar with a per-Party dropdown (Queue, Search, Songs, Users, TV Mode, YouTube Player, Web Player, Moderation, Settings) and an admin dropdown. The v2 look must be kept (project memory: v3 UI must match v2).
 - Known Vue 3 defects in the existing components: `beforeDestroy` instead of `beforeUnmount`, and `intervalId` never reset (`Player.vue:169-171`, `TvPlayer.vue:59-61`). These are E8/E9 concerns, but the shared composables must not repeat them.
 
@@ -57,7 +58,7 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 7. **R7 Custom stylesheet safety.** Admins still supply arbitrary CSS. It is served as `text/css` from the R6 route, never inlined in HTML, so it cannot break out of a `<style>` tag.
 8. **R8 Layout.** `AppLayout.vue` with sidebar nav, Party dropdown (manager-only links gated on `canManage`), admin dropdown (Dashboard, Users, Settings, Pulse, Horizon; Telescope is gone after E3), Profile, Logout and impersonation banner. It has page title and breadcrumb slots. A `GuestLayout.vue` covers login. A `BareLayout.vue` covers TV, YouTube player and popup pages, for E8.
 9. **R9 Shared kit** (`resources/js/Components`, `resources/js/Composables`):
-   - `TrackRow`: album art, name, artists, duration, explicit badge, an in-Queue state with Score and Vote, and a request button with allowed/reason. It is ported from `SearchResult.vue` and accepts the E6 `Track` + `TrackEligibility` shape. Album and artist names render as links when the caller passes a route; E8 fills these in.
+   - `TrackRow`: album art, name, artists, duration, explicit badge, an in-Queue state with Score and Vote, and a request button with allowed/reason. It is ported from `SearchResult.vue` and accepts the E6 `TrackAnnotation` (a `Track` plus its eligibility, as produced by `TrackEligibility`) via a JSON resource, not the legacy `toSearchResult()` array. Album and artist names render as links when the caller passes a route; E8 fills these in.
    - `TrackRow` also has a decoration slot (display name override, label, CSS class, accent) for mod decorations, a "needs approval" state for a track that would be flagged, and an "awaiting approval" state for the member's own Flagged Request, with a withdraw action. E8 wires these to real data.
    - `TrackList` (paginated), `Pagination`, `EmptyState`, `ConfirmDialog` and `Toast`/flash.
    - `useEcho()`: one Echo instance built from the shared config, with private and public channel helpers that unsubscribe in `onBeforeUnmount`, and a reconnect callback hook for state resync.
@@ -88,14 +89,16 @@ Goal: deliver the Inertia + Vue 3 shell, the latest stable Tabler and a design-t
 
 ## Suggested ticket slices
 
-1. **E7-1** Install Inertia, TypeScript and Wayfinder, Vite entry points, root view and middleware with shared props, ADR (R1-R3, R11, R13 tooling). blocked_by: none.
-2. **E7-2** Tabler upgrade and Blade visual fixes (R4). blocked_by: none.
-3. **E7-3** Token stylesheet mapped onto Tabler (R5). blocked_by: E7-2.
-4. **E7-4** Themes as token sets: migration, served theme CSS, admin form (R6, R7). blocked_by: E7-3.
-5. **E7-5** `AppLayout`, `GuestLayout` and `BareLayout` matching v2 (R8). blocked_by: E7-1, E7-3.
-6. **E7-6** Shared kit: `TrackRow` (including decoration and approval states), `TrackList`, the dialogs and the composables, with Vitest (R9, R12). blocked_by: E7-5.
-7. **E7-7** Pilot: Party Search page in Inertia (R10). blocked_by: E7-6, E7-4.
-8. **E7-8** Convert the existing Vue components and JS entry files to TypeScript, type-only (R13). blocked_by: E7-1.
+1. **E7-1** Install Inertia, TypeScript (`tsconfig`, `vue-tsc`) and Wayfinder, Vite entry points, root view and middleware with shared props except the theme, ADR (R1-R3, R11, R13 tooling). blocked_by: E3 skeleton migration (#304, reopened: it never reached `feature/v3-rewrite`).
+2. **E7-2** Front-end lint (ESLint, Prettier) and Vitest tooling, plus lint, type-check and test steps in CI (R12). blocked_by: E7-1.
+3. **E7-3** Tabler upgrade and Blade visual fixes (R4). blocked_by: none.
+4. **E7-4** Token stylesheet mapped onto Tabler (R5). blocked_by: E7-3.
+5. **E7-5** Themes as token sets: cached active-theme resolver and removal of the seating CSS first, then the migration, served theme CSS, theme shared prop and admin form (R2 theme, R6, R7). blocked_by: E7-1, E7-4.
+6. **E7-6** `AppLayout`, `GuestLayout` and `BareLayout` matching v2 (R8). blocked_by: E7-1, E7-4.
+7. **E7-7** Track display kit: `TrackAnnotation` JSON resource and TypeScript type, `TrackRow` (all states), `TrackList`, `Pagination`, `EmptyState`, with Vitest (R9). blocked_by: E7-2, E7-6.
+8. **E7-8** Composables and feedback kit: `useEcho`, `useRequestTrack`, `useProgress` with a `PlaybackState` JSON contract, `ConfirmDialog`, `Toast`/flash, with Vitest (R9). blocked_by: E7-2, E7-6.
+9. **E7-9** Pilot: Party Search page in Inertia (R10). blocked_by: E7-5, E7-7, E7-8.
+10. **E7-10** Convert the existing Vue components and JS entry files to TypeScript, type-only (R13). blocked_by: E7-1, E7-2.
 
 ## Risks and open questions
 
