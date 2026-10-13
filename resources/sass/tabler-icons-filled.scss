@@ -1,0 +1,114 @@
+$filled-font-path: '../../node_modules/@tabler/icons-webfont/dist/fonts';
+
+@font-face {
+    font-family: 'tabler-icons-filled';
+    font-style: normal;
+    font-weight: 400;
+    src: url('#{$filled-font-path}/tabler-icons-filled.woff2') format('woff2'),
+    url('#{$filled-font-path}/tabler-icons-filled.woff') format('woff'),
+    url('#{$filled-font-path}/tabler-icons-filled.ttf') format('truetype');
+}
+
+.ti-arrow-big-down-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f6c6";
+    }
+}
+
+.ti-arrow-big-up-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f6cf";
+    }
+}
+
+.ti-brand-github-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f7e7";
+    }
+}
+
+.ti-heart-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f67c";
+    }
+}
+
+.ti-player-pause-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f690";
+    }
+}
+
+.ti-player-play-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f691";
+    }
+}
+
+.ti-player-skip-back-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f693";
+    }
+}
+
+.ti-player-skip-forward-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f694";
+    }
+}
+
+.ti-star-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f6a6";
+    }
+}
+
+.ti-thumb-down-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f6aa";
+    }
+}
+
+.ti-thumb-up-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\f6ab";
+    }
+}
+
+.ti-caret-down-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\fb2a";
+    }
+}
+
+.ti-caret-up-filled {
+    font-family: 'tabler-icons-filled' !important;
+
+    &:before {
+        content: "\fb2d";
+    }
+}

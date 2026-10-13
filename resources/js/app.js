@@ -1,7 +1,9 @@
 import '~tabler/dist/js/tabler.min.js';
+import '~tabler/dist/css/tabler.css';
 import './bootstrap';
 import '../sass/app.scss';
-import '../sass/tabler-icons.scss';
+import '@tabler/icons-webfont/dist/tabler-icons.css';
+import '../sass/tabler-icons-filled.scss';
 import {createApp} from 'vue'
 import Player from './components/Player.vue'
 import Next from './components/Next.vue'
