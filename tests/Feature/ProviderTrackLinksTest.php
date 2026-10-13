@@ -11,9 +11,11 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Requests\TrackEligibility;
 use App\Services\Spotify\SpotifyGateway;
+use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeFallbackPlaylist;
 
 beforeEach(function () {
+    $this->withoutVite();
     $this->fake = app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('t1'));
     $this->owner = User::factory()->create(['first_login' => false]);
     app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
@@ -40,11 +42,12 @@ it('shows no Spotify links or labels on the upcoming songs pages of a Fake party
     $party = Party::factory()->create(['provider_id' => 'fake', 'user_id' => $this->owner->id]);
     $upcoming = providerLinksSong($party, 'fake');
 
-    $index = $this->actingAs($this->owner, 'sanctum')->get(route('parties.songs.index', $party->code))->assertOk();
-    $show = $this->actingAs($this->owner, 'sanctum')->get(route('parties.songs.show', [$party->code, $upcoming->id]))->assertOk();
-
-    $index->assertSee('Sent to Fake')->assertDontSee('Spotify');
-    $show->assertSee('Sent to Fake')->assertDontSee('Spotify')->assertDontSee('open.spotify.com');
+    $this->actingAs($this->owner, 'sanctum')->get(route('parties.songs.index', $party->code))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Index')->where('providerName', 'Fake'));
+    $this->actingAs($this->owner, 'sanctum')->get(route('parties.songs.show', [$party->code, $upcoming->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Show')->where('providerName', 'Fake')->where('trackUrl', null));
 });
 
 it('links to Spotify on the upcoming song page of a Spotify party', function () {
@@ -53,9 +56,9 @@ it('links to Spotify on the upcoming song page of a Spotify party', function () 
 
     $this->actingAs($this->owner, 'sanctum')->get(route('parties.songs.show', [$party->code, $upcoming->id]))
         ->assertOk()
-        ->assertSee('Sent to Spotify')
-        ->assertSee('View on Spotify')
-        ->assertSee('https://open.spotify.com/track/t1');
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Show')
+            ->where('providerName', 'Spotify')
+            ->where('trackUrl', 'https://open.spotify.com/track/t1'));
 });
 
 it('annotates search results with the party provider name and link', function () {

@@ -195,3 +195,8 @@ export interface AdminMod {
     description: string;
     settings: ModSetting[];
 }
+
+export interface When {
+    iso: string;
+    human: string;
+}

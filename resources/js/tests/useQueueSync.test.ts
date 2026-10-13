@@ -18,6 +18,7 @@ vi.mock('vue', async (original) => ({
 }));
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
+        onReconnect: () => undefined,
         privateChannel: (name: string) => {
             handlers.channel = name;
             return {

@@ -7,6 +7,26 @@ import {legacyAccentStyle} from '../lib/decoration';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
 
+const echo = vi.hoisted(() => ({
+    publicNames: [] as string[],
+    privateNames: [] as string[],
+    handlers: {} as Record<string, (payload: unknown) => void>,
+}));
+
+vi.mock('@/composables/useEcho', () => ({
+    useEcho: () => ({
+        onReconnect: () => undefined,
+        publicChannel: (name: string) => {
+            echo.publicNames.push(name);
+            return {listen: (event: string, cb: (payload: unknown) => void) => void (echo.handlers[event] = cb)};
+        },
+        privateChannel: (name: string) => {
+            echo.privateNames.push(name);
+            return {listen: (event: string, cb: (payload: unknown) => void) => void (echo.handlers[event] = cb)};
+        },
+    }),
+}));
+
 const decoration = {label: 'Boosted', accent: '#ff0000', class: 'mod-row', displayName: 'Mod Track'};
 
 const track = (extra: Record<string, unknown> = {}) => ({
@@ -44,9 +64,7 @@ describe('legacy decoration rendering', () => {
             props: {
                 party: 'ABC',
                 timezone: 'UTC',
-                initialstate: JSON.stringify([
-                    {...track({decoration}), id: 1, vote: 0, created_at: '2030-01-01T00:00:00Z'},
-                ]),
+                initialState: [{...track({decoration}), id: 1, vote: 0, created_at: '2030-01-01T00:00:00Z'}],
             },
         });
 
@@ -58,7 +76,7 @@ describe('legacy decoration rendering', () => {
 
     it('renders label and accent in the up next view', async () => {
         const wrapper = mount(Next, {
-            props: {code: 'ABC', initialstate: JSON.stringify({next: track({decoration})})},
+            props: {code: 'ABC', initialState: {next: track({decoration})} as never},
         });
 
         await wrapper.vm.$nextTick();
@@ -129,31 +147,21 @@ describe('TvPlayer progress', () => {
 describe('legacy player channel subscriptions', () => {
     afterEach(() => {
         delete (window as unknown as {Echo?: unknown}).Echo;
+        echo.publicNames.length = 0;
+        echo.privateNames.length = 0;
     });
 
     it('subscribes the queue to the private party.{code} channel', async () => {
-        const privateChannel = vi.fn(() => ({listen: () => {}}));
-        (window as unknown as {Echo: unknown}).Echo = {channel: vi.fn(), private: privateChannel};
+        mount(Upcoming, {props: {party: 'ABC', timezone: 'UTC', initialState: []}});
 
-        mount(Upcoming, {props: {party: 'ABC', timezone: 'UTC', initialstate: JSON.stringify([])}});
-
-        expect(privateChannel).toHaveBeenCalledWith('party.ABC');
+        expect(echo.privateNames).toContain('party.ABC');
     });
 
     it('subscribes up next to party.{code} and updates on Party\\UpdatedEvent', async () => {
-        let handler: ((payload: unknown) => void) | undefined;
-        const channel = vi.fn(() => ({
-            listen: (event: string, cb: (payload: unknown) => void) => {
-                expect(event).toBe('Party\\UpdatedEvent');
-                handler = cb;
-            },
-        }));
-        (window as unknown as {Echo: unknown}).Echo = {channel, private: vi.fn()};
+        const wrapper = mount(Next, {props: {code: 'ABC', initialState: {next: track()} as never}});
+        expect(echo.publicNames).toContain('party.ABC');
 
-        const wrapper = mount(Next, {props: {code: 'ABC', initialstate: JSON.stringify({next: track()})}});
-        expect(channel).toHaveBeenCalledWith('party.ABC');
-
-        handler?.({next: track({name: 'Pushed Song'})});
+        echo.handlers['Party\\UpdatedEvent']({next: track({name: 'Pushed Song'})});
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Pushed Song');

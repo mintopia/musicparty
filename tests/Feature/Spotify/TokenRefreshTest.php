@@ -18,6 +18,7 @@ use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
+use Inertia\Testing\AssertableInertia as Assert;
 use Laravel\Socialite\Two\User as SocialiteUser;
 use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
@@ -172,9 +173,9 @@ it('shows the re-link banner to managers but not guests, and re-linking clears i
     $party = Party::factory()->create(['user_id' => $account->user_id]);
 
     $this->actingAs(User::factory()->create(['first_login' => false]))->get(route('parties.show', $party->code))
-        ->assertOk()->assertDontSee('spotify-relink-banner');
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->component('Parties/Show')->where('spotifyNeedsRelink', false));
     $this->actingAs($account->user)->get(route('parties.show', $party->code))
-        ->assertOk()->assertSee('Spotify needs re-linking');
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->component('Parties/Show')->where('spotifyNeedsRelink', true));
 
     $remote = new SocialiteUser;
     $remote->token = 'tok';
@@ -184,7 +185,7 @@ it('shows the re-link banner to managers but not guests, and re-linking clears i
     $account->save();
 
     $this->actingAs($account->user)->get(route('parties.show', $party->code))
-        ->assertOk()->assertDontSee('spotify-relink-banner');
+        ->assertOk()->assertInertia(fn (Assert $page) => $page->component('Parties/Show')->where('spotifyNeedsRelink', false));
 });
 
 it('falls back to the control account when the search account needs re-link', function () {

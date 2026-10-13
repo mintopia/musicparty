@@ -6,14 +6,18 @@ use App\Enums\Purpose;
 use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\UpcomingSong;
+use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
-use Illuminate\Contracts\View\View;
+use Carbon\CarbonInterface;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class UpcomingSongController extends Controller
 {
-    public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers): View
+    public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers): Response
     {
         $providerName = $providers->forParty($party, Purpose::Control)->displayName();
         $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
@@ -78,24 +82,33 @@ class UpcomingSongController extends Controller
 
         $songs = $query->paginate($perPage)->appends($params);
 
-        return view('upcomingsongs.index', [
-            'party' => $party,
+        $songs->through(fn (UpcomingSong $song): array => [
+            'id' => $song->id,
+            'name' => $song->song->name,
+            'artists' => $song->song->artists->pluck('name')->all(),
+            'albumName' => $song->song->album->name,
+            'imageUrl' => $song->song->album->image_url,
+            'votes' => (int) $song->votes_count,
+            'score' => $song->score,
+            'createdAt' => $this->when($song->created_at),
+            'queuedAt' => $this->when($song->queued_at),
+            'url' => route('parties.songs.show', [$party->code, $song->id]),
+        ]);
+
+        return Inertia::render('Parties/Songs/Index', [
+            'party' => $this->partyProps($party),
             'providerName' => $providerName,
-            'canManage' => true,
+            'types' => [
+                ['code' => 'queued', 'name' => 'Queued'],
+                ['code' => 'spotify', 'name' => "Sent to {$providerName}"],
+            ],
+            'filters' => $params,
             'songs' => $songs,
-            'types' => [(object) [
-                'code' => 'queued',
-                'name' => 'Queued',
-            ], (object) [
-                'code' => 'spotify',
-                'name' => "Sent to {$providerName}",
-            ]],
-            'filters' => (object) $params,
-            'params' => $params,
+            'playerState' => $party->getState(),
         ]);
     }
 
-    public function show(PaginationRequest $request, Party $party, UpcomingSong $song, MusicProviderFactory $providers): View
+    public function show(PaginationRequest $request, Party $party, UpcomingSong $song, MusicProviderFactory $providers): Response
     {
         $provider = $providers->forParty($party, Purpose::Control);
         $params = [];
@@ -111,15 +124,79 @@ class UpcomingSongController extends Controller
             $ratings = new LengthAwarePaginator([], 0, $perPage);
         }
 
-        return view('upcomingsongs.show', [
-            'party' => $party,
-            'canManage' => true,
-            'song' => $song,
+        $voteRows = fn ($row): array => [
+            'nickname' => $row->user->nickname,
+            'userUrl' => $this->memberUrl($party, $row->user),
+            'value' => (int) $row->value,
+            'createdAt' => $this->when($row->created_at),
+        ];
+        $requester = $song->user;
+
+        return Inertia::render('Parties/Songs/Show', [
+            'party' => $this->partyProps($party),
             'providerName' => $provider->displayName(),
             'trackUrl' => $provider->trackUrl($song->song->provider_track_id),
-            'votes' => $votes,
-            'other' => $other,
-            'ratings' => $ratings,
+            'song' => [
+                'id' => $song->id,
+                'name' => $song->song->name,
+                'imageUrl' => $song->song->album->image_url,
+                'albumName' => $song->song->album->name,
+                'albumUrl' => route('parties.songs.index', [$party->code, 'album' => $song->song->album->name]),
+                'artists' => $song->song->artists->map(fn ($artist): array => [
+                    'name' => $artist->name,
+                    'url' => route('parties.songs.index', [$party->code, 'artist' => $artist->name]),
+                ])->values()->all(),
+                'duration' => format_ms($song->song->length),
+                'votes' => $song->votes()->count(),
+                'score' => $song->score,
+                'createdAt' => $this->when($song->created_at),
+                'queuedAt' => $this->when($song->queued_at),
+                'requestedBy' => $requester ? [
+                    'nickname' => $requester->nickname,
+                    'url' => $this->memberUrl($party, $requester),
+                ] : null,
+                'moderateUrl' => route('parties.moderation.create', ['party' => $party->code, 'track' => $song->song->provider_track_id]),
+            ],
+            'votes' => $votes->through($voteRows),
+            'other' => $other->map(fn (UpcomingSong $row): array => [
+                'id' => $row->id,
+                'url' => route('parties.songs.show', [$party->code, $row->id]),
+                'votes' => (int) $row->votes_count,
+                'score' => $row->score,
+                'createdAt' => $this->when($row->created_at),
+                'queuedAt' => $this->when($row->queued_at),
+            ])->values()->all(),
+            'ratings' => $ratings->through($voteRows),
+            'playerState' => $party->getState(),
         ]);
+    }
+
+    /**
+     * @return array{code: string, name: string, downvotes: bool, canManage: bool, weighted: bool}
+     */
+    private function partyProps(Party $party): array
+    {
+        return [
+            'code' => $party->code,
+            'name' => $party->name,
+            'downvotes' => (bool) $party->downvotes,
+            'canManage' => true,
+            'weighted' => (bool) $party->weighted,
+        ];
+    }
+
+    /**
+     * @return array{iso: string, human: string}|null
+     */
+    private function when(?CarbonInterface $moment): ?array
+    {
+        return $moment ? ['iso' => $moment->format('Y-m-d H:i:s'), 'human' => $moment->diffForHumans()] : null;
+    }
+
+    private function memberUrl(Party $party, User $user): ?string
+    {
+        $member = $user->getPartyMember($party);
+
+        return $member instanceof PartyMember ? route('parties.users.show', [$party->code, $member]) : null;
     }
 }

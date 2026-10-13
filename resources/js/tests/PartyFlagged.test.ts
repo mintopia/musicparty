@@ -30,6 +30,7 @@ vi.mock('@/composables/useEcho', () => ({
         };
 
         return {
+            onReconnect: () => undefined,
             privateChannel: (name: string) => {
                 echo.channels.push(name);
                 return channel;
