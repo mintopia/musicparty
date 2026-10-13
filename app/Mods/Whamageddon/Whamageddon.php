@@ -5,6 +5,7 @@ namespace App\Mods\Whamageddon;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -63,7 +64,7 @@ class Whamageddon
     {
         $hour = CarbonImmutable::now()->hour;
         if ($hour >= 23) {
-            $upcoming->not_before = CarbonImmutable::now()->startOfDay()->addDay()->hour(10);
+            $upcoming->not_before = now()->startOfDay()->addDay()->hour(10);
             Log::info("{$this->party} Whamageddon: Delaying Playback until 10AM tomorrow");
             $upcoming->save();
         } elseif ($upcoming->not_before && $hour >= 10) {
@@ -109,12 +110,13 @@ class Whamageddon
                 $query->where('spotify_id', $trackId);
             })->first();
         if ($upcoming === null) {
-            $track = $this->party->user->getSpotifyApi()->getTrack($trackId);
-            if (! $track) {
+            $response = $this->party->user->requireSpotifyApi()->getTrack($trackId);
+            if (! $response) {
                 Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} in Spotify");
 
                 return;
             }
+            $track = SpotifyPayload::object($response);
             $song = Song::fromSpotify($track);
             $upcoming = new UpcomingSong;
             $upcoming->song()->associate($song);

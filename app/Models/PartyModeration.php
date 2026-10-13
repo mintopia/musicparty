@@ -6,16 +6,48 @@ use App\Enums\PartyModerationType;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * @property int $id
+ * @property int $party_id
+ * @property PartyModerationType $type
+ * @property string $value
+ * @property string|null $notes
+ * @property bool $enabled
+ * @property bool $regex
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Party $party
+ *
+ * @method static \Database\Factories\PartyModerationFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereRegex($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereValue($value)
+ *
+ * @mixin \Eloquent
+ */
 class PartyModeration extends Model
 {
     use HasFactory;
 
     protected $casts = [
+        'enabled' => 'boolean',
+        'regex' => 'boolean',
         'type' => PartyModerationType::class,
     ];
 
+    /** @return BelongsTo<Party, $this> */
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);

@@ -128,9 +128,9 @@ class UserController extends Controller
         $spotify = null;
         $search = null;
         foreach ($request->user()->accounts as $account) {
-            if ($account->provider->code == 'spotify') {
+            if ($account->provider?->code == 'spotify') {
                 $spotify = $account;
-            } elseif ($account->provider->code == 'spotifysearch') {
+            } elseif ($account->provider?->code == 'spotifysearch') {
                 $search = $account;
             }
         }

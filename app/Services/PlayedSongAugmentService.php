@@ -14,7 +14,7 @@ class PlayedSongAugmentService
         $ratings = $user->ratings()->whereIn('played_song_id', $ids)->get();
         $augmentedData = [];
         foreach ($ratings as $rating) {
-            $augmentedData[$rating->upcoming_song_id] = (object) [
+            $augmentedData[$rating->played_song_id] = (object) [
                 'rated' => $rating,
             ];
         }

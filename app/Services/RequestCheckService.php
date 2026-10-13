@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
+use App\Support\SpotifyPayload;
 use Illuminate\Support\Collection;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
@@ -42,7 +43,7 @@ class RequestCheckService
         if (is_string($input)) {
             // Get the song from Spotify
             try {
-                $spotifyData = $this->party->user->getSpotifyApi()->getTrack($input);
+                $spotifyData = SpotifyPayload::object($this->party->user->requireSpotifyApi()->getTrack($input));
             } catch (SpotifyWebAPIException $ex) {
                 if ($ex->getMessage() === 'invalid id') {
                     return new RequestCheckResponse(false, 'Song is not found in Spotify');
@@ -115,7 +116,7 @@ class RequestCheckService
             return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
         }
 
-        if ($this->member->role?->code === 'banned') {
+        if ($this->member->role->code === 'banned') {
             return new RequestCheckResponse(false, 'You are not allowed to make requests');
         }
 
@@ -148,7 +149,7 @@ class RequestCheckService
             return false;
         }
 
-        if ($this->member->role?->code === 'vip') {
+        if ($this->member->role->code === 'vip') {
             return false;
         }
 

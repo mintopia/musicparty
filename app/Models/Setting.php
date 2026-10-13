@@ -7,12 +7,46 @@ use App\Enums\SettingType;
 use App\Models\Traits\ToString;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Spatie\EloquentSortable\Sortable;
 use Spatie\EloquentSortable\SortableTrait;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property string|null $description
+ * @property bool $encrypted
+ * @property bool $hidden
+ * @property mixed|null $value
+ * @property string|null $validation
+ * @property SettingType $type
+ * @property int $order
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ *
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting ordered(string $direction = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereEncrypted($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereHidden($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereValidation($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Setting whereValue($value)
+ *
+ * @mixin \Eloquent
+ */
 class Setting extends Model implements Sortable
 {
     use HasFactory;
@@ -22,6 +56,8 @@ class Setting extends Model implements Sortable
     protected static array $cached = [];
 
     protected $casts = [
+        'encrypted' => 'boolean',
+        'hidden' => 'boolean',
         'value' => SettingValue::class,
         'type' => SettingType::class,
     ];

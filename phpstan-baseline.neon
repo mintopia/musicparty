@@ -19,58 +19,16 @@ parameters:
 			path: app/Casts/SettingValue.php
 
 		-
-			message: '#^Dead catch \- Exception is never thrown in the try block\.$#'
-			identifier: catch.neverThrown
-			count: 1
-			path: app/Casts/SettingValue.php
-
-		-
-			message: '#^Strict comparison using \!\=\= between string and null will always evaluate to true\.$#'
-			identifier: notIdentical.alwaysTrue
-			count: 1
-			path: app/Casts/SettingValue.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$trustscore\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Console/Commands/PartyCalculateTrust.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Console/Commands/PartyCalculateTrust.php
-
-		-
 			message: '#^Method App\\Console\\Commands\\PartyCalculateTrust\:\:handle\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
 			path: app/Console/Commands/PartyCalculateTrust.php
 
 		-
-			message: '#^Call to an undefined method App\\Models\\Party\:\:fixPlaylist\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Console/Commands/PartyCheck.php
-
-		-
-			message: '#^Method App\\Console\\Commands\\PartyCheck\:\:handle\(\) has no return type specified\.$#'
-			identifier: missingType.return
-			count: 1
-			path: app/Console/Commands/PartyCheck.php
-
-		-
 			message: '#^Method App\\Console\\Commands\\PartyFallback\:\:handle\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
 			path: app/Console/Commands/PartyFallback.php
-
-		-
-			message: '#^Cannot call method getDevices\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Console/Commands/PartyForce.php
 
 		-
 			message: '#^Method App\\Console\\Commands\\PartyForce\:\:handle\(\) has no return type specified\.$#'
@@ -85,12 +43,6 @@ parameters:
 			path: app/Console/Commands/PartyPushUpdate.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Console/Commands/PartyRefreshAccessTokens.php
-
-		-
 			message: '#^Method App\\Console\\Commands\\PartyRefreshAccessTokens\:\:handle\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -103,18 +55,6 @@ parameters:
 			path: app/Console/Commands/PartyUpdateState.php
 
 		-
-			message: '#^Cannot access property \$value on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 3
-			path: app/Console/Commands/SetupDiscord.php
-
-		-
-			message: '#^Cannot call method save\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Console/Commands/SetupDiscord.php
-
-		-
 			message: '#^Method App\\Console\\Commands\\SetupDiscord\:\:handle\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -125,18 +65,6 @@ parameters:
 			identifier: missingType.generics
 			count: 1
 			path: app/Enums/PartyModerationType.php
-
-		-
-			message: '#^Property App\\Events\\Mods\\PartyModSettingDeletedEvent\:\:\$party \(App\\Models\\Party\) does not accept Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Events/Mods/PartyModSettingDeletedEvent.php
-
-		-
-			message: '#^Property App\\Events\\Mods\\PartyModSettingDeletedEvent\:\:\$setting \(App\\Models\\ModSetting\) does not accept Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Events/Mods/PartyModSettingDeletedEvent.php
 
 		-
 			message: '#^Property App\\Events\\Mods\\PartyModSettingUpdatedEvent\:\:\$changed type has no value type specified in iterable type array\.$#'
@@ -161,18 +89,6 @@ parameters:
 			identifier: missingType.return
 			count: 1
 			path: app/Events/UpcomingSong/RemovedEvent.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Events/UpcomingSong/UpdatedEvent.php
-
-		-
-			message: '#^Cannot call method toIso8601String\(\) on Carbon\\Carbon\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Events/UpcomingSong/UpdatedEvent.php
 
 		-
 			message: '#^Method App\\Events\\UpcomingSong\\UpdatedEvent\:\:broadcastWith\(\) has no return type specified\.$#'
@@ -211,12 +127,6 @@ parameters:
 			path: app/Http/Controllers/Admin/HomeController.php
 
 		-
-			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Http/Controllers/Admin/LinkedAccountController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Admin\\LinkedAccountController\:\:delete\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -239,24 +149,6 @@ parameters:
 			identifier: missingType.return
 			count: 1
 			path: app/Http/Controllers/Admin/SettingController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/SocialProviderController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Http/Controllers/Admin/SocialProviderController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/SocialProviderController.php
 
 		-
 			message: '#^Method App\\Http\\Controllers\\Admin\\SocialProviderController\:\:edit\(\) has no return type specified\.$#'
@@ -317,12 +209,6 @@ parameters:
 			identifier: assign.propertyType
 			count: 1
 			path: app/Http/Controllers/Admin/ThemeController.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$code\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Http/Controllers/Admin/UserController.php
 
 		-
 			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
@@ -397,12 +283,6 @@ parameters:
 			path: app/Http/Controllers/Api/V1/PingController.php
 
 		-
-			message: '#^Cannot call method current\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/Api/V1/SongRatingController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\Api\\V1\\SongRatingController\:\:store\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -421,21 +301,9 @@ parameters:
 			path: app/Http/Controllers/Api/V1/SongRatingController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:votes\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
-
-		-
 			message: '#^Cannot access property \$id on App\\Models\\User\|null\.$#'
 			identifier: property.nonObject
 			count: 2
-			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
 			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
 
 		-
@@ -459,12 +327,6 @@ parameters:
 		-
 			message: '#^Method App\\Http\\Controllers\\Api\\V1\\UpcomingSongController\:\:store\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
-
-		-
-			message: '#^Parameter \#1 \$song of method App\\Services\\UpcomingSongAugmentService\:\:augment\(\) expects App\\Models\\UpcomingSong, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/Api/V1/UpcomingSongController.php
 
@@ -541,31 +403,13 @@ parameters:
 			path: app/Http/Controllers/PartyController.php
 
 		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Http/Controllers/PartyController.php
-
-		-
 			message: '#^Cannot call method getDevices\(\) on App\\Models\\User\|null\.$#'
 			identifier: method.nonObject
 			count: 1
 			path: app/Http/Controllers/PartyController.php
 
 		-
-			message: '#^Cannot call method getDevices\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/PartyController.php
-
-		-
 			message: '#^Cannot call method getPlaylists\(\) on App\\Models\\User\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/PartyController.php
-
-		-
-			message: '#^Cannot call method getPlaylists\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: method.nonObject
 			count: 1
 			path: app/Http/Controllers/PartyController.php
@@ -643,12 +487,6 @@ parameters:
 			path: app/Http/Controllers/PartyController.php
 
 		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array\<string, mixed\>, Closure\(App\\Models\\UpcomingSong\)\: array\<string, mixed\> given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Http/Controllers/PartyController.php
-
-		-
 			message: '#^Parameter \#1 \$user of method App\\Models\\Party\:\:getMember\(\) expects App\\Models\\User, App\\Models\\User\|null given\.$#'
 			identifier: argument.type
 			count: 2
@@ -659,12 +497,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: app/Http/Controllers/PartyController.php
-
-		-
-			message: '#^Cannot call method votes\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/PartyMemberController.php
 
 		-
 			message: '#^Method App\\Http\\Controllers\\PartyMemberController\:\:edit\(\) has no return type specified\.$#'
@@ -689,18 +521,6 @@ parameters:
 			identifier: missingType.return
 			count: 1
 			path: app/Http/Controllers/PartyMemberController.php
-
-		-
-			message: '#^Offset ''direction'' does not exist on array\{order\: mixed, order_direction\: mixed, per_page\?\: mixed, nickname\?\: mixed, role\?\: mixed\}\.$#'
-			identifier: offsetAccess.notFound
-			count: 1
-			path: app/Http/Controllers/PartyMemberController.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Http/Controllers/PartyModerationController.php
 
 		-
 			message: '#^Method App\\Http\\Controllers\\PartyModerationController\:\:create\(\) has no return type specified\.$#'
@@ -745,12 +565,6 @@ parameters:
 			path: app/Http/Controllers/PartyModerationController.php
 
 		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:ratings\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Http/Controllers/UpcomingSongController.php
-
-		-
 			message: '#^Method App\\Http\\Controllers\\UpcomingSongController\:\:index\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
@@ -764,12 +578,6 @@ parameters:
 
 		-
 			message: '#^Cannot access property \$accounts on App\\Models\\User\|null\.$#'
-			identifier: property.nonObject
-			count: 2
-			path: app/Http/Controllers/UserController.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: property.nonObject
 			count: 2
 			path: app/Http/Controllers/UserController.php
@@ -979,18 +787,6 @@ parameters:
 			path: app/Http/Resources/V1/Collections/UpcomingSongResourceCollection.php
 
 		-
-			message: '#^Cannot call method toIso8601String\(\) on Carbon\\Carbon\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Http/Resources/V1/PlayedSongResource.php
-
-		-
-			message: '#^Cannot call method toIso8601String\(\) on Carbon\\Carbon\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Http/Resources/V1/UpcomingSongResource.php
-
-		-
 			message: '#^Method App\\Jobs\\PartyUpdate\:\:middleware\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1021,12 +817,6 @@ parameters:
 			path: app/Models/Album.php
 
 		-
-			message: '#^Method App\\Models\\Album\:\:songs\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Album.php
-
-		-
 			message: '#^Method App\\Models\\Album\:\:toApi\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
@@ -1051,28 +841,10 @@ parameters:
 			path: app/Models/Artist.php
 
 		-
-			message: '#^Method App\\Models\\Artist\:\:songs\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Artist.php
-
-		-
 			message: '#^Method App\\Models\\Artist\:\:toApi\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Models/Artist.php
-
-		-
-			message: '#^Cannot access property \$auth_enabled on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/LinkedAccount.php
-
-		-
-			message: '#^Cannot call method accounts\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Models/LinkedAccount.php
 
 		-
 			message: '#^Class App\\Models\\LinkedAccount uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1081,37 +853,7 @@ parameters:
 			path: app/Models/LinkedAccount.php
 
 		-
-			message: '#^Method App\\Models\\LinkedAccount\:\:provider\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/LinkedAccount.php
-
-		-
-			message: '#^Method App\\Models\\LinkedAccount\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/LinkedAccount.php
-
-		-
-			message: '#^Access to an undefined property App\\Models\\Mod\:\:\$_settings\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Mod.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Mod.php
-
-		-
 			message: '#^Class App\\Models\\Mod uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Mod.php
-
-		-
-			message: '#^Method App\\Models\\Mod\:\:settings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Mod.php
@@ -1129,171 +871,9 @@ parameters:
 			path: app/Models/ModSetting.php
 
 		-
-			message: '#^Method App\\Models\\ModSetting\:\:mod\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/ModSetting.php
-
-		-
-			message: '#^Method App\\Models\\ModSetting\:\:partysettings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/ModSetting.php
-
-		-
 			message: '#^Access to an undefined property App\\Models\\Party\:\:\$playlist_id\.$#'
 			identifier: property.notFound
 			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$length\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$queued_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$song\.$#'
-			identifier: property.notFound
-			count: 8
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$spotify_id\.$#'
-			identifier: property.notFound
-			count: 4
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$trustscore\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$device\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$is_playing\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$item\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Access to an undefined property object\:\:\$progress_ms\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:toApi\(\)\.$#'
-			identifier: method.notFound
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$market on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$mod on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$status on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 4
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$status_updated_at on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot access property \$upcoming on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot call method getDevices\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot call method getPlaylist\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 10
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot call method getSpotifyStatus\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 4
-			path: app/Models/Party.php
-
-		-
-			message: '#^Cannot call method toIso8601String\(\) on Carbon\\Carbon\|null\.$#'
-			identifier: method.nonObject
-			count: 2
 			path: app/Models/Party.php
 
 		-
@@ -1321,74 +901,14 @@ parameters:
 			path: app/Models/Party.php
 
 		-
-			message: '#^Method App\\Models\\Party\:\:getMember\(\) should return App\\Models\\PartyMember but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:getNextUpdateDelay\(\) should return int\|null but returns float\|int\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:history\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:members\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:moderations\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
 			message: '#^Method App\\Models\\Party\:\:next\(\) has no return type specified\.$#'
 			identifier: missingType.return
 			count: 1
 			path: app/Models/Party.php
 
 		-
-			message: '#^Method App\\Models\\Party\:\:song\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:trustedUser\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:upcoming\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
 			message: '#^Method App\\Models\\Party\:\:updateCurrentSong\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Method App\\Models\\Party\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Party.php
-
-		-
-			message: '#^Property App\\Models\\PlayedSong\:\:\$played_at \(Carbon\\Carbon\) does not accept Carbon\\Carbon\|null\.$#'
-			identifier: assign.propertyType
 			count: 1
 			path: app/Models/Party.php
 
@@ -1411,34 +931,10 @@ parameters:
 			path: app/Models/PartyMember.php
 
 		-
-			message: '#^Method App\\Models\\PartyMember\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMember.php
-
-		-
-			message: '#^Method App\\Models\\PartyMember\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMember.php
-
-		-
 			message: '#^Class App\\Models\\PartyMemberRole uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/PartyMemberRole.php
-
-		-
-			message: '#^Method App\\Models\\PartyMemberRole\:\:member\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyMemberRole.php
-
-		-
-			message: '#^Cannot access property \$type on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/PartyModSetting.php
 
 		-
 			message: '#^Class App\\Models\\PartyModSetting uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1448,18 +944,6 @@ parameters:
 
 		-
 			message: '#^Method App\\Models\\PartyModSetting\:\:getType\(\) return type with generic class Illuminate\\Database\\Eloquent\\Casts\\Attribute does not specify its types\: TGet, TSet$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyModSetting.php
-
-		-
-			message: '#^Method App\\Models\\PartyModSetting\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyModSetting.php
-
-		-
-			message: '#^Method App\\Models\\PartyModSetting\:\:setting\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/PartyModSetting.php
@@ -1483,12 +967,6 @@ parameters:
 			path: app/Models/PartyModeration.php
 
 		-
-			message: '#^Method App\\Models\\PartyModeration\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PartyModeration.php
-
-		-
 			message: '#^Method App\\Models\\PartyModeration\:\:regexTest\(\) has parameter \$caseInsensitive with no type specified\.$#'
 			identifier: missingType.parameter
 			count: 1
@@ -1501,55 +979,7 @@ parameters:
 			path: app/Models/PartyModeration.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Cannot access property \$spotify_id on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Cannot call method toApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
 			message: '#^Class App\\Models\\PlayedSong uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:addRating\(\) should return App\\Models\\SongRating\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:findRequestedSong\(\) should return App\\Models\\UpcomingSong\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:ratings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:song\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/PlayedSong.php
@@ -1557,12 +987,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\PlayedSong\:\:toApi\(\) return type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/PlayedSong.php
-
-		-
-			message: '#^Method App\\Models\\PlayedSong\:\:upcoming\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
 			count: 1
 			path: app/Models/PlayedSong.php
 
@@ -1591,19 +1015,7 @@ parameters:
 			path: app/Models/ProviderSetting.php
 
 		-
-			message: '#^Method App\\Models\\ProviderSetting\:\:provider\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/ProviderSetting.php
-
-		-
 			message: '#^Class App\\Models\\Role uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Role.php
-
-		-
-			message: '#^Method App\\Models\\Role\:\:users\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Role.php
@@ -1639,19 +1051,7 @@ parameters:
 			path: app/Models/Setting.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Models/SocialProvider.php
-
-		-
 			message: '#^Class App\\Models\\SocialProvider uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/SocialProvider.php
-
-		-
-			message: '#^Method App\\Models\\SocialProvider\:\:accounts\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/SocialProvider.php
@@ -1671,12 +1071,6 @@ parameters:
 		-
 			message: '#^Method App\\Models\\SocialProvider\:\:redirect\(\) has no return type specified\.$#'
 			identifier: missingType.return
-			count: 1
-			path: app/Models/SocialProvider.php
-
-		-
-			message: '#^Method App\\Models\\SocialProvider\:\:settings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\MorphMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
 			count: 1
 			path: app/Models/SocialProvider.php
 
@@ -1723,37 +1117,7 @@ parameters:
 			path: app/Models/Song.php
 
 		-
-			message: '#^Cannot call method toApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/Song.php
-
-		-
 			message: '#^Class App\\Models\\Song uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Method App\\Models\\Song\:\:album\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Method App\\Models\\Song\:\:artists\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Method App\\Models\\Song\:\:parties\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Method App\\Models\\Song\:\:played\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Song.php
@@ -1765,31 +1129,7 @@ parameters:
 			path: app/Models/Song.php
 
 		-
-			message: '#^Method App\\Models\\Song\:\:upcoming\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Song.php
-
-		-
-			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(App\\Models\\Artist\)\: array given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/Song.php
-
-		-
 			message: '#^Class App\\Models\\SongRating uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/SongRating.php
-
-		-
-			message: '#^Method App\\Models\\SongRating\:\:song\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/SongRating.php
-
-		-
-			message: '#^Method App\\Models\\SongRating\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/SongRating.php
@@ -1801,61 +1141,7 @@ parameters:
 			path: app/Models/Theme.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$value\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Cannot access property \$downvotes on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Cannot call method checkDownvotesForUser\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Cannot call method getMember\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Cannot call method toApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
 			message: '#^Class App\\Models\\UpcomingSong uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:addVote\(\) should return App\\Models\\Vote but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:party\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:played\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasOne does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:song\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/UpcomingSong.php
@@ -1867,76 +1153,10 @@ parameters:
 			path: app/Models/UpcomingSong.php
 
 		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Method App\\Models\\UpcomingSong\:\:votes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Property App\\Models\\UpcomingSong\:\:\$casts \(array\<string, string\>\) does not accept default value of type array\<int\|string, string\>\.$#'
-			identifier: property.defaultValue
-			count: 1
-			path: app/Models/UpcomingSong.php
-
-		-
 			message: '#^Property App\\Models\\UpcomingSong\:\:\$score \(int\) does not accept float\|int\.$#'
 			identifier: assign.propertyType
 			count: 1
 			path: app/Models/UpcomingSong.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$party_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot access property \$devices on array\|object\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot access property \$items on array\|object\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot access property \$next on array\|object\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot call method getMyCurrentPlaybackInfo\(\) on SpotifyWebAPI\\SpotifyWebAPI\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot call method getMyRecentTracks\(\) on SpotifyWebAPI\\SpotifyWebAPI\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot call method getPlaylist\(\) on SpotifyWebAPI\\SpotifyWebAPI\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Cannot call method getSetting\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Models/User.php
 
 		-
 			message: '#^Class App\\Models\\User uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
@@ -1945,115 +1165,7 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\LinkedAccount\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
-			identifier: generics.lessTypes
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Generic type Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Party\> in PHPDoc tag @return does not specify all template types of class Illuminate\\Database\\Eloquent\\Relations\\HasMany\: TRelatedModel, TDeclaringModel$#'
-			identifier: generics.lessTypes
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:accounts\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\LinkedAccount\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\LinkedAccount, \$this\(App\\Models\\User\)\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:getDevices\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:getDevices\(\) should return array but returns array\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:getPartyMember\(\) should return App\\Models\\PartyMember\|null but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:getPlaylist\(\) should return object\|null but returns array\|object\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:getPlaylists\(\) return type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:parties\(\) should return Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Party\> but returns Illuminate\\Database\\Eloquent\\Relations\\HasMany\<App\\Models\\Party, \$this\(App\\Models\\User\)\>\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:partyMembers\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:ratings\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:roles\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsToMany does not specify its types\: TRelatedModel, TDeclaringModel, TPivotModel, TAccessor \(2\-4 required\)$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Method App\\Models\\User\:\:votes\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\HasMany does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Negated boolean expression is always false\.$#'
-			identifier: booleanNot.alwaysFalse
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Parameter \#1 \$accessToken of method SpotifyWebAPI\\Session\:\:setAccessToken\(\) expects string, string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Parameter \#2 \$accessToken of event class App\\Events\\User\\SpotifyAccessTokenUpdatedEvent constructor expects string in App\\Events\\User\\SpotifyAccessTokenUpdatedEvent\:\:dispatch\(\), string\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Property App\\Models\\User\:\:\$devices type has no value type specified in iterable type array\.$#'
-			identifier: missingType.iterableValue
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Property App\\Models\\User\:\:\$hasUpdatedStatus has no type specified\.$#'
-			identifier: missingType.property
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Property App\\Models\\User\:\:\$playlistCache type has no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Models/User.php
@@ -2065,166 +1177,16 @@ parameters:
 			path: app/Models/User.php
 
 		-
-			message: '#^Property App\\Models\\User\:\:\$recentTracks \(object\|null\) does not accept array\|object\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Property App\\Models\\User\:\:\$status \(stdClass\|null\) does not accept array\|object\|null\.$#'
-			identifier: assign.propertyType
-			count: 1
-			path: app/Models/User.php
-
-		-
-			message: '#^Unable to resolve the template type TCacheValue in call to static method Illuminate\\Cache\\Repository\:\:remember\(\)$#'
-			identifier: argument.templateType
-			count: 1
-			path: app/Models/User.php
-
-		-
 			message: '#^Class App\\Models\\Vote uses generic trait Illuminate\\Database\\Eloquent\\Factories\\HasFactory but does not specify its types\: TFactory$#'
 			identifier: missingType.generics
 			count: 1
 			path: app/Models/Vote.php
 
 		-
-			message: '#^Method App\\Models\\Vote\:\:upcomingSong\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Vote.php
-
-		-
-			message: '#^Method App\\Models\\Vote\:\:user\(\) return type with generic class Illuminate\\Database\\Eloquent\\Relations\\BelongsTo does not specify its types\: TRelatedModel, TDeclaringModel$#'
-			identifier: missingType.generics
-			count: 1
-			path: app/Models/Vote.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$default\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$encrypted\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$private\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Method App\\Mods\\Whamageddon\\Commands\\InstallCommand\:\:addSetting\(\) should return App\\Models\\ModSetting but returns Illuminate\\Database\\Eloquent\\Model\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Mods/Whamageddon/Commands/InstallCommand.php
-
-		-
-			message: '#^Call to an undefined static method Laravel\\Reverb\\Loggers\\Log\:\:info\(\)\.$#'
-			identifier: staticMethod.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Listeners/HourTickListener.php
-
-		-
-			message: '#^Parameter \#1 \$party of class App\\Mods\\Whamageddon\\Whamageddon constructor expects App\\Models\\Party, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Mods/Whamageddon/Listeners/HourTickListener.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Mods/Whamageddon/Listeners/ModSettingDeletedListener.php
-
-		-
-			message: '#^Cannot access property \$code on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
-			path: app/Mods/Whamageddon/Listeners/ModSettingUpdatedListener.php
-
-		-
-			message: '#^Cannot access property \$mod on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Mods/Whamageddon/Listeners/ModSettingUpdatedListener.php
-
-		-
 			message: '#^Method App\\Mods\\Whamageddon\\Listeners\\ModSettingUpdatedListener\:\:handleEnabled\(\) has parameter \$changed with no value type specified in iterable type array\.$#'
 			identifier: missingType.iterableValue
 			count: 1
 			path: app/Mods/Whamageddon/Listeners/ModSettingUpdatedListener.php
-
-		-
-			message: '#^Parameter \#1 \$party of class App\\Mods\\Whamageddon\\Whamageddon constructor expects App\\Models\\Party, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Mods/Whamageddon/Listeners/ModSettingUpdatedListener.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$css_classes\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$fallback_override\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$score_adjustment\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
-
-		-
-			message: '#^Method App\\Mods\\Whamageddon\\Whamageddon\:\:getUpcomingSong\(\) should return App\\Models\\UpcomingSong\|null but returns Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: return.type
-			count: 1
-			path: app/Mods/Whamageddon/Whamageddon.php
 
 		-
 			message: '#^Property App\\Mods\\Whamageddon\\Whamageddon\:\:\$settings with generic class Illuminate\\Support\\Collection does not specify its types\: TKey, TValue$#'
@@ -2237,18 +1199,6 @@ parameters:
 			identifier: missingType.return
 			count: 1
 			path: app/Mods/Whamageddon/WhammageddonServiceProvider.php
-
-		-
-			message: '#^Cannot access property \$party on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 2
-			path: app/Observers/SongRatingObserver.php
-
-		-
-			message: '#^Cannot call method updateRating\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Observers/SongRatingObserver.php
 
 		-
 			message: '#^Method App\\Observers\\UpcomingSongObserver\:\:created\(\) has no return type specified\.$#'
@@ -2269,24 +1219,6 @@ parameters:
 			path: app/Observers/UpcomingSongObserver.php
 
 		-
-			message: '#^Parameter \#1 \$party of event class App\\Events\\UpcomingSong\\RemovedEvent constructor expects App\\Models\\Party in App\\Events\\UpcomingSong\\RemovedEvent\:\:dispatch\(\), Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 2
-			path: app/Observers/UpcomingSongObserver.php
-
-		-
-			message: '#^Cannot call method updateScore\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 2
-			path: app/Observers/VoteObserver.php
-
-		-
-			message: '#^Cannot call method canBeManagedBy\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Policies/UpcomingSongPolicy.php
-
-		-
 			message: '#^Property App\\Providers\\EventServiceProvider\:\:\$listen \(array\<class\-string, array\<int, class\-string\>\>\) does not accept default value of type array\<string, list\<string\>\>\.$#'
 			identifier: property.defaultValue
 			count: 1
@@ -2305,12 +1237,6 @@ parameters:
 			path: app/Services/Contracts/SocialProviderContract.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$upcoming_song_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/PlayedSongAugmentService.php
-
-		-
 			message: '#^Method App\\Services\\PlayedSongAugmentService\:\:augmentCollection\(\) has parameter \$items with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
 			identifier: missingType.generics
 			count: 1
@@ -2321,18 +1247,6 @@ parameters:
 			identifier: missingType.generics
 			count: 1
 			path: app/Services/PlayedSongAugmentService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$song\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$song_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
 
 		-
 			message: '#^Access to an undefined property object\:\:\$duration_ms\.$#'
@@ -2349,24 +1263,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property object\:\:\$id\.$#'
 			identifier: property.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:getMessage\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Eloquent\\Model\:\:match\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: app/Services/RequestCheckService.php
 
@@ -2407,12 +1303,6 @@ parameters:
 			path: app/Services/RequestCheckService.php
 
 		-
-			message: '#^Parameter \#1 \$user of method App\\Models\\Party\:\:canBeManagedBy\(\) expects App\\Models\\User\|null, Illuminate\\Database\\Eloquent\\Model\|null given\.$#'
-			identifier: argument.type
-			count: 1
-			path: app/Services/RequestCheckService.php
-
-		-
 			message: '#^Unable to resolve the template type TKey in call to function collect$#'
 			identifier: argument.templateType
 			count: 1
@@ -2425,61 +1315,7 @@ parameters:
 			path: app/Services/RequestCheckService.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$description\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email_verified_at\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$encrypted\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$type\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$user_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$validation\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
 			message: '#^Cannot access property \$auth_enabled on App\\Models\\SocialProvider\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Cannot access property \$user on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
 			identifier: property.nonObject
 			count: 1
 			path: app/Services/SocialProviders/AbstractSocialProvider.php
@@ -2523,12 +1359,6 @@ parameters:
 		-
 			message: '#^Method App\\Services\\SocialProviders\\AbstractSocialProvider\:\:updateAccount\(\) has parameter \$remoteUser with no type specified\.$#'
 			identifier: missingType.parameter
-			count: 1
-			path: app/Services/SocialProviders/AbstractSocialProvider.php
-
-		-
-			message: '#^Parameter \#1 \$account of method App\\Services\\SocialProviders\\AbstractSocialProvider\:\:updateAccount\(\) expects App\\Models\\LinkedAccount, Illuminate\\Database\\Eloquent\\Model given\.$#'
-			identifier: argument.type
 			count: 1
 			path: app/Services/SocialProviders/AbstractSocialProvider.php
 
@@ -2671,24 +1501,6 @@ parameters:
 			path: app/Services/SocialProviders/TwitchProvider.php
 
 		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
-			identifier: property.notFound
-			count: 2
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$score\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$song\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
 			message: '#^Access to an undefined property object\:\:\$items\.$#'
 			identifier: property.notFound
 			count: 4
@@ -2697,30 +1509,6 @@ parameters:
 		-
 			message: '#^Access to an undefined property object\:\:\$total\.$#'
 			identifier: property.notFound
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Cannot access property \$id on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Cannot access property \$market on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: property.nonObject
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Cannot call method accounts\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
-			count: 1
-			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Cannot call method getSpotifyApi\(\) on Illuminate\\Database\\Eloquent\\Model\|null\.$#'
-			identifier: method.nonObject
 			count: 1
 			path: app/Services/SpotifySearchService.php
 
@@ -2753,12 +1541,6 @@ parameters:
 			identifier: argument.templateType
 			count: 1
 			path: app/Services/SpotifySearchService.php
-
-		-
-			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$upcoming_song_id\.$#'
-			identifier: property.notFound
-			count: 1
-			path: app/Services/UpcomingSongAugmentService.php
 
 		-
 			message: '#^Method App\\Services\\UpcomingSongAugmentService\:\:augmentCollection\(\) has parameter \$items with generic class Illuminate\\Support\\Collection but does not specify its types\: TKey, TValue$#'
@@ -2831,12 +1613,6 @@ parameters:
 			identifier: argument.type
 			count: 1
 			path: config/session.php
-
-		-
-			message: '#^Call to an undefined method Illuminate\\Database\\Schema\\ForeignIdColumnDefinition\:\:contrained\(\)\.$#'
-			identifier: method.notFound
-			count: 1
-			path: database/migrations/2023_12_05_220820_create_linked_accounts_table.php
 
 		-
 			message: '#^Access to an undefined property object\:\:\$name\.$#'

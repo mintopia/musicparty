@@ -5,19 +5,103 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
-use Carbon\Carbon;
+use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use NumPHP\LinAlg\LinAlg;
 use Random\Randomizer;
+use stdClass;
 
+/**
+ * @property int $id
+ * @property string $code
+ * @property string $name
+ * @property int $user_id
+ * @property int|null $song_id
+ * @property Carbon|null $song_started_at
+ * @property bool $active
+ * @property bool $poll
+ * @property bool $show_qrcode
+ * @property int|null $downvotes_per_hour
+ * @property bool $weighted
+ * @property string|null $history_playlist_id
+ * @property int|null $max_requests
+ * @property bool $trustscore
+ * @property int|null $trusted_user_id
+ * @property bool $force
+ * @property bool $explicit
+ * @property bool $allow_requests
+ * @property bool $downvotes
+ * @property int|null $min_song_length
+ * @property int|null $max_song_length
+ * @property int|null $no_repeat_interval
+ * @property string|null $device_id
+ * @property string|null $recent_device_id
+ * @property string|null $device_name
+ * @property string|null $backup_playlist_id
+ * @property string|null $backup_playlist_name
+ * @property Carbon|null $last_updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PlayedSong> $history
+ * @property-read int|null $history_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyMember> $members
+ * @property-read int|null $members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyModeration> $moderations
+ * @property-read int|null $moderations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, PartyModSetting> $modsettings
+ * @property-read int|null $modsettings_count
+ * @property-read Song|null $song
+ * @property-read User|null $trustedUser
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, UpcomingSong> $upcoming
+ * @property-read int|null $upcoming_count
+ * @property-read User $user
+ *
+ * @method static \Database\Factories\PartyFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereActive($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereAllowRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereBackupPlaylistId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereBackupPlaylistName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereDeviceName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereDownvotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereDownvotesPerHour($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereExplicit($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereForce($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereHistoryPlaylistId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereLastUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxRequests($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxSongLength($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMinSongLength($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereNoRepeatInterval($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party wherePoll($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereRecentDeviceId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereShowQrcode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereSongStartedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereTrustedUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereTrustscore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereUserId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereWeighted($value)
+ *
+ * @mixin \Eloquent
+ */
 class Party extends Model
 {
     use HasFactory;
@@ -37,6 +121,15 @@ class Party extends Model
     ];
 
     protected $casts = [
+        'active' => 'boolean',
+        'poll' => 'boolean',
+        'show_qrcode' => 'boolean',
+        'weighted' => 'boolean',
+        'trustscore' => 'boolean',
+        'force' => 'boolean',
+        'explicit' => 'boolean',
+        'allow_requests' => 'boolean',
+        'downvotes' => 'boolean',
         'last_updated_at' => 'datetime',
         'song_started_at' => 'datetime',
     ];
@@ -54,42 +147,50 @@ class Party extends Model
         return 'code';
     }
 
+    /** @return HasMany<PartyMember, $this> */
     public function members(): HasMany
     {
         return $this->hasMany(PartyMember::class);
     }
 
     /** @return HasMany<PartyModSetting, $this> */
+    /** @return HasMany<PartyModSetting, $this> */
     public function modsettings(): HasMany
     {
         return $this->hasMany(PartyModSetting::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
+    /** @return BelongsTo<User, $this> */
     public function trustedUser(): BelongsTo
     {
         return $this->belongsTo(User::class, 'trusted_user_id');
     }
 
+    /** @return HasMany<UpcomingSong, $this> */
     public function upcoming(): HasMany
     {
         return $this->hasMany(UpcomingSong::class);
     }
 
+    /** @return HasMany<PlayedSong, $this> */
     public function history(): HasMany
     {
         return $this->hasMany(PlayedSong::class);
     }
 
+    /** @return BelongsTo<Song, $this> */
     public function song(): BelongsTo
     {
         return $this->belongsTo(Song::class);
     }
 
+    /** @return HasMany<PartyModeration, $this> */
     public function moderations(): HasMany
     {
         return $this->hasMany(PartyModeration::class);
@@ -242,13 +343,14 @@ class Party extends Model
             'current' => $current?->toApi(),
             'next' => $next?->toApi(),
             'show_qrcode' => $this->show_qrcode,
-            'created_at' => $this->created_at->toIso8601String(),
-            'updated_at' => $this->updated_at->toIso8601String(),
+            'created_at' => $this->created_at?->toIso8601String(),
+            'updated_at' => $this->updated_at?->toIso8601String(),
         ];
     }
 
     protected function getStatus(): object
     {
+        /** @var stdClass|null $status */
         $status = $this->user->status;
 
         if (! $status) {
@@ -277,7 +379,7 @@ class Party extends Model
             'isPlaying' => $status->is_playing,
             'progress' => null,
             'length' => null,
-            'updatedAt' => $this->user->status_updated_at->toIso8601String(),
+            'updatedAt' => $this->user->status_updated_at?->toIso8601String(),
         ];
 
         if ($this->song && $status->item && $status->item->id == $this->song->spotify_id) {
@@ -299,7 +401,7 @@ class Party extends Model
             $trackUri = "spotify:track:{$this->song->spotify_id}";
         }
         $current = $this->user->getSpotifyStatus();
-        if (is_object($current) && property_exists($current, 'item') && $current->item->id !== null && $current->item->type === 'track') {
+        if ($current !== null && property_exists($current, 'item') && $current->item->id !== null && $current->item->type === 'track') {
             $trackUri = "spotify:track:{$current->item->id}";
         }
         if ($trackUri === '') {
@@ -316,7 +418,7 @@ class Party extends Model
                 $trackUri = "spotify:track:{$song->song->spotify_id}";
             }
         }
-        $this->user->getSpotifyApi()->play($playbackDevice, [
+        $this->user->requireSpotifyApi()->play($playbackDevice, [
             'uris' => [$trackUri],
         ]);
     }
@@ -324,19 +426,19 @@ class Party extends Model
     public function pause(): void
     {
         Log::debug("{$this}: Spotify API -> pause()");
-        $this->user->getSpotifyApi()->pause($this->recent_device_id);
+        $this->user->requireSpotifyApi()->pause($this->recent_device_id ?? '');
     }
 
     public function nextTrack(): void
     {
         Log::debug("{$this}: Spotify API -> next()");
-        $this->user->getSpotifyApi()->next($this->recent_device_id);
+        $this->user->requireSpotifyApi()->next($this->recent_device_id ?? '');
     }
 
     public function previousTrack(): void
     {
         Log::debug("{$this}: Spotify API -> seek()");
-        $this->user->getSpotifyApi()->seek([
+        $this->user->requireSpotifyApi()->seek([
             'position_ms' => 0,
             'device_id' => $this->recent_device_id,
         ]);
@@ -353,9 +455,9 @@ class Party extends Model
 
         return Cache::remember($key, 86400, function () use ($playedId) {
             Log::debug("{$this}: Spotify API -> getTrack({$playedId})");
-            $data = $this->user->getSpotifyApi()->getTrack($playedId, [
+            $data = SpotifyPayload::object($this->user->requireSpotifyApi()->getTrack($playedId, [
                 'market',
-            ]);
+            ]));
 
             return $data->id;
         });
@@ -365,7 +467,7 @@ class Party extends Model
     {
         Log::debug("{$this}: Checking if we need to add tracks to queue");
         $this->user->getSpotifyStatus();
-        $queue = $this->user->getSpotifyApi()->getMyQueue();
+        $queue = SpotifyPayload::object($this->user->requireSpotifyApi()->getMyQueue());
         $count = count($queue->queue);
         $ids = collect($queue->queue)->pluck('id')->unique();
         /* So let's talk about the Spotify queue. The Queue endpoint will return up to a maximum of 20 items, and a
@@ -462,13 +564,13 @@ class Party extends Model
         foreach ($songsToAdd as $song) {
             Log::info("{$this}: Adding {$song->song} to queue");
             Log::debug("{$this}: Spotify API -> queue({$song->song->spotify_id}, [])");
-            $this->user->getSpotifyApi()->queue($song->song->spotify_id);
+            $this->user->requireSpotifyApi()->queue($song->song->spotify_id);
             $song->queued_at = Carbon::now();
             $song->save();
             if ($this->history_playlist_id !== null) {
                 Log::info("{$this}: Adding {$song->song} to history playlist");
                 Log::debug("{$this}: Spotify API -> addPlaylistTracks({$this->history_playlist_id}, [{$song->song->spotify_id}])");
-                $this->user->getSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
+                $this->user->requireSpotifyApi()->addPlaylistTracks($this->history_playlist_id, [$song->song->spotify_id]);
             }
         }
     }
@@ -526,19 +628,21 @@ class Party extends Model
             return 60;
         }
 
-        if (! $this->user->status || ! $this->user->status->is_playing) {
+        /** @var stdClass|null $status */
+        $status = $this->user->status;
+        if (! $status || ! $status->is_playing) {
             return 60;
         }
 
-        $remaining = ($this->song->length - $this->user->status->progress_ms) / 1000;
+        $remaining = ($this->song->length - $status->progress_ms) / 1000;
         if ($remaining > 60) {
             return 60;
         }
 
-        return max(5, floor($remaining / 2));
+        return max(5, (int) floor($remaining / 2));
     }
 
-    protected function forcePlayback(?object $current): ?object
+    protected function forcePlayback(?stdClass $current): ?stdClass
     {
         if (! $this->force || ! $this->device_id) {
             return $current;
@@ -565,7 +669,7 @@ class Party extends Model
             if ($device->id == $this->device_id) {
                 Log::info("{$this}: Forcing playback on {$device->name}");
                 Log::debug("{$this}: Spotify API -> play()");
-                $this->user->getSpotifyApi()->play($this->device_id, [
+                $this->user->requireSpotifyApi()->play($this->device_id, [
                     'uris' => [$trackUri],
                 ]);
 
@@ -670,15 +774,19 @@ class Party extends Model
             return $tracks;
         }
 
+        if ($this->backup_playlist_id === null) {
+            return [];
+        }
+
         $tracks = [];
         $offset = 0;
         do {
             Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
-            $response = $this->user->getSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
+            $response = SpotifyPayload::object($this->user->requireSpotifyApi()->getPlaylistTracks($this->backup_playlist_id, [
                 'limit' => 50,
                 'offset' => $offset,
                 'market' => $this->user->market,
-            ]);
+            ]));
             foreach ($response->items as $track) {
                 if ($track->track === null) {
                     continue;

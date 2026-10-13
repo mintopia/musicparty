@@ -13,6 +13,7 @@ use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Services\RequestCheckService;
 use App\Services\UpcomingSongAugmentService;
+use App\Support\SpotifyPayload;
 use Illuminate\Http\Request;
 
 class UpcomingSongController extends Controller
@@ -63,8 +64,8 @@ class UpcomingSongController extends Controller
             $query->whereSpotifyId($request->input('spotify_id'));
         })->first();
         if (! $upcoming) {
-            $spotifySong = $party->user->getSpotifyApi()->getTrack($request->input('spotify_id'));
-            if (! $spotifySong) {
+            $response = $party->user->requireSpotifyApi()->getTrack($request->input('spotify_id'));
+            if (! $response) {
                 return response()->json([
                     'message' => 'Unable to find the song in Spotify.',
                     'errors' => [
@@ -75,6 +76,7 @@ class UpcomingSongController extends Controller
                 ], 422);
             }
 
+            $spotifySong = SpotifyPayload::object($response);
             $checkService = new RequestCheckService($party, $member);
             $checkResponse = $checkService->checkSong($spotifySong);
             if (! $checkResponse->allowed) {
@@ -133,7 +135,7 @@ class UpcomingSongController extends Controller
         if (! $party->allow_requests) {
             return 'Party is not accepting requests';
         }
-        if ($member->role?->code === 'banned') {
+        if ($member->role->code === 'banned') {
             return 'You are not allowed to request any more songs';
         }
 

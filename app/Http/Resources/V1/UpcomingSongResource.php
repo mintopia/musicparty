@@ -22,8 +22,8 @@ class UpcomingSongResource extends JsonResource
     {
         $data = $this->toApi();
         $data['id'] = $this->id;
-        $data['created_at'] = $this->created_at->toIso8601String();
-        $data['updated_at'] = $this->updated_at->toIso8601String();
+        $data['created_at'] = $this->created_at?->toIso8601String();
+        $data['updated_at'] = $this->updated_at?->toIso8601String();
         $data['vote'] = $this->augmentedData->vote->value ?? null;
         $data['user'] = $this->user->nickname ?? null;
 

@@ -54,7 +54,9 @@ class PartyMemberController extends Controller
                 $query = $query->orderBy('role_id', $params['order_direction']);
                 break;
             case 'nickname':
-                $query = $query->join('users', 'users.id', '=', 'party_members.user_id')->orderBy('users.nickname', $params['direction']);
+                $query = $query->join('users', 'users.id', '=', 'party_members.user_id')
+                    ->select('party_members.*')
+                    ->orderBy('users.nickname', $params['order_direction']);
                 break;
         }
 

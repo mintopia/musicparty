@@ -6,7 +6,7 @@ use App\Events\Cron\HourTickEvent;
 use App\Models\PartyModSetting;
 use App\Mods\Whamageddon\Whamageddon;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Laravel\Reverb\Loggers\Log;
+use Illuminate\Support\Facades\Log;
 
 class HourTickListener implements ShouldQueue
 {

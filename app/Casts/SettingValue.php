@@ -21,13 +21,9 @@ class SettingValue implements CastsAttributes
             $value = Crypt::decrypt($value);
         }
         if (is_string($value)) {
-            try {
-                $unserialized = @unserialize($value);
-                if ($unserialized !== false) {
-                    $value = $unserialized;
-                }
-            } catch (\Exception) {
-                // Do nothing, assume it's OK!
+            $unserialized = @unserialize($value);
+            if ($unserialized !== false) {
+                $value = $unserialized;
             }
         }
         switch ($model->type) {
@@ -56,7 +52,7 @@ class SettingValue implements CastsAttributes
     public function set(Model $model, string $key, mixed $value, array $attributes): mixed
     {
         $value = serialize($value);
-        if ($model->encrypted && $value !== null) {
+        if ($model->encrypted) {
             $value = Crypt::encrypt($value);
         }
 

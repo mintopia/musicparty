@@ -20,7 +20,7 @@ class PartyMemberUpdateRequest extends FormRequest
         $member = $this->route('user');
         $user = $this->user();
 
-        $touchesOwnerRole = $this->input('role') === 'owner' || $member->role?->code === 'owner';
+        $touchesOwnerRole = $this->input('role') === 'owner' || $member->role->code === 'owner';
         if (! $touchesOwnerRole) {
             return true;
         }

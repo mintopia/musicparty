@@ -5,8 +5,8 @@ namespace App\Services;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Vote;
-use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
@@ -29,18 +29,19 @@ class SpotifySearchService
         $account = $this->party->user->accounts()->whereHas('provider', function ($query) {
             $query->whereCode('spotifysearch');
         })->first();
-        if (! $account) {
+        $provider = $account?->provider;
+        if ($account === null || $provider === null) {
             Log::warning("{$this->party->user}: No Spotify Search account, using control account");
-            $this->api = $this->party->user->getSpotifyApi();
+            $this->api = $this->party->user->requireSpotifyApi();
 
             return $this->api;
         }
 
         if ($this->session === null) {
-            $clientId = $account->provider->getSetting('client_id');
-            $clientSecret = $account->provider->getSetting('client_secret');
+            $clientId = $provider->getSetting('client_id');
+            $clientSecret = $provider->getSetting('client_secret');
             $this->session = new Session($clientId, $clientSecret);
-            $this->session->setAccessToken($account->access_token);
+            $this->session->setAccessToken($account->access_token ?? '');
         }
 
         // Create new API
@@ -50,7 +51,7 @@ class SpotifySearchService
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this->party->user}: Refreshing expiring Search API access token");
-            $this->session->refreshAccessToken($account->refresh_token);
+            $this->session->refreshAccessToken($account->refresh_token ?? '');
             $account->access_token = $this->session->getAccessToken();
             $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
             $account->save();

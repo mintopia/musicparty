@@ -7,7 +7,6 @@ use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Models\Role;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -91,7 +90,7 @@ class UserController extends Controller
         $user->nickname = $request->input('nickname');
 
         if ($request->input('terms', false)) {
-            $user->terms_agreed_at ??= Carbon::now();
+            $user->terms_agreed_at ??= now();
         } else {
             $user->terms_agreed_at = null;
         }

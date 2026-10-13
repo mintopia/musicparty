@@ -6,6 +6,7 @@ use App\Enums\PartyModerationType;
 use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
+use App\Support\SpotifyPayload;
 use Illuminate\Http\Request;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
@@ -39,7 +40,7 @@ class PartyModerationController extends Controller
         $spotifyData = null;
         if ($request->has('track')) {
             try {
-                $spotifyData = $party->user->getSpotifyApi()->getTrack($request->input('track'));
+                $spotifyData = SpotifyPayload::object($party->user->requireSpotifyApi()->getTrack($request->input('track')));
             } catch (SpotifyWebAPIException) {
                 // Do Nothing
             }

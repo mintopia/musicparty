@@ -177,7 +177,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $localUser->save();
         });
 
-        $localUser ??= $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->first()->user;
+        $localUser ??= $this->provider->accounts()->whereExternalId($remoteUser->getId())->with('user')->firstOrFail()->user;
 
         return $localUser;
     }

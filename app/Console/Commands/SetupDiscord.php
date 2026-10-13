@@ -38,8 +38,8 @@ class SetupDiscord extends Command
             $provider = $prov->install();
         }
 
-        $clientId = $provider->settings()->whereCode('client_id')->first();
-        $secret = $provider->settings()->whereCode('client_secret')->first();
+        $clientId = $provider->settings()->whereCode('client_id')->firstOrFail();
+        $secret = $provider->settings()->whereCode('client_secret')->firstOrFail();
 
         $clientId->value = text(
             label: 'Discord Client ID',

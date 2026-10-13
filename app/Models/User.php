@@ -4,19 +4,75 @@ namespace App\Models;
 
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Models\Traits\ToString;
-use Carbon\Carbon;
+use App\Support\SpotifyPayload;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\DatabaseNotification;
+use Illuminate\Notifications\DatabaseNotificationCollection;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Laravel\Sanctum\HasApiTokens;
+use Laravel\Sanctum\PersonalAccessToken;
+use RuntimeException;
 use SpotifyWebAPI\Request;
 use SpotifyWebAPI\Session;
 use SpotifyWebAPI\SpotifyWebAPI;
+use stdClass;
 
+/**
+ * @property int $id
+ * @property string $nickname
+ * @property string $market
+ * @property string|null $avatar
+ * @property Carbon|null $terms_agreed_at
+ * @property bool $first_login
+ * @property Carbon|null $last_login
+ * @property bool $suspended
+ * @property object|null $status
+ * @property Carbon|null $status_updated_at
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property-read Collection<int, LinkedAccount> $accounts
+ * @property-read int|null $accounts_count
+ * @property-read DatabaseNotificationCollection<int, DatabaseNotification> $notifications
+ * @property-read int|null $notifications_count
+ * @property-read Collection<int, Party> $parties
+ * @property-read int|null $parties_count
+ * @property-read Collection<int, PartyMember> $partyMembers
+ * @property-read int|null $party_members_count
+ * @property-read Collection<int, SongRating> $ratings
+ * @property-read int|null $ratings_count
+ * @property-read Collection<int, Role> $roles
+ * @property-read int|null $roles_count
+ * @property-read Collection<int, PersonalAccessToken> $tokens
+ * @property-read int|null $tokens_count
+ * @property-read Collection<int, Vote> $votes
+ * @property-read int|null $votes_count
+ *
+ * @method static \Database\Factories\UserFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereAvatar($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereFirstLogin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereLastLogin($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereMarket($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereNickname($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStatus($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereStatusUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereSuspended($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereTermsAgreedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|User whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class User extends Authenticatable
 {
     use HasApiTokens;
@@ -25,6 +81,8 @@ class User extends Authenticatable
     use ToString;
 
     protected $casts = [
+        'first_login' => 'boolean',
+        'suspended' => 'boolean',
         'terms_agreed_at' => 'datetime',
         'last_login' => 'datetime',
         'status_updated_at' => 'datetime',
@@ -41,38 +99,36 @@ class User extends Authenticatable
 
     protected ?array $devices = null;
 
-    protected ?object $recentTracks = null;
+    protected ?stdClass $recentTracks = null;
 
+    /** @var array<string, stdClass> */
     protected array $playlistCache = [];
 
-    protected $hasUpdatedStatus = false;
-
-    /**
-     * @return HasMany<LinkedAccount>
-     */
+    /** @return HasMany<LinkedAccount, $this> */
     public function accounts(): HasMany
     {
         return $this->hasMany(LinkedAccount::class);
     }
 
-    /**
-     * @return HasMany<Party>
-     */
+    /** @return HasMany<Party, $this> */
     public function parties(): HasMany
     {
         return $this->hasMany(Party::class);
     }
 
+    /** @return HasMany<PartyMember, $this> */
     public function partyMembers(): HasMany
     {
         return $this->hasMany(PartyMember::class);
     }
 
+    /** @return HasMany<Vote, $this> */
     public function votes(): HasMany
     {
         return $this->hasMany(Vote::class);
     }
 
+    /** @return HasMany<SongRating, $this> */
     public function ratings(): HasMany
     {
         return $this->hasMany(SongRating::class);
@@ -102,6 +158,7 @@ class User extends Authenticatable
         return null;
     }
 
+    /** @return BelongsToMany<Role, $this> */
     public function roles(): BelongsToMany
     {
         return $this->belongsToMany(Role::class);
@@ -150,21 +207,19 @@ class User extends Authenticatable
 
     public function getSpotifyApi(): ?SpotifyWebAPI
     {
-        /**
-         * @var LinkedAccount $account
-         */
-        $account = $this->accounts()->whereHas('provider', function ($query) {
+        $account = $this->accounts()->with('provider')->whereHas('provider', function ($query) {
             $query->whereCode('spotify');
         })->first();
-        if (! $account) {
+        $provider = $account?->provider;
+        if ($account === null || $provider === null) {
             return null;
         }
 
         if ($this->session === null) {
-            $clientId = $account->provider->getSetting('client_id');
-            $clientSecret = $account->provider->getSetting('client_secret');
+            $clientId = $provider->getSetting('client_id');
+            $clientSecret = $provider->getSetting('client_secret');
             $this->session = new Session($clientId, $clientSecret);
-            $this->session->setAccessToken($account->access_token);
+            $this->session->setAccessToken($account->access_token ?? '');
         }
 
         if (! $this->api) {
@@ -176,7 +231,7 @@ class User extends Authenticatable
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$this}: Refreshing expiring access token");
-            $this->session->refreshAccessToken($account->refresh_token);
+            $this->session->refreshAccessToken($account->refresh_token ?? '');
             $account->access_token = $this->session->getAccessToken();
             $account->access_token_expires_at = new Carbon($this->session->getTokenExpiration());
             $account->save();
@@ -186,6 +241,14 @@ class User extends Authenticatable
         return $this->api;
     }
 
+    public function requireSpotifyApi(): SpotifyWebAPI
+    {
+        return $this->getSpotifyApi() ?? throw new RuntimeException("{$this}: No linked Spotify account");
+    }
+
+    /**
+     * @return array<int, stdClass>
+     */
     public function getDevices(): array
     {
         if ($this->devices !== null) {
@@ -196,15 +259,20 @@ class User extends Authenticatable
             return [];
         }
 
-        $this->devices = Cache::remember("users.{$this->id}.devices", 300, function () use ($api) {
+        /** @var array<int, stdClass> $devices */
+        $devices = Cache::remember("users.{$this->id}.devices", 300, function () use ($api): array {
             Log::debug("{$this}: Spotify API -> getMyDevices()");
 
-            return $api->getMyDevices()->devices;
+            return (array) SpotifyPayload::object($api->getMyDevices())->devices;
         });
+        $this->devices = $devices;
 
-        return $this->devices;
+        return $devices;
     }
 
+    /**
+     * @return array<int, stdClass>
+     */
     public function getPlaylists(): array
     {
         if ($this->playlists !== null) {
@@ -219,7 +287,7 @@ class User extends Authenticatable
         $offset = 0;
         do {
             Log::debug("{$this}: Spotify API -> getMyPlaylists({$offset})");
-            $result = $api->getMyPlaylists(['limit' => 50, 'offset' => $offset]);
+            $result = SpotifyPayload::object($api->getMyPlaylists(['limit' => 50, 'offset' => $offset]));
             $this->playlists = array_merge($this->playlists, $result->items);
             $offset += 50;
         } while ($result->next);
@@ -227,19 +295,18 @@ class User extends Authenticatable
         return $this->playlists;
     }
 
-    public function getSpotifyStatus(bool $forced = false): ?object
+    public function getSpotifyStatus(): ?stdClass
     {
-        if ($this->hasUpdatedStatus && ! $forced) {
-            return $this->status;
-        }
         Log::debug("{$this}: Spotify API -> getMyCurrentPlaybackInfo()");
-        $this->status = $this->getSpotifyApi()->getMyCurrentPlaybackInfo([
+        $playback = $this->requireSpotifyApi()->getMyCurrentPlaybackInfo([
             'market' => $this->market,
         ]);
+        $status = $playback === null ? null : SpotifyPayload::object($playback);
+        $this->status = $status;
         $this->status_updated_at = Carbon::now();
         $this->save();
 
-        return $this->status;
+        return $status;
     }
 
     public function getPartyMember(Party $party): ?PartyMember
@@ -253,31 +320,31 @@ class User extends Authenticatable
         return null;
     }
 
-    public function getRecentTracks(bool $force = false): ?object
+    public function getRecentTracks(bool $force = false): stdClass
     {
         if (! $force && $this->recentTracks !== null) {
             return $this->recentTracks;
         }
 
         Log::debug("{$this}: Spotify API -> getMyRecentTracks()");
-        $this->recentTracks = $this->getSpotifyApi()->getMyRecentTracks([
+        $this->recentTracks = SpotifyPayload::object($this->requireSpotifyApi()->getMyRecentTracks([
             'limit' => 20,
             'market' => $this->market,
-        ]);
+        ]));
 
         return $this->recentTracks;
     }
 
-    public function getPlaylist(string $id, bool $force = false): ?object
+    public function getPlaylist(string $id, bool $force = false): stdClass
     {
         if (! $force && isset($this->playlistCache[$id])) {
             return $this->playlistCache[$id];
         }
 
         Log::debug("{$this}: Spotify API -> getPlaylist({$id})");
-        $this->playlistCache[$id] = $this->getSpotifyApi()->getPlaylist($id, [
+        $this->playlistCache[$id] = SpotifyPayload::object($this->requireSpotifyApi()->getPlaylist($id, [
             'market' => $this->market,
-        ]);
+        ]));
 
         return $this->playlistCache[$id];
     }

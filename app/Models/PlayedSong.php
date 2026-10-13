@@ -2,11 +2,49 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 
+/**
+ * @property int $id
+ * @property int $song_id
+ * @property int $party_id
+ * @property Carbon $played_at
+ * @property int $likes
+ * @property int $dislikes
+ * @property Carbon|null $created_at
+ * @property Carbon|null $updated_at
+ * @property int|null $upcoming_song_id
+ * @property int $rating
+ * @property string|null $relinked_from
+ * @property-read Party $party
+ * @property-read Collection<int, SongRating> $ratings
+ * @property-read int|null $ratings_count
+ * @property-read Song $song
+ * @property-read UpcomingSong|null $upcoming
+ *
+ * @method static \Database\Factories\PlayedSongFactory factory($count = null, $state = [])
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereDislikes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereLikes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong wherePlayedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereRating($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereRelinkedFrom($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereUpcomingSongId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PlayedSong whereUpdatedAt($value)
+ *
+ * @mixin \Eloquent
+ */
 class PlayedSong extends Model
 {
     use HasFactory;
@@ -15,21 +53,25 @@ class PlayedSong extends Model
         'played_at' => 'datetime',
     ];
 
+    /** @return BelongsTo<Party, $this> */
     public function party(): BelongsTo
     {
         return $this->belongsTo(Party::class);
     }
 
+    /** @return BelongsTo<Song, $this> */
     public function song(): BelongsTo
     {
         return $this->belongsTo(Song::class);
     }
 
+    /** @return BelongsTo<UpcomingSong, $this> */
     public function upcoming(): BelongsTo
     {
         return $this->belongsTo(UpcomingSong::class, 'upcoming_song_id');
     }
 
+    /** @return HasMany<SongRating, $this> */
     public function ratings(): HasMany
     {
         return $this->hasMany(SongRating::class);

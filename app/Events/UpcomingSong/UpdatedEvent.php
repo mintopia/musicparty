@@ -27,8 +27,8 @@ class UpdatedEvent implements ShouldBroadcast
     {
         $data = $this->song->toApi();
         $data['id'] = $this->song->id;
-        $data['created_at'] = $this->song->created_at->toIso8601String();
-        $data['updated_at'] = $this->song->updated_at->toIso8601String();
+        $data['created_at'] = $this->song->created_at?->toIso8601String();
+        $data['updated_at'] = $this->song->updated_at?->toIso8601String();
         $data['vote'] = null;
 
         return $data;
