@@ -3,6 +3,8 @@
 namespace App\Providers;
 
 use App\Enums\Purpose;
+use App\Events\User\SpotifyAccessTokenUpdatedEvent;
+use App\Listeners\BroadcastWebPlayerToken;
 use App\Listeners\DispatchPushedPlaybackState;
 use App\Listeners\MessageLoggedListener;
 use App\Models\Party;
@@ -27,6 +29,7 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\Playback\PushedStateRouter;
+use App\Services\Playback\WebPlayerStateMapper;
 use App\Services\PlayedSongAugmentService;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -54,6 +57,7 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->scoped(ActiveTheme::class);
+        $this->app->tag([WebPlayerStateMapper::class], 'pushed-state-mappers');
         $this->app->bind(PushedStateRouter::class, fn (): PushedStateRouter => new PushedStateRouter($this->app->tagged('pushed-state-mappers')));
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
@@ -95,6 +99,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(SocialiteWasCalled::class, LaravelPassportExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, SpotifyExtendSocialite::class.'@handle');
         Event::listen(MessageLogged::class, MessageLoggedListener::class);
+        Event::listen(SpotifyAccessTokenUpdatedEvent::class, BroadcastWebPlayerToken::class);
         Event::listen(MessageReceived::class, DispatchPushedPlaybackState::class);
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));

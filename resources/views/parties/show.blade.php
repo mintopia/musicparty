@@ -24,6 +24,12 @@
             <div class="text-secondary small mb-1" data-testid="current-player">
                 Player: {{ $party->playback_source ? Str::headline($party->playback_source->value) : 'None' }}
             </div>
+            @can('player', $party)
+                <button type="button" class="btn btn-outline-primary btn-sm mb-2" id="open-web-player"
+                    onclick="window.open('{{ route('parties.player', $party->code) }}', 'musicparty-web-player-{{ $party->code }}', 'popup,width=480,height=640')">
+                    Open Web Player
+                </button>
+            @endcan
         @endif
         <next
             code="{{ $party->code }}"
