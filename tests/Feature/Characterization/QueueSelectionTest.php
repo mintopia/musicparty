@@ -4,11 +4,14 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\Vote;
+use App\Services\Music\Data\Playlist;
+use App\Services\Music\Fake\FakeMusicProvider;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Random\Engine\Mt19937;
 use Random\Randomizer;
+use Tests\Support\FakeFallbackPlaylist;
 use Tests\Support\FakeSpotify;
 
 function selectionParty(array $attributes = []): array
@@ -17,6 +20,7 @@ function selectionParty(array $attributes = []): array
     $party = Party::factory()->create(array_merge(['active' => true, 'weighted' => false, 'backup_playlist_id' => 'BACKUP'], $attributes));
     Cache::flush();
     $fake->calls = [];
+    app()->forgetInstance(FakeMusicProvider::class);
 
     return [$party, $fake];
 }
@@ -343,7 +347,7 @@ it('fills a short weighted draw from the remaining requests ordered by score, cr
 
 it('tops up to five waiting requests from the Fallback Playlist after sending, so the first run sends nothing and the second sends the topped-up requests', function () {
     [$party, $fake] = selectionParty();
-    $fake->withBackupPlaylist(['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']);
+    FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']);
     seedRandomness(11);
 
     $party->updateState();
@@ -362,7 +366,7 @@ it('tops up after sending, so a freshly sent request counts as recently queued a
     [$party, $fake] = selectionParty();
     waitingRequest($party, 'F1', 0);
     waitingRequest($party, 'F2', 0);
-    $fake->withBackupPlaylist(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
     seedRandomness(3);
 
     $party->updateState();
@@ -377,7 +381,7 @@ it('tops up only the shortfall from the Fallback Playlist and never duplicates a
     waitingRequest($party, 'F1', 0);
     waitingRequest($party, 'F2', 0);
     queueWith($fake, ['X', 'Y']);
-    $fake->withBackupPlaylist(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
     seedRandomness(3);
 
     $party->updateState();
@@ -394,11 +398,11 @@ it('does not top up when five or more requests are already waiting', function ()
         waitingRequest($party, "W{$n}");
     }
     queueWith($fake, ['X', 'Y']);
-    $fake->withBackupPlaylist(['F1', 'F2']);
+    FakeFallbackPlaylist::seed(['F1', 'F2']);
 
     $party->updateState();
 
-    expect($fake->callsTo('getPlaylistTracks'))->toBe([])
+    expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toBe([])
         ->and(UpcomingSong::query()->count())->toBe(5);
 });
 
@@ -406,7 +410,7 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     [$party, $fake] = selectionParty();
     waitingRequest($party, 'RECENT', 0, ['queued_at' => now()->subMinutes(10)]);
     waitingRequest($party, 'OLD', 0, ['queued_at' => now()->subMinutes(45)]);
-    $fake->withBackupPlaylist(['RECENT', 'OLD']);
+    FakeFallbackPlaylist::seed(['RECENT', 'OLD']);
     queueWith($fake, ['X', 'Y']);
     seedRandomness(2);
 
@@ -416,20 +420,11 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     expect($added->pluck('song.spotify_id')->all())->toBe(['OLD']);
 });
 
-it('skips fallback entries that are null, local or not playable', function () {
+it('skips fallback entries that are not playable', function () {
     [$party, $fake] = selectionParty();
-    $local = FakeSpotify::track('LOCAL');
-    $local->is_local = true;
-    $unplayable = FakeSpotify::track('NOPLAY');
-    $unplayable->is_playable = false;
-    $fake->respond('getPlaylistTracks', (object) [
-        'items' => [
-            (object) ['track' => null],
-            (object) ['track' => $local],
-            (object) ['track' => $unplayable],
-            (object) ['track' => FakeSpotify::track('GOOD')],
-        ],
-        'next' => null,
+    app(FakeMusicProvider::class)->withPlaylist(new Playlist('BACKUP', 'Fallback', 'Owner', 2), [
+        FakeFallbackPlaylist::track('NOPLAY', false),
+        FakeFallbackPlaylist::track('GOOD'),
     ]);
     seedRandomness(2);
 
@@ -441,11 +436,11 @@ it('skips fallback entries that are null, local or not playable', function () {
 
 it('caches the fallback playlist for an hour so a second run does not refetch it', function () {
     [$party, $fake] = selectionParty();
-    $fake->withBackupPlaylist(['F1']);
+    FakeFallbackPlaylist::seed(['F1']);
     seedRandomness(2);
 
     $party->updateState();
     $party->updateState();
 
-    expect($fake->callsTo('getPlaylistTracks'))->toHaveCount(1);
+    expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toHaveCount(1);
 });

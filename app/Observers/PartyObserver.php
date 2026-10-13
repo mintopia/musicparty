@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Jobs\RefreshFallbackPlaylist;
 use App\Models\Party;
 use Illuminate\Support\Str;
 
@@ -25,7 +26,7 @@ class PartyObserver
     public function saved(Party $party): void
     {
         if ($party->isDirty('backup_playlist_id')) {
-            $party->getBackupPlaylistTracks(true);
+            RefreshFallbackPlaylist::dispatch($party);
         }
     }
 

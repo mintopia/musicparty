@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Models\Traits\ToString;
+use App\Services\FallbackPlaylist;
 use App\Services\Spotify\SpotifyGateway;
 use App\Support\SpotifyPayload;
 use Carbon\CarbonImmutable;
@@ -735,90 +736,7 @@ class Party extends Model
 
     protected function backfillUpcomingSongs(): void
     {
-        Log::debug("{$this}: Backfilling upcoming songs");
-        $toAdd = self::MINIMUM_UPCOMING - $this->upcoming()->whereNull('queued_at')->count();
-        if ($toAdd <= 0) {
-            return;
-        }
-
-        $tracks = $this->getBackupPlaylistTracks();
-
-        $existingIds = $this->upcoming()
-            ->where(function ($query) {
-                $query->whereNull('queued_at')
-                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));
-            })
-            ->with('song')
-            ->get()
-            ->pluck('song.spotify_id')
-            ->toArray();
-
-        $tracks = array_filter($tracks, function ($track) use ($existingIds) {
-            if ($track->track === null) {
-                return false;
-            }
-
-            return ! in_array($track->track->id, $existingIds);
-        });
-
-        $toAdd = min($toAdd, count($tracks));
-        $tracks = app(Randomizer::class)->shuffleArray(array_values($tracks));
-
-        for ($i = 0; $i < $toAdd; $i++) {
-            $track = $tracks[$i];
-            $song = Song::fromSpotify($track->track);
-            Log::info("{$this}: Adding {$song} from backup playlist");
-            $upcoming = new UpcomingSong;
-            $upcoming->party()->associate($this);
-            $upcoming->song()->associate($song);
-            $upcoming->save();
-        }
-    }
-
-    /** @return array<int, stdClass> */
-    public function getBackupPlaylistTracks(bool $force = false): array
-    {
-        $cacheKey = "party.{$this->id}.backupplaylist";
-        $tracks = Cache::get($cacheKey);
-        if ($tracks !== null && ! $force) {
-            return $tracks;
-        }
-
-        if ($this->backup_playlist_id === null) {
-            return [];
-        }
-
-        $tracks = [];
-        $offset = 0;
-        do {
-            Log::debug("{$this}: Spotify API -> getPlaylistTracks({$this->backup_playlist_id}, {$offset})");
-            $response = SpotifyPayload::object(app(SpotifyGateway::class)->requireClient($this->user)->getPlaylistTracks($this->backup_playlist_id, [
-                'limit' => 50,
-                'offset' => $offset,
-                'market' => $this->user->market,
-            ]));
-            foreach ($response->items as $track) {
-                if ($track->track === null) {
-                    continue;
-                }
-                if (property_exists($track->track, 'is_playable') && ! $track->track->is_playable) {
-                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is not playable");
-
-                    continue;
-                }
-                if ($track->track->is_local) {
-                    Log::debug("{$this}: Ignoring [{$track->track->id}] {$track->track->name} because it is local");
-
-                    continue;
-                }
-                $tracks[] = $track;
-            }
-            $offset += 50;
-        } while ($response->next !== null);
-
-        Cache::put($cacheKey, $tracks, 3600);
-
-        return $tracks;
+        app(FallbackPlaylist::class)->backfill($this);
     }
 
     public function canBeManagedBy(?User $user): bool
