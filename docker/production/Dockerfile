@@ -34,7 +34,8 @@ COPY --from=npm /app /app
 COPY docker/production/entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh && \
     mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
-    echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
+    echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini && \
+    echo 'session.upload_progress.enabled = 0' > /usr/local/etc/php/conf.d/session_upload_progress.ini
 
 COPY docker/Caddyfile /
 
