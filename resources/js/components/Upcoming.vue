@@ -4,7 +4,7 @@
             <div class="list-group card-list-group">
                 <TransitionGroup name="list" tag="div">
                     <div class="list-group-item" v-for="song in upcoming" :key="song.id">
-                        <div class="row g-2 align-items-center">
+                        <div v-bind:class="'row g-2 align-items-center ' + song.css_classes">
                             <div class="col-auto">
                                 <img v-bind:src="song.album.image_url" v-bind:title="song.album.name" class="rounded" width="60" height="60">
                             </div>
@@ -15,7 +15,7 @@
                                 </div>
                                 <div class="text-muted">
                                     <template v-if="song.user">Requested by {{ song.user }}</template>
-                                    <template v-else>Fallback Track</template>
+                                    <template v-else>{{ song.fallback_name }}</template>
                                 </div>
                             </div>
                             <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
@@ -111,6 +111,27 @@
 
     .song-length {
         padding-right: 1rem;
+    }
+
+    .whamageddon {
+        padding-top: 20px;
+    }
+
+    .whamageddon::before {
+        content: 'Whamageddon!';
+        white-space:nowrap;
+        position: absolute;
+        padding: 5px 100px;
+        width: 100%;
+        color: white;
+        text-align: center;
+        text-transform: uppercase;
+        font-size: 10px;
+        font-weight: bold;
+        box-sizing: border-box;
+        top: 0;
+        left: 0;
+        background-color: #990000;
     }
 </style>
 <script>

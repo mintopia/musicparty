@@ -130,6 +130,18 @@
                 <p class="invalid-feedback">{{ $message }}</p>
                 @enderror
             </div>
+
+            <div class="mb-3 col-md-6">
+                <label class="form-label">Max Requests</label>
+                <div class="input-group">
+                    <input type="text" name="max_requests" class="form-control @error('max_requests') is-invalid @enderror"
+                           value="{{ old('max_requests', $party->max_requests ?? '') }}">
+                </div>
+                <small class="form-hint">The maximum number of requests that a user can have in the queue</small>
+                @error('downvotes_per_hour')
+                <p class="invalid-feedback">{{ $message }}</p>
+                @enderror
+            </div>
         </div>
 
         <h2 class="mt-4">Advanced Options</h2>
@@ -185,6 +197,45 @@
             @enderror
         </div>
     </div>
+
+    @foreach ($mods as $mod)
+        <h2 class="mt-4">{{ $mod->name }}</h2>
+
+        @if ($mod->description)
+            <p>
+                {{ $mod->description }}
+            </p>
+        @endif
+        @foreach ($mod->settings()->wherePrivate(false)->get() as $setting)
+            <div class="mb-3">
+                @if ($setting->type === \App\Enums\SettingType::stBoolean)
+                    <label class="form-check form-switch">
+                        <input type="checkbox" class="form-check-input" name="mods_{{ $mod->code }}_{{ $setting->code }}" value="1"
+                               @if(old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code))) checked @endif>
+                        {{ $setting->name }}
+                    </label>
+                    @if ($setting->description)
+                        <small class="form-hint">{{ $setting->description }}</small>
+                    @endif
+                    @error("mods_{$mod->code}_{$setting->code}")
+                    <p class="invalid-feedback">{{ $message }}</p>
+                    @enderror
+                @else
+                    <label class="form-label required">{{ $setting->name }}</label>
+                    <div>
+                        <input type="text" name="mods_{{ $mod->code }}_{{ $setting->code }}" class="form-control @error("mods_{$mod->code}_{$setting->code}") is-invalid @enderror"
+                               placeholder="Name" value="{{ old("mods_{$mod->code}_{$setting->code}", $party->getModSettingValue($mod, $setting->code) ?? '') }}">
+                        @if ($setting->description)
+                            <small class="form-hint">{{ $setting->description }}</small>
+                        @endif
+                        @error("mods_{$mod->code}_{$setting->code}")
+                        <p class="invalid-feedback">{{ $message }}</p>
+                        @enderror
+                    </div>
+                @endif
+            </div>
+        @endforeach
+    @endforeach
 </div>
 
 

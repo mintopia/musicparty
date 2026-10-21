@@ -15,6 +15,7 @@ class PartyMemberRoleSeeder extends Seeder
     {
         $roles = [
             'owner' => 'Owner',
+            'vip' => 'VIP',
             'user' => 'User',
             'banned' => 'Banned',
         ];

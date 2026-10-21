@@ -174,6 +174,31 @@ service:
       exporters: [debug]
 ```
 
+## Modding Support
+
+Music Party now supports mods! Simply write a service provider to provide commands and event listeners. There are some
+classes to help with this:
+
+- `Mod` - Write an install method to create a Mod object for your mod. It should have a unique code.
+- `ModSetting` - Similar to provider settings, it allows you to define configuration for your mod. By setting it to
+  `private` you can use it as a variable to store data for your mod.
+- `PartyModSetting` - A value of a setting for the party.
+
+The best way to work with mod settings in the context of a party is using the helper methods on the `Party` class, eg.
+
+```php
+$isEnabled = $party->getModSettingValue('testmod', 'enabled');
+$party->setModSetting('testmod', 'enabled', true);
+```
+
+There are new events that are emitted when a mod setting is updated or deleted for a party, and events emitted every
+minute, hour and day.
+
+### Whamageddon
+
+The first example mod. When enabled, it will add Last Christmas by Wham into the queue. Every hour between 9AM and 1AM
+an upvote will be added to the track.
+
 ## Contributing
 
 It's an open source project and I'm happy to accept pull requests. I am terrible at UI and UX, which is why this is

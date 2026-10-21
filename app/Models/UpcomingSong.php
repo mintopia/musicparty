@@ -18,6 +18,7 @@ class UpcomingSong extends Model
 
     protected $casts = [
         'queued_at' => 'datetime',
+        'not_before', 'datetime',
     ];
 
     public function party(): BelongsTo
@@ -51,6 +52,8 @@ class UpcomingSong extends Model
         $data['score'] = $this->score;
         $data['queued_at'] = $this->queued_at ? $this->queued_at->toIso8601String() : null;
         $data['user'] = $this->user->nickname ?? null;
+        $data['fallback_name'] = $this->fallback_override ?? 'Fallback Track';
+        $data['css_classes'] = $this->css_classes ?? '';
         return $data;
     }
 
@@ -90,7 +93,7 @@ class UpcomingSong extends Model
 
     public function updateScore(): void
     {
-        $this->score = $this->votes()->sum('value');
+        $this->score = $this->votes()->sum('value') + $this->score_adjustment;
         if ($this->isDirty()) {
             $this->save();
         }

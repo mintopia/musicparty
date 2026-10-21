@@ -131,7 +131,13 @@
                 }).then((response) => {
                     this.updateResponseFromData(response.data.data);
                 }).catch((error) => {
-                    // Do Nothing
+                    if (error.response?.status !== 400) {
+                        return;
+                    }
+                    this.message = error.response.data.message
+                    setTimeout(() => {
+                        this.message = '';
+                    }, 5000);
                 }).finally(() => {
                     this.state.sending = false;
                 });

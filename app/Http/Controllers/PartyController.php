@@ -2,9 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\PartyPlayYouTubeRequest;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
+use App\Jobs\PartyPlayYouTubeVideo;
+use App\Models\Mod;
+use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\SpotifySearchService;
@@ -29,6 +33,7 @@ class PartyController extends Controller
         $party = new Party();
         return view('parties.create', [
             'party' => $party,
+            'mods' => Mod::all(),
             'playlists' => $request->user()->getPlaylists(),
             'devices' => $request->user()->getDevices(),
         ]);
@@ -84,6 +89,42 @@ class PartyController extends Controller
         ]);
     }
 
+    public function youtube(Request $request, Party $party)
+    {
+        return view('parties.youtube', [
+            'party' => $party,
+            'canManage' => $party->canBeManagedBy($request->user()),
+        ]);
+    }
+
+    public function youtube_play(PartyPlayYouTubeRequest $request, Party $party)
+    {
+        $videoId = null;
+        $url = parse_url($request->input('video'));
+        if ($url['host'] === 'youtu.be') {
+            // https://youtu.be/Lp__P8VBR5o?si=teYIzjNQoHuD7SEU
+            $videoId = substr($url['path'] ?? '', 1);
+        } else {
+            $query = [];
+            parse_str($url['query'] ?? '', $query);
+            $videoId = $query['v'] ?? null;
+        }
+        if ($videoId === null || !$videoId) {
+            return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
+                ->with('failureMessage', 'Unable to identify video');
+        }
+        PartyPlayYouTubeVideo::dispatch($party, $videoId)->afterResponse();
+        return response()->redirectToRoute('parties.youtube', ['party' => $party->code])
+            ->with('successMessage', 'Video requested');
+    }
+
+    public function ytplayer(Party $party)
+    {
+        return view('parties.ytplayer', [
+            'party' => $party,
+        ]);
+    }
+
     public function search(SearchRequest $request, Party $party)
     {
         $member = $party->getMember($request->user());
@@ -116,6 +157,7 @@ class PartyController extends Controller
     {
         return view('parties.edit', [
             'party' => $party,
+            'mods' => Mod::all(),
             'canManage' => true,
             'playlists' => $party->user->getPlaylists(),
             'devices' => $party->user->getDevices(),
@@ -152,6 +194,11 @@ class PartyController extends Controller
         } else {
             $party->downvotes_per_hour = null;
         }
+        if ($request->input('max_requests')) {
+            $party->max_requests = $request->input('max_requests');
+        } else {
+            $party->max_requests = null;
+        }
         if ($request->has('min_song_length') && $request->input('min_song_length') > 0) {
             $party->min_song_length = $request->input('min_song_length');
         }
@@ -167,5 +214,14 @@ class PartyController extends Controller
             $party->history_playlist_id = null;
         }
         $party->save();
+
+        $modSettings = ModSetting::wherePrivate(false)->with('mod')->get();
+        foreach ($modSettings as $modSetting) {
+            $currentValue = $party->getModSetting($modSetting->mod, $modSetting->code);
+            $value = $request->input("mods_{$modSetting->mod->code}_{$modSetting->code}");
+            if ($value !== $currentValue) {
+                $party->setModSetting($modSetting->mod, $modSetting->code, $value);
+            }
+        }
     }
 }

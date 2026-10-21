@@ -109,6 +109,76 @@ namespace App\Models{
  * @property int $id
  * @property string $code
  * @property string $name
+ * @property string|null $description
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\ModSetting> $settings
+ * @property-read int|null $settings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Mod whereUpdatedAt($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperMod {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $mod_id
+ * @property string $name
+ * @property string $code
+ * @property string|null $description
+ * @property \App\Enums\SettingType $type
+ * @property int $encrypted
+ * @property int $private
+ * @property string|null $validation
+ * @property mixed|null $default
+ * @property int $order
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Mod $mod
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $partysettings
+ * @property-read int|null $partysettings_count
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting ordered(string $direction = 'asc')
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCode($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDefault($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereDescription($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereEncrypted($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereModId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereName($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereOrder($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting wherePrivate($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|ModSetting whereValidation($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperModSetting {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property string $code
+ * @property string $name
  * @property int $user_id
  * @property int|null $song_id
  * @property \Illuminate\Support\Carbon|null $song_started_at
@@ -118,6 +188,7 @@ namespace App\Models{
  * @property int|null $downvotes_per_hour
  * @property int $weighted
  * @property string|null $history_playlist_id
+ * @property int|null $max_requests
  * @property int $trustscore
  * @property int|null $trusted_user_id
  * @property int $force
@@ -139,6 +210,10 @@ namespace App\Models{
  * @property-read int|null $history_count
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyMember> $members
  * @property-read int|null $members_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModeration> $moderations
+ * @property-read int|null $moderations_count
+ * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\PartyModSetting> $modsettings
+ * @property-read int|null $modsettings_count
  * @property-read \App\Models\Song|null $song
  * @property-read \App\Models\User|null $trustedUser
  * @property-read \Illuminate\Database\Eloquent\Collection<int, \App\Models\UpcomingSong> $upcoming
@@ -162,6 +237,7 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereHistoryPlaylistId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereLastUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxRequests($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMaxSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereMinSongLength($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|Party whereName($value)
@@ -239,6 +315,66 @@ namespace App\Models{
  */
 	#[\AllowDynamicProperties]
 	class IdeHelperPartyMemberRole {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $party_id
+ * @property int $mod_setting_id
+ * @property mixed|null $value
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read mixed $get_type
+ * @property-read \App\Models\Party $party
+ * @property-read \App\Models\ModSetting $setting
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereModSettingId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModSetting whereValue($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperPartyModSetting {}
+}
+
+namespace App\Models{
+/**
+ * 
+ *
+ * @property int $id
+ * @property int $party_id
+ * @property \App\Enums\PartyModerationType $type
+ * @property string $value
+ * @property string|null $notes
+ * @property int $enabled
+ * @property int $regex
+ * @property \Illuminate\Support\Carbon|null $created_at
+ * @property \Illuminate\Support\Carbon|null $updated_at
+ * @property-read \App\Models\Party $party
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newModelQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration newQuery()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration query()
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereEnabled($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereNotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration wherePartyId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereRegex($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereType($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereUpdatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyModeration whereValue($value)
+ * @mixin \Eloquent
+ */
+	#[\AllowDynamicProperties]
+	class IdeHelperPartyModeration {}
 }
 
 namespace App\Models{
@@ -527,13 +663,18 @@ namespace App\Models{
  * @property int $id
  * @property int $party_id
  * @property int $song_id
+ * @property string|null $not_before
  * @property int $score
+ * @property int $score_adjustment
+ * @property string|null $fallback_override
+ * @property string|null $css_classes
  * @property int $upvotes
  * @property int $downvotes
  * @property \Illuminate\Support\Carbon|null $queued_at
  * @property \Illuminate\Support\Carbon|null $created_at
  * @property \Illuminate\Support\Carbon|null $updated_at
  * @property int|null $user_id
+ * @property mixed $0
  * @property-read \App\Models\Party $party
  * @property-read \App\Models\PlayedSong|null $played
  * @property-read \App\Models\Song $song
@@ -544,11 +685,15 @@ namespace App\Models{
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong query()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCreatedAt($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereCssClasses($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereDownvotes($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereFallbackOverride($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereId($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereNotBefore($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong wherePartyId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereQueuedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereScore($value)
+ * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereScoreAdjustment($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereSongId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereUpdatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|UpcomingSong whereUpvotes($value)

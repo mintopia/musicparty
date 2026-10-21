@@ -11,9 +11,11 @@ use SpotifyWebAPI\SpotifyWebAPIException;
 class RequestCheckService
 {
     const CONTEXT_PLAYLIST_TRACK = '62mFjcWGkt2OY9LT9EvxS2';
+    public bool $userHasTooManyRequests = false;
 
     public function __construct(protected Party $party, protected PartyMember $member)
     {
+        $this->userHasTooManyRequests = $this->userHasTooManyRequests();
     }
 
     public function checkCollection(Collection $input): Collection
@@ -95,6 +97,9 @@ class RequestCheckService
             }
         }
 
+        // Now we check similar songs
+        $output = array_merge($output, $this->checkSimilarSongs($input));
+
         return collect($output);
     }
 
@@ -105,6 +110,10 @@ class RequestCheckService
         }
         if (!$this->party->allow_requests) {
             return new RequestCheckResponse(false, 'Party is not accepting requests');
+        }
+
+        if ($this->userHasTooManyRequests) {
+            return new RequestCheckResponse(false, 'You are not allowed to request any more songs');
         }
 
         if ($this->member->role->code === 'banned') {
@@ -120,7 +129,74 @@ class RequestCheckService
         if (!$this->party->explicit && $spotifyData->explicit) {
             return new RequestCheckResponse(false, 'Explicit songs are not allowed');
         }
+        foreach ($this->party->moderations as $mod) {
+            $result = $mod->match($spotifyData);
+            if ($result === true) {
+                return new RequestCheckResponse(false, $mod->getMessage());
+            }
+        }
 
         return null;
+    }
+
+    protected function userHasTooManyRequests(): bool
+    {
+        if ($this->party->max_requests === null) {
+            return false;
+        }
+
+        if ($this->party->canBeManagedBy($this->member->user)) {
+            return false;
+        }
+
+        if ($this->member->role->code === 'vip') {
+            return false;
+        }
+
+        $count = $this->party->upcoming()
+            ->whereNull('queued_at')
+            ->whereUserId($this->member->user_id)
+            ->count();
+        return $count >= $this->party->max_requests;
+    }
+
+    protected function checkSimilarSongs(Collection $input): array
+    {
+        $names = [];
+        $artists = [];
+
+        $compositeIndex = [];
+        foreach ($input as $track) {
+            $compositeKey = "{$track->name}:";
+            foreach ($track->artists ?? [] as $artist) {
+                $compositeKey .= ":{$artist->name}";
+            }
+            if (!array_key_exists($compositeKey, $compositeIndex)) {
+                $compositeIndex[$compositeKey] = [];
+            }
+            $compositeIndex[$compositeKey][] = $track;
+            $names[] = $track->name;
+            $artists = array_merge($artists, collect($track->artists)->pluck('name')->toArray());
+        }
+        $output = [];
+
+        $existing = $this->party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($names, $artists) {
+            $query->whereIn('name', array_keys($names));
+            $query->whereHas('artists', function ($query) use ($artists) {
+                $query->whereIn('name', $artists);
+            });
+        })->with(['song', 'song.artists'])->get();
+        foreach ($existing as $upcoming) {
+            $compositeKey = "{$upcoming->song->name}:";
+            foreach ($upcoming->song->artists as $artist) {
+                $compositeKey .= ":{$artist->name}";
+            }
+            $tracks = $compositeIndex[$compositeKey] ?? [];
+            foreach ($tracks as $track) {
+                $output[$track->id] = new RequestCheckResponse(false, 'A similar song is already in the queue');
+            }
+        }
+
+        return $output;
     }
 }

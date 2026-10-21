@@ -44,4 +44,11 @@ class PartyController extends Controller
         }
         return response()->noContent();
     }
+
+    public function soloist(Party $party)
+    {
+        Log::debug("{$party}: Received soloist webhook event");
+        PartyUpdate::dispatch($party);
+        return response()->noContent();
+    }
 }
