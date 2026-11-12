@@ -63,10 +63,10 @@ class SettingsSeeder extends Seeder
     protected function updateSetting(string $code, object $data): void
     {
         $setting = Setting::whereCode($code)->first();
-        if (!$setting) {
+        $isNew = !$setting;
+        if ($isNew) {
             $setting = new Setting();
             $setting->code = $code;
-            $setting->value = $data->default ?? null;
         }
         $setting->hidden = $data->hidden ?? false;
         $setting->name = $data->name;
@@ -74,6 +74,10 @@ class SettingsSeeder extends Seeder
         $setting->encrypted = $data->encrypted ?? false;
         $setting->validation = $data->validation ?? '';
         $setting->type = $data->type ?? SettingType::stString;
+        if ($isNew) {
+            // After encrypted is set: the SettingValue cast encrypts on assignment.
+            $setting->value = $data->default ?? null;
+        }
         $setting->save();
     }
 }
