@@ -85,18 +85,23 @@ abstract class AbstractSocialProvider implements SocialProviderContract
     {
         foreach ($this->configMapping() as $code => $config) {
             $setting = $this->provider->settings()->whereCode($code)->first();
-            if (!$setting) {
+            $isNew = !$setting;
+            if ($isNew) {
                 $setting = new ProviderSetting();
                 $setting->provider()->associate($this->provider);
                 $setting->code = $code;
-                // Only set value initially
-                $setting->value = $config->value ?? null;
             }
             $setting->name = $config->name;
             $setting->validation = $config->validation ?? null;
             $setting->encrypted = $config->encrypted ?? false;
             $setting->description = $config->description ?? null;
             $setting->type = $config->type ?? SettingType::stString;
+            if ($isNew) {
+                // Only set value initially, and only once encrypted is set: the
+                // SettingValue cast encrypts on assignment, so a value assigned
+                // first is stored in plain text and fails to decrypt later.
+                $setting->value = $config->value ?? null;
+            }
             if ($setting->isDirty()) {
                 $setting->save();
             }
