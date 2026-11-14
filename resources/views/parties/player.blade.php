@@ -41,6 +41,22 @@
         window.accessToken = '{{ $party->user->getSpotifyAccessToken() }}';
         window.currentTrack = null;
 
+        const autoplay = new URLSearchParams(window.location.search).has('autoplay');
+
+        function startPlayback() {
+            fetch('/api/v1/parties/{{ $party->code }}/control', {
+                method: 'POST',
+                headers: {
+                    'x-csrf-token': '{{ csrf_token() }}',
+                    'content-type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'play',
+                    'deviceId': window.deviceId,
+                }),
+            });
+        }
+
         // Spotify Player
         window.onSpotifyWebPlaybackSDKReady = () => {
             const player = new Spotify.Player({
@@ -55,6 +71,16 @@
             player.addListener('ready', ({device_id}) => {
                 console.log('Ready with Device ID', device_id);
                 window.deviceId = device_id;
+                if (autoplay) {
+                    startPlayback();
+                    document.getElementById('togglePlay').style.display = 'none';
+                }
+            });
+
+            // Browsers refuse audio without a user gesture unless autoplay is permitted
+            player.addListener('autoplay_failed', () => {
+                console.warn('Autoplay was blocked by the browser');
+                document.getElementById('togglePlay').style.display = 'block';
             });
 
             // Not Ready
@@ -108,17 +134,7 @@
 
             document.getElementById('togglePlay').onclick = function() {
                 player.togglePlay();
-                fetch('/api/v1/parties/{{ $party->code }}/control', {
-                    method: 'POST',
-                    headers: {
-                        'x-csrf-token': '{{ csrf_token() }}',
-                        'content-type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'play',
-                        'deviceId': window.deviceId,
-                    }),
-                });
+                startPlayback();
                 document.getElementById('togglePlay').style.display = 'none';
             };
         };
