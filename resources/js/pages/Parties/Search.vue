@@ -1,9 +1,9 @@
 <script setup lang="ts">
-import {Head, router, usePage} from '@inertiajs/vue3';
+import {Deferred, Head, router, usePage} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref, watch} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
-import TrackList from '@/components/TrackList.vue';
+import SearchResultsSection from '@/components/SearchResultsSection.vue';
 import {useEcho} from '@/composables/useEcho';
 import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
@@ -14,18 +14,20 @@ import {show, search} from '@/routes/parties';
 import {show as showAlbum} from '@/routes/parties/albums';
 import {show as showArtist} from '@/routes/parties/artists';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyPartyState, Paginator, SharedProps, TrackAnnotation} from '@/types';
+import type {LegacyPartyState, Paginator, SearchError, SharedProps, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean};
     params: {query: string | null; perPage: number};
-    results: Paginator<TrackAnnotation> | null;
+    results?: Paginator<TrackAnnotation> | SearchError | null;
     playerState: LegacyPartyState;
 }>();
 
 const query = ref(props.params.query ?? '');
 const message = ref<string | null>(null);
-const tracks = ref<Paginator<TrackAnnotation> | null>(props.results);
+const tracks = ref<Paginator<TrackAnnotation> | SearchError | null | undefined>(props.results);
+const searching = ref(false);
+const hasSearch = computed(() => props.params.query !== null || (tracks.value ?? null) !== null);
 const {status, reason, request} = useRequestTrack(() => props.party.code);
 
 watch(
@@ -38,9 +40,21 @@ watch(
 const searchUrl = computed(() => search(props.party.code).url);
 
 function submit(): void {
-    router.get(searchUrl.value, {
-        query: query.value,
-        perPage: props.params.perPage === 20 ? undefined : props.params.perPage,
+    router.get(
+        searchUrl.value,
+        {
+            query: query.value,
+            perPage: props.params.perPage === 20 ? undefined : props.params.perPage,
+        },
+        {onStart: () => (searching.value = true), onFinish: () => (searching.value = false)},
+    );
+}
+
+function retry(): void {
+    router.reload({
+        only: ['results'],
+        onStart: () => (searching.value = true),
+        onFinish: () => (searching.value = false),
     });
 }
 
@@ -141,13 +155,15 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                     </div>
                 </div>
             </form>
-            <template v-if="tracks !== null">
+            <template v-if="hasSearch">
                 <h2 class="mt-5">Results</h2>
-                <div class="card">
-                    <TrackList
-                        :tracks="tracks"
+                <SearchResultsSection v-if="searching" loading />
+                <Deferred v-else data="results">
+                    <template #fallback><SearchResultsSection loading /></template>
+                    <template #rescue><SearchResultsSection failed @retry="retry" /></template>
+                    <SearchResultsSection
+                        :results="tracks"
                         :can-downvote="party.downvotes"
-                        empty-title="No results found"
                         :album-route="
                             (id: string) =>
                                 showAlbum({party: party.code, album: id}).url +
@@ -161,8 +177,9 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                         @request="requestTrack"
                         @withdraw="withdraw"
                         @vote="vote"
+                        @retry="retry"
                     />
-                </div>
+                </Deferred>
             </template>
         </div>
         <div v-if="message" class="position-fixed z-3 p-2 top-50 start-50 translate-middle" data-test="message">

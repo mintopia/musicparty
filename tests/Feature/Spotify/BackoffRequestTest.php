@@ -18,6 +18,8 @@ use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Support\Facades\Cache;
+use Inertia\Testing\AssertableInertia as Assert;
+use SpotifyWebAPI\Request;
 use SpotifyWebAPI\SpotifyWebAPIException;
 use Tests\Support\FakeSpotify;
 
@@ -146,5 +148,66 @@ it('shows a friendly error instead of a 500 when search hits a backoff', functio
     $this->withoutVite()->actingAs($owner)
         ->get(route('parties.search', ['party' => $party->code, 'query' => 'abba']))
         ->assertOk()
-        ->assertSee('try again shortly');
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
+            ->where('results.error.code', 'busy')
+            ->where('results.error.retryable', true)));
+});
+
+it('maps Spotify search failures to friendly deferred errors', function (Throwable $failure, string $code, bool $backoff) {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose));
+    $fake = new class($failure) extends FakeSpotify
+    {
+        public function __construct(private Throwable $failure) {}
+
+        public function search(string $query, array|string $type, object|array $options = []): object|array
+        {
+            throw $this->failure;
+        }
+    };
+    app()->bind(SpotifyWebAPI\SpotifyWebAPI::class, fn () => $fake);
+    $owner = User::factory()->create();
+    $provider = SocialProvider::factory()->create(['code' => 'spotify']);
+    LinkedAccount::factory()->create(['user_id' => $owner->id, 'social_provider_id' => $provider->id, 'access_token' => 'token', 'refresh_token' => 'refresh', 'access_token_expires_at' => now()->addHour()]);
+    $party = new Party;
+    $party->forceFill(['code' => 'WXYZ', 'name' => 'Test Party', 'user_id' => $owner->id, 'active' => false, 'allow_requests' => true]);
+    Party::withoutEvents(fn () => $party->save());
+    $role = PartyMemberRole::query()->where('code', 'member')->first() ?? PartyMemberRole::query()->forceCreate(['code' => 'member', 'name' => 'Member']);
+    $member = new PartyMember;
+    $member->party_id = $party->id;
+    $member->user_id = $owner->id;
+    $member->role_id = $role->id;
+    $member->save();
+
+    $this->withoutVite()->actingAs($owner)
+        ->get(route('parties.search', ['party' => $party->code, 'query' => 'abba']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
+            ->where('results.error.code', $code)
+            ->where('results.error.retryable', true)));
+})->with([
+    'curl timeout' => [fn () => new SpotifyWebAPIException('cURL transport error: 28 Operation timed out after 8001 milliseconds'), 'timeout', false],
+    'connection refused' => [fn () => new SpotifyWebAPIException('cURL transport error: 7 Failed to connect'), 'unavailable', false],
+    'rate limited' => [fn () => new SpotifyWebAPIException('rate limited', 429), 'busy', true],
+    'backoff active' => [fn () => new SpotifyBackoffException(5), 'busy', true],
+]);
+
+it('retries a GET once after a connection failure but not after a timeout or for other methods', function () {
+    $connect = new SpotifyWebAPIException('cURL transport error: 7 Failed to connect');
+    $request = scriptedRequest('spotify', [$connect, 'ok']);
+    expect($request->send('GET', 'https://api.spotify.com/v1/search')['body'])->toBe('ok')->and($request->httpCalls)->toBe(2);
+
+    $request = scriptedRequest('spotify', [new SpotifyWebAPIException('cURL transport error: 28 timed out'), 'ok']);
+    expect(fn () => $request->send('GET', 'https://api.spotify.com/v1/search'))->toThrow(SpotifyWebAPIException::class);
+    expect($request->httpCalls)->toBe(1);
+
+    $request = scriptedRequest('spotify', [$connect, 'ok']);
+    expect(fn () => $request->send('POST', 'https://api.spotify.com/v1/x'))->toThrow(SpotifyWebAPIException::class);
+    expect($request->httpCalls)->toBe(1);
+});
+
+it('applies the configured HTTP timeouts to Spotify requests', function () {
+    config(['musicparty.spotify_timeout_seconds' => 3, 'musicparty.spotify_connect_timeout_seconds' => 2]);
+    $options = (new ReflectionProperty(Request::class, 'options'))->getValue(BackoffRequest::forApplication('spotify'));
+
+    expect($options['curl_options'])->toBe([CURLOPT_TIMEOUT => 3, CURLOPT_CONNECTTIMEOUT => 2]);
 });

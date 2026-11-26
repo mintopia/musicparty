@@ -1,13 +1,26 @@
 import {flushPromises, mount} from '@vue/test-utils';
+import {defineComponent, h} from 'vue';
 import axios from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Search from '@/pages/Parties/Search.vue';
 import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
 
 const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn()}));
+const deferred = vi.hoisted(() => ({mode: 'loaded' as 'loaded' | 'loading' | 'rescued'}));
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
+    Deferred: defineComponent({
+        props: {data: {type: String, required: true}},
+        setup:
+            (_props, {slots}) =>
+            () =>
+                deferred.mode === 'loading'
+                    ? h('div', slots.fallback?.())
+                    : deferred.mode === 'rescued'
+                      ? h('div', slots.rescue?.())
+                      : h('div', slots.default?.({reloading: false})),
+    }),
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     router: inertia,
     usePage: () => ({props: {flash: {}, auth: {user: null}}}),
@@ -61,6 +74,7 @@ describe('Party search page', () => {
     beforeEach(() => {
         inertia.get.mockReset();
         inertia.reload.mockReset();
+        deferred.mode = 'loaded';
     });
 
     afterEach(() => {
@@ -99,7 +113,92 @@ describe('Party search page', () => {
         await wrapper.get('#query').setValue('abba');
         await wrapper.get('form').trigger('submit');
 
-        expect(inertia.get).toHaveBeenCalledWith('/parties/ABCD/search', {query: 'abba', perPage: undefined});
+        expect(inertia.get).toHaveBeenCalledWith(
+            '/parties/ABCD/search',
+            {query: 'abba', perPage: undefined},
+            expect.objectContaining({onStart: expect.any(Function)}),
+        );
+    });
+
+    it('shows track placeholders while the deferred results load', () => {
+        deferred.mode = 'loading';
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, playerState: idle},
+        });
+
+        expect(wrapper.find('[data-test="results-loading"]').exists()).toBe(true);
+        expect(wrapper.findAll('[data-test="track-placeholder"]').length).toBeGreaterThan(0);
+        expect(wrapper.find('[data-test="track-row"]').exists()).toBe(false);
+    });
+
+    it('fills in the results once they arrive', () => {
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
+
+        expect(wrapper.find('[data-test="track-placeholder"]').exists()).toBe(false);
+        expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(1);
+    });
+
+    it('shows a friendly error with Retry when the search reports a failure', async () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: 'q', perPage: 20},
+                results: {
+                    error: {code: 'timeout', message: 'The music provider took too long to answer.', retryable: true},
+                },
+                playerState: idle,
+            },
+        });
+
+        expect(wrapper.get('[data-test="results-error"]').text()).toContain('took too long');
+
+        await wrapper.get('[data-test="retry"]').trigger('click');
+
+        expect(inertia.reload).toHaveBeenCalledWith(expect.objectContaining({only: ['results']}));
+    });
+
+    it('offers no Retry for a failure that cannot be retried', () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: 'q', perPage: 20},
+                results: {error: {code: 'relink', message: 'Needs re-linking', retryable: false}},
+                playerState: idle,
+            },
+        });
+
+        expect(wrapper.find('[data-test="retry"]').exists()).toBe(false);
+    });
+
+    it('shows the error with Retry when the deferred load itself fails', () => {
+        deferred.mode = 'rescued';
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, playerState: idle},
+        });
+
+        expect(wrapper.find('[data-test="results-error"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="retry"]').exists()).toBe(true);
+    });
+
+    it('shows placeholders again as soon as a new search starts', async () => {
+        const wrapper = mount(Search, {
+            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+        });
+
+        await wrapper.get('#query').setValue('abba');
+        await wrapper.get('form').trigger('submit');
+        const options = inertia.get.mock.calls[0][2] as {onStart: () => void; onFinish: () => void};
+        options.onStart();
+        await flushPromises();
+
+        expect(wrapper.find('[data-test="results-loading"]').exists()).toBe(true);
+
+        options.onFinish();
+        await flushPromises();
+
+        expect(wrapper.find('[data-test="results-loading"]').exists()).toBe(false);
     });
 
     it('requests a track and reloads the results', async () => {

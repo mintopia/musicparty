@@ -38,7 +38,7 @@ const emit = defineEmits<{
                 @withdraw="emit('withdraw', $event)"
             />
         </div>
-        <div class="mt-3 d-flex justify-content-center">
+        <div v-if="tracks.last_page > 1" class="py-3 d-flex justify-content-center" data-test="track-pagination">
             <Pagination :paginator="tracks" />
         </div>
     </div>

@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Enums\Purpose;
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
+use App\Exceptions\ProviderUnavailableException;
 use App\Http\Requests\PartyRequest;
 use App\Http\Requests\SearchRequest;
 use App\Http\Resources\TrackAnnotationResource;
@@ -134,21 +135,12 @@ class PartyController extends Controller
         }
 
         $results = null;
-        if ($params['query'] && ! $this->withinSearchLimit($party, $member)) {
-            session()->now('errorMessage', 'The music provider is busy right now. Please try again shortly.');
-        } elseif ($params['query']) {
-            try {
-                $found = $factory->forParty($party, Purpose::Search)->searchTracks((string) $request->input('query'), $page, (int) $perPage);
-                $items = $eligibility->annotate($party, $member, $found->items);
-                $results = new LengthAwarePaginator($items, $found->total, (int) $perPage, $page)
-                    ->setPath(route('parties.search', $party->code))
-                    ->appends($params)
-                    ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
-            } catch (ProviderRelinkRequiredException) {
-                session()->now('errorMessage', 'The music provider needs re-linking before search is available.');
-            } catch (ProviderBackoffException) {
-                session()->now('errorMessage', 'The music provider is busy right now. Please try again shortly.');
-            }
+        if ($params['query']) {
+            $query = (string) $params['query'];
+            $results = Inertia::defer(
+                fn (): LengthAwarePaginator|array => $this->searchResults($party, $member, $factory, $eligibility, $query, $page, (int) $perPage, $params),
+                rescue: true,
+            );
         }
 
         return Inertia::render('Parties/Search', [
@@ -162,6 +154,45 @@ class PartyController extends Controller
             'results' => $results,
             'playerState' => $party->getState(),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return LengthAwarePaginator<int, array<mixed>>|array{error: array{code: string, message: string, retryable: bool}}
+     */
+    protected function searchResults(Party $party, PartyMember $member, MusicProviderFactory $factory, TrackEligibility $eligibility, string $query, int $page, int $perPage, array $params): LengthAwarePaginator|array
+    {
+        if (! $this->withinSearchLimit($party, $member)) {
+            return $this->searchError('busy', 'The music provider is busy right now. Please try again shortly.');
+        }
+
+        try {
+            $found = $factory->forParty($party, Purpose::Search)->searchTracks($query, $page, $perPage);
+        } catch (ProviderRelinkRequiredException) {
+            return $this->searchError('relink', 'The music provider needs re-linking before search is available.', false);
+        } catch (ProviderBackoffException) {
+            return $this->searchError('busy', 'The music provider is busy right now. Please try again shortly.');
+        } catch (ProviderUnavailableException $e) {
+            return $this->searchError(
+                $e->timedOut ? 'timeout' : 'unavailable',
+                $e->timedOut ? 'The music provider took too long to answer.' : 'The music provider could not be reached.',
+            );
+        }
+
+        $items = $eligibility->annotate($party, $member, $found->items);
+
+        return new LengthAwarePaginator($items, $found->total, $perPage, $page)
+            ->setPath(route('parties.search', $party->code))
+            ->appends($params)
+            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+    }
+
+    /**
+     * @return array{error: array{code: string, message: string, retryable: bool}}
+     */
+    protected function searchError(string $code, string $message, bool $retryable = true): array
+    {
+        return ['error' => ['code' => $code, 'message' => $message, 'retryable' => $retryable]];
     }
 
     public function album(SearchRequest $request, Party $party, string $album, MusicProviderFactory $factory, TrackEligibility $eligibility): Response|\Symfony\Component\HttpFoundation\Response

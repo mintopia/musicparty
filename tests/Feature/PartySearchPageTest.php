@@ -2,6 +2,7 @@
 
 use App\Enums\PartyModerationType;
 use App\Enums\Purpose;
+use App\Exceptions\ProviderUnavailableException;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
@@ -67,10 +68,12 @@ it('renders the Inertia search page for a member with results', function () {
             ->where('party.code', $this->party->code)
             ->where('party.downvotes', true)
             ->where('params.query', 'q')
-            ->where('results.current_page', 1)
-            ->where('results.data.0.id', 'fresh')
-            ->where('results.data.0.eligibility.allowed', true)
-            ->where('results.data.0.queue.in_queue', false));
+            ->missing('results')
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.current_page', 1)
+                ->where('results.data.0.id', 'fresh')
+                ->where('results.data.0.eligibility.allowed', true)
+                ->where('results.data.0.queue.in_queue', false)));
 });
 
 it('renders the page without results when there is no query', function () {
@@ -94,10 +97,11 @@ it('marks queued tracks and reports why a banned member cannot request', functio
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Search')
-            ->where('results.data.0.queue.in_queue', true)
-            ->where('results.data.0.queue.score', 5)
-            ->where('results.data.1.eligibility.allowed', false)
-            ->whereNot('results.data.1.eligibility.reason', null));
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.data.0.queue.in_queue', true)
+                ->where('results.data.0.queue.score', 5)
+                ->where('results.data.1.eligibility.allowed', false)
+                ->whereNot('results.data.1.eligibility.reason', null)));
 });
 
 it('paginates using perPage and page and keeps the query string on page links', function () {
@@ -107,12 +111,13 @@ it('paginates using perPage and page and keeps the query string on page links', 
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q', 'perPage' => 10, 'page' => 2]))
         ->assertInertia(fn (Assert $page) => $page
             ->where('params.perPage', 10)
-            ->where('results.current_page', 2)
-            ->where('results.last_page', 6)
-            ->where('results.links.1.url', fn ($url) => str_contains($url, 'query=q') && str_contains($url, 'perPage=10')));
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.current_page', 2)
+                ->where('results.last_page', 6)
+                ->where('results.links.1.url', fn ($url) => str_contains($url, 'query=q') && str_contains($url, 'perPage=10'))));
 });
 
-it('flashes a relink message when Spotify needs re-linking', function () {
+it('reports a relink error in the deferred results when Spotify needs re-linking', function () {
     $this->mock(MusicProviderFactory::class, function ($mock) {
         $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
         $provider->shouldReceive('searchTracks')->andThrow(new SpotifyRelinkRequiredException);
@@ -122,11 +127,13 @@ it('flashes a relink message when Spotify needs re-linking', function () {
     $this->actingAs($this->member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('flash.error', 'The music provider needs re-linking before search is available.')
-            ->where('results', null));
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.error.code', 'relink')
+                ->where('results.error.message', 'The music provider needs re-linking before search is available.')
+                ->where('results.error.retryable', false)));
 });
 
-it('flashes a busy message when Spotify is backing off', function () {
+it('reports a busy error in the deferred results when Spotify is backing off', function () {
     $this->mock(MusicProviderFactory::class, function ($mock) {
         $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
         $provider->shouldReceive('searchTracks')->andThrow(new SpotifyBackoffException(30));
@@ -136,7 +143,10 @@ it('flashes a busy message when Spotify is backing off', function () {
     $this->actingAs($this->member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('flash.error', 'The music provider is busy right now. Please try again shortly.'));
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.error.code', 'busy')
+                ->where('results.error.message', 'The music provider is busy right now. Please try again shortly.')
+                ->where('results.error.retryable', true)));
 });
 
 it('reports every eligibility reason on the search page', function (string $reason, Closure $arrange) {
@@ -148,8 +158,9 @@ it('reports every eligibility reason on the search page', function (string $reas
     $this->actingAs($member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
         ->assertInertia(fn (Assert $page) => $page
-            ->where('results.data.0.eligibility.allowed', false)
-            ->where('results.data.0.eligibility.reason', $reason));
+            ->loadDeferredProps(fn (Assert $loaded) => $loaded
+                ->where('results.data.0.eligibility.allowed', false)
+                ->where('results.data.0.eligibility.reason', $reason)));
 })->with([
     'not accepting requests' => ['Party is not accepting requests', fn ($party) => $party->forceFill(['allow_requests' => false])->save()],
     'banned member' => ['You are not allowed to make requests', fn ($party, $member) => $member->forceFill(['role_id' => PartyMemberRole::query()->forceCreate(['code' => 'banned', 'name' => 'Banned'])->id])->save()],
@@ -191,7 +202,8 @@ it('searches in the Party country rather than the owner market', function () {
 
     $this->actingAs($this->member->user, 'sanctum')
         ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
-        ->assertOk();
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded->has('results.data')));
 
     expect($this->fake->callsTo('search')[0][2]['market'])->toBe('DE');
 });
@@ -202,18 +214,55 @@ it('shows the try again shortly state once a member exhausts the search bucket',
     pageSearchResults($this->fake, FakeSpotify::track('fresh'));
     $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
 
-    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
-    $this->actingAs($this->member->user, 'sanctum')->get($url)->assertOk();
+    $load = fn ($user, Closure $assert) => $this->actingAs($user, 'sanctum')->get($url)
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps($assert));
+
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.current_page', 1));
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.current_page', 1));
     expect($this->fake->callsTo('search'))->toHaveCount(2);
 
-    $this->actingAs($this->member->user, 'sanctum')->get($url)
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Parties/Search')
-            ->where('results', null)
-            ->where('flash.error', 'The music provider is busy right now. Please try again shortly.'));
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.error.code', 'busy'));
     expect($this->fake->callsTo('search'))->toHaveCount(2);
 
     $other = pageSearchMember($this->party);
-    $this->actingAs($other->user, 'sanctum')->get($url)->assertInertia(fn (Assert $page) => $page->where('results.current_page', 1));
+    $load($other->user, fn (Assert $loaded) => $loaded->where('results.current_page', 1));
+});
+
+it('renders the page immediately without calling the provider until the deferred props load', function () {
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Search')->missing('results'));
+
+    expect($this->fake->callsTo('search'))->toBeEmpty();
+});
+
+it('maps provider unavailability to a friendly retryable error', function (bool $timedOut, string $code, string $message) {
+    $this->mock(MusicProviderFactory::class, function ($mock) use ($timedOut) {
+        $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
+        $provider->shouldReceive('searchTracks')->andThrow(new ProviderUnavailableException($timedOut));
+        $mock->shouldReceive('forParty')->andReturn($provider);
+    });
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
+            ->where('results.error.code', $code)
+            ->where('results.error.message', $message)
+            ->where('results.error.retryable', true)));
+})->with([
+    'timeout' => [true, 'timeout', 'The music provider took too long to answer.'],
+    'unreachable' => [false, 'unavailable', 'The music provider could not be reached.'],
+]);
+
+it('rescues an unexpected failure in the deferred results instead of erroring the page', function () {
+    $this->mock(MusicProviderFactory::class, function ($mock) {
+        $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
+        $provider->shouldReceive('searchTracks')->andThrow(new RuntimeException('boom'));
+        $mock->shouldReceive('forParty')->andReturn($provider);
+    });
+    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+
+    $this->actingAs($this->member->user, 'sanctum')->get($url)
+        ->assertInertia(fn (Assert $page) => $page->reload(fn (Assert $loaded) => $loaded->missing('results'), only: 'results'));
 });

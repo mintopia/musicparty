@@ -9,6 +9,7 @@ const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn()}));
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
+    Deferred: {template: '<div><slot /></div>'},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     router: inertia,
     usePage: () => ({props: {flash: {}, auth: {user: null}}}),
