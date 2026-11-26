@@ -41,13 +41,13 @@ it('forgets a context playlist the host no longer owns', function () {
 it('releases the job on backoff and stays quiet when a relink is needed', function () {
     $context = Mockery::mock(ContextPlaylist::class);
     $context->shouldReceive('enforceEmpty')->once()->andThrow(new SpotifyBackoffException(12));
-    $job = (new EmptyContextPlaylist($this->party))->withFakeQueueInteractions();
+    $job = new EmptyContextPlaylist($this->party)->withFakeQueueInteractions();
     $job->handle($context);
     $job->assertReleased(12);
 
     $relink = Mockery::mock(ContextPlaylist::class);
     $relink->shouldReceive('enforceEmpty')->once()->andThrow(new PartyRelinkRequiredException);
-    $quiet = (new EmptyContextPlaylist($this->party))->withFakeQueueInteractions();
+    $quiet = new EmptyContextPlaylist($this->party)->withFakeQueueInteractions();
     $quiet->handle($relink);
     $quiet->assertNotReleased();
 });

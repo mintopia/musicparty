@@ -77,7 +77,7 @@ class PartyDashboard
                 'player' => $viewer->can('player', $party),
             ],
             'timezone' => fn (): string => $this->timezones->for($party),
-            'playerState' => fn (): object => $party->getState(),
+            'playerState' => $party->getState(...),
             'control' => fn (): array => $this->control($party),
             'upNext' => fn (): array => $this->upNext($party, $viewer),
             'upcoming' => fn (): array => $this->upcoming($party, $viewer),
