@@ -49,6 +49,17 @@ function aiReviewSetup(bool $flagRequests = true, bool $enabled = true, string $
     return [$party->refresh(), $member];
 }
 
+function chatCompletion(string $verdict, string $reason = 'Fine', int $promptTokens = 11, int $completionTokens = 7): array
+{
+    return [
+        'id' => 'chatcmpl-1',
+        'object' => 'chat.completion',
+        'model' => 'review-1',
+        'choices' => [['index' => 0, 'finish_reason' => 'stop', 'message' => ['role' => 'assistant', 'content' => json_encode(['verdict' => $verdict, 'reason' => $reason])]]],
+        'usage' => ['prompt_tokens' => $promptTokens, 'completion_tokens' => $completionTokens, 'total_tokens' => $promptTokens + $completionTokens],
+    ];
+}
+
 beforeEach(function () {
     Http::preventStrayRequests();
 });
@@ -433,6 +444,42 @@ describe('Party context', function () {
         app(RequestRules::class)->check($party, $member, aiReviewTrack());
 
         expect(aiReviewLogged($handler, 'ai-review.request')['user'])->toContain('party_context')->toContain($played->song->name);
+    });
+
+    it('sends recent history and top tracks in the chat user message over the wire', function () {
+        Http::fake(['llm.example.test/*' => Http::response(chatCompletion('allow'))]);
+        [$party, $member] = aiReviewSetup();
+        $played = PlayedSong::factory()->for($party)->create(['rating' => 3]);
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(function (Request $request) use ($played): bool {
+            $messages = $request['messages'];
+            $user = json_decode($messages[1]['content'], true);
+
+            return $messages[1]['role'] === 'user'
+                && str_contains($user['party_context'], 'Most recently played')
+                && str_contains($user['party_context'], 'Highest rated by guests')
+                && str_contains($user['party_context'], $played->song->name)
+                && ! str_contains($messages[0]['content'], $played->song->name);
+        });
+    });
+
+    it('sends recent history and top tracks in the decision model state over the wire', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $played = PlayedSong::factory()->for($party)->create(['rating' => 3]);
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(function (Request $request) use ($played): bool {
+            $state = json_decode($request['state'], true);
+
+            return str_contains($state['party_context'], 'Most recently played')
+                && str_contains($state['party_context'], 'Highest rated by guests')
+                && str_contains($state['party_context'], $played->song->name)
+                && ! str_contains($request['questions']['suitability']['instructions'], $played->song->name);
+        });
     });
 
     it('leaves the party context out when the setting is off', function () {
