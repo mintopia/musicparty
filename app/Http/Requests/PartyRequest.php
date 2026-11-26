@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Enums\Purpose;
+use App\Exceptions\ProviderBackoffException;
+use App\Exceptions\ProviderRelinkRequiredException;
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
@@ -9,6 +12,7 @@ use App\Services\PartyProviderOptions;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\Validator;
 
 class PartyRequest extends FormRequest
 {
@@ -27,6 +31,31 @@ class PartyRequest extends FormRequest
         if (! $this->route('party') instanceof Party && ! $this->has('provider_id')) {
             $this->merge(['provider_id' => MusicProviderFactory::DEFAULT_PROVIDER_ID]);
         }
+    }
+
+    /**
+     * @return list<callable(Validator): void>
+     */
+    public function after(): array
+    {
+        return [function (Validator $validator): void {
+            $party = $this->route('party');
+            $playlistId = $this->input('context_playlist_id');
+            if (! $party instanceof Party || ! is_string($playlistId) || $playlistId === '' || $playlistId === $party->context_playlist_id || $validator->errors()->has('context_playlist_id')) {
+                return;
+            }
+
+            try {
+                $owned = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->ownedPlaylist($playlistId);
+            } catch (ProviderRelinkRequiredException|ProviderBackoffException) {
+                $validator->errors()->add('context_playlist_id', 'The playlist could not be checked right now. Try again shortly.');
+
+                return;
+            }
+            if ($owned === null) {
+                $validator->errors()->add('context_playlist_id', "Use a playlist owned by {$party->user->nickname}'s Spotify account");
+            }
+        }];
     }
 
     /**
@@ -80,6 +109,7 @@ class PartyRequest extends FormRequest
             'max_song_length' => 'sometimes|integer|min:1|nullable',
             'no_repeat_interval' => 'sometimes|integer|min:1|nullable',
             'max_requests' => 'sometimes|integer|min:1|nullable',
+            'context_playlist_id' => 'sometimes|nullable|string|max:64',
             'history_playlist_id' => [
                 'sometimes',
                 'string',

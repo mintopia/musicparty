@@ -17,6 +17,7 @@ use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
 use App\Services\PartyTimezone;
+use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
@@ -317,10 +318,24 @@ class PartyController extends Controller
         return [
             'playlists' => array_map(fn ($playlist): array => ['id' => $playlist->id, 'name' => $playlist->name], $options->playlists($source)),
             'devices' => array_map(fn ($device): array => ['id' => $device->id, 'name' => $device->name], $options->devices($source)),
+            'contextPlaylistName' => $this->contextPlaylistName($source),
             'defaultCountry' => $user->market ?: 'GB',
             'instanceTimezone' => app(PartyTimezone::class)->instance(),
             'timezones' => \DateTimeZone::listIdentifiers(),
         ];
+    }
+
+    protected function contextPlaylistName(Party $party): ?string
+    {
+        if (! $party->exists || $party->context_playlist_id === null) {
+            return null;
+        }
+
+        try {
+            return app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->ownedPlaylist($party->context_playlist_id)?->name;
+        } catch (ProviderRelinkRequiredException|ProviderBackoffException) {
+            return null;
+        }
     }
 
     /**
@@ -334,6 +349,7 @@ class PartyController extends Controller
             'timezone' => $party->timezone,
             'backup_playlist_id' => $party->backup_playlist_id,
             'history_playlist_id' => $party->history_playlist_id,
+            'context_playlist_id' => $party->context_playlist_id,
             'device_id' => $party->device_id,
             'active' => (bool) $party->active,
             'allow_requests' => (bool) $party->allow_requests,
@@ -409,6 +425,13 @@ class PartyController extends Controller
         }
         if ($request->has('no_repeat_interval') && $request->input('no_repeat_interval') > 0) {
             $party->no_repeat_interval = $request->input('no_repeat_interval');
+        }
+        if ($party->exists && $request->has('context_playlist_id')) {
+            $contextPlaylistId = $request->input('context_playlist_id') ?: null;
+            if ($contextPlaylistId !== $party->context_playlist_id) {
+                app(ContextPlaylist::class)->forgetVerified($party);
+            }
+            $party->context_playlist_id = $contextPlaylistId;
         }
         if ($request->has('history_playlist_id') && $request->input('history_playlist_id') !== 'none') {
             $party->history_playlist_id = $request->input('history_playlist_id');

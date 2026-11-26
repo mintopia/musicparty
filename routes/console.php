@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Schedule;
 Schedule::command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
 Schedule::command('party:fallback')->everyMinute()->onOneServer();
 Schedule::command('party:force')->everyMinute()->onOneServer();
+Schedule::command('party:contextplaylist')->everyFifteenMinutes()->onOneServer();
 Schedule::command('party:refreshaccesstokens')->everyMinute()->onOneServer();
 Schedule::call(fn () => app(ModScheduler::class)->run(ScheduleFrequency::Minute))
     ->name('mods:minute')->everyMinute()->onOneServer();

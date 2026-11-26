@@ -1,0 +1,195 @@
+<?php
+
+use App\Models\Song;
+use App\Services\Music\Data\Device;
+use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Fake\FakeMusicProvider;
+use Illuminate\Support\Facades\Cache;
+use Inertia\Testing\AssertableInertia as Assert;
+
+require_once __DIR__.'/../../Support/DashboardFixtures.php';
+
+beforeEach(function () {
+    $this->withoutVite();
+    $this->fake = dashboardFake();
+    $this->party = dashboardParty();
+    $this->url = route('parties.dashboard', $this->party->code);
+});
+
+function dashboardControl(mixed $test, ?string $path = null): mixed
+{
+    $props = null;
+    $test->actingAs($test->party->user)->get($test->url)->assertOk()
+        ->assertInertia(function (Assert $page) use (&$props): void {
+            $props = $page->toArray()['props'];
+        });
+
+    return $path === null ? $props : data_get($props, $path);
+}
+
+it('lets managers in and keeps everyone else out', function (?string $role, int $status) {
+    $user = dashboardUser($this->party, $role);
+
+    $this->actingAs($user)->get($this->url)->assertStatus($status);
+})->with([
+    'owner member' => ['owner', 200],
+    'site admin' => ['admin', 200],
+    'vip' => ['vip', 403],
+    'user' => ['user', 403],
+    'non-member' => [null, 403],
+]);
+
+it('lets the creator in and redirects a guest to login', function () {
+    $this->actingAs($this->party->user)->get($this->url)->assertOk();
+    $this->app['auth']->forgetGuards();
+    $this->get($this->url)->assertRedirect();
+});
+
+it('renders the dashboard page with every top-level prop', function () {
+    $this->actingAs($this->party->user)->get($this->url)->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Parties/Dashboard')
+            ->where('party.code', $this->party->code)
+            ->where('party.canManage', true)
+            ->where('host.name', 'Kestrel')
+            ->where('can.moderate', true)
+            ->has('can.control')
+            ->has('timezone')
+            ->has('playerState')
+            ->has('control.playingFrom')
+            ->has('control.nowPlaying')
+            ->has('control.health')
+            ->has('control.start')
+            ->has('upNext')
+            ->has('upcoming.items')
+            ->has('attention.issues')
+            ->has('attention.flagged')
+            ->has('links')
+            ->where('hasFallbackPlaylist', false));
+});
+
+it('derives the start state', function (string $scenario, string $state) {
+    $this->party->forceFill(['context_playlist_id' => 'ctx1'])->saveQuietly();
+    $current = Song::factory()->create(['provider_id' => 'spotify', 'provider_track_id' => 'cur']);
+    $this->fake->withTrack(dashboardTrack('cur'));
+
+    match ($scenario) {
+        'hidden' => $this->fake->withPlayback(dashboardPlaying('cur', contextUri: 'fake:playlist:ctx1')),
+        'outside' => $this->fake->withPlayback(dashboardPlaying('cur', contextUri: 'spotify:user:abc:collection'))->withContextName('spotify:user:abc:collection', 'Liked Songs'),
+        'resume' => $this->fake->withPlayback(dashboardPlaying('cur', playing: false, progressMs: 72000, contextUri: 'fake:playlist:ctx1')),
+        'no_device' => $this->fake->withDevices([]),
+        'restricted' => $this->fake->withDevices([new Device('d1', 'Phone', 'Smartphone', false, true)]),
+        'relink' => $this->fake->withRelinkRequired(),
+        'premium' => Cache::put("party.{$this->party->id}.premium-required", true, 60),
+        'idle' => null,
+    };
+    if (in_array($scenario, ['resume', 'hidden', 'outside'], true)) {
+        $this->party->song()->associate($current)->saveQuietly();
+    }
+
+    expect(dashboardControl($this, 'control.start.state'))->toBe($state);
+})->with([
+    ['hidden', 'hidden'],
+    ['outside', 'outside'],
+    ['resume', 'resume'],
+    ['idle', 'idle'],
+    ['no_device', 'no_device'],
+    ['restricted', 'no_device'],
+    ['relink', 'relink_required'],
+    ['premium', 'premium_required'],
+]);
+
+it('labels a Liked Songs context with the host name and carries the resume position', function () {
+    $current = Song::factory()->create(['provider_id' => 'spotify', 'provider_track_id' => 'cur']);
+    $this->party->song()->associate($current)->saveQuietly();
+    $this->fake->withTrack(dashboardTrack('cur'))
+        ->withPlayback(dashboardPlaying('cur', playing: false, progressMs: 72000, contextUri: 'spotify:user:abc:collection'))
+        ->withContextName('spotify:user:abc:collection', 'Liked Songs');
+
+    $control = dashboardControl($this, 'control');
+
+    expect($control['playingFrom'])->toBe(['kind' => 'outside', 'label' => "Kestrel's Liked Songs"])
+        ->and($control['start']['state'])->toBe('resume')
+        ->and($control['start']['target']['kind'])->toBe('resume')
+        ->and($control['start']['target']['positionMs'])->toBe(72000)
+        ->and($control['start']['selectedDeviceId'])->toBe('fake-device');
+});
+
+it('hides devices when the party is already playing and fetches them otherwise', function () {
+    $current = Song::factory()->create(['provider_id' => 'spotify', 'provider_track_id' => 'cur']);
+    $this->party->forceFill(['context_playlist_id' => 'ctx1'])->saveQuietly();
+    $this->party->song()->associate($current)->saveQuietly();
+    $this->fake->withPlayback(dashboardPlaying('cur', contextUri: 'fake:playlist:ctx1'));
+
+    expect(dashboardControl($this, 'control.start.devices'))->toBe([])
+        ->and($this->fake->callsTo('devices'))->toBeEmpty();
+});
+
+it('shows the sent request first, then the top candidates, excluding flagged and played requests', function () {
+    $sent = dashboardRequest($this->party, ['queued_at' => now()]);
+    $played = dashboardRequest($this->party, ['queued_at' => now()->subMinutes(5)]);
+    dashboardPlayed($played);
+    dashboardRequest($this->party, ['flagged_at' => now(), 'flag_reason' => 'x', 'score' => 99]);
+    $low = dashboardRequest($this->party, ['score' => 1]);
+    $high = dashboardRequest($this->party, ['score' => 5]);
+    $mid = dashboardRequest($this->party, ['score' => 3]);
+    $last = dashboardRequest($this->party, ['score' => 0]);
+
+    $props = dashboardControl($this);
+
+    expect(array_column($props['upNext'], 'id'))->toBe([$sent->id, $high->id, $mid->id])
+        ->and(array_column($props['upNext'], 'sent'))->toBe([true, false, false])
+        ->and(array_column($props['upcoming']['items'], 'id'))->toBe([$low->id, $last->id])
+        ->and($props['upcoming']['total'])->toBe(5);
+});
+
+it('reports attention issues and caps the flagged list at five', function () {
+    $this->party->forceFill(['active' => false, 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(5)])->saveQuietly();
+    $this->fake->withRelinkRequired();
+    foreach (range(1, 7) as $i) {
+        dashboardRequest($this->party, ['flagged_at' => now()->addSeconds($i), 'flag_reason' => 'x']);
+    }
+
+    $attention = dashboardControl($this, 'attention');
+
+    expect(array_column($attention['issues'], 'code'))->toBe(['relink_required', 'party_inactive', 'player_stale'])
+        ->and($attention['issues'][1]['action'])->toBe(['label' => 'Activate', 'kind' => 'activate'])
+        ->and($attention['flagged'])->toHaveCount(5)
+        ->and($attention['flaggedTotal'])->toBe(7);
+});
+
+it('flags a site admin who is not a member as unable to moderate', function () {
+    $admin = dashboardUser($this->party, 'admin');
+
+    $this->actingAs($admin)->get($this->url)->assertInertia(fn (Assert $page) => $page
+        ->where('can.control', true)
+        ->where('can.moderate', false)
+        ->where('party.canManage', false));
+});
+
+it('only links the web player to those who can use it', function () {
+    expect(dashboardControl($this, 'links.webPlayer'))->toBeNull();
+
+    $owner = dashboardUser($this->party, 'owner');
+    $this->actingAs($owner)->get($this->url)->assertInertia(fn (Assert $page) => $page
+        ->where('links.webPlayer', route('parties.player', $this->party->code))
+        ->where('links.encoreRelay', route('parties.edit', $this->party->code).'#encore-relay'));
+});
+
+it('does not touch the provider devices on a partial reload of upNext', function () {
+    dashboardRequest($this->party);
+
+    $version = null;
+    $this->actingAs($this->party->user)->get($this->url)->assertInertia(function (Assert $page) use (&$version): void {
+        $version = $page->toArray()['version'];
+    });
+    app()->forgetInstance(FakeMusicProvider::class);
+
+    $this->get($this->url, [
+        'X-Inertia' => 'true',
+        'X-Inertia-Version' => (string) $version,
+        'X-Inertia-Partial-Component' => 'Parties/Dashboard',
+        'X-Inertia-Partial-Data' => 'upNext',
+    ])->assertOk()->assertJsonCount(1, 'props.upNext')->assertJsonMissingPath('props.control');
+
+    expect(dashboardFake()->callsTo('devices'))->toBeEmpty();
+});

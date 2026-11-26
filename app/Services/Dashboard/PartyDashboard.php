@@ -190,7 +190,7 @@ class PartyDashboard
      */
     public function upcoming(Party $party, User $viewer): array
     {
-        $skip = $this->upNextRequests($party)->count();
+        $skip = $this->upNextRequests($party)->whereNull('queued_at')->count();
         $items = $this->unsent($party)->skip($skip)->take(self::UPCOMING_SIZE)->get();
 
         return [
