@@ -5,11 +5,12 @@ defineProps<{
     for?: string;
     error?: string;
     stacked?: boolean;
+    wide?: boolean;
 }>();
 </script>
 
 <template>
-    <div class="setting-row" :class="{'setting-row-stacked': stacked}" data-test="setting-row">
+    <div class="setting-row" :class="{'setting-row-stacked': stacked, 'setting-row-wide': wide}" data-test="setting-row">
         <div class="setting-text">
             <label class="setting-label" :for="$props.for">{{ label }}</label>
             <p v-if="hint" class="setting-hint">{{ hint }}</p>
@@ -34,6 +35,14 @@ defineProps<{
 .setting-row-stacked {
     grid-template-columns: minmax(0, 1fr);
     align-items: start;
+}
+
+.setting-row-wide {
+    grid-template-columns: auto minmax(0, 1fr);
+}
+
+.setting-row-wide .setting-control {
+    flex-wrap: nowrap;
 }
 
 .setting-label {
