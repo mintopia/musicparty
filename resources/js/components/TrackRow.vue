@@ -115,70 +115,81 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 <slot name="decoration" />
             </div>
             <div class="col-auto text-secondary" :class="{'d-none d-md-block small': compact}">{{ duration }}</div>
-            <div v-if="track.queue.in_queue" class="col-auto text-center w-8" data-test="queue-state">
-                <template v-if="canDownvote">
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-link"
-                        aria-label="Upvote"
-                        data-test="upvote"
-                        @click="castVote(vote === 1 ? 0 : 1)"
-                    >
-                        <i
-                            class="icon ti"
-                            :class="vote === 1 ? 'ti-arrow-big-up-filled text-success' : 'ti-arrow-big-up'"
-                        ></i>
-                    </button>
-                    <span data-test="score">{{ track.queue.score }}</span>
-                    <button
-                        type="button"
-                        class="btn btn-sm btn-link"
-                        aria-label="Downvote"
-                        data-test="downvote"
-                        @click="castVote(vote === -1 ? 0 : -1)"
-                    >
-                        <i
-                            class="icon ti"
-                            :class="vote === -1 ? 'ti-arrow-big-down-filled text-danger' : 'ti-arrow-big-down'"
-                        ></i>
-                    </button>
-                </template>
+            <div
+                v-if="track.queue.in_queue || !hideActions"
+                class="col-auto track-actions"
+                :class="{compact}"
+                data-test="track-actions"
+            >
+                <div
+                    v-if="track.queue.in_queue"
+                    class="btn-list flex-nowrap justify-content-center align-items-center gap-1"
+                    data-test="queue-state"
+                >
+                    <template v-if="canDownvote">
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link"
+                            aria-label="Upvote"
+                            data-test="upvote"
+                            @click="castVote(vote === 1 ? 0 : 1)"
+                        >
+                            <i
+                                class="icon ti"
+                                :class="vote === 1 ? 'ti-arrow-big-up-filled text-success' : 'ti-arrow-big-up'"
+                            ></i>
+                        </button>
+                        <span data-test="score">{{ track.queue.score }}</span>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link"
+                            aria-label="Downvote"
+                            data-test="downvote"
+                            @click="castVote(vote === -1 ? 0 : -1)"
+                        >
+                            <i
+                                class="icon ti"
+                                :class="vote === -1 ? 'ti-arrow-big-down-filled text-danger' : 'ti-arrow-big-down'"
+                            ></i>
+                        </button>
+                    </template>
+                    <template v-else>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-link"
+                            aria-label="Like"
+                            data-test="heart"
+                            @click="castVote(vote === 1 ? 0 : 1)"
+                        >
+                            <i class="icon ti" :class="vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"></i>
+                        </button>
+                        <span data-test="score">{{ track.queue.score }}</span>
+                    </template>
+                </div>
                 <template v-else>
                     <button
+                        v-if="isAwaiting"
                         type="button"
-                        class="btn btn-sm btn-link"
-                        aria-label="Like"
-                        data-test="heart"
-                        @click="castVote(vote === 1 ? 0 : 1)"
+                        class="btn btn-outline-secondary w-100"
+                        :class="{'btn-compact': compact}"
+                        data-test="withdraw"
+                        @click="emit('withdraw', track)"
                     >
-                        <i class="icon ti" :class="vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"></i>
+                        Withdraw
                     </button>
-                    <span data-test="score">{{ track.queue.score }}</span>
+                    <button
+                        v-else
+                        type="button"
+                        class="btn btn-primary w-100"
+                        :class="{'btn-compact': compact}"
+                        :disabled="!canRequest"
+                        data-test="request"
+                        @click="emit('request', track)"
+                    >
+                        <i class="icon ti ti-music-plus"></i>
+                        {{ requestLabel }}
+                    </button>
                 </template>
-            </div>
-            <div v-else-if="!hideActions" class="col-auto text-center" :class="{'w-8': !compact}">
-                <button
-                    v-if="isAwaiting"
-                    type="button"
-                    class="btn btn-outline-secondary"
-                    :class="compact ? 'btn-compact' : 'ms-2 w-100'"
-                    data-test="withdraw"
-                    @click="emit('withdraw', track)"
-                >
-                    Withdraw
-                </button>
-                <button
-                    v-else
-                    type="button"
-                    class="btn btn-primary"
-                    :class="compact ? 'btn-compact' : 'ms-2 w-100'"
-                    :disabled="!canRequest"
-                    data-test="request"
-                    @click="emit('request', track)"
-                >
-                    <i class="icon ti ti-music-plus"></i>
-                    {{ requestLabel }}
-                </button>
             </div>
         </div>
         <div v-if="isAwaiting && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
@@ -191,6 +202,15 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 .track-main {
     min-width: 0;
     overflow-wrap: anywhere;
+}
+
+.track-actions {
+    width: 8rem;
+    flex-shrink: 0;
+}
+
+.track-actions.compact {
+    width: 7rem;
 }
 
 .track-art-compact {

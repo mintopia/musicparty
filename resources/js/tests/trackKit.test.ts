@@ -118,6 +118,18 @@ describe('TrackRow', () => {
         ]);
     });
 
+    it('keeps request and vote controls in the same fixed actions slot', () => {
+        const requestable = mount(TrackRow, {props: {track: make()}});
+        const voted = mount(TrackRow, {props: {track: inQueue(1), canDownvote: true}});
+
+        const actions = requestable.get('[data-test=track-actions]');
+        expect(actions.find('[data-test=request]').exists()).toBe(true);
+        const votedActions = voted.get('[data-test=track-actions]');
+        expect(votedActions.find('[data-test=upvote]').exists()).toBe(true);
+        expect(votedActions.find('[data-test=downvote]').exists()).toBe(true);
+        expect(actions.classes()).toEqual(votedActions.classes());
+    });
+
     it('shows the explicit badge', () => {
         expect(
             mount(TrackRow, {props: {track: make({explicit: true})}})
