@@ -21,6 +21,7 @@ class FlaggedRequestController extends Controller
         return Inertia::render('Parties/Flagged', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'flagged' => $flagged->listFor($party),
+            'playerState' => $party->getState(),
         ]);
     }
 

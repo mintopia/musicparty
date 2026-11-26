@@ -191,6 +191,7 @@ describe('approval queue', function () {
             ->assertInertia(fn ($page) => $page
                 ->component('Parties/Flagged')
                 ->where('party.code', $this->party->code)
+                ->has('playerState')
                 ->where('flagged.0.id', $request->id)
                 ->where('flagged.0.reason', 'Needs a look')
                 ->where('flagged.0.requester.id', $this->member->user_id)

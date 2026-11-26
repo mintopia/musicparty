@@ -2,7 +2,9 @@
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
+import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type {LegacyPartyState} from '@/types';
 
 interface TrackData {
     id: string;
@@ -14,6 +16,7 @@ interface TrackData {
 
 const props = defineProps<{
     party: {code: string; name: string; canManage: boolean};
+    playerState: LegacyPartyState;
     types: Record<string, string>;
     actions: Record<string, string>;
     moderation: {
@@ -50,12 +53,15 @@ function submit(): void {
                 </li>
             </ModerationBreadcrumbs>
         </template>
+        <template #header>
+            <PartyPlayer :code="party.code" :initial-state="playerState" />
+        </template>
         <Head :title="`Create Filter - ${party.name}`" />
         <div class="page-header mt-0">
             <h1>Create Filter</h1>
         </div>
         <div class="row">
-            <div :class="track ? 'col-12 col-lg-6' : 'col-md-6 col-md-offset-3'">
+            <div :class="track ? 'col-12 col-lg-6' : 'col-md-6 offset-md-3'">
                 <form class="card" @submit.prevent="submit">
                     <ModerationForm :form="form" :types="types" :actions="actions" />
                     <div class="card-footer text-end">
