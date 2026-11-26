@@ -32,6 +32,7 @@ class PartyModerationController extends Controller
 
         return Inertia::render('Parties/Moderation/Index', [
             'party' => $this->partyProps($party),
+            'playerState' => $party->getState(),
             'moderations' => $moderations,
         ]);
     }
@@ -47,6 +48,7 @@ class PartyModerationController extends Controller
 
         return Inertia::render('Parties/Moderation/Create', [
             'party' => $this->partyProps($party),
+            'playerState' => $party->getState(),
             'types' => PartyModerationType::getHumanReadableTypes(),
             'actions' => PartyModerationAction::getHumanReadableActions(),
             'moderation' => $this->present($moderation),
@@ -75,6 +77,7 @@ class PartyModerationController extends Controller
     {
         return Inertia::render('Parties/Moderation/Edit', [
             'party' => $this->partyProps($party),
+            'playerState' => $party->getState(),
             'types' => PartyModerationType::getHumanReadableTypes(),
             'actions' => PartyModerationAction::getHumanReadableActions(),
             'moderation' => $this->present($moderation),
@@ -85,6 +88,7 @@ class PartyModerationController extends Controller
     {
         return Inertia::render('Parties/Moderation/Delete', [
             'party' => $this->partyProps($party),
+            'playerState' => $party->getState(),
             'moderation' => $this->present($moderation),
         ]);
     }

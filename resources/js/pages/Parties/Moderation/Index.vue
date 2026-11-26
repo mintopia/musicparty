@@ -2,8 +2,9 @@
 import {Head, Link} from '@inertiajs/vue3';
 import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import Pagination from '@/components/Pagination.vue';
+import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type {Paginator} from '@/types';
+import type {LegacyPartyState, Paginator} from '@/types';
 
 interface ModerationRow {
     id: number;
@@ -16,6 +17,7 @@ interface ModerationRow {
 
 defineProps<{
     party: {code: string; name: string; canManage: boolean};
+    playerState: LegacyPartyState;
     moderations: Paginator<ModerationRow>;
 }>();
 </script>
@@ -24,6 +26,9 @@ defineProps<{
     <AppLayout :title="`Moderation - ${party.name}`">
         <template #breadcrumbs>
             <ModerationBreadcrumbs :party="party" active />
+        </template>
+        <template #header>
+            <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Moderation - ${party.name}`" />
         <div class="row">

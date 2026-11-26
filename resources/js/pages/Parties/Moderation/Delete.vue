@@ -1,10 +1,13 @@
 <script setup lang="ts">
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
+import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type {LegacyPartyState} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; canManage: boolean};
+    playerState: LegacyPartyState;
     moderation: {id: number; type_name: string | null; value: string | null};
 }>();
 
@@ -24,6 +27,9 @@ function submit(): void {
                     <a :href="`${base}/delete`">Delete Filter</a>
                 </li>
             </ModerationBreadcrumbs>
+        </template>
+        <template #header>
+            <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Delete ${moderation.type_name} Filter`" />
         <div class="page-header mt-0">

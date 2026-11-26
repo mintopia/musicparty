@@ -42,6 +42,7 @@ it('renders the index with party props and rows', function () {
             ->component('Parties/Moderation/Index')
             ->where('party.code', $this->party->code)
             ->where('party.canManage', true)
+            ->has('playerState')
             ->has('moderations.data', 1)
             ->where('moderations.data.0.type_name', 'Track Name')
             ->where('moderations.data.0.value', 'bad song'));
@@ -52,6 +53,7 @@ it('renders create with defaults and option lists', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Moderation/Create')
+            ->has('playerState')
             ->where('moderation.action', 'reject')
             ->where('track', null)
             ->where('types.mtName', 'Track Name')
@@ -65,6 +67,7 @@ it('renders edit and delete with the filter', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Moderation/Edit')
+            ->has('playerState')
             ->where('moderation.type', 'mtName')
             ->where('moderation.notes', 'note'));
 
@@ -72,6 +75,7 @@ it('renders edit and delete with the filter', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Moderation/Delete')
+            ->has('playerState')
             ->where('moderation.value', 'bad song'));
 });
 

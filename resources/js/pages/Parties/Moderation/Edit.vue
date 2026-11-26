@@ -2,10 +2,13 @@
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
+import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import type {LegacyPartyState} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; canManage: boolean};
+    playerState: LegacyPartyState;
     types: Record<string, string>;
     actions: Record<string, string>;
     moderation: {
@@ -44,6 +47,9 @@ function submit(): void {
                     <a :href="`${base}/edit`">Edit Filter</a>
                 </li>
             </ModerationBreadcrumbs>
+        </template>
+        <template #header>
+            <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Edit ${moderation.type_name} Filter`" />
         <div class="page-header mt-0">
