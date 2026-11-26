@@ -93,6 +93,7 @@ final class SpotifyMapper
             name: (string) $payload->name,
             type: (string) ($payload->type ?? ''),
             isActive: (bool) ($payload->is_active ?? false),
+            isRestricted: (bool) ($payload->is_restricted ?? false),
         );
     }
 
@@ -118,6 +119,7 @@ final class SpotifyMapper
             deviceId: isset($device->id) ? (string) $device->id : null,
             deviceName: isset($device->name) ? (string) $device->name : null,
             source: $source,
+            contextUri: isset($payload->context->uri) ? (string) $payload->context->uri : null,
         );
     }
 

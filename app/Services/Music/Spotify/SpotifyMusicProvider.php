@@ -4,6 +4,7 @@ namespace App\Services\Music\Spotify;
 
 use App\Enums\Purpose;
 use App\Exceptions\NoActiveDeviceException;
+use App\Exceptions\ProviderPremiumRequiredException;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
@@ -13,6 +14,7 @@ use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
+use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\Track;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
@@ -28,6 +30,8 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     private const int BROWSE_CACHE_SECONDS = 3600;
 
     public const string CONTEXT_PLAYLIST_TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
+
+    private ?string $accountId = null;
 
     public function __construct(
         protected SpotifyGateway $gateway,
@@ -238,6 +242,86 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         return $playlists;
     }
 
+    public function ownedPlaylist(string $playlistId): ?Playlist
+    {
+        try {
+            $payload = SpotifyPayload::object($this->control()->getPlaylist($playlistId, ['fields' => 'id,name,owner(id,display_name),tracks(total)']));
+        } catch (SpotifyWebAPIException $exception) {
+            if (in_array($exception->getCode(), [400, 404], true)) {
+                return null;
+            }
+            throw $exception;
+        }
+        $ownerId = isset($payload->owner) ? (string) (SpotifyPayload::object($payload->owner)->id ?? '') : '';
+
+        return isset($payload->id) && $ownerId !== '' && $ownerId === $this->accountId() ? SpotifyMapper::playlist($payload) : null;
+    }
+
+    public function findOwnedPlaylistByName(string $name): ?Playlist
+    {
+        $accountId = $this->accountId();
+        $offset = 0;
+        do {
+            $result = SpotifyPayload::object($this->control()->getMyPlaylists(['limit' => 50, 'offset' => $offset]));
+            foreach ((array) $result->items as $item) {
+                $item = SpotifyPayload::object($item);
+                $ownerId = isset($item->owner) ? (string) (SpotifyPayload::object($item->owner)->id ?? '') : '';
+                if ((string) $item->name === $name && $ownerId === $accountId) {
+                    return SpotifyMapper::playlist($item);
+                }
+            }
+            $offset += 50;
+        } while ($result->next);
+
+        return null;
+    }
+
+    public function createPrivatePlaylist(string $name, string $description): Playlist
+    {
+        // The array form of createPlaylist() targets /v1/me/playlists but raises the library's own deprecation notice, which we swallow here only.
+        set_error_handler(fn (): bool => true, E_USER_DEPRECATED);
+        try {
+            $payload = SpotifyPayload::object($this->control()->createPlaylist(['name' => $name, 'description' => $description, 'public' => false]));
+        } finally {
+            restore_error_handler();
+        }
+
+        return SpotifyMapper::playlist($payload);
+    }
+
+    public function clearPlaylist(string $playlistId): void
+    {
+        $this->control()->replacePlaylistTracks($playlistId, []);
+    }
+
+    public function playlistContextUri(string $playlistId): string
+    {
+        return "spotify:playlist:{$playlistId}";
+    }
+
+    public function contextName(string $contextUri): ?string
+    {
+        return Cache::remember("music.spotify.context-name.{$contextUri}", 600, function () use ($contextUri): ?string {
+            if (preg_match('/^spotify:user:[^:]+:collection$/D', $contextUri) === 1) {
+                return 'Liked Songs';
+            }
+            if (preg_match('/^spotify:(playlist|album|artist):([A-Za-z0-9]+)$/D', $contextUri, $matches) !== 1) {
+                return null;
+            }
+            [, $kind, $id] = $matches;
+
+            try {
+                return match ($kind) {
+                    'playlist' => $this->playlistName($id),
+                    'album' => $this->getAlbum($id)?->ref->name,
+                    default => $this->getArtist($id)?->ref->name,
+                };
+            } catch (SpotifyWebAPIException) {
+                return null;
+            }
+        });
+    }
+
     public function isReservedTrack(string $trackId): bool
     {
         return $trackId === self::CONTEXT_PLAYLIST_TRACK_ID;
@@ -271,6 +355,15 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     {
         $options = $track === null ? [] : ['uris' => ["spotify:track:{$track->id}"]];
         $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->play($deviceId ?? '', $options));
+    }
+
+    public function playInContext(string $playlistId, Track $track, ?string $deviceId = null, int $positionMs = 0): void
+    {
+        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->play($deviceId ?? '', [
+            'context_uri' => "spotify:playlist:{$playlistId}",
+            'offset' => ['uri' => "spotify:track:{$track->id}"],
+            'position_ms' => $positionMs,
+        ]));
     }
 
     public function transferPlayback(string $deviceId): void
@@ -321,9 +414,25 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
             if ($exception->getCode() === 404) {
                 throw new NoActiveDeviceException($exception->getMessage(), 404, $exception);
             }
+            if ($exception->getCode() === 403 && $exception->getReason() === 'PREMIUM_REQUIRED') {
+                throw new ProviderPremiumRequiredException($exception->getMessage(), 403, $exception);
+            }
 
             throw $exception;
         }
+    }
+
+    protected function playlistName(string $id): ?string
+    {
+        $name = SpotifyPayload::object($this->control()->getPlaylist($id, ['fields' => 'name']))->name ?? null;
+
+        return $name === null ? null : (string) $name;
+    }
+
+    protected function accountId(): string
+    {
+        return $this->accountId ??= (string) ($this->user->accounts()->whereHas('provider', fn ($query) => $query->whereCode('spotify'))->first()?->external_id
+            ?? SpotifyPayload::object($this->control()->me())->id);
     }
 
     protected function reader(): SpotifyWebAPI

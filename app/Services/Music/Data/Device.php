@@ -9,5 +9,6 @@ final readonly class Device
         public string $name,
         public string $type,
         public bool $isActive,
+        public bool $isRestricted = false,
     ) {}
 }

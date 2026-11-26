@@ -14,6 +14,7 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Playback\ContextPlaylist;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -266,7 +267,11 @@ class PlaybackSync
             if ($device->id === $party->device_id) {
                 Log::info("{$party}: Forcing playback on {$device->name}");
                 $track = $trackId === null ? null : $this->trackFor($party, $provider, $trackId);
-                $provider->play($party->device_id, $track);
+                if ($track === null) {
+                    $provider->play($party->device_id);
+                } else {
+                    $provider->playInContext(app(ContextPlaylist::class)->ensure($party, $provider), $track, $party->device_id);
+                }
 
                 return $provider->currentPlayback();
             }

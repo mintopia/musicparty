@@ -135,6 +135,7 @@ it('party:force starts a forced party whose device is online and stamps last_upd
 
 it('party:force sends play to a fresh pushed Player through the transport seam', function () {
     Event::fake([PlayerCommand::class]);
+    app(FakeMusicProvider::class)->withoutActiveDevice();
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
 
     $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();
@@ -144,6 +145,7 @@ it('party:force sends play to a fresh pushed Player through the transport seam',
 
 it('party:force sends play to a fresh Web Player through the transport seam', function () {
     Event::fake([PlayerCommand::class]);
+    app(FakeMusicProvider::class)->withoutActiveDevice();
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::WebPlayer, 'playback_received_at' => now()]);
 
     $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();

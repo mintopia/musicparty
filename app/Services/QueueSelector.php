@@ -67,13 +67,7 @@ class QueueSelector
         }
 
         Log::debug("{$party}: Adding {$toAdd} tracks to the queue");
-        $candidates = $this->candidates($party);
-        $due = $candidates->filter(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->take($toAdd)->values();
-        $rest = $candidates->reject(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->values();
-        $remaining = $toAdd - $due->count();
-        $selected = $due->concat($remaining < 1 ? [] : ($current->weighted
-            ? $this->selectWeighted($rest, $remaining)
-            : $this->selectRanked($rest, $remaining)))->values();
+        $selected = $this->pick($party, $toAdd);
 
         if ($selected->isEmpty()) {
             Log::debug("{$party}: Found no songs in the upcoming songs list to backfill");
@@ -95,6 +89,33 @@ class QueueSelector
             if ($current->history_playlist_id !== null) {
                 Log::info("{$party}: Adding {$request->song} to history playlist");
                 $provider->appendToPlaylist($current->history_playlist_id, [$track]);
+            }
+        }
+    }
+
+    /**
+     * The Requests that would be sent next: Scheduled first, then ranked or weighted.
+     *
+     * @return Collection<int, UpcomingSong>
+     */
+    public function pick(Party $party, int $limit): Collection
+    {
+        $wasSelecting = $this->selecting;
+        $this->selecting = true;
+        try {
+            $current = $party->fresh() ?? $party;
+            $candidates = $this->candidates($party);
+            $due = $candidates->filter(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->take($limit)->values();
+            $rest = $candidates->reject(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->values();
+            $remaining = $limit - $due->count();
+
+            return $due->concat($remaining < 1 ? [] : ($current->weighted
+                ? $this->selectWeighted($rest, $remaining)
+                : $this->selectRanked($rest, $remaining)))->values();
+        } finally {
+            if (! $wasSelecting) {
+                $this->selecting = false;
+                $this->modifiers = [];
             }
         }
     }

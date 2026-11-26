@@ -21,6 +21,11 @@ interface ProviderPlayback
 
     public function play(?string $deviceId = null, ?Track $track = null): void;
 
+    /**
+     * Starts $track from $positionMs on $deviceId (null = active device) with the given provider playlist as the playback context.
+     */
+    public function playInContext(string $playlistId, Track $track, ?string $deviceId = null, int $positionMs = 0): void;
+
     public function pause(): void;
 
     public function next(): void;
