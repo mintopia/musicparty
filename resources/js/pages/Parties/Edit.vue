@@ -262,14 +262,14 @@ function holdFlagged(): void {
             </div>
 
             <form class="settings-form" data-test="settings-form" @submit.prevent="save">
-                <div class="settings-tabs" role="tablist" aria-label="Settings sections" @keydown="onTabKeydown">
+                <div class="underline-tabs" role="tablist" aria-label="Settings sections" @keydown="onTabKeydown">
                     <button
                         v-for="t in TABS"
                         :id="`tab-${t.id}`"
                         :key="t.id"
                         type="button"
                         role="tab"
-                        class="settings-tab"
+                        class="underline-tab"
                         :class="{active: activeTab === t.id}"
                         :aria-selected="activeTab === t.id"
                         :aria-controls="`panel-${t.id}`"
@@ -325,40 +325,6 @@ function holdFlagged(): void {
 </template>
 
 <style scoped>
-.settings-tabs {
-    display: flex;
-    gap: 1.5rem;
-    overflow-x: auto;
-    border-bottom: 1px solid var(--tblr-border-color);
-}
-
-.settings-tab {
-    margin-bottom: -1px;
-    padding: 0.5rem 0;
-    border: 0;
-    border-bottom: 2px solid transparent;
-    background: none;
-    color: var(--tblr-secondary);
-    font: inherit;
-    white-space: nowrap;
-}
-
-.settings-tab:hover {
-    color: var(--tblr-body-color);
-}
-
-.settings-tab.active {
-    border-bottom-color: var(--tblr-primary);
-    color: var(--tblr-body-color);
-    font-weight: 500;
-}
-
-.settings-tab:focus-visible {
-    outline: 2px solid var(--tblr-primary);
-    outline-offset: 2px;
-    border-radius: 2px;
-}
-
 .settings-panel {
     padding: 1.5rem 0 2rem;
 }

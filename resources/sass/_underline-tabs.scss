@@ -1,0 +1,35 @@
+.underline-tabs {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.underline-tab {
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--tblr-secondary);
+    font: inherit;
+    white-space: nowrap;
+    text-decoration: none;
+
+    &:hover {
+        color: var(--tblr-body-color);
+        text-decoration: none;
+    }
+
+    &.active {
+        border-bottom-color: var(--tblr-primary);
+        color: var(--tblr-body-color);
+        font-weight: 500;
+    }
+
+    &:focus-visible {
+        outline: 2px solid var(--tblr-primary);
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+}
