@@ -10,6 +10,7 @@ export interface PartyMembership {
     code: string;
     name: string;
     canManage: boolean;
+    aiReviewEnabled?: boolean;
 }
 
 export interface SharedProps {
@@ -327,3 +328,35 @@ export type SearchTypeResults =
     | {view: 'type'; type: 'artist'; total: number; capped: boolean; items: SearchPage<ArtistResult>};
 
 export type SearchResults = SearchOverviewResults | SearchTypeResults;
+
+export type AiReviewOutcome = 'allow' | 'flag' | 'reject' | 'error';
+
+export interface AiReviewRow {
+    id: number;
+    createdAt: When | null;
+    user: string | null;
+    track: {title: string; artists: string};
+    outcome: AiReviewOutcome;
+    outcomeLabel: string;
+    reason: string | null;
+    driver: string;
+    model: string | null;
+    latencyMs: number;
+    promptTokens: number | null;
+    completionTokens: number | null;
+    totalTokens: number | null;
+    requested: boolean;
+}
+
+export interface AiReviewDetail extends AiReviewRow {
+    endpointHost: string | null;
+    score: number | null;
+    confidence: number | null;
+    request: Record<string, unknown>;
+    response: Record<string, unknown> | null;
+    partyContext: string | null;
+    errorClass: string | null;
+    errorMessage: string | null;
+    trackId: string;
+    trackProvider: string;
+}

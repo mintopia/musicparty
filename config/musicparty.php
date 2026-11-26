@@ -15,4 +15,6 @@ return [
     // Spotify HTTP timeouts: total request time and connection time, in seconds.
     'spotify_timeout_seconds' => (int) env('MUSICPARTY_SPOTIFY_TIMEOUT_SECONDS', 8),
     'spotify_connect_timeout_seconds' => (int) env('MUSICPARTY_SPOTIFY_CONNECT_TIMEOUT_SECONDS', 4),
+    // Days AI Request Review history is kept before it is pruned.
+    'ai_review_retention_days' => (int) env('MUSICPARTY_AI_REVIEW_RETENTION_DAYS', 30),
 ];

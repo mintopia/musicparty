@@ -11,6 +11,7 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
 use App\Services\Playback\PartyDashboardCache;
@@ -122,6 +123,7 @@ class UpcomingSongController extends Controller
                             $song = Song::fromTrack($track);
                             if ($checkResponse->isFlagged()) {
                                 $flagged = app(FlaggedRequests::class)->flag($party, $song, $user, (string) $checkResponse->reason, $scheduledFor);
+                                app(AiReviewRecorder::class)->linkRequest($flagged, $user, $trackId);
 
                                 return response()->json([
                                     'message' => 'Your request is awaiting approval',
@@ -135,6 +137,7 @@ class UpcomingSongController extends Controller
                             $upcoming->user()->associate($user);
                             $upcoming->song()->associate($song);
                             $upcoming->save();
+                            app(AiReviewRecorder::class)->linkRequest($upcoming, $user, $trackId);
                         }
 
                         if ($scheduledFor !== null) {

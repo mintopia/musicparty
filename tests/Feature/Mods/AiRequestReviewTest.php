@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AiReviewOutcome;
 use App\Enums\SettingType;
+use App\Models\AiReview;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -497,5 +499,187 @@ describe('Party context', function () {
         $definition = collect(new AiRequestReviewMod()->settings())->first(fn ($setting): bool => $setting->code === 'include_party_context');
 
         expect($definition->type)->toBe(SettingType::stBoolean)->and($definition->default)->toBeTrue();
+    });
+});
+
+describe('History', function () {
+    it('records a chat review with the messages, response and token usage', function () {
+        Http::fake(['llm.example.test/*' => Http::response(chatCompletion('reject', 'Not for this party', 21, 9))]);
+        [$party, $member] = aiReviewSetup(flagRequests: false);
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'guidelines', 'No explicit lyrics');
+
+        app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
+
+        $review = AiReview::sole();
+        expect($review)
+            ->party_id->toBe($party->id)
+            ->user_id->toBe($member->user_id)
+            ->party_member_id->toBe($member->id)
+            ->track_provider->toBe('fake')
+            ->track_id->toBe(aiReviewTrack()->id)
+            ->track_title->toBe(aiReviewTrack()->name)
+            ->driver->toBe('openai-compatible')
+            ->model->toBe('review-1')
+            ->endpoint_host->toBe('llm.example.test')
+            ->outcome->toBe(AiReviewOutcome::Reject)
+            ->reason->toBe('Not for this party')
+            ->prompt_tokens->toBe(21)
+            ->completion_tokens->toBe(9)
+            ->total_tokens->toBe(30)
+            ->error_class->toBeNull()
+            ->and($review->latency_ms)->toBeInt()
+            ->and($review->request['messages'][0]['content'])->toContain('Party guidelines: No explicit lyrics')
+            ->and($review->request['messages'][1]['content'])->toContain('"title"')
+            ->and($review->response)->toMatchArray(['verdict' => 'reject', 'reason' => 'Not for this party']);
+    });
+
+    it('records a decision model review with the exact body, raw response, score and usage', function () {
+        $answer = decisionAnswer(1.4, 0.8);
+        $answer['usage'] = ['prompt_tokens' => 300, 'completion_tokens' => 12, 'total_tokens' => 312];
+        Http::fake(['openrouter.ai/*' => Http::response($answer)]);
+        [$party, $member] = decisionSetup();
+        $sent = null;
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+        Http::assertSent(function (Request $request) use (&$sent): bool {
+            $sent = $request->data();
+
+            return true;
+        });
+
+        $review = AiReview::sole();
+        expect($review)
+            ->driver->toBe('decision-model')
+            ->model->toBe('typesafe/jev-1.13')
+            ->endpoint_host->toBe('openrouter.ai')
+            ->outcome->toBe(AiReviewOutcome::Flag)
+            ->reason->toBe('Probably against')
+            ->score->toBe(1.4)
+            ->confidence->toBe(0.8)
+            ->prompt_tokens->toBe(300)
+            ->completion_tokens->toBe(12)
+            ->total_tokens->toBe(312)
+            ->and($review->request)->toBe($sent)
+            ->and($review->response['answers']['suitability']['score'])->toBe(1.4);
+    });
+
+    it('records each outcome the model can produce', function (float $score, float $confidence, AiReviewOutcome $expected) {
+        Http::fake(['*' => Http::response(decisionAnswer($score, $confidence))]);
+        [$party, $member] = decisionSetup();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(AiReview::sole()->outcome)->toBe($expected);
+    })->with([
+        'allow' => [4.0, 0.9, AiReviewOutcome::Allow],
+        'flag' => [1.4, 0.9, AiReviewOutcome::Flag],
+        'reject' => [0.2, 0.9, AiReviewOutcome::Reject],
+        'low confidence is flagged' => [4.0, 0.1, AiReviewOutcome::Flag],
+    ]);
+
+    it('records the review as flagged even when the party has flagging off', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(1.4))]);
+        [$party, $member] = decisionSetup(flagRequests: false);
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+        expect(AiReview::sole()->outcome)->toBe(AiReviewOutcome::Flag);
+    });
+
+    it('records fail-open errors with a sanitised message and the raw error body', function (Closure $fake, string $class) {
+        Http::fake(['*' => $fake]);
+        [$party, $member] = decisionSetup();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+
+        $review = AiReview::sole();
+        expect($review)
+            ->outcome->toBe(AiReviewOutcome::Error)
+            ->error_class->toBe($class)
+            ->and($review->error_message)->not->toContain('sk-secret-key')->not->toBeEmpty()
+            ->and(json_encode($review->getAttributes()))->not->toContain('sk-secret-key');
+    })->with([
+        'timeout' => [fn () => fn () => throw new ConnectionException('cURL error 28 for Bearer sk-secret-key'), DecisionModelException::class],
+        'server error' => [fn () => fn () => Http::response('boom sk-secret-key', 500), DecisionModelException::class],
+    ]);
+
+    it('records the raw error response body when the server fails', function () {
+        Http::fake(['*' => Http::response('boom sk-secret-key', 500)]);
+        [$party, $member] = decisionSetup();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        $response = AiReview::sole()->response;
+        expect($response['status'])->toBe(500)->and($response['body'])->toContain('boom')->not->toContain('sk-secret-key');
+    });
+
+    it('records a chat provider error', function () {
+        RequestReviewAgent::fake(fn () => throw new RuntimeException('401 for Bearer secret'));
+        [$party, $member] = aiReviewSetup();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        $review = AiReview::sole();
+        expect($review)->outcome->toBe(AiReviewOutcome::Error)->error_class->toBe(RuntimeException::class)
+            ->error_message->toBe('401 for Bearer [redacted]')
+            ->and($review->request['messages'])->toHaveCount(2)
+            ->and($review->response)->toBeNull();
+    });
+
+    it('never stores the api key or an authorization header in the request or response', function (string $driver) {
+        Http::fake([
+            'openrouter.ai/*' => Http::response(decisionAnswer(4) + ['echo' => 'Bearer sk-secret-key']),
+            'llm.example.test/*' => Http::response(chatCompletion('allow')),
+        ]);
+        [$party, $member] = aiReviewSetup(driver: $driver);
+        $store = app(ModSettingsStore::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'api_key', 'sk-secret-key');
+        $store->set($party, AiRequestReviewMod::CODE, 'guidelines', 'Use key sk-secret-key never');
+
+        app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
+
+        $stored = json_encode(AiReview::sole()->getAttributes());
+        expect($stored)->not->toContain('sk-secret-key')->not->toContain('Authorization')->not->toContain('Bearer sk');
+    })->with(['decision-model', 'openai-compatible']);
+
+    it('includes the party context that was sent in the stored request', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $played = PlayedSong::factory()->for($party)->create(['rating' => 2]);
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(AiReview::sole()->request['state'])->toContain('party_context')->toContain($played->song->name);
+    });
+
+    it('does not record when the review is skipped', function () {
+        RequestReviewAgent::fake()->preventStrayPrompts();
+        [$party, $member] = aiReviewSetup();
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'model', null);
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+        app(RequestRules::class)->check($party, $member, aiReviewTrack(), RequestMode::Annotate);
+
+        expect(AiReview::count())->toBe(0);
+    });
+
+    it('does not break the request when the history cannot be saved', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        AiReview::creating(fn () => throw new RuntimeException('disk full'));
+
+        $outcome = app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome;
+        AiReview::flushEventListeners();
+
+        expect($outcome)->toBe(RequestOutcome::Allow)->and(AiReview::count())->toBe(0);
+    });
+
+    it('prunes reviews older than the retention period', function () {
+        config(['musicparty.ai_review_retention_days' => 30]);
+        $old = AiReview::factory()->create(['created_at' => now()->subDays(31)]);
+        $recent = AiReview::factory()->create(['created_at' => now()->subDays(29)]);
+
+        Artisan::call('model:prune', ['--model' => [AiReview::class]]);
+
+        expect(AiReview::pluck('id')->all())->toBe([$recent->id])->and(AiReview::find($old->id))->toBeNull();
     });
 });

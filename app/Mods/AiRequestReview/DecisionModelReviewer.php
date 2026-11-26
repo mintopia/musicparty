@@ -37,12 +37,17 @@ class DecisionModelReviewer
      * @param  array<string, mixed>  $track
      * @param  array<string, mixed>  $log
      */
-    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $track, int $timeout, float $confidenceThreshold, array $log = []): RequestDecision
+    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $track, int $timeout, float $confidenceThreshold, array $log = [], ?AiReviewTrace $trace = null): RequestDecision
     {
         $this->assertSafeEndpoint($endpoint);
 
         $payload = $this->payload($model, $guidelines, $track);
         $log += ['model' => $model, 'endpoint_host' => parse_url($endpoint, PHP_URL_HOST), 'timeout' => $timeout, 'confidence_threshold' => $confidenceThreshold];
+        if ($trace !== null) {
+            $trace->model = $model;
+            $trace->endpointHost = is_string($log['endpoint_host']) ? $log['endpoint_host'] : null;
+            $trace->request = $payload;
+        }
         $this->log->debug('ai-review.request', $log + [
             'headers' => ['Authorization' => 'Bearer '.AiReviewLog::REDACTED, 'X-Title' => 'Music Party'],
             'body' => $payload,
@@ -64,9 +69,15 @@ class DecisionModelReviewer
         }
 
         $log += ['latency_ms' => $this->log->elapsedMs($startedAt), 'status' => $response->status()];
-        $this->log->debug('ai-review.response', $log + ['body' => $this->log->redact($response->body(), $apiKey)]);
+        $body = $this->log->redact($response->body(), $apiKey);
+        $this->log->debug('ai-review.response', $log + ['body' => $body]);
+        if ($trace !== null) {
+            $json = $response->json();
+            $trace->response = is_array($json) ? $json : ['status' => $response->status(), 'body' => $body];
+            $trace->usageFrom(is_array($json) && is_array($json['usage'] ?? null) ? $json['usage'] : null);
+        }
 
-        return $this->interpret($response, $confidenceThreshold, $log);
+        return $this->interpret($response, $confidenceThreshold, $log, $trace);
     }
 
     /**
@@ -96,7 +107,7 @@ class DecisionModelReviewer
     /**
      * @param  array<string, mixed>  $log
      */
-    protected function interpret(Response $response, float $confidenceThreshold, array $log = []): RequestDecision
+    protected function interpret(Response $response, float $confidenceThreshold, array $log = [], ?AiReviewTrace $trace = null): RequestDecision
     {
         if (! $response->successful()) {
             throw new DecisionModelException("Decision model responded with HTTP {$response->status()}");
@@ -114,6 +125,10 @@ class DecisionModelReviewer
         $score = (float) $answer['score'];
         $confidence = isset($answer['confidence']) && is_numeric($answer['confidence']) ? (float) $answer['confidence'] : null;
         $reason = $this->legendReason($answer, $score);
+        if ($trace !== null) {
+            $trace->score = $score;
+            $trace->confidence = $confidence;
+        }
 
         if ($confidence === null || $confidence < $confidenceThreshold) {
             $band = 'low_confidence';

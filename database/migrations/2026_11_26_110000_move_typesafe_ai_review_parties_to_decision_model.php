@@ -5,11 +5,11 @@ use Illuminate\Support\Facades\DB;
 
 return new class extends Migration
 {
-    private const MOD = 'ai-request-review';
+    private const string MOD = 'ai-request-review';
 
-    private const ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
+    private const string ENDPOINT = 'https://api.typesafe.ai/v1/systemone';
 
-    private const MODEL = 'jev-latest';
+    private const string MODEL = 'jev-latest';
 
     public function up(): void
     {
@@ -41,8 +41,6 @@ return new class extends Migration
             }
         }
     }
-
-    public function down(): void {}
 
     private function read(mixed $stored): mixed
     {

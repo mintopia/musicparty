@@ -7,6 +7,8 @@ use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
+use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\PartyMods;
 use App\Services\ActiveTheme;
 use App\Services\RealtimeConfig;
 use Illuminate\Http\Request;
@@ -72,7 +74,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array<int, array{code: string, name: string, canManage: bool}>
+     * @return array<int, array{code: string, name: string, canManage: bool, aiReviewEnabled: bool}>
      */
     private function partyProps(?User $user): array
     {
@@ -81,11 +83,16 @@ class HandleInertiaRequests extends Middleware
         }
 
         return $user->partyMembers()->with('party')->get()
-            ->map(fn (PartyMember $member): array => [
-                'code' => $member->party->code,
-                'name' => $member->party->name,
-                'canManage' => $member->party->canBeManagedBy($user),
-            ])
+            ->map(function (PartyMember $member) use ($user): array {
+                $canManage = $member->party->canBeManagedBy($user);
+
+                return [
+                    'code' => $member->party->code,
+                    'name' => $member->party->name,
+                    'canManage' => $canManage,
+                    'aiReviewEnabled' => $canManage && app(PartyMods::class)->isEnabled($member->party, AiRequestReviewMod::CODE),
+                ];
+            })
             ->values()
             ->all();
     }

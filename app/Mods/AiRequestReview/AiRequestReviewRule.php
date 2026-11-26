@@ -21,7 +21,7 @@ class AiRequestReviewRule implements RequestRule
 
     public const DRIVER_DECISION_MODEL = 'decision-model';
 
-    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods, protected DecisionModelReviewer $decisionModel, protected AiReviewLog $log, protected PartyVibeSummary $vibe) {}
+    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods, protected DecisionModelReviewer $decisionModel, protected AiReviewLog $log, protected PartyVibeSummary $vibe, protected AiReviewRecorder $recorder) {}
 
     public function decide(RequestContext $context, Track $track): RequestDecision
     {
@@ -39,10 +39,11 @@ class AiRequestReviewRule implements RequestRule
             'driver' => $driver,
         ];
         $startedAt = hrtime(true);
+        $trace = new AiReviewTrace($context->party, $context->member, $track, $driver, $this->apiKeyOf($context->party));
         $this->log->debug('ai-review.start', $log);
 
         if ($driver === self::DRIVER_DECISION_MODEL) {
-            return $this->decideWithDecisionModel($context->party, $track, $log, $startedAt);
+            return $this->decideWithDecisionModel($context->party, $track, $log, $startedAt, $trace);
         }
 
         $model = $this->setting($context->party, 'model');
@@ -57,30 +58,48 @@ class AiRequestReviewRule implements RequestRule
             $provider = $this->providerName($context->party);
             $partyContext = $this->partyContext($context->party);
             $log += ['provider' => $provider, 'model' => $model, 'timeout' => $timeout, 'party_context_included' => $partyContext !== null];
-            [$verdict, $reason] = $this->prompt($track, $guidelines, $provider, $model, $timeout, $partyContext, $log);
+            $trace->model = $model;
+            $endpoint = $this->setting($context->party, 'endpoint');
+            $trace->endpointHost = is_string($endpoint) ? (parse_url($endpoint, PHP_URL_HOST) ?: null) : null;
+            [$verdict, $reason] = $this->prompt($track, $guidelines, $provider, $model, $timeout, $partyContext, $log, $trace);
 
-            return $this->logged($this->interpret($verdict, $reason), $log, $startedAt, is_string($verdict) ? "verdict:{$verdict}" : 'no_verdict');
+            return $this->logged($this->interpret($verdict, $reason), $log, $startedAt, is_string($verdict) ? "verdict:{$verdict}" : 'no_verdict', $trace);
         } catch (Throwable $e) {
             Log::warning("AI Request Review unavailable: {$e->getMessage()}");
-            $this->log->failure($e, $this->apiKeyOf($context->party), $log + ['latency_ms' => $this->log->elapsedMs($startedAt)]);
 
-            return $this->logged(RequestDecision::allow(), $log, $startedAt, 'fail_open_on_error');
+            return $this->failedOpen($e, $log, $startedAt, $trace);
         }
     }
 
     /**
      * @param  array<string, mixed>  $log
      */
-    protected function logged(RequestDecision $decision, array $log, int $startedAt, string $why): RequestDecision
+    protected function logged(RequestDecision $decision, array $log, int $startedAt, string $why, ?AiReviewTrace $trace = null): RequestDecision
     {
+        $latency = $this->log->elapsedMs($startedAt);
         $this->log->debug('ai-review.outcome', $log + [
             'outcome' => $decision->outcome->value,
             'reason' => $decision->reason,
             'why' => $why,
-            'latency_ms' => $this->log->elapsedMs($startedAt),
+            'latency_ms' => $latency,
         ]);
+        if ($trace !== null) {
+            $this->recorder->record($trace, $decision, $latency);
+        }
 
         return $decision;
+    }
+
+    /**
+     * @param  array<string, mixed>  $log
+     */
+    protected function failedOpen(Throwable $e, array $log, int $startedAt, AiReviewTrace $trace): RequestDecision
+    {
+        $this->log->failure($e, $trace->secret, $log + ['latency_ms' => $this->log->elapsedMs($startedAt)]);
+        $trace->errorClass = $e::class;
+        $trace->errorMessage = $this->log->redact($e->getMessage(), $trace->secret);
+
+        return $this->logged(RequestDecision::allow(), $log, $startedAt, 'fail_open_on_error', $trace);
     }
 
     protected function apiKeyOf(Party $party): ?string
@@ -93,7 +112,7 @@ class AiRequestReviewRule implements RequestRule
     /**
      * @param  array<string, mixed>  $log
      */
-    protected function decideWithDecisionModel(Party $party, Track $track, array $log, int $startedAt): RequestDecision
+    protected function decideWithDecisionModel(Party $party, Track $track, array $log, int $startedAt, AiReviewTrace $trace): RequestDecision
     {
         $apiKey = $this->setting($party, 'api_key');
         if (! is_string($apiKey) || $apiKey === '') {
@@ -117,14 +136,14 @@ class AiRequestReviewRule implements RequestRule
                 max(1, (int) ($this->setting($party, 'timeout') ?? 10)),
                 is_numeric($threshold) ? (float) $threshold : DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD,
                 $log,
+                $trace,
             );
 
-            return $this->logged($decision, $log, $startedAt, 'decision_model');
+            return $this->logged($decision, $log, $startedAt, 'decision_model', $trace);
         } catch (Throwable $e) {
             Log::warning('AI Request Review unavailable: '.($e instanceof DecisionModelException ? $e->getMessage() : $e::class));
-            $this->log->failure($e, $apiKey, $log + ['latency_ms' => $this->log->elapsedMs($startedAt)]);
 
-            return $this->logged(RequestDecision::allow(), $log, $startedAt, 'fail_open_on_error');
+            return $this->failedOpen($e, $log, $startedAt, $trace);
         }
     }
 
@@ -132,11 +151,13 @@ class AiRequestReviewRule implements RequestRule
      * @param  array<string, mixed>  $log
      * @return array{0: mixed, 1: mixed}
      */
-    protected function prompt(Track $track, ?string $guidelines, string $provider, string $model, int $timeout, ?string $partyContext, array $log): array
+    protected function prompt(Track $track, ?string $guidelines, string $provider, string $model, int $timeout, ?string $partyContext, array $log, AiReviewTrace $trace): array
     {
         $agent = new RequestReviewAgent($guidelines);
         $message = $this->describe($track, $partyContext);
-        $this->log->debug('ai-review.request', $log + ['system' => (string) $agent->instructions(), 'user' => $message]);
+        $system = (string) $agent->instructions();
+        $this->log->debug('ai-review.request', $log + ['system' => $system, 'user' => $message]);
+        $trace->request = ['model' => $model, 'messages' => [['role' => 'system', 'content' => $system], ['role' => 'user', 'content' => $message]]];
         $startedAt = hrtime(true);
 
         $response = $agent->prompt($message, provider: $provider, model: $model, timeout: $timeout);
@@ -146,6 +167,10 @@ class AiRequestReviewRule implements RequestRule
             'verdict' => $response['verdict'] ?? null,
             'reason' => $response['reason'] ?? null,
         ]);
+        $trace->response = ['verdict' => $response['verdict'] ?? null, 'reason' => $response['reason'] ?? null];
+        if ($response->usage->totalTokens() > 0) {
+            $trace->usage($response->usage->inputTokens, $response->usage->outputTokens, $response->usage->totalTokens());
+        }
 
         return [$response['verdict'] ?? null, $response['reason'] ?? null];
     }

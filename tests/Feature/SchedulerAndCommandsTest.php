@@ -3,6 +3,7 @@
 use App\Enums\ScheduleFrequency;
 use App\Events\Party\PlayerCommand;
 use App\Jobs\PartyUpdate;
+use App\Models\AiReview;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\SocialProvider;
@@ -49,6 +50,7 @@ function activeParty(array $attributes = []): Party
 
 dataset('scheduled entries', [
     'sanctum prune' => ['sanctum:prune-expired --hours=24', '0 0 * * *'],
+    'ai review prune' => ['model:prune --model='.escapeshellarg(AiReview::class), '0 0 * * *'],
     'party fallback' => ['party:fallback', '* * * * *'],
     'party force' => ['party:force', '* * * * *'],
     'context playlist' => ['party:contextplaylist', '*/15 * * * *'],
@@ -68,7 +70,7 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
-        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force', 'party:contextplaylist',
+        'sanctum:prune-expired --hours=24', 'model:prune --model='.escapeshellarg(AiReview::class), 'party:fallback', 'party:force', 'party:contextplaylist',
         'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day',
     ]);
 });
