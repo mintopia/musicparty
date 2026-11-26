@@ -3,6 +3,7 @@
 namespace Tests\Support;
 
 use SpotifyWebAPI\SpotifyWebAPI;
+use SpotifyWebAPI\SpotifyWebAPIException;
 
 class FakeSpotify extends SpotifyWebAPI
 {
@@ -125,8 +126,8 @@ class FakeSpotify extends SpotifyWebAPI
 
     public function createPlaylist(string|array|object $userId, array|object $options = []): array|object
     {
-        if (is_array($userId) || is_object($userId)) {
-            trigger_error('Calling SpotifyWebAPI::createPlaylist() without a user ID is deprecated.', E_USER_DEPRECATED);
+        if (! isset(((array) $options)['name'])) {
+            throw new SpotifyWebAPIException('Missing required field: name', 400);
         }
 
         return $this->record(__FUNCTION__, func_get_args());

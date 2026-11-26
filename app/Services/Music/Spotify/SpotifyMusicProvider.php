@@ -279,13 +279,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function createPrivatePlaylist(string $name, string $description): Playlist
     {
-        // The array form of createPlaylist() targets /v1/me/playlists but raises the library's own deprecation notice, which we swallow here only.
-        set_error_handler(fn (): bool => true, E_USER_DEPRECATED);
-        try {
-            $payload = SpotifyPayload::object($this->control()->createPlaylist(['name' => $name, 'description' => $description, 'public' => false]));
-        } finally {
-            restore_error_handler();
-        }
+        $payload = SpotifyPayload::object($this->control()->createPlaylist($this->accountId(), ['name' => $name, 'description' => $description, 'public' => false]));
 
         return SpotifyMapper::playlist($payload);
     }

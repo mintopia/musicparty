@@ -183,24 +183,14 @@ it('still empties the context playlist when the play command fails', function ()
     expect($api->callsTo('replacePlaylistTracks'))->toBe([['ctx', ['abc']], ['ctx', []]]);
 });
 
-it('creates a private playlist through /me/playlists without leaking the library deprecation notice', function () {
+it('creates a private playlist with the options as the request body', function () {
     $api = FakeSpotify::install();
-    $leaked = [];
-    set_error_handler(function (int $level, string $message) use (&$leaked): bool {
-        $leaked[] = $message;
 
-        return true;
-    }, E_USER_DEPRECATED);
+    $playlist = spotifyProvider($api)->createPrivatePlaylist('Music Party Context', 'Leave it empty.');
 
-    try {
-        $playlist = spotifyProvider($api)->createPrivatePlaylist('Music Party Context', 'Leave it empty.');
-    } finally {
-        restore_error_handler();
-    }
-
-    expect($api->callsTo('createPlaylist'))->toBe([[['name' => 'Music Party Context', 'description' => 'Leave it empty.', 'public' => false]]])
-        ->and($playlist->id)->toBe('newpl')
-        ->and($leaked)->toBe([]);
+    $call = $api->callsTo('createPlaylist')[0];
+    expect($call[1])->toBe(['name' => 'Music Party Context', 'description' => 'Leave it empty.', 'public' => false])
+        ->and($playlist->id)->toBe('newpl');
 });
 
 it('clears a playlist with an empty replace', function () {
