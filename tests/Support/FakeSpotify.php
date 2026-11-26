@@ -98,6 +98,40 @@ class FakeSpotify extends SpotifyWebAPI
         return (object) ['id' => $id, 'type' => 'artist', 'name' => $name, 'uri' => "spotify:artist:{$id}"];
     }
 
+    public static function album(string $id = 'album1', string $name = 'Test Album', string $type = 'album', string $releaseDate = '1998-03-24'): object
+    {
+        return (object) [
+            'id' => $id,
+            'type' => 'album',
+            'album_type' => $type,
+            'name' => $name,
+            'release_date' => $releaseDate,
+            'images' => [(object) ['url' => "https://i.scdn.co/image/{$id}", 'height' => 640, 'width' => 640]],
+            'artists' => [self::artist()],
+        ];
+    }
+
+    public static function artistWithImage(string $id = 'artist1', string $name = 'Test Artist'): object
+    {
+        return (object) [...(array) self::artist($id, $name), 'images' => [(object) ['url' => "https://i.scdn.co/image/{$id}"]]];
+    }
+
+    /**
+     * @param  array<int, object>  $tracks
+     * @param  array<int, object>  $albums
+     * @param  array<int, object>  $artists
+     */
+    public static function searchResponse(array $tracks = [], array $albums = [], array $artists = [], ?int $trackTotal = null, ?int $albumTotal = null, ?int $artistTotal = null): object
+    {
+        $paging = fn (array $items, ?int $total): object => (object) ['items' => $items, 'total' => $total ?? count($items), 'limit' => 10, 'offset' => 0];
+
+        return (object) [
+            'tracks' => $paging($tracks, $trackTotal),
+            'albums' => $paging($albums, $albumTotal),
+            'artists' => $paging($artists, $artistTotal),
+        ];
+    }
+
     public static function device(string $id = 'device1'): object
     {
         return (object) [
@@ -270,7 +304,7 @@ class FakeSpotify extends SpotifyWebAPI
             'getMyDevices' => (object) ['devices' => [self::device()]],
             'getMyPlaylists', 'getMyRecentTracks' => (object) ['items' => [], 'total' => 0, 'limit' => 50, 'offset' => 0, 'next' => null],
             'getPlaylistTracks' => (object) ['items' => [], 'total' => 0, 'limit' => 50, 'offset' => 0, 'next' => null],
-            'search' => (object) ['tracks' => (object) ['items' => [], 'total' => 0, 'limit' => 20, 'offset' => 0]],
+            'search' => self::searchResponse(),
             'getTrack' => self::track(),
             default => true,
         };

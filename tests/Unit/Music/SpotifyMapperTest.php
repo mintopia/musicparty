@@ -94,3 +94,26 @@ it('maps restricted devices and the playback context', function () {
         ->and(SpotifyMapper::playbackState($payload)->contextUri)->toBe('spotify:playlist:pl1')
         ->and(SpotifyMapper::playbackState(spotifyFixture('playback'))->contextUri)->toBeNull();
 });
+
+it('maps an album search item to a summary', function () {
+    $summary = SpotifyMapper::albumSummary((object) [
+        'id' => 'al1',
+        'name' => 'Closing Time',
+        'album_type' => 'single',
+        'release_date' => '2003-05',
+        'images' => [(object) ['url' => 'https://img.test/al1']],
+        'artists' => [(object) ['id' => 'ar1', 'name' => 'Semisonic']],
+    ]);
+
+    expect($summary->ref->name)->toBe('Closing Time')
+        ->and($summary->ref->imageUrl)->toBe('https://img.test/al1')
+        ->and($summary->albumType)->toBe('Single')
+        ->and($summary->releaseYear)->toBe('2003')
+        ->and($summary->artists[0]->name)->toBe('Semisonic');
+});
+
+it('maps an album search item with no date or images', function () {
+    $summary = SpotifyMapper::albumSummary((object) ['id' => 'al1', 'name' => 'Bare']);
+
+    expect($summary->albumType)->toBe('Album')->and($summary->releaseYear)->toBeNull()->and($summary->ref->imageUrl)->toBeNull();
+});

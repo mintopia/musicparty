@@ -7,12 +7,14 @@ use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\Data\Album;
 use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Playlist;
+use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\Track;
 use Throwable;
 
@@ -250,12 +252,92 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
         $this->record(__FUNCTION__, func_get_args());
+
+        return $this->pageOf($this->matchingTracks($query), $page, $perPage);
+    }
+
+    public function searchOverview(string $query, int $limit): SearchOverview
+    {
+        $this->record(__FUNCTION__, func_get_args());
+
+        return new SearchOverview(
+            $this->pageOf($this->matchingTracks($query), 1, $limit),
+            $this->pageOf($this->matchingAlbums($query), 1, $limit),
+            $this->pageOf($this->matchingArtists($query), 1, $limit),
+        );
+    }
+
+    public function searchAlbums(string $query, int $page, int $perPage): Page
+    {
+        $this->record(__FUNCTION__, func_get_args());
+
+        return $this->pageOf($this->matchingAlbums($query), $page, $perPage);
+    }
+
+    public function searchArtists(string $query, int $page, int $perPage): Page
+    {
+        $this->record(__FUNCTION__, func_get_args());
+
+        return $this->pageOf($this->matchingArtists($query), $page, $perPage);
+    }
+
+    /**
+     * @return list<Track>
+     */
+    protected function matchingTracks(string $query): array
+    {
         $needle = mb_strtolower($query);
-        $matches = array_values(array_filter($this->tracks, fn (Track $track): bool => $needle === ''
+
+        return array_values(array_filter($this->tracks, fn (Track $track): bool => $needle === ''
             || str_contains(mb_strtolower($track->name), $needle)
             || str_contains(mb_strtolower($track->artists[0]->name ?? ''), $needle)));
+    }
 
-        return new Page(array_slice($matches, ($page - 1) * $perPage, $perPage), count($matches), $page, $perPage);
+    /**
+     * @return list<AlbumSummary>
+     */
+    protected function matchingAlbums(string $query): array
+    {
+        $needle = mb_strtolower($query);
+        $albums = [];
+        foreach ($this->tracks as $track) {
+            if (isset($albums[$track->album->id]) || ($needle !== '' && ! str_contains(mb_strtolower($track->album->name), $needle))) {
+                continue;
+            }
+            $albums[$track->album->id] = new AlbumSummary($track->album, 'Album', $track->artists, '2020');
+        }
+
+        return array_values($albums);
+    }
+
+    /**
+     * @return list<Artist>
+     */
+    protected function matchingArtists(string $query): array
+    {
+        $needle = mb_strtolower($query);
+        $artists = [];
+        foreach ($this->tracks as $track) {
+            foreach ($track->artists as $artist) {
+                if (isset($artists[$artist->id]) || ($needle !== '' && ! str_contains(mb_strtolower($artist->name), $needle))) {
+                    continue;
+                }
+                $artists[$artist->id] = new Artist($artist, "https://fake.test/artists/{$artist->id}.jpg");
+            }
+        }
+
+        return array_values($artists);
+    }
+
+    /**
+     * @template T
+     *
+     * @param  list<T>  $items
+     * @return Page<T>
+     */
+    protected function pageOf(array $items, int $page, int $perPage): Page
+    {
+        return new Page(array_slice($items, ($page - 1) * $perPage, $perPage), count($items), $page, $perPage);
     }
 
     public function getTrack(string $id): ?Track

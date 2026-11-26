@@ -4,6 +4,7 @@ namespace App\Services\Music\Spotify;
 
 use App\Services\Music\Data\Album;
 use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Device;
@@ -71,6 +72,16 @@ final class SpotifyMapper
     public static function artist(stdClass $payload): Artist
     {
         return new Artist(self::artistRef($payload), self::imageUrl($payload));
+    }
+
+    public static function albumSummary(stdClass $payload): AlbumSummary
+    {
+        return new AlbumSummary(
+            ref: self::albumRef($payload),
+            albumType: ucfirst((string) ($payload->album_type ?? 'album')),
+            artists: self::artistRefs($payload->artists ?? []),
+            releaseYear: isset($payload->release_date) ? substr((string) $payload->release_date, 0, 4) : null,
+        );
     }
 
     public static function playlist(stdClass $payload): Playlist

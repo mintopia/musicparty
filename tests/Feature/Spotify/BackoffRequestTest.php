@@ -207,7 +207,7 @@ it('retries a GET once after a connection failure but not after a timeout or for
 
 it('applies the configured HTTP timeouts to Spotify requests', function () {
     config(['musicparty.spotify_timeout_seconds' => 3, 'musicparty.spotify_connect_timeout_seconds' => 2]);
-    $options = (new ReflectionProperty(Request::class, 'options'))->getValue(BackoffRequest::forApplication('spotify'));
+    $options = new ReflectionProperty(Request::class, 'options')->getValue(BackoffRequest::forApplication('spotify'));
 
     expect($options['curl_options'])->toBe([CURLOPT_TIMEOUT => 3, CURLOPT_CONNECTTIMEOUT => 2]);
 });

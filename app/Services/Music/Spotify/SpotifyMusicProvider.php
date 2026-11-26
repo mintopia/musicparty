@@ -11,11 +11,13 @@ use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\Data\Album;
 use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Playlist;
+use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\Track;
 use App\Services\Spotify\BackoffRequest;
 use App\Services\Spotify\SpotifyBackoffException;
@@ -32,6 +34,10 @@ use stdClass;
 class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 {
     private const int BROWSE_CACHE_SECONDS = 3600;
+
+    public const int SEARCH_MAX_LIMIT = 10;
+
+    public const int SEARCH_MAX_OFFSET = 1000;
 
     public const string CONTEXT_PLAYLIST_TRACK_ID = '62mFjcWGkt2OY9LT9EvxS2';
 
@@ -105,11 +111,62 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
+        [$page, $perPage] = $this->clampSearchPaging($page, $perPage);
+        $result = $this->search($query, 'track', $perPage, ($page - 1) * $perPage);
+
+        return $this->trackPage($result->tracks ?? null, $page, $perPage);
+    }
+
+    public function searchOverview(string $query, int $limit): SearchOverview
+    {
+        $limit = max(1, min($limit, self::SEARCH_MAX_LIMIT));
+        $result = $this->search($query, ['track', 'album', 'artist'], $limit, 0);
+
+        return new SearchOverview(
+            $this->trackPage($result->tracks ?? null, 1, $limit),
+            $this->albumPage($result->albums ?? null, 1, $limit),
+            $this->artistPage($result->artists ?? null, 1, $limit),
+        );
+    }
+
+    public function searchAlbums(string $query, int $page, int $perPage): Page
+    {
+        [$page, $perPage] = $this->clampSearchPaging($page, $perPage);
+        $result = $this->search($query, 'album', $perPage, ($page - 1) * $perPage);
+
+        return $this->albumPage($result->albums ?? null, $page, $perPage);
+    }
+
+    public function searchArtists(string $query, int $page, int $perPage): Page
+    {
+        [$page, $perPage] = $this->clampSearchPaging($page, $perPage);
+        $result = $this->search($query, 'artist', $perPage, ($page - 1) * $perPage);
+
+        return $this->artistPage($result->artists ?? null, $page, $perPage);
+    }
+
+    /**
+     * Spotify allows at most 10 results per type and an offset of at most 1,000.
+     *
+     * @return array{int, int}
+     */
+    protected function clampSearchPaging(int $page, int $perPage): array
+    {
+        $perPage = max(1, min($perPage, self::SEARCH_MAX_LIMIT));
+
+        return [max(1, min($page, intdiv(self::SEARCH_MAX_OFFSET, $perPage))), $perPage];
+    }
+
+    /**
+     * @param  string|list<string>  $type
+     */
+    protected function search(string $query, string|array $type, int $limit, int $offset): stdClass
+    {
         try {
-            $result = SpotifyPayload::object($this->reader()->search($query, 'track', [
+            return SpotifyPayload::object($this->reader()->search($query, $type, [
                 'market' => $this->market(),
-                'limit' => $perPage,
-                'offset' => ($page - 1) * $perPage,
+                'limit' => $limit,
+                'offset' => $offset,
             ]));
         } catch (SpotifyWebAPIException $e) {
             throw match (true) {
@@ -119,9 +176,48 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
                 default => $e,
             };
         }
-        $tracks = SpotifyPayload::object($result->tracks);
+    }
 
-        return new Page($this->mapTracks((array) $tracks->items), (int) $tracks->total, $page, $perPage);
+    /**
+     * @return Page<Track>
+     */
+    protected function trackPage(mixed $payload, int $page, int $perPage): Page
+    {
+        $paging = SpotifyPayload::object($payload ?? (object) []);
+
+        return new Page($this->mapTracks((array) ($paging->items ?? [])), (int) ($paging->total ?? 0), $page, $perPage);
+    }
+
+    /**
+     * @return Page<AlbumSummary>
+     */
+    protected function albumPage(mixed $payload, int $page, int $perPage): Page
+    {
+        $paging = SpotifyPayload::object($payload ?? (object) []);
+        $items = [];
+        foreach ((array) ($paging->items ?? []) as $item) {
+            if ($item instanceof stdClass || is_array($item)) {
+                $items[] = SpotifyMapper::albumSummary(SpotifyPayload::object($item));
+            }
+        }
+
+        return new Page($items, (int) ($paging->total ?? 0), $page, $perPage);
+    }
+
+    /**
+     * @return Page<Artist>
+     */
+    protected function artistPage(mixed $payload, int $page, int $perPage): Page
+    {
+        $paging = SpotifyPayload::object($payload ?? (object) []);
+        $items = [];
+        foreach ((array) ($paging->items ?? []) as $item) {
+            if ($item instanceof stdClass || is_array($item)) {
+                $items[] = SpotifyMapper::artist(SpotifyPayload::object($item));
+            }
+        }
+
+        return new Page($items, (int) ($paging->total ?? 0), $page, $perPage);
     }
 
     public function getTrack(string $id): ?Track
