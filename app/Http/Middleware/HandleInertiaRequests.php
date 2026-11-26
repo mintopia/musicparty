@@ -11,6 +11,7 @@ use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
 use App\Services\ActiveTheme;
 use App\Services\RealtimeConfig;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -74,7 +75,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array<int, array{code: string, name: string, canManage: bool, aiReviewEnabled: bool}>
+     * @return array<int, array{code: string, name: string, canManage: bool, aiReviewEnabled: bool, flaggedCount: int}>
      */
     private function partyProps(?User $user): array
     {
@@ -91,6 +92,7 @@ class HandleInertiaRequests extends Middleware
                     'name' => $member->party->name,
                     'canManage' => $canManage,
                     'aiReviewEnabled' => $canManage && app(PartyMods::class)->isEnabled($member->party, AiRequestReviewMod::CODE),
+                    'flaggedCount' => $canManage ? app(ModerationTabs::class)->flaggedCount($member->party) : 0,
                 ];
             })
             ->values()

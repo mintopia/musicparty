@@ -192,6 +192,8 @@ describe('approval queue', function () {
                 ->component('Parties/Flagged')
                 ->where('party.code', $this->party->code)
                 ->has('playerState')
+                ->where('moderationTabs.flaggedCount', 1)
+                ->where('moderationTabs.aiReviewEnabled', false)
                 ->where('flagged.0.id', $request->id)
                 ->where('flagged.0.reason', 'Needs a look')
                 ->where('flagged.0.requester.id', $this->member->user_id)

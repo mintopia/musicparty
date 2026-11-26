@@ -4,6 +4,7 @@ import axios from 'axios';
 import {ref} from 'vue';
 import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import EmptyState from '@/components/EmptyState.vue';
+import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackRow from '@/components/TrackRow.vue';
 import {useEcho} from '@/composables/useEcho';
@@ -11,11 +12,12 @@ import {flaggedApproveUrl, flaggedRejectUrl, flaggedUrl} from '@/lib/flagged';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {show} from '@/routes/parties';
-import type {FlaggedRequest, LegacyPartyState} from '@/types';
+import type {FlaggedRequest, LegacyPartyState, ModerationTabsProps} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string};
     flagged: FlaggedRequest[];
+    moderationTabs: ModerationTabsProps;
     playerState: LegacyPartyState;
 }>();
 
@@ -89,9 +91,7 @@ function confirmReject(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Flagged requests - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>Flagged requests</h1>
-        </div>
+        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="flagged" />
         <div class="row">
             <div class="col-12">
                 <div v-if="error" class="alert alert-danger" role="alert" data-test="error">{{ error }}</div>

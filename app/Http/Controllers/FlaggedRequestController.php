@@ -7,6 +7,7 @@ use App\Events\FlaggedRequestResolved;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\Requests\FlaggedRequests;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -14,13 +15,14 @@ use Inertia\Response;
 
 class FlaggedRequestController extends Controller
 {
-    public function index(Party $party, FlaggedRequests $flagged): Response
+    public function index(Party $party, FlaggedRequests $flagged, ModerationTabs $tabs): Response
     {
         $this->authorize('update', $party);
 
         return Inertia::render('Parties/Flagged', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'flagged' => $flagged->listFor($party),
+            'moderationTabs' => $tabs->for($party),
             'playerState' => $party->getState(),
         ]);
     }

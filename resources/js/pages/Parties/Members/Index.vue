@@ -55,22 +55,22 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Users - ${party.name}`">
+    <AppLayout :title="`Members - ${party.name}`">
         <template #breadcrumbs>
             <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
             <li class="breadcrumb-item">
                 <a :href="show(party.code).url">{{ party.name }}</a>
             </li>
             <li class="breadcrumb-item active">
-                <a :href="usersUrl">Users</a>
+                <a :href="usersUrl">Members</a>
             </li>
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Users - ${party.name}`" />
+        <Head :title="`Members - ${party.name}`" />
         <div class="page-header mt-0">
-            <h1>Users</h1>
+            <h1>Members</h1>
         </div>
 
         <div class="row">

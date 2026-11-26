@@ -8,11 +8,11 @@ defineProps<{party: {code: string; name: string}; active?: boolean}>();
         <a :href="`/parties/${party.code}`">{{ party.name }}</a>
     </li>
     <li v-if="active" class="breadcrumb-item active">
-        <a :href="`/parties/${party.code}/moderation`">Moderation</a>
+        <a :href="`/parties/${party.code}/moderation`">Rules</a>
     </li>
     <template v-else>
         <li class="breadcrumb-item">
-            <a :href="`/parties/${party.code}/moderation`">Moderation</a>
+            <a :href="`/parties/${party.code}/moderation`">Rules</a>
         </li>
         <slot />
     </template>

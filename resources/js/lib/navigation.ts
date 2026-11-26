@@ -2,7 +2,7 @@ import {dashboard as adminDashboard} from '@/routes/admin';
 import {index as adminSettings} from '@/routes/admin/settings';
 import {index as adminUsers} from '@/routes/admin/users';
 import {index as horizon} from '@/routes/horizon';
-import {create as createParty, dashboard, edit, player, search, show, tv} from '@/routes/parties';
+import {create as createParty, dashboard, edit, search, show} from '@/routes/parties';
 import {index as moderation} from '@/routes/parties/moderation';
 import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
@@ -16,6 +16,9 @@ import type {PartyMembership, SharedProps} from '@/types';
 export interface NavLink {
     title: string;
     href: string;
+    badge?: number;
+    match?: string[];
+    exact?: boolean;
 }
 
 export interface NavItem {
@@ -28,27 +31,27 @@ export interface NavItem {
 
 export function partyLinks(party: PartyMembership): NavLink[] {
     const links: NavLink[] = [
-        {title: 'Queue', href: show(party.code).url},
+        {title: 'Queue', href: show(party.code).url, exact: true},
         {title: 'Search', href: search(party.code).url},
     ];
 
     if (party.canManage) {
         links.unshift({title: 'Dashboard', href: dashboard(party.code).url});
         links.push(
-            {title: 'Songs', href: songs(party.code).url},
-            {title: 'Users', href: partyUsers(party.code).url},
-            {title: 'TV Mode', href: tv(party.code).url},
-            {title: 'Web Player', href: player(party.code).url},
-            {title: 'Flagged', href: flaggedUrl(party.code)},
-            {title: 'Moderation', href: moderation(party.code).url},
-            {title: 'Mods', href: partyModsUrl(party.code)},
-            {title: 'Settings', href: edit(party.code).url},
+            {
+                title: 'Moderation',
+                href: flaggedUrl(party.code),
+                badge: party.flaggedCount,
+                match: [
+                    flaggedUrl(party.code),
+                    songs(party.code).url,
+                    moderation(party.code).url,
+                    aiReviewsUrl(party.code),
+                ],
+            },
+            {title: 'Members', href: partyUsers(party.code).url},
+            {title: 'Settings', href: edit(party.code).url, match: [edit(party.code).url, partyModsUrl(party.code)]},
         );
-    }
-
-    if (party.canManage && party.aiReviewEnabled) {
-        const at = links.findIndex((link) => link.title === 'Moderation');
-        links.splice(at + 1, 0, {title: 'AI Reviews', href: aiReviewsUrl(party.code)});
     }
 
     return links;
@@ -114,4 +117,14 @@ export function isActive(item: NavItem, currentUrl: string): boolean {
     }
 
     return item.href !== undefined && matchesPath(path, item.href);
+}
+
+export function isLinkActive(link: NavLink, currentUrl: string): boolean {
+    const path = currentUrl.split('?')[0] ?? currentUrl;
+
+    if (link.exact) {
+        return path.replace(/\/+$/, '') === link.href;
+    }
+
+    return (link.match ?? [link.href]).some((base) => matchesPath(path, base));
 }

@@ -3,9 +3,10 @@ import {Head, Link} from '@inertiajs/vue3';
 import EmptyState from '@/components/EmptyState.vue';
 import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import Pagination from '@/components/Pagination.vue';
+import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type {LegacyPartyState, Paginator} from '@/types';
+import type {LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
 
 interface ModerationRow {
     id: number;
@@ -20,23 +21,22 @@ defineProps<{
     party: {code: string; name: string; canManage: boolean};
     playerState: LegacyPartyState;
     moderations: Paginator<ModerationRow>;
+    moderationTabs: ModerationTabsProps;
 }>();
 </script>
 
 <template>
-    <AppLayout :title="`Moderation - ${party.name}`">
+    <AppLayout :title="`Rules - ${party.name}`">
         <template #breadcrumbs>
             <ModerationBreadcrumbs :party="party" active />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Moderation - ${party.name}`" />
+        <Head :title="`Rules - ${party.name}`" />
+        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="rules" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <div class="row">
-                <div class="col page-header mt-2">
-                    <h1>Moderation</h1>
-                </div>
                 <div v-if="moderations.data.length > 0" class="col-auto ms-auto d-print-none">
                     <div class="btn-list">
                         <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary d-inline-block">

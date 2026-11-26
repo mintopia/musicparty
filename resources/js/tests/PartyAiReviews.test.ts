@@ -96,6 +96,7 @@ function mountIndex(
         props: {
             party,
             playerState,
+            moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
             filters,
             outcomes,
             retentionDays: 30,

@@ -6,11 +6,17 @@ export interface AuthUser {
     impersonating: boolean;
 }
 
+export interface ModerationTabsProps {
+    flaggedCount: number;
+    aiReviewEnabled: boolean;
+}
+
 export interface PartyMembership {
     code: string;
     name: string;
     canManage: boolean;
     aiReviewEnabled?: boolean;
+    flaggedCount?: number;
 }
 
 export interface SharedProps {

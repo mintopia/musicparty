@@ -53,6 +53,7 @@ describe('party moderation pages', () => {
             props: {
                 party,
                 playerState,
+                moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
                 moderations: {
                     data: [moderation, {...moderation, id: 6, enabled: false, regex: true, value: '/x/'}],
                     current_page: 1,
@@ -75,6 +76,7 @@ describe('party moderation pages', () => {
             props: {
                 party,
                 playerState,
+                moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
                 moderations: {
                     data: [],
                     current_page: 1,
@@ -104,6 +106,7 @@ describe('party moderation pages', () => {
             props: {
                 party,
                 playerState,
+                moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
                 types,
                 actions,
                 track,

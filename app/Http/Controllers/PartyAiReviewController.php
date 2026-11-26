@@ -7,6 +7,7 @@ use App\Models\AiReview;
 use App\Models\Party;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -50,6 +51,7 @@ class PartyAiReviewController extends Controller
             'holdsFlagged' => (bool) $party->flag_requests,
             'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
             'reviews' => $reviews,
+            'moderationTabs' => app(ModerationTabs::class)->for($party),
         ]);
     }
 
