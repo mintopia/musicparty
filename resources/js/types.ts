@@ -216,13 +216,7 @@ export interface DashboardDevice {
 }
 
 export type DashboardStartState =
-    | 'hidden'
-    | 'idle'
-    | 'resume'
-    | 'outside'
-    | 'no_device'
-    | 'premium_required'
-    | 'relink_required';
+    'hidden' | 'idle' | 'resume' | 'outside' | 'no_device' | 'premium_required' | 'relink_required';
 
 export interface DashboardStartTarget {
     kind: 'resume' | 'next' | 'select';
