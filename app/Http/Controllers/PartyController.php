@@ -39,7 +39,7 @@ use Inertia\Response;
 
 class PartyController extends Controller
 {
-    private const SETTINGS_TABS = ['general', 'requests', 'playback', 'screens', 'mods'];
+    private const array SETTINGS_TABS = ['general', 'requests', 'playback', 'screens', 'mods'];
 
     private const int SEARCH_PAGE_SIZE = 10;
 
