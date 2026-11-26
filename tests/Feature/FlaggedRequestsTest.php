@@ -6,17 +6,23 @@ use App\Events\FlaggedRequestAdded;
 use App\Events\FlaggedRequestRejected;
 use App\Events\FlaggedRequestResolved;
 use App\Events\UpcomingSong\UpdatedEvent;
+use App\Models\AiReview;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyModeration;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\PartyMods;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\QueueSelector;
+use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestMode;
 use App\Services\Requests\RequestRules;
 use App\Services\Requests\TrackEligibility;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Sanctum\Sanctum;
@@ -272,5 +278,51 @@ describe('manager channel', function () {
         $channel = fn (User $user) => Gate::forUser($user)->allows('update', $this->party);
 
         expect($channel($this->manager))->toBeTrue()->and($channel($this->member->user))->toBeFalse();
+    });
+});
+
+describe('AI review link', function () {
+    beforeEach(function () {
+        Artisan::call('mods:sync');
+    });
+
+    it('links flagged requests to their latest AI review while the mod is enabled', function () {
+        app(PartyMods::class)->enable($this->party, AiRequestReviewMod::CODE);
+        $request = flaggedRequest($this->party);
+        $plain = flaggedRequest($this->party);
+        AiReview::factory()->for($this->party)->create(['upcoming_song_id' => $request->id]);
+        $latest = AiReview::factory()->for($this->party)->create(['upcoming_song_id' => $request->id]);
+
+        $items = collect(app(FlaggedRequests::class)->listFor($this->party))->keyBy('id');
+
+        expect($items[$request->id]['ai_review_url'])->toBe(route('parties.ai-reviews.show', [$this->party->code, $latest->id]))
+            ->and($items[$plain->id]['ai_review_url'])->toBeNull();
+    });
+
+    it('omits the link when the mod is disabled', function () {
+        $request = flaggedRequest($this->party);
+        AiReview::factory()->for($this->party)->create(['upcoming_song_id' => $request->id]);
+
+        expect(app(FlaggedRequests::class)->listFor($this->party)[0]['ai_review_url'])->toBeNull();
+    });
+
+    it('does not run more AI review queries for more flagged requests', function () {
+        app(PartyMods::class)->enable($this->party, AiRequestReviewMod::CODE);
+        $queries = function (): int {
+            DB::flushQueryLog();
+            DB::enableQueryLog();
+            app(FlaggedRequests::class)->listFor($this->party->refresh());
+
+            return count(array_filter(DB::getQueryLog(), fn (array $query): bool => str_contains($query['query'], 'ai_reviews')));
+        };
+        $first = flaggedRequest($this->party);
+        AiReview::factory()->for($this->party)->create(['upcoming_song_id' => $first->id]);
+        $one = $queries();
+        foreach (range(1, 4) as $ignored) {
+            $request = flaggedRequest($this->party);
+            AiReview::factory()->for($this->party)->create(['upcoming_song_id' => $request->id]);
+        }
+
+        expect($queries())->toBe($one);
     });
 });

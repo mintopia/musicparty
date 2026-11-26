@@ -104,6 +104,13 @@ function confirmReject(): void {
                                     <div data-test="flagged-requester">Requested by {{ item.requester.name }}</div>
                                     <div v-if="item.reason" class="text-warning" data-test="flagged-reason">
                                         {{ item.reason }}
+                                        <a
+                                            v-if="item.ai_review_url"
+                                            :href="item.ai_review_url"
+                                            class="ms-1"
+                                            data-test="ai-review-link"
+                                            >AI review</a
+                                        >
                                     </div>
                                     <div class="mt-2">
                                         <button

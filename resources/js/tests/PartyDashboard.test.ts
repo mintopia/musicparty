@@ -126,6 +126,7 @@ function flagged(id: number, name: string): FlaggedRequest {
         reason: null,
         flagged_at: '2026-01-01T00:00:00Z',
         requester: {id: 1, name: 'Boris'},
+        ai_review_url: null,
         track: {
             provider_id: 'spotify',
             id: `t${id}`,
@@ -451,6 +452,15 @@ describe('needs attention', () => {
         await card.find('[data-test="issue-action"]').trigger('click');
         await flushPromises();
         expect(post('/api/v1/parties/ABCD/activate')).toHaveLength(1);
+    });
+
+    it('links flagged requests to their AI review when one exists', () => {
+        const linked = {...flagged(1, 'Last Christmas'), ai_review_url: '/parties/ABCD/ai-reviews/5'};
+        const wrapper = mountPage({flagged: [linked, flagged(2, 'Axel F')]});
+
+        const rows = wrapper.findAll('[data-test="flagged-row"]');
+        expect(rows[0].find('[data-test="ai-review-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews/5');
+        expect(rows[1].find('[data-test="ai-review-link"]').exists()).toBe(false);
     });
 
     it('approves and rejects flagged requests', async () => {

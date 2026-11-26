@@ -66,6 +66,7 @@ function item(id: number, name = 'Sam'): FlaggedRequest {
         reason: `Reason ${id}`,
         flagged_at: '2026-01-01T00:00:00Z',
         requester: {id: id + 100, name},
+        ai_review_url: null,
         track: track(`t${id}`),
     };
 }
@@ -95,6 +96,15 @@ describe('Flagged requests page', () => {
 
     afterEach(() => {
         axios.defaults.adapter = originalAdapter;
+    });
+
+    it('links the reason to the AI review only when one exists', () => {
+        const linked = {...item(1), ai_review_url: '/parties/ABCD/ai-reviews/5'};
+        const wrapper = mount(Flagged, {props: {party, playerState, moderationTabs, flagged: [linked, item(2)]}});
+
+        const links = wrapper.findAll('[data-test="ai-review-link"]');
+        expect(links).toHaveLength(1);
+        expect(links[0].attributes('href')).toBe('/parties/ABCD/ai-reviews/5');
     });
 
     it('renders each flagged request with reason and requester', () => {

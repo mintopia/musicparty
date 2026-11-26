@@ -73,6 +73,7 @@ export interface FlaggedRequest {
     reason: string | null;
     flagged_at: string;
     requester: {id: number; name: string};
+    ai_review_url: string | null;
     track: TrackAnnotation;
 }
 
