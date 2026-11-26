@@ -146,6 +146,18 @@ it('counts only unique queued tracks after the playing one as the queue depth', 
     'two unique tracks' => [['X', 'Y', 'X', 'Y'], 1],
 ]);
 
+it('does not count the playing track against the queue depth', function (array $queued, int $depth) {
+    $api = FakeSpotify::install();
+    $api->respond('getMyQueue', (object) ['currently_playing' => FakeSpotify::track('NOW'), 'queue' => array_map(fn (string $id) => FakeSpotify::track($id), $queued)]);
+
+    expect(spotifyProvider($api)->queueDepth())->toBe($depth);
+})->with([
+    'nothing queued' => [[], 0],
+    'padded with copies of the playing track' => [array_fill(0, 20, 'NOW'), 0],
+    'one request queued' => [['X'], 1],
+    'two requests queued' => [['X', 'Y'], 2],
+]);
+
 it('reserves only the context playlist track', function () {
     $provider = spotifyProvider(FakeSpotify::install());
 
