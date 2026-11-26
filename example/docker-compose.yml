@@ -1,80 +1,94 @@
+# Single-host Music Party deployment. Copy .env.example to .env and fill it in; see README.md.
+# Keep in step with ../docker-compose.production.example.yml.
+
+name: musicparty
+
+x-app: &app
+  image: ghcr.io/mintopia/musicparty:${MUSICPARTY_TAG:-latest}
+  restart: unless-stopped
+  env_file:
+    - path: .env
+      required: false
+  environment:
+    PUID: "${PUID:-1000}"
+    PGID: "${PGID:-1000}"
+  volumes:
+    - ./logs:/app/storage/logs
+  depends_on:
+    database:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+    migrate:
+      condition: service_completed_successfully
+
 services:
-  musicparty:
-    image: ghcr.io/mintopia/musicparty:develop
-    env_file: .env
-    restart: unless-stopped
-    depends_on:
-      - redis
-      - database
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
-
-  redis:
-    image: redis:6.2.6
-    restart: unless-stopped
-
-  database:
-    image: mariadb:10.5-focal
-    env_file: .env.mariadb
-    restart: unless-stopped
-    volumes:
-      - ./database:/var/lib/mysql
+  # Web role: the image's default command. Also proxies websocket upgrades to reverb (ADR 0004).
+  web:
+    <<: *app
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-8080}:8080"
 
   horizon:
-    image: ghcr.io/mintopia/musicparty:develop
-    restart: unless-stopped
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
-    entrypoint: [ "php", "artisan", "horizon" ]
+    <<: *app
+    command: [ "php", "artisan", "horizon" ]
+    stop_grace_period: 60s
     healthcheck:
-        disable: true
-
-
-  scheduler:
-    image: ghcr.io/mintopia/musicparty:develop
-    restart: unless-stopped
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
-    entrypoint: [ "php", "artisan", "schedule:work"]
-    healthcheck:
-        disable: true
+      disable: true
 
   reverb:
-    image: ghcr.io/mintopia/musicparty:develop
-    restart: unless-stopped
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
-    entrypoint: [ "php", "artisan", "reverb:start", "--host=0.0.0.0", "--debug" ]
+    <<: *app
+    command: [ "php", "artisan", "reverb:start" ]
     healthcheck:
       disable: true
 
-  artisan:
-    image: ghcr.io/mintopia/musicparty:develop
-    profiles:
-      - artisan
-    env_file: .env
-    depends_on:
-      - database
-      - redis
-    volumes:
-      - ./logs:/app/storage/logs
-      - ./public:/app/storage/public
-    entrypoint: [ "php", "artisan" ]
+  scheduler:
+    <<: *app
+    command: [ "php", "artisan", "schedule:work" ]
     healthcheck:
       disable: true
+
+  # One-off: applies migrations and idempotent seeders, then exits. Also used for ad-hoc artisan commands:
+  #   docker compose run --rm migrate php artisan <command>
+  migrate:
+    <<: *app
+    restart: "no"
+    command: [ "sh", "-c", "php artisan migrate --force && php artisan db:seed --force" ]
+    depends_on:
+      database:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      disable: true
+
+  database:
+    image: mariadb:11.8
+    restart: unless-stopped
+    environment:
+      MARIADB_RANDOM_ROOT_PASSWORD: "1"
+      MARIADB_DATABASE: "${DB_DATABASE:?set DB_DATABASE in .env}"
+      MARIADB_USER: "${DB_USERNAME:?set DB_USERNAME in .env}"
+      MARIADB_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD in .env}"
+    volumes:
+      - dbdata:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:8-alpine
+    restart: unless-stopped
+    volumes:
+      - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  dbdata:
+  redisdata:
