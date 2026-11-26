@@ -479,3 +479,11 @@ describe('live updates', () => {
         expect(only).toContain('attention');
     });
 });
+
+describe('upcoming list', () => {
+    it('links each row to its song page for scheduling', () => {
+        const wrapper = mountPage({state: 'hidden'});
+
+        expect(wrapper.find('[data-test="schedule"]').attributes('href')).toBe('/songs/4');
+    });
+});

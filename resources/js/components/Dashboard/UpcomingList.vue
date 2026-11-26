@@ -120,6 +120,14 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             </template>
                         </div>
                         <div class="col-auto qa">
+                            <a
+                                :href="`${queueUrl}/${request.id}`"
+                                class="btn btn-ghost-secondary btn-icon"
+                                aria-label="Schedule"
+                                title="Schedule"
+                                data-test="schedule"
+                                ><i class="ti ti-clock"></i
+                            ></a>
                             <button
                                 type="button"
                                 class="btn btn-ghost-danger btn-icon"
