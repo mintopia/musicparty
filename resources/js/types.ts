@@ -202,3 +202,89 @@ export interface When {
     iso: string;
     human: string;
 }
+
+export type DashboardPlayerSource = 'polling' | 'webhook' | 'webplayer' | 'encore';
+
+export interface DashboardDevice {
+    id: string;
+    name: string;
+    type: string;
+    isActive: boolean;
+    isRestricted: boolean;
+    label: string;
+    icon: string;
+}
+
+export type DashboardStartState =
+    | 'hidden'
+    | 'idle'
+    | 'resume'
+    | 'outside'
+    | 'no_device'
+    | 'premium_required'
+    | 'relink_required';
+
+export interface DashboardStartTarget {
+    kind: 'resume' | 'next' | 'select';
+    track: LegacyTrack;
+    positionMs: number;
+    requestedBy: string | null;
+}
+
+export interface DashboardControl {
+    playingFrom: {kind: 'party' | 'outside' | 'nothing' | 'unknown'; label: string | null};
+    nowPlaying: {isRequest: boolean; requestedBy: string | null};
+    health: {
+        player: {source: DashboardPlayerSource | null; label: string; fresh: boolean};
+        device: {id: string | null; name: string | null};
+        sampledAt: string | null;
+        link: 'connected' | 'relink_required';
+        polling: 'off' | 'on' | 'backup';
+    };
+    start: {
+        state: DashboardStartState;
+        target: DashboardStartTarget | null;
+        devices: DashboardDevice[];
+        selectedDeviceId: string | null;
+    };
+}
+
+export interface DashboardRequest extends LegacyUpcomingSong {
+    sent: boolean;
+}
+
+export type DashboardIssueCode = 'relink_required' | 'party_inactive' | 'player_stale' | 'premium_required';
+
+export interface DashboardIssue {
+    code: DashboardIssueCode;
+    fact: string;
+    detail: string;
+    action: {label: string; kind: 'activate'} | null;
+}
+
+export interface DashboardProps {
+    party: {code: string; name: string; active: boolean; weighted: boolean; downvotes: boolean; canManage: boolean};
+    host: {name: string};
+    can: {control: boolean; moderate: boolean; player: boolean};
+    timezone: string;
+    playerState: LegacyPartyState;
+    control: DashboardControl;
+    upNext: DashboardRequest[];
+    upcoming: {items: DashboardRequest[]; total: number};
+    attention: {issues: DashboardIssue[]; flagged: FlaggedRequest[]; flaggedTotal: number};
+    links: {
+        queue: string;
+        songs: string;
+        flagged: string;
+        settings: string;
+        members: string;
+        moderation: string;
+        mods: string;
+        tv: string;
+        webPlayer: string | null;
+        encoreRelay: string;
+        join: string;
+        fallbackSettings: string;
+    };
+    hasFallbackPlaylist: boolean;
+}
