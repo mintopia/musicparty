@@ -3,7 +3,7 @@ import {defineComponent, h} from 'vue';
 import axios from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Search from '@/pages/Parties/Search.vue';
-import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
+import type {LegacyPartyState, SearchOverviewResults, TrackAnnotation} from '@/types';
 
 const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn()}));
 const deferred = vi.hoisted(() => ({mode: 'loaded' as 'loaded' | 'loading' | 'rescued'}));
@@ -62,8 +62,8 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
     };
 }
 
-function results(data: TrackAnnotation[]): Paginator<TrackAnnotation> {
-    return {data, current_page: 1, last_page: 1, prev_page_url: null, next_page_url: null, links: []};
+function results(tracks: TrackAnnotation[]): SearchOverviewResults {
+    return {view: 'overview', top: null, tracks, albums: [], artists: [], empty: false};
 }
 
 const idle: LegacyPartyState = {now: null, next: null, current: null, status: null};
@@ -83,7 +83,7 @@ describe('Party search page', () => {
 
     it('shows no results section until a search has run', () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+            props: {party, params: {query: null, perPage: 10}, results: null, playerState: idle},
         });
 
         expect(wrapper.text()).not.toContain('Results');
@@ -91,7 +91,7 @@ describe('Party search page', () => {
 
     it('renders the party player above the search and follows live updates', async () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+            props: {party, params: {query: null, perPage: 10}, results: null, playerState: idle},
         });
 
         expect(wrapper.find('[data-test="nothing-playing"]').exists()).toBe(true);
@@ -107,7 +107,7 @@ describe('Party search page', () => {
 
     it('submits the query through Inertia', async () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: null, perPage: 20}, results: null, playerState: idle},
+            props: {party, params: {query: null, perPage: 10}, results: null, playerState: idle},
         });
 
         await wrapper.get('#query').setValue('abba');
@@ -123,7 +123,7 @@ describe('Party search page', () => {
     it('shows track placeholders while the deferred results load', () => {
         deferred.mode = 'loading';
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, playerState: idle},
         });
 
         expect(wrapper.find('[data-test="results-loading"]').exists()).toBe(true);
@@ -133,7 +133,7 @@ describe('Party search page', () => {
 
     it('fills in the results once they arrive', () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         expect(wrapper.find('[data-test="track-placeholder"]').exists()).toBe(false);
@@ -144,7 +144,7 @@ describe('Party search page', () => {
         const wrapper = mount(Search, {
             props: {
                 party,
-                params: {query: 'q', perPage: 20},
+                params: {query: 'q', perPage: 10},
                 results: {
                     error: {code: 'timeout', message: 'The music provider took too long to answer.', retryable: true},
                 },
@@ -163,7 +163,7 @@ describe('Party search page', () => {
         const wrapper = mount(Search, {
             props: {
                 party,
-                params: {query: 'q', perPage: 20},
+                params: {query: 'q', perPage: 10},
                 results: {error: {code: 'relink', message: 'Needs re-linking', retryable: false}},
                 playerState: idle,
             },
@@ -175,7 +175,7 @@ describe('Party search page', () => {
     it('shows the error with Retry when the deferred load itself fails', () => {
         deferred.mode = 'rescued';
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, playerState: idle},
         });
 
         expect(wrapper.find('[data-test="results-error"]').exists()).toBe(true);
@@ -184,7 +184,7 @@ describe('Party search page', () => {
 
     it('shows placeholders again as soon as a new search starts', async () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         await wrapper.get('#query').setValue('abba');
@@ -205,7 +205,7 @@ describe('Party search page', () => {
         axios.defaults.adapter = () =>
             Promise.resolve({data: {}, status: 201, statusText: 'Created', headers: {}, config: {}} as never);
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         await wrapper.get('[data-test="request"]').trigger('click');
@@ -224,7 +224,7 @@ describe('Party search page', () => {
                 }),
             );
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         await wrapper.get('[data-test="request"]').trigger('click');
@@ -245,7 +245,7 @@ describe('Party search page', () => {
             } as never);
         const queued = track('t1', {in_queue: true, upcoming_id: 9, score: 3, requested_by: 'Sam'});
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'q', perPage: 20}, results: results([queued]), playerState: idle},
+            props: {party, params: {query: 'q', perPage: 10}, results: results([queued]), playerState: idle},
         });
 
         await wrapper.get('[data-test="heart"]').trigger('click');
@@ -256,7 +256,7 @@ describe('Party search page', () => {
 
     it('links track albums and artists to their pages, preserving the query', () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: 'ab ba', perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: 'ab ba', perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         const hrefs = wrapper.findAll('a').map((link) => link.attributes('href'));
@@ -267,7 +267,7 @@ describe('Party search page', () => {
 
     it('links without a query string when nothing was searched', () => {
         const wrapper = mount(Search, {
-            props: {party, params: {query: null, perPage: 20}, results: results([track('t1')]), playerState: idle},
+            props: {party, params: {query: null, perPage: 10}, results: results([track('t1')]), playerState: idle},
         });
 
         const hrefs = wrapper.findAll('a').map((link) => link.attributes('href'));

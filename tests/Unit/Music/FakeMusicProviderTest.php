@@ -59,3 +59,17 @@ it('appends to playlists', function () {
     expect($fake->getPlaylistTracks('fake-playlist'))->toHaveCount(1)
         ->and($fake->listPlaylists())->toHaveCount(1);
 });
+
+it('searches albums and artists in the catalogue and records the calls', function () {
+    $fake = new FakeMusicProvider;
+
+    $albums = $fake->searchAlbums('Fake Album 2', 1, 5);
+    $artists = $fake->searchArtists('Fake Artist', 1, 4);
+    $overview = $fake->searchOverview('Fake Artist 1', 3);
+
+    expect($albums->total)->toBe(1)->and($albums->items[0]->ref->id)->toBe('fake-album-2')->and($albums->items[0]->albumType)->toBe('Album')
+        ->and($artists->total)->toBe(6)->and($artists->items)->toHaveCount(4)
+        ->and($overview->tracks->items)->toHaveCount(3)->and($overview->tracks->total)->toBe(5)
+        ->and($overview->artists->items[0]->ref->id)->toBe('fake-artist-1')
+        ->and(array_column($fake->calls(), 'method'))->toBe(['searchAlbums', 'searchArtists', 'searchOverview']);
+});

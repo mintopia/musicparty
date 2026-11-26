@@ -10,11 +10,12 @@ const props = withDefaults(
         needsApproval?: boolean;
         awaitingApproval?: boolean;
         hideActions?: boolean;
+        compact?: boolean;
         decoration?: TrackDecoration;
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
     }>(),
-    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false, hideActions: false},
+    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false, hideActions: false, compact: false},
 );
 
 const emit = defineEmits<{
@@ -46,11 +47,11 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 <template>
     <div
         class="list-group-item"
-        :class="activeDecoration?.class"
+        :class="[activeDecoration?.class, {'py-2': compact}]"
         :style="activeDecoration?.accent ? {borderLeft: `4px solid ${activeDecoration.accent}`} : undefined"
         data-test="track-row"
     >
-        <div class="row g-2 align-items-center">
+        <div class="row align-items-center" :class="compact ? 'g-3' : 'g-2'">
             <div class="col-auto">
                 <component
                     :is="albumRoute ? 'a' : 'span'"
@@ -63,14 +64,15 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         :title="track.album.name"
                         :alt="track.album.name"
                         class="rounded"
-                        width="60"
-                        height="60"
+                        :class="{'track-art-compact': compact}"
+                        :width="compact ? undefined : 60"
+                        :height="compact ? undefined : 60"
                     />
                 </component>
             </div>
-            <div class="col">
+            <div class="col track-main">
                 <div>
-                    <span data-test="track-name">{{ displayName }}</span>
+                    <span :class="{'fw-medium': compact}" data-test="track-name">{{ displayName }}</span>
                     <span v-if="track.explicit" class="badge bg-secondary ms-1" data-test="explicit-badge"
                         >Explicit</span
                     >
@@ -84,8 +86,9 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <a v-if="artistRoute" :href="href(artistRoute(artist.id))">{{ artist.name }}</a>
                         <template v-else>{{ artist.name }}</template>
                     </template>
+                    <span v-if="compact" class="d-md-none" data-test="track-album-inline"> · {{ track.album.name }}</span>
                 </div>
-                <div class="text-secondary" data-test="track-album">
+                <div class="text-secondary" :class="{'d-none': compact}" data-test="track-album">
                     <a v-if="albumRoute" :href="href(albumRoute(track.album.id))">{{ track.album.name }}</a>
                     <template v-else>{{ track.album.name }}</template>
                 </div>
@@ -102,7 +105,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 </div>
                 <slot name="decoration" />
             </div>
-            <div class="col-auto text-secondary">{{ duration }}</div>
+            <div class="col-auto text-secondary" :class="{'d-none d-md-block small': compact}">{{ duration }}</div>
             <div v-if="track.queue.in_queue" class="col-auto text-center w-8" data-test="queue-state">
                 <template v-if="canDownvote">
                     <button
@@ -144,11 +147,12 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <span data-test="score">{{ track.queue.score }}</span>
                 </template>
             </div>
-            <div v-else-if="!hideActions" class="col-auto text-center w-8">
+            <div v-else-if="!hideActions" class="col-auto text-center" :class="{'w-8': !compact}">
                 <button
                     v-if="isAwaiting"
                     type="button"
-                    class="btn btn-outline-secondary ms-2 w-100"
+                    class="btn btn-outline-secondary"
+                    :class="compact ? 'btn-compact' : 'ms-2 w-100'"
                     data-test="withdraw"
                     @click="emit('withdraw', track)"
                 >
@@ -157,7 +161,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 <button
                     v-else
                     type="button"
-                    class="btn btn-primary ms-2 w-100"
+                    class="btn btn-primary"
+                    :class="compact ? 'btn-compact' : 'ms-2 w-100'"
                     :disabled="!canRequest"
                     data-test="request"
                     @click="emit('request', track)"
@@ -172,3 +177,28 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
         </div>
     </div>
 </template>
+
+<style scoped>
+.track-main {
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.track-art-compact {
+    width: 48px;
+    height: 48px;
+    object-fit: cover;
+}
+
+.btn-compact {
+    min-height: 44px;
+    padding-inline: 0.8rem;
+}
+
+@media (min-width: 768px) {
+    .track-art-compact {
+        width: 44px;
+        height: 44px;
+    }
+}
+</style>

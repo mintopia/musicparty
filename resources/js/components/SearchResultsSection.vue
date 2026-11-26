@@ -1,21 +1,40 @@
 <script setup lang="ts">
 import {computed} from 'vue';
-import EmptyState from '@/components/EmptyState.vue';
-import TrackList from '@/components/TrackList.vue';
+import SearchOverviewPlaceholder from '@/components/Search/SearchOverviewPlaceholder.vue';
+import SearchOverviewResults from '@/components/Search/SearchOverviewResults.vue';
+import SearchTypeResults from '@/components/Search/SearchTypeResults.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
-import type {LinkTarget, Paginator, SearchError, TrackAnnotation} from '@/types';
+import type {LinkTarget, SearchError, SearchResults, SearchType, TrackAnnotation} from '@/types';
 
 const props = withDefaults(
     defineProps<{
-        results?: Paginator<TrackAnnotation> | SearchError | null;
+        results?: SearchResults | SearchError | null;
+        type?: SearchType | null;
+        query?: string;
         loading?: boolean;
         failed?: boolean;
+        loadingMore?: boolean;
         canDownvote?: boolean;
         placeholderCount?: number;
+        overviewUrl?: string;
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
+        typeUrl?: (type: SearchType) => string;
     }>(),
-    {results: null, loading: false, failed: false, canDownvote: false, placeholderCount: 6},
+    {
+        results: null,
+        type: null,
+        query: '',
+        loading: false,
+        failed: false,
+        loadingMore: false,
+        canDownvote: false,
+        placeholderCount: 6,
+        overviewUrl: '#',
+        albumRoute: (id: string) => `#${id}`,
+        artistRoute: (id: string) => `#${id}`,
+        typeUrl: (type: SearchType) => `#${type}`,
+    },
 );
 
 const emit = defineEmits<{
@@ -23,6 +42,7 @@ const emit = defineEmits<{
     vote: [track: TrackAnnotation, value: -1 | 0 | 1];
     withdraw: [track: TrackAnnotation];
     retry: [];
+    loadMore: [url: string];
 }>();
 
 const error = computed(() => {
@@ -32,41 +52,68 @@ const error = computed(() => {
 
     return props.results !== null && 'error' in props.results ? props.results.error : null;
 });
-const tracks = computed(() => (props.results !== null && 'data' in props.results ? props.results : null));
+
+const found = computed(() => (props.results !== null && 'view' in props.results ? props.results : null));
+const nothingFound = computed(() => {
+    const view = found.value;
+
+    return view !== null && (view.view === 'overview' ? view.empty : view.total === 0);
+});
 </script>
 
 <template>
-    <div class="card" data-test="search-results">
-        <div v-if="loading" class="list-group list-group-flush" aria-busy="true" data-test="results-loading">
-            <TrackRowPlaceholder v-for="n in placeholderCount" :key="n" />
+    <div data-test="search-results">
+        <SearchOverviewPlaceholder v-if="loading && type === null" />
+        <div v-else-if="loading" class="card mt-4" aria-busy="true" data-test="results-loading">
+            <div class="list-group list-group-flush">
+                <TrackRowPlaceholder v-for="n in placeholderCount" :key="n" />
+            </div>
         </div>
-        <EmptyState
-            v-else-if="error"
-            title="Search is unavailable"
-            :description="error.message"
-            data-test="results-error"
-        >
-            <button
-                v-if="error.retryable"
-                type="button"
-                class="btn btn-primary"
-                data-test="retry"
-                @click="emit('retry')"
-            >
-                <i class="icon ti ti-refresh"></i>
-                Retry
-            </button>
-        </EmptyState>
-        <TrackList
-            v-else-if="tracks"
-            :tracks="tracks"
+        <div v-else-if="error" class="card mt-4" role="alert" data-test="results-error">
+            <div class="card-body text-center py-5">
+                <i class="icon ti ti-cloud-off text-secondary fs-1"></i>
+                <h3 class="mt-3 mb-1">Search didn't load</h3>
+                <div class="text-secondary" :class="{'mb-3': error.retryable}">
+                    {{ error.message }}
+                    <template v-if="error.retryable">Your search is still in the box.</template>
+                </div>
+                <button v-if="error.retryable" type="button" class="btn btn-primary" data-test="retry" @click="emit('retry')">
+                    <i class="icon ti ti-refresh me-1"></i>
+                    Retry
+                </button>
+            </div>
+        </div>
+        <div v-else-if="nothingFound" class="card mt-4" data-test="results-empty">
+            <div class="card-body text-center py-5">
+                <i class="icon ti ti-mood-empty text-secondary fs-1"></i>
+                <h3 class="mt-3 mb-1">No results for "{{ query }}"</h3>
+                <div class="text-secondary">Check the spelling, or try the artist's name.</div>
+            </div>
+        </div>
+        <SearchOverviewResults
+            v-else-if="found && found.view === 'overview'"
+            :results="found"
             :can-downvote="canDownvote"
-            empty-title="No results found"
+            :album-route="albumRoute"
+            :artist-route="artistRoute"
+            :type-url="typeUrl"
+            @request="emit('request', $event)"
+            @vote="(t, v) => emit('vote', t, v)"
+            @withdraw="emit('withdraw', $event)"
+        />
+        <SearchTypeResults
+            v-else-if="found && found.view === 'type'"
+            :results="found"
+            :query="query"
+            :overview-url="overviewUrl"
+            :can-downvote="canDownvote"
+            :loading-more="loadingMore"
             :album-route="albumRoute"
             :artist-route="artistRoute"
             @request="emit('request', $event)"
-            @withdraw="emit('withdraw', $event)"
             @vote="(t, v) => emit('vote', t, v)"
+            @withdraw="emit('withdraw', $event)"
+            @load-more="emit('loadMore', $event)"
         />
     </div>
 </template>

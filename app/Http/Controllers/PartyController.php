@@ -15,7 +15,13 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Services\Contracts\MusicProvider;
+use App\Services\Music\Data\AlbumSummary;
+use App\Services\Music\Data\Artist;
+use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\SearchType;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\PartyProviderOptions;
 use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
@@ -23,6 +29,7 @@ use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
+use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -31,6 +38,12 @@ use Inertia\Response;
 
 class PartyController extends Controller
 {
+    private const int SEARCH_PAGE_SIZE = 10;
+
+    private const int SEARCH_OVERVIEW_LIMIT = 5;
+
+    private const int SEARCH_OVERVIEW_TRACKS = 4;
+
     public function __construct()
     {
         $this->authorizeResource(Party::class, 'party');
@@ -125,20 +138,26 @@ class PartyController extends Controller
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
-        $params = [
-            'query' => $request->input('query'),
-        ];
+        $query = $request->input('query');
+        $type = SearchType::tryFrom((string) $request->input('type'));
         $page = LengthAwarePaginator::resolveCurrentPage();
-        $perPage = $request->input('perPage', 20);
-        if ($perPage !== 20) {
+        $perPage = max(1, min((int) $request->input('perPage', self::SEARCH_PAGE_SIZE), SpotifyMusicProvider::SEARCH_MAX_LIMIT));
+
+        $params = ['query' => $query];
+        if ($type !== null) {
+            $params['type'] = $type->value;
+        }
+        if ($perPage !== self::SEARCH_PAGE_SIZE) {
             $params['perPage'] = $perPage;
         }
 
         $results = null;
-        if ($params['query']) {
-            $query = (string) $params['query'];
+        if ($query) {
+            $text = (string) $query;
             $results = Inertia::defer(
-                fn (): LengthAwarePaginator|array => $this->searchResults($party, $member, $factory, $eligibility, $query, $page, (int) $perPage, $params),
+                fn (): array => $this->searchResults($party, $member, $factory, fn (MusicProvider $provider): array => $type === null
+                    ? $this->searchOverview($party, $member, $eligibility, $provider, $text)
+                    : $this->searchSingleType($party, $member, $eligibility, $provider, $type, $text, $page, $perPage, $params)),
                 rescue: true,
             );
         }
@@ -150,24 +169,24 @@ class PartyController extends Controller
                 'downvotes' => (bool) $party->downvotes,
                 'canManage' => $party->canBeManagedBy($request->user()),
             ],
-            'params' => ['query' => $params['query'], 'perPage' => (int) $perPage],
+            'params' => ['query' => $query, 'perPage' => $perPage, 'type' => $type?->value],
             'results' => $results,
             'playerState' => $party->getState(),
         ]);
     }
 
     /**
-     * @param  array<string, mixed>  $params
-     * @return LengthAwarePaginator<int, array<mixed>>|array{error: array{code: string, message: string, retryable: bool}}
+     * @param  Closure(MusicProvider): array<string, mixed>  $search
+     * @return array<string, mixed>
      */
-    protected function searchResults(Party $party, PartyMember $member, MusicProviderFactory $factory, TrackEligibility $eligibility, string $query, int $page, int $perPage, array $params): LengthAwarePaginator|array
+    protected function searchResults(Party $party, PartyMember $member, MusicProviderFactory $factory, Closure $search): array
     {
         if (! $this->withinSearchLimit($party, $member)) {
             return $this->searchError('busy', 'The music provider is busy right now. Please try again shortly.');
         }
 
         try {
-            $found = $factory->forParty($party, Purpose::Search)->searchTracks($query, $page, $perPage);
+            return $search($factory->forParty($party, Purpose::Search));
         } catch (ProviderRelinkRequiredException) {
             return $this->searchError('relink', 'The music provider needs re-linking before search is available.', false);
         } catch (ProviderBackoffException) {
@@ -178,13 +197,129 @@ class PartyController extends Controller
                 $e->timedOut ? 'The music provider took too long to answer.' : 'The music provider could not be reached.',
             );
         }
+    }
 
-        $items = $eligibility->annotate($party, $member, $found->items);
+    /**
+     * @return array<string, mixed>
+     */
+    protected function searchOverview(Party $party, PartyMember $member, TrackEligibility $eligibility, MusicProvider $provider, string $query): array
+    {
+        $found = $provider->searchOverview($query, self::SEARCH_OVERVIEW_LIMIT);
 
-        return new LengthAwarePaginator($items, $found->total, $perPage, $page)
+        $topArtist = $this->exactArtistMatch($query, $found->artists->items);
+        $tracks = $found->tracks->items;
+        $topTrack = null;
+        if ($topArtist === null && $tracks !== []) {
+            $topTrack = $tracks[0];
+            $tracks = array_slice($tracks, 1);
+        }
+        $tracks = array_slice($tracks, 0, self::SEARCH_OVERVIEW_TRACKS);
+
+        $annotated = array_map(
+            fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve(),
+            $eligibility->annotate($party, $member, $topTrack === null ? $tracks : [$topTrack, ...$tracks]),
+        );
+        $top = null;
+        if ($topArtist !== null) {
+            $top = ['kind' => 'artist', 'artist' => $this->artistResult($topArtist)];
+        } elseif ($topTrack !== null) {
+            $top = ['kind' => 'track', 'track' => array_shift($annotated)];
+        }
+
+        $albums = array_map($this->albumResult(...), $found->albums->items);
+        $artists = array_map($this->artistResult(...), $found->artists->items);
+
+        return [
+            'view' => 'overview',
+            'top' => $top,
+            'tracks' => $annotated,
+            'albums' => $albums,
+            'artists' => $artists,
+            'empty' => $top === null && $annotated === [] && $albums === [] && $artists === [],
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $params
+     * @return array<string, mixed>
+     */
+    protected function searchSingleType(Party $party, PartyMember $member, TrackEligibility $eligibility, MusicProvider $provider, SearchType $type, string $query, int $page, int $perPage, array $params): array
+    {
+        $found = match ($type) {
+            SearchType::Track => $provider->searchTracks($query, $page, $perPage),
+            SearchType::Album => $provider->searchAlbums($query, $page, $perPage),
+            SearchType::Artist => $provider->searchArtists($query, $page, $perPage),
+        };
+
+        $items = match ($type) {
+            SearchType::Track => array_map(
+                fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve(),
+                $eligibility->annotate($party, $member, $found->items),
+            ),
+            SearchType::Album => array_map($this->albumResult(...), $found->items),
+            SearchType::Artist => array_map($this->artistResult(...), $found->items),
+        };
+
+        $total = min($found->total, SpotifyMusicProvider::SEARCH_MAX_OFFSET);
+        $paginator = new LengthAwarePaginator($items, $total, $found->perPage, $found->page)
             ->setPath(route('parties.search', $party->code))
-            ->appends($params)
-            ->through(fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve());
+            ->appends($params);
+
+        return [
+            'view' => 'type',
+            'type' => $type->value,
+            'total' => $total,
+            'capped' => $found->total > SpotifyMusicProvider::SEARCH_MAX_OFFSET,
+            'items' => $paginator->toArray(),
+        ];
+    }
+
+    /**
+     * @param  list<Artist>  $artists
+     */
+    protected function exactArtistMatch(string $query, array $artists): ?Artist
+    {
+        $needle = $this->normaliseName($query);
+        foreach ($artists as $artist) {
+            if ($this->normaliseName($artist->ref->name) === $needle) {
+                return $artist;
+            }
+        }
+
+        return null;
+    }
+
+    protected function normaliseName(string $name): string
+    {
+        $lower = mb_strtolower(trim($name));
+        $stripped = preg_replace('/[^\p{L}\p{N}\s]+/u', '', $lower) ?? $lower;
+        $withoutArticle = preg_replace('/^the\s+/u', '', trim($stripped)) ?? $stripped;
+        $normalised = trim(preg_replace('/\s+/u', ' ', $withoutArticle) ?? $withoutArticle);
+
+        return $normalised === '' ? $lower : $normalised;
+    }
+
+    /**
+     * @return array{id: string, name: string, image_url: string|null, album_type: string, artists: list<array{id: string, name: string}>, release_year: string|null}
+     */
+    protected function albumResult(AlbumSummary $album): array
+    {
+        return [
+            'id' => $album->ref->id,
+            'name' => $album->ref->name,
+            'image_url' => $album->ref->imageUrl,
+            'album_type' => $album->albumType,
+            'artists' => array_map(fn (ArtistRef $artist): array => ['id' => $artist->id, 'name' => $artist->name], $album->artists),
+            'release_year' => $album->releaseYear,
+        ];
+    }
+
+    /**
+     * @return array{id: string, name: string, image_url: string|null}
+     */
+    protected function artistResult(Artist $artist): array
+    {
+        return ['id' => $artist->ref->id, 'name' => $artist->ref->name, 'image_url' => $artist->imageUrl];
     }
 
     /**

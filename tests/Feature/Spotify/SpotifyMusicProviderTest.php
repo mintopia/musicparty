@@ -79,10 +79,10 @@ it('maps playlist tracks, skipping empty items', function () {
 it('maps search results to a page', function () {
     $api = FakeSpotify::install()->respond('search', (object) ['tracks' => (object) ['items' => [FakeSpotify::track('s1')], 'total' => 41]]);
 
-    $page = spotifyProvider($api)->searchTracks('q', 3, 20);
+    $page = spotifyProvider($api)->searchTracks('q', 3, 10);
 
     expect($page->total)->toBe(41)->and($page->items[0]->id)->toBe('s1')
-        ->and($api->callsTo('search')[0][2])->toMatchArray(['market' => 'GB', 'offset' => 40]);
+        ->and($api->callsTo('search')[0][2])->toMatchArray(['market' => 'GB', 'limit' => 10, 'offset' => 20]);
 });
 
 it('transports through the control client', function () {

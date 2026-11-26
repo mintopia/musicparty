@@ -4,9 +4,11 @@ namespace App\Services\Contracts;
 
 use App\Services\Music\Data\Album;
 use App\Services\Music\Data\AlbumRef;
+use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\Page;
 use App\Services\Music\Data\Playlist;
+use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\Track;
 
 interface MusicProvider
@@ -44,6 +46,21 @@ interface MusicProvider
      * @return Page<Track>
      */
     public function searchTracks(string $query, int $page, int $perPage): Page;
+
+    /**
+     * Tracks, albums and artists matching the query from a single provider call, each limited to $limit items.
+     */
+    public function searchOverview(string $query, int $limit): SearchOverview;
+
+    /**
+     * @return Page<AlbumSummary>
+     */
+    public function searchAlbums(string $query, int $page, int $perPage): Page;
+
+    /**
+     * @return Page<Artist>
+     */
+    public function searchArtists(string $query, int $page, int $perPage): Page;
 
     public function getTrack(string $id): ?Track;
 

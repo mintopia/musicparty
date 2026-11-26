@@ -150,7 +150,7 @@ it('gives the same eligibility reasons on search, album and artist pages', funct
         $rows = new ArrayObject;
         $this->actingAs($this->member->user, 'sanctum')->get($url)
             ->assertInertia(fn ($page) => $page->loadDeferredProps(function ($loaded) use ($rows) {
-                $rows->exchangeArray($loaded->toArray()['props']['results']['data']);
+                $rows->exchangeArray($loaded->toArray()['props']['results']['items']['data']);
             }));
 
         return $rows->getArrayCopy();
@@ -159,7 +159,7 @@ it('gives the same eligibility reasons on search, album and artist pages', funct
 
     $artist = $extract($reasons($this->url, 'tracks'));
     $album = $extract($reasons(route('parties.albums.show', ['party' => $this->party->code, 'album' => 'alb1']), 'tracks'));
-    $search = $extract($searchReasons(route('parties.search', ['party' => $this->party->code, 'query' => 'q'])));
+    $search = $extract($searchReasons(route('parties.search', ['party' => $this->party->code, 'query' => 'q', 'type' => 'track'])));
 
     expect($artist)->toBe($search)->toBe($album)
         ->and($artist[0][1])->toBeFalse()

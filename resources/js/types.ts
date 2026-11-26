@@ -286,3 +286,44 @@ export interface DashboardProps {
 export interface SearchError {
     error: {code: string; message: string; retryable: boolean};
 }
+
+export interface AlbumResult {
+    id: string;
+    name: string;
+    image_url: string | null;
+    album_type: string;
+    artists: {id: string; name: string}[];
+    release_year: string | null;
+}
+
+export interface ArtistResult {
+    id: string;
+    name: string;
+    image_url: string | null;
+}
+
+export type SearchType = 'track' | 'album' | 'artist';
+
+export type SearchTopResult = {kind: 'track'; track: TrackAnnotation} | {kind: 'artist'; artist: ArtistResult};
+
+export interface SearchOverviewResults {
+    view: 'overview';
+    top: SearchTopResult | null;
+    tracks: TrackAnnotation[];
+    albums: AlbumResult[];
+    artists: ArtistResult[];
+    empty: boolean;
+}
+
+export interface SearchPage<T> extends Paginator<T> {
+    total: number;
+    from: number | null;
+    to: number | null;
+}
+
+export type SearchTypeResults =
+    | {view: 'type'; type: 'track'; total: number; capped: boolean; items: SearchPage<TrackAnnotation>}
+    | {view: 'type'; type: 'album'; total: number; capped: boolean; items: SearchPage<AlbumResult>}
+    | {view: 'type'; type: 'artist'; total: number; capped: boolean; items: SearchPage<ArtistResult>};
+
+export type SearchResults = SearchOverviewResults | SearchTypeResults;

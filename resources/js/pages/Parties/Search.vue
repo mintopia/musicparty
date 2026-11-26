@@ -14,39 +14,57 @@ import {show, search} from '@/routes/parties';
 import {show as showAlbum} from '@/routes/parties/albums';
 import {show as showArtist} from '@/routes/parties/artists';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyPartyState, Paginator, SearchError, SharedProps, TrackAnnotation} from '@/types';
+import type {LegacyPartyState, SearchError, SearchResults, SearchType, SharedProps, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean};
-    params: {query: string | null; perPage: number};
-    results?: Paginator<TrackAnnotation> | SearchError | null;
+    params: {query: string | null; perPage: number; type?: SearchType | null};
+    results?: SearchResults | SearchError | null;
     playerState: LegacyPartyState;
 }>();
 
 const query = ref(props.params.query ?? '');
 const message = ref<string | null>(null);
-const tracks = ref<Paginator<TrackAnnotation> | SearchError | null | undefined>(props.results);
+const current = ref<SearchResults | SearchError | null | undefined>(props.results);
 const searching = ref(false);
-const hasSearch = computed(() => props.params.query !== null || (tracks.value ?? null) !== null);
+const loadingMore = ref(false);
+const hasSearch = computed(() => props.params.query !== null || (current.value ?? null) !== null);
 const {status, reason, request} = useRequestTrack(() => props.party.code);
 
 watch(
     () => props.results,
     (results) => {
-        tracks.value = results;
+        current.value = results;
     },
 );
 
 const searchUrl = computed(() => search(props.party.code).url);
+const queryString = computed(() => (query.value ? `?query=${encodeURIComponent(query.value)}` : ''));
+const overviewUrl = computed(() => searchUrl.value + (props.params.query ? `?query=${encodeURIComponent(props.params.query)}` : ''));
+const typeUrl = (type: SearchType): string => `${overviewUrl.value}${props.params.query ? '&' : '?'}type=${type}`;
 
 function submit(): void {
     router.get(
         searchUrl.value,
         {
             query: query.value,
-            perPage: props.params.perPage === 20 ? undefined : props.params.perPage,
+            perPage: props.params.perPage === 10 ? undefined : props.params.perPage,
         },
         {onStart: () => (searching.value = true), onFinish: () => (searching.value = false)},
+    );
+}
+
+function loadMore(url: string): void {
+    router.get(
+        url,
+        {},
+        {
+            only: ['results', 'params'],
+            preserveState: true,
+            preserveScroll: true,
+            onStart: () => (loadingMore.value = true),
+            onFinish: () => (loadingMore.value = false),
+        },
     );
 }
 
@@ -156,28 +174,24 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                 </div>
             </form>
             <template v-if="hasSearch">
-                <h2 class="mt-5">Results</h2>
                 <SearchResultsSection v-if="searching" loading />
                 <Deferred v-else data="results">
-                    <template #fallback><SearchResultsSection loading /></template>
+                    <template #fallback><SearchResultsSection loading :type="params.type ?? null" /></template>
                     <template #rescue><SearchResultsSection failed @retry="retry" /></template>
                     <SearchResultsSection
-                        :results="tracks"
+                        :results="current"
+                        :query="params.query ?? ''"
+                        :overview-url="overviewUrl"
+                        :type-url="typeUrl"
+                        :loading-more="loadingMore"
                         :can-downvote="party.downvotes"
-                        :album-route="
-                            (id: string) =>
-                                showAlbum({party: party.code, album: id}).url +
-                                (query ? `?query=${encodeURIComponent(query)}` : '')
-                        "
-                        :artist-route="
-                            (id: string) =>
-                                showArtist({party: party.code, artist: id}).url +
-                                (query ? `?query=${encodeURIComponent(query)}` : '')
-                        "
+                        :album-route="(id: string) => showAlbum({party: party.code, album: id}).url + queryString"
+                        :artist-route="(id: string) => showArtist({party: party.code, artist: id}).url + queryString"
                         @request="requestTrack"
                         @withdraw="withdraw"
                         @vote="vote"
                         @retry="retry"
+                        @load-more="loadMore"
                     />
                 </Deferred>
             </template>
