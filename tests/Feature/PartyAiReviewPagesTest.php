@@ -166,7 +166,7 @@ it('shares the nav flag only for managers of a party with the mod enabled', func
         ->assertInertia(fn (Assert $page) => $page->where('auth.parties.0.aiReviewEnabled', true));
 
     app(PartyMods::class)->disable($this->party, AiRequestReviewMod::CODE);
-    $this->get(route('parties.mods.edit', $this->party->code))
+    $this->get(route('parties.edit', $this->party->code))
         ->assertInertia(fn (Assert $page) => $page->where('auth.parties.0.aiReviewEnabled', false));
 });
 
@@ -230,17 +230,5 @@ it('tells the AI reviews page whether flagged requests are held', function () {
 
     $this->party->forceFill(['flag_requests' => true])->save();
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', $this->party->code))
-        ->assertInertia(fn (Assert $page) => $page->where('holdsFlagged', true));
-});
-
-it('tells the Mods page whether flagged requests are held', function () {
-    $this->party->forceFill(['flag_requests' => false])->save();
-    $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
-        ->assertInertia(fn (Assert $page) => $page
-            ->where('holdsFlagged', false)
-            ->where('settingsUrl', route('parties.edit', $this->party->code).'#flag_requests'));
-
-    $this->party->forceFill(['flag_requests' => true])->save();
-    $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
         ->assertInertia(fn (Assert $page) => $page->where('holdsFlagged', true));
 });

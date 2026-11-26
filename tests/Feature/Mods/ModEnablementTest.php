@@ -97,20 +97,20 @@ describe('party mods screen', function () {
     });
 
     it('toggles a mod through the Mods screen', function () {
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), ['mods' => ['foo' => ['enabled' => true]]])
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), ['enabled' => true, 'settings' => []])
             ->assertSessionHasNoErrors()->assertRedirect();
         expect(app(PartyMods::class)->isEnabled($this->party, 'foo'))->toBeTrue();
 
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), ['mods' => ['foo' => ['enabled' => false]]]);
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), ['enabled' => false, 'settings' => []]);
         expect(app(PartyMods::class)->isEnabled($this->party, 'foo'))->toBeFalse();
     });
 
     it('lists mods on the Mods screen and hides removed mods', function () {
         Mod::factory()->create(['code' => 'gone', 'name' => 'Gone Mod', 'removed_at' => now()]);
 
-        $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
+        $this->actingAs($this->owner)->get(route('parties.edit', $this->party->code))
             ->assertOk()
-            ->assertInertia(fn ($page) => $page->component('Parties/Mods')->has('mods', 1)->where('mods.0.code', 'foo'));
+            ->assertInertia(fn ($page) => $page->component('Parties/Edit')->has('mods', 1)->where('mods.0.code', 'foo'));
     });
 });
 

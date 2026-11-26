@@ -10,6 +10,7 @@ export const dashboard = (party: string | {code: string}) => ({
     method: 'get' as const,
 });
 export const edit = (party: string | {code: string}) => ({url: `/parties/${code(party)}/edit`, method: 'get' as const});
+export const update = (party: string | {code: string}) => ({url: `/parties/${code(party)}`, method: 'put' as const});
 export const tv = (party: string | {code: string}) => ({url: `/parties/${code(party)}/tv`, method: 'get' as const});
 export const player = (party: string | {code: string}) => ({
     url: `/parties/${code(party)}/player`,

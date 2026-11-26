@@ -29,7 +29,7 @@ beforeEach(function () {
 
 it('saves one mod while another mod would be invalid', function () {
     $this->actingAs($this->owner)->put(($this->url)('foo'), ['settings' => ['count' => 4]])
-        ->assertSessionHasNoErrors()->assertRedirect(route('parties.mods.edit', $this->party->code));
+        ->assertSessionHasNoErrors()->assertRedirect(route('parties.edit', ['party' => $this->party->code, 'tab' => 'mods']));
 
     expect($this->store->value($this->party, 'foo', 'count'))->toBe(4);
 });
@@ -78,4 +78,23 @@ it('searches only party members', function () {
     $other = User::factory()->withSpotify()->create();
     $other->forceFill(['first_login' => false])->save();
     $this->actingAs($other)->getJson(route('parties.mods.users', [$this->party->code]))->assertForbidden();
+});
+
+it('redirects the old Mods page to the Mods tab of Settings', function () {
+    $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
+        ->assertRedirect(route('parties.edit', ['party' => $this->party->code, 'tab' => 'mods']));
+});
+
+it('opens Settings on the requested tab and defaults to general', function () {
+    $this->actingAs($this->owner)->get(route('parties.edit', [$this->party->code, 'tab' => 'mods']))
+        ->assertInertia(fn ($page) => $page->component('Parties/Edit')->where('tab', 'mods')->has('mods'));
+
+    $this->actingAs($this->owner)->get(route('parties.edit', [$this->party->code, 'tab' => 'bogus']))
+        ->assertInertia(fn ($page) => $page->where('tab', 'general'));
+});
+
+it('returns to the page the Settings form was saved from', function () {
+    $this->actingAs($this->owner)->from(route('parties.edit', [$this->party->code, 'tab' => 'playback']))
+        ->put(($this->url)('foo'), ['settings' => ['count' => 4]])
+        ->assertRedirect(route('parties.edit', [$this->party->code, 'tab' => 'playback']));
 });

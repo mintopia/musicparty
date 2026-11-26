@@ -1,7 +1,6 @@
 import {mount} from '@vue/test-utils';
 import {describe, expect, it, vi} from 'vitest';
 import AdminMods from '@/pages/Admin/Mods.vue';
-import PartyMods from '@/pages/Parties/Mods.vue';
 
 vi.mock('@inertiajs/vue3', async () => {
     const {reactive} = await import('vue');
@@ -17,7 +16,6 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
     default: {template: '<div><slot name="breadcrumbs" /><slot /></div>'},
 }));
 
-const party = {code: 'abc', name: 'Test Party'};
 const settings = [
     {
         code: 'token',
@@ -30,13 +28,9 @@ const settings = [
         required: false,
     },
 ];
-const partyMod = {code: 'alpha', name: 'Alpha', description: 'First mod', enabled: false, settings};
 const adminMod = {code: 'alpha', name: 'Alpha', description: 'First mod', settings};
 
-describe.each([
-    ['Parties/Mods', PartyMods, {party}, partyMod],
-    ['Admin/Mods', AdminMods, {}, adminMod],
-])('%s', (_name, component, extra, mod) => {
+describe.each([['Admin/Mods', AdminMods, {}, adminMod]])('%s', (_name, component, extra, mod) => {
     it('shows the empty state and no Save button when there are no mods', () => {
         const wrapper = mount(component, {props: {...extra, mods: []} as never});
 
