@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import {Head} from '@inertiajs/vue3';
-import {computed, onBeforeUnmount, provide, ref, watch} from 'vue';
+import {onBeforeUnmount, provide, ref, watch} from 'vue';
 import ControlRoom from '@/components/Dashboard/ControlRoom.vue';
 import DeleteRequestDialog from '@/components/Dashboard/DeleteRequestDialog.vue';
 import NeedsAttention from '@/components/Dashboard/NeedsAttention.vue';
 import QuickLinks from '@/components/Dashboard/QuickLinks.vue';
 import UpcomingList from '@/components/Dashboard/UpcomingList.vue';
-import UpNextCard from '@/components/Dashboard/UpNextCard.vue';
 import {useDashboardSync} from '@/composables/useDashboardSync';
 import {notifyKey} from '@/lib/dashboard';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -44,7 +43,6 @@ useDashboardSync(props.party.code, (next) => {
     state.value = next;
 });
 
-const hidden = computed(() => props.control.start.state === 'hidden');
 onBeforeUnmount(() => {
     if (noticeTimer !== null) {
         clearTimeout(noticeTimer);
@@ -88,7 +86,6 @@ onBeforeUnmount(() => {
         </div>
         <div class="row g-4">
             <div class="col-lg-7">
-                <UpNextCard v-if="!hidden && upNext.length > 0" :request="upNext[0]" />
                 <UpcomingList
                     :code="party.code"
                     :items="upcoming.items"

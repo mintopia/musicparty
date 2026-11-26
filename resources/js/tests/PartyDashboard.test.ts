@@ -245,7 +245,7 @@ describe('control room strip', () => {
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="up-next-deck"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="restart-in-party"]').exists()).toBe(false);
-        expect(wrapper.find('[data-test="up-next-card"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="up-next-card"]').exists()).toBe(false);
         expect(wrapper.findAll('[data-test="upcoming-row"]')).toHaveLength(1);
     });
 
