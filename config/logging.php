@@ -73,6 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'ai-review' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/ai-review.log'),
+            'level' => env('LOG_AI_REVIEW_LEVEL', 'debug'),
+            'max_files' => env('LOG_DAILY_DAYS', 14),
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),
