@@ -58,7 +58,6 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:update,party')->group(function () {
             Route::get('parties/{party}/dashboard', [PartyDashboardController::class, 'show'])->name('parties.dashboard');
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
-            Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::get('parties/{party}/mods/users', [ModUserSearchController::class, 'party'])->name('parties.mods.users');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();

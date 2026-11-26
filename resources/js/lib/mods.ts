@@ -1,4 +1,41 @@
-import type {ModSetting} from '@/types';
+import type {ModSetting, PartyMod} from '@/types';
+
+export interface ModDraft {
+    enabled: boolean;
+    settings: Record<string, ModSettingValue>;
+}
+
+const MOD_GROUP_BY_CODE: Record<string, string> = {
+    'ai-request-review': 'Moderation',
+    trust: 'Moderation',
+    whamageddon: 'Fun',
+};
+
+const MOD_GROUP_ORDER = ['Moderation', 'Fun', 'Other'];
+
+export function groupMods(mods: PartyMod[]): {name: string; mods: PartyMod[]}[] {
+    const groups = new Map<string, PartyMod[]>();
+    for (const mod of mods) {
+        const name = MOD_GROUP_BY_CODE[mod.code] ?? 'Other';
+        groups.set(name, [...(groups.get(name) ?? []), mod]);
+    }
+    return MOD_GROUP_ORDER.filter((name) => groups.has(name)).map((name) => ({name, mods: groups.get(name) ?? []}));
+}
+
+export function initialModDraft(mod: PartyMod): ModDraft {
+    return {
+        enabled: mod.enabled,
+        settings: Object.fromEntries(mod.settings.map((s) => [s.code, initialSettingValue(s)])),
+    };
+}
+
+export function cloneDraft(draft: ModDraft): ModDraft {
+    return JSON.parse(JSON.stringify(draft)) as ModDraft;
+}
+
+export function isModDirty(draft: ModDraft, baseline: ModDraft): boolean {
+    return JSON.stringify(draft) !== JSON.stringify(baseline);
+}
 
 export const partyModsUrl = (code: string): string => `/parties/${code}/mods`;
 export const adminModsUrl = (): string => '/admin/mods';

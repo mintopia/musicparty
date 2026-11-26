@@ -55,7 +55,7 @@ function putMods(Party $party, array $settings, ?bool $enabled = null): array
         $entry['enabled'] = $enabled;
     }
 
-    return ['mods' => ['foo' => $entry]];
+    return $entry;
 }
 
 describe('store validation', function () {
@@ -164,10 +164,10 @@ describe('party Mods screen', function () {
     it('exposes only Host-editable settings in the contract shape', function () {
         $this->store->set($this->party, 'foo', 'count', 5);
 
-        $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
+        $this->actingAs($this->owner)->get(route('parties.edit', $this->party->code))
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
-                ->component('Parties/Mods')
+                ->component('Parties/Edit')
                 ->has('playerState')
                 ->where('party.code', $this->party->code)
                 ->where('mods.0.code', 'foo')
@@ -178,9 +178,9 @@ describe('party Mods screen', function () {
     });
 
     it('saves settings and enablement', function () {
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), putMods($this->party, [
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, [
             'title' => 'Yo', 'flag' => true, 'count' => 4, 'opens' => '08:15', 'required_text' => 'ok', 'party_secret' => 's3cret',
-        ], true))->assertSessionHasNoErrors()->assertRedirect(route('parties.mods.edit', $this->party->code));
+        ], true))->assertSessionHasNoErrors()->assertRedirect(route('parties.edit', ['party' => $this->party->code, 'tab' => 'mods']));
 
         $store = new ModSettingsStore;
         expect($store->value($this->party, 'foo', 'title'))->toBe('Yo')
@@ -190,7 +190,7 @@ describe('party Mods screen', function () {
     });
 
     it('returns errors keyed by mod and setting and writes nothing', function () {
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), putMods($this->party, [
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, [
             'title' => 'fine', 'count' => 'abc', 'opens' => 'bad',
         ], true))->assertSessionHasErrors(['mods.foo.settings.count', 'mods.foo.settings.opens']);
 
@@ -198,32 +198,32 @@ describe('party Mods screen', function () {
     });
 
     it('rejects private and instance-only settings', function () {
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), putMods($this->party, ['hidden' => 'x']))
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, ['hidden' => 'x']))
             ->assertSessionHasErrors('mods.foo.settings.hidden');
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), putMods($this->party, ['instance_name' => 'x', 'api_key' => 'y']))
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, ['instance_name' => 'x', 'api_key' => 'y']))
             ->assertSessionHasErrors(['mods.foo.settings.instance_name', 'mods.foo.settings.api_key']);
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), ['mods' => ['nope' => ['enabled' => true]]])
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'nope']), ['enabled' => true, 'settings' => []])
             ->assertSessionHasErrors('mods.nope');
 
         expect(PartyModSetting::count())->toBe(0);
     });
 
     it('never puts a secret in the response', function () {
-        $this->actingAs($this->owner)->put(route('parties.mods.update', $this->party->code), putMods($this->party, ['party_secret' => 'hunter2']));
+        $this->actingAs($this->owner)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, ['party_secret' => 'hunter2']));
 
-        $this->actingAs($this->owner)->get(route('parties.mods.edit', $this->party->code))
+        $this->actingAs($this->owner)->get(route('parties.edit', $this->party->code))
             ->assertOk()->assertDontSee('hunter2')
             ->assertInertia(fn (Assert $page) => $page->where('mods.0.settings.7', fn ($setting) => $setting['value'] === null && $setting['has_value'] === true));
     });
 
     it('is host-only', function () {
         $this->get(route('parties.mods.edit', $this->party->code))->assertRedirect();
-        $this->put(route('parties.mods.update', $this->party->code), ['mods' => []])->assertRedirect();
+        $this->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), ['settings' => []])->assertRedirect();
 
         $other = User::factory()->withSpotify()->create();
         $other->forceFill(['first_login' => false])->save();
         $this->actingAs($other)->get(route('parties.mods.edit', $this->party->code))->assertForbidden();
-        $this->actingAs($other)->put(route('parties.mods.update', $this->party->code), putMods($this->party, ['title' => 'x']))->assertForbidden();
+        $this->actingAs($other)->put(route('parties.mods.updateMod', [$this->party->code, 'foo']), putMods($this->party, ['title' => 'x']))->assertForbidden();
     });
 });
 

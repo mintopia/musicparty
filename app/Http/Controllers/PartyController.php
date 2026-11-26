@@ -16,6 +16,7 @@ use App\Models\PartyMember;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
+use App\Services\ModSettingsStore;
 use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
@@ -38,6 +39,8 @@ use Inertia\Response;
 
 class PartyController extends Controller
 {
+    private const SETTINGS_TABS = ['general', 'requests', 'playback', 'screens', 'mods'];
+
     private const int SEARCH_PAGE_SIZE = 10;
 
     private const int SEARCH_OVERVIEW_LIMIT = 5;
@@ -458,7 +461,7 @@ class PartyController extends Controller
         )->attempt();
     }
 
-    public function edit(Request $request, Party $party, PartyProviderOptions $options): Response
+    public function edit(Request $request, Party $party, PartyProviderOptions $options, ModSettingsStore $mods): Response
     {
         $reverbApp = config('reverb.apps.apps.0');
         $isAdmin = $request->user()?->can('admin') ?? false;
@@ -467,6 +470,8 @@ class PartyController extends Controller
             'party' => $this->formValues($party) + ['code' => $party->code],
             'providerName' => ucfirst((string) $party->provider_id),
             'playerState' => $party->getState(),
+            'tab' => in_array($request->query('tab'), self::SETTINGS_TABS, true) ? $request->query('tab') : 'general',
+            'mods' => fn () => $mods->presentFor($party),
             'encore' => [
                 'host' => $request->getHost(),
                 'key' => $reverbApp['key'] ?? null,
@@ -539,7 +544,7 @@ class PartyController extends Controller
         $this->updateObject($party, $request);
         $party->save();
 
-        return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been updated');
+        return redirect()->to(url()->previous(route('parties.edit', $party->code)))->with('successMessage', 'The party has been updated');
     }
 
     protected function updateObject(Party $party, Request $request): void

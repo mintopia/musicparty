@@ -1,15 +1,57 @@
 <script setup lang="ts">
-import {Head, useForm} from '@inertiajs/vue3';
-import {computed} from 'vue';
-import CopyButton from '@/components/CopyButton.vue';
-import PartyForm from '@/components/PartyForm.vue';
+import {Head, router, useForm} from '@inertiajs/vue3';
+import {computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue';
+import PartyModsTab from '@/components/PartyModsTab.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
+import PartySettingsFields from '@/components/PartySettingsFields.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import {buildSettings, cloneDraft, initialModDraft, isModDirty, partyModUrl, partyModUsersUrl} from '@/lib/mods';
+import type {ModDraft} from '@/lib/mods';
 import {initialPartyForm} from '@/lib/partyForm';
 import type {NamedOption, PartyFormValues} from '@/lib/partyForm';
 import {home} from '@/routes';
 import {edit, show, update} from '@/routes/parties';
-import type {LegacyPartyState} from '@/types';
+import type {LegacyPartyState, PartyMod} from '@/types';
+
+const TABS = [
+    {id: 'general', label: 'General'},
+    {id: 'requests', label: 'Requests'},
+    {id: 'playback', label: 'Playback'},
+    {id: 'screens', label: 'Screens'},
+    {id: 'mods', label: 'Mods'},
+] as const;
+
+type TabId = (typeof TABS)[number]['id'];
+
+const FIELD_TAB: Record<string, TabId> = {
+    active: 'general',
+    name: 'general',
+    country: 'general',
+    timezone: 'general',
+    allow_requests: 'requests',
+    downvotes: 'requests',
+    weighted: 'requests',
+    explicit: 'requests',
+    flag_requests: 'requests',
+    max_requests: 'requests',
+    downvotes_per_hour: 'requests',
+    min_song_length: 'requests',
+    max_song_length: 'requests',
+    no_repeat_interval: 'requests',
+    backup_playlist_id: 'playback',
+    custom_backup_playlist_id: 'playback',
+    history_playlist_id: 'playback',
+    device_id: 'playback',
+    force: 'playback',
+    poll: 'playback',
+    context_playlist_id: 'playback',
+    show_qrcode: 'screens',
+};
+
+const ANCHOR_TAB: Record<string, TabId> = {
+    flag_requests: 'requests',
+    'encore-relay': 'screens',
+};
 
 const props = defineProps<{
     party: PartyFormValues & {code: string};
@@ -22,14 +64,180 @@ const props = defineProps<{
     playerState: LegacyPartyState;
     contextPlaylistName?: string | null;
     encore: {host: string; key: string | null; channel: string; secret: string | null};
+    mods?: PartyMod[];
+    tab?: string;
 }>();
 
-const form = useForm(initialPartyForm(props.party, props.playlists, props.defaultCountry));
+const isTab = (value: string | null | undefined): value is TabId => TABS.some((t) => t.id === value);
 
-const relayUrl = computed(() => `wss://${props.encore.host}/app/${props.encore.key}`);
+const initialValues = initialPartyForm(props.party, props.playlists, props.defaultCountry);
+const form = useForm(initialValues);
+const baseline = reactive<Record<string, unknown>>({...initialValues});
 
-function submit(): void {
-    form.patch(update(props.party.code).url);
+const modList = computed(() => props.mods ?? []);
+const drafts = reactive<Record<string, ModDraft>>({});
+const modBaselines = reactive<Record<string, ModDraft>>({});
+for (const mod of modList.value) {
+    drafts[mod.code] = initialModDraft(mod);
+    modBaselines[mod.code] = cloneDraft(drafts[mod.code]!);
+}
+const modErrors = reactive<Record<string, Record<string, string>>>({});
+
+const activeTab = ref<TabId>(isTab(props.tab) ? props.tab : 'general');
+const saving = ref(false);
+
+function selectTab(id: TabId): void {
+    activeTab.value = id;
+}
+
+watch(activeTab, (id) => {
+    const url = new URL(window.location.href);
+    url.searchParams.set('tab', id);
+    url.hash = '';
+    window.history.replaceState(window.history.state, '', url);
+});
+
+function onTabKeydown(event: KeyboardEvent): void {
+    const step = event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0;
+    if (step === 0) {
+        return;
+    }
+    event.preventDefault();
+    const index = TABS.findIndex((t) => t.id === activeTab.value);
+    const next = TABS[(index + step + TABS.length) % TABS.length]!;
+    selectTab(next.id);
+    void nextTick(() => document.getElementById(`tab-${next.id}`)?.focus());
+}
+
+async function applyHash(): Promise<void> {
+    const anchor = window.location.hash.slice(1);
+    if (anchor === '') {
+        return;
+    }
+    const target = ANCHOR_TAB[anchor] ?? (anchor.startsWith('mod-') ? 'mods' : null);
+    if (target === null) {
+        return;
+    }
+    activeTab.value = target;
+    await nextTick();
+    document.getElementById(anchor)?.scrollIntoView?.({block: 'center'});
+}
+
+onMounted(() => {
+    void applyHash();
+    window.addEventListener('hashchange', applyHash);
+});
+onBeforeUnmount(() => window.removeEventListener('hashchange', applyHash));
+
+const changedFields = computed(() =>
+    Object.keys(baseline).filter((key) => (form as unknown as Record<string, unknown>)[key] !== baseline[key]),
+);
+const changedMods = computed(() =>
+    modList.value.filter((mod) => drafts[mod.code] && isModDirty(drafts[mod.code]!, modBaselines[mod.code]!)),
+);
+const changeCount = computed(() => changedFields.value.length + changedMods.value.length);
+const dirty = computed(() => changeCount.value > 0);
+
+const changeSummary = computed(() => {
+    const labels = new Set<string>();
+    for (const field of changedFields.value) {
+        const tab = FIELD_TAB[field];
+        labels.add(TABS.find((t) => t.id === tab)?.label ?? 'Settings');
+    }
+    for (const mod of changedMods.value) {
+        labels.add(mod.name);
+    }
+    const count = `${changeCount.value} ${changeCount.value === 1 ? 'change' : 'changes'}`;
+    return labels.size > 0 ? `${count}: ${[...labels].join(', ')}` : count;
+});
+
+function discard(): void {
+    for (const key of Object.keys(baseline)) {
+        (form as unknown as Record<string, unknown>)[key] = baseline[key];
+    }
+    form.clearErrors?.();
+    for (const mod of modList.value) {
+        drafts[mod.code] = cloneDraft(modBaselines[mod.code]!);
+        delete modErrors[mod.code];
+    }
+}
+
+function patchParty(): Promise<boolean> {
+    return new Promise((resolve) => {
+        form.patch(update(props.party.code).url, {
+            preserveScroll: true,
+            preserveState: true,
+            onSuccess: () => {
+                for (const key of Object.keys(baseline)) {
+                    baseline[key] = (form as unknown as Record<string, unknown>)[key];
+                }
+                resolve(true);
+            },
+            onError: () => resolve(false),
+        });
+    });
+}
+
+function saveMod(mod: PartyMod): Promise<boolean> {
+    const draft = drafts[mod.code]!;
+    return new Promise((resolve) => {
+        router.put(
+            partyModUrl(props.party.code, mod.code),
+            {enabled: draft.enabled, settings: buildSettings(mod.settings, draft.settings)},
+            {
+                preserveScroll: true,
+                preserveState: true,
+                only: ['mods'],
+                onSuccess: () => {
+                    for (const s of mod.settings) {
+                        if (s.type === 'secret') {
+                            draft.settings[s.code] = '';
+                        }
+                    }
+                    modBaselines[mod.code] = cloneDraft(draft);
+                    delete modErrors[mod.code];
+                    resolve(true);
+                },
+                onError: (errors: Record<string, string>) => {
+                    const own = Object.fromEntries(
+                        Object.entries(errors).filter(([key]) => key.startsWith(`mods.${mod.code}`)),
+                    );
+                    modErrors[mod.code] = Object.keys(own).length > 0 ? own : errors;
+                    resolve(false);
+                },
+            },
+        );
+    });
+}
+
+async function save(): Promise<void> {
+    if (saving.value || !dirty.value) {
+        return;
+    }
+    saving.value = true;
+    try {
+        const queue = [...changedMods.value];
+        if (changedFields.value.length > 0 && !(await patchParty())) {
+            const first = Object.keys(form.errors)[0];
+            const tab = first ? FIELD_TAB[first] : undefined;
+            if (tab && queue.length === 0) {
+                selectTab(tab);
+            }
+        }
+        for (const mod of queue) {
+            await saveMod(mod);
+        }
+        const failed = Object.keys(modErrors).find((code) => modList.value.some((m) => m.code === code));
+        if (failed) {
+            selectTab('mods');
+        }
+    } finally {
+        saving.value = false;
+    }
+}
+
+function holdFlagged(): void {
+    form.flag_requests = true;
 }
 </script>
 
@@ -48,64 +256,129 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head title="Settings" />
-        <div class="page-header mt-0">
-            <h1>Settings</h1>
-        </div>
-
-        <div class="col-md-6 offset-md-3">
-            <PartyForm
-                :form="form"
-                :playlists="playlists"
-                :devices="devices"
-                :provider-name="providerName"
-                show-context-playlist
-                :context-playlist-name="contextPlaylistName"
-                :instance-timezone="instanceTimezone"
-                :timezones="timezones"
-                :cancel-url="show(party.code).url"
-                @submit="submit"
-            />
-            <div id="encore-relay" class="card mt-3">
-                <div class="card-header">
-                    <h3 class="card-title">Encore relay</h3>
-                </div>
-                <div class="card-body">
-                    <dl class="row mb-0">
-                        <dt class="col-sm-4">Relay URL</dt>
-                        <dd class="col-sm-8">
-                            <div class="d-flex align-items-start gap-2">
-                                <code class="text-break flex-grow-1">{{ relayUrl }}</code>
-                                <CopyButton :value="relayUrl" label="Copy relay URL" />
-                            </div>
-                        </dd>
-                        <dt class="col-sm-4">Pusher protocol</dt>
-                        <dd class="col-sm-8">On</dd>
-                        <dt class="col-sm-4">Channel</dt>
-                        <dd class="col-sm-8">
-                            <div class="d-flex align-items-start gap-2">
-                                <code class="text-break flex-grow-1">{{ encore.channel }}</code>
-                                <CopyButton :value="encore.channel" label="Copy channel" />
-                            </div>
-                        </dd>
-                        <dt class="col-sm-4">App key</dt>
-                        <dd class="col-sm-8">
-                            <div class="d-flex align-items-start gap-2">
-                                <code class="text-break flex-grow-1">{{ encore.key }}</code>
-                                <CopyButton :value="encore.key ?? ''" label="Copy app key" />
-                            </div>
-                        </dd>
-                        <template v-if="encore.secret">
-                            <dt class="col-sm-4">App secret</dt>
-                            <dd class="col-sm-8">
-                                <div class="d-flex align-items-start gap-2">
-                                    <code class="text-break flex-grow-1">{{ encore.secret }}</code>
-                                    <CopyButton :value="encore.secret" label="Copy app secret" />
-                                </div>
-                            </dd>
-                        </template>
-                    </dl>
-                </div>
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="page-header mt-0">
+                <h1>Settings</h1>
             </div>
+
+            <form class="settings-form" data-test="settings-form" @submit.prevent="save">
+                <div class="settings-tabs" role="tablist" aria-label="Settings sections" @keydown="onTabKeydown">
+                    <button
+                        v-for="t in TABS"
+                        :id="`tab-${t.id}`"
+                        :key="t.id"
+                        type="button"
+                        role="tab"
+                        class="settings-tab"
+                        :class="{active: activeTab === t.id}"
+                        :aria-selected="activeTab === t.id"
+                        :aria-controls="`panel-${t.id}`"
+                        :tabindex="activeTab === t.id ? 0 : -1"
+                        :data-test="`tab-${t.id}`"
+                        @click="selectTab(t.id)"
+                    >
+                        {{ t.label }}
+                    </button>
+                </div>
+
+                <div
+                    :id="`panel-${activeTab}`"
+                    class="settings-panel"
+                    role="tabpanel"
+                    :aria-labelledby="`tab-${activeTab}`"
+                >
+                    <PartyModsTab
+                        v-if="activeTab === 'mods'"
+                        :mods="modList"
+                        :drafts="drafts"
+                        :errors="modErrors"
+                        :user-search-url="partyModUsersUrl(party.code)"
+                        :holds-flagged="form.flag_requests"
+                        @hold-flagged="holdFlagged"
+                    />
+                    <PartySettingsFields
+                        v-else
+                        :tab="activeTab"
+                        :form="form"
+                        :playlists="playlists"
+                        :devices="devices"
+                        :provider-name="providerName"
+                        :instance-timezone="instanceTimezone"
+                        :timezones="timezones"
+                        :context-playlist-name="contextPlaylistName"
+                        :encore="encore"
+                    />
+                </div>
+
+                <div v-if="dirty" class="save-bar" role="region" aria-label="Unsaved changes" data-test="save-bar">
+                    <span class="save-summary" aria-live="polite" data-test="save-summary">{{ changeSummary }}</span>
+                    <button type="button" class="btn btn-link" :disabled="saving" data-test="discard" @click="discard">
+                        Discard
+                    </button>
+                    <button type="submit" class="btn btn-primary" :disabled="saving" data-test="save">
+                        Save changes
+                    </button>
+                </div>
+            </form>
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.settings-tabs {
+    display: flex;
+    gap: 1.5rem;
+    overflow-x: auto;
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.settings-tab {
+    margin-bottom: -1px;
+    padding: 0.5rem 0;
+    border: 0;
+    border-bottom: 2px solid transparent;
+    background: none;
+    color: var(--tblr-secondary);
+    font: inherit;
+    white-space: nowrap;
+}
+
+.settings-tab:hover {
+    color: var(--tblr-body-color);
+}
+
+.settings-tab.active {
+    border-bottom-color: var(--tblr-primary);
+    color: var(--tblr-body-color);
+    font-weight: 500;
+}
+
+.settings-tab:focus-visible {
+    outline: 2px solid var(--tblr-primary);
+    outline-offset: 2px;
+    border-radius: 2px;
+}
+
+.settings-panel {
+    padding: 1.5rem 0 2rem;
+}
+
+.save-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 5;
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 0.75rem;
+    padding: 0.75rem 0;
+    border-top: 1px solid var(--tblr-border-color);
+    background: var(--tblr-bg-surface, var(--tblr-body-bg));
+}
+
+.save-summary {
+    margin-right: auto;
+    color: var(--tblr-secondary);
+    font-size: 0.875rem;
+}
+</style>

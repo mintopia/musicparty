@@ -9,6 +9,7 @@ const props = defineProps<{
     error?: string;
     id: string;
     userSearchUrl?: string;
+    row?: boolean;
 }>();
 
 const emit = defineEmits<{'update:modelValue': [value: string | number | boolean | null]}>();
@@ -42,6 +43,13 @@ const widthClass = computed(() => {
     }
 });
 
+const wrapperClass = computed(() => {
+    if (!props.row) {
+        return 'mb-3';
+    }
+    return props.setting.type === 'choice' || props.setting.type === 'text' ? 'mod-setting-stack' : 'mod-setting-row';
+});
+
 function onInput(event: Event): void {
     const raw = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
     if (props.setting.type === 'integer' || props.setting.type === 'float') {
@@ -53,8 +61,8 @@ function onInput(event: Event): void {
 </script>
 
 <template>
-    <div class="mb-3" data-test="mod-setting" :data-setting="setting.code">
-        <div v-if="setting.type === 'boolean'" class="form-check form-switch">
+    <div :class="wrapperClass" data-test="mod-setting" :data-setting="setting.code">
+        <div v-if="setting.type === 'boolean'" class="form-check form-switch" :class="{'mod-switch-row': row}">
             <input
                 :id="id"
                 type="checkbox"
@@ -139,6 +147,61 @@ function onInput(event: Event): void {
 </template>
 
 <style scoped>
+.mod-setting-stack {
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.mod-setting-row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 16rem);
+    align-items: center;
+    gap: 0.25rem 1.5rem;
+    padding: 0.625rem 0;
+    border-bottom: 1px solid var(--tblr-border-color);
+}
+
+.mod-setting-row > label,
+.mod-setting-row > .form-label {
+    margin: 0;
+}
+
+.mod-setting-row > .form-hint,
+.mod-setting-row > .invalid-feedback,
+.mod-setting-row > .mod-switch-row {
+    grid-column: 1 / -1;
+}
+
+.mod-setting-row > .form-hint {
+    margin: 0;
+}
+
+.mod-setting-row .mod-field-narrow,
+.mod-setting-row .mod-field-medium,
+.mod-setting-row .mod-field-wide {
+    max-width: none;
+}
+
+.mod-switch-row {
+    display: flex;
+    flex-direction: row-reverse;
+    justify-content: space-between;
+    align-items: center;
+    padding-left: 0;
+    margin: 0;
+}
+
+.mod-switch-row .form-check-input {
+    float: none;
+    margin: 0;
+}
+
+@media (max-width: 575.98px) {
+    .mod-setting-row {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
 .mod-field-narrow {
     max-width: 10rem;
 }

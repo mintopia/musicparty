@@ -104,7 +104,7 @@ it('returns validation errors to the form and saves valid settings with checkbox
         'active' => true,
         'explicit' => false,
         'max_requests' => '3',
-    ])->assertRedirect(route('parties.show', $party->code));
+    ])->assertRedirect(route('parties.edit', $party->code));
 
     expect($party->fresh())
         ->name->toBe('Renamed')

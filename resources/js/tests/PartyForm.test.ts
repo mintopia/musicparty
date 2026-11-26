@@ -14,6 +14,7 @@ const inertia = vi.hoisted(() => ({
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
+    router: {put: vi.fn()},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     useForm: (initial: Record<string, unknown>) => {
         const form = reactive({...initial, errors: inertia.errors, processing: false}) as Record<string, unknown>;
@@ -121,14 +122,12 @@ describe('party form', () => {
             },
         });
 
-        const custom = wrapper.find('#custom_backup_playlist_id');
-        expect(custom.classes()).not.toContain('d-none');
+        await wrapper.find('[data-test="tab-playback"]').trigger('click');
+        expect(wrapper.find('#custom_backup_playlist_id').exists()).toBe(true);
         await wrapper.find('#backup_playlist_id').setValue('pl1');
-        expect(custom.classes()).toContain('d-none');
+        expect(wrapper.find('#custom_backup_playlist_id').exists()).toBe(false);
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(false);
-        expect(wrapper.find('input[name="context_playlist_id"]').attributes('placeholder')).toBe(
-            'Music Party Context (automatic)',
-        );
+        await wrapper.find('[data-test="tab-screens"]').trigger('click');
         expect(wrapper.text()).toContain('private-encore.abc');
         expect(wrapper.text()).not.toContain('App secret');
 
