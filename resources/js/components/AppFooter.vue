@@ -11,7 +11,7 @@ const site = computed(() => usePage<SharedProps>().props.site);
 <template>
     <footer class="ae-footer d-print-none">
         <div class="ae-footer__row">
-            <a class="ae-footer__credit" href="https://mintopia.net">
+            <a class="ae-footer__credit" href="https://appliedentropy.dev">
                 <img class="ae-footer__mark ae-footer__mark--light" :src="markLight" alt="" width="20" height="24" />
                 <img class="ae-footer__mark ae-footer__mark--dark" :src="markDark" alt="" width="20" height="24" />
                 An Applied Entropy project

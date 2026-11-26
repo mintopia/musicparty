@@ -32,7 +32,7 @@ describe('AppFooter', () => {
         const wrapper = mount(AppFooter);
 
         const credit = wrapper.get('.ae-footer__credit');
-        expect(credit.attributes('href')).toBe('https://mintopia.net');
+        expect(credit.attributes('href')).toBe('https://appliedentropy.dev');
         expect(credit.text()).toBe('An Applied Entropy project');
         expect(wrapper.findAll('img.ae-footer__mark')).toHaveLength(2);
         expect(wrapper.get('a[href="https://github.com/mintopia/musicparty"]').text()).toBe('Source');
