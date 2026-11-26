@@ -6,7 +6,7 @@ import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 <template>
     <div class="placeholder-wave" aria-busy="true" aria-label="Loading results" data-test="results-loading">
         <div class="row g-4 mt-0">
-            <div class="col-md-5">
+            <div class="col-md-5 col-xxl-4">
                 <SearchSectionHead title="Top result" />
                 <div class="card" data-test="top-placeholder">
                     <div class="card-body d-flex flex-column gap-3">
@@ -19,7 +19,7 @@ import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
                     </div>
                 </div>
             </div>
-            <div class="col-md-7">
+            <div class="col-md-7 col-xxl-8">
                 <SearchSectionHead title="Tracks" />
                 <div class="card">
                     <div class="list-group list-group-flush">

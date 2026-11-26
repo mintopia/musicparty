@@ -20,6 +20,8 @@ class PartyModsController extends Controller
             'party' => ['code' => $party->code, 'name' => $party->name],
             'mods' => $store->presentFor($party),
             'playerState' => $party->getState(),
+            'holdsFlagged' => (bool) $party->flag_requests,
+            'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
         ]);
     }
 

@@ -26,7 +26,7 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
 <template>
     <div data-test="search-overview">
         <div v-if="results.top || results.tracks.length" class="row g-4 mt-0">
-            <div v-if="results.top" class="col-md-5">
+            <div v-if="results.top" class="col-md-5 col-xxl-4">
                 <SearchSectionHead title="Top result" />
                 <SearchTopResult
                     :top="results.top"
@@ -37,7 +37,11 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
                     @withdraw="emit('withdraw', $event)"
                 />
             </div>
-            <div v-if="results.tracks.length" :class="results.top ? 'col-md-7' : 'col-12'" data-test="tracks-section">
+            <div
+                v-if="results.tracks.length"
+                :class="results.top ? 'col-md-7 col-xxl-8' : 'col-12'"
+                data-test="tracks-section"
+            >
                 <SearchSectionHead title="Tracks" :see-all-href="typeUrl('track')" see-all-label="See all tracks" />
                 <div class="card">
                     <div class="list-group list-group-flush">

@@ -7,11 +7,26 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {partyModUrl, partyModUsersUrl, partyModsUrl} from '@/lib/mods';
 import type {LegacyPartyState, PartyMod} from '@/types';
 
-defineProps<{
+const props = defineProps<{
     party: {code: string; name: string};
     mods: PartyMod[];
     playerState: LegacyPartyState;
+    holdsFlagged?: boolean;
+    settingsUrl?: string;
 }>();
+
+const AI_REVIEW_MOD = 'ai-request-review';
+
+function noticeFor(mod: PartyMod): {text: string; linkLabel: string; href: string} | null {
+    if (mod.code !== AI_REVIEW_MOD || props.holdsFlagged !== false) {
+        return null;
+    }
+    return {
+        text: "Flagged requests aren't held. They go straight to the queue.",
+        linkLabel: 'Turn on approval',
+        href: props.settingsUrl ?? `/parties/${props.party.code}/edit`,
+    };
+}
 </script>
 
 <template>
@@ -45,6 +60,7 @@ defineProps<{
                     :mod="mod"
                     :url="partyModUrl(party.code, mod.code)"
                     :user-search-url="partyModUsersUrl(party.code)"
+                    :notice="noticeFor(mod)"
                     show-enabled
                 />
             </div>

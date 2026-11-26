@@ -177,6 +177,7 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
             <div class="mb-3">
                 <label v-for="item in switches" :key="item.name" class="form-check form-switch">
                     <input
+                        :id="item.name"
                         v-model="form[item.name]"
                         type="checkbox"
                         class="form-check-input"
