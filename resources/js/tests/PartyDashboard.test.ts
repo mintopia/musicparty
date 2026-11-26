@@ -333,6 +333,19 @@ describe('up next deck', () => {
         expect(post('/api/v1/parties/ABCD/upcomingsongs/2/play')).toHaveLength(1);
     });
 
+    it('plays an unsent first row through the play endpoint, not next', async () => {
+        const wrapper = mountPage({state: 'hidden', upNext: [request(5, 'Unsent'), request(6, 'Other')]});
+
+        expect(wrapper.find('[data-test="play-now"]').attributes('title')).toBe(
+            'Play now: move to the top of the queue and play',
+        );
+        await wrapper.find('[data-test="play-now"]').trigger('click');
+        await flushPromises();
+
+        expect(post('/api/v1/parties/ABCD/upcomingsongs/5/play')).toHaveLength(1);
+        expect(post('/api/v1/parties/ABCD/control')).toHaveLength(0);
+    });
+
     it('disables Delete on a sent row with an explanatory tooltip', () => {
         const wrapper = mountPage({state: 'hidden'});
         const rows = wrapper.findAll('[data-test="up-next-row"]');

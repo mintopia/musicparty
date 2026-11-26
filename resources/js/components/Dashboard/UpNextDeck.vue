@@ -19,9 +19,9 @@ const busy = ref(false);
 const sub = (request: DashboardRequest): string =>
     `${request.artists.map((a) => a.name).join(', ')} · ${request.user ?? legacyFallbackName(request) ?? 'Fallback'}`;
 
-async function playNow(request: DashboardRequest, index: number): Promise<void> {
+async function playNow(request: DashboardRequest): Promise<void> {
     busy.value = true;
-    await run(() => (index === 0 ? sendControl(props.code, 'next') : playRequest(props.code, request.id)));
+    await run(() => (request.sent ? sendControl(props.code, 'next') : playRequest(props.code, request.id)));
     busy.value = false;
 }
 </script>
@@ -36,7 +36,7 @@ async function playNow(request: DashboardRequest, index: number): Promise<void> 
         </div>
         <div v-if="items.length === 0" class="text-secondary small" data-test="up-next-empty">Queue empty</div>
         <div v-else class="und">
-            <div v-for="(request, index) in items" :key="request.id" class="und-row" data-test="up-next-row">
+            <div v-for="request in items" :key="request.id" class="und-row" data-test="up-next-row">
                 <div class="und-art">
                     <img class="und-cover" :src="request.album.image_url" :title="request.album.name" alt="" />
                 </div>
@@ -53,14 +53,14 @@ async function playNow(request: DashboardRequest, index: number): Promise<void> 
                         type="button"
                         class="btn und-btn"
                         :title="
-                            index === 0
+                            request.sent
                                 ? 'Next track: skip to this now'
                                 : 'Play now: move to the top of the queue and play'
                         "
-                        :aria-label="index === 0 ? 'Next track' : 'Play now'"
-                        :disabled="busy || (index > 0 && !canModerate)"
+                        :aria-label="request.sent ? 'Next track' : 'Play now'"
+                        :disabled="busy || (!request.sent && !canModerate)"
                         data-test="play-now"
-                        @click="playNow(request, index)"
+                        @click="playNow(request)"
                     >
                         <i class="ti ti-player-track-next"></i>
                     </button>
