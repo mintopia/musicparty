@@ -25,6 +25,26 @@ it('limits Reverb allowed origins to the APP_URL host', function () {
     expect(config('reverb.apps.apps.0.allowed_origins'))->toBe([parse_url((string) config('app.url'), PHP_URL_HOST)]);
 });
 
+it('resolves Reverb allowed origins from REVERB_ALLOWED_ORIGINS', function (?string $value, ?array $expected) {
+    $previous = getenv('REVERB_ALLOWED_ORIGINS');
+
+    try {
+        $value === null ? putenv('REVERB_ALLOWED_ORIGINS') : putenv("REVERB_ALLOWED_ORIGINS={$value}");
+        $config = require config_path('reverb.php');
+
+        expect($config['apps']['apps'][0]['allowed_origins'])
+            ->toBe($expected ?? [parse_url((string) env('APP_URL', 'http://localhost'), PHP_URL_HOST)]);
+    } finally {
+        $previous === false ? putenv('REVERB_ALLOWED_ORIGINS') : putenv("REVERB_ALLOWED_ORIGINS={$previous}");
+    }
+})->with([
+    'unset uses APP_URL host' => [null, null],
+    'empty uses APP_URL host' => ['', null],
+    'blank entries use APP_URL host' => [' , ,', null],
+    'wildcard' => ['*', ['*']],
+    'trimmed list' => ['a.example, b.example', ['a.example', 'b.example']],
+]);
+
 it('renders the realtime config after config is cached', function () {
     $cachePath = sys_get_temp_dir().'/config-cache-'.uniqid().'.php';
 

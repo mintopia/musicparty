@@ -67,6 +67,13 @@ For nginx set `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade`
 `proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`. If you want the real client IP in the app
 logs, set `TRUSTED_PROXIES` in `.env` to your proxy's address range.
 
+### Encore (Soloist relay)
+
+Encore is a server-side websocket client and sends no `Origin` header, so Reverb rejects it with pusher error 4009
+"Origin not allowed" unless you set `REVERB_ALLOWED_ORIGINS=*` in `.env` (or list the origin it sends). The default
+is the `APP_URL` host only. Encore's relay settings (key, secret, channel) come from the party's settings page on the
+same instance it connects to. A key from another instance gives 4001 "Application does not exist".
+
 ## 4. Social login and Spotify
 
 OAuth client credentials are not environment variables. They are stored in the database and set after the first
