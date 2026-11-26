@@ -30,8 +30,8 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
     public function settings(): array
     {
         return [
-            new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_TYPESAFE, 'TypeSafe (Jev) and OpenAI-compatible use chat models; a decision model scores the request through a decisions endpoint such as OpenRouter.', options: [AiRequestReviewRule::DRIVER_TYPESAFE => 'TypeSafe (Jev)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible', AiRequestReviewRule::DRIVER_DECISION_MODEL => 'Decision model (Jev / TypeSafe)']),
-            new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not needed for Jev.', validation: ['url']),
+            new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_DECISION_MODEL, 'A decision model (Jev) scores the request through a decisions endpoint such as OpenRouter or direct TypeSafe; OpenAI-compatible uses a chat model.', options: [AiRequestReviewRule::DRIVER_DECISION_MODEL => 'Decision model (Jev / TypeSafe)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible']),
+            new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not used by the decision model driver.', validation: ['url']),
             new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null, 'Used by every driver. Stored encrypted and never shown again.'),
             new SettingDefinition('model', 'Model', SettingType::stString),
             new SettingDefinition('decision_endpoint', 'Decision endpoint', SettingType::stString, DecisionModelReviewer::OPENROUTER_ENDPOINT, 'Decision model driver only. An https URL; direct TypeSafe is https://api.typesafe.ai/v1/systemone.', validation: ['url:https']),

@@ -24,8 +24,6 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
-use Laravel\Ai\Classification;
-use Laravel\Ai\Responses\Data\ChoiceAnswer;
 use Monolog\Handler\TestHandler;
 use Psr\Log\NullLogger;
 
@@ -133,7 +131,7 @@ it('registers per-party settings with an encrypted api key and a driver choice',
 
     expect($mod->settings()->whereCode('api_key')->sole())->encrypted->toBeTrue()->instance_only->toBeFalse()
         ->and($mod->settings()->whereCode('driver')->sole())->type->toBe(SettingType::stChoice)->instance_only->toBeFalse()
-        ->options->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)']);
+        ->options->toBe(['decision-model' => 'Decision model (Jev / TypeSafe)', 'openai-compatible' => 'OpenAI-compatible']);
 });
 
 it('presents the settings per party with the driver as a choice', function () {
@@ -145,7 +143,7 @@ it('presents the settings per party with the driver as a choice', function () {
 
     expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'include_party_context', 'timeout', 'guidelines'])
         ->and($driver['type'])->toBe('choice')
-        ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)'])
+        ->and((array) $driver['options'])->toBe(['decision-model' => 'Decision model (Jev / TypeSafe)', 'openai-compatible' => 'OpenAI-compatible'])
         ->and($settings['model']['value'])->toBe('review-1');
 });
 
@@ -153,56 +151,30 @@ it('only accepts a driver from the options', function () {
     [$party] = aiReviewSetup();
     $store = app(ModSettingsStore::class);
 
-    $store->set($party, AiRequestReviewMod::CODE, 'driver', 'typesafe');
-    expect($store->value($party, AiRequestReviewMod::CODE, 'driver'))->toBe('typesafe');
+    $store->set($party, AiRequestReviewMod::CODE, 'driver', 'decision-model');
+    expect($store->value($party, AiRequestReviewMod::CODE, 'driver'))->toBe('decision-model');
 
-    expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'driver', 'bogus'))->toThrow(ValidationException::class);
+    expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'driver', 'typesafe'))->toThrow(ValidationException::class)
+        ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'driver', 'bogus'))->toThrow(ValidationException::class);
 });
 
 it('reads the driver and model from the party that is being reviewed', function () {
-    Classification::fake([['verdict' => new ChoiceAnswer('reject', ['reject' => 1.0])]]);
+    Http::fake(['*' => Http::response(decisionAnswer(0.0))]);
     RequestReviewAgent::fake([['verdict' => 'allow', 'reason' => 'Fine']]);
-    [$jevParty, $jevMember] = aiReviewSetup(driver: 'typesafe');
+    [$decisionParty, $decisionMember] = aiReviewSetup(driver: 'decision-model');
     [$otherParty, $otherMember] = aiReviewSetup(driver: 'openai-compatible');
     app(ModSettingsStore::class)->set($otherParty, AiRequestReviewMod::CODE, 'model', null);
 
-    expect(app(RequestRules::class)->check($jevParty, $jevMember, aiReviewTrack())->allowed)->toBeFalse()
+    expect(app(RequestRules::class)->check($decisionParty, $decisionMember, aiReviewTrack())->allowed)->toBeFalse()
         ->and(app(RequestRules::class)->check($otherParty, $otherMember, aiReviewTrack())->allowed)->toBeTrue();
-    Classification::assertClassified(fn () => true);
     RequestReviewAgent::assertNeverPrompted();
 });
 
-describe('Jev classification', function () {
-    it('maps the classified verdict to a decision', function (string $choice, bool $flagRequests, RequestOutcome $expected) {
-        Classification::fake([['verdict' => new ChoiceAnswer($choice, [$choice => 1.0])]]);
-        [$party, $member] = aiReviewSetup(flagRequests: $flagRequests, driver: 'typesafe');
+it('defaults new parties to the decision model driver', function () {
+    Artisan::call('mods:sync');
+    $party = Party::factory()->create()->refresh();
 
-        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
-
-        expect($decision->outcome)->toBe($expected);
-        Classification::assertClassified(fn () => true);
-    })->with([
-        'allow' => ['allow', true, RequestOutcome::Allow],
-        'flag on' => ['flag', true, RequestOutcome::Flag],
-        'flag off' => ['flag', false, RequestOutcome::Allow],
-        'reject' => ['reject', false, RequestOutcome::Reject],
-    ]);
-
-    it('allows when classification fails', function () {
-        Classification::fake(fn () => throw new RuntimeException('timeout'));
-        [$party, $member] = aiReviewSetup(driver: 'typesafe');
-
-        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
-    });
-
-    it('does not classify during annotation', function () {
-        Classification::fake();
-        [$party, $member] = aiReviewSetup(driver: 'typesafe');
-
-        app(RequestRules::class)->check($party, $member, aiReviewTrack(), RequestMode::Annotate);
-
-        Classification::assertNothingClassified();
-    });
+    expect(app(ModSettingsStore::class)->value($party, AiRequestReviewMod::CODE, 'driver'))->toBe('decision-model');
 });
 
 describe('Decision model', function () {
@@ -252,7 +224,12 @@ describe('Decision model', function () {
 
         app(RequestRules::class)->check($party, $member, aiReviewTrack());
 
-        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.typesafe.ai/v1/systemone' && $request['model'] === 'jev-latest');
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.typesafe.ai/v1/systemone'
+            && $request->hasHeader('Authorization', 'Bearer sk-secret-key')
+            && array_keys($request->data()) === ['model', 'state', 'questions']
+            && $request['model'] === 'jev-latest'
+            && is_string($request['state'])
+            && $request['questions']['suitability']['type'] === 'score');
     });
 
     it('maps score bands to a decision with the legend as the reason', function (float $score, RequestOutcome $expected, ?string $reason) {
@@ -380,18 +357,6 @@ describe('Debug logging', function () {
             ->and($request['user'])->toContain('"title"')
             ->and(aiReviewLogged($handler, 'ai-review.response'))->toMatchArray(['verdict' => 'reject', 'reason' => 'Not for this party'])->toHaveKey('latency_ms')
             ->and($outcome)->toMatchArray(['outcome' => 'reject', 'why' => 'verdict:reject']);
-    });
-
-    it('logs the jev classification state and answer', function () {
-        Classification::fake([['verdict' => new ChoiceAnswer('flag', ['flag' => 0.8], 0.7)]]);
-        [$party, $member] = aiReviewSetup(driver: 'typesafe');
-        $handler = aiReviewLogHandler();
-
-        app(RequestRules::class)->check($party, $member, aiReviewTrack());
-
-        expect(aiReviewLogged($handler, 'ai-review.request'))->toHaveKeys(['state', 'question'])
-            ->and(aiReviewLogged($handler, 'ai-review.response')['answer'])->toMatchArray(['choice' => 'flag', 'confidence' => 0.7])
-            ->and(aiReviewLogged($handler, 'ai-review.outcome'))->toMatchArray(['outcome' => 'flag', 'why' => 'verdict:flag']);
     });
 
     it('logs the decision body, raw response, band and endpoint host without the key', function (float $score, float $confidence, string $band, string $outcome) {

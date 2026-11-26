@@ -123,9 +123,9 @@ describe('Mods pages', () => {
 
     it('renders choice settings as radios and submits the chosen key', async () => {
         const driver = setting('driver', 'choice', {
-            value: 'typesafe',
+            value: 'decision-model',
             has_value: true,
-            options: {typesafe: 'TypeSafe (Jev)', 'openai-compatible': 'OpenAI-compatible'},
+            options: {'decision-model': 'Decision model (Jev / TypeSafe)', 'openai-compatible': 'OpenAI-compatible'},
         });
         const w = mount(PartyMods, {
             props: {
