@@ -69,7 +69,7 @@ async function rate(value: number): Promise<void> {
                     <img v-if="art" class="pu-cover" :src="art" :title="state.now.album?.name" alt="" />
                     <span v-else class="pu-cover pu-cover-blank"></span>
                 </div>
-                <div class="flex-grow-1 d-flex flex-column min-w-0">
+                <div class="pu-body flex-grow-1 d-flex flex-column">
                     <div class="pu-title text-truncate" :title="state.now.name" data-test="now-name">
                         {{ state.now.name }}
                     </div>
@@ -180,6 +180,12 @@ async function rate(value: number): Promise<void> {
     padding: 20px;
     color: #fff;
     height: 100%;
+}
+.pu-art {
+    flex: 0 0 auto;
+}
+.pu-body {
+    min-width: 0;
 }
 .pu-cover {
     display: block;

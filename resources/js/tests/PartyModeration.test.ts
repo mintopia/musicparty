@@ -126,7 +126,7 @@ describe('party moderation pages', () => {
 
     it('patches the edit form and links to delete', async () => {
         const wrapper = mount(Edit, {props: {party, playerState, types, actions, moderation}});
-        expect(wrapper.find('h1').text()).toBe('Edit Track Name Filter');
+        expect(wrapper.find('h1').text()).toBe('Edit Track Name rule');
         expect(wrapper.find('a[href="/parties/ABCD/moderation/5/delete"]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
         expect(inertia.patch).toHaveBeenCalledWith('/parties/ABCD/moderation/5');

@@ -40,21 +40,21 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Edit ${moderation.type_name} Filter`">
+    <AppLayout :title="`Edit ${moderation.type_name} rule`">
         <template #breadcrumbs>
             <ModerationBreadcrumbs :party="party">
                 <li class="breadcrumb-item active">
-                    <a :href="`${base}/edit`">Edit Filter</a>
+                    <a :href="`${base}/edit`">Edit rule</a>
                 </li>
             </ModerationBreadcrumbs>
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Edit ${moderation.type_name} Filter`" />
+        <Head :title="`Edit ${moderation.type_name} rule`" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <div class="page-header mt-0">
-                <h1>Edit {{ moderation.type_name }} Filter</h1>
+                <h1>Edit {{ moderation.type_name }} rule</h1>
             </div>
 
             <div>

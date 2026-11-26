@@ -45,21 +45,21 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Create Filter - ${party.name}`">
+    <AppLayout :title="`Add rule - ${party.name}`">
         <template #breadcrumbs>
             <ModerationBreadcrumbs :party="party">
                 <li class="breadcrumb-item active">
-                    <a :href="`/parties/${party.code}/moderation/create`">Create Filter</a>
+                    <a :href="`/parties/${party.code}/moderation/create`">Add rule</a>
                 </li>
             </ModerationBreadcrumbs>
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Create Filter - ${party.name}`" />
+        <Head :title="`Add rule - ${party.name}`" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <div class="page-header mt-0">
-                <h1>Create Filter</h1>
+                <h1>Add rule</h1>
             </div>
             <div class="row">
                 <div :class="track ? 'col-12 col-lg-6' : 'col-12'">
