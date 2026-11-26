@@ -13,7 +13,6 @@ describe('ModerationTabs', () => {
 
         expect(links).toEqual([
             ['Flagged', '/parties/ABCD/flagged'],
-            ['Requests', '/parties/ABCD/songs'],
             ['Rules', '/parties/ABCD/moderation'],
         ]);
         expect(wrapper.get('a.active').text()).toBe('Flagged');

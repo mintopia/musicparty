@@ -55,7 +55,6 @@ describe('Party songs index', () => {
     const props = {
         party,
         playerState: idle,
-        moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
         providerName: 'Spotify',
         filters: {order: 'created_at', order_direction: 'desc' as const, artist: 'abba'},
         types: [{code: 'queued', name: 'Queued'}],
@@ -116,7 +115,6 @@ describe('Party songs show', () => {
     const base = {
         party,
         playerState: idle,
-        moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
         providerName: 'Spotify',
         trackUrl: null,
         song,

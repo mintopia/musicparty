@@ -95,7 +95,15 @@ describe('buildNavigation', () => {
         const links = (items: NavItem[]) => titles(items.find((item) => item.key === 'party:ABC')?.children ?? []);
 
         expect(links(member)).toEqual(['Queue', 'Search']);
-        expect(links(manager)).toEqual(['Dashboard', 'Queue', 'Search', 'Moderation', 'Members', 'Settings']);
+        expect(links(manager)).toEqual([
+            'Dashboard',
+            'Queue',
+            'Search',
+            'Requests',
+            'Moderation',
+            'Members',
+            'Settings',
+        ]);
     });
 
     it('carries the flagged count on Moderation', () => {
@@ -114,7 +122,7 @@ describe('buildNavigation', () => {
         const activeAt = (url: string) => links.filter((link) => isLinkActive(link, url)).map((link) => link.title);
 
         expect(activeAt('/parties/ABC')).toEqual(['Queue']);
-        expect(activeAt('/parties/ABC/songs/4')).toEqual(['Moderation']);
+        expect(activeAt('/parties/ABC/songs/4')).toEqual(['Requests']);
         expect(activeAt('/parties/ABC/moderation/create')).toEqual(['Moderation']);
         expect(activeAt('/parties/ABC/ai-reviews')).toEqual(['Moderation']);
         expect(activeAt('/parties/ABC/mods')).toEqual(['Settings']);
