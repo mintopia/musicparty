@@ -13,6 +13,7 @@ use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyController;
+use App\Http\Controllers\PartyDashboardController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PartyModsController;
@@ -54,6 +55,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('parties/{party}/player/activate', [WebPlayerController::class, 'activate'])->name('parties.player.activate');
         });
         Route::middleware('can:update,party')->group(function () {
+            Route::get('parties/{party}/dashboard', [PartyDashboardController::class, 'show'])->name('parties.dashboard');
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
             Route::get('parties/{party}/mods/users', [ModUserSearchController::class, 'party'])->name('parties.mods.users');

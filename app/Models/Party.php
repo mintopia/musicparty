@@ -36,6 +36,7 @@ use Illuminate\Support\Carbon;
  * @property int|null $downvotes_per_hour
  * @property bool $weighted
  * @property string|null $history_playlist_id
+ * @property string|null $context_playlist_id
  * @property int|null $max_requests
  * @property bool $flag_requests
  * @property bool $force

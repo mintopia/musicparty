@@ -15,6 +15,13 @@ class PartyObserver
         }
     }
 
+    public function saving(Party $party): void
+    {
+        if ($party->exists && $party->isDirty('user_id')) {
+            $party->context_playlist_id = null;
+        }
+    }
+
     public function saved(Party $party): void
     {
         if ($party->isDirty('backup_playlist_id')) {
