@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import {Head, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
+import AppFooter from '@/components/AppFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {useColorMode} from '@/composables/useColorMode';
 import {buildNavigation, isActive} from '@/lib/navigation';
@@ -152,47 +153,7 @@ useColorMode();
                     <slot />
                 </div>
             </div>
-            <footer class="footer footer-transparent d-print-none mt-auto pb-2">
-                <div class="container-xl">
-                    <div class="row text-center align-items-center flex-row-reverse">
-                        <div class="col-lg-auto ms-lg-auto">
-                            <ul class="list-inline list-inline-dots mb-0">
-                                <li v-if="site.terms" class="list-inline-item">
-                                    <a :href="site.terms" target="_blank" class="link-secondary"
-                                        >Terms and Conditions</a
-                                    >
-                                </li>
-                                <li v-if="site.privacyPolicy" class="list-inline-item">
-                                    <a :href="site.privacyPolicy" target="_blank" class="link-secondary"
-                                        >Privacy Policy</a
-                                    >
-                                </li>
-                            </ul>
-                        </div>
-                        <div class="col-12 col-lg-auto mt-3 mt-lg-0">
-                            <ul class="list-inline list-inline-dots mb-0">
-                                <li class="list-inline-item">
-                                    Copyright &copy; {{ new Date().getFullYear() }}
-                                    <a :href="home().url" class="link-secondary">{{ name }}</a
-                                    >. All rights reserved
-                                </li>
-                                <li class="list-inline-item">
-                                    Made with <i class="icon ti ti-heart-filled text-pink"></i> by
-                                    <a class="link-muted" href="https://github.com/mintopia">Mintopia</a>
-                                </li>
-                                <li class="list-inline-item">
-                                    <a
-                                        href="https://github.com/mintopia/musicparty"
-                                        class="link-muted link-underline-opacity-0"
-                                    >
-                                        <i class="icon ti ti-brand-github-filled"></i>GitHub
-                                    </a>
-                                </li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            </footer>
+            <AppFooter />
         </div>
     </div>
 </template>
