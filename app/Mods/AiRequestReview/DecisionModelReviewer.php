@@ -31,14 +31,23 @@ class DecisionModelReviewer
         'Clearly fine for the party',
     ];
 
-    public function __construct(protected Factory $http) {}
+    public function __construct(protected Factory $http, protected AiReviewLog $log) {}
 
     /**
      * @param  array<string, mixed>  $track
+     * @param  array<string, mixed>  $log
      */
-    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $track, int $timeout, float $confidenceThreshold): RequestDecision
+    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $track, int $timeout, float $confidenceThreshold, array $log = []): RequestDecision
     {
         $this->assertSafeEndpoint($endpoint);
+
+        $payload = $this->payload($model, $guidelines, $track);
+        $log += ['model' => $model, 'endpoint_host' => parse_url($endpoint, PHP_URL_HOST), 'timeout' => $timeout, 'confidence_threshold' => $confidenceThreshold];
+        $this->log->debug('ai-review.request', $log + [
+            'headers' => ['Authorization' => 'Bearer '.AiReviewLog::REDACTED, 'X-Title' => 'Music Party'],
+            'body' => $payload,
+        ]);
+        $startedAt = hrtime(true);
 
         try {
             $response = $this->http
@@ -49,12 +58,15 @@ class DecisionModelReviewer
                 ->asJson()
                 ->timeout($timeout)
                 ->connectTimeout(min($timeout, 5))
-                ->post($endpoint, $this->payload($model, $guidelines, $track));
+                ->post($endpoint, $payload);
         } catch (ConnectionException) {
             throw new DecisionModelException('Decision model request failed to connect or timed out');
         }
 
-        return $this->interpret($response, $confidenceThreshold);
+        $log += ['latency_ms' => $this->log->elapsedMs($startedAt), 'status' => $response->status()];
+        $this->log->debug('ai-review.response', $log + ['body' => $this->log->redact($response->body(), $apiKey)]);
+
+        return $this->interpret($response, $confidenceThreshold, $log);
     }
 
     /**
@@ -81,7 +93,10 @@ class DecisionModelReviewer
         ];
     }
 
-    protected function interpret(Response $response, float $confidenceThreshold): RequestDecision
+    /**
+     * @param  array<string, mixed>  $log
+     */
+    protected function interpret(Response $response, float $confidenceThreshold, array $log = []): RequestDecision
     {
         if (! $response->successful()) {
             throw new DecisionModelException("Decision model responded with HTTP {$response->status()}");
@@ -101,16 +116,28 @@ class DecisionModelReviewer
         $reason = $this->legendReason($answer, $score);
 
         if ($confidence === null || $confidence < $confidenceThreshold) {
-            return RequestDecision::flag('The AI review was not confident enough, a manager should look at it');
-        }
-        if ($score < self::REJECT_BELOW) {
-            return RequestDecision::reject($reason ?? 'This song was rejected by the AI review');
-        }
-        if ($score < self::FLAG_BELOW) {
-            return RequestDecision::flag($reason ?? 'Flagged by the AI review');
+            $band = 'low_confidence';
+            $decision = RequestDecision::flag('The AI review was not confident enough, a manager should look at it');
+        } elseif ($score < self::REJECT_BELOW) {
+            $band = 'reject';
+            $decision = RequestDecision::reject($reason ?? 'This song was rejected by the AI review');
+        } elseif ($score < self::FLAG_BELOW) {
+            $band = 'flag';
+            $decision = RequestDecision::flag($reason ?? 'Flagged by the AI review');
+        } else {
+            $band = 'allow';
+            $decision = RequestDecision::allow();
         }
 
-        return RequestDecision::allow();
+        $this->log->debug('ai-review.decision', $log + [
+            'score' => $score,
+            'confidence' => $confidence,
+            'probabilities' => $answer['probabilities'] ?? null,
+            'band' => $band,
+            'outcome' => $decision->outcome->value,
+        ]);
+
+        return $decision;
     }
 
     /**

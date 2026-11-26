@@ -4,6 +4,7 @@ use App\Enums\SettingType;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\PlayedSong;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\AiRequestReview\DecisionModelException;
@@ -25,6 +26,8 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
+use Monolog\Handler\TestHandler;
+use Psr\Log\NullLogger;
 
 function aiReviewTrack(): Track
 {
@@ -140,7 +143,7 @@ it('presents the settings per party with the driver as a choice', function () {
     $settings = collect($mod['settings'])->keyBy('code');
     $driver = $settings['driver'];
 
-    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'timeout', 'guidelines'])
+    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'include_party_context', 'timeout', 'guidelines'])
         ->and($driver['type'])->toBe('choice')
         ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)'])
         ->and($settings['model']['value'])->toBe('review-1');
@@ -289,6 +292,7 @@ describe('Decision model', function () {
         Http::fake(['*' => $fake]);
         [$party, $member] = decisionSetup();
         Log::spy();
+        Log::shouldReceive('channel')->andReturn(new NullLogger);
 
         expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
         Log::shouldHaveReceived('warning')->withArgs(fn (string $message): bool => ! str_contains($message, 'sk-secret-key'))->once();
@@ -339,5 +343,147 @@ describe('Decision model', function () {
             ->and(json_encode($mod))->not->toContain('sk-secret-key')
             ->and($apiKey['value'])->toBeNull()
             ->and($apiKey['has_value'])->toBeTrue();
+    });
+});
+
+describe('Debug logging', function () {
+    function aiReviewLogHandler(): TestHandler
+    {
+        $handler = new TestHandler;
+        config(['logging.channels.ai-review' => ['driver' => 'monolog', 'handler' => TestHandler::class, 'level' => 'debug']]);
+        Log::forgetChannel('ai-review');
+        $logger = Log::channel('ai-review')->getLogger();
+        $logger->setHandlers([$handler]);
+
+        return $handler;
+    }
+
+    function aiReviewLogged(TestHandler $handler, string $event): array
+    {
+        $records = array_values(array_filter($handler->getRecords(), fn ($record): bool => $record->message === $event));
+
+        return $records === [] ? [] : $records[0]->context;
+    }
+
+    it('logs the chat prompt, response and outcome with the party and track', function () {
+        RequestReviewAgent::fake([['verdict' => 'reject', 'reason' => 'Not for this party']]);
+        [$party, $member] = aiReviewSetup(flagRequests: false);
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'guidelines', 'No explicit lyrics');
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
+
+        $request = aiReviewLogged($handler, 'ai-review.request');
+        $outcome = aiReviewLogged($handler, 'ai-review.outcome');
+        expect($request)->toMatchArray(['party_id' => $party->id, 'party_code' => $party->code, 'driver' => 'openai-compatible', 'model' => 'review-1', 'track_id' => aiReviewTrack()->id])
+            ->and($request['system'])->toContain('Party guidelines: No explicit lyrics')
+            ->and($request['user'])->toContain('"title"')
+            ->and(aiReviewLogged($handler, 'ai-review.response'))->toMatchArray(['verdict' => 'reject', 'reason' => 'Not for this party'])->toHaveKey('latency_ms')
+            ->and($outcome)->toMatchArray(['outcome' => 'reject', 'why' => 'verdict:reject']);
+    });
+
+    it('logs the jev classification state and answer', function () {
+        Classification::fake([['verdict' => new ChoiceAnswer('flag', ['flag' => 0.8], 0.7)]]);
+        [$party, $member] = aiReviewSetup(driver: 'typesafe');
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(aiReviewLogged($handler, 'ai-review.request'))->toHaveKeys(['state', 'question'])
+            ->and(aiReviewLogged($handler, 'ai-review.response')['answer'])->toMatchArray(['choice' => 'flag', 'confidence' => 0.7])
+            ->and(aiReviewLogged($handler, 'ai-review.outcome'))->toMatchArray(['outcome' => 'flag', 'why' => 'verdict:flag']);
+    });
+
+    it('logs the decision body, raw response, band and endpoint host without the key', function (float $score, float $confidence, string $band, string $outcome) {
+        Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer($score, $confidence))]);
+        [$party, $member] = decisionSetup();
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        $request = aiReviewLogged($handler, 'ai-review.request');
+        $decision = aiReviewLogged($handler, 'ai-review.decision');
+        expect($request)->toMatchArray(['driver' => 'decision-model', 'endpoint_host' => 'openrouter.ai', 'model' => 'typesafe/jev-1.13'])
+            ->and($request['body']['questions']['suitability']['instructions'])->toContain('No explicit lyrics')
+            ->and($request['headers']['Authorization'])->toBe('Bearer [redacted]')
+            ->and(aiReviewLogged($handler, 'ai-review.response'))->toHaveKeys(['latency_ms', 'status', 'body'])
+            ->and($decision)->toMatchArray(['score' => $score, 'confidence' => $confidence, 'band' => $band, 'outcome' => $outcome])
+            ->and(aiReviewLogged($handler, 'ai-review.outcome'))->toMatchArray(['outcome' => $outcome, 'why' => 'decision_model']);
+        expect(json_encode($handler->getRecords()))->not->toContain('sk-secret-key');
+    })->with([
+        'reject band' => [0.2, 0.9, 'reject', 'reject'],
+        'flag band' => [1.4, 0.9, 'flag', 'flag'],
+        'allow band' => [4.0, 0.9, 'allow', 'allow'],
+        'low confidence' => [4.0, 0.1, 'low_confidence', 'flag'],
+    ]);
+
+    it('logs fail-open errors with a sanitized message and never the key', function (Closure $fake) {
+        Http::fake(['*' => $fake]);
+        [$party, $member] = decisionSetup();
+        $handler = aiReviewLogHandler();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+
+        $error = aiReviewLogged($handler, 'ai-review.error');
+        expect($error)->toHaveKeys(['error_class', 'error_message', 'latency_ms'])
+            ->and(aiReviewLogged($handler, 'ai-review.outcome'))->toMatchArray(['outcome' => 'allow', 'why' => 'fail_open_on_error'])
+            ->and(json_encode($handler->getRecords()))->not->toContain('sk-secret-key');
+    })->with([
+        'timeout' => fn () => fn () => throw new ConnectionException('cURL error 28 for Bearer sk-secret-key'),
+        'server error' => fn () => fn () => Http::response('boom sk-secret-key', 500),
+    ]);
+
+    it('never logs the key on the chat path when the provider errors with it', function () {
+        RequestReviewAgent::fake(fn () => throw new RuntimeException('401 for Bearer secret'));
+        [$party, $member] = aiReviewSetup();
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(aiReviewLogged($handler, 'ai-review.error')['error_message'])->toBe('401 for Bearer [redacted]')
+            ->and(json_encode($handler->getRecords()))->not->toContain('"secret"')->not->toContain('Bearer secret');
+    });
+});
+
+describe('Party context', function () {
+    it('sends the party context to the decision model and logs it', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $played = PlayedSong::factory()->for($party)->create(['rating' => 2]);
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request['state'], 'party_context') && str_contains($request['state'], $played->song->name));
+        expect(json_encode(aiReviewLogged($handler, 'ai-review.request')['body']))->toContain('party_context')
+            ->and(aiReviewLogged($handler, 'ai-review.outcome')['party_context_included'])->toBeTrue();
+    });
+
+    it('sends the party context in the chat user message and logs it', function () {
+        RequestReviewAgent::fake([['verdict' => 'allow', 'reason' => 'Fine']]);
+        [$party, $member] = aiReviewSetup();
+        $played = PlayedSong::factory()->for($party)->create();
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(aiReviewLogged($handler, 'ai-review.request')['user'])->toContain('party_context')->toContain($played->song->name);
+    });
+
+    it('leaves the party context out when the setting is off', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        PlayedSong::factory()->for($party)->create();
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'include_party_context', false);
+
+        app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
+
+        Http::assertSent(fn (Request $request): bool => ! str_contains($request['state'], 'party_context'));
+    });
+
+    it('defaults the setting on', function () {
+        $definition = collect(new AiRequestReviewMod()->settings())->first(fn ($setting): bool => $setting->code === 'include_party_context');
+
+        expect($definition->type)->toBe(SettingType::stBoolean)->and($definition->default)->toBeTrue();
     });
 });
