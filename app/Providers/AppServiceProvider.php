@@ -8,6 +8,7 @@ use App\Listeners\BroadcastWebPlayerToken;
 use App\Listeners\DispatchPushedPlaybackState;
 use App\Listeners\MessageLoggedListener;
 use App\Models\Party;
+use App\Models\PlayedSong;
 use App\Models\Setting;
 use App\Models\SongRating;
 use App\Models\Theme;
@@ -15,6 +16,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use App\Observers\PartyObserver;
+use App\Observers\PlayedSongObserver;
 use App\Observers\SettingObserver;
 use App\Observers\SongRatingObserver;
 use App\Observers\ThemeObserver;
@@ -94,6 +96,7 @@ class AppServiceProvider extends ServiceProvider
         Vote::observe(VoteObserver::class);
         UpcomingSong::observe(UpcomingSongObserver::class);
         SongRating::observe(SongRatingObserver::class);
+        PlayedSong::observe(PlayedSongObserver::class);
 
         Event::listen(SocialiteWasCalled::class, DiscordExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, SteamExtendSocialite::class.'@handle');

@@ -4,6 +4,7 @@ use App\Enums\SettingType;
 use App\Models\Mod;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\PlayedSong;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\AiRequestReview\DecisionModelException;
@@ -142,7 +143,7 @@ it('presents the settings per party with the driver as a choice', function () {
     $settings = collect($mod['settings'])->keyBy('code');
     $driver = $settings['driver'];
 
-    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'timeout', 'guidelines'])
+    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'include_party_context', 'timeout', 'guidelines'])
         ->and($driver['type'])->toBe('choice')
         ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)'])
         ->and($settings['model']['value'])->toBe('review-1');
@@ -441,5 +442,48 @@ describe('Debug logging', function () {
 
         expect(aiReviewLogged($handler, 'ai-review.error')['error_message'])->toBe('401 for Bearer [redacted]')
             ->and(json_encode($handler->getRecords()))->not->toContain('"secret"')->not->toContain('Bearer secret');
+    });
+});
+
+describe('Party context', function () {
+    it('sends the party context to the decision model and logs it', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $played = PlayedSong::factory()->for($party)->create(['rating' => 2]);
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(fn (Request $request): bool => str_contains($request['state'], 'party_context') && str_contains($request['state'], $played->song->name));
+        expect(json_encode(aiReviewLogged($handler, 'ai-review.request')['body']))->toContain('party_context')
+            ->and(aiReviewLogged($handler, 'ai-review.outcome')['party_context_included'])->toBeTrue();
+    });
+
+    it('sends the party context in the chat user message and logs it', function () {
+        RequestReviewAgent::fake([['verdict' => 'allow', 'reason' => 'Fine']]);
+        [$party, $member] = aiReviewSetup();
+        $played = PlayedSong::factory()->for($party)->create();
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(aiReviewLogged($handler, 'ai-review.request')['user'])->toContain('party_context')->toContain($played->song->name);
+    });
+
+    it('leaves the party context out when the setting is off', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        PlayedSong::factory()->for($party)->create();
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'include_party_context', false);
+
+        app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
+
+        Http::assertSent(fn (Request $request): bool => ! str_contains($request['state'], 'party_context'));
+    });
+
+    it('defaults the setting on', function () {
+        $definition = collect(new AiRequestReviewMod()->settings())->first(fn ($setting): bool => $setting->code === 'include_party_context');
+
+        expect($definition->type)->toBe(SettingType::stBoolean)->and($definition->default)->toBeTrue();
     });
 });

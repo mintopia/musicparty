@@ -37,6 +37,7 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
             new SettingDefinition('decision_endpoint', 'Decision endpoint', SettingType::stString, DecisionModelReviewer::OPENROUTER_ENDPOINT, 'Decision model driver only. An https URL; direct TypeSafe is https://api.typesafe.ai/v1/systemone.', validation: ['url:https']),
             new SettingDefinition('decision_model', 'Decision model', SettingType::stString, DecisionModelReviewer::DEFAULT_MODEL, 'Decision model driver only. Use jev-latest for direct TypeSafe.'),
             new SettingDefinition('confidence_threshold', 'Confidence threshold', SettingType::stFloat, DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD, 'Decision model driver only. Answers below this confidence are flagged for a manager.', validation: ['min:0', 'max:1']),
+            new SettingDefinition('include_party_context', 'Include party context', SettingType::stBoolean, true, 'Sends the model a short music-only summary of this Party: recent and best-rated tracks, top artists and a few stats. No names or user data.'),
             new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stString, null, 'What this Party does and does not want to hear, passed to the model.'),
         ];
