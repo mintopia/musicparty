@@ -1,0 +1,13 @@
+#!/bin/sh
+set -e
+
+# Development only: when PUID/PGID are unset, or RUN_AS_APP_OWNER=1, run as the owner of the
+# bind-mounted checkout so files created in the container stay editable on the host.
+if [ "${RUN_AS_APP_OWNER:-0}" = "1" ] || [ -z "${PUID:-}" ]; then
+	owner_uid="$(stat -c %u "${APP_ROOT:-/app}")"
+	owner_gid="$(stat -c %g "${APP_ROOT:-/app}")"
+	if [ "$owner_uid" != "0" ]; then
+		export PUID="$owner_uid" PGID="$owner_gid"
+	fi
+fi
+exec "$@"

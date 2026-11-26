@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Only the web role (frankenphp) syncs mods; horizon, reverb and the scheduler skip it.
+case "$1 $2 $3" in
+	*frankenphp*run*)
+		run-as php "${APP_ROOT:-/app}/artisan" mods:sync || echo "mods:sync failed (is the database migrated?)" >&2
+		;;
+esac
+exec "$@"

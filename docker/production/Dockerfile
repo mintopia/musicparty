@@ -1,19 +1,9 @@
-FROM dunglas/frankenphp:php8.5 AS base
-
-COPY --from=ghcr.io/php/pie:bin /pie /usr/local/bin/pie
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends git unzip && \
-    rm -rf /var/lib/apt/lists/* && \
-    install-php-extensions bcmath pcntl pdo_mysql redis protobuf opentelemetry && \
-    pie install pie-extensions/grpc:1.81.1
-
-FROM base AS composer
+FROM ghcr.io/mintopia/php:8.5-cli AS composer
 
 WORKDIR /app/
 ENV HOME=/tmp
-RUN mkdir -p /app
-COPY --from=composer:2.8 /usr/bin/composer /usr/bin/composer
+COPY --from=composer:2.8 /usr/bin/composer /usr/local/bin/composer
+RUN apk add --no-cache git unzip
 COPY . /app/
 COPY docker/production/production.env /app/.env
 
@@ -21,48 +11,28 @@ RUN composer install \
         --no-dev \
         --no-progress \
         --optimize-autoloader \
-        --prefer-dist \
-        --ignore-platform-reqs
+        --prefer-dist
 
-# Build assets with the same Node major as the develop image; PHP is needed
-# because the Wayfinder Vite plugin runs artisan.
-FROM base AS npm
+# PHP is needed because the Wayfinder Vite plugin runs artisan.
+FROM ghcr.io/mintopia/php:8.5-cli AS npm
 
-COPY --from=node:24-trixie-slim /usr/local/bin/node /usr/local/bin/
-COPY --from=node:24-trixie-slim /usr/local/lib/node_modules /usr/local/lib/node_modules
-RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
-    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
-
+RUN apk add --no-cache nodejs npm
 WORKDIR /app/
 ENV HOME=/tmp
-RUN mkdir -p /app
 COPY --from=composer /app/ /app
 
 RUN npm install --production=false && \
     npm run build
 
-# Now our final image
-FROM base
+FROM ghcr.io/mintopia/php:8.5-frankenphp
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
 COPY --from=npm /app /app
-COPY docker/entrypoint.sh /entrypoint.sh
-RUN chmod +x /entrypoint.sh && \
-    setcap -r /usr/local/bin/frankenphp && \
-    groupadd -g 1000 musicparty && \
-    useradd -u 1000 -g 1000 -m -s /bin/sh musicparty && \
-    chmod 755 /home/musicparty && \
-    mkdir -p /data/caddy /config/caddy && \
-    chown -R musicparty:musicparty /data /config /app/storage /app/bootstrap/cache /app/public && \
-    chmod -R a+rwX /data /config && \
-    mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini" && \
-    echo 'memory_limit = 512M' > /usr/local/etc/php/conf.d/memory_limit.ini
-
-COPY docker/Caddyfile /
+COPY docker/hooks/05-reverb-proxy docker/hooks/30-mods-sync /docker-entrypoint.d/
 
 ENV PUID=1000 \
     PGID=1000 \
-    ENTRYPOINT_OPTIMIZE=1
-
-ENTRYPOINT ["/entrypoint.sh"]
-CMD ["php", "artisan", "octane:frankenphp", "--caddyfile=/Caddyfile", "--host=0.0.0.0", "--admin-host=0.0.0.0", "--port=8080"]
+    LARAVEL_OCTANE=true \
+    LARAVEL_OPTIMIZE=true \
+    PHP_MEMORY_LIMIT=512M \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=0

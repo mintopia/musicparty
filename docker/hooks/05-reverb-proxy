@@ -1,0 +1,12 @@
+#!/bin/sh
+set -e
+
+# ADR 0004: websocket upgrades on the app hostname go to Reverb, everything else to Laravel.
+CADDY_SERVER_EXTRA_DIRECTIVES="${CADDY_SERVER_EXTRA_DIRECTIVES:-}
+@websocket {
+	header_regexp Connection (?i)upgrade
+	header Upgrade websocket
+}
+reverse_proxy @websocket ${REVERB_UPSTREAM_HOST:-reverb}:${REVERB_UPSTREAM_PORT:-8080}"
+export CADDY_SERVER_EXTRA_DIRECTIVES
+exec "$@"
