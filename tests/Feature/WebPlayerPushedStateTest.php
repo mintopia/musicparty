@@ -86,7 +86,7 @@ it('applies recorded SDK states through the mapper with zero currentPlayback cal
     $channel = "private-webplayer.{$party->code}";
 
     foreach ([['A', 1_760_000_000_000], ['B', 1_760_000_005_000]] as [$id, $timestamp]) {
-        (new ApplyPushedPlaybackState($channel, 'client-state', json_encode(webPlayerFrame(['uri' => "fake:track:{$id}", 'timestamp' => $timestamp]))))
+        new ApplyPushedPlaybackState($channel, 'client-state', json_encode(webPlayerFrame(['uri' => "fake:track:{$id}", 'timestamp' => $timestamp])))
             ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
     }
 
@@ -120,7 +120,7 @@ it('records the Played Track, tops up the Queue and broadcasts once from a Web P
     $upcoming = UpcomingSong::factory()->for($party)->create(['song_id' => $queued->id, 'queued_at' => null]);
     Event::fake([PartyUpdatedEvent::class]);
 
-    (new ApplyPushedPlaybackState("private-webplayer.{$party->code}", 'client-state', json_encode(webPlayerFrame())))
+    new ApplyPushedPlaybackState("private-webplayer.{$party->code}", 'client-state', json_encode(webPlayerFrame()))
         ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
 
     expect(PlayedSong::query()->sole()->song->provider_track_id)->toBe('A')

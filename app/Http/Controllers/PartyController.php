@@ -115,7 +115,7 @@ class PartyController extends Controller
                 'name' => $party->name,
                 'url' => route('parties.show', $party->code),
             ],
-            'state' => fn () => $party->getState(),
+            'state' => $party->getState(...),
         ]);
     }
 
@@ -284,11 +284,11 @@ class PartyController extends Controller
 
     protected function withinSearchLimit(Party $party, PartyMember $member): bool
     {
-        return (new LeakyBucket(
+        return new LeakyBucket(
             "search:{$party->getKey()}:{$member->user_id}",
             (int) config('musicparty.search_burst'),
             (float) config('musicparty.search_leak_per_second'),
-        ))->attempt();
+        )->attempt();
     }
 
     public function edit(Request $request, Party $party, PartyProviderOptions $options): Response

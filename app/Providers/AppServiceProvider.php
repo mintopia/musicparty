@@ -71,7 +71,7 @@ class AppServiceProvider extends ServiceProvider
             return new MusicProviderFactory([
                 'spotify' => $this->app->environment('testing')
                     ? $fake
-                    : fn (User $user, Purpose $purpose, ?string $market = null): SpotifyMusicProvider => SpotifyMusicProvider::make($user, $purpose, $market),
+                    : SpotifyMusicProvider::make(...),
                 'fake' => $fake,
             ]);
         });

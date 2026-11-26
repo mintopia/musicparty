@@ -51,6 +51,17 @@ jobs:
           cp .env.example .env
           php artisan key:generate --ansi
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Build frontend assets
+        run: npm run build
+
       - name: Pest (parallel, with coverage)
         env:
           XDEBUG_MODE: coverage

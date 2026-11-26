@@ -32,8 +32,8 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
         return [
             new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_TYPESAFE, 'Either "typesafe" (Jev) or "openai-compatible".', options: [AiRequestReviewRule::DRIVER_TYPESAFE => 'TypeSafe (Jev)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible']),
             new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not needed for Jev.', validation: ['url']),
-            new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null),
-            new SettingDefinition('model', 'Model', SettingType::stString, null),
+            new SettingDefinition('api_key', 'API Key', SettingType::stSecret),
+            new SettingDefinition('model', 'Model', SettingType::stString),
             new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stString, null, 'What this Party does and does not want to hear, passed to the model.'),
         ];

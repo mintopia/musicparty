@@ -12,7 +12,11 @@ class ModDataStore
     {
         $row = $this->query($owner, $modCode)->where('key', $key)->first();
 
-        return $row === null ? $default : $row->value;
+        if ($row instanceof ModData) {
+            return $row->value;
+        }
+
+        return $default;
     }
 
     public function set(Model $owner, string $modCode, string $key, mixed $value): void

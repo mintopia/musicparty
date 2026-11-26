@@ -20,6 +20,7 @@ use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\PlaybackStatus;
 use App\Services\PlaybackSync;
+use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Reverb\Application;
@@ -36,7 +37,7 @@ function soloistFrame(string $name): array
 function ingestEncore(Party $party, string $name): void
 {
     $frame = soloistFrame($name);
-    (new ApplyPushedPlaybackState("private-encore.{$party->code}", "client-{$frame['type']}", $frame))
+    new ApplyPushedPlaybackState("private-encore.{$party->code}", "client-{$frame['type']}", $frame)
         ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
 }
 
@@ -99,7 +100,7 @@ it('drops frames with unrecognised track references or unknown types', function 
 
 it('refuses user sessions on the Encore channel', function () {
     config(['broadcasting.default' => 'reverb', 'broadcasting.connections.reverb.key' => 'k', 'broadcasting.connections.reverb.secret' => 's', 'broadcasting.connections.reverb.app_id' => '1']);
-    app('Illuminate\Broadcasting\BroadcastManager')->purge();
+    app(BroadcastManager::class)->purge();
     require base_path('routes/channels.php');
     $this->actingAs(User::factory()->create())
         ->postJson('/broadcasting/auth', ['channel_name' => 'private-encore.ABC', 'socket_id' => '1.1'])
@@ -148,8 +149,8 @@ it('broadcasts get_state on the Encore channel', function () {
     Event::fake([PlayerCommand::class]);
     $party = encoreParty();
 
-    (new RequestEncoreState($party->code))->handle();
-    (new RequestEncoreState('NOPE'))->handle();
+    new RequestEncoreState($party->code)->handle();
+    new RequestEncoreState('NOPE')->handle();
 
     Event::assertDispatchedTimes(PlayerCommand::class, 1);
     Event::assertDispatched(PlayerCommand::class, fn ($e) => $e->command === ['type' => 'get_state'] && $e->broadcastWith() === ['type' => 'command', 'command' => 'get_state'] && $e->broadcastOn()->name === "private-encore.{$party->code}");

@@ -57,7 +57,7 @@ class PlaybackSync
 
                 $provider = $this->providers->forParty($party, Purpose::Control);
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
-                $this->applyState($party, $provider, $playback === null ? PlaybackState::idle($source) : $playback->withSource($source));
+                $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
             } finally {
                 $party->last_updated_at = now();
                 $party->save();

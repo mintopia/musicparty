@@ -188,9 +188,11 @@ function submit(): void {
                                         >
                                     </td>
                                     <td>
-                                        <span class="status" :class="provider.enabled ? 'status-green' : 'status-red'">{{
-                                            provider.enabled ? 'Yes' : 'No'
-                                        }}</span>
+                                        <span
+                                            class="status"
+                                            :class="provider.enabled ? 'status-green' : 'status-red'"
+                                            >{{ provider.enabled ? 'Yes' : 'No' }}</span
+                                        >
                                     </td>
                                     <td>
                                         <span v-if="provider.auth_enabled" class="status status-green">Yes</span>

@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Cache;
 
 class ThemeStylesheetController extends Controller
 {
-    private const MISS_TTL_SECONDS = 300;
+    private const int MISS_TTL_SECONDS = 300;
 
     public function __invoke(Request $request, string $code): Response
     {

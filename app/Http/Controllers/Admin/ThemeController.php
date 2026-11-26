@@ -83,7 +83,7 @@ class ThemeController extends Controller
             'id' => $theme->id,
             'name' => (string) $theme->name,
             'css' => (string) $theme->css,
-            'tokens' => array_map('strval', (array) $theme->tokens),
+            'tokens' => array_map(strval(...), (array) $theme->tokens),
             'active' => (bool) $theme->active,
             'dark_mode' => (bool) $theme->dark_mode,
             'readonly' => (bool) $theme->readonly,

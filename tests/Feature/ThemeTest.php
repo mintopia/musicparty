@@ -102,7 +102,11 @@ it('creates and updates themes with tokens and validates colours', function () {
         'name' => 'Made', 'tokens' => ['primary' => 'notacolour', 'nav-background' => '#123456', 'danger' => 'red'],
     ])->assertSessionHasErrors(['tokens.primary', 'tokens.danger']);
 
-    $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk()->assertSee('name="tokens[primary]"', false);
+    $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Themes/Edit')
+            ->where('theme.id', $theme->id)
+            ->where('colourTokens', fn ($tokens) => collect($tokens)->pluck('token')->contains('primary')));
     $this->actingAs($admin)->delete(route('admin.settings.themes.destroy', $theme))->assertRedirect();
     expect(Theme::whereCode('made')->exists())->toBeFalse();
 });
@@ -121,14 +125,17 @@ it('renders the token form with a field per colour token and the saved values', 
     $admin = themeAdmin();
     $theme = Theme::factory()->create(['name' => 'Form', 'tokens' => ['primary' => '#abcdef', 'nav-background' => '#123456', 'danger' => '#ff0000'], 'dark_mode' => true]);
 
-    $create = $this->actingAs($admin)->get(route('admin.settings.themes.create'))->assertOk();
-    $edit = $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk();
+    $tokenNames = array_keys(Theme::COLOUR_TOKENS);
+    $assertTokenFields = fn (Assert $page) => $page
+        ->where('colourTokens', fn ($tokens) => collect($tokens)->pluck('token')->all() === $tokenNames);
 
-    foreach (array_keys(Theme::COLOUR_TOKENS) as $token) {
-        $create->assertSee("name=\"tokens[{$token}]\"", false);
-        $edit->assertSee("name=\"tokens[{$token}]\"", false);
-    }
-    $edit->assertSee('value="#abcdef"', false)->assertSee('value="#ff0000"', false)->assertSee('name="dark_mode"', false);
+    $this->actingAs($admin)->get(route('admin.settings.themes.create'))->assertOk()
+        ->assertInertia(fn (Assert $page) => $assertTokenFields($page->component('Admin/Themes/Create')));
+    $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk()
+        ->assertInertia(fn (Assert $page) => $assertTokenFields($page->component('Admin/Themes/Edit'))
+            ->where('theme.tokens.primary', '#abcdef')
+            ->where('theme.tokens.danger', '#ff0000')
+            ->where('theme.dark_mode', true));
 });
 
 it('serves an edited theme stylesheet instead of the cached one', function () {

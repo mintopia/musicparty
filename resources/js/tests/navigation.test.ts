@@ -66,7 +66,7 @@ function makeProps(overrides: {
     } as unknown as SharedProps;
 }
 
-function titles(items: NavItem[]): string[] {
+function titles(items: Array<Pick<NavItem, 'title'>>): string[] {
     return items.map((item) => item.title);
 }
 

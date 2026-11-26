@@ -38,7 +38,7 @@ function stateMapper(?PlaybackState $result): PushedStateMapper
 function receive(array|string $frame): void
 {
     $message = is_array($frame) ? json_encode($frame) : $frame;
-    $event = (new ReflectionClass(MessageReceived::class))->newInstanceWithoutConstructor();
+    $event = new ReflectionClass(MessageReceived::class)->newInstanceWithoutConstructor();
     $event->message = $message;
     (new DispatchPushedPlaybackState)->handle($event);
 }
@@ -46,7 +46,7 @@ function receive(array|string $frame): void
 function runIngest(?PushedStateMapper $mapper, string $channel, mixed $data, string $event = 'client-playback_state'): void
 {
     app()->instance(PushedStateRouter::class, new PushedStateRouter($mapper ? [$mapper] : []));
-    (new ApplyPushedPlaybackState($channel, $event, $data))->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
+    new ApplyPushedPlaybackState($channel, $event, $data)->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
 }
 
 it('dispatches a queued job for client events with only channel, event and data', function () {

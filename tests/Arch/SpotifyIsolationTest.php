@@ -1,7 +1,9 @@
 <?php
 
+use App\Http\Controllers\WebPlayerController;
 use App\Models\Party;
 use App\Models\User;
+use App\Support\SpotifyPayload;
 use Symfony\Component\Finder\Finder;
 
 function phpFilesUnder(array $dirs): Finder
@@ -13,13 +15,13 @@ arch('the Spotify SDK, gateway and payload helper are only used by the Spotify M
     ->expect([
         'SpotifyWebAPI',
         'App\Services\Spotify',
-        'App\Support\SpotifyPayload',
+        SpotifyPayload::class,
     ])
     ->toOnlyBeUsedIn([
         'App\Services\Music\Spotify',
         'App\Services\Spotify',
-        'App\Support\SpotifyPayload',
-        'App\Http\Controllers\WebPlayerController',
+        SpotifyPayload::class,
+        WebPlayerController::class,
     ]);
 
 arch('Party and User hold no Spotify client code')

@@ -9,9 +9,9 @@ use App\Services\Requests\RequestContext;
 use App\Services\Requests\RequestDecision;
 use App\Services\Requests\RequestRule;
 
-final class ReservedTrackRule implements RequestRule
+final readonly class ReservedTrackRule implements RequestRule
 {
-    public function __construct(private readonly MusicProviderFactory $providers) {}
+    public function __construct(private MusicProviderFactory $providers) {}
 
     public function decide(RequestContext $context, Track $track): RequestDecision
     {

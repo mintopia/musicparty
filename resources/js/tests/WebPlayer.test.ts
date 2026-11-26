@@ -98,7 +98,12 @@ const mounted: Array<{unmount: () => void}> = [];
 
 async function mountPlayer() {
     const wrapper = mount(WebPlayer, {
-        props: {party: {code: 'ABC', name: 'Friday'}, tokenUrl: '/token', activateUrl: '/activate', deviceName: 'Music Party'},
+        props: {
+            party: {code: 'ABC', name: 'Friday'},
+            tokenUrl: '/token',
+            activateUrl: '/activate',
+            deviceName: 'Music Party',
+        },
     });
     await flushPromises();
     (window as unknown as {onSpotifyWebPlaybackSDKReady: () => void}).onSpotifyWebPlaybackSDKReady();

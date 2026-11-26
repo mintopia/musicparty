@@ -192,9 +192,9 @@ it('records the Webhook source when a webhook update syncs and Polling for the p
     $fake->withTrack(new Track('fake', 'W', 'W', 200000, false, true, new AlbumRef('album-w', 'Album', null), [new ArtistRef('artist1', 'Artist')]));
     $fake->withPlayback(new PlaybackState(true, 'W', null, 200000, 1000, CarbonImmutable::now(), false, 'off', 'dev', 'Dev', PlaybackSource::Polling));
 
-    (new PartyUpdate($party->fresh(), PlaybackSource::Webhook))->handle();
+    new PartyUpdate($party->fresh(), PlaybackSource::Webhook)->handle();
     expect($party->fresh()->playback_source)->toBe(PlaybackSource::Webhook);
 
-    (new PartyUpdate($party->fresh()))->handle();
+    new PartyUpdate($party->fresh())->handle();
     expect($party->fresh()->playback_source)->toBe(PlaybackSource::Polling);
 });

@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Table;
+use Illuminate\Database\Eloquent\Attributes\Unguarded;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Support\Carbon;
@@ -21,12 +23,10 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
+#[Unguarded]
+#[Table(name: 'mod_data')]
 class ModData extends Model
 {
-    protected $table = 'mod_data';
-
-    protected $guarded = [];
-
     protected $casts = [
         'value' => 'json',
     ];

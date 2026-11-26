@@ -146,11 +146,11 @@ it('carries a mod decoration on queued track annotations for TrackRow', function
     $member = PartyMember::factory()->for($this->partyA)->for(User::factory())->create();
     $annotations = app(TrackEligibility::class)->annotate($this->partyA, $member, [$request->song->toTrack()]);
 
-    expect((new TrackAnnotationResource($annotations[0]))->resolve()['decoration'])->toBe(['displayName' => 'Bar ONE', 'label' => 'bar']);
+    expect(new TrackAnnotationResource($annotations[0])->resolve()['decoration'])->toBe(['displayName' => 'Bar ONE', 'label' => 'bar']);
 
     $otherMember = PartyMember::factory()->for($this->partyB)->for(User::factory())->create();
     $plain = extRequest($this->partyB, 'TWO')->load('song');
     $other = app(TrackEligibility::class)->annotate($this->partyB, $otherMember, [$plain->song->toTrack()]);
 
-    expect((new TrackAnnotationResource($other[0]))->resolve()['decoration'])->toBeNull();
+    expect(new TrackAnnotationResource($other[0])->resolve()['decoration'])->toBeNull();
 });
