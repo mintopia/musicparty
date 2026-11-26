@@ -70,6 +70,7 @@ function item(id: number, name = 'Sam'): FlaggedRequest {
 }
 
 const party = {code: 'ABCD', name: 'Party'};
+const playerState: LegacyPartyState = {now: null, next: null, current: null, status: null};
 const originalAdapter = axios.defaults.adapter;
 let calls: {method?: string; url?: string; data?: string}[] = [];
 
@@ -95,7 +96,7 @@ describe('Flagged requests page', () => {
     });
 
     it('renders each flagged request with reason and requester', () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: [item(1), item(2, 'Alex')]}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: [item(1), item(2, 'Alex')]}});
 
         expect(wrapper.findAll('[data-test="flagged-item"]')).toHaveLength(2);
         expect(wrapper.text()).toContain('Requested by Alex');
@@ -104,13 +105,13 @@ describe('Flagged requests page', () => {
     });
 
     it('shows an empty state', () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: []}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: []}});
 
         expect(wrapper.get('[data-test="empty-state"]').text()).toContain('No flagged requests');
     });
 
     it('approves a request and removes it', async () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: [item(1), item(2)]}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: [item(1), item(2)]}});
 
         await wrapper.get('[data-test="approve"]').trigger('click');
         await flushPromises();
@@ -120,7 +121,7 @@ describe('Flagged requests page', () => {
     });
 
     it('rejects with an optional message after confirming', async () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: [item(1)]}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: [item(1)]}});
 
         await wrapper.get('[data-test="reject"]').trigger('click');
         await wrapper.get('[data-test="reject-message"]').setValue('Not tonight');
@@ -134,7 +135,7 @@ describe('Flagged requests page', () => {
     });
 
     it('does not reject when the dialog is cancelled', async () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: [item(1)]}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: [item(1)]}});
 
         await wrapper.get('[data-test="reject"]').trigger('click');
         await wrapper.get('.link-secondary').trigger('click');
@@ -145,7 +146,7 @@ describe('Flagged requests page', () => {
     });
 
     it('adds and resolves requests from realtime events', async () => {
-        const wrapper = mount(Flagged, {props: {party, flagged: [item(1)]}});
+        const wrapper = mount(Flagged, {props: {party, playerState, flagged: [item(1)]}});
 
         echo.handlers.FlaggedRequestAdded(item(2) as never);
         echo.handlers.FlaggedRequestAdded(item(2) as never);
@@ -160,7 +161,7 @@ describe('Flagged requests page', () => {
 });
 
 describe('Search withdraw', () => {
-    const idle: LegacyPartyState = {now: null, next: null, current: null, status: null};
+    const idle = playerState;
 
     beforeEach(() => {
         calls = [];
