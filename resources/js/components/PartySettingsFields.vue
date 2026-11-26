@@ -406,7 +406,7 @@ function err(field: string): string | undefined {
                 </span>
             </SettingRow>
             <h3 id="encore-relay" class="settings-heading settings-heading-spaced">Encore relay</h3>
-            <SettingRow v-for="row in relayRows" :key="row.label" :label="row.label">
+            <SettingRow v-for="row in relayRows" :key="row.label" :label="row.label" wide>
                 <code class="text-break">{{ row.value }}</code>
                 <CopyButton :value="row.value" :label="row.copy" />
             </SettingRow>
