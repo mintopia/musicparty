@@ -6,6 +6,8 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\AiRequestReview\DecisionModelException;
+use App\Mods\AiRequestReview\DecisionModelReviewer;
 use App\Mods\AiRequestReview\RequestReviewAgent;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
@@ -14,8 +16,12 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Requests\RequestMode;
 use App\Services\Requests\RequestOutcome;
 use App\Services\Requests\RequestRules;
+use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\ValidationException;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
@@ -124,7 +130,7 @@ it('registers per-party settings with an encrypted api key and a driver choice',
 
     expect($mod->settings()->whereCode('api_key')->sole())->encrypted->toBeTrue()->instance_only->toBeFalse()
         ->and($mod->settings()->whereCode('driver')->sole())->type->toBe(SettingType::stChoice)->instance_only->toBeFalse()
-        ->options->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible']);
+        ->options->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)']);
 });
 
 it('presents the settings per party with the driver as a choice', function () {
@@ -134,9 +140,9 @@ it('presents the settings per party with the driver as a choice', function () {
     $settings = collect($mod['settings'])->keyBy('code');
     $driver = $settings['driver'];
 
-    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'timeout', 'guidelines'])
+    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'timeout', 'guidelines'])
         ->and($driver['type'])->toBe('choice')
-        ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible'])
+        ->and((array) $driver['options'])->toBe(['typesafe' => 'TypeSafe (Jev)', 'openai-compatible' => 'OpenAI-compatible', 'decision-model' => 'Decision model (Jev / TypeSafe)'])
         ->and($settings['model']['value'])->toBe('review-1');
 });
 
@@ -193,5 +199,145 @@ describe('Jev classification', function () {
         app(RequestRules::class)->check($party, $member, aiReviewTrack(), RequestMode::Annotate);
 
         Classification::assertNothingClassified();
+    });
+});
+
+describe('Decision model', function () {
+    function decisionAnswer(float $score, float $confidence = 0.9, array $legend = [0 => 'Against the guidelines', 1 => 'Probably against', 2 => 'Unsure', 3 => 'Probably fine', 4 => 'Clearly fine']): array
+    {
+        return ['answers' => ['suitability' => ['type' => 'score', 'score' => $score, 'legend' => $legend, 'probabilities' => [], 'confidence' => $confidence]], 'usage' => []];
+    }
+
+    function decisionSetup(bool $flagRequests = true): array
+    {
+        [$party, $member] = aiReviewSetup(flagRequests: $flagRequests, driver: 'decision-model');
+        $store = app(ModSettingsStore::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'api_key', 'sk-secret-key');
+        $store->set($party, AiRequestReviewMod::CODE, 'guidelines', 'No explicit lyrics');
+
+        return [$party->refresh(), $member];
+    }
+
+    it('posts one score question to the default endpoint with the key and attribution header', function () {
+        Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(function (Request $request): bool {
+            $question = $request['questions']['suitability'] ?? [];
+
+            return $request->url() === 'https://openrouter.ai/api/alpha/decisions'
+                && $request->hasHeader('Authorization', 'Bearer sk-secret-key')
+                && $request->hasHeader('X-Title', 'Music Party')
+                && $request['model'] === 'typesafe/jev-1.13'
+                && $question['type'] === 'score'
+                && count($question['criteria']) === 5
+                && str_contains($question['instructions'], 'No explicit lyrics')
+                && str_contains($request['state'], '"title"')
+                && ! str_contains($request->body(), 'sk-secret-key')
+                && count($request['questions']) === 1;
+        });
+    });
+
+    it('uses a configured endpoint and model', function () {
+        Http::fake(['api.typesafe.ai/*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $store = app(ModSettingsStore::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://api.typesafe.ai/v1/systemone');
+        $store->set($party, AiRequestReviewMod::CODE, 'decision_model', 'jev-latest');
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(fn (Request $request): bool => $request->url() === 'https://api.typesafe.ai/v1/systemone' && $request['model'] === 'jev-latest');
+    });
+
+    it('maps score bands to a decision with the legend as the reason', function (float $score, RequestOutcome $expected, ?string $reason) {
+        Http::fake(['*' => Http::response(decisionAnswer($score))]);
+        [$party, $member] = decisionSetup();
+
+        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect($decision->outcome)->toBe($expected)->and($decision->reason)->toBe($reason);
+    })->with([
+        'worst' => [0.2, RequestOutcome::Reject, 'Against the guidelines'],
+        'probably against' => [1.4, RequestOutcome::Flag, 'Probably against'],
+        'unsure' => [2.0, RequestOutcome::Flag, 'Unsure'],
+        'probably fine' => [3.2, RequestOutcome::Allow, null],
+        'best' => [4.0, RequestOutcome::Allow, null],
+    ]);
+
+    it('flags a confident-looking score that is below the confidence threshold', function (float $confidence, RequestOutcome $expected) {
+        Http::fake(['*' => Http::response(decisionAnswer(4.0, $confidence))]);
+        [$party, $member] = decisionSetup();
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'confidence_threshold', 0.6);
+
+        expect(app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack())->outcome)->toBe($expected);
+    })->with([
+        'low' => [0.3, RequestOutcome::Flag],
+        'enough' => [0.6, RequestOutcome::Allow],
+    ]);
+
+    it('flags low confidence even on a reject score so a human decides', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(0.0, 0.1))]);
+        [$party, $member] = decisionSetup();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->isFlagged())->toBeTrue();
+    });
+
+    it('allows on timeouts, http errors and malformed answers', function (Closure $fake) {
+        Http::fake(['*' => $fake]);
+        [$party, $member] = decisionSetup();
+        Log::spy();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+        Log::shouldHaveReceived('warning')->withArgs(fn (string $message): bool => ! str_contains($message, 'sk-secret-key'))->once();
+    })->with([
+        'timeout' => fn () => fn () => throw new ConnectionException('cURL error 28 for sk-secret-key'),
+        'server error' => fn () => fn () => Http::response('boom sk-secret-key', 500),
+        'no answer' => fn () => fn () => Http::response(['answers' => []]),
+        'non numeric' => fn () => fn () => Http::response(['answers' => ['suitability' => ['score' => 'high']]]),
+    ]);
+
+    it('does not call out without an api key', function () {
+        [$party, $member] = decisionSetup();
+        $apiKeyId = app(ModSettingsStore::class)->find($party, AiRequestReviewMod::CODE, 'api_key')->mod_setting_id;
+        DB::table('party_mod_settings')->where('mod_setting_id', $apiKeyId)->delete();
+        app(ModSettingsStore::class)->forget($party);
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+        Http::assertNothingSent();
+    });
+
+    it('refuses internal or non-https endpoints without sending the key', function (string $endpoint) {
+        $reviewer = app(DecisionModelReviewer::class);
+
+        expect(fn () => $reviewer->review($endpoint, 'sk-secret-key', 'm', null, [], 5, 0.5))
+            ->toThrow(DecisionModelException::class);
+        Http::assertNothingSent();
+    })->with(['http' => 'http://openrouter.ai/x', 'localhost' => 'https://localhost/x', 'loopback' => 'https://127.0.0.1/x', 'private' => 'https://10.0.0.5/x', 'metadata' => 'https://169.254.169.254/x']);
+
+    it('validates the decision endpoint as an https url', function () {
+        [$party] = decisionSetup();
+        $store = app(ModSettingsStore::class);
+
+        expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'http://example.test/decisions'))->toThrow(ValidationException::class)
+            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'not a url'))->toThrow(ValidationException::class)
+            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_threshold', 1.5))->toThrow(ValidationException::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://example.test/decisions');
+        expect($store->value($party, AiRequestReviewMod::CODE, 'decision_endpoint'))->toBe('https://example.test/decisions');
+    });
+
+    it('stores the api key encrypted and never presents it', function () {
+        [$party] = decisionSetup();
+
+        $raw = (string) DB::table('party_mod_settings')->pluck('value')->implode('|');
+        $mod = collect(app(ModSettingsStore::class)->presentFor($party))->firstWhere('code', AiRequestReviewMod::CODE);
+        $apiKey = collect($mod['settings'])->firstWhere('code', 'api_key');
+
+        expect($raw)->not->toContain('sk-secret-key')
+            ->and(json_encode($mod))->not->toContain('sk-secret-key')
+            ->and($apiKey['value'])->toBeNull()
+            ->and($apiKey['has_value'])->toBeTrue();
     });
 });

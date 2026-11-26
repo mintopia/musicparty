@@ -30,10 +30,13 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
     public function settings(): array
     {
         return [
-            new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_TYPESAFE, 'Either "typesafe" (Jev) or "openai-compatible".', options: [AiRequestReviewRule::DRIVER_TYPESAFE => 'TypeSafe (Jev)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible']),
+            new SettingDefinition('driver', 'Driver', SettingType::stChoice, AiRequestReviewRule::DRIVER_TYPESAFE, 'TypeSafe (Jev) and OpenAI-compatible use chat models; a decision model scores the request through a decisions endpoint such as OpenRouter.', options: [AiRequestReviewRule::DRIVER_TYPESAFE => 'TypeSafe (Jev)', AiRequestReviewRule::DRIVER_OPENAI_COMPATIBLE => 'OpenAI-compatible', AiRequestReviewRule::DRIVER_DECISION_MODEL => 'Decision model (Jev / TypeSafe)']),
             new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not needed for Jev.', validation: ['url']),
-            new SettingDefinition('api_key', 'API Key', SettingType::stSecret),
+            new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null, 'Used by every driver. Stored encrypted and never shown again.'),
             new SettingDefinition('model', 'Model', SettingType::stString),
+            new SettingDefinition('decision_endpoint', 'Decision endpoint', SettingType::stString, DecisionModelReviewer::OPENROUTER_ENDPOINT, 'Decision model driver only. An https URL; direct TypeSafe is https://api.typesafe.ai/v1/systemone.', validation: ['url:https']),
+            new SettingDefinition('decision_model', 'Decision model', SettingType::stString, DecisionModelReviewer::DEFAULT_MODEL, 'Decision model driver only. Use jev-latest for direct TypeSafe.'),
+            new SettingDefinition('confidence_threshold', 'Confidence threshold', SettingType::stFloat, DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD, 'Decision model driver only. Answers below this confidence are flagged for a manager.', validation: ['min:0', 'max:1']),
             new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stString, null, 'What this Party does and does not want to hear, passed to the model.'),
         ];
