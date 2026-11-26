@@ -69,7 +69,11 @@ const votes = computed(() => track.value?.queue.score ?? 0);
                         </template>
                         <template v-else>Fallback Track</template>
                     </div>
-                    <div v-else-if="!track.eligibility.allowed" class="text-warning small mt-1" data-test="top-reason">
+                    <div
+                        v-else-if="!track.eligibility.allowed && !isAwaiting"
+                        class="text-warning small mt-1"
+                        data-test="top-reason"
+                    >
                         <i class="icon ti ti-alert-triangle"></i>
                         {{ track.eligibility.reason }}
                     </div>
