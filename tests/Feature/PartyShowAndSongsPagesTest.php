@@ -60,7 +60,6 @@ it('lists songs for a manager with sorting and name filter', function () {
     $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'order' => 'votes', 'name' => 'nomatch']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page->component('Parties/Songs/Index')
-            ->where('moderationTabs.flaggedCount', 0)
             ->where('filters.order', 'votes')
             ->where('songs.total', 0));
 

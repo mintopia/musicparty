@@ -3,18 +3,16 @@ import {computed} from 'vue';
 import {aiReviewsUrl} from '@/lib/aiReviews';
 import {flaggedUrl} from '@/lib/flagged';
 import {index as moderationIndex} from '@/routes/parties/moderation';
-import {index as songsIndex} from '@/routes/parties/songs';
 import type {ModerationTabsProps} from '@/types';
 
 const props = defineProps<{
     code: string;
     tabs: ModerationTabsProps;
-    active: 'flagged' | 'requests' | 'rules' | 'ai-reviews';
+    active: 'flagged' | 'rules' | 'ai-reviews';
 }>();
 
 const items = computed(() => [
     {key: 'flagged', label: 'Flagged', href: flaggedUrl(props.code), count: props.tabs.flaggedCount},
-    {key: 'requests', label: 'Requests', href: songsIndex(props.code).url, count: 0},
     {key: 'rules', label: 'Rules', href: moderationIndex(props.code).url, count: 0},
     ...(props.tabs.aiReviewEnabled
         ? [{key: 'ai-reviews', label: 'AI reviews', href: aiReviewsUrl(props.code), count: 0}]

@@ -38,16 +38,12 @@ export function partyLinks(party: PartyMembership): NavLink[] {
     if (party.canManage) {
         links.unshift({title: 'Dashboard', href: dashboard(party.code).url});
         links.push(
+            {title: 'Requests', href: songs(party.code).url},
             {
                 title: 'Moderation',
                 href: flaggedUrl(party.code),
                 badge: party.flaggedCount,
-                match: [
-                    flaggedUrl(party.code),
-                    songs(party.code).url,
-                    moderation(party.code).url,
-                    aiReviewsUrl(party.code),
-                ],
+                match: [flaggedUrl(party.code), moderation(party.code).url, aiReviewsUrl(party.code)],
             },
             {title: 'Members', href: partyUsers(party.code).url},
             {title: 'Settings', href: edit(party.code).url, match: [edit(party.code).url, partyModsUrl(party.code)]},

@@ -12,7 +12,6 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
-use App\Services\Requests\ModerationTabs;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +21,7 @@ use Inertia\Response;
 
 class UpcomingSongController extends Controller
 {
-    public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers, ModerationTabs $tabs): Response
+    public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers): Response
     {
         $providerName = $providers->forParty($party, Purpose::Control)->displayName();
         $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
@@ -109,7 +108,6 @@ class UpcomingSongController extends Controller
             ],
             'filters' => $params,
             'songs' => $songs,
-            'moderationTabs' => $tabs->for($party),
             'playerState' => $party->getState(),
         ]);
     }
