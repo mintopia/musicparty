@@ -35,15 +35,11 @@ defineProps<{
         </template>
         <Head :title="`Rules - ${party.name}`" />
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="rules" />
-        <div class="row">
-            <div v-if="moderations.data.length > 0" class="col-auto ms-auto d-print-none">
-                <div class="btn-list">
-                    <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary d-inline-block">
-                        <i class="icon ti ti-plus"></i>
-                        Create Filter
-                    </Link>
-                </div>
-            </div>
+        <div v-if="moderations.data.length > 0" class="d-flex justify-content-end mb-3 d-print-none">
+            <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">
+                <i class="icon ti ti-plus"></i>
+                Add rule
+            </Link>
         </div>
 
         <EmptyState

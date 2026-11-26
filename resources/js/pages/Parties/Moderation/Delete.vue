@@ -20,21 +20,21 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Delete ${moderation.type_name} Filter`">
+    <AppLayout :title="`Delete ${moderation.type_name} rule`">
         <template #breadcrumbs>
             <ModerationBreadcrumbs :party="party">
                 <li class="breadcrumb-item active">
-                    <a :href="`${base}/delete`">Delete Filter</a>
+                    <a :href="`${base}/delete`">Delete rule</a>
                 </li>
             </ModerationBreadcrumbs>
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Delete ${moderation.type_name} Filter`" />
+        <Head :title="`Delete ${moderation.type_name} rule`" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <div class="page-header mt-0">
-                <h1>Delete {{ moderation.type_name }} Filter</h1>
+                <h1>Delete {{ moderation.type_name }} rule</h1>
             </div>
 
             <div>
