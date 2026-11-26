@@ -53,6 +53,7 @@ Goal: build the shared Request and playback foundations on the E6 seams, then gi
 - Outbound: every Soloist frame is sent as a client event `{"event":"client-<frame.type>","channel":"<channel>","data":<frame object>}`. Frames are Soloist's native JSON: `playback_state`, `track_changed`, `playback_changed`, `position_sync`, `volume_changed`, `queue_changed`, `auth_state`, `device_changed`, `context_changed`, `options_changed`, `error`. Track identity is `item.uri` (`spotify:track:...`). Position is `{position_ms, timestamp_ms, speed}`.
 - Inbound: any non-`pusher:` event on the channel has its `data` unwrapped and sent to Soloist as a command, as `{"type":"command","command":"<name>"}`, e.g. `get_state`, `play`, `pause`, `next`, `skip_prev`, `seek {position_ms}`.
 - Delivery is best effort. Frames are dropped while disconnected, reconnect backs off 0.5 s to 30 s, and Soloist emits a frame about every 10 s while playing. On (re)subscribe the relay does not replay the latest state.
+- Origin: Encore sends no `Origin` header, which Reverb rejects with 4009 unless `allowed_origins` contains `*` (Reverb's `verifyOrigin` returns early on `*`, before reading the header). Operators set `REVERB_ALLOWED_ORIGINS=*`; unset keeps the `APP_URL` host only. A key from another instance gives 4001.
 - Known limitation: the app secret lets Encore subscribe to any private channel, so only the operator should run it. This will most likely be revised later.
 
 ## Requirements
