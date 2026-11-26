@@ -65,12 +65,13 @@ defineProps<{
                 <h3 class="my-4">Site Colours</h3>
                 <div v-for="item in colourTokens" :key="item.token" class="mb-3">
                     <label class="form-label" :class="{required: item.required}">{{ item.label }} Colour</label>
-                    <div class="col-md-5">
+                    <div class="col-12 col-sm-10 col-md-12 col-lg-9">
                         <div class="input-group">
                             <input
                                 v-model="form.tokens[item.token]"
                                 type="color"
-                                class="form-control form-control-color"
+                                class="form-control form-control-color flex-grow-0"
+                                style="width: 3.5rem; height: 2.75rem"
                                 :title="`${item.label} Colour`"
                                 :disabled="readonly"
                             />
