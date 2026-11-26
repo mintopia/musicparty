@@ -7,6 +7,7 @@ export interface PartyFormValues {
     backup_playlist_id: string | null;
     history_playlist_id: string | null;
     device_id: string | null;
+    context_playlist_id?: string | null;
     active: boolean;
     allow_requests: boolean;
     downvotes: boolean;
@@ -39,6 +40,7 @@ export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[
         custom_backup_playlist_id: listed ? '' : (party.backup_playlist_id ?? ''),
         history_playlist_id: party.history_playlist_id ?? 'none',
         device_id: party.device_id ?? '',
+        context_playlist_id: party.context_playlist_id ?? '',
         active: party.active,
         allow_requests: party.allow_requests,
         downvotes: party.downvotes,

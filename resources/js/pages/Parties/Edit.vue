@@ -20,6 +20,7 @@ const props = defineProps<{
     instanceTimezone: string;
     timezones: string[];
     playerState: LegacyPartyState;
+    contextPlaylistName?: string | null;
     encore: {host: string; key: string | null; channel: string; secret: string | null};
 }>();
 
@@ -57,6 +58,8 @@ function submit(): void {
                 :playlists="playlists"
                 :devices="devices"
                 :provider-name="providerName"
+                show-context-playlist
+                :context-playlist-name="contextPlaylistName"
                 :instance-timezone="instanceTimezone"
                 :timezones="timezones"
                 :cancel-url="show(party.code).url"
