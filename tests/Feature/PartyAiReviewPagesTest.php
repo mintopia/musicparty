@@ -89,6 +89,14 @@ it('filters by outcome', function () {
         ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 1)->where('reviews.data.0.outcome', 'flag')->where('filters.outcome', 'flag'));
 });
 
+it('narrows the list to one review when linked to it', function () {
+    AiReview::factory()->for($this->party)->count(2)->create();
+    $target = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Flag)->create();
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'review' => $target->id]))
+        ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 1)->where('reviews.data.0.id', $target->id)->where('filters.review', $target->id));
+});
+
 it('rejects an unknown outcome filter', function () {
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'outcome' => 'bogus']))->assertSessionHasErrors('outcome');
 });

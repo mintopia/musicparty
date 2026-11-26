@@ -245,7 +245,7 @@ export interface DashboardStartTarget {
 
 export interface DashboardControl {
     playingFrom: {kind: 'party' | 'outside' | 'nothing' | 'unknown'; label: string | null};
-    nowPlaying: {isRequest: boolean; requestedBy: string | null};
+    nowPlaying: {isRequest: boolean; isFallback: boolean; requestedBy: string | null};
     health: {
         player: {source: DashboardPlayerSource | null; label: string; fresh: boolean; connected: boolean | null};
         device: {id: string | null; name: string | null};

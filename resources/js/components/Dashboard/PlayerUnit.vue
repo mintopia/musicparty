@@ -81,6 +81,9 @@ async function rate(value: number): Promise<void> {
                         <span v-if="control.nowPlaying.isRequest" class="np-meta small">
                             <i class="icon ti ti-music-question"></i> Requested by {{ control.nowPlaying.requestedBy }}
                         </span>
+                        <span v-else-if="control.nowPlaying.isFallback" class="np-meta small" data-test="now-fallback">
+                            <i class="icon ti ti-playlist"></i> Fallback Track
+                        </span>
                         <span v-else class="badge bg-white-lt text-white">Not a party request</span>
                     </div>
                     <div class="mt-auto">

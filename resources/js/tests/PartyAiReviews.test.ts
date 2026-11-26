@@ -88,7 +88,7 @@ function paginator(data: AiReviewRow[], extra: Record<string, unknown> = {}) {
 
 function mountIndex(
     data: AiReviewRow[],
-    filters = {outcome: '', q: ''},
+    filters: {outcome: string; q: string; review: number | null} = {outcome: '', q: '', review: null},
     extra: Record<string, unknown> = {},
     props: Record<string, unknown> = {},
 ) {
@@ -172,7 +172,7 @@ describe('AI reviews list', () => {
     });
 
     it('shows a no-match empty state with a way back when filters are active', () => {
-        const wrapper = mountIndex([], {outcome: 'flag', q: 'zzz'});
+        const wrapper = mountIndex([], {outcome: 'flag', q: 'zzz', review: null});
 
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No reviews match these filters');
         expect(wrapper.find('[data-test="clear-filters"]').attributes('href')).toBe('/parties/ABCD/ai-reviews');
@@ -193,7 +193,7 @@ describe('AI reviews list', () => {
     });
 
     it('starts the form from the active filters', () => {
-        const wrapper = mountIndex([row(1)], {outcome: 'reject', q: 'brightside'});
+        const wrapper = mountIndex([row(1)], {outcome: 'reject', q: 'brightside', review: null});
 
         expect((wrapper.get('input[name="q"]').element as HTMLInputElement).value).toBe('brightside');
         expect((wrapper.get('select[name="outcome"]').element as HTMLSelectElement).value).toBe('reject');

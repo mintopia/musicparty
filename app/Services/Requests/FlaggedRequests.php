@@ -80,7 +80,7 @@ class FlaggedRequests
             'reason' => $request->flag_reason,
             'flagged_at' => $request->flagged_at?->toIso8601String(),
             'requester' => ['id' => $request->user_id, 'name' => $request->user->nickname ?? 'Unknown'],
-            'ai_review_url' => $review !== null && $reviewsAvailable ? route('parties.ai-reviews.show', [$party->code, $review->id]) : null,
+            'ai_review_url' => $review !== null && $reviewsAvailable ? route('parties.ai-reviews.index', [$party->code, 'review' => $review->id]) : null,
             'track' => new TrackAnnotationResource($annotation)->resolve(),
         ];
     }

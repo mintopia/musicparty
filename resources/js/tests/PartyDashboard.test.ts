@@ -156,6 +156,7 @@ interface Options {
     upcoming?: DashboardRequest[];
     connected?: boolean | null;
     receivedAt?: string;
+    nowPlaying?: DashboardProps['control']['nowPlaying'];
 }
 
 function makeProps(options: Options = {}): DashboardProps {
@@ -174,7 +175,7 @@ function makeProps(options: Options = {}): DashboardProps {
         },
         control: {
             playingFrom: options.playingFrom ?? {kind: state === 'hidden' ? 'party' : 'nothing', label: null},
-            nowPlaying: {isRequest: true, requestedBy: 'Tamsin'},
+            nowPlaying: options.nowPlaying ?? {isRequest: true, isFallback: false, requestedBy: 'Tamsin'},
             health: {
                 player: {
                     source: 'encore',
@@ -223,6 +224,12 @@ const mountPage = (options: Options = {}) => mount(Dashboard, {props: makeProps(
 const post = (url: string) => calls.filter((call) => call.method === 'post' && call.url === url);
 
 describe('control room strip', () => {
+    it('labels a playing fallback track instead of naming a requester', () => {
+        const wrapper = mountPage({nowPlaying: {isRequest: false, isFallback: true, requestedBy: null}});
+
+        expect(wrapper.get('[data-test="now-origin"]').text()).toBe('Fallback Track');
+    });
+
     it('shows the Up Next deck while the party is playing', () => {
         const wrapper = mountPage({state: 'hidden'});
 

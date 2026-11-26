@@ -277,14 +277,16 @@ class PartyDashboard
     }
 
     /**
-     * @return array{isRequest: bool, requestedBy: string|null}
+     * @return array{isRequest: bool, isFallback: bool, requestedBy: string|null}
      */
     protected function nowPlaying(Party $party): array
     {
         $current = $party->song_id === null ? null : $party->current();
         $request = $current !== null && $current->song_id === $party->song_id ? $current->upcoming : null;
 
-        return ['isRequest' => $request !== null, 'requestedBy' => $request?->user?->nickname];
+        $requestedBy = $request?->user?->nickname;
+
+        return ['isRequest' => $requestedBy !== null, 'isFallback' => $request !== null && $request->user_id === null, 'requestedBy' => $requestedBy];
     }
 
     /**
