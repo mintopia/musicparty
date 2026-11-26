@@ -95,7 +95,15 @@ describe('buildNavigation', () => {
         const links = (items: NavItem[]) => titles(items.find((item) => item.key === 'party:ABC')?.children ?? []);
 
         expect(links(member)).toEqual(['Queue', 'Search']);
-        expect(links(manager)).toEqual(['Dashboard', 'Queue', 'Search', 'Requests', 'Moderation', 'Members', 'Settings']);
+        expect(links(manager)).toEqual([
+            'Dashboard',
+            'Queue',
+            'Search',
+            'Requests',
+            'Moderation',
+            'Members',
+            'Settings',
+        ]);
     });
 
     it('carries the flagged count on Moderation', () => {
