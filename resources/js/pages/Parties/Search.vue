@@ -149,7 +149,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Search - ${party.name}`" />
-        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        <div>
             <div class="page-header mt-0">
                 <h1>Search</h1>
             </div>

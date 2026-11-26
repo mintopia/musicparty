@@ -12,6 +12,7 @@ const props = defineProps<{
     url: string;
     userSearchUrl: string;
     showEnabled?: boolean;
+    notice?: {text: string; linkLabel: string; href: string} | null;
 }>();
 
 const initiallyEnabled = 'enabled' in props.mod ? props.mod.enabled : false;
@@ -84,6 +85,10 @@ function submit(): void {
                 </span>
             </label>
         </template>
+        <div v-if="notice && form.enabled" class="alert alert-warning py-2" role="status" data-test="mod-notice">
+            {{ notice.text }}
+            <a :href="notice.href" class="ms-1">{{ notice.linkLabel }}</a>
+        </div>
         <form data-test="mod-form" @submit.prevent="submit">
             <ModSettingField
                 v-for="setting in mod.settings"

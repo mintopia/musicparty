@@ -121,6 +121,26 @@ describe('Mods pages', () => {
         expect(second.settings.i).toBe(7);
     });
 
+    it('warns on the AI review mod only when it is enabled and flagged requests are not held', async () => {
+        const mods = [
+            {code: 'ai-request-review', name: 'AI', description: '', enabled: true, settings: []},
+            {code: 'other', name: 'Other', description: '', enabled: true, settings: []},
+        ];
+        const off = mount(PartyMods, {
+            props: {party, playerState, mods, holdsFlagged: false, settingsUrl: '/parties/abc/edit#flag_requests'},
+        });
+        const notices = off.findAll('[data-test="mod-notice"]');
+        expect(notices).toHaveLength(1);
+        expect(notices[0]?.text()).toContain("Flagged requests aren't held");
+        expect(notices[0]?.find('a').attributes('href')).toBe('/parties/abc/edit#flag_requests');
+
+        await off.findAll('[data-test="mod-enabled"]')[0]?.setValue(false);
+        expect(off.find('[data-test="mod-notice"]').exists()).toBe(false);
+
+        const on = mount(PartyMods, {props: {party, playerState, mods, holdsFlagged: true}});
+        expect(on.find('[data-test="mod-notice"]').exists()).toBe(false);
+    });
+
     it('renders choice settings as radios and submits the chosen key', async () => {
         const driver = setting('driver', 'choice', {
             value: 'decision-model',

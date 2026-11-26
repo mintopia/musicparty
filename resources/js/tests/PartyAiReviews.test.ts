@@ -86,9 +86,24 @@ function paginator(data: AiReviewRow[], extra: Record<string, unknown> = {}) {
     };
 }
 
-function mountIndex(data: AiReviewRow[], filters = {outcome: '', q: ''}, extra: Record<string, unknown> = {}) {
+function mountIndex(
+    data: AiReviewRow[],
+    filters = {outcome: '', q: ''},
+    extra: Record<string, unknown> = {},
+    props: Record<string, unknown> = {},
+) {
     return mount(Index, {
-        props: {party, playerState, filters, outcomes, retentionDays: 30, reviews: paginator(data, extra)},
+        props: {
+            party,
+            playerState,
+            filters,
+            outcomes,
+            retentionDays: 30,
+            holdsFlagged: true,
+            settingsUrl: '/parties/ABCD/edit#flag_requests',
+            reviews: paginator(data, extra),
+            ...props,
+        },
     });
 }
 
@@ -114,13 +129,37 @@ describe('AI reviews list', () => {
         expect(rows[0]?.text()).toContain('A very long track title that must stay fully visible 1');
         expect(rows[0]?.find('[data-test="review-outcome"]').text()).toBe('Rejected');
         expect(rows[0]?.find('[data-test="review-reason"]').text()).toBe('Not for this party');
-        expect(rows[0]?.text()).toContain('decision-model');
+
         expect(rows[0]?.text()).toContain('812 ms');
         expect(rows[0]?.text()).toContain('128');
         expect(rows[1]?.find('[data-test="review-user"]').text()).toBe('Unknown');
         expect(rows[1]?.find('[data-test="review-reason"]').text()).toBe('None');
-        expect(wrapper.text()).toContain('Showing 1 to 2 of 2 reviews');
+        expect(wrapper.text()).toContain('1-2 of 2');
         expect(wrapper.text()).toContain('Kept for 30 days');
+    });
+
+    it('hides the not-held notice when flagged requests are held', () => {
+        const wrapper = mountIndex([row(1, {outcome: 'flag', outcomeLabel: 'Flagged'})]);
+
+        expect(wrapper.find('[data-test="not-held-notice"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="not-held"]').exists()).toBe(false);
+    });
+
+    it('warns that flagged requests are not held and links to the settings', () => {
+        const wrapper = mountIndex(
+            [row(1, {outcome: 'flag', outcomeLabel: 'Flagged'}), row(2)],
+            undefined,
+            {},
+            {holdsFlagged: false},
+        );
+
+        expect(wrapper.get('[data-test="not-held-notice"]').text()).toContain("Flagged requests aren't held");
+        expect(wrapper.get('[data-test="turn-on-approval"]').attributes('href')).toBe(
+            '/parties/ABCD/edit#flag_requests',
+        );
+        const rows = wrapper.findAll('[data-test="review-row"]');
+        expect(rows[0]?.find('[data-test="not-held"]').exists()).toBe(true);
+        expect(rows[1]?.find('[data-test="not-held"]').exists()).toBe(false);
     });
 
     it('shows the first-run empty state with no filters', () => {
@@ -261,9 +300,9 @@ describe('AI review detail', () => {
             ],
         });
 
-        expect(blocks.map((block) => block.title)).toEqual(['Model', 'System message', 'User message']);
-        expect(blocks[1]?.text).toBe('You review song requests');
-        expect(blocks[2]?.text).toContain('"party_context": "ctx"');
+        expect(blocks.map((block) => block.title)).toEqual(['System message', 'User message']);
+        expect(blocks[0]?.text).toBe('You review song requests');
+        expect(blocks[1]?.text).toContain('"party_context": "ctx"');
     });
 
     it('formats latency in ms and seconds', () => {

@@ -36,7 +36,7 @@ export function prettyJson(value: unknown): string {
 export function requestBlocks(request: Record<string, unknown>): TextBlock[] {
     const messages = request.messages;
     if (Array.isArray(messages)) {
-        const blocks: TextBlock[] = [{key: 'model', title: 'Model', text: String(request.model ?? '')}];
+        const blocks: TextBlock[] = [];
         for (const [index, message] of messages.entries()) {
             const entry = message as {role?: string; content?: unknown};
             const isUser = entry.role === 'user';
