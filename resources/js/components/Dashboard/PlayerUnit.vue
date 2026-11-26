@@ -104,51 +104,38 @@ async function rate(value: number): Promise<void> {
             There is nothing playing
         </div>
 
-        <div class="pu-row">
+        <div v-if="state.now !== null" class="pu-row">
             <div></div>
             <div class="tp">
-                <template v-if="state.now !== null">
-                    <button
-                        type="button"
-                        class="btn btn-ondark"
-                        aria-label="Restart track"
-                        :disabled="busy || !canControl"
-                        data-test="previous"
-                        @click="transport('previous')"
-                    >
-                        <i class="ti ti-player-skip-back"></i>
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-primary btn-play"
-                        :aria-label="playing ? 'Pause' : 'Play'"
-                        :disabled="busy || !canControl"
-                        data-test="play-pause"
-                        @click="transport(playing ? 'pause' : 'play')"
-                    >
-                        <i class="ti" :class="playing ? 'ti-player-pause' : 'ti-player-play'"></i>
-                    </button>
-                    <button
-                        type="button"
-                        class="btn btn-ondark"
-                        aria-label="Skip"
-                        :disabled="busy || !canControl"
-                        data-test="next"
-                        @click="transport('next')"
-                    >
-                        <i class="ti ti-player-skip-forward"></i>
-                    </button>
-                </template>
                 <button
-                    v-else
+                    type="button"
+                    class="btn btn-ondark"
+                    aria-label="Restart track"
+                    :disabled="busy || !canControl"
+                    data-test="previous"
+                    @click="transport('previous')"
+                >
+                    <i class="ti ti-player-skip-back"></i>
+                </button>
+                <button
                     type="button"
                     class="btn btn-primary btn-play"
-                    aria-label="Play"
+                    :aria-label="playing ? 'Pause' : 'Play'"
                     :disabled="busy || !canControl"
                     data-test="play-pause"
-                    @click="transport('play')"
+                    @click="transport(playing ? 'pause' : 'play')"
                 >
-                    <i class="ti ti-player-play"></i>
+                    <i class="ti" :class="playing ? 'ti-player-pause' : 'ti-player-play'"></i>
+                </button>
+                <button
+                    type="button"
+                    class="btn btn-ondark"
+                    aria-label="Skip"
+                    :disabled="busy || !canControl"
+                    data-test="next"
+                    @click="transport('next')"
+                >
+                    <i class="ti ti-player-skip-forward"></i>
                 </button>
             </div>
             <div class="pu-rate">
@@ -213,6 +200,7 @@ async function rate(value: number): Promise<void> {
     opacity: 0.8;
 }
 .pu-empty {
+    height: auto;
     padding: 2rem 0;
 }
 .pu-row {

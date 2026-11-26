@@ -157,6 +157,7 @@ interface Options {
     connected?: boolean | null;
     receivedAt?: string;
     nowPlaying?: DashboardProps['control']['nowPlaying'];
+    nothingPlaying?: boolean;
 }
 
 function makeProps(options: Options = {}): DashboardProps {
@@ -168,7 +169,7 @@ function makeProps(options: Options = {}): DashboardProps {
         can: {control: true, moderate: options.moderate ?? true, player: true},
         timezone: 'UTC',
         playerState: {
-            now: {...track('Sandstorm'), artists: [{name: 'Darude'}]},
+            now: options.nothingPlaying ? null : {...track('Sandstorm'), artists: [{name: 'Darude'}]},
             next: null,
             current: {id: 9, user: 'Tamsin', rating: 0},
             status: {isPlaying: true, sampledAt: new Date().toISOString(), progressMs: 112000, length: 225000},
@@ -224,6 +225,15 @@ const mountPage = (options: Options = {}) => mount(Dashboard, {props: makeProps(
 const post = (url: string) => calls.filter((call) => call.method === 'post' && call.url === url);
 
 describe('control room strip', () => {
+    it('shows only the empty state when nothing is playing, leaving Start Playback as the action', () => {
+        const wrapper = mountPage({state: 'idle', nothingPlaying: true});
+
+        expect(wrapper.find('[data-test="nothing-playing"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="play-pause"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="rating"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
+    });
+
     it('labels a playing fallback track instead of naming a requester', () => {
         const wrapper = mountPage({nowPlaying: {isRequest: false, isFallback: true, requestedBy: null}});
 
