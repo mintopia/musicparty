@@ -10,6 +10,7 @@ use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
 use App\Services\Spotify\SpotifyBackoffException;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
@@ -251,4 +252,38 @@ it('requires a position to seek', function () {
     $party = controlParty();
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'seek'])->assertUnprocessable();
+});
+
+it('forgets the dashboard playback cache after a control action', function () {
+    app(FakeMusicProvider::class);
+    $party = controlParty();
+    Cache::put("party.{$party->id}.dashboard.playback", 'stale', 60);
+    Cache::put("party.{$party->id}.dashboard.devices", ['stale'], 60);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'pause'])->assertOk();
+
+    expect(Cache::has("party.{$party->id}.dashboard.playback"))->toBeFalse()
+        ->and(Cache::has("party.{$party->id}.dashboard.devices"))->toBeFalse();
+});
+
+it('forgets the dashboard playback cache when a playback state is applied', function () {
+    $fake = app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'));
+    $party = controlParty();
+    Cache::put("party.{$party->id}.dashboard.playback", 'stale', 60);
+
+    app(PlaybackSync::class)->apply($party, playingState('cur'));
+
+    expect(Cache::has("party.{$party->id}.dashboard.playback"))->toBeFalse();
+});
+
+it('answers 409 busy when the sync lock is held while playing', function () {
+    config(['musicparty.prevent_overlapping_updates' => true]);
+    app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(playingState('cur'));
+    $party = controlParty();
+    $lock = Cache::lock("party-sync:{$party->id}", 30);
+    $lock->get();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertStatus(409)->assertJsonPath('code', 'busy');
+
+    $lock->release();
 });

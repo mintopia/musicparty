@@ -89,18 +89,36 @@ function contextSettingsPayload(array $extra = []): array
 
 it('accepts a context playlist the host owns, rejects one they do not, and clears on blank', function () {
     $this->withoutVite();
-    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Mine', 'Fake Owner', 0));
+    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Music Party Context', 'Fake Owner', 0));
     $url = route('parties.update', $this->party);
 
     $this->actingAs($this->party->user)->put($url, contextSettingsPayload(['context_playlist_id' => 'mine']))->assertSessionHasNoErrors();
     expect($this->party->fresh()->context_playlist_id)->toBe('mine');
 
     $this->actingAs($this->party->user)->put($url, contextSettingsPayload(['context_playlist_id' => 'theirs']))
-        ->assertSessionHasErrors(['context_playlist_id' => "Use a playlist owned by Kestrel's Spotify account"]);
+        ->assertSessionHasErrors('context_playlist_id');
     expect($this->party->fresh()->context_playlist_id)->toBe('mine');
 
     $this->actingAs($this->party->user)->put($url, contextSettingsPayload(['context_playlist_id' => '']))->assertSessionHasNoErrors();
     expect($this->party->fresh()->context_playlist_id)->toBeNull();
+});
+
+it('rejects owned playlists that are not named Music Party Context', function (string $name) {
+    $this->fake->withOwnedPlaylist(new Playlist('real', $name, 'Fake Owner', 50));
+
+    $this->actingAs($this->party->user)->put(route('parties.update', $this->party), contextSettingsPayload(['context_playlist_id' => 'real']))
+        ->assertSessionHasErrors('context_playlist_id');
+
+    expect($this->party->fresh()->context_playlist_id)->toBeNull();
+})->with(['Road Trip 2024', 'Fallback']);
+
+it('never empties a stored playlist whose name is not Music Party Context', function () {
+    $this->fake->withOwnedPlaylist(new Playlist('real', 'Road Trip 2024', 'Fake Owner', 50), 50);
+    $this->party->forceFill(['context_playlist_id' => 'real'])->saveQuietly();
+
+    EmptyContextPlaylist::dispatchSync($this->party);
+
+    expect($this->fake->callsTo('clearPlaylist'))->toBeEmpty();
 });
 
 it('leaves the context playlist untouched when the form does not send it', function () {
@@ -113,12 +131,12 @@ it('leaves the context playlist untouched when the form does not send it', funct
 
 it('exposes the context playlist and its name on the edit page', function () {
     $this->withoutVite();
-    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Mine', 'Fake Owner', 0));
+    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Music Party Context', 'Fake Owner', 0));
     $this->party->forceFill(['context_playlist_id' => 'mine'])->saveQuietly();
 
     $this->actingAs($this->party->user)->get(route('parties.edit', $this->party))->assertInertia(fn ($page) => $page
         ->where('party.context_playlist_id', 'mine')
-        ->where('contextPlaylistName', 'Mine'));
+        ->where('contextPlaylistName', 'Music Party Context'));
 });
 
 it('plays forced playback inside the context playlist', function () {

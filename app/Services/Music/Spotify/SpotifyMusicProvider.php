@@ -21,6 +21,7 @@ use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Support\SpotifyPayload;
 use Closure;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\SpotifyWebAPI;
 use SpotifyWebAPI\SpotifyWebAPIException;
 use stdClass;
@@ -247,7 +248,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         try {
             $payload = SpotifyPayload::object($this->control()->getPlaylist($playlistId, ['fields' => 'id,name,owner(id,display_name),tracks(total)']));
         } catch (SpotifyWebAPIException $exception) {
-            if (in_array($exception->getCode(), [400, 404], true)) {
+            if (in_array($exception->getCode(), [400, 403, 404], true)) {
                 return null;
             }
             throw $exception;
@@ -359,11 +360,21 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function playInContext(string $playlistId, Track $track, ?string $deviceId = null, int $positionMs = 0): void
     {
-        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->play($deviceId ?? '', [
-            'context_uri' => "spotify:playlist:{$playlistId}",
-            'offset' => ['uri' => "spotify:track:{$track->id}"],
-            'position_ms' => $positionMs,
-        ]));
+        // Spotify ignores an offset into an empty context, so the track sits in the playlist only while it starts.
+        $this->control()->replacePlaylistTracks($playlistId, [$track->id]);
+        try {
+            $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->play($deviceId ?? '', [
+                'context_uri' => "spotify:playlist:{$playlistId}",
+                'offset' => ['position' => 0],
+                'position_ms' => $positionMs,
+            ]));
+        } finally {
+            try {
+                $this->control()->replacePlaylistTracks($playlistId, []);
+            } catch (SpotifyWebAPIException $exception) {
+                Log::warning("Unable to empty context playlist {$playlistId}: {$exception->getMessage()}");
+            }
+        }
     }
 
     public function transferPlayback(string $deviceId): void

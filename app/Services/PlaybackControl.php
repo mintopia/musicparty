@@ -5,12 +5,14 @@ namespace App\Services;
 use App\Enums\Purpose;
 use App\Events\Party\PlayerCommand;
 use App\Exceptions\NoActiveDeviceException;
+use App\Exceptions\PlaybackBusyException;
 use App\Models\Party;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\Data\Device;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
+use App\Services\Playback\PartyDashboardCache;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -24,6 +26,15 @@ class PlaybackControl
     ) {}
 
     public function perform(Party $party, string $action, ?string $deviceId = null, ?int $positionMs = null): void
+    {
+        try {
+            $this->dispatchAction($party, $action, $deviceId, $positionMs);
+        } finally {
+            PartyDashboardCache::forget($party);
+        }
+    }
+
+    protected function dispatchAction(Party $party, string $action, ?string $deviceId, ?int $positionMs): void
     {
         if ($action === 'play' && $party->hasFreshPushedPlayback()) {
             // Encore and the Web Player are Connect devices, so the Web API can start them; the pushed command is the fallback.
@@ -134,6 +145,9 @@ class PlaybackControl
         }
 
         $resumeAt = $state !== null && ! $state->isPlaying && $state->trackId === $track->id ? $state->progressMs : 0;
-        $provider->playInContext($this->context->ensure($party, $provider), $track, $deviceId, $resumeAt);
+        $ran = $this->sync->withLock($party, fn () => $provider->playInContext($this->context->ensure($party, $provider), $track, $deviceId, $resumeAt));
+        if (! $ran) {
+            throw new PlaybackBusyException;
+        }
     }
 }

@@ -4,6 +4,7 @@ use App\Exceptions\ProviderPremiumRequiredException;
 use App\Models\Song;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\Playlist;
+use App\Services\Playback\StartPlayback;
 use App\Services\Spotify\SpotifyBackoffException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Testing\TestResponse;
@@ -46,7 +47,7 @@ it('reuses an existing playlist with the same name', function () {
 });
 
 it('reuses the stored playlist when the host still owns it', function () {
-    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Anything', 'Fake Owner', 0));
+    $this->fake->withOwnedPlaylist(new Playlist('mine', 'Music Party Context', 'Fake Owner', 0));
     $this->party->forceFill(['context_playlist_id' => 'mine'])->saveQuietly();
 
     startPlayback($this)->assertOk();
@@ -54,6 +55,26 @@ it('reuses the stored playlist when the host still owns it', function () {
     expect($this->fake->callsTo('findOwnedPlaylistByName'))->toBeEmpty()
         ->and($this->fake->callsTo('createPrivatePlaylist'))->toBeEmpty()
         ->and($this->fake->callsTo('playInContext')[0][0])->toBe('mine');
+});
+
+it('replaces a stored playlist that is owned but not named Music Party Context', function () {
+    $this->fake->withOwnedPlaylist(new Playlist('road-trip', 'Road Trip', 'Fake Owner', 40));
+    $this->party->forceFill(['context_playlist_id' => 'road-trip'])->saveQuietly();
+
+    startPlayback($this)->assertOk();
+
+    expect($this->party->fresh()->context_playlist_id)->toBe('fake-owned-2')
+        ->and($this->fake->callsTo('playInContext')[0][0])->toBe('fake-owned-2');
+});
+
+it('weighted parties start the track they were shown', function () {
+    $this->party->forceFill(['weighted' => true])->saveQuietly();
+    foreach (range(1, 6) as $i) {
+        dashboardRequest($this->party, ['score' => $i]);
+    }
+    $shown = app(StartPlayback::class)->target($this->party->fresh(), null);
+
+    startPlayback($this)->assertOk()->assertJsonPath('target.trackId', $shown->track->id);
 });
 
 it('replaces a stored playlist the host does not own', function () {

@@ -97,3 +97,23 @@ it('answers 409 busy while another sync holds the lock', function () {
 
     $lock->release();
 });
+
+it('refuses a sent request that is not the newest one', function () {
+    $older = dashboardRequest($this->party, ['queued_at' => now()->subMinute()]);
+
+    playNow($this, $older)->assertStatus(422)->assertJsonPath('code', 'not_playable');
+
+    expect($this->fake->callsTo('playInContext'))->toBeEmpty();
+});
+
+it('keeps history linking when the previous play was sent in the same second as the sent request', function () {
+    $stamp = now()->startOfSecond();
+    $this->sent->forceFill(['queued_at' => $stamp])->save();
+    $previous = dashboardRequest($this->party, ['queued_at' => $stamp]);
+    dashboardPlayed($previous);
+    $newest = dashboardRequest($this->party);
+
+    playNow($this, $newest)->assertNoContent();
+
+    expect(playedInOrder($this, $newest->fresh(), $this->sent->fresh()))->toBe([$newest->id, $this->sent->id]);
+});

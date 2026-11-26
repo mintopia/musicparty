@@ -15,6 +15,7 @@ use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
+use App\Services\Playback\PartyDashboardCache;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -170,6 +171,7 @@ class PlaybackSync
 
     protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): void
     {
+        PartyDashboardCache::forget($party);
         $this->status->remember($party, $state);
         $party->playback_source = $state->source;
         $party->playback_received_at = $state->connectionStatus === null || $state->connectionStatus === PlaybackConnectionStatus::Connected ? now() : null;

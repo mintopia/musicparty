@@ -22,13 +22,14 @@ class ContextPlaylist
     public function ensure(Party $party, MusicProvider $provider): string
     {
         $stored = $party->context_playlist_id;
-        if ($stored !== null && (Cache::get($this->verifiedKey($party)) === $stored || $provider->ownedPlaylist($stored) !== null)) {
+        if ($stored !== null && (Cache::get($this->verifiedKey($party)) === $stored || $provider->ownedPlaylist($stored)?->name === self::NAME)) {
             Cache::put($this->verifiedKey($party), $stored, self::VERIFIED_SECONDS);
 
             return $stored;
         }
 
-        $playlist = $provider->findOwnedPlaylistByName(self::NAME) ?? $provider->createPrivatePlaylist(self::NAME, self::DESCRIPTION);
+        // Two quick calls must not both create the playlist.
+        $playlist = Cache::lock("host-context-playlist:{$party->user_id}", 15)->block(10, fn () => $provider->findOwnedPlaylistByName(self::NAME) ?? $provider->createPrivatePlaylist(self::NAME, self::DESCRIPTION));
         $party->forceFill(['context_playlist_id' => $playlist->id])->saveQuietly();
         Cache::put($this->verifiedKey($party), $playlist->id, self::VERIFIED_SECONDS);
 
@@ -47,6 +48,12 @@ class ContextPlaylist
         if ($playlist === null) {
             $party->forceFill(['context_playlist_id' => null])->saveQuietly();
             Cache::forget($this->verifiedKey($party));
+
+            return;
+        }
+
+        if ($playlist->name !== self::NAME) {
+            Log::warning("{$party}: Not emptying playlist {$id} because it is named \"{$playlist->name}\", not \"".self::NAME.'"');
 
             return;
         }

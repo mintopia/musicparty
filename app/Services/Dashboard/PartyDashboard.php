@@ -4,6 +4,8 @@ namespace App\Services\Dashboard;
 
 use App\Enums\Purpose;
 use App\Enums\StartTargetKind;
+use App\Exceptions\ProviderBackoffException;
+use App\Exceptions\ProviderRelinkRequiredException;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
 use App\Models\Song;
@@ -114,6 +116,8 @@ class PartyDashboard
 
         try {
             return Cache::remember(PartyDashboardCache::playbackKey($party), self::READ_CACHE_SECONDS, fn (): ?PlaybackState => $this->providers->forParty($party, Purpose::Control)->currentPlayback());
+        } catch (ProviderBackoffException|ProviderRelinkRequiredException) {
+            return null;
         } catch (Throwable $e) {
             report($e);
 
@@ -128,6 +132,8 @@ class PartyDashboard
     {
         try {
             return Cache::remember(PartyDashboardCache::devicesKey($party), self::READ_CACHE_SECONDS, fn (): array => $this->control->devices($party));
+        } catch (ProviderBackoffException|ProviderRelinkRequiredException) {
+            return [];
         } catch (Throwable $e) {
             report($e);
 

@@ -65,7 +65,7 @@ class StartPlayback
             return new StartTarget(StartTargetKind::Next, $sent->song->toTrack(), 0, $sent, true);
         }
 
-        $request = $this->selector->pick($party, 1)->first();
+        $request = $this->candidate($party);
 
         return $request === null ? null : new StartTarget(StartTargetKind::Select, $request->song->toTrack(), 0, $request, false);
     }
@@ -97,6 +97,9 @@ class StartPlayback
         }
 
         $sent = $this->sentRequest($party);
+        if ($request->queued_at !== null && ! $sent?->is($request)) {
+            throw new NotPlayableException;
+        }
         if ($sent?->is($request)) {
             $this->control->perform($party, 'next');
             $this->afterChange($party);
@@ -104,12 +107,12 @@ class StartPlayback
             return;
         }
 
-        $ran = $this->sync->withLock($party, function () use ($party, $request, $sent): void {
+        $ran = $this->sync->withLock($party, function () use ($party, $request): void {
             $provider = $this->providers->forParty($party, Purpose::Control);
             $playlistId = $this->context->ensure($party, $provider);
             $track = $request->song->toTrack();
             $provider->playInContext($playlistId, $track);
-            $this->stamp($party, $provider, $request, $track, $sent?->queued_at?->copy()->subSecond());
+            $this->stamp($party, $provider, $request, $track, $this->stampBeforeSent($party));
         });
         if (! $ran) {
             throw new PlaybackBusyException;
@@ -193,10 +196,55 @@ class StartPlayback
         return isset($usable[0]) ? (string) $usable[0]->id : throw new NoActiveDeviceException('No device available to start playback on');
     }
 
+    /**
+     * A queued_at that sorts just before the Sent Request but after the last played one, so history linking keeps working.
+     */
+    protected function stampBeforeSent(Party $party): mixed
+    {
+        $sent = $this->sentRequest($party);
+        if ($sent === null || $sent->queued_at === null) {
+            return now();
+        }
+
+        $base = $sent->queued_at->copy();
+        $stamp = $base->copy()->subSecond();
+        $lastPlayed = $party->upcoming()->whereNotNull('queued_at')->has('played')->orderByDesc('queued_at')->first();
+        if ($lastPlayed?->queued_at !== null && $stamp->lessThanOrEqualTo($lastPlayed->queued_at)) {
+            $sent->queued_at = $base->copy()->addSecond();
+            $sent->save();
+
+            return $base;
+        }
+
+        return $stamp;
+    }
+
+    protected function candidate(Party $party): ?UpcomingSong
+    {
+        if (! $party->weighted) {
+            return $this->selector->pick($party, 1)->first();
+        }
+
+        $key = "party.{$party->id}.start-pick";
+        $id = Cache::get($key);
+        $cached = $id === null ? null : $party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->with('song')->whereKey($id)->first();
+        if ($cached !== null) {
+            return $cached;
+        }
+
+        $request = $this->selector->pick($party, 1)->first();
+        if ($request !== null) {
+            Cache::put($key, $request->id, 30);
+        }
+
+        return $request;
+    }
+
     protected function stamp(Party $party, MusicProvider&ProviderPlayback $provider, UpcomingSong $request, Track $track, mixed $queuedAt): void
     {
         $request->queued_at = $queuedAt ?? now();
         $request->save();
+        Cache::forget("party.{$party->id}.start-pick");
         if ($party->history_playlist_id !== null) {
             $provider->appendToPlaylist($party->history_playlist_id, [$track]);
         }

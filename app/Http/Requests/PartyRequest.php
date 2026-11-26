@@ -9,6 +9,7 @@ use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyProviderOptions;
+use App\Services\Playback\ContextPlaylist;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -52,8 +53,8 @@ class PartyRequest extends FormRequest
 
                 return;
             }
-            if ($owned === null) {
-                $validator->errors()->add('context_playlist_id', "Use a playlist owned by {$party->user->nickname}'s Spotify account");
+            if ($owned === null || $owned->name !== ContextPlaylist::NAME) {
+                $validator->errors()->add('context_playlist_id', 'Use the playlist named "'.ContextPlaylist::NAME."\" owned by {$party->user->nickname}'s Spotify account");
             }
         }];
     }

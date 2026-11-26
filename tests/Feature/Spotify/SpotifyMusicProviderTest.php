@@ -158,18 +158,29 @@ function ownedPlaylistPayload(string $id = 'ctx', string $name = 'Music Party Co
     return (object) ['id' => $id, 'name' => $name, 'owner' => (object) ['id' => $owner, 'display_name' => 'Owner'], 'tracks' => (object) ['total' => $total]];
 }
 
-it('plays a track inside a playlist context at an offset and position', function () {
+it('adds the track to the context playlist, plays it by position, then empties the playlist', function () {
     $api = FakeSpotify::install();
     $provider = spotifyProvider($api);
 
     $provider->playInContext('ctx', mappedTrack('abc'), 'dev1', 5000);
     $provider->playInContext('ctx', mappedTrack('abc'));
 
-    $context = ['context_uri' => 'spotify:playlist:ctx', 'offset' => ['uri' => 'spotify:track:abc']];
-    expect($api->callsTo('play'))->toBe([
-        ['dev1', $context + ['position_ms' => 5000]],
-        ['', $context + ['position_ms' => 0]],
-    ]);
+    $context = ['context_uri' => 'spotify:playlist:ctx', 'offset' => ['position' => 0]];
+    $order = array_map(fn (array $call): string => $call['method'], $api->calls);
+    expect(array_slice($order, 0, 3))->toBe(['replacePlaylistTracks', 'play', 'replacePlaylistTracks'])
+        ->and($api->callsTo('replacePlaylistTracks'))->toBe([['ctx', ['abc']], ['ctx', []], ['ctx', ['abc']], ['ctx', []]])
+        ->and($api->callsTo('play'))->toBe([
+            ['dev1', $context + ['position_ms' => 5000]],
+            ['', $context + ['position_ms' => 0]],
+        ]);
+});
+
+it('still empties the context playlist when the play command fails', function () {
+    $api = FakeSpotify::install()->respond('play', new SpotifyWebAPIException('No active device', 404));
+
+    expect(fn () => spotifyProvider($api)->playInContext('ctx', mappedTrack('abc')))->toThrow(NoActiveDeviceException::class);
+
+    expect($api->callsTo('replacePlaylistTracks'))->toBe([['ctx', ['abc']], ['ctx', []]]);
 });
 
 it('creates a private playlist through /me/playlists without leaking the library deprecation notice', function () {
@@ -208,6 +219,7 @@ it('only reports playlists the linked account owns', function (mixed $response, 
     'own playlist' => [fn () => ownedPlaylistPayload(), 'ctx'],
     'foreign playlist' => [fn () => ownedPlaylistPayload(owner: 'someone-else'), null],
     'missing playlist' => [fn () => new SpotifyWebAPIException('Not found', 404), null],
+    'forbidden playlist' => [fn () => new SpotifyWebAPIException('Forbidden', 403), null],
 ]);
 
 it('finds the first owned playlist with an exact name', function () {
