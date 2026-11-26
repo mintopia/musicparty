@@ -8,6 +8,7 @@ import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
 import {home, login, logout, pulse} from '@/routes';
 import {profile} from '@/routes/user';
+import {aiReviewsUrl} from '@/lib/aiReviews';
 import {flaggedUrl} from '@/lib/flagged';
 import {adminModsUrl, partyModsUrl} from '@/lib/mods';
 import type {PartyMembership, SharedProps} from '@/types';
@@ -43,6 +44,11 @@ export function partyLinks(party: PartyMembership): NavLink[] {
             {title: 'Mods', href: partyModsUrl(party.code)},
             {title: 'Settings', href: edit(party.code).url},
         );
+    }
+
+    if (party.canManage && party.aiReviewEnabled) {
+        const at = links.findIndex((link) => link.title === 'Moderation');
+        links.splice(at + 1, 0, {title: 'AI Reviews', href: aiReviewsUrl(party.code)});
     }
 
     return links;

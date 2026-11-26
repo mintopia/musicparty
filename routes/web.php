@@ -12,6 +12,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\ModUserSearchController;
+use App\Http\Controllers\PartyAiReviewController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyDashboardController;
 use App\Http\Controllers\PartyMemberController;
@@ -62,6 +63,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy', 'update'])->scoped();
+            Route::get('parties/{party}/ai-reviews', [PartyAiReviewController::class, 'index'])->name('parties.ai-reviews.index');
+            Route::get('parties/{party}/ai-reviews/{aiReview}', [PartyAiReviewController::class, 'show'])->scopeBindings()->name('parties.ai-reviews.show');
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
             Route::get('parties/{party}/moderation/{moderation}/delete', [PartyModerationController::class, 'delete'])
                 ->scopeBindings()

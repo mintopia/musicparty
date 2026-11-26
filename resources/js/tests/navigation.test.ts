@@ -110,6 +110,20 @@ describe('buildNavigation', () => {
         ]);
     });
 
+    it('adds AI Reviews after Moderation only for managers when the mod is enabled', () => {
+        const links = (canManage: boolean, aiReviewEnabled: boolean) =>
+            titles(
+                buildNavigation(makeProps({parties: [{code: 'ABC', name: 'Fun', canManage, aiReviewEnabled}]})).find(
+                    (item) => item.key === 'party:ABC',
+                )?.children ?? [],
+            );
+
+        const enabled = links(true, true);
+        expect(enabled[enabled.indexOf('Moderation') + 1]).toBe('AI Reviews');
+        expect(links(true, false)).not.toContain('AI Reviews');
+        expect(links(false, true)).not.toContain('AI Reviews');
+    });
+
     it('gates Create Party on the createParty permission', () => {
         expect(titles(buildNavigation(makeProps({can: {createParty: true}})))).toContain('Create Party');
         expect(titles(buildNavigation(makeProps({})))).not.toContain('Create Party');

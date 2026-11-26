@@ -11,3 +11,9 @@ Jev-style TypeSafe models are not chat models: they take `{model, state, questio
 **Settings and secrets.** `decision_endpoint` (validated `url:https`, default the OpenRouter URL), `decision_model` (default `typesafe/jev-1.13`) and `confidence_threshold` are new settings; the existing `api_key` secret is shared by all drivers. `stSecret` already encrypts at rest and is never returned to the frontend, so no new setting types were needed. The endpoint is manager-supplied, so the reviewer also refuses localhost, `.internal`/`.local` names and private or reserved IP literals before sending the key.
 
 **Known limit.** Hostnames that resolve to internal addresses are not blocked, only literals and obvious names.
+
+## Amendment: the TypeSafe chat driver is removed
+
+The original `typesafe` driver (laravel/ai `Classification` against `api.typesafe.ai/v1/systemone`) is gone. `decision-model` talks to the same `{model, state, questions}` API, either through OpenRouter or direct TypeSafe, so it replaces `typesafe` rather than sitting beside it. The driver choices are now `decision-model` (the default for new parties) and `openai-compatible`.
+
+A data migration moves every Party that used `typesafe`, explicitly or by default with the mod enabled, to `decision-model` with `decision_endpoint = https://api.typesafe.ai/v1/systemone` and `decision_model` set to its previous `model` setting, or `jev-latest` if it had none. The `api_key` is kept.

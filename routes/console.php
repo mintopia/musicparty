@@ -1,10 +1,12 @@
 <?php
 
 use App\Enums\ScheduleFrequency;
+use App\Models\AiReview;
 use App\Mods\ModScheduler;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
+Schedule::command('model:prune', ['--model' => [AiReview::class]])->daily()->onOneServer();
 Schedule::command('party:fallback')->everyMinute()->onOneServer();
 Schedule::command('party:force')->everyMinute()->onOneServer();
 Schedule::command('party:contextplaylist')->everyFifteenMinutes()->onOneServer();

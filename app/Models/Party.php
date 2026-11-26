@@ -189,6 +189,12 @@ class Party extends Model
         return $this->hasMany(UpcomingSong::class);
     }
 
+    /** @return HasMany<AiReview, $this> */
+    public function aiReviews(): HasMany
+    {
+        return $this->hasMany(AiReview::class);
+    }
+
     /** @return HasMany<PlayedSong, $this> */
     public function history(): HasMany
     {
