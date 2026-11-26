@@ -5,6 +5,7 @@ namespace App\Enums;
 enum SettingType
 {
     case stString;
+    case stText;
     case stBoolean;
     case stInteger;
     case stFloat;
@@ -19,6 +20,7 @@ enum SettingType
     {
         return match ($this) {
             self::stString => 'string',
+            self::stText => 'text',
             self::stBoolean => 'boolean',
             self::stInteger => 'integer',
             self::stFloat => 'float',

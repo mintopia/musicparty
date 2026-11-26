@@ -43,7 +43,7 @@ const widthClass = computed(() => {
 });
 
 function onInput(event: Event): void {
-    const raw = (event.target as HTMLInputElement).value;
+    const raw = (event.target as HTMLInputElement | HTMLTextAreaElement).value;
     if (props.setting.type === 'integer' || props.setting.type === 'float') {
         emit('update:modelValue', raw === '' ? null : Number(raw));
         return;
@@ -99,6 +99,20 @@ function onInput(event: Event): void {
                 />
             </div>
         </template>
+        <template v-else-if="setting.type === 'text'">
+            <label :for="id" class="form-label">
+                {{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span>
+            </label>
+            <textarea
+                :id="id"
+                rows="5"
+                class="form-control mod-field-wide mod-field-textarea"
+                :class="{'is-invalid': error}"
+                :value="String(modelValue ?? '')"
+                data-test="setting-input"
+                @input="onInput"
+            ></textarea>
+        </template>
         <template v-else>
             <label :for="id" class="form-label">
                 {{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span>
@@ -135,5 +149,9 @@ function onInput(event: Event): void {
 
 .mod-field-wide {
     max-width: 28rem;
+}
+
+.mod-field-textarea {
+    resize: vertical;
 }
 </style>

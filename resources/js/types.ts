@@ -169,7 +169,17 @@ export interface PlaybackState {
 }
 
 export type ModSettingType =
-    'string' | 'boolean' | 'integer' | 'float' | 'datetime' | 'track' | 'time_of_day' | 'secret' | 'choice' | 'user';
+    | 'string'
+    | 'text'
+    | 'boolean'
+    | 'integer'
+    | 'float'
+    | 'datetime'
+    | 'track'
+    | 'time_of_day'
+    | 'secret'
+    | 'choice'
+    | 'user';
 
 export interface ModSetting {
     code: string;

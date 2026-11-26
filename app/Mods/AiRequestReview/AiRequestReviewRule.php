@@ -125,14 +125,14 @@ class AiRequestReviewRule implements RequestRule
             $model = $this->setting($party, 'decision_model');
             $threshold = $this->setting($party, 'confidence_threshold');
 
-            $partyContext = $this->partyContext($party);
-            $log['party_context_included'] = $partyContext !== null;
+            $partyState = $this->partyState($party);
+            $log['party_context_included'] = $partyState !== null;
             $decision = $this->decisionModel->review(
                 is_string($endpoint) && $endpoint !== '' ? $endpoint : DecisionModelReviewer::OPENROUTER_ENDPOINT,
                 $apiKey,
                 is_string($model) && $model !== '' ? $model : DecisionModelReviewer::DEFAULT_MODEL,
                 is_string($guidelines) ? $guidelines : null,
-                $this->trackDetails($track, $partyContext),
+                ['request' => $this->trackDetails($track)] + ($partyState !== null ? ['party' => $partyState] : []),
                 max(1, (int) ($this->setting($party, 'timeout') ?? 10)),
                 is_numeric($threshold) ? (float) $threshold : DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD,
                 $log,
@@ -216,6 +216,27 @@ class AiRequestReviewRule implements RequestRule
         $text = $this->vibe->text($party);
 
         return $text === '' ? null : $text;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    protected function partyState(Party $party): ?array
+    {
+        if ($this->partyContext($party) === null) {
+            return null;
+        }
+        $data = $this->vibe->data($party);
+
+        return [
+            'stats' => $data['stats'],
+            'recent' => $data['recent'],
+            'top_rated' => $data['top_rated'],
+            'downvoted' => $data['downvoted'],
+            'most_upvoted_requests' => $data['most_upvoted_requests'],
+            'most_downvoted_requests' => $data['most_downvoted_requests'],
+            'artists' => $data['artists'],
+        ];
     }
 
     /**

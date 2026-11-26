@@ -65,3 +65,15 @@ test('settings are isolated per party', function () {
 
     expect($this->store->value($other, 'demo', 'alpha'))->toBe('default-alpha');
 });
+
+test('a text setting keeps newlines and presents as text', function () {
+    ModSetting::factory()->create(['mod_id' => $this->mod->id, 'code' => 'notes', 'type' => SettingType::stText, 'order' => 9]);
+    $value = "No explicit lyrics\nNo live versions\n\n  Indented line";
+
+    $this->store->set($this->party, 'demo', 'notes', $value);
+
+    $presented = collect(collect($this->store->presentFor($this->party))->firstWhere('code', 'demo')['settings'])->firstWhere('code', 'notes');
+    expect($this->store->value($this->party, 'demo', 'notes'))->toBe($value)
+        ->and($presented['type'])->toBe('text')
+        ->and($presented['value'])->toBe($value);
+});

@@ -6,7 +6,9 @@ use App\Models\Party;
 use App\Models\PlayedSong;
 use App\Models\Song;
 use App\Models\SongRating;
+use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Models\Vote;
 use App\Mods\AiRequestReview\PartyVibeSummary;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Support\Facades\Cache;
@@ -103,7 +105,7 @@ it('builds with a bounded number of queries regardless of party size', function 
     DB::enableQueryLog();
     app(PartyVibeSummary::class)->build($party);
 
-    expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(11);
+    expect(count(DB::getQueryLog()))->toBeLessThanOrEqual(15);
 });
 
 it('schedules one debounced unique refresh however many plays and ratings change', function () {
@@ -127,4 +129,57 @@ it('refreshes the cache when the job runs', function () {
     new RefreshPartyVibeSummary($party)->handle($summary);
 
     expect(Cache::get(PartyVibeSummary::cacheKey($party))['text'])->toContain('Fresh Song');
+});
+
+function vibeRequest(Party $party, string $title, string $artist, int $net, ?Carbon\Carbon $flaggedAt = null): UpcomingSong
+{
+    $song = Song::factory()->create(['name' => $title]);
+    $song->artists()->sync([Artist::factory()->create(['name' => $artist])->id]);
+    $request = UpcomingSong::factory()->for($party)->for($song)->create(['flagged_at' => $flaggedAt]);
+    foreach (range(1, abs($net)) as $ignored) {
+        Vote::factory()->for($request)->create(['value' => $net <=> 0]);
+    }
+
+    return $request;
+}
+
+it('lists the most upvoted and downvoted requests by net votes', function () {
+    $party = Party::factory()->create();
+    vibeRequest($party, 'Loved', 'Fans', 3);
+    vibeRequest($party, 'Liked', 'Some', 1);
+    vibeRequest($party, 'Hated', 'Foes', -2);
+    vibeRequest($party, 'Flagged Fave', 'Hidden', 5, now());
+    vibeRequest(Party::factory()->create(), 'Elsewhere', 'Other', 9);
+    $even = vibeRequest($party, 'Even', 'Meh', 1);
+    Vote::factory()->for($even)->create(['value' => -1]);
+
+    $data = app(PartyVibeSummary::class)->build($party);
+
+    expect($data['most_upvoted_requests'])->toBe(['Loved - Fans', 'Liked - Some'])
+        ->and($data['most_downvoted_requests'])->toBe(['Hated - Foes'])
+        ->and($data['text'])->toContain('Most upvoted requests: Loved - Fans; Liked - Some')
+        ->toContain('Most downvoted requests: Hated - Foes')
+        ->not->toContain('Flagged Fave')->not->toContain('Elsewhere');
+});
+
+it('caps the voted request lists', function () {
+    $party = Party::factory()->create();
+    foreach (range(1, 8) as $i) {
+        vibeRequest($party, "Up {$i}", 'A', $i);
+        vibeRequest($party, "Down {$i}", 'B', -$i);
+    }
+
+    $data = app(PartyVibeSummary::class)->build($party);
+
+    expect($data['most_upvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_upvoted_requests'][0])->toBe('Up 8 - A')
+        ->and($data['most_downvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_downvoted_requests'][0])->toBe('Down 8 - B');
+});
+
+it('schedules a debounced refresh when votes are cast', function () {
+    $party = Party::factory()->create();
+    $upcoming = UpcomingSong::factory()->for($party)->create();
+
+    Vote::factory()->for($upcoming)->create();
+
+    Queue::assertPushed(RefreshPartyVibeSummary::class, fn (RefreshPartyVibeSummary $job): bool => $job->party->is($party) && $job->delay !== null);
 });
