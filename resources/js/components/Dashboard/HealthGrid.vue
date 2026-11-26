@@ -5,19 +5,20 @@ import type {DashboardControl} from '@/types';
 
 const STALE_SECONDS = 60;
 
-const props = defineProps<{health: DashboardControl['health']; playingFrom: DashboardControl['playingFrom']}>();
+const props = defineProps<{health: DashboardControl['health']}>();
 
 const now = useTicker(
-    () => props.health.sampledAt !== null,
-    () => props.health.sampledAt,
+    () => props.health.receivedAt !== null,
+    () => props.health.receivedAt,
 );
 
 const ageSeconds = computed(() =>
-    props.health.sampledAt === null
+    props.health.receivedAt === null
         ? null
-        : Math.max(0, Math.floor((now.value - Date.parse(props.health.sampledAt)) / 1000)),
+        : Math.max(0, Math.floor((now.value - Date.parse(props.health.receivedAt)) / 1000)),
 );
-const stale = computed(() => ageSeconds.value !== null && ageSeconds.value > STALE_SECONDS);
+const live = computed(() => props.health.player.connected === true);
+const stale = computed(() => !live.value && ageSeconds.value !== null && ageSeconds.value > STALE_SECONDS);
 const ageLabel = computed(() => {
     const seconds = ageSeconds.value;
     if (seconds === null) {
@@ -26,19 +27,6 @@ const ageLabel = computed(() => {
     return seconds < 120 ? `${seconds} s ago` : `${Math.floor(seconds / 60)} min ago`;
 });
 const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as backup'})[props.health.polling]);
-const playingFromWarns = computed(() => props.playingFrom.kind === 'outside' || props.playingFrom.kind === 'unknown');
-const playingFromLabel = computed(() => {
-    switch (props.playingFrom.kind) {
-        case 'party':
-            return 'The party';
-        case 'outside':
-            return props.playingFrom.label ?? 'Outside the party';
-        case 'unknown':
-            return 'Unknown';
-        default:
-            return 'Nothing';
-    }
-});
 </script>
 
 <template>
@@ -60,16 +48,9 @@ const playingFromLabel = computed(() => {
         <div>
             <div class="lbl">Last update</div>
             <div class="val" :class="{warn: stale}" data-test="health-age">
-                <template v-if="stale"><i class="ti ti-alert-triangle"></i> {{ ageLabel }}, stale</template>
+                <template v-if="live"><span class="status-dot status-green me-2"></span>Live</template>
+                <template v-else-if="stale"><i class="ti ti-alert-triangle"></i> {{ ageLabel }}, stale</template>
                 <template v-else>{{ ageLabel }}</template>
-            </div>
-        </div>
-        <div>
-            <div class="lbl">Playing from</div>
-            <div class="val" :class="{warn: playingFromWarns}" data-test="health-from">
-                <i v-if="playingFromWarns" class="ti ti-alert-triangle"></i>
-                <span v-else-if="playingFrom.kind === 'party'" class="status-dot status-green me-2"></span>
-                {{ playingFromLabel }}
             </div>
         </div>
         <div>
@@ -91,7 +72,7 @@ const playingFromLabel = computed(() => {
 <style scoped>
 .health {
     display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     margin-top: 16px;
     border-top: 1px solid rgba(255, 255, 255, 0.12);
 }

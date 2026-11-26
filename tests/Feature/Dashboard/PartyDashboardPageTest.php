@@ -1,9 +1,11 @@
 <?php
 
+use App\Models\Party;
 use App\Models\Song;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Playback\EncoreConnection;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -124,7 +126,7 @@ it('hides devices when the party is already playing and fetches them otherwise',
         ->and($this->fake->callsTo('devices'))->toBeEmpty();
 });
 
-it('shows the sent request first, then the top candidates, excluding flagged and played requests', function () {
+it('shows the sent request first, then the top candidates (Up Next rows included), excluding flagged and played requests', function () {
     $sent = dashboardRequest($this->party, ['queued_at' => now()]);
     $played = dashboardRequest($this->party, ['queued_at' => now()->subMinutes(5)]);
     dashboardPlayed($played);
@@ -138,7 +140,8 @@ it('shows the sent request first, then the top candidates, excluding flagged and
 
     expect(array_column($props['upNext'], 'id'))->toBe([$sent->id, $high->id, $mid->id])
         ->and(array_column($props['upNext'], 'sent'))->toBe([true, false, false])
-        ->and(array_column($props['upcoming']['items'], 'id'))->toBe([$low->id, $last->id])
+        ->and(array_column($props['upcoming']['items'], 'id'))->toBe([$sent->id, $high->id, $mid->id, $low->id, $last->id])
+        ->and(array_column($props['upcoming']['items'], 'sent'))->toBe([true, false, false, false, false])
         ->and($props['upcoming']['total'])->toBe(5);
 });
 
@@ -156,6 +159,33 @@ it('reports attention issues and caps the flagged list at five', function () {
         ->and($attention['flagged'])->toHaveCount(5)
         ->and($attention['flaggedTotal'])->toBe(7);
 });
+
+it('does not flag the player as stale while Encore is connected', function (?bool $connected, bool $flagged) {
+    $this->app->instance(EncoreConnection::class, new class($connected) extends EncoreConnection
+    {
+        public function __construct(private readonly ?bool $answer) {}
+
+        public function isConnected(Party $party): ?bool
+        {
+            return $this->answer;
+        }
+    });
+    $this->party->forceFill(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(5)])->saveQuietly();
+
+    $props = dashboardControl($this);
+
+    expect(array_column($props['attention']['issues'], 'code') === ['player_stale'])->toBe($flagged)
+        ->and($props['control']['health']['player']['connected'])->toBe($connected)
+        ->and($props['control']['health']['player']['fresh'])->toBe($connected === true);
+})->with([[true, false], [false, true], [null, true]]);
+
+it('says polling is off in the stale detail when polling is disabled', function (bool $poll, string $detail) {
+    $this->party->forceFill(['poll' => $poll, 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(5)])->saveQuietly();
+
+    $issues = dashboardControl($this, 'attention')['issues'];
+
+    expect($issues[0]['detail'])->toBe($detail);
+})->with([[true, 'Polling is checking Spotify'], [false, 'Polling is off']]);
 
 it('flags a site admin who is not a member as unable to moderate', function () {
     $admin = dashboardUser($this->party, 'admin');

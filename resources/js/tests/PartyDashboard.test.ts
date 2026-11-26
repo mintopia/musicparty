@@ -152,6 +152,9 @@ interface Options {
     moderate?: boolean;
     webPlayer?: string | null;
     upNext?: DashboardRequest[];
+    upcoming?: DashboardRequest[];
+    connected?: boolean | null;
+    receivedAt?: string;
 }
 
 function makeProps(options: Options = {}): DashboardProps {
@@ -172,9 +175,14 @@ function makeProps(options: Options = {}): DashboardProps {
             playingFrom: options.playingFrom ?? {kind: state === 'hidden' ? 'party' : 'nothing', label: null},
             nowPlaying: {isRequest: true, requestedBy: 'Tamsin'},
             health: {
-                player: {source: 'encore', label: 'Encore', fresh: true},
+                player: {
+                    source: 'encore',
+                    label: 'Encore',
+                    fresh: true,
+                    connected: options.connected === undefined ? true : options.connected,
+                },
                 device: {id: 'd1', name: 'Main Hall Speaker'},
-                sampledAt: new Date().toISOString(),
+                receivedAt: options.receivedAt ?? new Date().toISOString(),
                 link: 'connected',
                 polling: 'backup',
             },
@@ -186,7 +194,7 @@ function makeProps(options: Options = {}): DashboardProps {
             },
         },
         upNext: options.upNext ?? [request(1, 'Mr. Brightside', true), request(2, 'Levels'), request(3, 'Bangarang')],
-        upcoming: {items: [request(4, 'Kernkraft 400')], total: 24},
+        upcoming: {items: options.upcoming ?? [request(4, 'Kernkraft 400')], total: 24},
         attention: {issues: options.issues ?? [], flagged: items, flaggedTotal: items.length},
         links: {
             queue: '/q',
@@ -214,23 +222,23 @@ const mountPage = (options: Options = {}) => mount(Dashboard, {props: makeProps(
 const post = (url: string) => calls.filter((call) => call.method === 'post' && call.url === url);
 
 describe('control room strip', () => {
-    it('shows the Up Next deck and the restart pill while the party is playing', () => {
+    it('shows the Up Next deck while the party is playing', () => {
         const wrapper = mountPage({state: 'hidden'});
 
         expect(wrapper.find('[data-test="up-next-deck"]').exists()).toBe(true);
-        expect(wrapper.find('[data-test="restart-in-party"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="restart-in-party"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="up-next-card"]').exists()).toBe(false);
     });
 
-    it('shows the Start Playback panel, without the pill, when not playing in the party', () => {
+    it('shows the Start Playback panel, when not playing in the party', () => {
         const wrapper = mountPage({state: 'idle'});
 
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="up-next-deck"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="restart-in-party"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="up-next-card"]').exists()).toBe(true);
-        expect(wrapper.findAll('[data-test="upcoming-row"]')).toHaveLength(3);
+        expect(wrapper.findAll('[data-test="upcoming-row"]')).toHaveLength(1);
     });
 
     it('labels the resume button with the track and position', () => {
@@ -313,6 +321,31 @@ describe('control room strip', () => {
 
         expect(mountPage({state: 'hidden'}).find('[data-test="skip-hint"]').exists()).toBe(false);
         expect(mountPage({state: 'idle'}).find('[data-test="skip-hint"]').exists()).toBe(false);
+    });
+});
+
+describe('health grid and upcoming list', () => {
+    it('shows Live without a stale warning while Encore is connected', () => {
+        const wrapper = mountPage({connected: true, receivedAt: new Date(Date.now() - 600000).toISOString()});
+
+        expect(wrapper.find('[data-test="health-age"]').text()).toBe('Live');
+        expect(wrapper.find('[data-test="health-from"]').exists()).toBe(false);
+    });
+
+    it('shows the age from the last frame, with a stale warning, when not connected', () => {
+        const wrapper = mountPage({connected: null, receivedAt: new Date(Date.now() - 600000).toISOString()});
+
+        expect(wrapper.find('[data-test="health-age"]').text()).toContain('stale');
+    });
+
+    it('shows a sent upcoming row with a badge instead of voting and delete', () => {
+        const wrapper = mountPage({state: 'idle', upcoming: [request(4, 'Sent one', true), request(5, 'Other')]});
+        const rows = wrapper.findAll('[data-test="upcoming-row"]');
+
+        expect(rows[0].find('[data-test="sent-badge"]').exists()).toBe(true);
+        expect(rows[0].find('[data-test="vote-up"]').exists()).toBe(false);
+        expect(rows[0].find('[data-test="remove"]').exists()).toBe(false);
+        expect(rows[1].find('[data-test="vote-up"]').exists()).toBe(true);
     });
 });
 

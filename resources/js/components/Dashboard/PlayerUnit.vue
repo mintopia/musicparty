@@ -4,13 +4,12 @@ import {computed, inject, ref} from 'vue';
 import HealthGrid from '@/components/Dashboard/HealthGrid.vue';
 import SeekBar from '@/components/Dashboard/SeekBar.vue';
 import {useTicker} from '@/composables/useProgress';
-import {notifyKey, sendControl, startPlayback, useRun} from '@/lib/dashboard';
+import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
 import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
 import type {DashboardControl, LegacyPartyState} from '@/types';
 
 const props = defineProps<{
     code: string;
-    host: string;
     state: LegacyPartyState;
     control: DashboardControl;
     canControl: boolean;
@@ -36,7 +35,6 @@ const positionMs = computed(() => {
 });
 const artist = computed(() => (props.state.now?.artists ?? []).map((a) => a.name).join(', '));
 const art = computed(() => props.state.now?.album?.image_url ?? '');
-const inParty = computed(() => props.control.start.state === 'hidden');
 const outsideLabel = computed(() => props.control.playingFrom.label ?? 'Spotify');
 
 async function transport(action: 'play' | 'pause' | 'next' | 'previous'): Promise<void> {
@@ -47,12 +45,6 @@ async function transport(action: 'play' | 'pause' | 'next' | 'previous'): Promis
 
 async function seek(ms: number): Promise<void> {
     await run(() => sendControl(props.code, 'seek', {positionMs: ms}));
-}
-
-async function restartInParty(): Promise<void> {
-    busy.value = true;
-    await run(() => startPlayback(props.code, props.control.start.selectedDeviceId, 'restart'));
-    busy.value = false;
 }
 
 async function rate(value: number): Promise<void> {
@@ -108,19 +100,7 @@ async function rate(value: number): Promise<void> {
         </div>
 
         <div class="pu-row">
-            <div>
-                <button
-                    v-if="inParty && state.now !== null"
-                    type="button"
-                    class="btn btn-sm btn-ondark rounded-pill px-3"
-                    :title="`Start this track again in the party context on ${host}'s Spotify`"
-                    :disabled="busy || !canControl"
-                    data-test="restart-in-party"
-                    @click="restartInParty"
-                >
-                    <i class="ti ti-refresh"></i><span class="restart-label ms-1">Restart in party</span>
-                </button>
-            </div>
+            <div></div>
             <div class="tp">
                 <template v-if="state.now !== null">
                     <button
@@ -184,7 +164,7 @@ async function rate(value: number): Promise<void> {
             <span>Skip moves through {{ outsideLabel }}. Use Start Playback to put the party back on.</span>
         </div>
 
-        <HealthGrid :health="control.health" :playing-from="control.playingFrom" />
+        <HealthGrid :health="control.health" />
     </div>
 </template>
 
@@ -293,9 +273,6 @@ async function rate(value: number): Promise<void> {
     }
     .pu-title {
         font-size: 1.5rem;
-    }
-    .restart-label {
-        display: none;
     }
     .tp {
         gap: 12px;

@@ -230,9 +230,9 @@ export interface DashboardControl {
     playingFrom: {kind: 'party' | 'outside' | 'nothing' | 'unknown'; label: string | null};
     nowPlaying: {isRequest: boolean; requestedBy: string | null};
     health: {
-        player: {source: DashboardPlayerSource | null; label: string; fresh: boolean};
+        player: {source: DashboardPlayerSource | null; label: string; fresh: boolean; connected: boolean | null};
         device: {id: string | null; name: string | null};
-        sampledAt: string | null;
+        receivedAt: string | null;
         link: 'connected' | 'relink_required';
         polling: 'off' | 'on' | 'backup';
     };

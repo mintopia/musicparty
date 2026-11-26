@@ -31,13 +31,7 @@ const bannerStyle = computed(() => {
             <div class="container-fluid px-4">
                 <div class="row g-4 align-items-stretch">
                     <div class="col-xl-7 col-lg-6">
-                        <PlayerUnit
-                            :code="code"
-                            :host="host"
-                            :state="state"
-                            :control="control"
-                            :can-control="canControl"
-                        />
+                        <PlayerUnit :code="code" :state="state" :control="control" :can-control="canControl" />
                     </div>
                     <div class="col-xl-5 col-lg-6">
                         <UpNextDeck
