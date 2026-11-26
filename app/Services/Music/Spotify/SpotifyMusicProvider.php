@@ -434,9 +434,15 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     {
         $queue = SpotifyPayload::object($this->control()->getMyQueue());
         $ids = collect((array) $queue->queue)->map(fn (mixed $item): mixed => SpotifyPayload::object($item)->id)->unique();
+        $playing = $queue->currently_playing ?? null;
+        $playingId = $playing === null ? null : SpotifyPayload::object($playing)->id;
 
-        // With nothing queued Spotify pads the queue with copies of the current context, so unique items minus the playing track is the real depth, or -1 when nothing is playing or queued.
-        return $ids->count() - 1;
+        if ($playingId === null) {
+            return $ids->count() - 1;
+        }
+
+        // The queue excludes the playing track, but Spotify pads an empty queue with copies of it.
+        return $ids->reject(fn (mixed $id): bool => $id === $playingId)->count();
     }
 
     public function currentPlayback(): ?PlaybackState
