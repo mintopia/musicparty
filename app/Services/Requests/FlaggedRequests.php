@@ -9,14 +9,16 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\ModExtensions;
+use App\Mods\PartyMods;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\QueueSelector;
 use Carbon\CarbonInterface;
 
 class FlaggedRequests
 {
-    public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue, protected ModExtensions $mods) {}
+    public function __construct(protected MusicProviderFactory $providers, protected QueueSelector $queue, protected ModExtensions $mods, protected PartyMods $partyMods) {}
 
     public function flag(Party $party, Song $song, User $user, string $reason, ?CarbonInterface $scheduledFor = null): UpcomingSong
     {
@@ -35,25 +37,29 @@ class FlaggedRequests
      */
     public function listFor(Party $party): array
     {
+        $reviewsAvailable = $this->partyMods->isEnabled($party, AiRequestReviewMod::CODE);
+
         return array_values($party->upcoming()
             ->whereNull('queued_at')
             ->whereNotNull('flagged_at')
-            ->with(['user', 'song.album', 'song.artists'])
+            ->with(['user', 'song.album', 'song.artists', 'aiReview'])
             ->orderBy('flagged_at')
             ->orderBy('id')
             ->get()
-            ->map(fn (UpcomingSong $request): array => $this->item($request))
+            ->map(fn (UpcomingSong $request): array => $this->item($request, $reviewsAvailable))
             ->all());
     }
 
     /**
      * @return array<string, mixed>
      */
-    public function item(UpcomingSong $request): array
+    public function item(UpcomingSong $request, ?bool $reviewsAvailable = null): array
     {
         $party = $request->party;
         $provider = $this->providers->forParty($party, Purpose::Search);
         $track = $request->song->toTrack();
+        $review = $request->loadMissing('aiReview')->aiReview;
+        $reviewsAvailable ??= $this->partyMods->isEnabled($party, AiRequestReviewMod::CODE);
         $annotation = new TrackAnnotation(
             track: $track,
             upcoming: false,
@@ -74,6 +80,7 @@ class FlaggedRequests
             'reason' => $request->flag_reason,
             'flagged_at' => $request->flagged_at?->toIso8601String(),
             'requester' => ['id' => $request->user_id, 'name' => $request->user->nickname ?? 'Unknown'],
+            'ai_review_url' => $review !== null && $reviewsAvailable ? route('parties.ai-reviews.show', [$party->code, $review->id]) : null,
             'track' => new TrackAnnotationResource($annotation)->resolve(),
         ];
     }

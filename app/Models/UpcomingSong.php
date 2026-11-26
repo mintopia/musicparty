@@ -30,6 +30,7 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property int|null $user_id
+ * @property-read AiReview|null $aiReview
  * @property-read Party $party
  * @property-read PlayedSong|null $played
  * @property-read Song $song
@@ -90,6 +91,12 @@ class UpcomingSong extends Model
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
+    }
+
+    /** @return HasOne<AiReview, $this> */
+    public function aiReview(): HasOne
+    {
+        return $this->hasOne(AiReview::class)->latestOfMany();
     }
 
     /** @return HasOne<PlayedSong, $this> */

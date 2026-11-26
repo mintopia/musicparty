@@ -87,7 +87,13 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                         <li v-for="item in flagged" :key="item.id" class="na-row" data-test="flagged-row">
                             <div class="na-text">
                                 <div class="fw-medium">{{ item.track.name }}</div>
-                                <div class="na-detail">{{ artists(item) }} · {{ item.requester.name }}</div>
+                                <div class="na-detail">
+                                    {{ artists(item) }} · {{ item.requester.name }}
+                                    <template v-if="item.ai_review_url">
+                                        ·
+                                        <a :href="item.ai_review_url" data-test="ai-review-link">AI review</a>
+                                    </template>
+                                </div>
                             </div>
                             <div v-if="canModerate" class="na-acts">
                                 <button
