@@ -2,6 +2,7 @@
 
 use App\Enums\Purpose;
 use App\Exceptions\NoActiveDeviceException;
+use App\Exceptions\ProviderPremiumRequiredException;
 use App\Models\User;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Spotify\SpotifyMapper;
@@ -150,4 +151,93 @@ it('reserves only the context playlist track', function () {
 
     expect($provider->isReservedTrack(SpotifyMusicProvider::CONTEXT_PLAYLIST_TRACK_ID))->toBeTrue()
         ->and($provider->isReservedTrack('abc'))->toBeFalse();
+});
+
+function ownedPlaylistPayload(string $id = 'ctx', string $name = 'Music Party Context', string $owner = 'me1', int $total = 0): stdClass
+{
+    return (object) ['id' => $id, 'name' => $name, 'owner' => (object) ['id' => $owner, 'display_name' => 'Owner'], 'tracks' => (object) ['total' => $total]];
+}
+
+it('plays a track inside a playlist context at an offset and position', function () {
+    $api = FakeSpotify::install();
+    $provider = spotifyProvider($api);
+
+    $provider->playInContext('ctx', mappedTrack('abc'), 'dev1', 5000);
+    $provider->playInContext('ctx', mappedTrack('abc'));
+
+    $context = ['context_uri' => 'spotify:playlist:ctx', 'offset' => ['uri' => 'spotify:track:abc']];
+    expect($api->callsTo('play'))->toBe([
+        ['dev1', $context + ['position_ms' => 5000]],
+        ['', $context + ['position_ms' => 0]],
+    ]);
+});
+
+it('creates a private playlist through /me/playlists without leaking the library deprecation notice', function () {
+    $api = FakeSpotify::install();
+    $leaked = [];
+    set_error_handler(function (int $level, string $message) use (&$leaked): bool {
+        $leaked[] = $message;
+
+        return true;
+    }, E_USER_DEPRECATED);
+
+    try {
+        $playlist = spotifyProvider($api)->createPrivatePlaylist('Music Party Context', 'Leave it empty.');
+    } finally {
+        restore_error_handler();
+    }
+
+    expect($api->callsTo('createPlaylist'))->toBe([[['name' => 'Music Party Context', 'description' => 'Leave it empty.', 'public' => false]]])
+        ->and($playlist->id)->toBe('newpl')
+        ->and($leaked)->toBe([]);
+});
+
+it('clears a playlist with an empty replace', function () {
+    $api = FakeSpotify::install();
+
+    spotifyProvider($api)->clearPlaylist('ctx');
+
+    expect($api->callsTo('replacePlaylistTracks'))->toBe([['ctx', []]]);
+});
+
+it('only reports playlists the linked account owns', function (mixed $response, ?string $expected) {
+    $api = FakeSpotify::install()->respond('getPlaylist', $response());
+
+    expect(spotifyProvider($api)->ownedPlaylist('ctx')?->id)->toBe($expected);
+})->with([
+    'own playlist' => [fn () => ownedPlaylistPayload(), 'ctx'],
+    'foreign playlist' => [fn () => ownedPlaylistPayload(owner: 'someone-else'), null],
+    'missing playlist' => [fn () => new SpotifyWebAPIException('Not found', 404), null],
+]);
+
+it('finds the first owned playlist with an exact name', function () {
+    $api = FakeSpotify::install()->respond('getMyPlaylists', (object) ['next' => null, 'items' => [
+        ownedPlaylistPayload('a', 'Music Party Context', 'someone-else'),
+        ownedPlaylistPayload('b', 'Music Party Context Copy'),
+        ownedPlaylistPayload('c', 'Music Party Context'),
+    ]]);
+
+    expect(spotifyProvider($api)->findOwnedPlaylistByName('Music Party Context')?->id)->toBe('c');
+});
+
+it('maps a Spotify Premium-only refusal to a dedicated exception', function () {
+    $api = FakeSpotify::install();
+    $refusal = new SpotifyWebAPIException('Player command failed: Premium required', 403);
+    $refusal->setReason('PREMIUM_REQUIRED');
+    $api->respond('pause', $refusal);
+
+    spotifyProvider($api)->pause();
+})->throws(ProviderPremiumRequiredException::class);
+
+it('names playback contexts and caches the lookup', function () {
+    Cache::flush();
+    $api = FakeSpotify::install()->respond('getPlaylist', (object) ['name' => 'Road Trip']);
+    $provider = spotifyProvider($api);
+
+    expect($provider->contextName('spotify:user:abc:collection'))->toBe('Liked Songs')
+        ->and($provider->contextName('spotify:playlist:pl1'))->toBe('Road Trip')
+        ->and($provider->contextName('spotify:playlist:pl1'))->toBe('Road Trip')
+        ->and($provider->contextName('spotify:show:xyz'))->toBeNull()
+        ->and($api->callsTo('getPlaylist'))->toHaveCount(1)
+        ->and($provider->playlistContextUri('pl1'))->toBe('spotify:playlist:pl1');
 });

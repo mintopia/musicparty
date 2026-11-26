@@ -51,6 +51,7 @@ dataset('scheduled entries', [
     'sanctum prune' => ['sanctum:prune-expired --hours=24', '0 0 * * *'],
     'party fallback' => ['party:fallback', '* * * * *'],
     'party force' => ['party:force', '* * * * *'],
+    'context playlist' => ['party:contextplaylist', '*/15 * * * *'],
     'refresh tokens' => ['party:refreshaccesstokens', '* * * * *'],
     'minute mods' => ['mods:minute', '* * * * *'],
     'hour mods' => ['mods:hour', '0 * * * *'],
@@ -67,7 +68,7 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
-        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force',
+        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force', 'party:contextplaylist',
         'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day',
     ]);
 });

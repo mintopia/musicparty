@@ -116,8 +116,8 @@ class PlaybackControl
         }
         $deviceId ??= $party->recent_device_id;
         $state = $provider->currentPlayback();
-        $trackId = $state?->trackId
-            ?? $party->song?->provider_track_id
+        $trackId = $state->trackId
+            ?? $party->song->provider_track_id
             ?? $party->history()->orderBy('played_at', 'desc')->first()?->song->provider_track_id;
 
         if ($trackId === null) {

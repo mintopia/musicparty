@@ -431,7 +431,7 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     protected function accountId(): string
     {
-        return $this->accountId ??= (string) ($this->user->accounts()->whereHas('provider', fn ($query) => $query->whereCode('spotify'))->first()?->external_id
+        return $this->accountId ??= (string) ($this->user->accounts()->whereHas('provider', fn ($query) => $query->whereCode('spotify'))->first()->external_id
             ?? SpotifyPayload::object($this->control()->me())->id);
     }
 

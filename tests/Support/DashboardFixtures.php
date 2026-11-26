@@ -1,9 +1,9 @@
 <?php
 
+use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
 use App\Models\PlayedSong;
-use App\Models\Party;
 use App\Models\Role;
 use App\Models\Song;
 use App\Models\UpcomingSong;

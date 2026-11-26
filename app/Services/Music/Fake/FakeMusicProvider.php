@@ -61,6 +61,8 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
 
     protected bool $relinkRequired = false;
 
+    protected ?Throwable $devicesFailure = null;
+
     public function __construct()
     {
         for ($i = 1; $i <= self::CATALOGUE_SIZE; $i++) {
@@ -185,6 +187,13 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function withPlaybackFailure(?Throwable $failure): self
     {
         $this->playbackFailure = $failure;
+
+        return $this;
+    }
+
+    public function failingDevicesWith(?Throwable $failure): self
+    {
+        $this->devicesFailure = $failure;
 
         return $this;
     }
@@ -446,6 +455,9 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function devices(): array
     {
         $this->record(__FUNCTION__, func_get_args());
+        if ($this->devicesFailure !== null) {
+            throw $this->devicesFailure;
+        }
 
         return $this->devices;
     }

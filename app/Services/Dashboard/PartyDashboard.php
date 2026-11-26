@@ -14,16 +14,17 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
-use App\Services\PlaybackControl;
-use App\Services\PlaybackStatus;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\Playback\PartyDashboardCache;
 use App\Services\Playback\StartPlayback;
 use App\Services\Playback\StartTarget;
+use App\Services\PlaybackControl;
+use App\Services\PlaybackStatus;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\UpcomingSongAugmentService;
 use Closure;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Cache;
 use Throwable;
 
@@ -303,7 +304,7 @@ class PartyDashboard
                 },
                 'fresh' => $fresh,
             ],
-            'device' => ['id' => $state?->deviceId ?? $party->recent_device_id, 'name' => $state?->deviceName ?? $party->device_name],
+            'device' => ['id' => $state->deviceId ?? $party->recent_device_id, 'name' => $state->deviceName ?? $party->device_name],
             'sampledAt' => $party->playback_sampled_at?->toIso8601String(),
             'link' => $needsRelink ? 'relink_required' : 'connected',
             'polling' => ! $party->poll ? 'off' : ($party->hasFreshPushedPlayback() ? 'backup' : 'on'),
@@ -361,7 +362,7 @@ class PartyDashboard
      */
     protected function targetPresentation(Party $party, StartTarget $target): array
     {
-        $song = $target->request?->song
+        $song = $target->request->song
             ?? ($party->song?->provider_track_id === $target->track->id ? $party->song : Song::fromTrack($target->track));
 
         return [
@@ -418,9 +419,9 @@ class PartyDashboard
     }
 
     /**
-     * @return \Illuminate\Database\Eloquent\Builder<UpcomingSong>
+     * @return HasMany<UpcomingSong, Party>
      */
-    protected function unsent(Party $party)
+    protected function unsent(Party $party): HasMany
     {
         return $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
@@ -462,11 +463,11 @@ class PartyDashboard
     {
         $augmented = $this->augment->augmentCollection($requests, $viewer);
 
-        return $requests->map(function (UpcomingSong $request) use ($augmented, $sent): array {
+        return array_values($requests->map(function (UpcomingSong $request) use ($augmented, $sent): array {
             $resource = new UpcomingSongResource($request);
             $resource->augment($augmented[$request->id] ?? null);
 
             return $resource->toArray(request()) + ['sent' => $sent ?? $request->queued_at !== null];
-        })->values()->all();
+        })->all());
     }
 }
