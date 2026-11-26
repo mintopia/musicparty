@@ -10,7 +10,11 @@ defineProps<{
 </script>
 
 <template>
-    <div class="setting-row" :class="{'setting-row-stacked': stacked, 'setting-row-wide': wide}" data-test="setting-row">
+    <div
+        class="setting-row"
+        :class="{'setting-row-stacked': stacked, 'setting-row-wide': wide}"
+        data-test="setting-row"
+    >
         <div class="setting-text">
             <label class="setting-label" :for="$props.for">{{ label }}</label>
             <p v-if="hint" class="setting-hint">{{ hint }}</p>
