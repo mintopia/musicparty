@@ -4,7 +4,14 @@ import {describe, expect, it} from 'vitest';
 import ThemeForm from '@/components/ThemeForm.vue';
 
 function mountForm(css: string, readonly = false) {
-    const form = reactive({name: 'T', css, active: false, dark_mode: false, tokens: {}, errors: {} as Record<string, string>});
+    const form = reactive({
+        name: 'T',
+        css,
+        active: false,
+        dark_mode: false,
+        tokens: {},
+        errors: {} as Record<string, string>,
+    });
     const wrapper = mount(ThemeForm, {props: {form, readonly, colourTokens: []}, attachTo: document.body});
     return {form, wrapper};
 }

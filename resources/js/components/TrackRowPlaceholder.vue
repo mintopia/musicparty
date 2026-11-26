@@ -19,7 +19,10 @@ withDefaults(defineProps<{compact?: boolean}>(), {compact: false});
             </div>
             <div v-if="!compact" class="col-auto"><span class="placeholder" style="width: 2.5rem"></span></div>
             <div class="col-auto text-center" :class="{'w-8': !compact}">
-                <span class="placeholder btn btn-primary disabled" :class="compact ? 'action-compact' : 'ms-2 w-100'"></span>
+                <span
+                    class="placeholder btn btn-primary disabled"
+                    :class="compact ? 'action-compact' : 'ms-2 w-100'"
+                ></span>
             </div>
         </div>
     </div>

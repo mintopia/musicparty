@@ -3,13 +3,7 @@ import {computed, onBeforeUnmount, onMounted, ref, watch} from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import SearchEntityRow from '@/components/Search/SearchEntityRow.vue';
 import TrackRow from '@/components/TrackRow.vue';
-import type {
-    AlbumResult,
-    ArtistResult,
-    LinkTarget,
-    SearchTypeResults,
-    TrackAnnotation,
-} from '@/types';
+import type {AlbumResult, ArtistResult, LinkTarget, SearchTypeResults, TrackAnnotation} from '@/types';
 
 const props = defineProps<{
     results: SearchTypeResults;
