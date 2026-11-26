@@ -75,7 +75,10 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             </div>
                         </div>
                         <div class="col-auto text-secondary">{{ formatMs(request.length) }}</div>
-                        <div class="col-auto votes">
+                        <div v-if="request.sent" class="col-auto" data-test="sent-badge">
+                            <span class="badge bg-green-lt" title="Already in Spotify's queue">Sent to Spotify</span>
+                        </div>
+                        <div v-if="!request.sent" class="col-auto votes">
                             <template v-if="canDownvote">
                                 <button
                                     type="button"
@@ -119,7 +122,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 <span class="mx-2">{{ request.score }}</span>
                             </template>
                         </div>
-                        <div class="col-auto qa">
+                        <div v-if="!request.sent" class="col-auto qa">
                             <a
                                 :href="`${queueUrl}/${request.id}`"
                                 class="btn btn-ghost-secondary btn-icon"

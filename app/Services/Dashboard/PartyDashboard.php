@@ -17,6 +17,7 @@ use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
+use App\Services\Playback\EncoreConnection;
 use App\Services\Playback\PartyDashboardCache;
 use App\Services\Playback\StartPlayback;
 use App\Services\Playback\StartTarget;
@@ -54,6 +55,7 @@ class PartyDashboard
         protected UpcomingSongAugmentService $augment,
         protected FlaggedRequests $flagged,
         protected PartyTimezone $timezones,
+        protected EncoreConnection $encore,
     ) {}
 
     /**
@@ -197,12 +199,15 @@ class PartyDashboard
      */
     public function upcoming(Party $party, User $viewer): array
     {
-        $skip = $this->upNextRequests($party)->whereNull('queued_at')->count();
-        $items = $this->unsent($party)->skip($skip)->take(self::UPCOMING_SIZE)->get();
+        $sent = $this->sentRequest($party);
+        $unsent = $this->unsent($party)->take(self::UPCOMING_SIZE - ($sent === null ? 0 : 1))->get();
 
         return [
-            'items' => $this->requests($items, $viewer, sent: false),
-            'total' => $this->unsent($party)->count() + ($this->sentRequest($party) === null ? 0 : 1),
+            'items' => array_merge(
+                $sent === null ? [] : $this->requests(new Collection([$sent]), $viewer, sent: true),
+                $this->requests($unsent, $viewer, sent: false),
+            ),
+            'total' => $this->unsent($party)->count() + ($sent === null ? 0 : 1),
         ];
     }
 
@@ -288,9 +293,10 @@ class PartyDashboard
     protected function health(Party $party, ?PlaybackState $state, bool $needsRelink): array
     {
         $source = $party->playback_source;
-        $fresh = $source !== null && $party->playback_received_at !== null && $party->playback_received_at->greaterThan(
+        $connected = $source === PlaybackSource::Encore ? $this->encore->isConnected($party) : null;
+        $fresh = $connected === true || ($source !== null && $party->playback_received_at !== null && $party->playback_received_at->greaterThan(
             now()->subSeconds($source->isPushed() ? Party::PUSHED_PLAYBACK_FRESH_SECONDS : self::POLLING_FRESH_SECONDS)
-        );
+        ));
 
         return [
             'player' => [
@@ -309,9 +315,10 @@ class PartyDashboard
                     null => 'None',
                 },
                 'fresh' => $fresh,
+                'connected' => $connected,
             ],
             'device' => ['id' => $state->deviceId ?? $party->recent_device_id, 'name' => $state->deviceName ?? $party->device_name],
-            'sampledAt' => $party->playback_sampled_at?->toIso8601String(),
+            'receivedAt' => $party->playback_received_at?->toIso8601String(),
             'link' => $needsRelink ? 'relink_required' : 'connected',
             'polling' => ! $party->poll ? 'off' : ($party->hasFreshPushedPlayback() ? 'backup' : 'on'),
         ];
@@ -414,8 +421,9 @@ class PartyDashboard
         if (! $party->active) {
             $issues[] = ['code' => 'party_inactive', 'fact' => 'Party inactive', 'detail' => 'Nothing is sent to Spotify', 'action' => ['label' => 'Activate', 'kind' => 'activate']];
         }
-        if ($party->playback_source?->isPushed() === true && ! $party->hasFreshPushedPlayback()) {
-            $issues[] = ['code' => 'player_stale', 'fact' => 'Player not reporting', 'detail' => 'Polling is checking Spotify', 'action' => null];
+        $encoreConnected = $party->playback_source === PlaybackSource::Encore && $this->encore->isConnected($party) === true;
+        if ($party->playback_source?->isPushed() === true && ! $party->hasFreshPushedPlayback() && ! $encoreConnected) {
+            $issues[] = ['code' => 'player_stale', 'fact' => 'Player not reporting', 'detail' => $party->poll ? 'Polling is checking Spotify' : 'Polling is off', 'action' => null];
         }
         if (Cache::get(StartPlayback::premiumFlagKey($party)) === true) {
             $issues[] = ['code' => 'premium_required', 'fact' => 'Spotify Premium required', 'detail' => "Ask {$host} to upgrade", 'action' => null];
