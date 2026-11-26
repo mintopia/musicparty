@@ -15,7 +15,14 @@ const props = withDefaults(
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
     }>(),
-    {canDownvote: false, requesting: false, needsApproval: false, awaitingApproval: false, hideActions: false, compact: false},
+    {
+        canDownvote: false,
+        requesting: false,
+        needsApproval: false,
+        awaitingApproval: false,
+        hideActions: false,
+        compact: false,
+    },
 );
 
 const emit = defineEmits<{
@@ -86,7 +93,9 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <a v-if="artistRoute" :href="href(artistRoute(artist.id))">{{ artist.name }}</a>
                         <template v-else>{{ artist.name }}</template>
                     </template>
-                    <span v-if="compact" class="d-md-none" data-test="track-album-inline"> · {{ track.album.name }}</span>
+                    <span v-if="compact" class="d-md-none" data-test="track-album-inline">
+                        · {{ track.album.name }}</span
+                    >
                 </div>
                 <div class="text-secondary" :class="{'d-none': compact}" data-test="track-album">
                     <a v-if="albumRoute" :href="href(albumRoute(track.album.id))">{{ track.album.name }}</a>

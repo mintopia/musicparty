@@ -77,7 +77,13 @@ const nothingFound = computed(() => {
                     {{ error.message }}
                     <template v-if="error.retryable">Your search is still in the box.</template>
                 </div>
-                <button v-if="error.retryable" type="button" class="btn btn-primary" data-test="retry" @click="emit('retry')">
+                <button
+                    v-if="error.retryable"
+                    type="button"
+                    class="btn btn-primary"
+                    data-test="retry"
+                    @click="emit('retry')"
+                >
                     <i class="icon ti ti-refresh me-1"></i>
                     Retry
                 </button>

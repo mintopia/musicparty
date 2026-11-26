@@ -60,7 +60,11 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
         album: {id: 'a', name: 'Album', image_url: null},
         artists: [{id: 'x', name: 'Artist'}],
         queue: {in_queue: false, upcoming_id: null, score: 0, vote: null, requested_by: null, ...queue},
-        eligibility: {allowed, outcome: allowed ? 'allow' : 'reject', reason: allowed ? null : 'Played in the last hour'},
+        eligibility: {
+            allowed,
+            outcome: allowed ? 'allow' : 'reject',
+            reason: allowed ? null : 'Played in the last hour',
+        },
     };
 }
 
@@ -118,7 +122,10 @@ const idle: LegacyPartyState = {now: null, next: null, current: null, status: nu
 const party = {code: 'ABCD', name: 'Party', downvotes: false, canManage: false};
 const originalAdapter = axios.defaults.adapter;
 
-const mountSearch = (results: unknown, params: {query: string | null; perPage?: number; type?: string | null} = {query: 'q'}) =>
+const mountSearch = (
+    results: unknown,
+    params: {query: string | null; perPage?: number; type?: string | null} = {query: 'q'},
+) =>
     mount(Search, {
         props: {party, params: {perPage: 10, type: null, ...params}, results, playerState: idle} as never,
     });
@@ -337,7 +344,13 @@ describe('Party search single-type view', () => {
 
     it('shows an exact count when the total is not capped', () => {
         const wrapper = mountSearch(
-            {view: 'type', type: 'track', total: 57, capped: false, items: {...page([track('a1')], 1, 6), total: 57, to: 1}},
+            {
+                view: 'type',
+                type: 'track',
+                total: 57,
+                capped: false,
+                items: {...page([track('a1')], 1, 6), total: 57, to: 1},
+            },
             {query: 'q', type: 'track'},
         );
 
@@ -376,14 +389,22 @@ describe('Party search single-type view', () => {
 
         expect(wrapper.get('[data-test="type-title"]').text()).toBe('Artists');
         expect(wrapper.findAll('[data-test="entity-row"]')).toHaveLength(2);
-        expect(wrapper.findAll('[data-test="entity-row"]')[0].attributes('href')).toBe('/parties/ABCD/artists/ar1?query=q');
+        expect(wrapper.findAll('[data-test="entity-row"]')[0].attributes('href')).toBe(
+            '/parties/ABCD/artists/ar1?query=q',
+        );
         expect(wrapper.findAll('[data-test="cover-fallback"]')).toHaveLength(1);
         expect(wrapper.get('[data-test="entity-subtitle"]').text()).toBe('Artist');
     });
 
     it('shows No results when the chosen type has nothing', () => {
         const wrapper = mountSearch(
-            {view: 'type', type: 'artist', total: 0, capped: false, items: {...page([], 1, 1), total: 0, from: null, to: null}},
+            {
+                view: 'type',
+                type: 'artist',
+                total: 0,
+                capped: false,
+                items: {...page([], 1, 1), total: 0, from: null, to: null},
+            },
             {query: 'zzz', type: 'artist'},
         );
 
@@ -423,7 +444,9 @@ describe('Party search single-type view', () => {
         await wrapper.get('[data-test="load-more"]').trigger('click');
         await wrapper.setProps({results: trackType(2, [track('b1')])});
 
-        await wrapper.setProps({results: trackType(2, [track('b1', {in_queue: true, upcoming_id: 3, requested_by: 'Sam'})])});
+        await wrapper.setProps({
+            results: trackType(2, [track('b1', {in_queue: true, upcoming_id: 3, requested_by: 'Sam'})]),
+        });
 
         expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(3);
     });

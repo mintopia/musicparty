@@ -40,7 +40,9 @@ watch(
 
 const searchUrl = computed(() => search(props.party.code).url);
 const queryString = computed(() => (query.value ? `?query=${encodeURIComponent(query.value)}` : ''));
-const overviewUrl = computed(() => searchUrl.value + (props.params.query ? `?query=${encodeURIComponent(props.params.query)}` : ''));
+const overviewUrl = computed(
+    () => searchUrl.value + (props.params.query ? `?query=${encodeURIComponent(props.params.query)}` : ''),
+);
 const typeUrl = (type: SearchType): string => `${overviewUrl.value}${props.params.query ? '&' : '?'}type=${type}`;
 
 function submit(): void {

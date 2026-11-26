@@ -15,7 +15,11 @@ withDefaults(
 </script>
 
 <template>
-    <a :href="href" class="list-group-item list-group-item-action d-flex align-items-center gap-3" data-test="entity-row">
+    <a
+        :href="href"
+        class="list-group-item list-group-item-action d-flex align-items-center gap-3"
+        data-test="entity-row"
+    >
         <SearchCover :src="image" :alt="title" :size="48" :round="round" :icon="icon" />
         <div class="entity-main">
             <div class="fw-medium" data-test="entity-title">{{ title }}</div>
