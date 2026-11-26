@@ -166,9 +166,7 @@ onBeforeUnmount(stopCountdown);
             <template v-else-if="state === 'starting'"
                 >Asking Spotify to start the party on {{ selectedDevice?.name ?? 'your device' }}.</template
             >
-            <template v-else-if="state === 'rate_limited'"
-                >Spotify is busy, try again in {{ retryIn }} s.</template
-            >
+            <template v-else-if="state === 'rate_limited'">Spotify is busy, try again in {{ retryIn }} s.</template>
             <template v-else-if="state === 'no_device'"
                 >No Spotify app is open on {{ host }}'s account. Open Spotify on the DJ laptop or wake the Encore
                 speaker, then refresh.</template
@@ -178,8 +176,8 @@ onBeforeUnmount(stopCountdown);
                 Ask {{ host }} to upgrade, then try again.</template
             >
             <template v-else-if="state === 'relink_required'"
-                >{{ host }}'s Spotify link has expired, so Music Party can't control playback. Ask {{ host }} to sign
-                in and re-link Spotify.</template
+                >{{ host }}'s Spotify link has expired, so Music Party can't control playback. Ask {{ host }} to sign in
+                and re-link Spotify.</template
             >
             <template v-else>Nothing is playing on {{ host }}'s Spotify.</template>
         </div>

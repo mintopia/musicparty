@@ -45,7 +45,9 @@ useDashboardSync(props.party.code, (next) => {
 });
 
 const hidden = computed(() => props.control.start.state === 'hidden');
-const upcomingItems = computed(() => (hidden.value ? props.upcoming.items : [...props.upNext.slice(1), ...props.upcoming.items]));
+const upcomingItems = computed(() =>
+    hidden.value ? props.upcoming.items : [...props.upNext.slice(1), ...props.upcoming.items],
+);
 
 onBeforeUnmount(() => {
     if (noticeTimer !== null) {

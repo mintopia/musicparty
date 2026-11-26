@@ -76,7 +76,8 @@ onBeforeUnmount(() => clearTimeout(timer));
                 </div>
                 <div class="col-6">
                     <button type="button" class="btn btn-primary w-100" data-test="copy-join" @click="copyJoin">
-                        <i class="ti" :class="copied ? 'ti-check' : 'ti-copy'"></i>{{ copied ? 'Copied' : 'Copy join link' }}
+                        <i class="ti" :class="copied ? 'ti-check' : 'ti-copy'"></i
+                        >{{ copied ? 'Copied' : 'Copy join link' }}
                     </button>
                 </div>
             </div>

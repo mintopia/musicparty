@@ -27,10 +27,7 @@ function formatScheduled(iso: string): string {
 
 async function vote(request: DashboardRequest, value: number): Promise<void> {
     const route = storeVote({party: props.code, upcomingsong: request.id});
-    await run(() => axios.request({url: route.url, method: route.method, data: {vote: value}}), [
-        'upNext',
-        'upcoming',
-    ]);
+    await run(() => axios.request({url: route.url, method: route.method, data: {vote: value}}), ['upNext', 'upcoming']);
 }
 </script>
 
@@ -38,11 +35,17 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     <div class="upcoming-list" data-test="upcoming-list">
         <div class="hdr d-flex align-items-center mt-4 mb-2">
             <h3 class="mb-0 flex-grow-1">Upcoming Songs</h3>
-            <a :href="queueUrl" data-test="manage-link">Manage all {{ total }} requests <i class="ti ti-chevron-right"></i></a>
+            <a :href="queueUrl" data-test="manage-link"
+                >Manage all {{ total }} requests <i class="ti ti-chevron-right"></i
+            ></a>
         </div>
         <div class="card">
             <EmptyState v-if="items.length === 0" title="Queue empty">
-                <a v-if="!hasFallbackPlaylist" :href="fallbackSettingsUrl" class="btn btn-outline-secondary" data-test="set-fallback"
+                <a
+                    v-if="!hasFallbackPlaylist"
+                    :href="fallbackSettingsUrl"
+                    class="btn btn-outline-secondary"
+                    data-test="set-fallback"
                     >Set fallback</a
                 >
             </EmptyState>
@@ -63,7 +66,8 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             <div class="title">{{ request.name }}</div>
                             <div class="text-secondary">{{ request.artists.map((a) => a.name).join(', ') }}</div>
                             <div v-if="request.scheduled_for" class="text-info small">
-                                <i class="icon ti ti-clock"></i> Scheduled for {{ formatScheduled(request.scheduled_for) }}
+                                <i class="icon ti ti-clock"></i> Scheduled for
+                                {{ formatScheduled(request.scheduled_for) }}
                             </div>
                             <div class="text-muted small">
                                 <template v-if="request.user">Requested by {{ request.user }}</template>
@@ -81,7 +85,10 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                     data-test="vote-up"
                                     @click="vote(request, request.vote === 1 ? 0 : 1)"
                                 >
-                                    <i class="ti" :class="request.vote === 1 ? 'ti-arrow-big-up-filled' : 'ti-arrow-big-up'"></i>
+                                    <i
+                                        class="ti"
+                                        :class="request.vote === 1 ? 'ti-arrow-big-up-filled' : 'ti-arrow-big-up'"
+                                    ></i>
                                 </button>
                                 <span class="mx-2">{{ request.score }}</span>
                                 <button
@@ -92,7 +99,10 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                     data-test="vote-down"
                                     @click="vote(request, request.vote === -1 ? 0 : -1)"
                                 >
-                                    <i class="ti" :class="request.vote === -1 ? 'ti-arrow-big-down-filled' : 'ti-arrow-big-down'"></i>
+                                    <i
+                                        class="ti"
+                                        :class="request.vote === -1 ? 'ti-arrow-big-down-filled' : 'ti-arrow-big-down'"
+                                    ></i>
                                 </button>
                             </template>
                             <template v-else>

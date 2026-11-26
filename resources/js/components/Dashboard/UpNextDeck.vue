@@ -47,9 +47,7 @@ async function playNow(request: DashboardRequest, index: number): Promise<void> 
                         >Sent to Spotify</span
                     >
                 </div>
-                <div class="und-meta und-num">
-                    {{ formatMs(request.length) }}<br />{{ request.score }} votes
-                </div>
+                <div class="und-meta und-num">{{ formatMs(request.length) }}<br />{{ request.score }} votes</div>
                 <div class="und-acts">
                     <button
                         type="button"

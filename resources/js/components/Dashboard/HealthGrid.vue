@@ -13,7 +13,9 @@ const now = useTicker(
 );
 
 const ageSeconds = computed(() =>
-    props.health.sampledAt === null ? null : Math.max(0, Math.floor((now.value - Date.parse(props.health.sampledAt)) / 1000)),
+    props.health.sampledAt === null
+        ? null
+        : Math.max(0, Math.floor((now.value - Date.parse(props.health.sampledAt)) / 1000)),
 );
 const stale = computed(() => ageSeconds.value !== null && ageSeconds.value > STALE_SECONDS);
 const ageLabel = computed(() => {
@@ -23,9 +25,7 @@ const ageLabel = computed(() => {
     }
     return seconds < 120 ? `${seconds} s ago` : `${Math.floor(seconds / 60)} min ago`;
 });
-const pollingLabel = computed(
-    () => ({off: 'Off', on: 'On', backup: 'On, as backup'})[props.health.polling],
-);
+const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as backup'})[props.health.polling]);
 const playingFromWarns = computed(() => props.playingFrom.kind === 'outside' || props.playingFrom.kind === 'unknown');
 const playingFromLabel = computed(() => {
     switch (props.playingFrom.kind) {

@@ -73,7 +73,10 @@ function key(event: KeyboardEvent): void {
             <div class="seek-fill" :style="{width: `${percent}%`}"></div>
             <div class="seek-knob" :style="{left: `${percent}%`}"></div>
         </div>
-        <div class="pu-times"><span>{{ formatMs(shown) }}</span><span>{{ formatMs(durationMs) }}</span></div>
+        <div class="pu-times">
+            <span>{{ formatMs(shown) }}</span
+            ><span>{{ formatMs(durationMs) }}</span>
+        </div>
     </div>
 </template>
 

@@ -32,7 +32,9 @@ async function confirm(): Promise<void> {
     } catch (error) {
         const failure = errorCode(error);
         notify(
-            failure.status === 400 ? "That request was already sent to Spotify, so it can't be removed." : failure.message,
+            failure.status === 400
+                ? "That request was already sent to Spotify, so it can't be removed."
+                : failure.message,
         );
     } finally {
         busy.value = false;
