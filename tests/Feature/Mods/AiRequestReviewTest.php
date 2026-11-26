@@ -222,7 +222,7 @@ describe('Decision model', function () {
                 && $question['type'] === 'score'
                 && count($question['criteria']) === 5
                 && str_contains($question['instructions'], 'No explicit lyrics')
-                && str_contains($request['state'], '"title"')
+                && isset($request['state']['request']['title'])
                 && ! str_contains($request->body(), 'sk-secret-key')
                 && count($request['questions']) === 1;
         });
@@ -241,7 +241,7 @@ describe('Decision model', function () {
             && $request->hasHeader('Authorization', 'Bearer sk-secret-key')
             && array_keys($request->data()) === ['model', 'state', 'questions']
             && $request['model'] === 'jev-latest'
-            && is_string($request['state'])
+            && is_array($request['state'])
             && $request['questions']['suitability']['type'] === 'score');
     });
 
@@ -432,8 +432,8 @@ describe('Party context', function () {
 
         app(RequestRules::class)->check($party, $member, aiReviewTrack());
 
-        Http::assertSent(fn (Request $request): bool => str_contains($request['state'], 'party_context') && str_contains($request['state'], $played->song->name));
-        expect(json_encode(aiReviewLogged($handler, 'ai-review.request')['body']))->toContain('party_context')
+        Http::assertSent(fn (Request $request): bool => is_array($request['state']) && str_contains(json_encode($request['state']['party']), $played->song->name));
+        expect(json_encode(aiReviewLogged($handler, 'ai-review.request')['body']))->toContain('most_upvoted_requests')
             ->and(aiReviewLogged($handler, 'ai-review.outcome')['party_context_included'])->toBeTrue();
     });
 
@@ -475,11 +475,13 @@ describe('Party context', function () {
         app(RequestRules::class)->check($party, $member, aiReviewTrack());
 
         Http::assertSent(function (Request $request) use ($played): bool {
-            $state = json_decode($request['state'], true);
+            $state = $request['state'];
 
-            return str_contains($state['party_context'], 'Most recently played')
-                && str_contains($state['party_context'], 'Highest rated by guests')
-                && str_contains($state['party_context'], $played->song->name)
+            return is_array($state)
+                && is_array($state['request'])
+                && isset($state['request']['title'])
+                && array_keys($state['party']) === ['stats', 'recent', 'top_rated', 'downvoted', 'most_upvoted_requests', 'most_downvoted_requests', 'artists']
+                && str_contains(json_encode($state['party']['top_rated']), $played->song->name)
                 && ! str_contains($request['questions']['suitability']['instructions'], $played->song->name);
         });
     });
@@ -492,7 +494,7 @@ describe('Party context', function () {
 
         app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack());
 
-        Http::assertSent(fn (Request $request): bool => ! str_contains($request['state'], 'party_context'));
+        Http::assertSent(fn (Request $request): bool => is_array($request['state']) && array_keys($request['state']) === ['request']);
     });
 
     it('defaults the setting on', function () {
@@ -648,7 +650,8 @@ describe('History', function () {
 
         app(RequestRules::class)->check($party, $member, aiReviewTrack());
 
-        expect(AiReview::sole()->request['state'])->toContain('party_context')->toContain($played->song->name);
+        expect(AiReview::sole()->request['state']['party']['recent'])->not->toBeEmpty()
+            ->and(json_encode(AiReview::sole()->request['state']))->toContain($played->song->name);
     });
 
     it('does not record when the review is skipped', function () {

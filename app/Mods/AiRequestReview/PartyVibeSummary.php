@@ -4,6 +4,7 @@ namespace App\Mods\AiRequestReview;
 
 use App\Models\Party;
 use App\Models\PlayedSong;
+use App\Models\Song;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -11,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * @phpstan-type Vibe array{text: string, built_at: string, stats: array{tracks_played: int, running_minutes: int}, recent: list<string>, top_rated: list<string>, downvoted: list<string>, artists: list<string>}
+ * @phpstan-type Vibe array{text: string, built_at: string, stats: array{tracks_played: int, running_minutes: int}, recent: list<string>, top_rated: list<string>, downvoted: list<string>, most_upvoted_requests: list<string>, most_downvoted_requests: list<string>, artists: list<string>}
  */
 class PartyVibeSummary
 {
@@ -20,6 +21,8 @@ class PartyVibeSummary
     public const TOP_RATED = 10;
 
     public const DOWNVOTED = 5;
+
+    public const VOTED_REQUESTS = 5;
 
     public const ARTISTS = 8;
 
@@ -31,7 +34,7 @@ class PartyVibeSummary
 
     public static function cacheKey(Party $party): string
     {
-        return "party-vibe:{$party->id}";
+        return "party-vibe:v2:{$party->id}";
     }
 
     public function text(Party $party): string
@@ -66,6 +69,8 @@ class PartyVibeSummary
         $recent = $this->titles($party, fn (Builder $query) => $query->orderByDesc('played_at')->orderByDesc('id'), self::RECENT);
         $topRated = $this->titles($party, fn (Builder $query) => $query->where('rating', '>', 0)->orderByDesc('rating')->orderByDesc('played_at'), self::TOP_RATED);
         $downvoted = $this->titles($party, fn (Builder $query) => $query->where('rating', '<', 0)->orderBy('rating')->orderByDesc('played_at'), self::DOWNVOTED);
+        $mostUpvoted = $this->votedRequests($party, true);
+        $mostDownvoted = $this->votedRequests($party, false);
         $artists = $this->dominantArtists($party);
 
         $aggregate = DB::table('played_songs')->where('party_id', $party->id)->selectRaw('count(*) as tracks, min(played_at) as first_at, max(played_at) as last_at')->first();
@@ -77,6 +82,8 @@ class PartyVibeSummary
             'Most recently played (newest first)' => $recent,
             'Highest rated by guests' => $topRated,
             'Most downvoted by guests' => $downvoted,
+            'Most upvoted requests' => $mostUpvoted,
+            'Most downvoted requests' => $mostDownvoted,
             'Most played artists' => $artists,
         ] as $heading => $items) {
             if ($items !== []) {
@@ -91,6 +98,8 @@ class PartyVibeSummary
             'recent' => $recent,
             'top_rated' => $topRated,
             'downvoted' => $downvoted,
+            'most_upvoted_requests' => $mostUpvoted,
+            'most_downvoted_requests' => $mostDownvoted,
             'artists' => $artists,
         ];
     }
@@ -104,11 +113,34 @@ class PartyVibeSummary
         $query = PlayedSong::query()->where('party_id', $party->id)->with('song.artists:id,name');
         $scope($query);
 
-        return array_values($query->limit($limit)->get()->map(function (PlayedSong $played): string {
-            $artists = $played->song->artists->pluck('name')->implode(', ');
+        return array_values($query->limit($limit)->get()->map(fn (PlayedSong $played): string => $this->label($played->song))->all());
+    }
 
-            return Str::limit($played->song->name.($artists !== '' ? " - {$artists}" : ''), self::MAX_TITLE - 3, '...');
-        })->all());
+    protected function label(Song $song): string
+    {
+        $artists = $song->artists->pluck('name')->implode(', ');
+
+        return Str::limit($song->name.($artists !== '' ? " - {$artists}" : ''), self::MAX_TITLE - 3, '...');
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function votedRequests(Party $party, bool $up): array
+    {
+        $rows = DB::table('votes')
+            ->join('upcoming_songs', 'upcoming_songs.id', '=', 'votes.upcoming_song_id')
+            ->where('upcoming_songs.party_id', $party->id)
+            ->whereNull('upcoming_songs.flagged_at')
+            ->groupBy('upcoming_songs.song_id')
+            ->havingRaw($up ? 'sum(votes.value) > 0' : 'sum(votes.value) < 0')
+            ->orderByRaw($up ? 'sum(votes.value) desc' : 'sum(votes.value) asc')
+            ->orderBy('upcoming_songs.song_id')
+            ->limit(self::VOTED_REQUESTS)
+            ->pluck('upcoming_songs.song_id');
+        $songs = Song::query()->whereIn('id', $rows)->with('artists:id,name')->get()->keyBy('id');
+
+        return array_values($rows->map(fn (mixed $id): ?string => ($song = $songs->get($id)) instanceof Song ? $this->label($song) : null)->filter()->all());
     }
 
     /**

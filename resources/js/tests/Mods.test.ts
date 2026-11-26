@@ -152,6 +152,16 @@ describe('Mods pages', () => {
         expect(w.emitted('update:modelValue')?.[0]).toEqual(['a']);
     });
 
+    it('ModSettingField renders text settings as a multi-line textarea and keeps newlines', async () => {
+        const field = setting('guidelines', 'text');
+        const w = mount(ModSettingField, {props: {setting: field, modelValue: 'a\nb', id: 'x'}});
+        const area = w.find('textarea[data-test="setting-input"]');
+        expect(area.attributes('rows')).toBe('5');
+        expect((area.element as HTMLTextAreaElement).value).toBe('a\nb');
+        await area.setValue('no explicit\nno live versions');
+        expect(w.emitted('update:modelValue')?.[0]).toEqual(['no explicit\nno live versions']);
+    });
+
     it('shows validation errors keyed by mod and setting', () => {
         inertia.errors = {'mods.m.settings.s': 'Bad value'};
         const w = mount(PartyMods, {
