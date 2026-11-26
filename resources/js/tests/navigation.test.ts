@@ -1,7 +1,7 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {buildNavigation, isActive} from '@/lib/navigation';
+import {buildNavigation, isActive, isLinkActive, partyLinks} from '@/lib/navigation';
 import type {NavItem} from '@/lib/navigation';
 import type {SharedProps} from '@/types';
 
@@ -95,33 +95,31 @@ describe('buildNavigation', () => {
         const links = (items: NavItem[]) => titles(items.find((item) => item.key === 'party:ABC')?.children ?? []);
 
         expect(links(member)).toEqual(['Queue', 'Search']);
-        expect(links(manager)).toEqual([
-            'Dashboard',
-            'Queue',
-            'Search',
-            'Songs',
-            'Users',
-            'TV Mode',
-            'Web Player',
-            'Flagged',
-            'Moderation',
-            'Mods',
-            'Settings',
-        ]);
+        expect(links(manager)).toEqual(['Dashboard', 'Queue', 'Search', 'Moderation', 'Members', 'Settings']);
     });
 
-    it('adds AI Reviews after Moderation only for managers when the mod is enabled', () => {
-        const links = (canManage: boolean, aiReviewEnabled: boolean) =>
-            titles(
-                buildNavigation(makeProps({parties: [{code: 'ABC', name: 'Fun', canManage, aiReviewEnabled}]})).find(
-                    (item) => item.key === 'party:ABC',
-                )?.children ?? [],
-            );
+    it('carries the flagged count on Moderation', () => {
+        const items = buildNavigation(
+            makeProps({parties: [{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 3}]}),
+        );
+        const moderation = items
+            .find((item) => item.key === 'party:ABC')
+            ?.children?.find((l) => l.title === 'Moderation');
 
-        const enabled = links(true, true);
-        expect(enabled[enabled.indexOf('Moderation') + 1]).toBe('AI Reviews');
-        expect(links(true, false)).not.toContain('AI Reviews');
-        expect(links(false, true)).not.toContain('AI Reviews');
+        expect(moderation?.badge).toBe(3);
+    });
+
+    it('highlights the section a sub-page belongs to', () => {
+        const links = partyLinks({code: 'ABC', name: 'Fun', canManage: true});
+        const activeAt = (url: string) => links.filter((link) => isLinkActive(link, url)).map((link) => link.title);
+
+        expect(activeAt('/parties/ABC')).toEqual(['Queue']);
+        expect(activeAt('/parties/ABC/songs/4')).toEqual(['Moderation']);
+        expect(activeAt('/parties/ABC/moderation/create')).toEqual(['Moderation']);
+        expect(activeAt('/parties/ABC/ai-reviews')).toEqual(['Moderation']);
+        expect(activeAt('/parties/ABC/mods')).toEqual(['Settings']);
+        expect(activeAt('/parties/ABC/edit')).toEqual(['Settings']);
+        expect(activeAt('/parties/ABC/users/2')).toEqual(['Members']);
     });
 
     it('gates Create Party on the createParty permission', () => {

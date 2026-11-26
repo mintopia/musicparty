@@ -9,6 +9,7 @@ use App\Http\Requests\PartyModerationRequest;
 use App\Models\Party;
 use App\Models\PartyModeration;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -34,6 +35,7 @@ class PartyModerationController extends Controller
             'party' => $this->partyProps($party),
             'playerState' => $party->getState(),
             'moderations' => $moderations,
+            'moderationTabs' => app(ModerationTabs::class)->for($party),
         ]);
     }
 

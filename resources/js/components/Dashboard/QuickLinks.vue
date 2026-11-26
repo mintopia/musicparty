@@ -8,10 +8,6 @@ const copied = ref(false);
 let timer: ReturnType<typeof setTimeout> | undefined;
 
 const items = computed(() => [
-    {icon: 'ti-settings', label: 'Settings', href: props.links.settings, external: false},
-    {icon: 'ti-users', label: 'Members', href: props.links.members, external: false},
-    {icon: 'ti-shield', label: 'Moderation', href: props.links.moderation, external: false},
-    {icon: 'ti-puzzle', label: 'Mods', href: props.links.mods, external: false},
     ...(props.links.webPlayer
         ? [{icon: 'ti-player-play', label: 'Web Player', href: props.links.webPlayer, external: false}]
         : []),

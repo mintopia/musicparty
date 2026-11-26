@@ -163,7 +163,7 @@ it('shares the nav flag only for managers of a party with the mod enabled', func
     PartyMember::factory()->owner()->for($this->party)->for($this->owner)->create();
 
     $this->get(route('parties.ai-reviews.index', $this->party->code))
-        ->assertInertia(fn (Assert $page) => $page->where('auth.parties.0.aiReviewEnabled', true));
+        ->assertInertia(fn (Assert $page) => $page->where('auth.parties.0.aiReviewEnabled', true)->where('moderationTabs.aiReviewEnabled', true)->where('auth.parties.0.flaggedCount', 0));
 
     app(PartyMods::class)->disable($this->party, AiRequestReviewMod::CODE);
     $this->get(route('parties.mods.edit', $this->party->code))

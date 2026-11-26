@@ -2,6 +2,7 @@
 import {Head, Link, router} from '@inertiajs/vue3';
 import {reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
+import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
@@ -10,7 +11,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {home} from '@/routes';
 import {show} from '@/routes/parties';
 import {index} from '@/routes/parties/songs';
-import type {LegacyPartyState, Paginator, When} from '@/types';
+import type {LegacyPartyState, ModerationTabsProps, Paginator, When} from '@/types';
 
 interface SongRow {
     id: number;
@@ -29,6 +30,7 @@ const props = defineProps<{
     party: {code: string; name: string};
     playerState: LegacyPartyState;
     providerName: string;
+    moderationTabs: ModerationTabsProps;
     filters: {
         name?: string | null;
         artist?: string | null;
@@ -57,23 +59,21 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Songs - ${party.name}`">
+    <AppLayout :title="`Requests - ${party.name}`">
         <template #breadcrumbs>
             <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
             <li class="breadcrumb-item">
                 <a :href="show(party.code).url">{{ party.name }}</a>
             </li>
             <li class="breadcrumb-item active">
-                <a :href="songsUrl">Songs</a>
+                <a :href="songsUrl">Requests</a>
             </li>
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Songs - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>Songs</h1>
-        </div>
+        <Head :title="`Requests - ${party.name}`" />
+        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="requests" />
         <div class="row">
             <div class="col-md-12 col-lg-3 mb-4">
                 <form :action="songsUrl" method="get" class="card" @submit.prevent="submit">

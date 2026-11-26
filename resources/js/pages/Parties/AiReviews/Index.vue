@@ -5,12 +5,13 @@ import {computed, reactive, ref} from 'vue';
 import AiReviewDetailPanel from '@/components/AiReviewDetail.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
+import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {aiReviewsUrl, aiReviewUrl, formatLatency, formatTokens, outcomeBadge} from '@/lib/aiReviews';
 import {home} from '@/routes';
 import {show} from '@/routes/parties';
-import type {AiReviewDetail, AiReviewRow, LegacyPartyState, Paginator} from '@/types';
+import type {AiReviewDetail, AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string};
@@ -19,6 +20,7 @@ const props = defineProps<{
     outcomes: {code: string; name: string}[];
     retentionDays: number;
     holdsFlagged: boolean;
+    moderationTabs: ModerationTabsProps;
     settingsUrl: string;
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
@@ -84,10 +86,8 @@ async function toggle(review: AiReviewRow): Promise<void> {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`AI reviews - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>AI reviews</h1>
-            <p class="text-secondary mb-0">Kept for {{ retentionDays }} days</p>
-        </div>
+        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
+        <p class="text-secondary">Kept for {{ retentionDays }} days</p>
 
         <div v-if="!holdsFlagged" class="alert alert-warning py-2" role="status" data-test="not-held-notice">
             <i class="icon ti ti-flag me-2" aria-hidden="true"></i>

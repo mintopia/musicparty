@@ -43,6 +43,7 @@ it('renders the index with party props and rows', function () {
             ->where('party.code', $this->party->code)
             ->where('party.canManage', true)
             ->has('playerState')
+            ->where('moderationTabs.aiReviewEnabled', false)
             ->has('moderations.data', 1)
             ->where('moderations.data.0.type_name', 'Track Name')
             ->where('moderations.data.0.value', 'bad song'));

@@ -4,7 +4,7 @@ import {computed, ref} from 'vue';
 import AppliedEntropyFooter from '@/components/AppliedEntropyFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {useColorMode} from '@/composables/useColorMode';
-import {buildNavigation, isActive} from '@/lib/navigation';
+import {buildNavigation, isActive, isLinkActive} from '@/lib/navigation';
 import {home} from '@/routes';
 import {unimpersonate} from '@/routes/admin';
 import {profile} from '@/routes/user';
@@ -98,10 +98,15 @@ useColorMode();
                                     <a
                                         v-for="child in item.children"
                                         :key="child.href"
-                                        class="dropdown-item"
+                                        class="dropdown-item d-flex align-items-center"
+                                        :class="{active: isLinkActive(child, page.url)}"
+                                        :aria-current="isLinkActive(child, page.url) ? 'page' : undefined"
                                         :href="child.href"
                                     >
                                         {{ child.title }}
+                                        <span v-if="child.badge" class="badge bg-red text-red-fg ms-auto">{{
+                                            child.badge
+                                        }}</span>
                                     </a>
                                 </div>
                             </template>
