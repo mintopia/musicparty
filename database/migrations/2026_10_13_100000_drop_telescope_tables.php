@@ -11,6 +11,4 @@ return new class extends Migration
         Schema::dropIfExists('telescope_entries');
         Schema::dropIfExists('telescope_monitoring');
     }
-
-    public function down(): void {}
 };

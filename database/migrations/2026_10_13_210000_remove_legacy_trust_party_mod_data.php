@@ -14,6 +14,4 @@ return new class extends Migration
             ->where('key', 'trustscore')
             ->delete();
     }
-
-    public function down(): void {}
 };
