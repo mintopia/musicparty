@@ -1,4 +1,11 @@
 <script setup lang="ts">
+import {onBeforeUnmount, onMounted, ref, watch} from 'vue';
+import {createEditor, type PrismEditor} from 'prism-code-editor';
+import {defaultKeymap, editorCommands} from 'prism-code-editor/commands';
+import 'prism-code-editor/prism/languages/css';
+import 'prism-code-editor/languages/css';
+import 'prism-code-editor/layout.css';
+
 export interface ThemeFormData {
     name: string;
     css: string;
@@ -8,11 +15,69 @@ export interface ThemeFormData {
     errors: Record<string, string>;
 }
 
-defineProps<{
+const props = defineProps<{
     form: ThemeFormData;
     readonly: boolean;
     colourTokens: {token: string; label: string; required: boolean}[];
 }>();
+
+const editorHost = ref<HTMLElement | null>(null);
+let editor: PrismEditor | null = null;
+
+onMounted(() => {
+    if (editorHost.value === null) {
+        return;
+    }
+    editor = createEditor(
+        editorHost.value,
+        {
+            language: 'css',
+            value: props.form.css ?? '',
+            tabSize: 4,
+            insertSpaces: true,
+            readOnly: props.readonly,
+            wordWrap: true,
+            lineNumbers: true,
+            onUpdate: (value) => {
+                if (value !== props.form.css) {
+                    props.form.css = value;
+                }
+            },
+        },
+        editorCommands(defaultKeymap),
+    );
+    const {textarea} = editor;
+    textarea.id = 'css';
+    textarea.name = 'css';
+    textarea.setAttribute('aria-describedby', 'css-hint');
+    textarea.setAttribute('aria-multiline', 'true');
+    textarea.setAttribute('spellcheck', 'false');
+    editor.container.classList.toggle('is-invalid', Boolean(props.form.errors.css));
+});
+
+watch(
+    () => props.form.css,
+    (css) => {
+        if (editor !== null && css !== editor.value) {
+            editor.setOptions({value: css ?? ''});
+        }
+    },
+);
+
+watch(
+    () => props.readonly,
+    (readOnly) => editor?.setOptions({readOnly}),
+);
+
+watch(
+    () => props.form.errors.css,
+    (error) => editor?.container.classList.toggle('is-invalid', Boolean(error)),
+);
+
+onBeforeUnmount(() => {
+    editor?.remove();
+    editor = null;
+});
 </script>
 
 <template>
@@ -47,16 +112,10 @@ defineProps<{
         <div class="row mb-3">
             <div class="col">
                 <label class="form-label" for="css">Custom CSS</label>
-                <textarea
-                    id="css"
-                    v-model="form.css"
-                    class="form-control font-monospace"
-                    :class="{'is-invalid': form.errors.css}"
-                    placeholder="Custom CSS Code"
-                    name="css"
-                    rows="5"
-                    :disabled="readonly"
-                ></textarea>
+                <div ref="editorHost" class="d-grid" data-testid="css-editor"></div>
+                <small id="css-hint" class="form-hint code-editor-hint">
+                    Press <kbd>Ctrl</kbd>+<kbd>M</kbd> to let Tab move focus out of the editor.
+                </small>
                 <p v-if="form.errors.css" class="invalid-feedback">{{ form.errors.css }}</p>
             </div>
         </div>

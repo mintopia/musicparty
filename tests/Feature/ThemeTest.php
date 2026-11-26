@@ -37,6 +37,32 @@ it('serves the theme stylesheet as cacheable text/css', function () {
     $this->get($theme->stylesheetUrl(), ['If-None-Match' => $response->headers->get('ETag')])->assertStatus(304);
 });
 
+it('emits the token block for the light and dark scopes so it beats Tabler dark overrides', function () {
+    $theme = Theme::factory()->create(['name' => 'Scopes', 'dark_mode' => true, 'tokens' => ['primary' => '#a86ef0']]);
+
+    $css = $this->get($theme->stylesheetUrl())->assertOk()->getContent();
+
+    expect($css)->toStartWith(":root, [data-bs-theme=light], [data-bs-theme=dark] {\n")
+        ->and($css)->toContain('--tblr-link-color: var(--mp-primary);');
+});
+
+it('applies top-level :root rules in custom css to the dark and light scopes too', function () {
+    $theme = Theme::factory()->create([
+        'name' => 'Rooted',
+        'dark_mode' => true,
+        'css' => ":root{--tblr-link-color:#a86ef0}\n:root.x .y{--a:1}\n.z:not(:root-ish){--b:1}\n.keep{--tblr-root:1}",
+    ]);
+
+    $css = $this->get($theme->stylesheetUrl())->assertOk()->getContent();
+    $scoped = ':is(:root, [data-bs-theme=light], [data-bs-theme=dark])';
+
+    expect($css)->toContain("{$scoped}{--tblr-link-color:#a86ef0}")
+        ->and($css)->toContain("{$scoped}.x .y")
+        ->and($css)->toContain(':root-ish')
+        ->and($css)->toContain('.keep{--tblr-root:1}')
+        ->and(substr_count($css, ':is(:root'))->toBe(2);
+});
+
 it('404s for an unknown theme code', function () {
     $this->get('/theme/nope.css')->assertNotFound();
 });

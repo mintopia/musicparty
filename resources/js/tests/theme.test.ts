@@ -41,6 +41,14 @@ describe('applyTheme', () => {
         expect(document.querySelector('link#mp-theme-stylesheet')).toBeNull();
     });
 
+    it('sets link overrides on the body so they outrank the dark scope', () => {
+        applyTheme({tokens: {primary: '#a86ef0'}, stylesheet: null, darkMode: true});
+        expect(document.body.style.getPropertyValue('--tblr-link-color')).toBe('var(--mp-primary)');
+
+        applyTheme({tokens: {}, stylesheet: null, darkMode: true});
+        expect(document.body.style.getPropertyValue('--tblr-link-color')).toBe('');
+    });
+
     it('toggles dark mode on the body', () => {
         applyTheme({tokens: {}, stylesheet: null, darkMode: true});
         expect(document.body.getAttribute('data-bs-theme')).toBe('dark');

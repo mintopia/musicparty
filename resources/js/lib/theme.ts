@@ -21,18 +21,28 @@ function rgb(colour: string): string {
 
 function applyVariables(tokens: Record<string, string>): void {
     const style = document.documentElement.style;
+    const bodyStyle = document.body.style;
     for (const name of [...style].filter((n) => n.startsWith('--mp-') || DERIVED.includes(n))) {
         style.removeProperty(name);
+    }
+    for (const name of DERIVED) {
+        bodyStyle.removeProperty(name);
     }
     for (const [token, value] of Object.entries(tokens)) {
         style.setProperty(`--mp-${token}`, value);
     }
     if (tokens.primary) {
         style.setProperty('--mp-primary-rgb', rgb(tokens.primary));
-        style.setProperty('--tblr-link-color', 'var(--mp-primary)');
-        style.setProperty('--tblr-link-color-rgb', 'var(--mp-primary-rgb)');
-        style.setProperty('--tblr-link-hover-color', 'var(--mp-primary)');
-        style.setProperty('--tblr-link-hover-color-rgb', 'var(--mp-primary-rgb)');
+        const links: Record<string, string> = {
+            '--tblr-link-color': 'var(--mp-primary)',
+            '--tblr-link-color-rgb': 'var(--mp-primary-rgb)',
+            '--tblr-link-hover-color': 'var(--mp-primary)',
+            '--tblr-link-hover-color-rgb': 'var(--mp-primary-rgb)',
+        };
+        for (const [name, value] of Object.entries(links)) {
+            style.setProperty(name, value);
+            bodyStyle.setProperty(name, value);
+        }
     }
 }
 

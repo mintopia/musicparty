@@ -36,6 +36,8 @@ use Illuminate\Support\Carbon;
  */
 class Theme extends Model
 {
+    private const string ALL_SCOPES = ':root, [data-bs-theme=light], [data-bs-theme=dark]';
+
     /** @use HasFactory<Factory<Theme>> */
     use HasFactory;
 
@@ -108,9 +110,14 @@ class Theme extends Model
         return route('theme.css', ['code' => $this->code, 'v' => $this->version()]);
     }
 
+    private function scopedCustomCss(): string
+    {
+        return (string) preg_replace('/(?<![\w-]):root(?![\w-])/', ':is('.self::ALL_SCOPES.')', (string) $this->css);
+    }
+
     public function renderCss(): string
     {
-        $css = ":root {\n";
+        $css = self::ALL_SCOPES." {\n";
         foreach ($this->validTokens() as $token => $value) {
             $css .= "    --mp-{$token}: {$value};\n";
         }
@@ -124,7 +131,7 @@ class Theme extends Model
         $css .= ".btn-link, .btn-link:hover {\n    color: var(--mp-primary);\n}\n\n";
         $css .= ".border-primary {\n    border-color: var(--mp-primary) !important;\n}\n";
         if (trim((string) $this->css) !== '') {
-            $css .= "\n/* Custom stylesheet */\n{$this->css}\n";
+            $css .= "\n/* Custom stylesheet */\n{$this->scopedCustomCss()}\n";
         }
 
         return $css;
