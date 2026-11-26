@@ -73,9 +73,11 @@ async function rate(value: number): Promise<void> {
                     <div class="pu-title text-truncate" :title="state.now.name" data-test="now-name">
                         {{ state.now.name }}
                     </div>
-                    <div class="np-meta mt-1 text-truncate">
-                        <i class="icon ti ti-users"></i> {{ artist }} <span class="mx-2">·</span
-                        ><i class="icon ti ti-vinyl"></i> {{ state.now.album?.name }}
+                    <div class="np-meta mt-1 text-truncate" :title="artist" data-test="now-artists">
+                        <i class="icon ti ti-users"></i> {{ artist }}
+                    </div>
+                    <div class="np-meta text-truncate" :title="state.now.album?.name" data-test="now-album">
+                        <i class="icon ti ti-vinyl"></i> {{ state.now.album?.name }}
                     </div>
                     <div class="mt-2" data-test="now-origin">
                         <span v-if="control.nowPlaying.isRequest" class="np-meta small">
