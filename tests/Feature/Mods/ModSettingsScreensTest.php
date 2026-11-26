@@ -168,6 +168,7 @@ describe('party Mods screen', function () {
             ->assertOk()
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Parties/Mods')
+                ->has('playerState')
                 ->where('party.code', $this->party->code)
                 ->where('mods.0.code', 'foo')
                 ->where('mods.0.enabled', false)

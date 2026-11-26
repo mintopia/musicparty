@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed} from 'vue';
+import UserAutocompleteField from '@/components/UserAutocompleteField.vue';
 import type {ModSetting} from '@/types';
 
 const props = defineProps<{
@@ -7,6 +8,7 @@ const props = defineProps<{
     modelValue: string | number | boolean | null;
     error?: string;
     id: string;
+    userSearchUrl?: string;
 }>();
 
 const emit = defineEmits<{'update:modelValue': [value: string | number | boolean | null]}>();
@@ -67,6 +69,20 @@ function onInput(event: Event): void {
                 />
                 <label :for="`${id}-${key}`" class="form-check-label">{{ label }}</label>
             </div>
+        </template>
+        <template v-else-if="setting.type === 'user'">
+            <label :for="id" class="form-label">
+                {{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span>
+            </label>
+            <UserAutocompleteField
+                :id="id"
+                :model-value="typeof modelValue === 'number' ? modelValue : null"
+                :search-url="userSearchUrl ?? ''"
+                :initial-label="setting.value_label"
+                :invalid="!!error"
+                :required="setting.required"
+                @update:model-value="emit('update:modelValue', $event)"
+            />
         </template>
         <template v-else>
             <label :for="id" class="form-label">

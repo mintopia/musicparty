@@ -19,6 +19,7 @@ class PartyModsController extends Controller
         return Inertia::render('Parties/Mods', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'mods' => $store->presentFor($party),
+            'playerState' => $party->getState(),
         ]);
     }
 
@@ -28,6 +29,16 @@ class PartyModsController extends Controller
         $validated = $request->validate(['mods' => ['present', 'array']]);
 
         $updater->updateParty($party, $validated['mods']);
+
+        return redirect()->route('parties.mods.edit', $party->code);
+    }
+
+    public function updateMod(Request $request, Party $party, string $mod, ModSettingsUpdater $updater): RedirectResponse
+    {
+        $this->authorize('update', $party);
+        $validated = $request->validate(['enabled' => ['sometimes', 'boolean'], 'settings' => ['present', 'array']]);
+
+        $updater->updateParty($party, [$mod => $validated]);
 
         return redirect()->route('parties.mods.edit', $party->code);
     }

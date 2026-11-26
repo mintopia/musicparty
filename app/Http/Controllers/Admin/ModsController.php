@@ -27,4 +27,13 @@ class ModsController extends Controller
 
         return redirect()->route('admin.mods.edit');
     }
+
+    public function updateMod(Request $request, string $mod, ModSettingsUpdater $updater): RedirectResponse
+    {
+        $validated = $request->validate(['settings' => ['present', 'array']]);
+
+        $updater->updateInstance([$mod => $validated]);
+
+        return redirect()->route('admin.mods.edit');
+    }
 }

@@ -22,7 +22,10 @@ vi.mock('@inertiajs/vue3', async () => {
                     return form;
                 },
                 put(url: string, options?: unknown) {
-                    const data = {mods: (form as unknown as {mods: unknown}).mods};
+                    const data = {
+                        enabled: (form as unknown as {enabled: boolean}).enabled,
+                        settings: (form as unknown as {settings: unknown}).settings,
+                    };
                     inertia.put(url, form._t ? form._t(data as never) : data, options);
                 },
             });
@@ -32,8 +35,10 @@ vi.mock('@inertiajs/vue3', async () => {
 });
 
 vi.mock('@/layouts/AppLayout.vue', () => ({
-    default: {template: '<div><slot name="breadcrumbs" /><slot /></div>'},
+    default: {template: '<div><slot name="breadcrumbs" /><slot name="header" /><slot /></div>'},
 }));
+
+vi.mock('@/components/PartyPlayer.vue', () => ({default: {template: '<div data-test="player" />'}}));
 
 function setting(code: string, type: ModSetting['type'], extra: Partial<ModSetting> = {}): ModSetting {
     return {
@@ -61,6 +66,7 @@ const settings = [
 ];
 
 const party = {code: 'abc', name: 'Party'};
+const playerState = {} as never;
 
 describe('Mods pages', () => {
     beforeEach(() => {
@@ -70,7 +76,7 @@ describe('Mods pages', () => {
 
     it('renders an input per setting type and never prefills secrets', () => {
         const w = mount(PartyMods, {
-            props: {party, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings}]},
+            props: {party, playerState, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings}]},
         });
         const input = (code: string) => w.find(`[data-setting="${code}"] input`);
         expect(input('s').attributes('type')).toBe('text');
@@ -88,13 +94,13 @@ describe('Mods pages', () => {
 
     it('sends null for untouched secrets, the typed value otherwise, and the enable toggle', async () => {
         const w = mount(PartyMods, {
-            props: {party, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings}]},
+            props: {party, playerState, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings}]},
         });
         await w.find('form').trigger('submit');
         const first = inertia.put.mock.calls[0];
-        expect(first[0]).toBe('/parties/abc/mods');
-        expect(first[1].mods.m.enabled).toBe(true);
-        expect(first[1].mods.m.settings).toMatchObject({
+        expect(first[0]).toBe('/parties/abc/mods/m');
+        expect(first[1].enabled).toBe(true);
+        expect(first[1].settings).toMatchObject({
             s: 'hi',
             b: true,
             i: 3,
@@ -110,9 +116,9 @@ describe('Mods pages', () => {
         await w.find('[data-setting="i"] input').setValue('7');
         await w.find('form').trigger('submit');
         const second = inertia.put.mock.calls[1][1];
-        expect(second.mods.m.enabled).toBe(false);
-        expect(second.mods.m.settings.sec).toBe('hunter2');
-        expect(second.mods.m.settings.i).toBe(7);
+        expect(second.enabled).toBe(false);
+        expect(second.settings.sec).toBe('hunter2');
+        expect(second.settings.i).toBe(7);
     });
 
     it('renders choice settings as radios and submits the chosen key', async () => {
@@ -122,7 +128,11 @@ describe('Mods pages', () => {
             options: {typesafe: 'TypeSafe (Jev)', 'openai-compatible': 'OpenAI-compatible'},
         });
         const w = mount(PartyMods, {
-            props: {party, mods: [{code: 'm', name: 'M', description: '', enabled: true, settings: [driver]}]},
+            props: {
+                party,
+                playerState,
+                mods: [{code: 'm', name: 'M', description: '', enabled: true, settings: [driver]}],
+            },
         });
         const radios = w.findAll('[data-setting="driver"] input[type="radio"]');
         expect(radios).toHaveLength(2);
@@ -130,7 +140,7 @@ describe('Mods pages', () => {
         expect(w.find('[data-setting="driver"]').text()).toContain('OpenAI-compatible');
         await radios[1].setValue(true);
         await w.find('form').trigger('submit');
-        expect(inertia.put.mock.calls[0][1].mods.m.settings.driver).toBe('openai-compatible');
+        expect(inertia.put.mock.calls[0][1].settings.driver).toBe('openai-compatible');
     });
 
     it('ModSettingField emits the option key on selection', async () => {
@@ -145,7 +155,7 @@ describe('Mods pages', () => {
     it('shows validation errors keyed by mod and setting', () => {
         inertia.errors = {'mods.m.settings.s': 'Bad value'};
         const w = mount(PartyMods, {
-            props: {party, mods: [{code: 'm', name: 'M', description: '', enabled: false, settings}]},
+            props: {party, playerState, mods: [{code: 'm', name: 'M', description: '', enabled: false, settings}]},
         });
         expect(w.find('[data-setting="s"] [data-test="setting-error"]').text()).toBe('Bad value');
     });
@@ -155,9 +165,43 @@ describe('Mods pages', () => {
         await w.find('[data-setting="sec"] input').setValue('k');
         await w.find('form').trigger('submit');
         const [url, body] = inertia.put.mock.calls[0];
-        expect(url).toBe('/admin/mods');
-        expect(body.mods.m.enabled).toBeUndefined();
-        expect(body.mods.m.settings.sec).toBe('k');
+        expect(url).toBe('/admin/mods/m');
+        expect(body.enabled).toBeUndefined();
+        expect(body.settings.sec).toBe('k');
         expect(w.find('[data-test="mod-enabled"]').exists()).toBe(false);
+    });
+
+    it('starts enabled mods expanded, disabled mods collapsed, and expands on enable', async () => {
+        const w = mount(PartyMods, {
+            props: {
+                party,
+                playerState,
+                mods: [
+                    {code: 'on', name: 'On', description: '', enabled: true, settings: [setting('s', 'string')]},
+                    {code: 'off', name: 'Off', description: '', enabled: false, settings: [setting('s', 'string')]},
+                ],
+            },
+        });
+        const body = (code: string) => w.find(`[data-mod="${code}"] .accordion-collapse`);
+        expect(body('on').classes()).toContain('show');
+        expect(body('off').classes()).not.toContain('show');
+        await w.find('[data-mod="off"] [data-test="mod-enabled"]').setValue(true);
+        expect(body('off').classes()).toContain('show');
+    });
+
+    it('submits only the saved mod', async () => {
+        const w = mount(PartyMods, {
+            props: {
+                party,
+                playerState,
+                mods: [
+                    {code: 'a', name: 'A', description: '', enabled: true, settings: [setting('s', 'string')]},
+                    {code: 'b', name: 'B', description: '', enabled: true, settings: [setting('s', 'string')]},
+                ],
+            },
+        });
+        await w.find('[data-mod="b"] form').trigger('submit');
+        expect(inertia.put).toHaveBeenCalledTimes(1);
+        expect(inertia.put.mock.calls[0][0]).toBe('/parties/abc/mods/b');
     });
 });

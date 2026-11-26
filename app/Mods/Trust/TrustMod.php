@@ -34,7 +34,7 @@ class TrustMod implements Mod, ModifiesScore
     public function settings(): array
     {
         return [
-            new SettingDefinition('trusted_user_id', 'Trusted User', SettingType::stInteger, null, 'ID of the user whose endorsements anchor the reputation. Defaults to the Party owner.', validation: ['exists:users,id']),
+            new SettingDefinition('trusted_user_id', 'Trusted User', SettingType::stUser, null, 'The user whose endorsements anchor the reputation. Defaults to the Party owner.'),
             new SettingDefinition('max_bonus', 'Maximum Score Bonus', SettingType::stInteger, 3, 'Score added to a request from a fully trusted member.', validation: ['min:0', 'max:10']),
             new SettingDefinition('window_days', 'Window (Days)', SettingType::stInteger, 7, 'How many days of votes and ratings count as endorsements.', validation: ['min:1', 'max:90']),
             new SettingDefinition('interval_minutes', 'Recalculation Interval (Minutes)', SettingType::stInteger, 15, 'Minimum time between trust recalculations.', validation: ['min:1', 'max:1440']),
