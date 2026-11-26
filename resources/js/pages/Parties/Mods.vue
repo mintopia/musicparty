@@ -29,26 +29,24 @@ defineProps<{
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Mods - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>Mods</h1>
-        </div>
-        <div class="row">
-            <div class="col-12">
-                <EmptyState
-                    v-if="mods.length === 0"
-                    title="No mods available"
-                    description="There are no mods installed on this instance yet."
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="page-header mt-0">
+                <h1>Mods</h1>
+            </div>
+            <EmptyState
+                v-if="mods.length === 0"
+                title="No mods available"
+                description="There are no mods installed on this instance yet."
+            />
+            <div v-else class="accordion">
+                <ModPanel
+                    v-for="mod in mods"
+                    :key="mod.code"
+                    :mod="mod"
+                    :url="partyModUrl(party.code, mod.code)"
+                    :user-search-url="partyModUsersUrl(party.code)"
+                    show-enabled
                 />
-                <div v-else class="accordion">
-                    <ModPanel
-                        v-for="mod in mods"
-                        :key="mod.code"
-                        :mod="mod"
-                        :url="partyModUrl(party.code, mod.code)"
-                        :user-search-url="partyModUsersUrl(party.code)"
-                        show-enabled
-                    />
-                </div>
             </div>
         </div>
     </AppLayout>

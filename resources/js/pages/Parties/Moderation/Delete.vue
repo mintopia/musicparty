@@ -32,28 +32,32 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Delete ${moderation.type_name} Filter`" />
-        <div class="page-header mt-0">
-            <h1>Delete {{ moderation.type_name }} Filter</h1>
-        </div>
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="page-header mt-0">
+                <h1>Delete {{ moderation.type_name }} Filter</h1>
+            </div>
 
-        <div class="col-md-6 offset-md-3">
-            <form class="card" @submit.prevent="submit">
-                <div class="card-status-top bg-danger"></div>
-                <div class="card-body text-center">
-                    <i class="icon mb-4 ti ti-alert-triangle icon-lg text-danger"></i>
-                    <p class="mt-4">
-                        Are you sure you want to delete this <strong>{{ moderation.type_name }}</strong> filter for
-                        <strong class="font-monospace">{{ moderation.value }}</strong
-                        >?
-                    </p>
-                </div>
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">Delete</button>
+            <div>
+                <form class="card" @submit.prevent="submit">
+                    <div class="card-status-top bg-danger"></div>
+                    <div class="card-body text-center">
+                        <i class="icon mb-4 ti ti-alert-triangle icon-lg text-danger"></i>
+                        <p class="mt-4">
+                            Are you sure you want to delete this <strong>{{ moderation.type_name }}</strong> filter for
+                            <strong class="font-monospace">{{ moderation.value }}</strong
+                            >?
+                        </p>
                     </div>
-                </div>
-            </form>
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
+                            <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">
+                                Delete
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
         </div>
     </AppLayout>
 </template>

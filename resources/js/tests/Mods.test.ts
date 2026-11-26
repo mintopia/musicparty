@@ -189,6 +189,32 @@ describe('Mods pages', () => {
         expect(body('off').classes()).toContain('show');
     });
 
+    it('keeps the description out of the heading and labels the enable switch without toggling the accordion', async () => {
+        const w = mount(PartyMods, {
+            props: {
+                party,
+                playerState,
+                mods: [{code: 'off', name: 'Off', description: 'Does things', enabled: false, settings: []}],
+            },
+        });
+        const mod = w.find('[data-mod="off"]');
+        const toggle = mod.find('[data-test="mod-toggle"]');
+        expect(mod.find('h2').text()).toBe('Off');
+        expect(mod.find('[data-test="mod-description"]').text()).toBe('Does things');
+        expect(toggle.attributes('aria-describedby')).toBe('mod-off-description');
+        expect(toggle.attributes('aria-expanded')).toBe('false');
+        expect(mod.find('[data-test="mod-enabled-label"]').text()).toBe('Off');
+
+        await mod.find('[data-test="mod-enabled"]').setValue(true);
+        expect(mod.find('[data-test="mod-enabled-label"]').text()).toBe('Enabled');
+        expect(toggle.attributes('aria-expanded')).toBe('true');
+
+        await mod.find('[data-test="mod-enabled"]').setValue(false);
+        expect(toggle.attributes('aria-expanded')).toBe('true');
+        await toggle.trigger('click');
+        expect(toggle.attributes('aria-expanded')).toBe('false');
+    });
+
     it('submits only the saved mod', async () => {
         const w = mount(PartyMods, {
             props: {

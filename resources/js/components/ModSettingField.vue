@@ -29,6 +29,19 @@ const inputType = computed(() => {
     }
 });
 
+const widthClass = computed(() => {
+    switch (props.setting.type) {
+        case 'integer':
+        case 'float':
+        case 'time_of_day':
+            return 'mod-field-narrow';
+        case 'datetime':
+            return 'mod-field-medium';
+        default:
+            return 'mod-field-wide';
+    }
+});
+
 function onInput(event: Event): void {
     const raw = (event.target as HTMLInputElement).value;
     if (props.setting.type === 'integer' || props.setting.type === 'float') {
@@ -74,15 +87,17 @@ function onInput(event: Event): void {
             <label :for="id" class="form-label">
                 {{ setting.name }}<span v-if="setting.required" class="text-danger"> *</span>
             </label>
-            <UserAutocompleteField
-                :id="id"
-                :model-value="typeof modelValue === 'number' ? modelValue : null"
-                :search-url="userSearchUrl ?? ''"
-                :initial-label="setting.value_label"
-                :invalid="!!error"
-                :required="setting.required"
-                @update:model-value="emit('update:modelValue', $event)"
-            />
+            <div class="mod-field-wide">
+                <UserAutocompleteField
+                    :id="id"
+                    :model-value="typeof modelValue === 'number' ? modelValue : null"
+                    :search-url="userSearchUrl ?? ''"
+                    :initial-label="setting.value_label"
+                    :invalid="!!error"
+                    :required="setting.required"
+                    @update:model-value="emit('update:modelValue', $event)"
+                />
+            </div>
         </template>
         <template v-else>
             <label :for="id" class="form-label">
@@ -92,7 +107,7 @@ function onInput(event: Event): void {
                 :id="id"
                 :type="inputType"
                 class="form-control"
-                :class="{'is-invalid': error}"
+                :class="[widthClass, {'is-invalid': error}]"
                 :value="modelValue ?? ''"
                 :step="setting.type === 'float' ? 'any' : setting.type === 'integer' ? '1' : undefined"
                 :autocomplete="setting.type === 'secret' ? 'new-password' : undefined"
@@ -108,3 +123,17 @@ function onInput(event: Event): void {
         <div v-if="error" class="invalid-feedback d-block" data-test="setting-error">{{ error }}</div>
     </div>
 </template>
+
+<style scoped>
+.mod-field-narrow {
+    max-width: 10rem;
+}
+
+.mod-field-medium {
+    max-width: 16rem;
+}
+
+.mod-field-wide {
+    max-width: 28rem;
+}
+</style>

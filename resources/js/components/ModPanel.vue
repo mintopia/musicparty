@@ -64,16 +64,25 @@ function submit(): void {
         :data-mod="mod.code"
     >
         <template v-if="showEnabled" #status>
-            <div class="form-check form-switch mb-0">
-                <input
-                    :id="`mod-${mod.code}-enabled`"
-                    v-model="form.enabled"
-                    type="checkbox"
-                    class="form-check-input"
-                    :aria-label="`Enable ${mod.name}`"
-                    data-test="mod-enabled"
-                />
-            </div>
+            <label class="d-flex align-items-center gap-2 mb-0 py-2" :for="`mod-${mod.code}-enabled`">
+                <span
+                    class="small fw-medium"
+                    :class="form.enabled ? 'text-success' : 'text-secondary'"
+                    data-test="mod-enabled-label"
+                    >{{ form.enabled ? 'Enabled' : 'Off' }}</span
+                >
+                <span class="form-check form-switch mb-0 ps-0 min-height-0">
+                    <input
+                        :id="`mod-${mod.code}-enabled`"
+                        v-model="form.enabled"
+                        type="checkbox"
+                        role="switch"
+                        class="form-check-input m-0"
+                        :aria-label="`Enable ${mod.name}`"
+                        data-test="mod-enabled"
+                    />
+                </span>
+            </label>
         </template>
         <form data-test="mod-form" @submit.prevent="submit">
             <ModSettingField
