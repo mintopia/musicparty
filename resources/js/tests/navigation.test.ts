@@ -33,6 +33,7 @@ vi.mock('@/routes/user', () => ({profile: route('/user/profile')}));
 vi.mock('@/routes/parties', () => ({
     create: route('/parties/create'),
     show: (code: string) => party(code),
+    dashboard: (code: string) => ({url: `/parties/${code}/dashboard`}),
     edit: (code: string) => ({url: `/parties/${code}/edit`}),
     search: (code: string) => ({url: `/parties/${code}/search`}),
     tv: (code: string) => ({url: `/parties/${code}/tv`}),
@@ -95,6 +96,7 @@ describe('buildNavigation', () => {
 
         expect(links(member)).toEqual(['Queue', 'Search']);
         expect(links(manager)).toEqual([
+            'Dashboard',
             'Queue',
             'Search',
             'Songs',

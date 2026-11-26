@@ -59,3 +59,11 @@ _Avoid_: Soloist proxy, Music Party Soloist
 **Soloist**:
 Spotify's headless Spotify Connect client, which Encore wraps.
 _Avoid_: Using "Soloist" to mean Encore
+
+**Context Playlist**:
+The empty playlist on the host's Spotify account that Music Party plays tracks in, so Spotify reports the party as the source. Music Party empties it every 15 minutes.
+_Avoid_: party playlist, sentinel playlist
+
+**Dashboard**:
+The moderator page for running a Party live: playback controls, Start Playback, Up Next, Upcoming Songs and what needs attention. Open to whoever can update the Party (a moderator or a site admin).
+_Avoid_: Control room, admin page

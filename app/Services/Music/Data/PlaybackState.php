@@ -21,11 +21,12 @@ final readonly class PlaybackState
         /** @var list<string> */
         public array $upcomingTrackIds = [],
         public ?PlaybackConnectionStatus $connectionStatus = null,
+        public ?string $contextUri = null,
     ) {}
 
     public function withSource(PlaybackSource $source): self
     {
-        return new self($this->isPlaying, $this->trackId, $this->linkedFromId, $this->durationMs, $this->progressMs, $this->sampledAt, $this->shuffle, $this->repeat, $this->deviceId, $this->deviceName, $source, $this->upcomingTrackIds, $this->connectionStatus);
+        return new self($this->isPlaying, $this->trackId, $this->linkedFromId, $this->durationMs, $this->progressMs, $this->sampledAt, $this->shuffle, $this->repeat, $this->deviceId, $this->deviceName, $source, $this->upcomingTrackIds, $this->connectionStatus, $this->contextUri);
     }
 
     public static function idle(PlaybackSource $source): self

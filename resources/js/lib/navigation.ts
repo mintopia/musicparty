@@ -2,7 +2,7 @@ import {dashboard as adminDashboard} from '@/routes/admin';
 import {index as adminSettings} from '@/routes/admin/settings';
 import {index as adminUsers} from '@/routes/admin/users';
 import {index as horizon} from '@/routes/horizon';
-import {create as createParty, edit, player, search, show, tv} from '@/routes/parties';
+import {create as createParty, dashboard, edit, player, search, show, tv} from '@/routes/parties';
 import {index as moderation} from '@/routes/parties/moderation';
 import {index as songs} from '@/routes/parties/songs';
 import {index as partyUsers} from '@/routes/parties/users';
@@ -32,6 +32,7 @@ export function partyLinks(party: PartyMembership): NavLink[] {
     ];
 
     if (party.canManage) {
+        links.unshift({title: 'Dashboard', href: dashboard(party.code).url});
         links.push(
             {title: 'Songs', href: songs(party.code).url},
             {title: 'Users', href: partyUsers(party.code).url},

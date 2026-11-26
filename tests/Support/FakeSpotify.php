@@ -123,6 +123,25 @@ class FakeSpotify extends SpotifyWebAPI
         ];
     }
 
+    public function createPlaylist(string|array|object $userId, array|object $options = []): array|object
+    {
+        if (is_array($userId) || is_object($userId)) {
+            trigger_error('Calling SpotifyWebAPI::createPlaylist() without a user ID is deprecated.', E_USER_DEPRECATED);
+        }
+
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function replacePlaylistTracks(string $playlistId, string|array $tracks): bool
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
+    public function me(): array|object
+    {
+        return $this->record(__FUNCTION__, func_get_args());
+    }
+
     public function getMyCurrentPlaybackInfo(array|object $options = []): array|object|null
     {
         return $this->record(__FUNCTION__, func_get_args());
@@ -244,6 +263,8 @@ class FakeSpotify extends SpotifyWebAPI
     {
         return match ($method) {
             'getMyCurrentPlaybackInfo' => null,
+            'me' => (object) ['id' => 'me1'],
+            'createPlaylist' => (object) ['id' => 'newpl', 'name' => 'Music Party Context', 'owner' => (object) ['id' => 'me1', 'display_name' => 'Me'], 'tracks' => (object) ['total' => 0]],
             'getMyQueue' => (object) ['currently_playing' => null, 'queue' => []],
             'getMyDevices' => (object) ['devices' => [self::device()]],
             'getMyPlaylists', 'getMyRecentTracks' => (object) ['items' => [], 'total' => 0, 'limit' => 50, 'offset' => 0, 'next' => null],

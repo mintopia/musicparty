@@ -89,6 +89,7 @@ describe('party form', () => {
 
         expect(wrapper.find('.invalid-feedback').text()).toContain('name field is required');
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(true);
+        expect(wrapper.find('[name="context_playlist_id"]').exists()).toBe(false);
         for (const name of [
             'name',
             'country',
@@ -125,6 +126,9 @@ describe('party form', () => {
         await wrapper.find('#backup_playlist_id').setValue('pl1');
         expect(custom.classes()).toContain('d-none');
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(false);
+        expect(wrapper.find('input[name="context_playlist_id"]').attributes('placeholder')).toBe(
+            'Music Party Context (automatic)',
+        );
         expect(wrapper.text()).toContain('private-encore.abc');
         expect(wrapper.text()).not.toContain('App secret');
 

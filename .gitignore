@@ -34,3 +34,5 @@ frankenphp-worker.php
 /resources/js/actions
 /resources/js/routes
 /resources/js/wayfinder
+
+/.visual-companion/

@@ -51,6 +51,7 @@ dataset('scheduled entries', [
     'sanctum prune' => ['sanctum:prune-expired --hours=24', '0 0 * * *'],
     'party fallback' => ['party:fallback', '* * * * *'],
     'party force' => ['party:force', '* * * * *'],
+    'context playlist' => ['party:contextplaylist', '*/15 * * * *'],
     'refresh tokens' => ['party:refreshaccesstokens', '* * * * *'],
     'minute mods' => ['mods:minute', '* * * * *'],
     'hour mods' => ['mods:hour', '0 * * * *'],
@@ -67,7 +68,7 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
-        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force',
+        'sanctum:prune-expired --hours=24', 'party:fallback', 'party:force', 'party:contextplaylist',
         'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day',
     ]);
 });
@@ -135,6 +136,7 @@ it('party:force starts a forced party whose device is online and stamps last_upd
 
 it('party:force sends play to a fresh pushed Player through the transport seam', function () {
     Event::fake([PlayerCommand::class]);
+    app(FakeMusicProvider::class)->withoutActiveDevice();
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
 
     $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();
@@ -144,6 +146,7 @@ it('party:force sends play to a fresh pushed Player through the transport seam',
 
 it('party:force sends play to a fresh Web Player through the transport seam', function () {
     Event::fake([PlayerCommand::class]);
+    app(FakeMusicProvider::class)->withoutActiveDevice();
     $party = activeParty(['poll' => false, 'force' => true, 'device_id' => 'dev1', 'last_updated_at' => now()->subMinutes(20), 'playback_source' => PlaybackSource::WebPlayer, 'playback_received_at' => now()]);
 
     $this->artisan('party:force', ['code' => $party->code])->assertSuccessful();

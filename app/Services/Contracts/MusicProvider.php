@@ -86,4 +86,31 @@ interface MusicProvider
      * @return list<Playlist>
      */
     public function listPlaylists(): array;
+
+    /**
+     * The playlist when it exists and the linked account owns it, otherwise null.
+     */
+    public function ownedPlaylist(string $playlistId): ?Playlist;
+
+    /**
+     * The first playlist with exactly this name that the linked account owns.
+     */
+    public function findOwnedPlaylistByName(string $name): ?Playlist;
+
+    public function createPrivatePlaylist(string $name, string $description): Playlist;
+
+    /**
+     * Removes every item from a playlist the linked account owns.
+     */
+    public function clearPlaylist(string $playlistId): void;
+
+    /**
+     * Provider context reference for one of its playlists, comparable with PlaybackState::$contextUri.
+     */
+    public function playlistContextUri(string $playlistId): string;
+
+    /**
+     * Display name for a playback context, or null when unknown.
+     */
+    public function contextName(string $contextUri): ?string;
 }

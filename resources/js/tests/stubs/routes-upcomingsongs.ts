@@ -10,3 +10,7 @@ export const destroy = (args: {party: string; upcomingsong: number}) => ({
     url: `/api/v1/parties/${args.party}/upcomingsongs/${args.upcomingsong}`,
     method: 'delete' as const,
 });
+export const play = (args: {party: string; upcomingsong: number}) => ({
+    url: `/api/v1/parties/${args.party}/upcomingsongs/${args.upcomingsong}/play`,
+    method: 'post' as const,
+});

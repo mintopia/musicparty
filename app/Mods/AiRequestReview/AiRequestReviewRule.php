@@ -16,6 +16,7 @@ use Laravel\Ai\Ai;
 use Laravel\Ai\Classification;
 use Laravel\Ai\Classification\Choice;
 use Laravel\Ai\Responses\Data\ChoiceAnswer;
+use Laravel\Ai\Responses\StructuredAgentResponse;
 use Throwable;
 
 class AiRequestReviewRule implements RequestRule
@@ -79,6 +80,10 @@ class AiRequestReviewRule implements RequestRule
     protected function prompt(Track $track, ?string $guidelines, string $provider, string $model, int $timeout): array
     {
         $response = new RequestReviewAgent($guidelines)->prompt($this->describe($track), provider: $provider, model: $model, timeout: $timeout);
+
+        if (! $response instanceof StructuredAgentResponse) {
+            return [null, null];
+        }
 
         return [$response['verdict'] ?? null, $response['reason'] ?? null];
     }

@@ -51,6 +51,18 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     /** @var list<Device> */
     protected array $devices = [];
 
+    /** @var array<string, Playlist> */
+    protected array $ownedPlaylists = [];
+
+    /** @var array<string, string> */
+    protected array $contextNames = [];
+
+    protected ?Throwable $playbackFailure = null;
+
+    protected bool $relinkRequired = false;
+
+    protected ?Throwable $devicesFailure = null;
+
     public function __construct()
     {
         for ($i = 1; $i <= self::CATALOGUE_SIZE; $i++) {
@@ -154,6 +166,52 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return $this;
     }
 
+    public function withOwnedPlaylist(Playlist $playlist, int $items = 0): self
+    {
+        $this->ownedPlaylists[$playlist->id] = new Playlist($playlist->id, $playlist->name, $playlist->ownerName, $items);
+
+        return $this;
+    }
+
+    /**
+     * @return array<string, Playlist>
+     */
+    public function ownedPlaylists(): array
+    {
+        return $this->ownedPlaylists;
+    }
+
+    /**
+     * The next player command throws this once, then behaves normally again.
+     */
+    public function withPlaybackFailure(?Throwable $failure): self
+    {
+        $this->playbackFailure = $failure;
+
+        return $this;
+    }
+
+    public function failingDevicesWith(?Throwable $failure): self
+    {
+        $this->devicesFailure = $failure;
+
+        return $this;
+    }
+
+    public function withRelinkRequired(bool $required = true): self
+    {
+        $this->relinkRequired = $required;
+
+        return $this;
+    }
+
+    public function withContextName(string $uri, string $name): self
+    {
+        $this->contextNames[$uri] = $name;
+
+        return $this;
+    }
+
     public function id(): string
     {
         return 'fake';
@@ -171,7 +229,7 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
 
     public function needsRelink(): bool
     {
-        return false;
+        return $this->relinkRequired;
     }
 
     public function trackUrl(string $trackId): ?string
@@ -277,6 +335,53 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return array_values($this->playlists);
     }
 
+    public function ownedPlaylist(string $playlistId): ?Playlist
+    {
+        $this->record(__FUNCTION__, func_get_args());
+
+        return $this->ownedPlaylists[$playlistId] ?? null;
+    }
+
+    public function findOwnedPlaylistByName(string $name): ?Playlist
+    {
+        $this->record(__FUNCTION__, func_get_args());
+        foreach ($this->ownedPlaylists as $playlist) {
+            if ($playlist->name === $name) {
+                return $playlist;
+            }
+        }
+
+        return null;
+    }
+
+    public function createPrivatePlaylist(string $name, string $description): Playlist
+    {
+        $this->record(__FUNCTION__, func_get_args());
+        $playlist = new Playlist('fake-owned-'.(count($this->ownedPlaylists) + 1), $name, 'Fake Owner', 0);
+        $this->ownedPlaylists[$playlist->id] = $playlist;
+
+        return $playlist;
+    }
+
+    public function clearPlaylist(string $playlistId): void
+    {
+        $this->record(__FUNCTION__, func_get_args());
+        if (isset($this->ownedPlaylists[$playlistId])) {
+            $playlist = $this->ownedPlaylists[$playlistId];
+            $this->ownedPlaylists[$playlistId] = new Playlist($playlist->id, $playlist->name, $playlist->ownerName, 0);
+        }
+    }
+
+    public function playlistContextUri(string $playlistId): string
+    {
+        return "fake:playlist:{$playlistId}";
+    }
+
+    public function contextName(string $contextUri): ?string
+    {
+        return $this->contextNames[$contextUri] ?? null;
+    }
+
     public function currentPlayback(): ?PlaybackState
     {
         $this->record(__FUNCTION__, func_get_args());
@@ -287,6 +392,7 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function sendToPlayer(Track $track): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
         $this->assertActiveDevice();
         $this->sentToPlayer[] = $track;
     }
@@ -304,38 +410,54 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     public function transferPlayback(string $deviceId): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
         $this->activeDeviceId = $deviceId;
     }
 
     public function play(?string $deviceId = null, ?Track $track = null): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
+        $this->assertActiveDevice();
+    }
+
+    public function playInContext(string $playlistId, Track $track, ?string $deviceId = null, int $positionMs = 0): void
+    {
+        $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
         $this->assertActiveDevice();
     }
 
     public function pause(): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
     }
 
     public function next(): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
     }
 
     public function previous(): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
     }
 
     public function seek(int $positionMs): void
     {
         $this->record(__FUNCTION__, func_get_args());
+        $this->failIfScheduled();
     }
 
     public function devices(): array
     {
         $this->record(__FUNCTION__, func_get_args());
+        if ($this->devicesFailure !== null) {
+            throw $this->devicesFailure;
+        }
 
         return $this->devices;
     }
@@ -354,6 +476,16 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     protected function record(string $method, array $args): void
     {
         $this->calls[] = ['method' => $method, 'args' => array_values($args)];
+    }
+
+    protected function failIfScheduled(): void
+    {
+        if ($this->playbackFailure !== null) {
+            $failure = $this->playbackFailure;
+            $this->playbackFailure = null;
+
+            throw $failure;
+        }
     }
 
     /**

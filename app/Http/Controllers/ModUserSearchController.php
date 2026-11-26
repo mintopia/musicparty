@@ -14,12 +14,19 @@ class ModUserSearchController extends Controller
     {
         $this->authorize('update', $party);
 
-        return $this->respond(User::query()->whereIn('id', $party->members()->select('user_id')), $request);
+        /** @var Builder<User> $query */
+        $query = User::query();
+        $query->whereIn('id', $party->members()->select('user_id'));
+
+        return $this->respond($query, $request);
     }
 
     public function instance(Request $request): JsonResponse
     {
-        return $this->respond(User::query(), $request);
+        /** @var Builder<User> $query */
+        $query = User::query();
+
+        return $this->respond($query, $request);
     }
 
     /**

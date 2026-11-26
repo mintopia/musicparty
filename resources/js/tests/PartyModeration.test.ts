@@ -29,6 +29,7 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
 }));
 
 const party = {code: 'ABCD', name: 'Party', canManage: true};
+const playerState = {now: null, next: null, current: null, status: null};
 const types = {mtName: 'Track Name', mtId: 'Track ID'};
 const actions = {reject: 'Reject the request', flag: 'Flag for approval'};
 const moderation = {
@@ -51,6 +52,7 @@ describe('party moderation pages', () => {
         const wrapper = mount(Index, {
             props: {
                 party,
+                playerState,
                 moderations: {
                     data: [moderation, {...moderation, id: 6, enabled: false, regex: true, value: '/x/'}],
                     current_page: 1,
@@ -79,6 +81,7 @@ describe('party moderation pages', () => {
         const wrapper = mount(Create, {
             props: {
                 party,
+                playerState,
                 types,
                 actions,
                 track,
@@ -92,12 +95,12 @@ describe('party moderation pages', () => {
     });
 
     it('omits track data without a track', () => {
-        const wrapper = mount(Create, {props: {party, types, actions, track: null, moderation}});
+        const wrapper = mount(Create, {props: {party, playerState, types, actions, track: null, moderation}});
         expect(wrapper.find('[data-test="track-data"]').exists()).toBe(false);
     });
 
     it('patches the edit form and links to delete', async () => {
-        const wrapper = mount(Edit, {props: {party, types, actions, moderation}});
+        const wrapper = mount(Edit, {props: {party, playerState, types, actions, moderation}});
         expect(wrapper.find('h1').text()).toBe('Edit Track Name Filter');
         expect(wrapper.find('a[href="/parties/ABCD/moderation/5/delete"]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
@@ -105,7 +108,7 @@ describe('party moderation pages', () => {
     });
 
     it('confirms and deletes', async () => {
-        const wrapper = mount(Delete, {props: {party, moderation}});
+        const wrapper = mount(Delete, {props: {party, playerState, moderation}});
         expect(wrapper.text()).toContain('bad');
         await wrapper.find('form').trigger('submit');
         expect(inertia.delete).toHaveBeenCalledWith('/parties/ABCD/moderation/5');

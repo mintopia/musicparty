@@ -1,6 +1,7 @@
 <?php
 
 use App\Events\Party\PlayerCommand;
+use App\Exceptions\ProviderPremiumRequiredException;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Role;
@@ -9,7 +10,10 @@ use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\PlaybackSync;
+use App\Services\Spotify\SpotifyBackoffException;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Sanctum\Sanctum;
@@ -36,10 +40,44 @@ it('plays the current track on the given device through the provider', function 
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play', 'deviceId' => 'dev9'])->assertOk();
 
-    $calls = $fake->callsTo('play');
+    $calls = $fake->callsTo('playInContext');
     expect($calls)->toHaveCount(1)
-        ->and($calls[0][0])->toBe('dev9')
-        ->and($calls[0][1]->id)->toBe('cur');
+        ->and($calls[0][0])->toBe($party->fresh()->context_playlist_id)
+        ->and($calls[0][1]->id)->toBe('cur')
+        ->and($calls[0][2])->toBe('dev9')
+        ->and($calls[0][3])->toBe(0)
+        ->and($fake->callsTo('play'))->toBeEmpty();
+});
+
+it('resumes a paused current track from its position instead of restarting it', function () {
+    $fake = app(FakeMusicProvider::class)
+        ->withTrack(FakeFallbackPlaylist::track('cur'))
+        ->withPlayback(new PlaybackState(false, 'cur', null, 180000, 72000, CarbonImmutable::now(), false, 'off', 'fake-device', 'Fake Speaker', PlaybackSource::Polling));
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertOk();
+
+    expect($fake->callsTo('playInContext')[0][3])->toBe(72000);
+});
+
+it('maps a Premium-only Spotify failure on control to a premium_required error and flags the party', function () {
+    app(FakeMusicProvider::class)->withPlaybackFailure(new ProviderPremiumRequiredException('Premium required'));
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'pause'])
+        ->assertStatus(409)
+        ->assertJson(['code' => 'premium_required']);
+    expect(Cache::get("party.{$party->id}.premium-required"))->toBeTrue();
+});
+
+it('maps a provider backoff on control to a rate_limited error with Retry-After', function () {
+    app(FakeMusicProvider::class)->withPlaybackFailure(new SpotifyBackoffException(12));
+    $party = controlParty();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'pause'])
+        ->assertStatus(503)
+        ->assertHeader('Retry-After', '12')
+        ->assertJson(['code' => 'rate_limited', 'retryAfter' => 12]);
 });
 
 it('transfers playback to the web player device before playing', function () {
@@ -53,8 +91,8 @@ it('transfers playback to the web player device before playing', function () {
 
     $methods = array_column($fake->calls(), 'method');
     expect($fake->callsTo('transferPlayback'))->toBe([['web-sdk']])
-        ->and(array_search('transferPlayback', $methods, true))->toBeLessThan(array_search('play', $methods, true))
-        ->and($fake->callsTo('play')[0][0])->toBe('web-sdk');
+        ->and(array_search('transferPlayback', $methods, true))->toBeLessThan(array_search('playInContext', $methods, true))
+        ->and($fake->callsTo('playInContext')[0][2])->toBe('web-sdk');
 });
 
 it('returns a client error rather than a server error when there is no active device', function () {
@@ -160,12 +198,32 @@ it('sends commands to Encore as Soloist commands when Encore is the Player', fun
         && $e->broadcastOn()->name === "private-encore.{$party->code}");
     expect($fake->calls())->not->toContain(fn ($c) => in_array($c['method'], ['pause', 'next', 'seek'], true));
 })->with([
-    ['play', ['type' => 'play']],
     ['pause', ['type' => 'pause']],
     ['next', ['type' => 'next']],
     ['previous', ['type' => 'skip_prev']],
     ['seek', ['type' => 'seek', 'position_ms' => 4200]],
 ]);
+
+it('plays through the Web API first when Encore is the Player', function () {
+    Event::fake([PlayerCommand::class]);
+    $fake = app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(playingState('cur'));
+    $party = controlParty(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertOk();
+
+    expect($fake->callsTo('playInContext'))->toHaveCount(1);
+    Event::assertNotDispatched(PlayerCommand::class);
+});
+
+it('falls back to the pushed play command when the Web API finds no active device', function (PlaybackSource $player) {
+    Event::fake([PlayerCommand::class]);
+    app(FakeMusicProvider::class)->withoutActiveDevice();
+    $party = controlParty(['playback_source' => $player, 'playback_received_at' => now()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertOk();
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === $player && $e->command === ['type' => 'play']);
+})->with([PlaybackSource::Encore, PlaybackSource::WebPlayer]);
 
 it('sends commands to the Web Player when it is the Player', function () {
     Event::fake([PlayerCommand::class]);
@@ -194,4 +252,38 @@ it('requires a position to seek', function () {
     $party = controlParty();
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'seek'])->assertUnprocessable();
+});
+
+it('forgets the dashboard playback cache after a control action', function () {
+    app(FakeMusicProvider::class);
+    $party = controlParty();
+    Cache::put("party.{$party->id}.dashboard.playback", 'stale', 60);
+    Cache::put("party.{$party->id}.dashboard.devices", ['stale'], 60);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'pause'])->assertOk();
+
+    expect(Cache::has("party.{$party->id}.dashboard.playback"))->toBeFalse()
+        ->and(Cache::has("party.{$party->id}.dashboard.devices"))->toBeFalse();
+});
+
+it('forgets the dashboard playback cache when a playback state is applied', function () {
+    $fake = app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'));
+    $party = controlParty();
+    Cache::put("party.{$party->id}.dashboard.playback", 'stale', 60);
+
+    app(PlaybackSync::class)->apply($party, playingState('cur'));
+
+    expect(Cache::has("party.{$party->id}.dashboard.playback"))->toBeFalse();
+});
+
+it('answers 409 busy when the sync lock is held while playing', function () {
+    config(['musicparty.prevent_overlapping_updates' => true]);
+    app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(playingState('cur'));
+    $party = controlParty();
+    $lock = Cache::lock("party-sync:{$party->id}", 30);
+    $lock->get();
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertStatus(409)->assertJsonPath('code', 'busy');
+
+    $lock->release();
 });

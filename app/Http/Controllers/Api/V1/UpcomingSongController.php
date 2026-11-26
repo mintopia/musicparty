@@ -13,6 +13,7 @@ use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
+use App\Services\Playback\PartyDashboardCache;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -172,6 +173,7 @@ class UpcomingSongController extends Controller
             abort(400, 'Unable to delete an upcoming song that has been queued');
         }
         $upcomingsong->delete();
+        PartyDashboardCache::forget($party);
 
         return response()->noContent();
     }

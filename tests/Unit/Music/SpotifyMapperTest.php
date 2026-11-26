@@ -83,3 +83,14 @@ it('maps playlists and devices', function () {
     expect($playlist->ownerName)->toBe('Jess')->and($playlist->trackCount)->toBe(12)
         ->and($device->isActive)->toBeTrue();
 });
+
+it('maps restricted devices and the playback context', function () {
+    $device = SpotifyMapper::device((object) ['id' => 'd1', 'name' => 'Cast', 'type' => 'CastVideo', 'is_active' => false, 'is_restricted' => true]);
+    $payload = spotifyFixture('playback');
+    $payload->context = (object) ['uri' => 'spotify:playlist:pl1', 'type' => 'playlist'];
+
+    expect($device->isRestricted)->toBeTrue()
+        ->and(SpotifyMapper::device((object) ['id' => 'd2', 'name' => 'Speaker'])->isRestricted)->toBeFalse()
+        ->and(SpotifyMapper::playbackState($payload)->contextUri)->toBe('spotify:playlist:pl1')
+        ->and(SpotifyMapper::playbackState(spotifyFixture('playback'))->contextUri)->toBeNull();
+});

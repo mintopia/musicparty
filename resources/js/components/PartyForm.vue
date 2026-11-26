@@ -11,6 +11,8 @@ defineProps<{
     cancelUrl: string;
     providerIds?: string[];
     providerName?: string;
+    showContextPlaylist?: boolean;
+    contextPlaylistName?: string | null;
 }>();
 
 defineEmits<{submit: []}>();
@@ -221,6 +223,26 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                     <input v-model="form.force" type="checkbox" class="form-check-input" name="force" value="1" />
                     Force playback on the selected device
                 </label>
+                <div v-if="showContextPlaylist" class="mb-3 mt-3">
+                    <label class="form-label" for="context_playlist_id">Context playlist</label>
+                    <input
+                        id="context_playlist_id"
+                        v-model="form.context_playlist_id"
+                        type="text"
+                        name="context_playlist_id"
+                        class="form-control"
+                        :class="{'is-invalid': form.errors.context_playlist_id}"
+                        placeholder="Music Party Context (automatic)"
+                    />
+                    <small class="form-hint">
+                        <template v-if="contextPlaylistName">In use: {{ contextPlaylistName }}. </template>
+                        Playlist ID on {{ providerName ?? 'the host' }}'s account. Leave blank to let Music Party manage
+                        it. The playlist is kept empty.
+                    </small>
+                    <p v-if="form.errors.context_playlist_id" class="invalid-feedback">
+                        {{ form.errors.context_playlist_id }}
+                    </p>
+                </div>
             </div>
             <div class="mb-3">
                 <label class="form-label">Playback Device</label>
