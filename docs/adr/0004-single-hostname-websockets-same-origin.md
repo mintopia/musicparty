@@ -7,3 +7,5 @@ We serve websockets from the same hostname as the app. The Caddyfile in the app 
 Server-side publishing from the app to Reverb keeps using `REVERB_HOST`/`REVERB_PORT`/`REVERB_SCHEME` on the internal network and never leaves it.
 
 An Operator's own reverse proxy in front of the app only has to forward one hostname with websocket upgrade headers. The cost is that Reverb traffic passes through the app container's Caddy, which is acceptable at this scale.
+
+Since ADR 0011 the matcher and proxy are injected through `CADDY_SERVER_EXTRA_DIRECTIVES` by the `docker/hooks/05-reverb-proxy` entrypoint hook, on top of the base image's own Caddyfile; there is no app Caddyfile.

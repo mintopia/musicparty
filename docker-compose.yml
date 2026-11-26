@@ -20,8 +20,6 @@ services:
       PHP_IDE_CONFIG: serverName=musicparty
       XDEBUG_MODE: debug
       XDEBUG_SESSION: start
-      CADDY_SERVER_FRANKENPHP_OPTIONS: ""
-      APP_INDEX_FILE: index.php
     depends_on:
       - redis
       - db
@@ -93,8 +91,9 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "composer" ]
+    entrypoint: [ "docker-entrypoint.sh", "composer" ]
     command: [ "--version" ]
+    environment: *user-env
     volumes:
       - ./:/app
     healthcheck:
@@ -105,7 +104,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "php", "vendor/bin/phpunit" ]
+    entrypoint: [ "docker-entrypoint.sh", "php", "vendor/bin/phpunit" ]
+    environment: *user-env
     volumes:
       - ./:/app
     healthcheck:
@@ -116,7 +116,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/entrypoint.sh", "npm" ]
+    entrypoint: [ "docker-entrypoint.sh", "npm" ]
     command: [ "run", "dev", "--", "--host=0.0.0.0" ]
     working_dir: /app
     environment:
@@ -133,7 +133,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/entrypoint.sh", "npm" ]
+    entrypoint: [ "docker-entrypoint.sh", "npm" ]
     command: [ "--version" ]
     working_dir: /app
     environment:
@@ -151,7 +151,7 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/entrypoint.sh", "php", "/app/artisan" ]
+    entrypoint: [ "docker-entrypoint.sh", "php", "/app/artisan" ]
     environment: *user-env
     volumes:
       - ./:/app/
@@ -166,7 +166,8 @@ services:
     build:
       context: .
       dockerfile: docker/develop/Dockerfile
-    entrypoint: [ "/bin/sh" ]
+    entrypoint: [ "docker-entrypoint.sh", "/bin/sh" ]
+    environment: *user-env
     volumes:
       - ./:/app/
     depends_on:
