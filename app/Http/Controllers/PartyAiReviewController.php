@@ -23,12 +23,15 @@ class PartyAiReviewController extends Controller
         $filters = $request->validate([
             'outcome' => ['nullable', 'string', 'in:'.implode(',', array_column(AiReviewOutcome::cases(), 'value'))],
             'q' => ['nullable', 'string', 'max:100'],
+            'review' => ['nullable', 'integer'],
         ]);
+        $focus = isset($filters['review']) ? (int) $filters['review'] : null;
         $outcome = $filters['outcome'] ?? null;
         $search = trim($filters['q'] ?? '');
 
         $reviews = $party->aiReviews()
             ->with('user:id,nickname')
+            ->when($focus !== null, fn ($query) => $query->whereKey($focus))
             ->when($outcome !== null && $outcome !== '', fn ($query) => $query->where('outcome', $outcome))
             ->when($search !== '', function ($query) use ($search): void {
                 $like = '%'.addcslashes($search, '%_\\').'%';
@@ -45,7 +48,7 @@ class PartyAiReviewController extends Controller
         return Inertia::render('Parties/AiReviews/Index', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'playerState' => $party->getState(),
-            'filters' => ['outcome' => $outcome ?? '', 'q' => $search],
+            'filters' => ['outcome' => $outcome ?? '', 'q' => $search, 'review' => $focus],
             'outcomes' => array_map(fn (AiReviewOutcome $case): array => ['code' => $case->value, 'name' => $case->label()], AiReviewOutcome::cases()),
             'retentionDays' => max(1, (int) config('musicparty.ai_review_retention_days')),
             'holdsFlagged' => (bool) $party->flag_requests,

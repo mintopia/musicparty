@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {Head, Link, router} from '@inertiajs/vue3';
 import axios from 'axios';
-import {computed, reactive, ref} from 'vue';
+import {computed, onMounted, reactive, ref} from 'vue';
 import AiReviewDetailPanel from '@/components/AiReviewDetail.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -16,7 +16,7 @@ import type {AiReviewDetail, AiReviewRow, LegacyPartyState, ModerationTabsProps,
 const props = defineProps<{
     party: {code: string; name: string};
     playerState: LegacyPartyState;
-    filters: {outcome: string; q: string};
+    filters: {outcome: string; q: string; review: number | null};
     outcomes: {code: string; name: string}[];
     retentionDays: number;
     holdsFlagged: boolean;
@@ -27,7 +27,9 @@ const props = defineProps<{
 
 const form = reactive({q: props.filters.q, outcome: props.filters.outcome});
 const listUrl = aiReviewsUrl(props.party.code);
-const filtered = computed(() => props.filters.q !== '' || props.filters.outcome !== '');
+const filtered = computed(
+    () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.review !== null,
+);
 const columns = 8;
 
 const expanded = ref<number | null>(null);
@@ -58,6 +60,13 @@ async function load(review: AiReviewRow): Promise<void> {
         loading.value = null;
     }
 }
+
+onMounted(() => {
+    const focused = props.reviews.data.find((review) => review.id === props.filters.review);
+    if (focused) {
+        void toggle(focused);
+    }
+});
 
 async function toggle(review: AiReviewRow): Promise<void> {
     if (expanded.value === review.id) {
