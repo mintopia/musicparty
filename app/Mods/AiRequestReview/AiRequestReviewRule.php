@@ -24,12 +24,18 @@ class AiRequestReviewRule implements RequestRule
 
     public const DRIVER_OPENAI_COMPATIBLE = 'openai-compatible';
 
-    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods) {}
+    public const DRIVER_DECISION_MODEL = 'decision-model';
+
+    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods, protected DecisionModelReviewer $decisionModel) {}
 
     public function decide(RequestContext $context, Track $track): RequestDecision
     {
         if ($context->mode !== RequestMode::Submit || ! $this->partyMods->isEnabled($context->party, AiRequestReviewMod::CODE)) {
             return RequestDecision::allow();
+        }
+
+        if ($this->setting($context->party, 'driver') === self::DRIVER_DECISION_MODEL) {
+            return $this->decideWithDecisionModel($context->party, $track);
         }
 
         $model = $this->setting($context->party, 'model');
@@ -49,6 +55,35 @@ class AiRequestReviewRule implements RequestRule
             return $this->interpret($verdict, $reason);
         } catch (Throwable $e) {
             Log::warning("AI Request Review unavailable: {$e->getMessage()}");
+
+            return RequestDecision::allow();
+        }
+    }
+
+    protected function decideWithDecisionModel(Party $party, Track $track): RequestDecision
+    {
+        $apiKey = $this->setting($party, 'api_key');
+        if (! is_string($apiKey) || $apiKey === '') {
+            return RequestDecision::allow();
+        }
+
+        try {
+            $guidelines = $this->setting($party, 'guidelines');
+            $endpoint = $this->setting($party, 'decision_endpoint');
+            $model = $this->setting($party, 'decision_model');
+            $threshold = $this->setting($party, 'confidence_threshold');
+
+            return $this->decisionModel->review(
+                is_string($endpoint) && $endpoint !== '' ? $endpoint : DecisionModelReviewer::OPENROUTER_ENDPOINT,
+                $apiKey,
+                is_string($model) && $model !== '' ? $model : DecisionModelReviewer::DEFAULT_MODEL,
+                is_string($guidelines) ? $guidelines : null,
+                $this->trackDetails($track),
+                max(1, (int) ($this->setting($party, 'timeout') ?? 10)),
+                is_numeric($threshold) ? (float) $threshold : DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD,
+            );
+        } catch (Throwable $e) {
+            Log::warning('AI Request Review unavailable: '.($e instanceof DecisionModelException ? $e->getMessage() : $e::class));
 
             return RequestDecision::allow();
         }
@@ -118,13 +153,19 @@ class AiRequestReviewRule implements RequestRule
 
     protected function describe(Track $track): string
     {
-        $artists = implode(', ', array_map(fn (ArtistRef $artist): string => $artist->name, $track->artists));
+        return json_encode($this->trackDetails($track), JSON_THROW_ON_ERROR);
+    }
 
-        return json_encode([
+    /**
+     * @return array{title: string, artists: string, album: string, explicit: bool}
+     */
+    protected function trackDetails(Track $track): array
+    {
+        return [
             'title' => $track->name,
-            'artists' => $artists,
+            'artists' => implode(', ', array_map(fn (ArtistRef $artist): string => $artist->name, $track->artists)),
             'album' => $track->album->name,
             'explicit' => $track->explicit,
-        ], JSON_THROW_ON_ERROR);
+        ];
     }
 }
