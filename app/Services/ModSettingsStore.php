@@ -8,6 +8,7 @@ use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
 use App\Models\PartyModSetting;
+use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use Carbon\CarbonInterface;
 use Closure;
@@ -65,7 +66,7 @@ class ModSettingsStore
      */
     public function validated(ModSetting $definition, mixed $value, ?Party $party): mixed
     {
-        $value = $value === '' ? null : $value;
+        $value = $value === '' || ($definition->type === SettingType::stUser && in_array($value, [0, '0'], true)) ? null : $value;
         $rules = $this->rulesFor($definition, $party);
         Validator::make([$definition->code => $value], [$definition->code => $rules], [], [$definition->code => $definition->name])->validate();
         if ($value === null) {
@@ -74,7 +75,7 @@ class ModSettingsStore
 
         return match ($definition->type) {
             SettingType::stBoolean => filter_var($value, FILTER_VALIDATE_BOOLEAN),
-            SettingType::stInteger => (int) $value,
+            SettingType::stInteger, SettingType::stUser => (int) $value,
             SettingType::stFloat => (float) $value,
             SettingType::stTrack => $this->resolveTrack($party, (string) $value),
             default => $value,
@@ -92,6 +93,7 @@ class ModSettingsStore
             SettingType::stBoolean => ['boolean'],
             SettingType::stInteger => ['integer'],
             SettingType::stFloat => ['numeric'],
+            SettingType::stUser => ['integer', 'exists:users,id'],
             SettingType::stDateTime => ['date'],
             SettingType::stTimeOfDay => ['date_format:H:i'],
             SettingType::stTrack => [
@@ -230,6 +232,7 @@ class ModSettingsStore
             'default' => $secret ? null : $this->presentValue($definition->default),
             'required' => $definition->isRequired(),
             'options' => (object) ($definition->options ?? []),
+            'value_label' => $definition->type === SettingType::stUser && is_numeric($value) && (int) $value > 0 ? User::query()->whereKey((int) $value)->value('nickname') : null,
         ];
     }
 

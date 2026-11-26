@@ -11,6 +11,7 @@ use App\Http\Controllers\FlaggedRequestController;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
+use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
@@ -55,6 +56,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:update,party')->group(function () {
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods', [PartyModsController::class, 'update'])->name('parties.mods.update');
+            Route::get('parties/{party}/mods/users', [ModUserSearchController::class, 'party'])->name('parties.mods.users');
+            Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
             Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
@@ -94,6 +97,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('mods', [AdminModsController::class, 'edit'])->name('mods.edit');
             Route::match(['PUT', 'PATCH'], 'mods', [AdminModsController::class, 'update'])->name('mods.update');
+            Route::get('mods/users', [ModUserSearchController::class, 'instance'])->name('mods.users');
+            Route::match(['PUT', 'PATCH'], 'mods/{mod}', [AdminModsController::class, 'updateMod'])->name('mods.updateMod');
 
             Route::get('settings', [AdminSettingController::class, 'index'])->name('settings.index');
             Route::match(['PUT', 'PATCH'], 'settings', [AdminSettingController::class, 'update'])->name('settings.update');

@@ -13,6 +13,7 @@ enum SettingType
     case stTimeOfDay;
     case stSecret;
     case stChoice;
+    case stUser;
 
     public function label(): string
     {
@@ -26,6 +27,7 @@ enum SettingType
             self::stTimeOfDay => 'time_of_day',
             self::stSecret => 'secret',
             self::stChoice => 'choice',
+            self::stUser => 'user',
         };
     }
 }

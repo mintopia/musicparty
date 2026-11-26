@@ -2,12 +2,21 @@ import type {ModSetting} from '@/types';
 
 export const partyModsUrl = (code: string): string => `/parties/${code}/mods`;
 export const adminModsUrl = (): string => '/admin/mods';
+export const partyModUrl = (code: string, mod: string): string => `/parties/${code}/mods/${mod}`;
+export const adminModUrl = (mod: string): string => `/admin/mods/${mod}`;
+export const partyModUsersUrl = (code: string): string => `/parties/${code}/mods/users`;
+export const adminModUsersUrl = (): string => '/admin/mods/users';
 
 export type ModSettingValue = string | number | boolean | null;
 
 export function initialSettingValue(setting: ModSetting): ModSettingValue {
     if (setting.type === 'secret') {
         return '';
+    }
+    if (setting.type === 'user') {
+        return setting.value === 0 || setting.value === null || setting.value === undefined
+            ? null
+            : (setting.value as number);
     }
     const raw = setting.has_value ? setting.value : setting.default;
     if (raw === undefined || raw === null) {
