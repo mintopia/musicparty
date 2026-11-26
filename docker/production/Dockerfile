@@ -1,4 +1,4 @@
-FROM ghcr.io/mintopia/php:8.5-cli AS composer
+FROM --platform=$BUILDPLATFORM ghcr.io/mintopia/php:8.5-cli AS composer
 
 WORKDIR /app/
 ENV HOME=/tmp
@@ -14,7 +14,7 @@ RUN composer install \
         --prefer-dist
 
 # PHP is needed because the Wayfinder Vite plugin runs artisan.
-FROM ghcr.io/mintopia/php:8.5-cli AS npm
+FROM --platform=$BUILDPLATFORM ghcr.io/mintopia/php:8.5-cli AS npm
 
 RUN apk add --no-cache nodejs npm
 WORKDIR /app/
