@@ -232,6 +232,13 @@ describe('queue and history', function () {
         expect(rulesCheck($party, rulesMember($party), $remaster))->toBe([false, 'A similar song is already in the queue']);
     });
 
+    it('ignores a similar request that is held for approval', function () {
+        $party = rulesParty();
+        rulesWaiting($party, rulesTrack())->forceFill(['flagged_at' => now(), 'flag_reason' => 'Flagged by the AI review'])->save();
+
+        expect(rulesCheck($party, rulesMember($party), rulesTrack())[1])->not->toBe('A similar song is already in the queue');
+    });
+
     it('allows a track with the same name but different artists', function () {
         $party = rulesParty();
         rulesWaiting($party, rulesTrack());

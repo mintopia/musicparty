@@ -106,7 +106,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <template v-if="track.queue.requested_by">Requested by {{ track.queue.requested_by }}</template>
                         <template v-else>Fallback Track</template>
                     </template>
-                    <span v-else-if="!track.eligibility.allowed" class="text-warning" data-test="reason">
+                    <span v-else-if="!track.eligibility.allowed && !isAwaiting" class="text-warning" data-test="reason">
                         <i class="icon ti ti-alert-triangle"></i>
                         {{ track.eligibility.reason }}
                     </span>

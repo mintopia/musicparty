@@ -34,7 +34,7 @@ final class SimilarTrackRule implements RequestRule
             }
         }
 
-        $waiting = $context->party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($names, $artists) {
+        $waiting = $context->party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->whereHas('song', function ($query) use ($names, $artists) {
             $query->whereIn('name', $names);
             $query->whereHas('artists', fn ($query) => $query->whereIn('name', $artists));
         })->with(['song', 'song.artists'])->get();
