@@ -20,12 +20,15 @@ if [ "${BUILD:-1}" = "1" ]; then
     docker build -f docker/production/Dockerfile -t "$IMAGE" .
 fi
 
+# This network has no database or redis. Pulse records the InvalidOrigin exception that a
+# header-less probe triggers via a blocking DB lookup, which stalls Reverb's event loop.
 ENV_ARGS=(
     -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     -e SESSION_DRIVER=array
     -e CACHE_STORE=array
     -e QUEUE_CONNECTION=sync
     -e BROADCAST_CONNECTION=null
+    -e PULSE_ENABLED=false
     -e REVERB_UPSTREAM_HOST="$REVERB"
     -e REVERB_UPSTREAM_PORT=8080
 )
