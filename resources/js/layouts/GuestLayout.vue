@@ -2,7 +2,7 @@
 import {Head, usePage} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import defaultCover from '@/../img/cover.jpg';
-import AppliedEntropyCredit from '@/components/AppliedEntropyCredit.vue';
+import AppliedEntropyFooter from '@/components/AppliedEntropyFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {useColorMode} from '@/composables/useColorMode';
 import {home} from '@/routes';
@@ -38,35 +38,9 @@ useColorMode();
                     <FlashMessages centered />
                     <slot />
                 </div>
-                <footer class="footer footer-transparent mt-auto pt-3 pb-1">
+                <footer class="footer footer-transparent ae-footer d-print-none mt-auto">
                     <div class="container-xl">
-                        <div class="row align-items-center flex-row-reverse">
-                            <div class="col-5 text-end">
-                                <ul class="list-unstyled mb-0">
-                                    <li v-if="site.terms">
-                                        <a :href="site.terms" target="_blank" class="link-secondary"
-                                            >Terms and Conditions</a
-                                        >
-                                    </li>
-                                    <li v-if="site.privacyPolicy">
-                                        <a :href="site.privacyPolicy" target="_blank" class="link-secondary"
-                                            >Privacy Policy</a
-                                        >
-                                    </li>
-                                </ul>
-                            </div>
-                            <div class="col-7">
-                                <ul class="list-inline list-inline-dots mb-0">
-                                    <li class="list-inline-item">
-                                        Copyright &copy; {{ new Date().getFullYear() }}
-                                        <a :href="home().url" class="link-secondary">{{ name }}</a
-                                        >.<br />
-                                        All rights reserved.
-                                    </li>
-                                </ul>
-                                <div class="mt-2"><AppliedEntropyCredit /></div>
-                            </div>
-                        </div>
+                        <AppliedEntropyFooter />
                     </div>
                 </footer>
             </div>

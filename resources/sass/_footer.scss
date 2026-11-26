@@ -1,46 +1,75 @@
-// Applied Entropy credit for the footer. The mark variant follows the theme's dark mode.
-@font-face {
-    font-family: 'Red Hat Text';
-    src: url('../fonts/RedHatText.woff2') format('woff2');
-    font-weight: 300 700;
-    font-style: normal;
-    font-display: swap;
+// Applied Entropy compact footer (DESIGN.md "Footers"), in the app's own typeface. Sits in the original footer
+// element and container. Colours follow the active theme's tokens; the mark variant
+// follows the theme's dark mode.
+.ae-footer {
+    --ae-footer-muted: color-mix(in srgb, var(--tblr-body-color) 80%, var(--tblr-body-bg));
+    border-top: 1px solid var(--tblr-border-color);
+    color: var(--ae-footer-muted);
+    font-size: 14px;
+    line-height: 1.5;
+    padding-block: 32px;
+
+    a {
+        color: inherit;
+        font-weight: 500;
+        text-decoration: none;
+
+        &:hover {
+            color: var(--tblr-body-color);
+            text-decoration: underline;
+        }
+
+        &:focus-visible {
+            border-radius: 2px;
+            outline: 3px solid var(--tblr-body-color);
+            outline-offset: 3px;
+        }
+    }
 }
 
-.ae-credit {
+.ae-footer__row {
     align-items: center;
-    color: inherit;
-    display: inline-flex;
-    font-family: 'Red Hat Text', var(--mp-font-family);
-    font-weight: 500;
-    gap: 0.5rem;
-    text-decoration: none;
-
-    &:hover {
-        color: var(--tblr-body-color);
-        text-decoration: underline;
-    }
-
-    &:focus-visible {
-        border-radius: 2px;
-        outline: 3px solid var(--tblr-body-color);
-        outline-offset: 3px;
-    }
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 1.5rem;
 }
 
-.ae-credit__mark {
+.ae-footer__credit {
+    align-items: center;
+    display: flex;
+    gap: 0.5rem;
+    margin-right: auto;
+}
+
+.ae-footer__mark {
     height: 24px;
     width: auto;
 }
 
-.ae-credit__mark--dark {
+.ae-footer__mark--dark {
     display: none;
 }
 
-[data-bs-theme='dark'] .ae-credit__mark--light {
+[data-bs-theme='dark'] .ae-footer__mark--light {
     display: none;
 }
 
-[data-bs-theme='dark'] .ae-credit__mark--dark {
+[data-bs-theme='dark'] .ae-footer__mark--dark {
     display: block;
+}
+
+.ae-footer__links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem 1rem;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+@media (max-width: 719px) {
+    .ae-footer__row {
+        align-items: flex-start;
+        flex-direction: column;
+    }
 }
