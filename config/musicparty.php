@@ -12,4 +12,7 @@ return [
     // Per-member search/browse leaky bucket: burst size, and calls per second drained.
     'search_burst' => (int) env('MUSICPARTY_SEARCH_BURST', 10),
     'search_leak_per_second' => (float) env('MUSICPARTY_SEARCH_LEAK_PER_SECOND', 1),
+    // Spotify HTTP timeouts: total request time and connection time, in seconds.
+    'spotify_timeout_seconds' => (int) env('MUSICPARTY_SPOTIFY_TIMEOUT_SECONDS', 8),
+    'spotify_connect_timeout_seconds' => (int) env('MUSICPARTY_SPOTIFY_CONNECT_TIMEOUT_SECONDS', 4),
 ];

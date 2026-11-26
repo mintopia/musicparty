@@ -122,3 +122,12 @@ body {
 .w-8 {
     width: 8rem !important;
 }
+
+html #nprogress .bar {
+    height: 3px;
+    background: var(--tblr-primary);
+}
+
+html #nprogress .peg {
+    box-shadow: 0 0 10px var(--tblr-primary), 0 0 5px var(--tblr-primary);
+}

@@ -161,7 +161,7 @@ class SpotifyGateway
             $this->clients[$account->id] = app(SpotifyWebAPI::class, [
                 'options' => [],
                 'session' => $session,
-                'request' => new BackoffRequest($backoffApplication),
+                'request' => BackoffRequest::forApplication($backoffApplication),
             ]);
         }
 
@@ -175,7 +175,7 @@ class SpotifyGateway
             (string) $provider?->getSetting('client_id'),
             (string) $provider?->getSetting('client_secret'),
             '',
-            new BackoffRequest((string) $provider?->code),
+            BackoffRequest::forApplication((string) $provider?->code),
         );
         $session->setAccessToken($account->access_token ?? '');
 

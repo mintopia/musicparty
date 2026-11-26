@@ -44,7 +44,7 @@ it('shares one leaky bucket per member across search, album and artist pages', f
     config(['musicparty.search_burst' => 2, 'musicparty.search_leak_per_second' => 0.001]);
 
     $this->actingAs($this->member->user, 'sanctum')->get($this->searchUrl)
-        ->assertInertia(fn (Assert $page) => $page->where('results.current_page', 1));
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded->where('results.current_page', 1)));
     $this->actingAs($this->member->user, 'sanctum')->get($this->albumUrl)
         ->assertInertia(fn (Assert $page) => $page->where('retry', false)->where('album.id', 'alb1'));
     $this->actingAs($this->member->user, 'sanctum')->get($this->artistUrl)

@@ -5,6 +5,7 @@ namespace App\Services\Music\Spotify;
 use App\Enums\Purpose;
 use App\Exceptions\NoActiveDeviceException;
 use App\Exceptions\ProviderPremiumRequiredException;
+use App\Exceptions\ProviderUnavailableException;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
@@ -16,6 +17,8 @@ use App\Services\Music\Data\Page;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\Track;
+use App\Services\Spotify\BackoffRequest;
+use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use App\Support\SpotifyPayload;
@@ -102,11 +105,20 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
 
     public function searchTracks(string $query, int $page, int $perPage): Page
     {
-        $result = SpotifyPayload::object($this->reader()->search($query, 'track', [
-            'market' => $this->market(),
-            'limit' => $perPage,
-            'offset' => ($page - 1) * $perPage,
-        ]));
+        try {
+            $result = SpotifyPayload::object($this->reader()->search($query, 'track', [
+                'market' => $this->market(),
+                'limit' => $perPage,
+                'offset' => ($page - 1) * $perPage,
+            ]));
+        } catch (SpotifyWebAPIException $e) {
+            throw match (true) {
+                $e instanceof SpotifyBackoffException => $e,
+                $e->isRateLimited() => new SpotifyBackoffException(1),
+                BackoffRequest::transportErrno($e) !== null => new ProviderUnavailableException(BackoffRequest::isTimeout($e), $e),
+                default => $e,
+            };
+        }
         $tracks = SpotifyPayload::object($result->tracks);
 
         return new Page($this->mapTracks((array) $tracks->items), (int) $tracks->total, $page, $perPage);

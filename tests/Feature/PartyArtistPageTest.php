@@ -146,11 +146,20 @@ it('gives the same eligibility reasons on search, album and artist pages', funct
     $this->fake->respond('getAlbum', (object) ['id' => 'alb1', 'name' => 'A', 'images' => [], 'artists' => [FakeSpotify::artist()], 'release_date' => '2019', 'total_tracks' => 4, 'tracks' => (object) ['items' => $albumTracks]]);
 
     $reasons = fn (string $url, string $key) => $this->actingAs($this->member->user, 'sanctum')->get($url)->viewData('page')['props'][$key]['data'];
+    $searchReasons = function (string $url) {
+        $rows = new ArrayObject;
+        $this->actingAs($this->member->user, 'sanctum')->get($url)
+            ->assertInertia(fn ($page) => $page->loadDeferredProps(function ($loaded) use ($rows) {
+                $rows->exchangeArray($loaded->toArray()['props']['results']['data']);
+            }));
+
+        return $rows->getArrayCopy();
+    };
     $extract = fn (array $rows) => array_map(fn ($row) => [$row['id'], $row['eligibility']['allowed'], $row['eligibility']['reason']], $rows);
 
     $artist = $extract($reasons($this->url, 'tracks'));
-    $search = $extract($reasons(route('parties.search', ['party' => $this->party->code, 'query' => 'q']), 'results'));
     $album = $extract($reasons(route('parties.albums.show', ['party' => $this->party->code, 'album' => 'alb1']), 'tracks'));
+    $search = $extract($searchReasons(route('parties.search', ['party' => $this->party->code, 'query' => 'q'])));
 
     expect($artist)->toBe($search)->toBe($album)
         ->and($artist[0][1])->toBeFalse()

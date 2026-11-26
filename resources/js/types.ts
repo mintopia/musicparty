@@ -282,3 +282,7 @@ export interface DashboardProps {
     };
     hasFallbackPlaylist: boolean;
 }
+
+export interface SearchError {
+    error: {code: string; message: string; retryable: boolean};
+}

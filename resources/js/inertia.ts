@@ -8,6 +8,7 @@ import type {DefineComponent} from 'vue';
 const pages = import.meta.glob<DefineComponent>('./pages/**/*.vue');
 
 createInertiaApp({
+    progress: {color: 'var(--tblr-primary)', delay: 100, showSpinner: false},
     resolve: (name) => {
         const page = pages[`./pages/${name}.vue`];
         if (!page) {
