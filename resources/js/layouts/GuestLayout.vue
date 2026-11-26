@@ -30,9 +30,9 @@ useColorMode();
             >
                 <div class="container container-tight mt-auto px-lg-5">
                     <h1 class="mb-4 text-center">
-                        <a :href="home().url" class="navbar-brand navbar-brand-autodark">
+                        <a id="site-brand" :href="home().url" class="navbar-brand navbar-brand-autodark">
                             <img v-if="logo" :src="logo" :alt="name" />
-                            <template v-else>{{ name }}</template>
+                            <span v-else class="site-brand-name">{{ name }}</span>
                         </a>
                     </h1>
                     <FlashMessages centered />

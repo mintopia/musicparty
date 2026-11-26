@@ -53,7 +53,7 @@ useColorMode();
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <h1 class="navbar-brand navbar-brand-autodark mt-1 px-2">
+                <h1 id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2">
                     <a :href="home().url">
                         <template v-if="site.logoLight">
                             <img
@@ -64,7 +64,7 @@ useColorMode();
                             />
                             <img :src="site.logoLight" :alt="name" class="d-none d-lg-inline" />
                         </template>
-                        <template v-else>{{ name }}</template>
+                        <span v-else class="site-brand-name">{{ name }}</span>
                     </a>
                 </h1>
 
