@@ -47,6 +47,10 @@
     --tblr-font-sans-serif: var(--mp-font-family);
 }
 
+.card-footer {
+    --tblr-card-footer-bg: color-mix(in srgb, var(--tblr-bg-surface) 96%, var(--tblr-body-color));
+}
+
 .navbar[data-bs-theme=dark] {
     --tblr-navbar-bg: var(--mp-nav-background, var(--mp-default-nav-background));
 }

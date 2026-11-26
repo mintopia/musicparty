@@ -1,0 +1,70 @@
+// Colours for the prism-code-editor in the theme form. light-dark() resolves per theme scope; see ADR 0008.
+.prism-code-editor {
+    --pce-bg: var(--tblr-bg-forms);
+    --pce-cursor: var(--tblr-body-color);
+    --pce-selection: light-dark(#add6ff, #264f78);
+    --pce-selection-match: light-dark(#add6ff80, #3fb95040);
+    --pce-bg-highlight: light-dark(#0000000a, #ffffff0f);
+    --pce-line-number: var(--tblr-secondary-color);
+    --pce-scrollbar: 210, 10%, 40%;
+    color: var(--tblr-body-color);
+    border: var(--tblr-border-width) solid var(--tblr-border-color);
+    border-radius: var(--tblr-border-radius);
+    font-family: var(--tblr-font-monospace, monospace);
+    font-size: 0.875rem;
+    max-height: 32rem;
+    min-height: 8rem;
+
+    &.pce-focus {
+        border-color: var(--tblr-primary);
+        box-shadow: 0 0 0 0.25rem rgba(var(--tblr-primary-rgb), 0.25);
+    }
+
+    &.is-invalid {
+        border-color: var(--tblr-danger);
+    }
+
+    .token.comment {
+        color: light-dark(#59636e, #9198a1);
+        font-style: italic;
+    }
+
+    .token.selector,
+    .token.atrule .rule,
+    .token.keyword {
+        color: light-dark(#0550ae, #79c0ff);
+    }
+
+    .token.property {
+        color: light-dark(#116329, #7ee787);
+    }
+
+    .token.string,
+    .token.url {
+        color: light-dark(#0a3069, #a5d6ff);
+    }
+
+    .token.function,
+    .token.important {
+        color: light-dark(#8250df, #d2a8ff);
+    }
+
+    .token.number,
+    .token.unit,
+    .token.hexcode {
+        color: light-dark(#953800, #ffa657);
+    }
+
+    .token.variable {
+        color: light-dark(#cf222e, #ff7b72);
+    }
+
+    .token.punctuation,
+    .token.operator {
+        color: var(--tblr-secondary-color);
+    }
+}
+
+.code-editor-hint kbd {
+    font-size: inherit;
+}
