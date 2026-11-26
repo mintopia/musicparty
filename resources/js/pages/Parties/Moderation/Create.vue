@@ -57,70 +57,72 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Create Filter - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>Create Filter</h1>
-        </div>
-        <div class="row">
-            <div :class="track ? 'col-12 col-lg-6' : 'col-md-6 offset-md-3'">
-                <form class="card" @submit.prevent="submit">
-                    <ModerationForm :form="form" :types="types" :actions="actions" />
-                    <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                            <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </form>
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="page-header mt-0">
+                <h1>Create Filter</h1>
             </div>
+            <div class="row">
+                <div :class="track ? 'col-12 col-lg-6' : 'col-12'">
+                    <form class="card" @submit.prevent="submit">
+                        <ModerationForm :form="form" :types="types" :actions="actions" />
+                        <div class="card-footer text-end">
+                            <div class="d-flex">
+                                <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
+                                <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
+                                    Save
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
 
-            <div v-if="track" class="col-12 col-lg-6" data-test="track-data">
-                <h3>Track Data</h3>
+                <div v-if="track" class="col-12 col-lg-6" data-test="track-data">
+                    <h3>Track Data</h3>
 
-                <div class="datagrid">
-                    <div>
-                        <div class="datagrid-title">Track ID</div>
-                        <div>{{ track.id ?? 'None' }}</div>
-                    </div>
-                </div>
-                <div class="datagrid mt-3">
-                    <div>
-                        <div class="datagrid-title">Track Name</div>
-                        <div>{{ track.name ?? 'None' }}</div>
-                    </div>
-                </div>
-                <div class="datagrid mt-3">
-                    <div>
-                        <div class="datagrid-title">Album ID</div>
-                        <div>{{ track.album.id ?? 'None' }}</div>
-                    </div>
-                </div>
-                <div class="datagrid mt-3">
-                    <div>
-                        <div class="datagrid-title">Album Name</div>
-                        <div>{{ track.album.name ?? 'None' }}</div>
-                    </div>
-                </div>
-                <template v-for="artist in track.artists" :key="artist.id">
-                    <div class="datagrid mt-3">
+                    <div class="datagrid">
                         <div>
-                            <div class="datagrid-title">Artist ID</div>
-                            <div>{{ artist.id ?? 'None' }}</div>
+                            <div class="datagrid-title">Track ID</div>
+                            <div>{{ track.id ?? 'None' }}</div>
                         </div>
                     </div>
                     <div class="datagrid mt-3">
                         <div>
-                            <div class="datagrid-title">Artist Name</div>
-                            <div>{{ artist.name ?? 'None' }}</div>
+                            <div class="datagrid-title">Track Name</div>
+                            <div>{{ track.name ?? 'None' }}</div>
                         </div>
                     </div>
-                </template>
+                    <div class="datagrid mt-3">
+                        <div>
+                            <div class="datagrid-title">Album ID</div>
+                            <div>{{ track.album.id ?? 'None' }}</div>
+                        </div>
+                    </div>
+                    <div class="datagrid mt-3">
+                        <div>
+                            <div class="datagrid-title">Album Name</div>
+                            <div>{{ track.album.name ?? 'None' }}</div>
+                        </div>
+                    </div>
+                    <template v-for="artist in track.artists" :key="artist.id">
+                        <div class="datagrid mt-3">
+                            <div>
+                                <div class="datagrid-title">Artist ID</div>
+                                <div>{{ artist.id ?? 'None' }}</div>
+                            </div>
+                        </div>
+                        <div class="datagrid mt-3">
+                            <div>
+                                <div class="datagrid-title">Artist Name</div>
+                                <div>{{ artist.name ?? 'None' }}</div>
+                            </div>
+                        </div>
+                    </template>
 
-                <div class="datagrid mt-3">
-                    <div>
-                        <div class="datagrid-title">ISRC Code</div>
-                        <div>{{ track.isrc ?? 'None' }}</div>
+                    <div class="datagrid mt-3">
+                        <div>
+                            <div class="datagrid-title">ISRC Code</div>
+                            <div>{{ track.isrc ?? 'None' }}</div>
+                        </div>
                     </div>
                 </div>
             </div>

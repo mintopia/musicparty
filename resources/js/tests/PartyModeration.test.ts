@@ -70,6 +70,28 @@ describe('party moderation pages', () => {
         expect(wrapper.find('code').text()).toBe('/x/');
     });
 
+    it('shows an empty state with an add rule action when there are no rules', () => {
+        const wrapper = mount(Index, {
+            props: {
+                party,
+                playerState,
+                moderations: {
+                    data: [],
+                    current_page: 1,
+                    last_page: 1,
+                    prev_page_url: null,
+                    next_page_url: null,
+                    links: [],
+                },
+            },
+        });
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No moderation rules');
+        expect(wrapper.find('[data-test="empty-state"] a[href="/parties/ABCD/moderation/create"]').text()).toContain(
+            'Add rule',
+        );
+        expect(wrapper.find('table').exists()).toBe(false);
+    });
+
     it('posts the create form and shows track data when prefilled', async () => {
         const track = {
             id: 't1',

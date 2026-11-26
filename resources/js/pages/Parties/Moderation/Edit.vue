@@ -52,21 +52,25 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Edit ${moderation.type_name} Filter`" />
-        <div class="page-header mt-0">
-            <h1>Edit {{ moderation.type_name }} Filter</h1>
-        </div>
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+            <div class="page-header mt-0">
+                <h1>Edit {{ moderation.type_name }} Filter</h1>
+            </div>
 
-        <div class="col-md-6 offset-md-3">
-            <form class="card" @submit.prevent="submit">
-                <ModerationForm :form="form" :types="types" :actions="actions" />
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                        <Link :href="`${base}/delete`" class="btn btn-link text-danger">Delete</Link>
-                        <button type="submit" class="btn ms-auto btn-primary" :disabled="form.processing">Save</button>
+            <div>
+                <form class="card" @submit.prevent="submit">
+                    <ModerationForm :form="form" :types="types" :actions="actions" />
+                    <div class="card-footer text-end">
+                        <div class="d-flex">
+                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
+                            <Link :href="`${base}/delete`" class="btn btn-link text-danger">Delete</Link>
+                            <button type="submit" class="btn ms-auto btn-primary" :disabled="form.processing">
+                                Save
+                            </button>
+                        </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </AppLayout>
 </template>
