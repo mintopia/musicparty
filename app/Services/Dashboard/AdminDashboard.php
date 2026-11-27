@@ -129,7 +129,7 @@ class AdminDashboard
         if ($this->isStale($party)) {
             return ['stale', null, 'No report for '.$this->words($party->playback_received_at)];
         }
-        $reported = $party->playback_received_at === null ? null : 'Last report '.$party->playback_received_at->diffForHumans();
+        $reported = $party->playback_received_at === null ? null : 'Paused for '.$party->playback_received_at->diffForHumans(null, CarbonInterface::DIFF_ABSOLUTE);
         if ($party->song_id !== null && $this->status->recall($party)?->isPlaying === true) {
             return ['playing', null, null];
         }

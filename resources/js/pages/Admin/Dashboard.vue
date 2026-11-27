@@ -250,7 +250,7 @@ const counts = (party: AdminDashboardParty): string[] => [
                                 <div class="datagrid-content mp-num">{{ activity.stats.playedToday }}</div>
                             </div>
                             <div>
-                                <div class="datagrid-title">Users</div>
+                                <div class="datagrid-title">Users now</div>
                                 <div class="datagrid-content mp-num">{{ activity.stats.users }}</div>
                             </div>
                         </div>

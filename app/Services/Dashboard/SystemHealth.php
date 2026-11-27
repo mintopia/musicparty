@@ -138,7 +138,7 @@ class SystemHealth
             return $this->check('spotify', 'Spotify app credentials', 'error', 'Missing '.implode(' and ', $missing).', so nobody can link Spotify.', $link);
         }
 
-        return $this->check('spotify', 'Spotify app credentials', 'ok', 'Client ID and secret are set.', $link);
+        return $this->check('spotify', 'Spotify app credentials', 'ok', 'Client ID and secret are set.');
     }
 
     /**
