@@ -2,7 +2,6 @@
 import {router} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import {update} from '@/routes/parties/songs';
-import type {StartEstimate} from '@/lib/dashboard';
 
 interface Ymd {
     y: number;
@@ -14,11 +13,11 @@ const props = defineProps<{
     title: string;
     party: string;
     song: number;
-    afterTrack?: StartEstimate | null;
     timezone: string;
     scheduledFor?: string | null;
+    anchor?: {bottom: number; right: number} | null;
 }>();
-const emit = defineEmits<{close: []}>();
+const emit = defineEmits<{close: []; saved: []}>();
 
 const pad = (n: number): string => String(n).padStart(2, '0');
 const key = (v: Ymd): string => `${v.y}-${pad(v.m)}-${pad(v.d)}`;
@@ -100,31 +99,35 @@ const summaryDay = computed(() =>
               new Date(Date.UTC(selected.value.y, selected.value.m - 1, selected.value.d)),
           ),
 );
-const afterPicked = ref(false);
-const afterName = computed(() => (afterPicked.value ? props.afterTrack?.precedingName : null));
 const saving = ref(false);
+
+const POPOVER_WIDTH = 340;
+const isPopover = Boolean(props.anchor) && window.matchMedia?.('(min-width: 768px)').matches === true;
+const popoverStyle = computed(() => {
+    if (!props.anchor || !isPopover) {
+        return undefined;
+    }
+    const left = Math.max(16, Math.min(props.anchor.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 16));
+    return {top: `${props.anchor.bottom + 8}px`, left: `${left}px`};
+});
 
 const chips = computed(() => {
     const soon = partsIn(plusMinutes(15));
     const nextHour = partsIn(plusMinutes(60 - today.mm));
-    const after = props.afterTrack ? partsIn(new Date(props.afterTrack.precedingEnd)) : null;
     return [
-        {label: 'In 15 minutes', at: soon, after: false},
-        ...(after ? [{label: 'After this track', at: after, after: true}] : []),
-        {label: `${pad(nextHour.hh)}:00`, at: nextHour, after: false},
+        {label: 'In 15 minutes', at: soon},
+        {label: `${pad(nextHour.hh)}:00`, at: nextHour},
     ];
 });
 
 function pick(value: Ymd): void {
-    afterPicked.value = false;
     selected.value = value;
     month.value = {y: value.y, m: value.m};
 }
 
-function pickChip(chip: {at: Ymd & {hh: number; mm: number}; after: boolean}): void {
+function pickChip(chip: {at: Ymd & {hh: number; mm: number}}): void {
     pick({y: chip.at.y, m: chip.at.m, d: chip.at.d});
     time.value = `${pad(chip.at.hh)}:${pad(chip.at.mm)}`;
-    afterPicked.value = chip.after;
 }
 
 function save(): void {
@@ -135,7 +138,14 @@ function save(): void {
     router.put(
         update({party: props.party, song: props.song}).url,
         {scheduled_for: scheduledInput.value},
-        {preserveScroll: true, onSuccess: () => emit('close'), onFinish: () => (saving.value = false)},
+        {
+            preserveScroll: true,
+            onSuccess: () => {
+                emit('saved');
+                emit('close');
+            },
+            onFinish: () => (saving.value = false),
+        },
     );
 }
 
@@ -155,11 +165,13 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
-    <div class="sheet-dim d-md-none" data-test="schedule-dim" @click="emit('close')"></div>
+    <div class="sheet-dim" data-test="schedule-dim" @click="emit('close')"></div>
     <div
-        class="sched-sheet d-md-none"
+        class="sched-sheet"
+        :class="{'is-anchored': isPopover}"
+        :style="popoverStyle"
+        :aria-modal="isPopover ? undefined : 'true'"
         role="dialog"
-        aria-modal="true"
         aria-labelledby="sched-title"
         data-test="schedule-sheet"
     >
@@ -227,7 +239,6 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
                     class="form-control"
                     aria-describedby="sched-sum"
                     data-test="schedule-time"
-                    @input="afterPicked = false"
                 />
             </div>
             <div class="sched-chips">
@@ -244,9 +255,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
             </div>
         </div>
         <p id="sched-sum" class="sched-sum" data-test="schedule-summary">
-            <i class="ti ti-calendar-time"></i>Plays at {{ time }} {{ summaryDay
-            }}<template v-if="afterName">, after {{ afterName }}</template
-            >.
+            <i class="ti ti-calendar-time"></i>Plays at {{ time }} {{ summaryDay }}.
         </p>
         <div class="sched-acts">
             <button
@@ -415,5 +424,28 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 }
 .sched-acts .btn-primary {
     flex: 1 1 auto;
+}
+@media (min-width: 768px) {
+    .sched-sheet {
+        inset: 50% auto auto 50%;
+        translate: -50% -50%;
+        inline-size: 340px;
+        max-inline-size: calc(100vw - 32px);
+        max-block-size: calc(100dvh - 32px);
+        padding: 16px;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+    }
+    .sched-sheet.is-anchored {
+        inset: auto;
+        translate: none;
+    }
+    .sheet-dim {
+        background: transparent;
+    }
+    .sched-grab {
+        display: none;
+    }
 }
 </style>

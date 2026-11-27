@@ -36,7 +36,7 @@ describe('Upcoming scheduled time', () => {
         await wrapper.vm.$nextTick();
         const labels = wrapper.findAll('[data-test="scheduled-time"]');
         expect(labels).toHaveLength(1);
-        expect(labels[0].text()).toMatch(/Jan 1, 2030.*8:00/);
+        expect(labels[0].text()).toMatch(/^Plays at Jan 1.*8:00/);
     });
 });
 
@@ -102,5 +102,53 @@ describe('Upcoming layout', () => {
         const empty = mount(Upcoming, {props: {party: 'ABC', initialState: []}});
         await empty.vm.$nextTick();
         expect(empty.find('[data-test="queue-card"]').exists()).toBe(false);
+    });
+});
+
+describe('Upcoming schedule actions', () => {
+    it('gives managers Schedule on rows and opens the schedule dialog from it', async () => {
+        const wrapper = mount(Upcoming, {
+            props: {party: 'ABC', canManage: true, initialState: [song(1), song(2)]},
+        });
+
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findAll('[data-test="schedule"]')).toHaveLength(2);
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
+
+        await wrapper.findAll('[data-test="schedule"]')[1].trigger('click');
+        expect(wrapper.find('#sched-title').text()).toBe('Schedule Song 2');
+        expect(wrapper.get('[data-test="schedule-summary"]').text()).not.toContain('after');
+    });
+
+    it('hides schedule actions from guests', async () => {
+        const wrapper = mount(Upcoming, {props: {party: 'ABC', initialState: [song(1)]}});
+
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('[data-test="schedule"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="schedule-menu"]').exists()).toBe(false);
+    });
+
+    it('lists Change schedule, View Request and Remove in the phone menu', async () => {
+        const wrapper = mount(Upcoming, {
+            props: {
+                party: 'ABC',
+                canManage: true,
+                initialState: [song(1, {scheduled_for: '2030-01-02T01:00:00+00:00'}), song(2)],
+            },
+        });
+
+        await wrapper.vm.$nextTick();
+        await wrapper.findAll('[data-test="actions"]')[0].trigger('click');
+        const menu = wrapper.get('[data-test="actions-menu"]');
+        expect(menu.findAll('.dropdown-item').map((item) => item.find('span span').text())).toEqual([
+            'Change schedule',
+            'View Request',
+            'Remove from Queue',
+        ]);
+        expect(menu.get('[data-test="view-request"]').attributes('href')).toContain('/songs/1');
+
+        await menu.get('[data-test="schedule-menu"]').trigger('click');
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="actions-menu"]').exists()).toBe(false);
     });
 });

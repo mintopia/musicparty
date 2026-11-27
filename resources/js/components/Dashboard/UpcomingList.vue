@@ -29,10 +29,16 @@ const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 const run = useRun();
 const openMenuId = ref<number | null>(null);
 const scheduling = ref<DashboardRequest | null>(null);
+const scheduleAnchor = ref<{bottom: number; right: number} | null>(null);
+
+function openSchedule(request: DashboardRequest, event: MouseEvent): void {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    scheduleAnchor.value = {bottom: rect.bottom, right: rect.right};
+    scheduling.value = request;
+}
 const estimates = computed(() =>
     estimateStarts(props.items, props.status, props.nowTrackName ?? null, props.now ?? Date.now()),
 );
-const schedulingIndex = computed(() => props.items.findIndex((item) => item.id === scheduling.value?.id));
 
 function toggleMenu(request: DashboardRequest): void {
     openMenuId.value = openMenuId.value === request.id ? null : request.id;
@@ -45,6 +51,7 @@ function removeFromMenu(request: DashboardRequest): void {
 
 function scheduleFromMenu(request: DashboardRequest): void {
     openMenuId.value = null;
+    scheduleAnchor.value = null;
     scheduling.value = request;
 }
 
@@ -226,14 +233,16 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             />
                         </div>
                         <div v-if="!request.sent" class="col-auto qa d-none d-md-block">
-                            <a
-                                :href="`${queueUrl}/${request.id}`"
+                            <button
+                                type="button"
                                 class="btn btn-ghost-secondary btn-icon"
                                 aria-label="Schedule"
                                 title="Schedule"
                                 data-test="schedule"
-                                ><i class="ti ti-calendar-clock"></i
-                            ></a>
+                                @click="openSchedule(request, $event)"
+                            >
+                                <i class="ti ti-calendar-clock"></i>
+                            </button>
                             <button
                                 type="button"
                                 class="btn btn-ghost-danger btn-icon"
@@ -258,7 +267,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             :song="scheduling.id"
             :timezone="timezone"
             :scheduled-for="scheduling.scheduled_for"
-            :after-track="schedulingIndex >= 0 ? estimates[schedulingIndex] : null"
+            :anchor="scheduleAnchor"
             @close="scheduling = null"
         />
     </div>
