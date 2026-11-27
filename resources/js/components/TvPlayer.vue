@@ -463,23 +463,28 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
     display: flex;
     flex-direction: column;
     align-items: flex-start;
+    gap: calc(12 * var(--u));
+}
+
+.tv-empty-copy > * {
+    margin: 0;
 }
 
 .tv-empty-title {
     font-size: calc(40 * var(--u));
+    line-height: 1.1;
     font-weight: 700;
 }
 
 .tv-empty-copy p {
-    margin: 0;
-    padding-block-start: calc(10 * var(--u));
     font-size: calc(19 * var(--u));
+    line-height: 1.4;
     color: rgba(255, 255, 255, 0.78);
 }
 
 .tv-empty-code {
     display: block;
-    padding-block-start: calc(6 * var(--u));
+    line-height: 1.1;
     font-size: calc(40 * var(--u));
     font-weight: 700;
     letter-spacing: 0.06em;
