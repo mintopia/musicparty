@@ -24,12 +24,12 @@ const clamped = computed(() => Math.min(100, Math.max(0, Number.isFinite(props.p
     height: var(--playback-progress-height, 5px);
     border-radius: 999px;
     overflow: hidden;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--playback-progress-track, rgba(255, 255, 255, 0.2));
 }
 
 .playback-progress-fill {
     height: 100%;
-    background: var(--tblr-primary);
+    background: var(--playback-progress-fill-color, var(--tblr-primary));
     transform-origin: left center;
     transition: transform 1s linear;
     will-change: transform;
