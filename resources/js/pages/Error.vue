@@ -23,8 +23,9 @@ const props = withDefaults(
         typedCode?: string | null;
         icon?: string | null;
         actions?: ErrorAction[];
+        breadcrumbs?: {label: string; href?: string}[];
     }>(),
-    {typedCode: null, icon: null, actions: () => []},
+    {typedCode: null, icon: null, actions: () => [], breadcrumbs: () => []},
 );
 
 const PARTY_CODE = /^[A-Z]{4}$/;
@@ -82,7 +83,11 @@ function reload(): void {
     <component :is="layout" :title="`${status} ${title}`">
         <template #breadcrumbs>
             <Breadcrumbs
-                :items="[{label: 'Home', href: home().url}, {label: partyNotFound ? 'Party not found' : 'Error'}]"
+                :items="
+                    breadcrumbs.length
+                        ? breadcrumbs
+                        : [{label: 'Home', href: home().url}, {label: partyNotFound ? 'Party not found' : 'Error'}]
+                "
             />
         </template>
         <div

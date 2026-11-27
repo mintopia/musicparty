@@ -21,6 +21,7 @@ it('renders a branded 404 for guests without leaking exception text', function (
             ->component('Error')
             ->where('status', 404)
             ->where('partyNotFound', false)
+            ->where('breadcrumbs.1.label', 'Page not found')
             ->where('auth.user', null));
 });
 
@@ -102,7 +103,9 @@ it('names the party, role and owner on a 403 for a plain member', function () {
             ->where('title', "You can't open Dashboard")
             ->where('message', "Only the owner and moderators of {$party->name} can. You're in this party as a user. Ask {$owner}, the owner, if you need access.")
             ->where('actions.0.label', 'Back to the Queue')
-            ->where('actions.0.href', route('parties.show', $party)));
+            ->where('actions.0.href', route('parties.show', $party))
+            ->where('breadcrumbs.1.label', $party->name)
+            ->where('breadcrumbs.2.label', 'Not allowed'));
 });
 
 it('limits a 403 to the owner on owner-only pages and treats non-members as users', function () {
@@ -150,7 +153,9 @@ it('explains a disabled AI reviews feature with a settings link for owners only'
             ->where('message', 'Turn on the AI Request Review mod to have new Requests checked against your guidelines.')
             ->where('actions.0.label', 'Open Mods settings')
             ->where('actions.0.href', route('parties.mods.edit', $party))
-            ->where('actions.1.label', 'Go to Moderation'));
+            ->where('actions.1.label', 'Go to Moderation')
+            ->where('breadcrumbs.1.label', $party->name)
+            ->where('breadcrumbs.2.label', 'Moderation'));
 
     $this->actingAs($moderator)->get(route('parties.ai-reviews.index', $party))
         ->assertNotFound()

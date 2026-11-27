@@ -54,6 +54,7 @@ class ErrorPageResponder
             'typedCode' => null,
             'icon' => null,
             'actions' => [],
+            'breadcrumbs' => $this->breadcrumbs($status === 500 ? 'Error' : 'Page not found'),
         ];
 
         if ($partyNotFound) {
@@ -91,6 +92,7 @@ class ErrorPageResponder
             'title' => 'No party with that code',
             'message' => 'Check the code on the TV, or ask the host for the link. Codes are four letters.',
             'typedCode' => mb_strtoupper($typed),
+            'breadcrumbs' => $this->breadcrumbs('Party not found'),
         ];
     }
 
@@ -118,6 +120,7 @@ class ErrorPageResponder
             'message' => $isOwner ? $disabled->ownerMessage : $disabled->moderatorMessage,
             'icon' => $disabled->icon,
             'actions' => $actions,
+            'breadcrumbs' => $this->breadcrumbs('Moderation', $party instanceof Party ? $party : null),
         ];
     }
 
@@ -131,7 +134,7 @@ class ErrorPageResponder
         $user = $request->user();
 
         if (! $party instanceof Party || $user === null) {
-            return $props;
+            return [...$props, 'breadcrumbs' => $this->breadcrumbs('Not allowed')];
         }
 
         $member = $party->members()->whereUserId($user->id)->with('role')->first();
@@ -144,6 +147,7 @@ class ErrorPageResponder
                 'title' => "You can't join {$party->name}",
                 'message' => "The host has removed you from this party. {$askOwner}, if you think that's a mistake.",
                 'icon' => 'ti-ban',
+                'breadcrumbs' => $this->breadcrumbs('Not allowed', $party),
                 'actions' => [['label' => 'Go to Home', 'href' => route('home'), 'icon' => 'ti-home']],
             ];
         }
@@ -156,8 +160,23 @@ class ErrorPageResponder
             'title' => "You can't open {$this->pageLabel($request)}",
             'message' => "Only {$who} of {$party->name} can. You're in this party as a {$role}. {$askOwner}, if you need access.",
             'icon' => 'ti-lock',
+            'breadcrumbs' => $this->breadcrumbs('Not allowed', $party),
             'actions' => [['label' => 'Back to the Queue', 'href' => route('parties.show', $party), 'icon' => 'ti-playlist']],
         ];
+    }
+
+    /**
+     * @return list<array{label: string, href?: string}>
+     */
+    private function breadcrumbs(string $current, ?Party $party = null): array
+    {
+        $trail = [['label' => 'Home', 'href' => route('home')]];
+        if ($party instanceof Party) {
+            $trail[] = ['label' => $party->name, 'href' => route('parties.show', $party)];
+        }
+        $trail[] = ['label' => $current];
+
+        return $trail;
     }
 
     private function routeRequiresOwner(Request $request): bool
