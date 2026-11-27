@@ -9,6 +9,7 @@ use App\Models\Vote;
 use App\Mods\ModExtensions;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\Rules\RecentlyPlayedRule;
 
 class TrackEligibility
 {
@@ -40,7 +41,7 @@ class TrackEligibility
                 vote: $entry['vote'] ?? null,
                 user: $entry['user'] ?? null,
                 allowed: $decision->allowed,
-                reason: $decision->reason,
+                reason: $decision->reason === RecentlyPlayedRule::REASON ? RecentlyPlayedRule::searchLabel($party->no_repeat_interval) : $decision->reason,
                 externalUrl: $provider->trackUrl($track->id),
                 providerName: $provider->displayName(),
                 flagged: $decision->isFlagged(),

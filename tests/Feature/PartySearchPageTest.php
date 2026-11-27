@@ -199,7 +199,7 @@ it('reports every eligibility reason on the search page', function (string $reas
     'similar song waiting' => ['A similar song is already in the queue', function ($party, $member, $track) {
         pageSearchUpcoming($party, (object) [...(array) $track, 'id' => 'other-id'], null, 1);
     }],
-    'played recently' => ['This song has been played recently', function ($party, $member, $track) {
+    'played recently' => ['Played in the last hour', function ($party, $member, $track) {
         $party->forceFill(['no_repeat_interval' => 3600])->save();
         PlayedSong::factory()->for($party)->for(Song::fromTrack(SpotifyMapper::track($track)))->create(['played_at' => now()->subMinute()]);
     }],
@@ -263,6 +263,7 @@ it('maps provider unavailability to a friendly retryable error', function (bool 
     $this->mock(MusicProviderFactory::class, function ($mock) use ($timedOut) {
         $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
         $provider->shouldReceive('searchOverview')->andThrow(new ProviderUnavailableException($timedOut));
+        $provider->shouldReceive('displayName')->andReturn('Spotify');
         $mock->shouldReceive('forParty')->andReturn($provider);
     });
 
@@ -273,7 +274,7 @@ it('maps provider unavailability to a friendly retryable error', function (bool 
             ->where('results.error.message', $message)
             ->where('results.error.retryable', true)));
 })->with([
-    'timeout' => [true, 'timeout', 'The music provider took too long to answer.'],
+    'timeout' => [true, 'timeout', "Spotify didn't answer in time."],
     'unreachable' => [false, 'unavailable', 'The music provider could not be reached.'],
 ]);
 

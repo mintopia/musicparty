@@ -1046,6 +1046,21 @@
     .mp-chip { min-block-size: 44px; }
 }
 
+@media (max-width: 767.98px) {
+    .mp-search-touch .form-control,
+    .mp-search-touch .btn,
+    .mp-search-touch .btn.vote-button {
+        min-block-size: 44px;
+        min-inline-size: 44px;
+    }
+    .mp-search-touch [data-test='see-all'],
+    .mp-search-touch [data-test='back-to-overview'] {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+}
+
 @media (max-width: 575.98px) {
     .mp-page-head .btn-list { inline-size: 100%; }
     .mp-page-head .btn-list .btn { flex: 1 1 auto; min-block-size: 44px; }

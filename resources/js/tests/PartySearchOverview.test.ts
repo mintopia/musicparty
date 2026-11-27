@@ -266,7 +266,7 @@ describe('Party search overview', () => {
             query: 'Clozing Tyme',
         });
 
-        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "Clozing Tyme"');
+        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for “Clozing Tyme”');
         expect(wrapper.text()).toContain("Check the spelling or try the artist's name.");
         expect(wrapper.find('[data-test="section-head"]').exists()).toBe(false);
     });
@@ -334,6 +334,14 @@ describe('Party search suggestions and weak matches', () => {
         expect(weak.get('[data-test="no-close-matches"]').text()).toContain('nearest results Spotify returned');
         expect(strong.find('[data-test="no-close-matches"]').exists()).toBe(false);
     });
+
+    it('lists weak results as plain full-width tracks without a Top result card', () => {
+        const weak = mountSearch(overview({weak: true}), {query: 'lucky dafft punk'});
+
+        expect(weak.find('[data-test="top-result"]').exists()).toBe(false);
+        expect(weak.get('[data-test="tracks-section"]').classes()).toContain('col-12');
+        expect(weak.findAll('[data-test="tracks-section"] [data-test="request"]')).toHaveLength(5);
+    });
 });
 
 describe('Party search states', () => {
@@ -374,7 +382,7 @@ describe('Party search states', () => {
 
     it('shows the error card with Retry that reloads only the results and keeps the query', async () => {
         const wrapper = mountSearch({
-            error: {code: 'timeout', message: 'The music provider took too long to answer.', retryable: true},
+            error: {code: 'timeout', message: 'Spotify didn\'t answer in time.', retryable: true},
         });
 
         const error = wrapper.get('[data-test="results-error"]');
@@ -488,7 +496,7 @@ describe('Party search single-type view', () => {
             {query: 'zzz', type: 'artist'},
         );
 
-        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "zzz"');
+        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for “zzz”');
     });
 
     it('loads more by fetching the next page in place and appending its rows', async () => {

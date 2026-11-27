@@ -63,9 +63,27 @@ class PartySearchSuggestions
         return array_values($rows->map(fn (object $row): array => [
             'id' => (string) $row->id,
             'name' => (string) $row->name,
-            'image_url' => null,
+            'image_url' => $this->coverFor($party, (string) $row->id),
             'requests' => (int) $row->requests,
         ])->all());
+    }
+
+    /**
+     * The cover of the artist's most recently requested track at this party, standing in for an artist photo.
+     */
+    protected function coverFor(Party $party, string $providerArtistId): ?string
+    {
+        $url = DB::table('upcoming_songs')
+            ->join('songs', 'songs.id', '=', 'upcoming_songs.song_id')
+            ->join('albums', 'albums.id', '=', 'songs.album_id')
+            ->join('artist_song', 'artist_song.song_id', '=', 'upcoming_songs.song_id')
+            ->join('artists', 'artists.id', '=', 'artist_song.artist_id')
+            ->where('upcoming_songs.party_id', $party->id)
+            ->where('artists.provider_artist_id', $providerArtistId)
+            ->orderByDesc('upcoming_songs.id')
+            ->value('albums.image_url');
+
+        return $url === null || $url === '' ? null : (string) $url;
     }
 
     /**

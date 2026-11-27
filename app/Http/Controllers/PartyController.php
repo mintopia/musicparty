@@ -236,7 +236,7 @@ class PartyController extends Controller
         } catch (ProviderUnavailableException $e) {
             return $this->searchError(
                 $e->timedOut ? 'timeout' : 'unavailable',
-                $e->timedOut ? 'The music provider took too long to answer.' : 'The music provider could not be reached.',
+                $e->timedOut ? "{$factory->forParty($party, Purpose::Search)->displayName()} didn't answer in time." : 'The music provider could not be reached.',
             );
         }
     }

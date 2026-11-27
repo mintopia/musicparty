@@ -135,6 +135,7 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         <i class="icon ti ti-alert-triangle"></i>
                         {{ track.eligibility.reason }}
                     </span>
+                    <span v-else-if="isAwaiting" data-test="awaiting-approval">Awaiting approval</span>
                     <span v-else-if="flagged" data-test="needs-approval">Needs approval</span>
                 </div>
                 <slot name="decoration" />
@@ -196,9 +197,6 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     </button>
                 </template>
             </div>
-        </div>
-        <div v-if="isAwaiting && !track.queue.in_queue" class="text-muted small" data-test="awaiting-approval">
-            Awaiting approval
         </div>
     </div>
 </template>

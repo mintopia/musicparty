@@ -29,6 +29,13 @@ const providerName = computed(() =>
         : (props.results.tracks[0]?.provider_name ?? null),
 );
 
+const topResult = computed(() => (props.results.weak && props.results.top?.kind === 'track' ? null : props.results.top));
+const trackRows = computed(() =>
+    props.results.weak && props.results.top?.kind === 'track'
+        ? [props.results.top.track, ...props.results.tracks]
+        : props.results.tracks,
+);
+
 const href = (target: LinkTarget): string => (typeof target === 'string' ? target : target.url);
 </script>
 
@@ -49,11 +56,11 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
                 </div>
             </div>
         </div>
-        <div v-if="results.top || results.tracks.length" class="row g-4 mt-0">
-            <div v-if="results.top" class="col-md-5 col-xxl-4">
+        <div v-if="topResult || trackRows.length" class="row g-4 mt-0">
+            <div v-if="topResult" class="col-md-5 col-xxl-4">
                 <SearchSectionHead title="Top result" />
                 <SearchTopResult
-                    :top="results.top"
+                    :top="topResult"
                     :album-route="albumRoute"
                     :artist-route="artistRoute"
                     @request="emit('request', $event)"
@@ -62,15 +69,15 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
                 />
             </div>
             <div
-                v-if="results.tracks.length"
-                :class="results.top ? 'col-md-7 col-xxl-8' : 'col-12'"
+                v-if="trackRows.length"
+                :class="topResult ? 'col-md-7 col-xxl-8' : 'col-12'"
                 data-test="tracks-section"
             >
                 <SearchSectionHead title="Tracks" :see-all-href="typeUrl('track')" see-all-label="See all tracks" />
                 <div class="card">
                     <div class="list-group list-group-flush">
                         <TrackRow
-                            v-for="track in results.tracks"
+                            v-for="track in trackRows"
                             :key="`${track.provider_id}:${track.id}`"
                             :track="track"
                             :can-downvote="canDownvote"
