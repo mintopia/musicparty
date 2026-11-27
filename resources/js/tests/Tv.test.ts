@@ -66,7 +66,12 @@ const state = (extra: Record<string, unknown> = {}) => ({
     ...extra,
 });
 
-const party = {code: 'ABC', name: 'P', url: 'https://x/parties/ABC', qrSvg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>'};
+const party = {
+    code: 'ABC',
+    name: 'P',
+    url: 'https://x/parties/ABC',
+    qrSvg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+};
 
 describe('Parties/Tv', () => {
     beforeEach(() => {

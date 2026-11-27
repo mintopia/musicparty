@@ -42,7 +42,8 @@ const playing = (sampledAt: string, progressMs = 0): LegacyPartyState => ({
     status: {isPlaying: true, sampledAt, progressMs, length: 200000},
 });
 
-const width = (wrapper: ReturnType<typeof mount>): string => wrapper.get('[role="progressbar"] > div').attributes('style') ?? '';
+const width = (wrapper: ReturnType<typeof mount>): string =>
+    wrapper.get('[role="progressbar"] > div').attributes('style') ?? '';
 
 describe('PartyPlayer', () => {
     beforeEach(() => {

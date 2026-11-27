@@ -5,6 +5,7 @@ import axios from 'axios';
 import {onBeforeUnmount, ref, watch} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
+import Toast from '@/components/Toast.vue';
 import TrackRow from '@/components/TrackRow.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 import {useIsPhone} from '@/composables/useIsPhone';
@@ -202,19 +203,7 @@ onBeforeUnmount(() => {
                 <div class="text-center text-secondary p-2">Error fetching upcoming songs</div>
             </template>
         </VueEternalLoading>
-        <div v-if="message" class="toast-container position-fixed top-0 end-0 p-3">
-            <div class="toast show align-items-center border-0 text-bg-danger" role="alert" data-test="queue-error">
-                <div class="d-flex">
-                    <div class="toast-body">{{ message }}</div>
-                    <button
-                        type="button"
-                        class="btn-close btn-close-white me-2 m-auto"
-                        aria-label="close"
-                        @click="message = ''"
-                    ></button>
-                </div>
-            </div>
-        </div>
+        <Toast :message="message" @dismiss="message = ''" />
     </div>
 </template>
 

@@ -3,6 +3,7 @@ import axios from 'axios';
 import {computed, inject, ref} from 'vue';
 import HealthGrid from '@/components/Dashboard/HealthGrid.vue';
 import SeekBar from '@/components/Dashboard/SeekBar.vue';
+import RateControl from '@/components/RateControl.vue';
 import {useTicker} from '@/composables/useProgress';
 import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
 import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
@@ -139,15 +140,12 @@ async function rate(value: number): Promise<void> {
                 </button>
             </div>
             <div class="pu-rate">
-                <template v-if="state.current">
-                    <button type="button" class="btn btn-ondark" aria-label="Rate down" @click="rate(-1)">
-                        <i class="ti ti-thumb-down"></i>
-                    </button>
-                    <span class="mx-2" data-test="rating">{{ state.current.rating ?? 0 }}</span>
-                    <button type="button" class="btn btn-ondark" aria-label="Rate up" @click="rate(1)">
-                        <i class="ti ti-thumb-up"></i>
-                    </button>
-                </template>
+                <RateControl
+                    v-if="state.current"
+                    :rating="state.current.rating"
+                    button-class="btn-ondark"
+                    @rate="rate"
+                />
             </div>
         </div>
 
@@ -250,13 +248,13 @@ async function rate(value: number): Promise<void> {
     gap: 4px;
     color: var(--mp-deck-muted);
 }
-.pu-rate .btn {
+.pu-rate :deep(.btn) {
     width: 40px;
     height: 40px;
     padding: 0;
     border-radius: 50%;
 }
-.pu-rate .ti {
+.pu-rate :deep(.ti) {
     font-size: 1.3rem;
 }
 .pu-hint {

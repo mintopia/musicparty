@@ -15,6 +15,7 @@ vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     router: inertia,
+    usePage: () => ({props: {flash: {}}}),
 }));
 vi.mock('@/layouts/AppLayout.vue', () => ({
     default: {template: '<div><slot name="breadcrumbs" /><slot name="header" /><slot /></div>'},

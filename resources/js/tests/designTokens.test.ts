@@ -1,9 +1,13 @@
 // @vitest-environment node
-import {readFileSync} from 'node:fs';
 import {build} from 'vite';
 import {cssTarget} from '../../../vite.css-target';
 import {describe, expect, it} from 'vitest';
 
+const deckSources = import.meta.glob<string>('../components/Dashboard/*.vue', {
+    query: '?raw',
+    import: 'default',
+    eager: true,
+});
 const appCssEntry = 'virtual:app-css';
 
 async function builtCss(input: string): Promise<string> {
@@ -88,7 +92,7 @@ describe('dashboard deck component styles', () => {
     ];
 
     it.each(deckComponents)('%s uses tokens, not raw colour literals', (name) => {
-        const source = readFileSync(new URL(`../components/Dashboard/${name}.vue`, import.meta.url).pathname, 'utf8');
+        const source = deckSources[`../components/Dashboard/${name}.vue`];
         const style = source.slice(source.indexOf('<style'));
 
         expect(style).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i);

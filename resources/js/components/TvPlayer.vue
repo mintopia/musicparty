@@ -21,16 +21,11 @@
 
         <section class="tv-now" aria-label="Now playing">
             <template v-if="state.now !== null">
-                <img
-                    class="tv-art"
-                    :src="state.now.album.image_url"
-                    alt=""
-                    width="352"
-                    height="352"
-                    decoding="async"
-                />
+                <img class="tv-art" :src="state.now.album.image_url" alt="" width="352" height="352" decoding="async" />
                 <div class="tv-now-body">
-                    <div class="tv-track-name"><strong>{{ state.now.name }}</strong></div>
+                    <div class="tv-track-name">
+                        <strong>{{ state.now.name }}</strong>
+                    </div>
                     <div class="tv-line">
                         <i class="ti ti-users"></i>
                         {{ combineArtists(state.now.artists) }}

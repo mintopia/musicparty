@@ -6,6 +6,7 @@ import Upcoming from '../components/Upcoming.vue';
 import {legacyAccentStyle} from '../lib/decoration';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
 
 const echo = vi.hoisted(() => ({
     publicNames: [] as string[],
@@ -89,7 +90,7 @@ describe('legacy decoration rendering', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                
+
                 state: {
                     name: 'P',
                     now: track(),
@@ -121,7 +122,7 @@ describe('TvPlayer progress', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                
+
                 state: {
                     name: 'P',
                     now: track(),

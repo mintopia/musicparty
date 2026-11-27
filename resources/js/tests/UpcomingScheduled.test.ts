@@ -3,6 +3,7 @@ import {describe, expect, it, vi} from 'vitest';
 import Upcoming from '../components/Upcoming.vue';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({onReconnect: () => undefined, privateChannel: () => ({listen: () => undefined})}),
 }));
