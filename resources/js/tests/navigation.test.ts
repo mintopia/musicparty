@@ -356,7 +356,7 @@ describe('live moderation badges', () => {
 
         fire('FlaggedRequestAdded', {id: 5, flaggedCount: 4});
         await tabs.vm.$nextTick();
-        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged4');
+        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged Requests4');
 
         wrapper.unmount();
     });
