@@ -11,10 +11,31 @@ const MOD_GROUP_BY_CODE: Record<string, string> = {
     whamageddon: 'Fun',
 };
 
+export interface ModStat {
+    label: string;
+    value: string;
+    tone?: 'success' | 'warning';
+}
+
+export interface ModStatus {
+    label: string;
+    tone: 'success' | 'warning' | 'muted';
+}
+
+const MOD_ICON_BY_CODE: Record<string, string> = {
+    'ai-request-review': 'ti-robot',
+    trust: 'ti-heart-handshake',
+    whamageddon: 'ti-snowflake',
+};
+
+export const AI_REVIEW_MOD = 'ai-request-review';
+
+export const modIcon = (code: string): string => MOD_ICON_BY_CODE[code] ?? 'ti-puzzle';
+
 const MOD_GROUP_ORDER = ['Moderation', 'Fun', 'Other'];
 
-export function groupMods(mods: PartyMod[]): {name: string; mods: PartyMod[]}[] {
-    const groups = new Map<string, PartyMod[]>();
+export function groupMods<T extends {code: string}>(mods: T[]): {name: string; mods: T[]}[] {
+    const groups = new Map<string, T[]>();
     for (const mod of mods) {
         const name = MOD_GROUP_BY_CODE[mod.code] ?? 'Other';
         groups.set(name, [...(groups.get(name) ?? []), mod]);
@@ -77,4 +98,24 @@ export function buildSettings(
     values: Record<string, ModSettingValue>,
 ): Record<string, ModSettingValue> {
     return Object.fromEntries(settings.map((s) => [s.code, submitSettingValue(s, values[s.code] ?? null)]));
+}
+
+export function settingByCode(settings: ModSetting[], code: string): ModSetting | undefined {
+    return settings.find((s) => s.code === code);
+}
+
+export function hasSavedApiKey(settings: ModSetting[]): boolean {
+    return settingByCode(settings, 'api_key')?.has_value === true;
+}
+
+export function aiReviewStats(settings: ModSetting[], values: Record<string, ModSettingValue>): ModStat[] {
+    const driver = settingByCode(settings, 'driver');
+    const engine = driver?.options?.[String(values.driver ?? '')] ?? '';
+    const saved = hasSavedApiKey(settings);
+    return [
+        {label: 'Engine', value: engine.replace(/\s*\(.*\)$/, '').trim() || 'Not set'},
+        saved
+            ? {label: 'API key', value: 'Saved', tone: 'success'}
+            : {label: 'API key', value: 'Not set', tone: 'warning'},
+    ];
 }

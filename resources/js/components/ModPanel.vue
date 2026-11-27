@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import {useForm} from '@inertiajs/vue3';
-import {ref} from 'vue';
-import ModAccordionItem from '@/components/ModAccordionItem.vue';
+import {computed, ref} from 'vue';
+import ModCard from '@/components/ModCard.vue';
 import ModSettingField from '@/components/ModSettingField.vue';
-import {buildSettings, initialSettingValue} from '@/lib/mods';
+import {AI_REVIEW_MOD, aiReviewStats, buildSettings, initialSettingValue, modIcon} from '@/lib/mods';
 import type {ModSettingValue} from '@/lib/mods';
 import type {AdminMod} from '@/types';
 
@@ -14,6 +14,9 @@ const props = defineProps<{
 }>();
 
 const open = ref(false);
+const stats = computed(() =>
+    props.mod.code === AI_REVIEW_MOD ? aiReviewStats(props.mod.settings, form.settings) : undefined,
+);
 
 const form = useForm({
     settings: Object.fromEntries(props.mod.settings.map((s) => [s.code, initialSettingValue(s)])) as Record<
@@ -43,24 +46,47 @@ function submit(): void {
 </script>
 
 <template>
-    <ModAccordionItem
+    <ModCard
         v-model:open="open"
         :id="`mod-${mod.code}`"
         :name="mod.name"
         :description="mod.description"
+        :icon="modIcon(mod.code)"
+        :stats="stats"
         :data-mod="mod.code"
     >
-        <form data-test="mod-form" @submit.prevent="submit">
+        <form class="mod-panel-form" data-test="mod-form" @submit.prevent="submit">
             <ModSettingField
                 v-for="setting in mod.settings"
                 :id="`mod-${mod.code}-${setting.code}`"
                 :key="setting.code"
                 v-model="form.settings[setting.code]"
+                row
                 :setting="setting"
                 :error="errorFor(setting.code)"
                 :user-search-url="userSearchUrl"
             />
-            <button type="submit" class="btn btn-primary" :disabled="form.processing" data-test="save">Save</button>
+            <div class="mod-panel-actions">
+                <button type="submit" class="btn btn-primary" :disabled="form.processing" data-test="save">Save</button>
+            </div>
         </form>
-    </ModAccordionItem>
+    </ModCard>
 </template>
+
+<style scoped>
+.mod-panel-form {
+    padding: 0.25rem 1.25rem 1rem;
+}
+
+.mod-panel-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-top: 0.75rem;
+}
+
+@media (max-width: 767.98px) {
+    .mod-panel-actions .btn {
+        min-block-size: 44px;
+    }
+}
+</style>
