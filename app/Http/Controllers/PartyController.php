@@ -123,6 +123,7 @@ class PartyController extends Controller
             'relinkUrl' => route('linkedaccounts.create', 'spotify'),
             'searchUrl' => route('parties.search', $party->code),
             'playerState' => $party->getState(),
+            'myRating' => $party->ratingBy($this->resolveAuthenticatedUser($request)),
         ]);
     }
 
