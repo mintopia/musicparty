@@ -3,6 +3,7 @@
 namespace App\Exceptions;
 
 use App\Models\Party;
+use App\Models\PartyMember;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -22,8 +23,18 @@ class ErrorPageResponder
         ],
         500 => [
             'title' => 'Something went wrong on our side',
-            'message' => 'Your requests and votes are safe. Try again in a minute. If it keeps happening, tell the host or the site admin.',
+            'message' => 'Your Requests and votes are safe. Try again in a minute. If it keeps happening, tell the host or the site admin.',
         ],
+    ];
+
+    private const array PAGE_LABELS = [
+        'dashboard' => 'Dashboard',
+        'ai-reviews' => 'AI reviews',
+        'moderation' => 'Moderation',
+        'users' => 'Members',
+        'songs' => 'Requests',
+        'mods' => 'Settings',
+        'player' => 'Player',
     ];
 
     public function __invoke(Response $response, Throwable $e, Request $request): Response
@@ -35,21 +46,148 @@ class ErrorPageResponder
         }
 
         $partyNotFound = $status === 404 && $this->isPartyNotFound($e);
+        $props = [
+            'status' => $status,
+            'title' => self::PAGES[$status]['title'],
+            'message' => self::PAGES[$status]['message'],
+            'partyNotFound' => $partyNotFound,
+            'typedCode' => null,
+            'icon' => null,
+            'actions' => [],
+        ];
+
+        if ($partyNotFound) {
+            $props = $this->partyNotFoundProps($props, $request, $e);
+        } elseif ($status === 404 && ($disabled = $this->findException($e, PartyFeatureDisabledException::class)) instanceof PartyFeatureDisabledException) {
+            $props = $this->featureDisabledProps($props, $request, $disabled);
+        } elseif ($status === 403) {
+            $props = $this->forbiddenProps($props, $request);
+        }
 
         try {
-            $page = Inertia::render('Error', [
-                'status' => $status,
-                'title' => $partyNotFound ? 'No party with that code' : self::PAGES[$status]['title'],
-                'message' => $partyNotFound
-                    ? 'Check the code on the TV, or ask the host for the link. Codes are four letters.'
-                    : self::PAGES[$status]['message'],
-                'partyNotFound' => $partyNotFound,
-            ])->toResponse($request);
+            $page = Inertia::render('Error', $props)->toResponse($request);
         } catch (Throwable) {
             return $response;
         }
 
         return $page->setStatusCode($status);
+    }
+
+    /**
+     * @param  array<string, mixed>  $props
+     * @return array<string, mixed>
+     */
+    private function partyNotFoundProps(array $props, Request $request, Throwable $e): array
+    {
+        $typed = $request->route('party');
+        if (! is_string($typed)) {
+            $model = $this->findException($e, ModelNotFoundException::class);
+            $ids = $model instanceof ModelNotFoundException ? $model->getIds() : [];
+            $typed = is_string($ids[0] ?? null) ? $ids[0] : '';
+        }
+
+        return [
+            ...$props,
+            'title' => 'No party with that code',
+            'message' => 'Check the code on the TV, or ask the host for the link. Codes are four letters.',
+            'typedCode' => mb_strtoupper($typed),
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $props
+     * @return array<string, mixed>
+     */
+    private function featureDisabledProps(array $props, Request $request, PartyFeatureDisabledException $disabled): array
+    {
+        $party = $request->route('party');
+        $user = $request->user();
+        $isOwner = $party instanceof Party && $user !== null && $user->can('update', $party);
+
+        $actions = [];
+        if ($party instanceof Party) {
+            if ($isOwner) {
+                $actions[] = ['label' => 'Open Mods settings', 'href' => route('parties.mods.edit', $party), 'icon' => 'ti-settings'];
+            }
+            $actions[] = ['label' => 'Go to Moderation', 'href' => route('parties.moderation.index', $party), 'icon' => 'ti-shield-check'];
+        }
+
+        return [
+            ...$props,
+            'title' => $disabled->title,
+            'message' => $isOwner ? $disabled->ownerMessage : $disabled->moderatorMessage,
+            'icon' => $disabled->icon,
+            'actions' => $actions,
+        ];
+    }
+
+    /**
+     * @param  array<string, mixed>  $props
+     * @return array<string, mixed>
+     */
+    private function forbiddenProps(array $props, Request $request): array
+    {
+        $party = $request->route('party');
+        $user = $request->user();
+
+        if (! $party instanceof Party || $user === null) {
+            return $props;
+        }
+
+        $member = $party->members()->whereUserId($user->id)->with('role')->first();
+        $owner = $party->user->nickname;
+        $askOwner = "Ask {$owner}, the owner";
+
+        if ($member instanceof PartyMember && $member->banned) {
+            return [
+                ...$props,
+                'title' => "You can't join {$party->name}",
+                'message' => "The host has removed you from this party. {$askOwner}, if you think that's a mistake.",
+                'icon' => 'ti-ban',
+                'actions' => [['label' => 'Go to Home', 'href' => route('home'), 'icon' => 'ti-home']],
+            ];
+        }
+
+        $role = $member?->role->code ?? 'user';
+        $who = $this->routeRequiresOwner($request) ? 'the owner' : 'the owner and moderators';
+
+        return [
+            ...$props,
+            'title' => "You can't open {$this->pageLabel($request)}",
+            'message' => "Only {$who} of {$party->name} can. You're in this party as a {$role}. {$askOwner}, if you need access.",
+            'icon' => 'ti-lock',
+            'actions' => [['label' => 'Back to the Queue', 'href' => route('parties.show', $party), 'icon' => 'ti-playlist']],
+        ];
+    }
+
+    private function routeRequiresOwner(Request $request): bool
+    {
+        return in_array('can:update,party', $request->route()?->gatherMiddleware() ?? [], true)
+            || in_array('can:player,party', $request->route()?->gatherMiddleware() ?? [], true);
+    }
+
+    private function pageLabel(Request $request): string
+    {
+        $segments = explode('.', (string) $request->route()?->getName());
+
+        return self::PAGE_LABELS[$segments[1] ?? ''] ?? 'that page';
+    }
+
+    /**
+     * @template T of Throwable
+     *
+     * @param  class-string<T>  $class
+     * @return T|null
+     */
+    private function findException(Throwable $e, string $class): ?Throwable
+    {
+        for ($current = $e; $current !== null; $current = $current->getPrevious()) {
+            if ($current instanceof $class) {
+                return $current;
+            }
+        }
+
+        return null;
     }
 
     private function isPartyNotFound(Throwable $e): bool

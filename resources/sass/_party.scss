@@ -627,6 +627,54 @@
     .mp-done { grid-template-columns: 1fr; }
     .mp-done-card .mp-done-code { font-size: 3.5rem; }
     .mp-wizard .card-footer .btn { flex: 1 1 auto; }
+}
+
+.mp-error {
+    text-align: center;
+    padding-block: 48px 32px;
+    max-inline-size: 560px;
+    margin-inline: auto;
+
+    .mp-error-code {
+        display: block;
+        font-size: 5rem;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: var(--tblr-primary);
+        margin-block-end: 8px;
+    }
+
+    .mp-error-icon {
+        display: inline-grid;
+        place-items: center;
+        inline-size: 72px;
+        block-size: 72px;
+        border-radius: 50%;
+        margin-block-end: 16px;
+        background: color-mix(in oklab, var(--tblr-primary) 12%, transparent);
+        color: var(--tblr-primary);
+        font-size: 2rem;
+    }
+
+    &.is-danger .mp-error-code {
+        color: var(--tblr-danger);
+    }
+
+    &.is-danger .mp-error-icon {
+        background: color-mix(in oklab, var(--tblr-danger) 12%, transparent);
+        color: var(--tblr-danger);
+    }
+
+    p {
+        color: var(--tblr-secondary-color);
+        margin-block-end: 24px;
+    }
+
+    .btn-list {
+        justify-content: center;
+    }
+}
 
 .mp-error.mp-stage {
     max-inline-size: 760px;
@@ -669,6 +717,18 @@
         background: rgb(255 255 255 / 12%);
         color: #fff;
         box-shadow: 0 0 0 10px rgb(255 255 255 / 6%);
+
+        .icon {
+            inline-size: 2.5rem;
+            block-size: 2.5rem;
+            font-size: 2.5rem;
+            stroke-width: 1.5;
+        }
+    }
+
+    &.is-danger .mp-error-icon {
+        background: rgb(255 120 120 / 16%);
+        color: oklch(85% 0.1 25);
     }
 
     &.is-danger::after {
