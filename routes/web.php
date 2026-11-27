@@ -61,7 +61,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('parties/{party}/mods/users', [ModUserSearchController::class, 'party'])->name('parties.mods.users');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
-            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy', 'update'])->scoped();
+            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'update'])->scoped();
             Route::get('parties/{party}/ai-reviews', [PartyAiReviewController::class, 'index'])->name('parties.ai-reviews.index');
             Route::get('parties/{party}/ai-reviews/{aiReview}', [PartyAiReviewController::class, 'show'])->scopeBindings()->name('parties.ai-reviews.show');
             Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
@@ -91,11 +91,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:admin')->name('admin.')->prefix('admin')->group(function () {
             Route::get('/', [AdminHomeController::class, 'dashboard'])->name('dashboard');
 
-            Route::resource('users', AdminUserController::class);
+            Route::resource('users', AdminUserController::class)->except(['create', 'store']);
             Route::get('users/{user}/delete', [AdminUserController::class, 'delete'])->name('users.delete');
             Route::get('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
-            Route::get('users/{user}/sync', [AdminUserController::class, 'sync_tickets'])->name('users.sync');
-
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
 

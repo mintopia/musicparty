@@ -13,6 +13,7 @@ use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
@@ -27,6 +28,7 @@ use App\Services\PartyProviderOptions;
 use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
+use App\Services\PlaybackStatus;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
@@ -51,6 +53,58 @@ class PartyController extends Controller
     public function __construct()
     {
         $this->authorizeResource(Party::class, 'party');
+    }
+
+    private const int PLAYER_STALE_MINUTES = 15;
+
+    public function index(Request $request): Response
+    {
+        $user = $this->resolveAuthenticatedUser($request);
+        $isAdmin = $user->hasRole('admin');
+
+        $parties = Party::query()
+            ->where(fn ($query) => $query
+                ->where('user_id', $user->id)
+                ->orWhereHas('members', fn ($members) => $members->where('user_id', $user->id)))
+            ->with(['song.album', 'members' => fn ($members) => $members->where('user_id', $user->id)->with('role')])
+            ->orderBy('name')
+            ->get()
+            ->map(function (Party $party) use ($user, $isAdmin) {
+                $canManage = $isAdmin || $party->canBeManagedBy($user);
+                $state = app(PlaybackStatus::class)->recall($party);
+                $sampledAt = $state?->sampledAt;
+                $lastUpdate = $sampledAt?->diffForHumans();
+                $related = $party->getRelation('song');
+                $song = $related instanceof Song ? $related : null;
+                $playback = match (true) {
+                    $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES)) => 'stale',
+                    $state === null || $song === null || $state->trackId !== $song->provider_track_id => 'idle',
+                    $state->isPlaying => 'playing',
+                    default => 'paused',
+                };
+                $member = $party->members->first();
+                $isOwner = $party->user_id === $user->id;
+                $roleCode = $isOwner ? 'owner' : ($member?->role->code ?? 'user');
+
+                return [
+                    'code' => $party->code,
+                    'name' => $party->name,
+                    'role' => $isOwner ? 'Owner' : ($member?->role->name ?? 'User'),
+                    'roleCode' => $roleCode,
+                    'playback' => $playback,
+                    'detail' => match ($playback) {
+                        'stale' => 'last update '.$lastUpdate,
+                        'playing', 'paused' => $song->name,
+                        default => null,
+                    },
+                    'cover' => $song?->album->image_url ?: null,
+                    'canManage' => $canManage,
+                    'url' => route($canManage ? 'parties.dashboard' : 'parties.show', $party->code),
+                ];
+            })
+            ->values();
+
+        return Inertia::render('Parties/Index', ['parties' => $parties]);
     }
 
     public function create(Request $request, PartyProviderOptions $options): RedirectResponse|Response
