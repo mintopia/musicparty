@@ -2,6 +2,7 @@
 import {computed, ref} from 'vue';
 import CopyButton from '@/components/CopyButton.vue';
 import SettingRow from '@/components/SettingRow.vue';
+import {countryOptionsFor} from '@/lib/countries';
 import type {NamedOption, PartyFormState} from '@/lib/partyForm';
 
 const props = defineProps<{
@@ -26,24 +27,7 @@ const relayRows = computed(() => [
     ...(props.encore.secret ? [{label: 'App secret', value: props.encore.secret, copy: 'Copy app secret'}] : []),
 ]);
 
-const countryOptions = computed(() => {
-    const names = new Intl.DisplayNames(['en'], {type: 'region'});
-    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-    const options: {code: string; name: string}[] = [];
-    for (const a of letters) {
-        for (const b of letters) {
-            const code = a + b;
-            const name = names.of(code);
-            if (name && name !== code) {
-                options.push({code, name});
-            }
-        }
-    }
-    if (props.form.country && !options.some((o) => o.code === props.form.country)) {
-        options.push({code: props.form.country, name: props.form.country});
-    }
-    return options.sort((x, y) => x.name.localeCompare(y.name));
-});
+const countryOptions = computed(() => countryOptionsFor(props.form.country));
 
 function err(field: string): string | undefined {
     return (props.form.errors as Record<string, string | undefined>)[field];

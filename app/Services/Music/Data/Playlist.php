@@ -9,5 +9,6 @@ final readonly class Playlist
         public string $name,
         public ?string $ownerName,
         public int $trackCount,
+        public ?string $imageUrl = null,
     ) {}
 }

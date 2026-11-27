@@ -59,6 +59,19 @@ class PartyRequest extends FormRequest
         }];
     }
 
+    public static function normalisePlaylistId(string $input): string
+    {
+        $input = trim($input);
+        if (preg_match('#^spotify:playlist:([^:?/\s]+)$#i', $input, $matches) === 1) {
+            return $matches[1];
+        }
+        if (preg_match('#^https?://open\.spotify\.com/(?:intl-[a-z-]+/)?playlist/([^/?\#\s]+)#i', $input, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return $input;
+    }
+
     /**
      * Get the validation rules that apply to the request.
      *
@@ -86,11 +99,15 @@ class PartyRequest extends FormRequest
             'country' => 'sometimes|string|alpha|size:2',
             'timezone' => 'sometimes|nullable|string|timezone:all',
             'backup_playlist_id' => [
-                'required',
+                $party instanceof Party ? 'required' : 'nullable',
                 'string',
                 'in:other,'.collect($playlists)->pluck('id')->implode(','),
             ],
-            'custom_backup_playlist_id' => 'required_if:backup_playlist_id,other|string|nullable',
+            'custom_backup_playlist_id' => ['required_if:backup_playlist_id,other', 'nullable', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($this->input('backup_playlist_id') === 'other' && ! preg_match('/^[A-Za-z0-9]+$/', self::normalisePlaylistId((string) $value))) {
+                    $fail('Enter a Spotify playlist link or ID.');
+                }
+            }],
             'allow_requests' => 'sometimes|boolean',
             'explicit' => 'sometimes|boolean',
             'downvotes' => 'sometimes|boolean',
