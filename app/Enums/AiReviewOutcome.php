@@ -15,7 +15,7 @@ enum AiReviewOutcome: string
             self::Allow => 'Allowed',
             self::Flag => 'Flagged',
             self::Reject => 'Rejected',
-            self::Error => 'Error, allowed',
+            self::Error => 'Error',
         };
     }
 }

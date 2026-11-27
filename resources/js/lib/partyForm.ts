@@ -29,6 +29,12 @@ export interface NamedOption {
     name: string;
 }
 
+export interface PlaylistOption extends NamedOption {
+    imageUrl?: string | null;
+    trackCount?: number;
+    ownerName?: string | null;
+}
+
 export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[], defaultCountry: string) {
     const listed = playlists.some((playlist) => playlist.id === party.backup_playlist_id);
 
@@ -56,6 +62,13 @@ export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[
         downvotes_per_hour: party.downvotes_per_hour ?? '',
         max_requests: party.max_requests ?? '',
     };
+}
+
+export function initialCreateForm(party: PartyFormValues, playlists: NamedOption[], defaultCountry: string) {
+    const {custom_backup_playlist_id: _custom, ...values} = initialPartyForm(party, playlists, defaultCountry);
+    const listed = playlists.some((playlist) => playlist.id === party.backup_playlist_id);
+
+    return {...values, backup_playlist_id: listed ? (party.backup_playlist_id as string) : (playlists[0]?.id ?? '')};
 }
 
 export type PartyFormData = ReturnType<typeof initialPartyForm> & {provider_id?: string};

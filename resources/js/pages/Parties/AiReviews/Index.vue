@@ -2,13 +2,16 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {computed, reactive, ref} from 'vue';
+import {computed, reactive} from 'vue';
+import {composeSearch, resolveSearch, setSingleToken} from '@/utils/searchFilters';
+import type {TokenSpec} from '@/utils/searchFilters';
 import EmptyState from '@/components/EmptyState.vue';
+import PageHead from '@/components/PageHead.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
-import SearchSelectField from '@/components/SearchSelectField.vue';
-import SearchTextField from '@/components/SearchTextField.vue';
+import SearchBar from '@/components/SearchBar.vue';
+import type {SearchChipGroup} from '@/components/SearchBar.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {aiReviewsUrl, aiReviewUrl, outcomeBadge} from '@/lib/aiReviews';
 import type {AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
@@ -22,29 +25,88 @@ const props = defineProps<{
     holdsFlagged: boolean;
     moderationTabs: ModerationTabsProps;
     settingsUrl: string;
+    counts: {total: number; outcome: Record<string, number>; criterion: Record<string, number>};
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
 
-const form = reactive({q: props.filters.q, outcome: props.filters.outcome, criterion: props.filters.criterion});
+const spec = computed<TokenSpec>(() => ({
+    outcome: props.outcomes.map((outcome) => outcome.code),
+    criterion: props.criteria.map((criterion) => criterion.code),
+}));
+const aliases = {allowed: 'allow', flagged: 'flag', rejected: 'reject', errors: 'error'};
+const form = reactive({
+    q: composeSearch(props.filters.q, {outcome: props.filters.outcome, criterion: props.filters.criterion}),
+});
 const listUrl = aiReviewsUrl(props.party.code);
 const filtered = computed(
     () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.criterion !== '',
 );
+const resolved = computed(() => resolveSearch(form.q, spec.value, aliases));
 
-const filtersOpen = ref(filtered.value);
+const groups = computed<SearchChipGroup[]>(() => [
+    {
+        key: 'outcome',
+        label: 'Outcome',
+        chips: props.outcomes.map((outcome) => ({
+            key: outcome.code,
+            label: outcome.name,
+            count: props.counts.outcome[outcome.code] ?? 0,
+            pressed: resolved.value.filters.outcome === outcome.code,
+        })),
+    },
+    {
+        key: 'criterion',
+        label: 'Criterion',
+        chips: props.criteria
+            .filter((criterion) => criterion.code !== 'none')
+            .map((criterion) => ({
+                key: criterion.code,
+                label: criterion.name,
+                count: props.counts.criterion[criterion.code] ?? 0,
+                pressed: resolved.value.filters.criterion === criterion.code,
+            })),
+    },
+]);
 
-function submit(): void {
+const activeSummary = computed(() => {
+    const parts: string[] = [];
+    if (props.filters.q !== '') {
+        parts.push(`\u201c${props.filters.q}\u201d`);
+    }
+    const outcome = props.outcomes.find((item) => item.code === props.filters.outcome);
+    if (outcome) {
+        parts.push(`outcome ${outcome.name}`);
+    }
+    const criterion = props.criteria.find((item) => item.code === props.filters.criterion);
+    if (criterion) {
+        parts.push(`criterion ${criterion.name}`);
+    }
+    return parts.join(', ');
+});
+
+function apply(): void {
+    const {text, filters} = resolveSearch(form.q, spec.value, aliases);
     const query: Record<string, string> = {};
-    if (form.q.trim() !== '') {
-        query.q = form.q.trim();
+    if (text.trim() !== '') {
+        query.q = text.trim();
     }
-    if (form.outcome !== '') {
-        query.outcome = form.outcome;
+    if (filters.outcome) {
+        query.outcome = filters.outcome;
     }
-    if (form.criterion !== '') {
-        query.criterion = form.criterion;
+    if (filters.criterion) {
+        query.criterion = filters.criterion;
     }
-    router.get(listUrl, query);
+    router.get(listUrl, query, {preserveState: true, replace: true});
+}
+
+function setQuery(value: string): void {
+    form.q = value;
+    apply();
+}
+
+function toggleChip(key: string, groupKey?: string): void {
+    form.q = setSingleToken(form.q, spec.value, groupKey ?? '', key, aliases);
+    apply();
 }
 
 const showUrl = (review: AiReviewRow): string =>
@@ -59,107 +121,88 @@ const showUrl = (review: AiReviewRow): string =>
 <template>
     <AppLayout :title="`AI reviews - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI Reviews'}]" />
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI reviews'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`AI reviews - ${party.name}`" />
+        <PageHead
+            title="Moderation"
+            summary="Review what the rules and AI reviews held back, and keep the rules that decide it."
+        />
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
 
         <div v-if="!holdsFlagged" class="alert alert-warning py-2" role="status" data-test="not-held-notice">
             <i class="icon ti ti-flag me-2" aria-hidden="true"></i>
-            Flagged requests aren't held. They go straight to the queue.
+            Flagged Requests aren't held. They go straight to the Queue.
             <a :href="settingsUrl" class="ms-1" data-test="turn-on-approval">Turn on approval</a>
         </div>
 
-        <div class="row">
-            <div class="col-md-12 col-lg-3 mb-4">
-                <form :action="listUrl" method="get" class="card" data-test="filters" @submit.prevent="submit">
-                    <div class="card-header">
-                        <h3 class="card-title">Search</h3>
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-ghost-secondary ms-auto d-lg-none"
-                            :aria-expanded="filtersOpen"
-                            aria-controls="ai-review-filter-fields"
-                            data-test="toggle-filters"
-                            @click="filtersOpen = !filtersOpen"
-                        >
-                            {{ filtersOpen ? 'Hide' : 'Show' }}
-                            <i
-                                class="icon ti ms-1"
-                                :class="filtersOpen ? 'ti-chevron-up' : 'ti-chevron-down'"
-                                aria-hidden="true"
-                            ></i>
-                        </button>
-                    </div>
-                    <div id="ai-review-filter-fields" class="card-body d-lg-block" :class="{'d-none': !filtersOpen}">
-                        <SearchTextField v-model="form.q" name="Track, artist or user" property="q" />
-                        <SearchSelectField
-                            v-model="form.outcome"
-                            name="Outcome"
-                            property="outcome"
-                            :options="outcomes"
-                            value-key="code"
-                            label-key="name"
-                        />
-                        <SearchSelectField
-                            v-model="form.criterion"
-                            name="Criterion"
-                            property="criterion"
-                            :options="criteria"
-                            value-key="code"
-                            label-key="name"
-                        />
-                    </div>
-                    <div class="card-footer d-lg-flex" :class="filtersOpen ? 'd-flex' : 'd-none'">
-                        <Link v-if="filtered" :href="listUrl" class="btn btn-link ms-auto" data-test="clear-filters"
-                            >Clear</Link
-                        >
-                        <button class="btn btn-primary" :class="{'ms-auto': !filtered}" type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-lg-9 col-md-12">
+        <SearchBar
+            :model-value="form.q"
+            placeholder="Search tracks, artists, people, reasons… or try outcome:rejected"
+            label="Search AI reviews"
+            :result-count="reviews.total"
+            :total="counts.total"
+            noun="reviews"
+            :groups="groups"
+            @update:model-value="setQuery"
+            @submit="setQuery"
+            @toggle-chip="toggleChip"
+        />
+        <div>
+            <div>
                 <EmptyState
                     v-if="reviews.data.length === 0 && filtered"
                     icon="ti-filter-off"
                     title="No matching reviews"
-                    description="Try a different search or outcome."
+                    :description="`Nothing matches ${activeSummary}.`"
                 >
-                    <Link :href="listUrl" class="btn btn-primary">Clear filters</Link>
+                    <template #title
+                        >No reviews match <code>{{ form.q.trim() }}</code></template
+                    >
+                    <Link :href="listUrl" class="btn btn-primary" data-test="clear-filters">Clear filters</Link>
                 </EmptyState>
                 <EmptyState
                     v-else-if="reviews.data.length === 0"
                     icon="ti-robot"
                     title="No AI reviews yet"
-                    description="Each requested track is reviewed and recorded here."
+                    description="Each Request is reviewed when it is made, and the result is recorded here. Request a track from the Queue to see the first one."
                 />
                 <div v-else class="card">
                     <ul class="list-group list-group-flush d-md-none" data-test="reviews-list">
                         <li v-for="review in reviews.data" :key="review.id" class="list-group-item p-0">
-                            <Link :href="showUrl(review)" class="d-block p-3 text-reset" data-test="review-item">
-                                <div class="fw-medium text-break">{{ review.track.title }}</div>
-                                <div class="text-secondary small text-break">{{ review.track.artists }}</div>
-                                <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
-                                    <span class="badge" :class="outcomeBadge[review.outcome].class">
-                                        <i
-                                            class="icon ti me-1"
-                                            :class="outcomeBadge[review.outcome].icon"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ review.outcomeLabel }}
-                                    </span>
-                                    <span v-if="review.criterionLabel" class="text-secondary small">{{
-                                        review.criterionLabel
-                                    }}</span>
+                            <Link
+                                :href="showUrl(review)"
+                                class="d-flex align-items-center gap-2 p-3 text-reset review-item"
+                                data-test="review-item"
+                            >
+                                <div class="flex-fill min-w-0">
+                                    <div class="fw-medium text-break">{{ review.track.title }}</div>
+                                    <div class="text-secondary small text-break">{{ review.track.artists }}</div>
+                                    <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge" :class="outcomeBadge[review.outcome].class">
+                                            <i
+                                                class="icon ti me-1"
+                                                :class="outcomeBadge[review.outcome].icon"
+                                                aria-hidden="true"
+                                            ></i>
+                                            {{ review.outcomeLabel }}
+                                        </span>
+                                        <span v-if="review.criterionLabel" class="text-secondary small">{{
+                                            review.criterionLabel
+                                        }}</span>
+                                    </div>
+                                    <div v-if="review.reason" class="reason-text mt-2">{{ review.reason }}</div>
+                                    <div class="text-secondary small mt-2">
+                                        {{ review.user ?? 'Unknown' }}
+                                        <template v-if="review.createdAt">
+                                            &middot; {{ review.createdAt.human }}</template
+                                        >
+                                    </div>
                                 </div>
-                                <div v-if="review.reason" class="reason-text mt-2">{{ review.reason }}</div>
-                                <div class="text-secondary small mt-2">
-                                    {{ review.user ?? 'Unknown' }}
-                                    <template v-if="review.createdAt"> &middot; {{ review.createdAt.human }}</template>
-                                </div>
+                                <i class="icon ti ti-chevron-right text-secondary" aria-hidden="true"></i>
                             </Link>
                         </li>
                     </ul>
@@ -196,7 +239,7 @@ const showUrl = (review: AiReviewRow): string =>
                                         </td>
                                         <td class="text-nowrap" data-test="review-criterion">
                                             <span v-if="review.criterionLabel">{{ review.criterionLabel }}</span>
-                                            <span v-else class="text-secondary">-</span>
+                                            <span v-else class="text-secondary">None</span>
                                         </td>
                                         <td class="track-col">
                                             <div class="fw-medium" data-test="review-title">
@@ -243,7 +286,7 @@ const showUrl = (review: AiReviewRow): string =>
                     </div>
                     <div class="card-footer d-flex align-items-center">
                         <p class="m-0 text-secondary tabular-nums">
-                            {{ reviews.from ?? 0 }}-{{ reviews.to ?? 0 }} of {{ reviews.total }}
+                            Showing {{ reviews.from ?? 0 }} to {{ reviews.to ?? 0 }} of {{ reviews.total }} reviews
                         </p>
                         <div class="m-0 ms-auto"><Pagination :paginator="reviews" /></div>
                     </div>
@@ -254,6 +297,14 @@ const showUrl = (review: AiReviewRow): string =>
 </template>
 
 <style scoped>
+.review-item {
+    min-height: 44px;
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
 .track-col {
     min-width: 12rem;
     max-width: 16rem;

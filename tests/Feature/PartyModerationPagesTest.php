@@ -31,7 +31,6 @@ it('forbids non-managers on every moderation page', function (string $method, st
     ['post', 'parties.moderation.store'],
     ['get', 'parties.moderation.edit'],
     ['patch', 'parties.moderation.update'],
-    ['get', 'parties.moderation.delete'],
     ['delete', 'parties.moderation.destroy'],
 ]);
 
@@ -45,8 +44,35 @@ it('renders the index with party props and rows', function () {
             ->has('playerState')
             ->where('moderationTabs.aiReviewEnabled', false)
             ->has('moderations.data', 1)
-            ->where('moderations.data.0.type_name', 'Track Name')
+            ->where('moderations.data.0.type_name', 'Track name')
             ->where('moderations.data.0.value', 'bad song'));
+});
+
+it('searches and filters rules and reports unfiltered counts', function () {
+    PartyModeration::query()->forceCreate([
+        'party_id' => $this->party->id,
+        'type' => PartyModerationType::mtArtist,
+        'value' => '(?i)nickel',
+        'enabled' => false,
+        'regex' => true,
+        'action' => 'flag',
+        'notes' => 'meh',
+    ]);
+    $values = fn (array $query) => collect($this->actingAs($this->owner)->get(route('parties.moderation.index', [$this->party->code] + $query))->assertOk()->viewData('page')['props']['moderations']['data'])->pluck('value')->all();
+
+    expect($values(['q' => 'bad']))->toBe(['bad song'])
+        ->and($values(['q' => 'meh']))->toBe(['(?i)nickel'])
+        ->and($values(['state' => 'on']))->toBe(['bad song'])
+        ->and($values(['state' => 'off']))->toBe(['(?i)nickel'])
+        ->and($values(['action' => 'flag']))->toBe(['(?i)nickel'])
+        ->and($values(['action' => 'reject']))->toBe(['bad song'])
+        ->and($values(['pattern' => 1]))->toBe(['(?i)nickel']);
+
+    $this->actingAs($this->owner)->get(route('parties.moderation.index', [$this->party->code, 'action' => 'flag']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('filters.action', 'flag')
+            ->where('counts', ['total' => 2, 'on' => 1, 'off' => 1, 'flag' => 1, 'reject' => 1, 'pattern' => 1]));
+    $this->actingAs($this->owner)->get(route('parties.moderation.index', [$this->party->code, 'action' => 'bogus']))->assertSessionHasErrors('action');
 });
 
 it('renders create with defaults and option lists', function () {
@@ -57,7 +83,7 @@ it('renders create with defaults and option lists', function () {
             ->has('playerState')
             ->where('moderation.action', 'reject')
             ->where('track', null)
-            ->where('types.mtName', 'Track Name')
+            ->where('types.mtName', 'Track name')
             ->where('actions.flag', 'Flag for approval'));
 });
 
@@ -71,13 +97,6 @@ it('renders edit and delete with the filter', function () {
             ->has('playerState')
             ->where('moderation.type', 'mtName')
             ->where('moderation.notes', 'note'));
-
-    $this->actingAs($this->owner)->get(route('parties.moderation.delete', $params))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Parties/Moderation/Delete')
-            ->has('playerState')
-            ->where('moderation.value', 'bad song'));
 });
 
 it('creates, updates and deletes a filter with flash messages', function () {

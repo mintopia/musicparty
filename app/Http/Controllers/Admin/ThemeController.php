@@ -12,6 +12,22 @@ use Inertia\Response;
 
 class ThemeController extends Controller
 {
+    public function index(): Response
+    {
+        return Inertia::render('Admin/Themes/Index', [
+            'themes' => Theme::get()->map(fn (Theme $theme): array => [
+                'id' => $theme->id,
+                'name' => $theme->name,
+                'active' => (bool) $theme->active,
+                'readonly' => (bool) $theme->readonly,
+                'dark_mode' => (bool) $theme->dark_mode,
+                'tokens' => $theme->validTokens(),
+                'css' => (string) $theme->css,
+                'updated_at' => $theme->updated_at?->diffForHumans(),
+            ])->values(),
+        ]);
+    }
+
     public function create(): Response
     {
         $default = Theme::whereCode('default')->first();
@@ -35,7 +51,7 @@ class ThemeController extends Controller
         $theme = new Theme;
         $this->updateObject($theme, $request);
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been created');
     }
 
     public function edit(Theme $theme): Response
@@ -50,28 +66,39 @@ class ThemeController extends Controller
     {
         $this->updateObject($theme, $request);
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been updated');
     }
 
-    public function delete(Theme $theme): Response
+    public function delete(Theme $theme): Response|RedirectResponse
     {
         if ($theme->readonly) {
-            abort(400);
+            return $this->builtInThemeRefusal();
         }
 
         return Inertia::render('Admin/Themes/Delete', [
-            'theme' => ['id' => $theme->id, 'name' => $theme->name],
+            'theme' => [
+                'id' => $theme->id,
+                'name' => $theme->name,
+                'active' => (bool) $theme->active,
+                'dark_mode' => (bool) $theme->dark_mode,
+                'tokens' => $theme->validTokens(),
+            ],
         ]);
     }
 
     public function destroy(Theme $theme): RedirectResponse
     {
         if ($theme->readonly) {
-            abort(400);
+            return $this->builtInThemeRefusal();
         }
         $theme->delete();
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been deleted');
+    }
+
+    protected function builtInThemeRefusal(): RedirectResponse
+    {
+        return response()->redirectToRoute('admin.themes.index')->with('errorMessage', 'Built-in themes can\'t be deleted.');
     }
 
     /**
@@ -87,11 +114,12 @@ class ThemeController extends Controller
             'active' => (bool) $theme->active,
             'dark_mode' => (bool) $theme->dark_mode,
             'readonly' => (bool) $theme->readonly,
+            'updated_at' => $theme->updated_at?->diffForHumans(),
         ];
     }
 
     /**
-     * @return list<array{token: string, label: string, required: bool}>
+     * @return list<array{token: string, label: string, default: string}>
      */
     protected function colourTokenProps(): array
     {
@@ -100,7 +128,7 @@ class ThemeController extends Controller
             $tokens[] = [
                 'token' => $token,
                 'label' => $label,
-                'required' => in_array($token, ['primary', 'nav-background'], true),
+                'default' => Theme::COLOUR_DEFAULTS[$token],
             ];
         }
 

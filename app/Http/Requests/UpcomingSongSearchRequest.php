@@ -23,11 +23,12 @@ class UpcomingSongSearchRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'q' => 'string|sometimes|nullable|max:200',
             'name' => 'string|sometimes|nullable|max:100',
             'artist' => 'string|sometimes|nullable|max:100',
             'album' => 'string|sometimes|nullable|max:100',
-            'status' => 'string|sometimes|nullable|in:queued,spotify',
-            'order' => 'string|sometimes|nullable|in:name,votes,created_at,queued_at',
+            'type' => 'string|sometimes|nullable|in:queued,sent',
+            'order' => 'string|sometimes|nullable|in:id,votes,score,created_at,queued_at',
             'order_direction' => 'string|sometimes|nullable|in:asc,desc',
             'per_page' => 'integer|sometimes|nullable|between:0,100',
         ];

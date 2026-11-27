@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
 import CopyButton from '@/components/CopyButton.vue';
+import OptionPicker from '@/components/OptionPicker.vue';
+import PlaylistPicker from '@/components/PlaylistPicker.vue';
 import SettingRow from '@/components/SettingRow.vue';
-import type {NamedOption, PartyFormState} from '@/lib/partyForm';
+import {countryOptionsFor} from '@/lib/countries';
+import {timezoneOffsetLabel} from '@/lib/timezones';
+import type {NamedOption, PartyFormState, PlaylistOption} from '@/lib/partyForm';
 
 const props = defineProps<{
     tab: 'general' | 'requests' | 'playback' | 'screens';
     form: PartyFormState;
-    playlists: NamedOption[];
+    playlists: PlaylistOption[];
+    hostName?: string;
     devices: NamedOption[];
     providerName: string;
     instanceTimezone: string;
@@ -26,6 +31,22 @@ const relayRows = computed(() => [
     ...(props.encore.secret ? [{label: 'App secret', value: props.encore.secret, copy: 'Copy app secret'}] : []),
 ]);
 
+const countryOptions = computed(() =>
+    countryOptionsFor(props.form.country).map((option) => ({
+        value: option.code,
+        label: option.name,
+        meta: option.code,
+    })),
+);
+const timezoneOptions = computed(() => [
+    {value: '', label: `Use instance timezone (${props.instanceTimezone})`},
+    ...props.timezones.map((identifier) => ({
+        value: identifier,
+        label: identifier,
+        meta: timezoneOffsetLabel(identifier),
+    })),
+]);
+
 function err(field: string): string | undefined {
     return (props.form.errors as Record<string, string | undefined>)[field];
 }
@@ -34,11 +55,11 @@ function err(field: string): string | undefined {
 <template>
     <div>
         <section v-if="tab === 'general'">
-            <h3 class="settings-heading">Party</h3>
+            <h2 class="settings-heading">Party</h2>
             <SettingRow
                 label="Party is running"
                 for="active"
-                hint="Turn off to pause the queue. Requests wait until it's back on."
+                hint="Turn off to pause the Queue. Requests wait until it's back on."
             >
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -66,47 +87,33 @@ function err(field: string): string | undefined {
             <SettingRow label="Music provider" hint="Set when the party was created">
                 <span class="text-secondary">{{ providerName }}</span>
             </SettingRow>
-            <SettingRow
-                label="Country"
-                for="country"
-                hint="Two-letter code used for search and browse results"
-                :error="err('country')"
-            >
-                <input
+            <SettingRow label="Country" for="country" hint="Used for search and browse results" :error="err('country')">
+                <OptionPicker
                     id="country"
                     v-model="form.country"
-                    type="text"
-                    name="country"
-                    maxlength="2"
-                    class="form-control"
-                    :class="{'is-invalid': err('country')}"
-                    placeholder="GB"
+                    label="Country"
+                    :options="countryOptions"
+                    :invalid="Boolean(err('country'))"
                 />
             </SettingRow>
             <SettingRow
                 label="Timezone"
                 for="timezone"
-                hint="Used by time-based mods and scheduled requests. Blank uses the instance timezone"
+                hint="Used by time-based mods and Scheduled Requests. Blank uses the instance timezone"
                 :error="err('timezone')"
             >
-                <input
+                <OptionPicker
                     id="timezone"
                     v-model="form.timezone"
-                    type="text"
-                    name="timezone"
-                    list="timezone-options"
-                    class="form-control"
-                    :class="{'is-invalid': err('timezone')}"
-                    :placeholder="instanceTimezone"
+                    label="Timezone"
+                    :options="timezoneOptions"
+                    :invalid="Boolean(err('timezone'))"
                 />
-                <datalist id="timezone-options">
-                    <option v-for="identifier in timezones" :key="identifier" :value="identifier"></option>
-                </datalist>
             </SettingRow>
         </section>
 
         <section v-if="tab === 'requests'">
-            <h3 class="settings-heading">Requests</h3>
+            <h2 class="settings-heading">Requests</h2>
             <SettingRow label="Accept requests" for="allow_requests">
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -164,9 +171,9 @@ function err(field: string): string | undefined {
                 </span>
             </SettingRow>
             <SettingRow
-                label="Hold flagged requests for approval"
+                label="Hold Flagged Requests for approval"
                 for="flag_requests"
-                hint="They wait on the Flagged page until a manager decides"
+                hint="They wait in Moderation until a manager or moderator decides"
             >
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -181,7 +188,7 @@ function err(field: string): string | undefined {
                 </span>
             </SettingRow>
 
-            <h3 class="settings-heading settings-heading-spaced">Limits</h3>
+            <h2 class="settings-heading settings-heading-spaced">Limits</h2>
             <SettingRow
                 label="Requests per person"
                 for="max_requests"
@@ -263,39 +270,28 @@ function err(field: string): string | undefined {
         </section>
 
         <section v-if="tab === 'playback'">
-            <h3 class="settings-heading">Playback</h3>
+            <h2 class="settings-heading">Playback</h2>
             <SettingRow
-                label="Fallback playlist"
+                label="Fallback Playlist"
                 for="backup_playlist_id"
-                hint="Plays when the queue is empty"
+                stacked
+                hint="Plays when the Queue is empty"
                 :error="err('backup_playlist_id') ?? err('custom_backup_playlist_id')"
             >
-                <select
+                <PlaylistPicker
                     id="backup_playlist_id"
                     v-model="form.backup_playlist_id"
-                    name="backup_playlist_id"
-                    class="form-select"
-                    :class="{'is-invalid': err('backup_playlist_id')}"
-                >
-                    <option v-for="playlist in playlists" :key="playlist.id" :value="playlist.id">
-                        {{ playlist.name }}
-                    </option>
-                    <option value="other">Other playlist</option>
-                </select>
-                <input
-                    v-if="form.backup_playlist_id === 'other'"
-                    id="custom_backup_playlist_id"
-                    v-model="form.custom_backup_playlist_id"
-                    type="text"
-                    name="custom_backup_playlist_id"
-                    class="form-control"
-                    :class="{'is-invalid': err('custom_backup_playlist_id')}"
-                    placeholder="Spotify playlist ID"
+                    v-model:custom="form.custom_backup_playlist_id"
+                    :playlists="playlists"
+                    :host-name="hostName"
+                    :provider-name="providerName"
+                    :invalid="Boolean(err('backup_playlist_id') ?? err('custom_backup_playlist_id'))"
                 />
             </SettingRow>
             <SettingRow
                 label="Save played tracks to"
                 for="history_playlist_id"
+                stacked
                 hint="Adds every track sent to the player to this playlist"
                 :error="err('history_playlist_id')"
             >
@@ -303,7 +299,7 @@ function err(field: string): string | undefined {
                     id="history_playlist_id"
                     v-model="form.history_playlist_id"
                     name="history_playlist_id"
-                    class="form-select"
+                    class="form-select mp-wide-select"
                     :class="{'is-invalid': err('history_playlist_id')}"
                 >
                     <option value="none">None</option>
@@ -391,7 +387,7 @@ function err(field: string): string | undefined {
         </section>
 
         <section v-if="tab === 'screens'">
-            <h3 class="settings-heading">TV screen</h3>
+            <h2 class="settings-heading">TV screen</h2>
             <SettingRow label="Show join QR code" for="show_qrcode" hint="Shown on the TV screen so guests can join">
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -405,7 +401,7 @@ function err(field: string): string | undefined {
                     />
                 </span>
             </SettingRow>
-            <h3 id="encore-relay" class="settings-heading settings-heading-spaced">Encore relay</h3>
+            <h2 id="encore-relay" class="settings-heading settings-heading-spaced">Encore relay</h2>
             <SettingRow v-for="row in relayRows" :key="row.label" :label="row.label" wide>
                 <code class="text-break">{{ row.value }}</code>
                 <CopyButton :value="row.value" :label="row.copy" />

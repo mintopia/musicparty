@@ -90,10 +90,11 @@ function overview(overrides: Partial<SearchOverviewResults> = {}): SearchOvervie
     return {
         view: 'overview',
         top: {kind: 'track', track: track('top')},
-        tracks: [track('t1'), track('t2'), track('t3'), track('t4')],
+        tracks: [track('top'), track('t1'), track('t2'), track('t3')],
         albums: [album('al1'), album('al2')],
         artists: [artist('ar1'), artist('ar2')],
         empty: false,
+        weak: false,
         ...overrides,
     };
 }
@@ -149,7 +150,7 @@ describe('Party search overview', () => {
 
         expect(wrapper.get('[data-test="top-name"]').text()).toBe('Track top');
         expect(wrapper.get('[data-test="top-artists"]').text()).toContain('Song');
-        expect(wrapper.findAll('[data-test="section-head"] h3').map((h3) => h3.text())).toEqual([
+        expect(wrapper.findAll('[data-test="section-head"] h2').map((h2) => h2.text())).toEqual([
             'Top result',
             'Tracks',
             'Albums',
@@ -265,9 +266,82 @@ describe('Party search overview', () => {
             query: 'Clozing Tyme',
         });
 
-        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "Clozing Tyme"');
+        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for “Clozing Tyme”');
         expect(wrapper.text()).toContain("Check the spelling or try the artist's name.");
         expect(wrapper.find('[data-test="section-head"]').exists()).toBe(false);
+    });
+});
+
+describe('Party search suggestions and weak matches', () => {
+    beforeEach(() => {
+        deferred.mode = 'loaded';
+    });
+
+    const suggestions = {
+        nowPlaying: {name: 'Midnight City', artist: 'M83', image_url: null, query: 'M83'},
+        recent: ['Levels', 'daft punk'],
+        artists: [{id: 'ar1', name: 'Daft Punk', image_url: null, requests: 5}],
+    };
+
+    it('offers the playing track, recent searches and top artists on the empty page', () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: null, perPage: 10, type: null},
+                results: null,
+                suggestions,
+                playerState: idle,
+            } as never,
+        });
+
+        expect(wrapper.get('[data-test="more-like"]').attributes('href')).toContain('?query=M83');
+        expect(wrapper.get('[data-test="more-like"]').text()).toContain('More like Midnight City');
+        expect(wrapper.findAll('[data-test="recent-search"]').map((a) => a.attributes('href'))).toEqual([
+            expect.stringContaining('query=Levels'),
+            expect.stringContaining('query=daft%20punk'),
+        ]);
+        expect(wrapper.get('[data-test="artist-subtitle"]').text()).toBe('5 Requests');
+    });
+
+    it('words a track you queued as requested by you with its age', () => {
+        const wrapper = mountSearch(
+            overview({
+                tracks: [
+                    track('t1', {
+                        in_queue: true,
+                        requested_by: 'Mina',
+                        requested_by_you: true,
+                        requested_ago: 'just now',
+                    }),
+                ],
+            }),
+        );
+
+        expect(wrapper.get('[data-test="track-row"]').text()).toContain('Requested by you · just now');
+    });
+
+    it('shows no suggestions once a search is made', () => {
+        const wrapper = mountSearch(overview());
+
+        expect(wrapper.find('[data-test="search-suggestions"]').exists()).toBe(false);
+    });
+
+    it('says there are no close matches above weak results only', () => {
+        const weak = mountSearch(overview({weak: true}), {query: 'lucky dafft punk'});
+        const strong = mountSearch(overview());
+
+        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('No close matches for “lucky dafft punk”');
+        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('These are the nearest results we found.');
+        expect(weak.get('[data-test="no-close-matches"]').text()).not.toContain('Spotify');
+        expect(strong.find('[data-test="no-close-matches"]').exists()).toBe(false);
+    });
+
+    it('lists weak results as plain full-width tracks without a Top result card', () => {
+        const weak = mountSearch(overview({weak: true}), {query: 'lucky dafft punk'});
+
+        expect(weak.find('[data-test="top-result"]').exists()).toBe(false);
+        expect(weak.get('[data-test="tracks-section"]').classes()).toContain('col-12');
+        expect(weak.findAll('[data-test="tracks-section"] [data-test="request"]')).toHaveLength(4);
     });
 });
 
@@ -289,7 +363,7 @@ describe('Party search states', () => {
         expect(wrapper.findAll('[data-test="track-placeholder"]')).toHaveLength(4);
         expect(wrapper.find('[data-test="album-placeholders"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="artist-placeholders"]').exists()).toBe(true);
-        expect(wrapper.findAll('[data-test="section-head"] h3').map((h3) => h3.text())).toEqual([
+        expect(wrapper.findAll('[data-test="section-head"] h2').map((h2) => h2.text())).toEqual([
             'Top result',
             'Tracks',
             'Albums',
@@ -309,7 +383,7 @@ describe('Party search states', () => {
 
     it('shows the error card with Retry that reloads only the results and keeps the query', async () => {
         const wrapper = mountSearch({
-            error: {code: 'timeout', message: 'The music provider took too long to answer.', retryable: true},
+            error: {code: 'timeout', message: "Spotify didn't answer in time.", retryable: true},
         });
 
         const error = wrapper.get('[data-test="results-error"]');
@@ -423,7 +497,7 @@ describe('Party search single-type view', () => {
             {query: 'zzz', type: 'artist'},
         );
 
-        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "zzz"');
+        expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for “zzz”');
     });
 
     it('loads more by fetching the next page in place and appending its rows', async () => {

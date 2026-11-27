@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import {Head, router, useForm} from '@inertiajs/vue3';
 import {computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import PartyModsTab from '@/components/PartyModsTab.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import PartySettingsFields from '@/components/PartySettingsFields.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {buildSettings, cloneDraft, initialModDraft, isModDirty, partyModUrl, partyModUsersUrl} from '@/lib/mods';
 import type {ModDraft} from '@/lib/mods';
 import {initialPartyForm} from '@/lib/partyForm';
-import type {NamedOption, PartyFormValues} from '@/lib/partyForm';
-import {home} from '@/routes';
-import {edit, show, update} from '@/routes/parties';
+import type {NamedOption, PartyFormValues, PlaylistOption} from '@/lib/partyForm';
+import {update} from '@/routes/parties';
 import type {LegacyPartyState, PartyMod} from '@/types';
 
 const TABS = [
@@ -56,7 +57,8 @@ const ANCHOR_TAB: Record<string, TabId> = {
 const props = defineProps<{
     party: PartyFormValues & {code: string};
     providerName: string;
-    playlists: NamedOption[];
+    playlists: PlaylistOption[];
+    hostName?: string | null;
     devices: NamedOption[];
     defaultCountry: string;
     instanceTimezone: string;
@@ -244,13 +246,9 @@ function holdFlagged(): void {
 <template>
     <AppLayout title="Settings">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="edit(party.code).url">Settings</a>
-            </li>
+            <Breadcrumbs
+                :items="[...partyCrumbs({code: party.code, name: party.name ?? party.code}), {label: 'Settings'}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -259,9 +257,10 @@ function holdFlagged(): void {
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <div class="page-header mt-0">
                 <h1>Settings</h1>
+                <p class="settings-lede">How {{ party.name ?? party.code }} runs. Changes apply when you save.</p>
             </div>
 
-            <form class="settings-form" data-test="settings-form" @submit.prevent="save">
+            <form class="settings-form mp-touch" data-test="settings-form" @submit.prevent="save">
                 <div class="underline-tabs" role="tablist" aria-label="Settings sections" @keydown="onTabKeydown">
                     <button
                         v-for="t in TABS"
@@ -301,6 +300,7 @@ function holdFlagged(): void {
                         :tab="activeTab"
                         :form="form"
                         :playlists="playlists"
+                        :host-name="hostName ?? undefined"
                         :devices="devices"
                         :provider-name="providerName"
                         :instance-timezone="instanceTimezone"
@@ -340,6 +340,32 @@ function holdFlagged(): void {
     padding: 0.75rem 0;
     border-top: 1px solid var(--tblr-border-color);
     background: var(--tblr-bg-surface, var(--tblr-body-bg));
+}
+
+.settings-lede {
+    margin: 0.5rem 0 0;
+    max-inline-size: 64ch;
+    color: var(--tblr-secondary-color);
+    font-size: 1rem;
+}
+
+.save-bar .btn {
+    min-block-size: 44px;
+}
+
+@media (max-width: 575.98px) {
+    .save-bar {
+        flex-wrap: wrap;
+        gap: 0.5rem 0.75rem;
+    }
+
+    .save-summary {
+        flex: 1 0 100%;
+    }
+
+    .save-bar .btn-primary {
+        flex: 1;
+    }
 }
 
 .save-summary {

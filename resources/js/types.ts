@@ -15,6 +15,7 @@ export interface PartyMembership {
     code: string;
     name: string;
     canManage: boolean;
+    canModerate?: boolean;
     aiReviewEnabled?: boolean;
     flaggedCount?: number;
 }
@@ -61,6 +62,8 @@ export interface TrackAnnotation {
         score: number;
         vote: number | null;
         requested_by: string | null;
+        requested_by_you?: boolean;
+        requested_ago?: string | null;
     };
     eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
     awaiting_approval?: boolean;
@@ -74,6 +77,8 @@ export interface FlaggedRequest {
     flagged_at: string;
     requester: {id: number; name: string};
     ai_review_url: string | null;
+    rule_url?: string | null;
+    ai_review?: {criterion: string | null; confidence: number | null; reason: string | null} | null;
     track: TrackAnnotation;
 }
 
@@ -114,6 +119,7 @@ export interface LegacyTrack {
     length: number;
     score: number;
     user: string | null;
+    user_id?: number | null;
     fallback_name: string | null;
     css_classes: string;
     decoration?: TrackDecoration | null;
@@ -219,6 +225,7 @@ export interface AdminMod {
     name: string;
     description: string;
     settings: ModSetting[];
+    review_stats?: {last_review_at: string | null; reviews_today: number} | null;
 }
 
 export interface When {
@@ -270,17 +277,28 @@ export interface DashboardRequest extends LegacyUpcomingSong {
     sent: boolean;
 }
 
-export type DashboardIssueCode = 'relink_required' | 'party_inactive' | 'player_stale' | 'premium_required';
+export type DashboardIssueCode =
+    'relink_required' | 'party_inactive' | 'player_stale' | 'premium_required' | 'no_device' | 'outside';
+
+export type DashboardIssueAction = 'activate' | 'open_web_player' | 'start' | 'relink' | 'refresh_devices';
 
 export interface DashboardIssue {
     code: DashboardIssueCode;
     fact: string;
     detail: string;
-    action: {label: string; kind: 'activate'} | null;
+    action: {label: string; kind: DashboardIssueAction} | null;
 }
 
 export interface DashboardProps {
-    party: {code: string; name: string; active: boolean; weighted: boolean; downvotes: boolean; canManage: boolean};
+    party: {
+        code: string;
+        name: string;
+        active: boolean;
+        weighted: boolean;
+        downvotes: boolean;
+        canManage: boolean;
+        canModerate?: boolean;
+    };
     host: {name: string};
     can: {control: boolean; moderate: boolean; player: boolean};
     timezone: string;
@@ -300,6 +318,7 @@ export interface DashboardProps {
         tv: string;
         webPlayer: string | null;
         encoreRelay: string;
+        relink: string;
         join: string;
         fallbackSettings: string;
     };
@@ -337,6 +356,13 @@ export interface SearchOverviewResults {
     albums: AlbumResult[];
     artists: ArtistResult[];
     empty: boolean;
+    weak: boolean;
+}
+
+export interface SearchSuggestions {
+    nowPlaying: {name: string; artist: string; image_url: string | null; query: string} | null;
+    recent: string[];
+    artists: (ArtistResult & {requests: number})[];
 }
 
 export interface SearchPage<T> extends Paginator<T> {
@@ -384,4 +410,49 @@ export interface AiReviewDetail extends AiReviewRow {
     errorMessage: string | null;
     trackId: string;
     trackProvider: string;
+    threshold: number;
+    rejectBelow: number;
+    flagBelow: number;
+    fate: AiReviewFate;
+}
+
+export interface AiReviewFate {
+    state: 'held' | 'queued' | 'played' | 'rejected' | 'gone';
+    requestUrl: string | null;
+    approveUrl: string | null;
+    rejectUrl: string | null;
+    flaggedAt: {iso: string; human: string} | null;
+    playedAt: {iso: string; human: string} | null;
+}
+
+export interface AdminDashboardAction {
+    label: string;
+    url: string;
+}
+
+export interface AdminDashboardParty {
+    code: string;
+    name: string;
+    url: string;
+    owner: string;
+    state: 'playing' | 'paused' | 'stale' | 'idle' | 'error';
+    stateLabel: string | null;
+    stateDetail: string | null;
+    track: {name: string; artists: string; image: string | null; lastKnown: boolean} | null;
+    guestsOnline: number | null;
+    requestsWaiting: number;
+    flagged: number;
+}
+
+export interface AdminDashboardProps {
+    generatedAt: string;
+    liveParties: AdminDashboardParty[];
+    quietFor: string | null;
+    attention: {key: string; severity: 'error' | 'warn'; title: string; detail: string; action: AdminDashboardAction}[];
+    health: {key: string; label: string; status: 'ok' | 'warn' | 'error'; detail: string; link: string | null}[];
+    activity: {
+        stats: {signUpsThisWeek: number; partiesThisWeek: number; playedToday: number; users: number};
+        recent: {icon: string; text: string; at: string}[];
+    };
+    links: {pulse: string; horizon: string; createParty: string};
 }

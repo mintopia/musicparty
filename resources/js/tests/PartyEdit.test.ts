@@ -188,6 +188,48 @@ describe('Parties/Edit save bar', () => {
         expect((w.find('#name').element as HTMLInputElement).value).toBe('P');
     });
 
+    it('counts a picked fallback playlist and a country as changes, then discards both', async () => {
+        const w = render({
+            tab: 'playback',
+            playlists: [
+                {id: 'pl1', name: 'Chill', trackCount: 3},
+                {id: 'pl2', name: 'Party', trackCount: 9},
+            ],
+        });
+        await w.find('#backup_playlist_id').trigger('click');
+        await w.findAll('[data-test="playlist-option"]')[1]!.trigger('click');
+        expect(w.find('[data-test="save-summary"]').text()).toBe('1 change: Playback');
+
+        await w.find('[data-test="discard"]').trigger('click');
+        expect(w.find('[data-test="save-bar"]').exists()).toBe(false);
+        expect(w.find('#backup_playlist_id').text()).toContain('Chill');
+
+        await w.find('[data-test="tab-general"]').trigger('click');
+        await w.find('#country').trigger('click');
+        await w
+            .findAll('[data-test="picker-option"]')
+            .find((o) => o.text().includes('Canada'))!
+            .trigger('click');
+        expect(w.find('[data-test="save-summary"]').text()).toBe('1 change: General');
+    });
+
+    it('saves the picked fallback playlist', async () => {
+        const w = render({
+            tab: 'playback',
+            playlists: [
+                {id: 'pl1', name: 'Chill'},
+                {id: 'pl2', name: 'Party'},
+            ],
+        });
+        await w.find('#backup_playlist_id').trigger('click');
+        await w.findAll('[data-test="playlist-option"]')[1]!.trigger('click');
+        await w.find('[data-test="settings-form"]').trigger('submit');
+        await flushPromises();
+
+        expect(inertia.patch).toHaveBeenCalledTimes(1);
+        expect(w.find('[data-test="save-bar"]').exists()).toBe(false);
+    });
+
     it('saves party fields and only the changed mods', async () => {
         const w = render({tab: 'mods'});
         await w.find('#mod-beta-token').setValue('changed');

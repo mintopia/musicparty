@@ -43,7 +43,7 @@ class Theme extends Model
 
     public const COLOUR_PATTERN = '/^#(?:(?:[0-9a-f]{3}){1,2}|(?:[0-9a-f]{4}){1,2})$/i';
 
-    /** Editable colour tokens, mapped to their `--mp-*` CSS variables; the first two are required. */
+    /** Editable colour tokens, mapped to their `--mp-*` CSS variables. Unset tokens fall back to the stock look. */
     public const COLOUR_TOKENS = [
         'primary' => 'Primary',
         'nav-background' => 'Navigation Background',
@@ -54,6 +54,19 @@ class Theme extends Model
         'success' => 'Success',
         'danger' => 'Danger',
         'warning' => 'Warning',
+    ];
+
+    /** The stock light-mode colour for each token, shown in the editor for tokens left unset. */
+    public const COLOUR_DEFAULTS = [
+        'primary' => '#0054a6',
+        'nav-background' => '#182433',
+        'surface' => '#ffffff',
+        'text' => '#182433',
+        'muted' => '#667382',
+        'border' => '#e6e7e9',
+        'success' => '#2fb344',
+        'danger' => '#d63939',
+        'warning' => '#f76707',
     ];
 
     protected $casts = [

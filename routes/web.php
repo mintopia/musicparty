@@ -15,6 +15,7 @@ use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyAiReviewController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyDashboardController;
+use App\Http\Controllers\PartyJoinController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PartyModsController;
@@ -31,6 +32,8 @@ Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', 
 if (app()->environment('testing')) {
     Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
 }
+Route::get('/', [HomeController::class, 'home'])->name('home');
+Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
@@ -41,8 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::match(['PUT', 'PATCH'], 'login/signup', [UserController::class, 'signup_process'])->name('login.signup.process');
 
     Route::middleware(RedirectOnFirstLoginMiddleware::class)->group(function () {
-
-        Route::get('/', [HomeController::class, 'home'])->name('home');
 
         Route::get('/profile', [UserController::class, 'profile'])->name('user.profile');
         Route::get('/profile/edit', [UserController::class, 'edit'])->name('user.profile.edit');
@@ -55,25 +56,28 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('parties/{party}/player/token', [WebPlayerController::class, 'token'])->name('parties.player.token');
             Route::post('parties/{party}/player/activate', [WebPlayerController::class, 'activate'])->name('parties.player.activate');
         });
-        Route::middleware('can:update,party')->group(function () {
+        Route::middleware('can:moderate,party')->group(function () {
             Route::get('parties/{party}/dashboard', [PartyDashboardController::class, 'show'])->name('parties.dashboard');
+            Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show'])->scoped();
+            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'update', 'destroy'])->scoped();
+            Route::get('parties/{party}/ai-reviews', [PartyAiReviewController::class, 'index'])->name('parties.ai-reviews.index');
+            Route::get('parties/{party}/ai-reviews/{aiReview}', [PartyAiReviewController::class, 'show'])->scopeBindings()->name('parties.ai-reviews.show');
+            Route::resource('parties.moderation', PartyModerationController::class)->only(['index'])->scoped();
+        });
+        Route::middleware('can:update,party')->group(function () {
             Route::get('parties/{party}/mods', [PartyModsController::class, 'edit'])->name('parties.mods.edit');
             Route::get('parties/{party}/mods/users', [ModUserSearchController::class, 'party'])->name('parties.mods.users');
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
-            Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show', 'edit', 'update'])->scoped();
-            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'destroy', 'update'])->scoped();
-            Route::get('parties/{party}/ai-reviews', [PartyAiReviewController::class, 'index'])->name('parties.ai-reviews.index');
-            Route::get('parties/{party}/ai-reviews/{aiReview}', [PartyAiReviewController::class, 'show'])->scopeBindings()->name('parties.ai-reviews.show');
-            Route::resource('parties.moderation', PartyModerationController::class)->except(['show'])->scoped();
-            Route::get('parties/{party}/moderation/{moderation}/delete', [PartyModerationController::class, 'delete'])
-                ->scopeBindings()
-                ->name('parties.moderation.delete');
+            Route::resource('parties.users', PartyMemberController::class)->only(['edit', 'update'])->scoped();
+            Route::resource('parties.moderation', PartyModerationController::class)->except(['index', 'show'])->scoped();
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
         Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
         Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->name('parties.artists.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
+        Route::post('parties/{party}/flagged/approve', [FlaggedRequestController::class, 'bulkApprove'])->name('parties.flagged.bulk-approve');
+        Route::post('parties/{party}/flagged/reject', [FlaggedRequestController::class, 'bulkReject'])->name('parties.flagged.bulk-reject');
         Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
         Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->name('parties.flagged.reject');
         Route::delete('parties/{party}/requests/{upcomingSong}/flag', [FlaggedRequestController::class, 'withdraw'])->scopeBindings()->name('parties.requests.withdraw');
@@ -91,11 +95,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:admin')->name('admin.')->prefix('admin')->group(function () {
             Route::get('/', [AdminHomeController::class, 'dashboard'])->name('dashboard');
 
-            Route::resource('users', AdminUserController::class);
+            Route::resource('users', AdminUserController::class)->except(['create', 'store']);
             Route::get('users/{user}/delete', [AdminUserController::class, 'delete'])->name('users.delete');
             Route::get('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
-            Route::get('users/{user}/sync', [AdminUserController::class, 'sync_tickets'])->name('users.sync');
-
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
 
@@ -109,10 +111,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('settings/socialproviders/{provider}/edit', [SocialProviderController::class, 'edit'])->name('settings.socialproviders.edit');
             Route::match(['PUT', 'PATCH'], 'settings/socialproviders/{provider}', [SocialProviderController::class, 'update'])->name('settings.socialproviders.update');
 
-            Route::prefix('settings')->name('settings.')->group(function () {
-                Route::resource('themes', ThemeController::class)->except(['index', 'show']);
-                Route::get('themes/{theme}/delete', [ThemeController::class, 'delete'])->name('themes.delete');
-            });
+            Route::resource('themes', ThemeController::class)->except(['show']);
+            Route::get('themes/{theme}/delete', [ThemeController::class, 'delete'])->name('themes.delete');
         });
     });
 });
@@ -123,3 +123,5 @@ Route::middleware('guest')->group(function () {
     Route::get('login/{socialprovider:code}', [UserController::class, 'login_redirect'])->name('login.redirect');
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
 });
+
+Route::fallback(fn () => abort(404));

@@ -122,7 +122,7 @@ describe('Flagged requests page', () => {
     it('shows an empty state', () => {
         const wrapper = mount(Flagged, {props: {party, playerState, moderationTabs, flagged: []}});
 
-        expect(wrapper.get('[data-test="empty-state"]').text()).toContain('No flagged requests');
+        expect(wrapper.get('[data-test="empty-state"]').text()).toContain('Nothing waiting for approval');
     });
 
     it('approves a request and removes it', async () => {
@@ -175,6 +175,98 @@ describe('Flagged requests page', () => {
     });
 });
 
+describe('Flagged requests bulk and notices', () => {
+    beforeEach(() => {
+        calls = [];
+        echo.handlers = {};
+        inertia.reload.mockReset();
+        mockAxios();
+    });
+
+    afterEach(() => {
+        axios.defaults.adapter = originalAdapter;
+    });
+
+    const props = (flagged: FlaggedRequest[], extra = {}) => ({
+        party: {...party, canManage: true, flagRequests: true},
+        playerState,
+        moderationTabs,
+        flagged,
+        ...extra,
+    });
+
+    it('selects rows, shows the bulk bar and bulk approves', async () => {
+        const wrapper = mount(Flagged, {props: props([item(1), item(2), item(3)])});
+        expect(wrapper.find('[data-test="bulk-bar"]').exists()).toBe(false);
+
+        const boxes = wrapper.findAll('[data-test="select"]');
+        await boxes[0].setValue(true);
+        await boxes[2].setValue(true);
+        expect(wrapper.get('[data-test="bulk-count"]').text()).toBe('2 selected');
+
+        await wrapper.get('[data-test="bulk-approve"]').trigger('click');
+        await flushPromises();
+
+        expect(calls[0]).toMatchObject({method: 'post', url: '/parties/ABCD/flagged/approve'});
+        expect(JSON.parse(calls[0].data as string)).toEqual({ids: [1, 3]});
+        expect(wrapper.findAll('[data-test="flagged-item"]')).toHaveLength(1);
+        expect(wrapper.find('[data-test="bulk-bar"]').exists()).toBe(false);
+    });
+
+    it('select all then bulk rejects with a message', async () => {
+        const wrapper = mount(Flagged, {props: props([item(1), item(2)])});
+
+        await wrapper.get('[data-test="select-all"]').setValue(true);
+        await wrapper.get('[data-test="bulk-reject"]').trigger('click');
+        await wrapper.get('[data-test="reject-message"]').setValue('Not tonight');
+        await wrapper.get('.btn-danger').trigger('click');
+        await flushPromises();
+
+        expect(calls[0].url).toBe('/parties/ABCD/flagged/reject');
+        expect(JSON.parse(calls[0].data as string)).toEqual({ids: [1, 2], message: 'Not tonight'});
+        expect(wrapper.find('[data-test="empty-state"]').exists()).toBe(true);
+    });
+
+    it('shows the rule link, or the AI review summary', () => {
+        const ai = {
+            ...item(2),
+            ai_review_url: '/parties/ABCD/ai-reviews/5',
+            ai_review: {criterion: 'Vibe', confidence: 0.71, reason: 'Novelty'},
+        };
+        const rule = {...item(1), rule_url: '/parties/ABCD/moderation'};
+        const wrapper = mount(Flagged, {props: props([rule, ai])});
+
+        expect(wrapper.get('[data-test="rule-link"]').attributes('href')).toBe('/parties/ABCD/moderation');
+        const text = wrapper.text();
+        expect(text).toContain('Rule: Reason 1');
+        expect(text).toContain('AI review: Vibe, 71% confident.');
+        expect(text).toContain('Novelty');
+    });
+
+    it('filters by chip', async () => {
+        const ai = {...item(2), ai_review_url: '/x'};
+        const wrapper = mount(Flagged, {props: props([item(1), ai])});
+
+        await wrapper.findAll('[data-test="search-chip"]')[1].trigger('click');
+
+        expect(wrapper.findAll('[data-test="flagged-item"]')).toHaveLength(1);
+    });
+
+    it('warns when requests are not held and links managers to turn it on', () => {
+        const held = mount(Flagged, {props: props([])});
+        expect(held.find('[data-test="not-held"]').exists()).toBe(false);
+
+        const notHeld = mount(Flagged, {props: props([], {party: {...party, canManage: true, flagRequests: false}})});
+        expect(notHeld.get('[data-test="turn-on"]').attributes('href')).toBe('/parties/ABCD/edit');
+
+        const moderator = mount(Flagged, {
+            props: props([], {party: {...party, canManage: false, flagRequests: false}}),
+        });
+        expect(moderator.find('[data-test="not-held"]').exists()).toBe(true);
+        expect(moderator.find('[data-test="turn-on"]').exists()).toBe(false);
+    });
+});
+
 describe('Search withdraw', () => {
     const idle = playerState;
 
@@ -194,7 +286,15 @@ describe('Search withdraw', () => {
             props: {
                 party: {...party, downvotes: false, canManage: false},
                 params: {query: 'q', perPage: 10},
-                results: {view: 'overview', top: null, tracks: [awaiting], albums: [], artists: [], empty: false},
+                results: {
+                    view: 'overview',
+                    top: null,
+                    tracks: [awaiting],
+                    albums: [],
+                    artists: [],
+                    empty: false,
+                    weak: false,
+                },
                 playerState: idle,
                 moderationTabs,
             },

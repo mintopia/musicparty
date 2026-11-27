@@ -112,3 +112,21 @@ it('returns validation errors to the form and saves valid settings with checkbox
         ->explicit->toBeFalse()
         ->max_requests->toBe(3);
 });
+
+it('stores a fallback playlist chosen from the picker or given as a link', function () {
+    $admin = partyFormAdmin();
+    $party = Party::factory()->for($admin)->create(['provider_id' => 'spotify', 'backup_playlist_id' => 'OLD']);
+
+    $this->actingAs($admin)->patch(route('parties.update', $party->code), [
+        'name' => $party->name,
+        'backup_playlist_id' => 'fake-playlist',
+    ])->assertRedirect(route('parties.edit', $party->code));
+    expect($party->fresh()->backup_playlist_id)->toBe('fake-playlist');
+
+    $this->actingAs($admin)->patch(route('parties.update', $party->code), [
+        'name' => $party->name,
+        'backup_playlist_id' => 'other',
+        'custom_backup_playlist_id' => 'LINKED',
+    ])->assertRedirect(route('parties.edit', $party->code));
+    expect($party->fresh()->backup_playlist_id)->toBe('LINKED');
+});

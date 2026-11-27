@@ -77,12 +77,12 @@ it('broadcasts an upcoming song update on the private party channel with the son
         ->and($channels[0])->toBeInstanceOf(PrivateChannel::class)
         ->and($channels[0]->name)->toBe('private-party.RTPT')
         ->and($payload)->toHaveKeys([
-            'score', 'queued_at', 'user', 'fallback_name', 'css_classes', 'id', 'created_at', 'updated_at', 'vote',
+            'score', 'queued_at', 'user', 'user_id', 'fallback_name', 'css_classes', 'id', 'created_at', 'updated_at', 'vote',
         ])
         ->and($payload['id'])->toBe($song->id)
         ->and($payload['vote'])->toBeNull()
         ->and($payload['queued_at'])->toBeNull()
-        ->and($payload['fallback_name'])->toBe('Fallback Track')
+        ->and($payload['fallback_name'])->toBe('From Fallback Playlist')
         ->and($payload['created_at'])->toBe($song->created_at->toIso8601String());
 });
 

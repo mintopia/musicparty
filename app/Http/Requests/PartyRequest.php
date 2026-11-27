@@ -41,6 +41,15 @@ class PartyRequest extends FormRequest
     {
         return [function (Validator $validator): void {
             $party = $this->route('party');
+            $newProviderId = $this->input('provider_id');
+            if (! $party instanceof Party && is_string($newProviderId) && ! $validator->errors()->has('provider_id')) {
+                $factory = app(MusicProviderFactory::class);
+                if (! $factory->forUser($newProviderId, $this->resolveAuthenticatedUser($this), Purpose::Control)->isLinked()) {
+                    $validator->errors()->add('provider_id', 'Link your account for this music provider before creating a party.');
+                }
+
+                return;
+            }
             $playlistId = $this->input('context_playlist_id');
             if (! $party instanceof Party || ! is_string($playlistId) || $playlistId === '' || $playlistId === $party->context_playlist_id || $validator->errors()->has('context_playlist_id')) {
                 return;
@@ -57,6 +66,19 @@ class PartyRequest extends FormRequest
                 $validator->errors()->add('context_playlist_id', 'Use the playlist named "'.ContextPlaylist::NAME."\" owned by {$party->user->nickname}'s Spotify account");
             }
         }];
+    }
+
+    public static function normalisePlaylistId(string $input): string
+    {
+        $input = trim($input);
+        if (preg_match('#^spotify:playlist:([^:?/\s]+)$#i', $input, $matches) === 1) {
+            return $matches[1];
+        }
+        if (preg_match('#^https?://open\.spotify\.com/(?:intl-[a-z-]+/)?playlist/([^/?\#\s]+)#i', $input, $matches) === 1) {
+            return $matches[1];
+        }
+
+        return $input;
     }
 
     /**
@@ -86,11 +108,15 @@ class PartyRequest extends FormRequest
             'country' => 'sometimes|string|alpha|size:2',
             'timezone' => 'sometimes|nullable|string|timezone:all',
             'backup_playlist_id' => [
-                'required',
+                $party instanceof Party ? 'required' : 'nullable',
                 'string',
                 'in:other,'.collect($playlists)->pluck('id')->implode(','),
             ],
-            'custom_backup_playlist_id' => 'required_if:backup_playlist_id,other|string|nullable',
+            'custom_backup_playlist_id' => ['required_if:backup_playlist_id,other', 'nullable', 'string', function (string $attribute, mixed $value, \Closure $fail): void {
+                if ($this->input('backup_playlist_id') === 'other' && ! preg_match('/^[A-Za-z0-9]+$/', self::normalisePlaylistId((string) $value))) {
+                    $fail('Enter a Spotify playlist link or ID.');
+                }
+            }],
             'allow_requests' => 'sometimes|boolean',
             'explicit' => 'sometimes|boolean',
             'downvotes' => 'sometimes|boolean',

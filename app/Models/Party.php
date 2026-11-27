@@ -121,7 +121,7 @@ class Party extends Model
         'downvotes' => true,
         'poll' => false,
         'active' => true,
-        'show_qrcode' => false,
+        'show_qrcode' => true,
         'flag_requests' => false,
     ];
 
@@ -318,6 +318,18 @@ class Party extends Model
         }
 
         return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
+    }
+
+    public function canBeModeratedBy(?User $user): bool
+    {
+        if ($user === null) {
+            return false;
+        }
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+
+        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner', 'moderator']))->exists();
     }
 
     public function pushUpdate(): void

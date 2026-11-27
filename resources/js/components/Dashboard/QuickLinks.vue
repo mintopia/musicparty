@@ -2,7 +2,7 @@
 import {computed, onBeforeUnmount, ref} from 'vue';
 import type {DashboardProps} from '@/types';
 
-const props = defineProps<{links: DashboardProps['links']}>();
+const props = withDefaults(defineProps<{links: DashboardProps['links']; canManage?: boolean}>(), {canManage: true});
 
 const copied = ref(false);
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -12,8 +12,18 @@ const items = computed(() => [
         ? [{icon: 'ti-player-play', label: 'Web Player', href: props.links.webPlayer, external: false}]
         : []),
     {icon: 'ti-device-tv', label: 'TV view', href: props.links.tv, external: true},
-    {icon: 'ti-broadcast', label: 'Encore relay', href: props.links.encoreRelay, external: false},
+    ...(props.canManage
+        ? [{icon: 'ti-broadcast', label: 'Encore relay', href: props.links.encoreRelay, external: false}]
+        : []),
 ]);
+
+const joinPath = computed(() => {
+    try {
+        return new URL(props.links.join).pathname;
+    } catch {
+        return props.links.join;
+    }
+});
 
 function fallbackCopy(text: string): boolean {
     const area = document.createElement('textarea');
@@ -58,7 +68,7 @@ onBeforeUnmount(() => clearTimeout(timer));
 
 <template>
     <div class="card" data-test="quick-links">
-        <div class="card-header"><h3 class="card-title">Quick links</h3></div>
+        <div class="card-header"><h2 class="card-title">Quick links</h2></div>
         <div class="card-body">
             <div class="row g-2 ql-grid">
                 <div v-for="item in items" :key="item.label" class="col-6">
@@ -71,11 +81,19 @@ onBeforeUnmount(() => clearTimeout(timer));
                     >
                 </div>
                 <div class="col-6">
-                    <button type="button" class="btn btn-primary w-100" data-test="copy-join" @click="copyJoin">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary w-100"
+                        data-test="copy-join"
+                        @click="copyJoin"
+                    >
                         <i class="ti" :class="copied ? 'ti-check' : 'ti-copy'"></i
                         >{{ copied ? 'Copied' : 'Copy join link' }}
                     </button>
                 </div>
+            </div>
+            <div class="text-secondary small mt-3" data-test="join-url">
+                Guests join at <b class="text-body">{{ joinPath }}</b>
             </div>
         </div>
     </div>

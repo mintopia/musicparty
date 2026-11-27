@@ -9,6 +9,16 @@ enum PlaybackSource: string
     case WebPlayer = 'web_player';
     case Encore = 'encore';
 
+    public function label(): string
+    {
+        return match ($this) {
+            self::Polling => 'Polling',
+            self::Webhook => 'Webhook',
+            self::WebPlayer => 'Web Player',
+            self::Encore => 'Encore',
+        };
+    }
+
     public function isPushed(): bool
     {
         return $this === self::WebPlayer || $this === self::Encore;

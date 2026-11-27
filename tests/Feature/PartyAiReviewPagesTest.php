@@ -102,6 +102,17 @@ it('filters by criterion and exposes it on each row', function () {
             ->where('filters.criterion', 'vibe'));
 });
 
+it('reports unfiltered outcome and criterion counts for the chips', function () {
+    AiReview::factory()->for($this->party)->create(['outcome' => AiReviewOutcome::Flag, 'criterion' => AiReviewCriterion::Troll]);
+    AiReview::factory()->for($this->party)->create(['outcome' => AiReviewOutcome::Allow, 'criterion' => null]);
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'outcome' => 'flag']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts.total', 2)
+            ->where('counts.outcome', ['allow' => 1, 'flag' => 1])
+            ->where('counts.criterion', ['troll' => 1]));
+});
+
 it('rejects an unknown criterion filter', function () {
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'criterion' => 'bogus']))->assertSessionHasErrors('criterion');
 });
@@ -164,6 +175,32 @@ it('renders the review as its own page with the request, response and error', fu
             ->where('review.endpointHost', 'api.typesafe.ai')
             ->where('backUrl', route('parties.ai-reviews.index', $this->party->code))
             ->has('moderationTabs'));
+});
+
+it('shows the threshold and the fate of a flagged Request with its approve link', function () {
+    $upcoming = UpcomingSong::factory()->for($this->party)->create(['flagged_at' => now(), 'flag_reason' => 'Vibe']);
+    $review = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Flag)->create(['upcoming_song_id' => $upcoming->id, 'score' => 1.9, 'confidence' => 0.82]);
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('review.threshold', 0.5)
+            ->where('review.rejectBelow', 0.75)
+            ->where('review.flagBelow', 2.5)
+            ->where('review.fate.state', 'held')
+            ->where('review.fate.approveUrl', route('parties.flagged.approve', [$this->party->code, $upcoming->id]))
+            ->where('review.fate.requestUrl', route('parties.songs.show', [$this->party->code, $upcoming->id])));
+
+    $upcoming->forceFill(['flagged_at' => null])->save();
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
+        ->assertInertia(fn (Assert $page) => $page->where('review.fate.state', 'queued')->where('review.fate.approveUrl', null));
+});
+
+it('reports a rejected review whose Request never existed', function () {
+    $review = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Reject)->create(['upcoming_song_id' => null]);
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
+        ->assertInertia(fn (Assert $page) => $page->where('review.fate.state', 'rejected')->where('review.fate.requestUrl', route('parties.songs.index', $this->party->code)));
 });
 
 it('links back to the list with the filters it was opened from', function () {

@@ -134,6 +134,21 @@ describe('buildNavigation', () => {
         ]);
     });
 
+    it('shows moderators everything but Settings', () => {
+        const items = buildNavigation(
+            makeProps({parties: [{code: 'ABC', name: 'Fun', canManage: false, canModerate: true}]}),
+        );
+
+        expect(titles(items.find((item) => item.key === 'party:ABC')?.children ?? [])).toEqual([
+            'Dashboard',
+            'Queue',
+            'Search',
+            'Requests',
+            'Moderation',
+            'Members',
+        ]);
+    });
+
     it('carries the flagged count on Moderation', () => {
         const items = buildNavigation(
             makeProps({parties: [{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 3}]}),
@@ -352,11 +367,11 @@ describe('live moderation badges', () => {
             props: {code: 'ABC', tabs: {flaggedCount: 1, aiReviewEnabled: false}, active: 'flagged'},
         });
 
-        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged1');
+        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged Requests1');
 
         fire('FlaggedRequestAdded', {id: 5, flaggedCount: 4});
         await tabs.vm.$nextTick();
-        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged4');
+        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged Requests4');
 
         wrapper.unmount();
     });

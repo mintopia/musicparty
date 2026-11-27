@@ -5,7 +5,6 @@ use App\Models\ProviderSetting;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SocialProvider;
-use App\Models\Theme;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -30,25 +29,12 @@ it('keeps non-admins and guests out of the admin settings routes', function (str
     ['patch', 'admin.settings.socialproviders.update'],
 ]);
 
-it('renders the dashboard stats', function () {
-    $this->actingAs($this->admin)->get(route('admin.dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Dashboard')
-            ->where('stats.users.total', 1)
-            ->where('stats.users.lastWeek', 1));
-});
-
-it('renders settings, themes and providers', function () {
-    $theme = Theme::factory()->create(['readonly' => true]);
-
+it('renders settings and providers', function () {
     $this->actingAs($this->admin)->get(route('admin.settings.index'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Settings/Index')
             ->has('settings')
-            ->where('themes.0.id', $theme->id)
-            ->where('themes.0.readonly', true)
             ->where('socialProviders.0.code', 'discord')
             ->where('socialProviders.0.login_return_url', route('login.return', 'discord')));
 });
@@ -77,8 +63,8 @@ it('edits and updates a social provider', function () {
     $setting = new ProviderSetting;
     $setting->forceFill([
         'provider_type' => SocialProvider::class, 'provider_id' => $this->provider->id,
-        'code' => 'client_id', 'name' => 'Client ID', 'type' => SettingType::stString,
-        'encrypted' => false, 'validation' => 'required', 'order' => 1,
+        'code' => 'client_secret', 'name' => 'Client secret', 'type' => SettingType::stString,
+        'encrypted' => true, 'validation' => 'required', 'order' => 1,
     ])->save();
 
     $this->actingAs($this->admin)->get(route('admin.settings.socialproviders.edit', $this->provider))
@@ -86,14 +72,15 @@ it('edits and updates a social provider', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/SocialProviders/Edit')
             ->where('provider.can_be_renamed', true)
-            ->where('settings.0.code', 'client_id')
+            ->where('provider.needs_secret', true)
+            ->where('settings.0.code', 'client_secret')
             ->where('settings.0.required', true));
 
     $this->actingAs($this->admin)->patch(route('admin.settings.socialproviders.update', $this->provider), ['name' => ''])
-        ->assertSessionHasErrors(['name', 'client_id']);
+        ->assertSessionHasErrors(['name', 'client_secret']);
 
     $this->actingAs($this->admin)->patch(route('admin.settings.socialproviders.update', $this->provider), [
-        'name' => 'Renamed', 'client_id' => 'abc', 'enabled' => true,
+        'name' => 'Renamed', 'client_secret' => 'abc', 'enabled' => true,
     ])->assertRedirect(route('admin.settings.index'))
         ->assertSessionHas('successMessage', 'Renamed has been updated');
 

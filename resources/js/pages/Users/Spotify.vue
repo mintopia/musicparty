@@ -1,87 +1,114 @@
 <script setup lang="ts">
+import {computed} from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head} from '@inertiajs/vue3';
+import PageHead from '@/components/PageHead.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {create as linkAccount} from '@/routes/linkedaccounts';
 import {create as createParty} from '@/routes/parties';
 
-defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
+const props = defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
+
+const missing = computed(() => [props.spotify ? null : 'Playback', props.search ? null : 'Search'].filter(Boolean));
 </script>
 
 <template>
-    <AppLayout title="Link Spotify Account">
+    <AppLayout title="Spotify">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Link Spotify Account'}]" />
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Spotify'}]" />
         </template>
-        <Head title="Link Spotify Account" />
-        <div class="page-header mt-2">
-            <h1>Link Spotify Account</h1>
-        </div>
+        <Head title="Spotify" />
+        <div class="mp-narrow">
+            <PageHead title="Spotify" summary="Music Party uses two Spotify links. Each does one job." />
 
-        <p>
-            For Music Party to work, we need to link your Spotify account twice. The first link is for controlling the
-            party and the second link is for guests to search for music.
-        </p>
-
-        <div class="row row-deck">
-            <div class="col-md-3 offset-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <template v-if="spotify">
-                            <p class="text-center">
-                                <i class="icon ti ti-music-bolt icon-lg text-success m-6"></i>
-                            </p>
-                            <div class="mt-2 text-center">{{ spotify.name }}</div>
-                        </template>
-                        <template v-else>
-                            <p class="text-center">
-                                <i class="icon ti ti-music-bolt icon-lg text-muted m-6"></i>
-                            </p>
-                            <div class="mt-2">
-                                <a class="btn btn-success w-100" :href="linkAccount('spotify').url">
-                                    <i class="icon ti ti-brand-spotify"></i>
-                                    Link with Spotify
-                                </a>
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <div class="card mp-link-card h-100" data-test="link-playback">
+                        <div class="card-body">
+                            <div class="mp-link-head">
+                                <span
+                                    class="avatar avatar-md rounded"
+                                    :class="spotify ? 'bg-green-lt text-green' : 'bg-secondary-lt'"
+                                >
+                                    <i class="icon ti ti-music-bolt"></i>
+                                </span>
+                                <h2 class="h3 card-title mb-0">Playback</h2>
                             </div>
-                        </template>
+                            <p>Lets Music Party play on your Spotify for parties you host.</p>
+                            <div class="mp-link-state">
+                                <template v-if="spotify">
+                                    <span class="status-dot status-green"></span>Linked as {{ spotify.name }}
+                                </template>
+                                <template v-else><span class="status-dot status-secondary"></span>Not linked</template>
+                            </div>
+                            <a
+                                class="btn"
+                                :class="spotify ? 'btn-outline-secondary' : 'btn-success'"
+                                :href="linkAccount('spotify').url"
+                            >
+                                <i class="icon ti" :class="spotify ? 'ti-refresh' : 'ti-brand-spotify'"></i>
+                                {{ spotify ? 'Re-link' : 'Link Spotify for playback' }}
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card mp-link-card h-100" data-test="link-search">
+                        <div class="card-body">
+                            <div class="mp-link-head">
+                                <span
+                                    class="avatar avatar-md rounded"
+                                    :class="search ? 'bg-green-lt text-green' : 'bg-secondary-lt'"
+                                >
+                                    <i class="icon ti ti-music-search"></i>
+                                </span>
+                                <h2 class="h3 card-title mb-0">Search</h2>
+                            </div>
+                            <p>Lets guests search Spotify's catalogue.</p>
+                            <div class="mp-link-state">
+                                <template v-if="search">
+                                    <span class="status-dot status-green"></span>Linked as {{ search.name }}
+                                </template>
+                                <template v-else><span class="status-dot status-secondary"></span>Not linked</template>
+                            </div>
+                            <a
+                                class="btn"
+                                :class="search ? 'btn-outline-secondary' : 'btn-success'"
+                                :href="linkAccount('spotifysearch').url"
+                            >
+                                <i class="icon ti" :class="search ? 'ti-refresh' : 'ti-brand-spotify'"></i>
+                                {{ search ? 'Re-link' : 'Link Spotify for search' }}
+                            </a>
+                        </div>
                     </div>
                 </div>
             </div>
-            <div class="col-md-3">
-                <div class="card">
-                    <div class="card-body">
-                        <template v-if="search">
-                            <p class="text-center">
-                                <i class="icon ti ti-music-search icon-lg text-success m-6"></i>
-                            </p>
-                            <div class="mt-2 text-center">{{ search.name }}</div>
+
+            <div class="card">
+                <div class="card-body d-flex flex-wrap align-items-center gap-3">
+                    <div class="flex-fill">
+                        <template v-if="spotify && search">
+                            <h2 class="h3 mb-1">Ready to host</h2>
+                            <p class="text-secondary mb-0">Both links are working. Create a party whenever you like.</p>
                         </template>
                         <template v-else>
-                            <p class="text-center">
-                                <i class="icon ti ti-music-search icon-lg text-muted m-6"></i>
+                            <h2 class="h3 mb-1">Link both to host a party</h2>
+                            <p class="text-secondary mb-0" data-test="link-missing">
+                                {{ missing.join(' and ') }}
+                                {{ missing.length === 1 ? 'still needs' : 'still need' }} linking.
                             </p>
-                            <div class="mt-2">
-                                <a class="btn btn-success w-100" :href="linkAccount('spotifysearch').url">
-                                    <i class="icon ti ti-brand-spotify"></i>
-                                    Link with Spotify (Search)
-                                </a>
-                            </div>
                         </template>
                     </div>
+                    <a v-if="spotify && search" :href="createParty().url" class="btn btn-primary">
+                        <i class="icon ti ti-playlist-add"></i>
+                        Create party
+                    </a>
+                    <button v-else class="btn btn-primary" disabled>
+                        <i class="icon ti ti-playlist-add"></i>
+                        Create party
+                    </button>
                 </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-md-6 offset-md-3 mt-2">
-                <a v-if="spotify && search" :href="createParty().url" class="btn btn-primary w-100">
-                    <i class="icon ti ti-playlist-add"></i>
-                    Create Party
-                </a>
-                <button v-else class="btn btn-primary w-100" disabled>
-                    <i class="icon ti ti-playlist-add"></i>
-                    Create Party
-                </button>
             </div>
         </div>
     </AppLayout>

@@ -5,9 +5,15 @@ import {activate, control, devices} from '@/routes/api/v1/parties';
 import {start} from '@/routes/api/v1/parties/playback';
 import {destroy, play} from '@/routes/api/v1/parties/upcomingsongs';
 import {flaggedApproveUrl, flaggedRejectUrl} from '@/lib/flagged';
-import type {DashboardDevice, DashboardStartState, DashboardStartTarget} from '@/types';
+import type {
+    DashboardDevice,
+    DashboardRequest,
+    DashboardStartState,
+    DashboardStartTarget,
+    LegacyPlaybackStatus,
+} from '@/types';
 
-export type PanelState = DashboardStartState | 'starting' | 'rate_limited';
+export type PanelState = DashboardStartState | 'starting' | 'rate_limited' | 'stale';
 export type ControlAction = 'play' | 'pause' | 'next' | 'previous' | 'seek';
 
 export interface ApiError {
@@ -26,6 +32,35 @@ export function formatMs(ms: number): string {
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
+export interface StartEstimate {
+    startsAt: number;
+    precedingEnd: number;
+    precedingName: string | null;
+}
+
+export function estimateStarts(
+    items: DashboardRequest[],
+    status: LegacyPlaybackStatus | null | undefined,
+    nowTrackName: string | null,
+    nowMs: number,
+): (StartEstimate | null)[] {
+    if (!status) {
+        return items.map(() => null);
+    }
+    const elapsed = status.isPlaying ? Math.max(0, nowMs - Date.parse(status.sampledAt)) : 0;
+    let cursor = nowMs + Math.max(0, status.length - status.progressMs - elapsed);
+    let previous = nowTrackName;
+
+    return items.map((item) => {
+        const scheduled = item.scheduled_for ? Date.parse(item.scheduled_for) : Number.NaN;
+        const startsAt = Number.isNaN(scheduled) ? cursor : Math.max(cursor, scheduled);
+        const estimate = {startsAt, precedingEnd: cursor, precedingName: previous};
+        cursor = startsAt + item.length;
+        previous = item.name;
+        return estimate;
+    });
+}
+
 export function errorCode(error: unknown): ApiError {
     if (axios.isAxiosError(error)) {
         const data = (error.response?.data ?? {}) as {message?: string; code?: string; retryAfter?: number};
@@ -37,25 +72,6 @@ export function errorCode(error: unknown): ApiError {
         };
     }
     return {status: null, code: null, message: 'Something went wrong. Try again.', retryAfter: null};
-}
-
-export function badgeFor(state: PanelState): {text: string; cls: string} {
-    switch (state) {
-        case 'outside':
-            return {text: 'Outside the party', cls: 'bg-warning text-warning-fg'};
-        case 'starting':
-            return {text: 'Starting', cls: 'bg-primary text-primary-fg'};
-        case 'no_device':
-            return {text: 'No device', cls: 'bg-danger text-danger-fg'};
-        case 'premium_required':
-            return {text: 'Premium required', cls: 'bg-danger text-danger-fg'};
-        case 'relink_required':
-            return {text: 'Re-link needed', cls: 'bg-warning text-warning-fg'};
-        case 'rate_limited':
-            return {text: 'Spotify busy', cls: 'bg-warning text-warning-fg'};
-        default:
-            return {text: 'Not playing', cls: 'bg-secondary text-secondary-fg'};
-    }
 }
 
 export function startLabel(state: PanelState, host: string): string {

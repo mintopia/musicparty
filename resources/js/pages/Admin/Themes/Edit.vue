@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
+import {adminThemesCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ThemeForm from '@/components/ThemeForm.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -14,8 +14,9 @@ const props = defineProps<{
         active: boolean;
         dark_mode: boolean;
         readonly: boolean;
+        updated_at: string | null;
     };
-    colourTokens: {token: string; label: string; required: boolean}[];
+    colourTokens: {token: string; label: string; default: string}[];
 }>();
 
 const form = useForm({
@@ -27,33 +28,31 @@ const form = useForm({
 });
 
 function submit(): void {
-    form.patch(`/admin/settings/themes/${props.theme.id}`);
+    form.patch(`/admin/themes/${props.theme.id}`);
 }
 </script>
 
 <template>
     <AppLayout :title="`Edit ${theme.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: 'Edit Theme'}]" />
+            <Breadcrumbs :items="[...adminThemesCrumbs(), {label: `Edit ${theme.name}`}]" />
         </template>
         <Head :title="`Edit ${theme.name}`" />
-        <div class="page-header mt-0">
-            <h1>Edit {{ theme.name }}</h1>
-        </div>
-
-        <div class="col-md-8 offset-md-2">
-            <form class="card" @submit.prevent="submit">
-                <div v-if="theme.readonly" class="alert alert-info alert-important m-4">
-                    It is not possible to edit this theme, you can only set it to be active and change dark mode.
+        <form @submit.prevent="submit">
+            <div class="mp-page-head">
+                <div>
+                    <h1>Edit {{ theme.name }}</h1>
+                    <p>{{ theme.active ? `Active since ${theme.updated_at}.` : 'Not in use.' }}</p>
                 </div>
-                <ThemeForm :form="form" :readonly="theme.readonly" :colour-tokens="colourTokens" />
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
-                    </div>
+                <div class="btn-list mp-btn-row">
+                    <Link href="/admin/themes" class="btn btn-link">Cancel</Link>
+                    <button type="submit" class="btn btn-primary" :disabled="form.processing">Save changes</button>
                 </div>
-            </form>
-        </div>
+            </div>
+            <div v-if="theme.readonly" class="alert alert-info alert-important mb-4">
+                It is not possible to edit this theme, you can only set it to be active and change dark mode.
+            </div>
+            <ThemeForm :form="form" :readonly="theme.readonly" :colour-tokens="colourTokens" />
+        </form>
     </AppLayout>
 </template>

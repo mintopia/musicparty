@@ -20,13 +20,13 @@ enum PartyModerationType
     public static function getHumanReadableTypes(): Collection
     {
         return collect([
-            self::mtName->name => 'Track Name',
+            self::mtName->name => 'Track name',
             self::mtId->name => 'Track ID',
-            self::mtArtist->name => 'Artist Name',
+            self::mtArtist->name => 'Artist name',
             self::mtArtistId->name => 'Artist ID',
-            self::mtAlbum->name => 'Album Name',
+            self::mtAlbum->name => 'Album name',
             self::mtAlbumId->name => 'Album ID',
-            self::mtISRC->name => 'ISRC Code',
+            self::mtISRC->name => 'ISRC code',
         ]);
     }
 

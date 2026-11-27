@@ -2,7 +2,10 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
+import {ref} from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
+import PageHead from '@/components/PageHead.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {LegacyPartyState} from '@/types';
@@ -35,6 +38,14 @@ const form = useForm({
     notes: props.moderation.notes ?? '',
 });
 
+const deleteForm = useForm({});
+const confirmingDelete = ref(false);
+const deleteMessage = `The rule ${props.moderation.type_name} is ${props.moderation.value} will stop ${props.moderation.action === 'flag' ? 'flagging' : 'rejecting'} Requests. Requests already waiting in Flagged Requests stay there.`;
+
+function destroy(): void {
+    deleteForm.delete(base);
+}
+
 function submit(): void {
     form.patch(base);
 }
@@ -43,31 +54,43 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${moderation.type_name} rule`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Edit rule'}]" />
+            <Breadcrumbs
+                :items="[
+                    ...moderationCrumbs(party),
+                    {label: 'Rules', href: base.replace(/\/\d+$/, '')},
+                    {label: 'Edit rule'},
+                ]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Edit ${moderation.type_name} rule`" />
-        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-            <div class="page-header mt-0">
-                <h1>Edit {{ moderation.type_name }} rule</h1>
-            </div>
-
-            <div>
-                <form class="card" @submit.prevent="submit">
-                    <ModerationForm :form="form" :types="types" :actions="actions" />
-                    <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                            <Link :href="`${base}/delete`" class="btn btn-link text-danger">Delete</Link>
-                            <button type="submit" class="btn ms-auto btn-primary" :disabled="form.processing">
-                                Save
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+        <div class="mp-narrow mp-touch">
+            <PageHead title="Edit rule" summary="Rules look at every new Request before it reaches the Queue." />
+            <form class="card" @submit.prevent="submit">
+                <ModerationForm :form="form" :types="types" :actions="actions" />
+                <div class="card-footer d-flex gap-2">
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger"
+                        data-test="delete-rule"
+                        @click="confirmingDelete = true"
+                    >
+                        <i class="icon ti ti-trash" aria-hidden="true"></i>Delete rule
+                    </button>
+                    <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link ms-auto">Cancel</Link>
+                    <button type="submit" class="btn btn-primary" :disabled="form.processing">Save rule</button>
+                </div>
+            </form>
         </div>
+        <ConfirmDialog
+            v-model="confirmingDelete"
+            title="Delete this rule?"
+            :message="deleteMessage"
+            confirm-label="Delete rule"
+            cancel-label="Keep rule"
+            @confirm="destroy"
+        />
     </AppLayout>
 </template>

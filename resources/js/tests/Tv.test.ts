@@ -47,7 +47,7 @@ const track = (extra: Record<string, unknown> = {}) => ({
     score: 1,
     user: null,
     css_classes: '',
-    fallback_name: 'Fallback Track',
+    fallback_name: 'From Fallback Playlist',
     ...extra,
 });
 
@@ -173,6 +173,7 @@ describe('Parties/Tv', () => {
 
         expect(wrapper.get('.tv-join').text()).toContain('Scan or join with code');
         expect(wrapper.get('.tv-join [data-test="join-code"]').text()).toBe('ABC');
+        expect(wrapper.find('[data-test="join-url"]').exists()).toBe(false);
         expect(wrapper.get('.tv-join [data-test="tv-qr"]').classes()).toContain('tv-qr-small');
         wrapper.unmount();
     });
@@ -196,6 +197,7 @@ describe('Parties/Tv', () => {
         );
         expect(wrapper.get('[data-test="nothing-playing"] [data-test="tv-qr"]').classes()).toContain('tv-qr-large');
         expect(wrapper.get('[data-test="join-code"]').text()).toBe('ABC');
+        expect(wrapper.find('[data-test="join-url"]').exists()).toBe(false);
         wrapper.unmount();
     });
 
@@ -264,7 +266,7 @@ describe('Parties/Tv', () => {
         wrapper.unmount();
     });
 
-    it('shows the requester or Fallback Track with a read-only score and no progress when the length is unknown', () => {
+    it('shows the requester or From Fallback Playlist with a read-only score and no progress when the length is unknown', () => {
         const wrapper = mount(Tv, {
             props: {
                 party,

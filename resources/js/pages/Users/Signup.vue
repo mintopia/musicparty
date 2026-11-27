@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import {Head, useForm} from '@inertiajs/vue3';
+import JoinSteps from '@/components/JoinSteps.vue';
+import type {PartyInvite} from '@/components/PartyInviteCard.vue';
 import GuestLayout from '@/layouts/GuestLayout.vue';
 import {logout} from '@/routes';
 import {signup} from '@/routes/login';
 
 const props = defineProps<{
     user: {nickname: string; avatar: string};
+    party?: PartyInvite | null;
     terms: string | null;
     privacy: string | null;
 }>();
@@ -18,9 +21,16 @@ function submit(): void {
 </script>
 
 <template>
-    <GuestLayout title="Create Account">
-        <Head title="Create Account" />
-        <h2 class="h3 text-center mb-3">Create Account</h2>
+    <GuestLayout :title="party ? 'Pick a nickname' : 'Create Account'">
+        <Head :title="party ? 'Pick a nickname' : 'Create Account'" />
+        <JoinSteps v-if="party" :current="2" />
+        <template v-if="party">
+            <h1 class="h3 text-center mb-1">Pick a nickname</h1>
+            <p class="text-secondary text-center">
+                You're joining <b>{{ party.name }}</b> ({{ party.code }}).
+            </p>
+        </template>
+        <h1 v-else class="h3 text-center mb-3">Create Account</h1>
 
         <div class="mb-3 text-center">
             <span class="avatar avatar-xl rounded" :style="{backgroundImage: `url('${user.avatar}')`}"></span>
@@ -38,7 +48,9 @@ function submit(): void {
                         :class="{'is-invalid': form.errors.nickname}"
                         placeholder="Nickname"
                     />
-                    <small class="form-hint">Your preferred nickname</small>
+                    <small class="form-hint">{{
+                        party ? 'Shown next to your Requests.' : 'Your preferred nickname'
+                    }}</small>
                     <p v-if="form.errors.nickname" class="invalid-feedback">{{ form.errors.nickname }}</p>
                 </div>
             </div>
@@ -60,7 +72,9 @@ function submit(): void {
             </div>
             <div class="d-flex">
                 <a :href="logout().url" class="btn btn-link">Cancel</a>
-                <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Continue</button>
+                <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
+                    {{ party ? 'Continue to the party' : 'Continue' }}
+                </button>
             </div>
         </form>
     </GuestLayout>

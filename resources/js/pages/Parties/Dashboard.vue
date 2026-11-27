@@ -10,18 +10,34 @@ import NeedsAttention from '@/components/Dashboard/NeedsAttention.vue';
 import QuickLinks from '@/components/Dashboard/QuickLinks.vue';
 import UpcomingList from '@/components/Dashboard/UpcomingList.vue';
 import {useDashboardSync} from '@/composables/useDashboardSync';
+import {useTicker} from '@/composables/useProgress';
 import {notifyKey} from '@/lib/dashboard';
+import {attentionIssue, derivePlaybackStatus} from '@/lib/playbackStatus';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {DashboardProps, DashboardRequest, LegacyPartyState} from '@/types';
 
 const props = defineProps<DashboardProps>();
+const PLAYBACK_ISSUES = ['relink_required', 'player_stale', 'no_device', 'outside'];
 
 const state = ref<LegacyPartyState>(props.playerState);
-const issues = computed(() =>
-    props.attention.issues.filter(
-        (issue) => issue.code !== 'player_stale' || props.control.health.player.connected !== true,
-    ),
+const now = useTicker(
+    () => props.control.health.receivedAt !== null,
+    () => props.control.health.receivedAt,
 );
+const status = computed(() =>
+    derivePlaybackStatus({
+        control: props.control,
+        state: state.value,
+        host: props.host.name,
+        hasWebPlayer: props.links.webPlayer !== null,
+        now: now.value,
+    }),
+);
+const issues = computed(() => {
+    const own = attentionIssue(status.value);
+    const rest = props.attention.issues.filter((issue) => !PLAYBACK_ISSUES.includes(issue.code));
+    return own ? [own, ...rest] : rest;
+});
 const deleting = ref<DashboardRequest | null>(null);
 const notice = ref<string | null>(null);
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -64,14 +80,18 @@ onBeforeUnmount(() => {
         <template #header>
             <ControlRoom
                 :code="party.code"
+                :party-name="party.name"
                 :host="host.name"
                 :state="state"
                 :control="control"
+                :status="status"
+                :links="links"
                 :up-next="upNext"
                 :total="upcoming.total"
                 :queue-url="links.songs"
                 :can-control="can.control"
                 :can-moderate="can.moderate"
+                :can-start="party.canManage"
                 :my-rating="myRating"
                 :connected="connected"
                 @delete="deleting = $event"
@@ -87,10 +107,14 @@ onBeforeUnmount(() => {
                     :total="upcoming.total"
                     :queue-url="links.songs"
                     :fallback-settings-url="links.fallbackSettings"
+                    :can-manage="party.canManage"
                     :has-fallback-playlist="hasFallbackPlaylist"
                     :can-moderate="can.moderate"
                     :can-downvote="party.downvotes"
                     :timezone="timezone"
+                    :status="state.status"
+                    :now-track-name="state.now?.name ?? null"
+                    :now="now"
                     @delete="deleting = $event"
                 />
             </div>
@@ -102,8 +126,11 @@ onBeforeUnmount(() => {
                     :flagged-total="attention.flaggedTotal"
                     :flagged-url="links.flagged"
                     :can-moderate="can.moderate"
+                    :web-player-url="links.webPlayer"
+                    :relink-url="links.relink"
+                    :device-id="control.start.selectedDeviceId"
                 />
-                <QuickLinks :links="links" />
+                <QuickLinks :links="links" :can-manage="party.canManage" />
             </div>
         </div>
         <DeleteRequestDialog :code="party.code" :request="deleting" @close="deleting = null" />

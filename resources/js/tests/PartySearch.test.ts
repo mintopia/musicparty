@@ -64,7 +64,7 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
 }
 
 function results(tracks: TrackAnnotation[]): SearchOverviewResults {
-    return {view: 'overview', top: null, tracks, albums: [], artists: [], empty: false};
+    return {view: 'overview', top: null, tracks, albums: [], artists: [], empty: false, weak: false};
 }
 
 const idle: LegacyPartyState = {now: null, next: null, current: null, status: null};
@@ -147,13 +147,13 @@ describe('Party search page', () => {
                 party,
                 params: {query: 'q', perPage: 10},
                 results: {
-                    error: {code: 'timeout', message: 'The music provider took too long to answer.', retryable: true},
+                    error: {code: 'timeout', message: "Spotify didn't answer in time.", retryable: true},
                 },
                 playerState: idle,
             },
         });
 
-        expect(wrapper.get('[data-test="results-error"]').text()).toContain('took too long');
+        expect(wrapper.get('[data-test="results-error"]').text()).toContain("didn't answer in time");
 
         await wrapper.get('[data-test="retry"]').trigger('click');
 

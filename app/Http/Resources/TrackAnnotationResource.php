@@ -45,6 +45,8 @@ class TrackAnnotationResource extends JsonResource
                 'score' => $annotation->score,
                 'vote' => $annotation->vote,
                 'requested_by' => $annotation->user,
+                'requested_by_you' => $annotation->requestedByViewer,
+                'requested_ago' => $annotation->requestedAgo,
             ],
             'eligibility' => [
                 'allowed' => $annotation->allowed,

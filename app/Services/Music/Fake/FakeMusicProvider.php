@@ -3,6 +3,7 @@
 namespace App\Services\Music\Fake;
 
 use App\Exceptions\NoActiveDeviceException;
+use App\Models\User;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
 use App\Services\Music\Data\Album;
@@ -12,15 +13,24 @@ use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\Page;
+use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Data\Playlist;
 use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\Track;
+use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Cache;
 use Throwable;
 
 class FakeMusicProvider implements MusicProvider, ProviderPlayback
 {
     public const CATALOGUE_SIZE = 30;
+
+    public const SCENARIO_NO_DEVICE = 'no_device';
+
+    public const SCENARIO_OUTSIDE = 'outside';
+
+    public const OUTSIDE_CONTEXT_URI = 'spotify:playlist:review-outside';
 
     /** @var list<array{method: string, args: list<mixed>}> */
     protected array $calls = [];
@@ -75,6 +85,29 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         $this->devices = [new Device('fake-device', 'Fake Speaker', 'Speaker', true)];
         $this->playlists['fake-playlist'] = new Playlist('fake-playlist', 'Fake Playlist', 'Fake Owner', 0);
         $this->playlistTracks['fake-playlist'] = [];
+    }
+
+    public static function scenarioKey(int $userId): string
+    {
+        return "fake-provider-scenario:{$userId}";
+    }
+
+    public static function forUser(User $user, self $default): self
+    {
+        $scenario = Cache::get(self::scenarioKey($user->id));
+
+        return is_string($scenario) ? (new self)->withScenario($scenario) : $default;
+    }
+
+    public function withScenario(string $scenario): self
+    {
+        return match ($scenario) {
+            self::SCENARIO_NO_DEVICE => $this->withDevices([]),
+            self::SCENARIO_OUTSIDE => $this
+                ->withContextName(self::OUTSIDE_CONTEXT_URI, 'Late Night Drive')
+                ->withPlayback(new PlaybackState(true, 'fake-track-3', null, 183000, 42000, CarbonImmutable::now(), false, 'off', 'fake-device', 'Fake Speaker', PlaybackSource::Polling, contextUri: self::OUTSIDE_CONTEXT_URI)),
+            default => $this,
+        };
     }
 
     /**

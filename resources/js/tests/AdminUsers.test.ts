@@ -34,6 +34,7 @@ const user = {
     suspended: true,
     first_login: false,
     terms_agreed: true,
+    avatar_url: 'https://img.test/u.png',
     roles: [],
     last_login: null,
     last_login_human: null,
@@ -46,18 +47,44 @@ beforeEach(() => {
 });
 
 describe('admin users', () => {
-    it('renders the index rows with a Never fallback and preserves order on search', async () => {
+    it('renders rows and cards, and searches with chips while preserving order', async () => {
         const wrapper = mount(UserIndex, {
             props: {
                 users: {
-                    data: [{...user}],
+                    data: [
+                        {
+                            ...user,
+                            is_admin: true,
+                            avatar_url: 'https://img.test/a.png',
+                            accounts: [
+                                {provider: 'discord', name: 'Discord', needs_relink: false},
+                                {provider: 'spotify', name: 'Spotify', needs_relink: true},
+                            ],
+                            parties_count: 3,
+                        },
+                    ],
+                    total: 1,
+                    from: 1,
+                    to: 1,
                     current_page: 1,
                     last_page: 1,
                     prev_page_url: null,
                     next_page_url: null,
                     links: [],
                 },
-                filters: {id: null, nickname: 'ali'},
+                filters: {
+                    q: 'ali',
+                    role: '',
+                    suspended: false,
+                    first_login: false,
+                    provider: '',
+                    spotify_relink: false,
+                },
+                providers: [
+                    {code: 'discord', name: 'Discord'},
+                    {code: 'spotify', name: 'Spotify'},
+                ],
+                total: 9,
                 order: 'nickname',
                 order_direction: 'desc',
             },
@@ -65,12 +92,98 @@ describe('admin users', () => {
 
         expect(wrapper.find('a[href="/admin/users/7"]').text()).toBe('alice');
         expect(wrapper.text()).toContain('Never');
+        expect(wrapper.find('[data-test="users-list"] [aria-label="Actions for alice"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="users-list"]').text()).toContain('3 parties');
+        expect(wrapper.find('[data-test="search-count"]').text()).toBe('1 of 9 users');
+        expect(wrapper.find('[data-test="user-avatar"]').attributes('style')).toContain('https://img.test/a.png');
+        const icons = wrapper.findAll('table [data-test="user-accounts"] i');
+        expect(icons.map((icon) => icon.attributes('aria-label'))).toEqual(['Discord', 'Spotify, needs re-link']);
+        expect(icons[0].classes()).toContain('ti-brand-discord');
+        expect(wrapper.find('tbody td.text-end').text()).toBe('3');
+
         await wrapper.find('form').trigger('submit');
-        expect(inertia.get).toHaveBeenCalledWith('/admin/users', {
-            order: 'nickname',
-            order_direction: 'desc',
-            nickname: 'ali',
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/admin/users',
+            {order: 'nickname', order_direction: 'desc', q: 'ali'},
+            {preserveState: true, replace: true},
+        );
+
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+        expect(chips.map((chip) => chip.text())).toEqual([
+            'Admin',
+            'Suspended',
+            'Signup not finished',
+            'Spotify needs re-link',
+            'Discord',
+        ]);
+        await chips[0]!.trigger('click');
+        await chips[4]!.trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/admin/users',
+            {order: 'nickname', order_direction: 'desc', q: 'ali', role: 'admin', provider: 'discord'},
+            {preserveState: true, replace: true},
+        );
+
+        const input = wrapper.get('[data-test="search-input"]');
+        expect((input.element as HTMLInputElement).value).toBe('ali role:admin provider:discord');
+        expect(input.attributes('placeholder')).toBe(
+            'Search by id, nickname or linked account. Try role:admin or provider:discord',
+        );
+        await input.setValue('id:7 suspended:yes signup:unfinished spotify:relink provider:steam');
+        await wrapper.find('form').trigger('submit');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/admin/users',
+            {
+                order: 'nickname',
+                order_direction: 'desc',
+                q: 'id:7',
+                suspended: '1',
+                first_login: '1',
+                spotify_relink: '1',
+                provider: 'steam',
+            },
+            {preserveState: true, replace: true},
+        );
+        expect(wrapper.findAll('[data-test="search-chip"]').map((chip) => chip.attributes('aria-pressed'))).toEqual([
+            'false',
+            'true',
+            'true',
+            'true',
+            'false',
+        ]);
+    });
+
+    it('repeats the query in the empty state with one clear button', () => {
+        const wrapper = mount(UserIndex, {
+            props: {
+                users: {
+                    data: [],
+                    total: 0,
+                    from: null,
+                    to: null,
+                    current_page: 1,
+                    last_page: 1,
+                    prev_page_url: null,
+                    next_page_url: null,
+                    links: [],
+                },
+                filters: {
+                    q: 'id:99',
+                    role: '',
+                    suspended: true,
+                    first_login: false,
+                    provider: '',
+                    spotify_relink: false,
+                },
+                providers: [],
+                total: 9,
+                order: 'id',
+                order_direction: 'asc',
+            },
         });
+        expect(wrapper.find('[data-test="empty-state"] .empty-title code').text()).toBe('id:99 suspended:yes');
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201cid:99\u201d, Suspended');
+        expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
     });
 
     it('uses a plain anchor for impersonation and disables undeletable accounts', () => {
@@ -84,10 +197,16 @@ describe('admin users', () => {
                         name: 'a',
                         email: null,
                         avatar_url: null,
-                        external_id: 'x',
+                        provider_code: 'discord',
+                        linked_human: '1 day ago',
+                        linked_at: '2026-01-01 00:00:00',
+                        needs_relink: false,
+                        token_expires_human: null,
+                        token_expired: false,
                         can_delete: false,
                     },
                 ],
+                parties: [],
             },
         });
 
@@ -96,10 +215,50 @@ describe('admin users', () => {
         expect(wrapper.text()).toContain('This user is suspended');
         expect(wrapper.find('a[href="/admin/users/7/accounts/1"]').exists()).toBe(false);
         expect(wrapper.find('.btn.disabled').exists()).toBe(true);
+        expect(wrapper.find('[data-test="token-note"]').exists()).toBe(false);
+    });
+
+    it('shows the token note only where the provider supplies an expiry', () => {
+        const base = {
+            id: 1,
+            provider: 'Spotify',
+            name: 'a',
+            email: null,
+            avatar_url: null,
+            provider_code: 'spotify',
+            linked_human: '1 day ago',
+            linked_at: null,
+            needs_relink: true,
+            token_expired: true,
+            can_delete: true,
+        };
+        const wrapper = mount(UserShow, {
+            props: {
+                user,
+                accounts: [{...base, token_expires_human: '12 days ago'}],
+                parties: [{code: 'HZMN', name: 'Retro Room', role: 'Owner'}],
+            },
+        });
+
+        expect(wrapper.find('[data-test="token-note"]').text()).toBe('Token expired 12 days ago');
+        expect(wrapper.text()).toContain('Needs re-link');
+        expect(wrapper.text()).toContain('Retro Room');
+
+        const table = wrapper.find('[data-test="parties-table"]');
+        expect(table.findAll('th').map((th) => th.text())).toEqual(['Party', 'Role']);
+        expect(table.find('.badge').classes()).toContain('bg-blue-lt');
     });
 
     it('submits the delete forms', async () => {
-        const del = mount(UserDelete, {props: {user: {id: 7, nickname: 'alice'}}});
+        const del = mount(UserDelete, {
+            props: {
+                user: {id: 7, nickname: 'alice'},
+                impact: {accounts: ['Discord', 'Spotify'], accounts_count: 2, memberships_count: 1, owned_parties: []},
+            },
+        });
+        expect(del.get('[data-test="delete-impact"]').text()).toBe(
+            'Removes 2 linked accounts (Discord, Spotify) and their membership of 1 party.',
+        );
         await del.find('form').trigger('submit');
         expect(inertia.delete).toHaveBeenCalledWith('/admin/users/7');
 

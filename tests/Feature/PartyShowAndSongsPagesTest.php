@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AiReviewOutcome;
 use App\Enums\Purpose;
+use App\Models\AiReview;
 use App\Models\PlayedSong;
 use App\Models\Song;
 use App\Models\SongRating;
@@ -70,8 +72,63 @@ it('lists songs for a manager with sorting and name filter', function () {
             ->where('songs.total', 1)
             ->where('songs.data.0.id', $this->upcoming->id)
             ->where('songs.data.0.score', 4)
-            ->where('types.0.code', 'queued')
             ->has('playerState'));
+});
+
+it('filters songs by free-text query and sent status', function () {
+    $name = $this->upcoming->song->name;
+    $artist = $this->upcoming->song->artists->first()?->name;
+
+    foreach (array_filter([$name, $artist, $this->upcoming->song->album->name]) as $term) {
+        $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => $term]))
+            ->assertInertia(fn (Assert $page) => $page->where('filters.q', $term)->where('songs.total', 1));
+    }
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => 'no-such-thing-xyz']))
+        ->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'sent']))
+        ->assertInertia(fn (Assert $page) => $page->where('filters.q', 'sent:yes')->where('songs.total', 0));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'queued']))
+        ->assertInertia(fn (Assert $page) => $page->where('songs.total', 1));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'bogus']))
+        ->assertSessionHasErrors('type');
+});
+
+it('filters songs by typed tokens, requester and the chip counts', function () {
+    $nickname = $this->member->user->nickname;
+    $artist = $this->upcoming->song->artists->first()->name;
+    $get = fn (string $q) => $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => $q]));
+
+    $get("sent:no by:{$nickname} artist:\"{$artist}\"")->assertInertia(fn (Assert $page) => $page
+        ->where('filters.q', "sent:no by:{$nickname} artist:\"{$artist}\"")
+        ->where('songs.total', 1)
+        ->where('songs.data.0.requestedBy.nickname', $nickname)
+        ->where('songs.data.0.requestedBy.isYou', false)
+        ->where('counts', ['total' => 1, 'sent' => 0, 'waiting' => 1, 'scheduled' => 0, 'flagged' => 0, 'mine' => 0]));
+    $get('sent:yes')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get('by:me')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get('flagged:yes scheduled:yes')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get($nickname)->assertInertia(fn (Assert $page) => $page->where('songs.total', 1));
+    $get('artist:no-such-artist')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+
+    $this->upcoming->forceFill(['flagged_at' => now(), 'scheduled_for' => now()->addHour(), 'queued_at' => now()])->save();
+    $get('flagged:yes scheduled:yes sent:yes')->assertInertia(fn (Assert $page) => $page
+        ->where('songs.total', 1)
+        ->where('songs.data.0.flagged', true)
+        ->has('songs.data.0.scheduledLabel')
+        ->where('counts.flagged', 1)
+        ->where('counts.scheduled', 1)
+        ->where('counts.sent', 1));
+});
+
+it('lets a moderator remove a request from the list', function () {
+    $this->actingAs($this->owner)->delete(route('parties.songs.destroy', [$this->party->code, $this->upcoming->id]))
+        ->assertRedirect(route('parties.songs.index', $this->party->code));
+
+    expect(UpcomingSong::find($this->upcoming->id))->toBeNull();
 });
 
 it('shows a song detail page for a manager', function () {
@@ -81,9 +138,31 @@ it('shows a song detail page for a manager', function () {
             ->where('song.id', $this->upcoming->id)
             ->where('song.requestedBy.nickname', $this->member->user->nickname)
             ->has('votes.data', 0)
-            ->has('other', 0)
-            ->has('ratings.data', 0)
+            ->where('aiReview', null)
+            ->where('song.removeUrl', route('parties.songs.destroy', [$this->party->code, $this->upcoming->id]))
+            ->has('history', 1)
+            ->where('history.0.text', $this->member->user->nickname.' requested it')
             ->has('playerState'));
+});
+
+it('shows the AI review outcome and a history of what happened on the detail page', function () {
+    $this->upcoming->forceFill(['created_at' => now()->subMinutes(5), 'queued_at' => now()])->save();
+    $review = AiReview::factory()->outcome(AiReviewOutcome::Flag)->create([
+        'party_id' => $this->party->id,
+        'upcoming_song_id' => $this->upcoming->id,
+        'reason' => 'Possibly explicit',
+        'created_at' => now()->subMinute(),
+    ]);
+
+    $this->actingAs($this->owner)->get(route('parties.songs.show', [$this->party->code, $this->upcoming->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('aiReview.outcomeLabel', 'Flagged')
+            ->where('aiReview.reason', 'Possibly explicit')
+            ->where('aiReview.url', route('parties.ai-reviews.show', [$this->party->code, $review->id]))
+            ->has('history', 3)
+            ->where('history.1.text', 'AI review flagged it for a moderator')
+            ->where('history.2.text', 'Sent to the Player'));
 });
 
 it('forbids non-managers from the songs pages', function () {

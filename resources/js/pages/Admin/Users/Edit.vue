@@ -2,6 +2,8 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
+import PageHead from '@/components/PageHead.vue';
+import SettingRow from '@/components/SettingRow.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -35,67 +37,95 @@ function submit(): void {
             <Breadcrumbs :items="[...adminUserCrumbs(user), {label: 'Edit'}]" />
         </template>
         <Head :title="`Edit ${user.nickname}`" />
-        <div class="page-header mt-0">
-            <h1>Edit {{ user.nickname }}</h1>
-        </div>
-
-        <div class="col-md-6 offset-md-3">
-            <form class="card" @submit.prevent="submit">
-                <div class="card-body">
-                    <div class="mb-3">
-                        <label class="form-label required" for="nickname">Nickname</label>
-                        <div>
+        <div class="mp-narrow mp-touch">
+            <PageHead
+                :title="`Edit ${user.nickname}`"
+                :summary="`User ${user.id}. Changes apply the next time they load a page.`"
+            />
+            <form class="card mx-auto" style="max-inline-size: 660px" @submit.prevent="submit">
+                <div class="card-body pt-2 pb-0">
+                    <SettingRow
+                        label="Nickname"
+                        for="nickname"
+                        hint="Shown on Requests, votes and the Members list."
+                        :error="form.errors.nickname"
+                    >
+                        <input
+                            id="nickname"
+                            v-model="form.nickname"
+                            type="text"
+                            name="nickname"
+                            class="form-control"
+                            :class="{'is-invalid': form.errors.nickname}"
+                            placeholder="Nickname"
+                        />
+                    </SettingRow>
+                    <SettingRow label="Roles" hint="Admins can open everything under Admin.">
+                        <label
+                            v-for="role in roles"
+                            :key="role.code"
+                            class="form-check mb-0 d-flex align-items-center gap-2"
+                        >
                             <input
-                                id="nickname"
-                                v-model="form.nickname"
-                                type="text"
-                                name="nickname"
-                                class="form-control"
-                                :class="{'is-invalid': form.errors.nickname}"
-                                placeholder="Nickname"
+                                v-model="form.roles"
+                                class="form-check-input m-0"
+                                type="checkbox"
+                                :value="role.code"
                             />
-                            <small class="form-hint">The user's nickname</small>
-                            <p v-if="form.errors.nickname" class="invalid-feedback">{{ form.errors.nickname }}</p>
-                        </div>
-                    </div>
-                    <div class="mb-6">
-                        <div class="form-label">Roles</div>
-                        <div>
-                            <label v-for="role in roles" :key="role.code" class="form-check">
-                                <input
-                                    v-model="form.roles"
-                                    class="form-check-input"
-                                    type="checkbox"
-                                    :value="role.code"
-                                />
-                                <span class="form-check-label">{{ role.name }}</span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-check form-switch">
-                            <input v-model="form.terms" type="checkbox" class="form-check-input" name="terms" />
-                            Accept Terms and Conditions
+                            <span class="form-check-label">{{ role.name }}</span>
                         </label>
-                        <label class="form-check form-switch">
+                    </SettingRow>
+                    <SettingRow
+                        label="Accepted Terms and Conditions"
+                        for="terms"
+                        hint="Records whether they have agreed to the terms and conditions."
+                    >
+                        <span class="form-check form-switch mb-0 ps-0 min-height-0">
                             <input
+                                id="terms"
+                                v-model="form.terms"
+                                type="checkbox"
+                                role="switch"
+                                class="form-check-input m-0"
+                                name="terms"
+                            />
+                        </span>
+                    </SettingRow>
+                    <SettingRow
+                        label="Completed signup"
+                        for="first_login"
+                        hint="Off sends them back to the signup form on next login."
+                    >
+                        <span class="form-check form-switch mb-0 ps-0 min-height-0">
+                            <input
+                                id="first_login"
                                 v-model="form.first_login"
                                 type="checkbox"
-                                class="form-check-input"
+                                role="switch"
+                                class="form-check-input m-0"
                                 name="first_login"
                             />
-                            Completed Signup
-                        </label>
-                        <label class="form-check form-switch">
-                            <input v-model="form.suspended" type="checkbox" class="form-check-input" name="suspended" />
-                            Suspended
-                        </label>
-                    </div>
+                        </span>
+                    </SettingRow>
+                    <SettingRow label="Suspended" for="suspended" hint="Suspended users cannot log in.">
+                        <span class="form-check form-switch mb-0 ps-0 min-height-0">
+                            <input
+                                id="suspended"
+                                v-model="form.suspended"
+                                type="checkbox"
+                                role="switch"
+                                class="form-check-input m-0"
+                                name="suspended"
+                            />
+                        </span>
+                    </SettingRow>
                 </div>
-                <div class="card-footer text-end">
-                    <div class="d-flex">
+                <div class="card-footer">
+                    <div class="d-flex align-items-center">
                         <Link :href="`/admin/users/${user.id}`" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
+                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
+                            Save changes
+                        </button>
                     </div>
                 </div>
             </form>

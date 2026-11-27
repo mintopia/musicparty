@@ -1,5 +1,9 @@
 <?php
 
-it('redirects guests from the home page to login', function () {
-    $this->get('/')->assertRedirect(route('login'));
+use Inertia\Testing\AssertableInertia as Assert;
+
+it('renders the anonymous home page for guests', function () {
+    $this->withoutVite()->get('/')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page->component('Welcome', false));
 });

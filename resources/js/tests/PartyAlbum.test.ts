@@ -75,7 +75,7 @@ describe('Party album page', () => {
             },
         });
 
-        const items = wrapper.findAll('.breadcrumb-item');
+        const items = wrapper.findAll('.breadcrumb-item:not([data-test="crumb-toggle"])');
 
         expect(items.map((item) => item.text())).toEqual(['Home', 'Party', 'Search', 'Arrival']);
         expect(items[1].get('a').attributes('href')).toBe('/parties/ABCD');
@@ -94,7 +94,7 @@ describe('Party album page', () => {
             },
         });
 
-        expect(wrapper.findAll('.breadcrumb-item').at(-1)?.text()).toBe('Album');
+        expect(wrapper.findAll('.breadcrumb-item:not([data-test="crumb-toggle"])').at(-1)?.text()).toBe('Album');
         expect(wrapper.get('a.btn').attributes('href')).toBe('/parties/ABCD/search?query=abba');
     });
 });

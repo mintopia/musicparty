@@ -87,7 +87,7 @@ it('shares the active theme with Inertia and follows a change of active theme', 
         ->where('theme.darkMode', false)
         ->has('theme.stylesheet'));
 
-    $this->actingAs(themeAdmin())->put(route('admin.settings.themes.update', $two), [
+    $this->actingAs(themeAdmin())->put(route('admin.themes.update', $two), [
         'name' => 'Two', 'active' => 1, 'dark_mode' => 1, 'css' => '',
         'tokens' => ['primary' => '#333333', 'nav-background' => '#444444'],
     ])->assertRedirect();
@@ -115,25 +115,25 @@ it('resolves the active theme once per request', function () {
 it('creates and updates themes with tokens and validates colours', function () {
     $admin = themeAdmin();
 
-    $this->actingAs($admin)->post(route('admin.settings.themes.store'), [
+    $this->actingAs($admin)->post(route('admin.themes.store'), [
         'name' => 'Made', 'css' => 'b{}',
         'tokens' => ['primary' => '#abcdef', 'nav-background' => '#123456', 'danger' => ''],
-    ])->assertRedirect(route('admin.settings.index'));
+    ])->assertRedirect(route('admin.themes.index'));
 
     $theme = Theme::whereCode('made')->firstOrFail();
     expect($theme->tokens)->toBe(['primary' => '#abcdef', 'nav-background' => '#123456'])
         ->and($theme->css)->toBe('b{}');
 
-    $this->actingAs($admin)->put(route('admin.settings.themes.update', $theme), [
+    $this->actingAs($admin)->put(route('admin.themes.update', $theme), [
         'name' => 'Made', 'tokens' => ['primary' => 'notacolour', 'nav-background' => '#123456', 'danger' => 'red'],
     ])->assertSessionHasErrors(['tokens.primary', 'tokens.danger']);
 
-    $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk()
+    $this->actingAs($admin)->get(route('admin.themes.edit', $theme))->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Themes/Edit')
             ->where('theme.id', $theme->id)
             ->where('colourTokens', fn ($tokens) => collect($tokens)->pluck('token')->contains('primary')));
-    $this->actingAs($admin)->delete(route('admin.settings.themes.destroy', $theme))->assertRedirect();
+    $this->actingAs($admin)->delete(route('admin.themes.destroy', $theme))->assertRedirect();
     expect(Theme::whereCode('made')->exists())->toBeFalse();
 });
 
@@ -141,9 +141,9 @@ it('rejects theme names that slug to nothing or collide with another theme', fun
     Theme::factory()->create(['name' => 'Taken']);
     $tokens = ['primary' => '#abcdef', 'nav-background' => '#123456'];
 
-    $this->actingAs(themeAdmin())->post(route('admin.settings.themes.store'), ['name' => '!!!', 'tokens' => $tokens])
+    $this->actingAs(themeAdmin())->post(route('admin.themes.store'), ['name' => '!!!', 'tokens' => $tokens])
         ->assertSessionHasErrors('name');
-    $this->post(route('admin.settings.themes.store'), ['name' => 'taken', 'tokens' => $tokens])
+    $this->post(route('admin.themes.store'), ['name' => 'taken', 'tokens' => $tokens])
         ->assertSessionHasErrors('name');
 });
 
@@ -155,9 +155,9 @@ it('renders the token form with a field per colour token and the saved values', 
     $assertTokenFields = fn (Assert $page) => $page
         ->where('colourTokens', fn ($tokens) => collect($tokens)->pluck('token')->all() === $tokenNames);
 
-    $this->actingAs($admin)->get(route('admin.settings.themes.create'))->assertOk()
+    $this->actingAs($admin)->get(route('admin.themes.create'))->assertOk()
         ->assertInertia(fn (Assert $page) => $assertTokenFields($page->component('Admin/Themes/Create')));
-    $this->actingAs($admin)->get(route('admin.settings.themes.edit', $theme))->assertOk()
+    $this->actingAs($admin)->get(route('admin.themes.edit', $theme))->assertOk()
         ->assertInertia(fn (Assert $page) => $assertTokenFields($page->component('Admin/Themes/Edit'))
             ->where('theme.tokens.primary', '#abcdef')
             ->where('theme.tokens.danger', '#ff0000')
@@ -169,7 +169,7 @@ it('serves an edited theme stylesheet instead of the cached one', function () {
     $this->get($theme->stylesheetUrl())->assertSee('--mp-primary: #111111;', false);
     $oldVersion = $theme->version();
 
-    $this->actingAs(themeAdmin())->put(route('admin.settings.themes.update', $theme), [
+    $this->actingAs(themeAdmin())->put(route('admin.themes.update', $theme), [
         'name' => 'Bust', 'tokens' => ['primary' => '#999999', 'nav-background' => '#222222'],
     ])->assertRedirect();
 
@@ -188,7 +188,7 @@ it('answers unknown theme codes from cache and serves them once the theme exists
     DB::disableQueryLog();
     expect($themeQueries)->toHaveCount(0);
 
-    $this->actingAs(themeAdmin())->post(route('admin.settings.themes.store'), [
+    $this->actingAs(themeAdmin())->post(route('admin.themes.store'), [
         'name' => 'Ghost', 'tokens' => ['primary' => '#abcdef', 'nav-background' => '#123456'],
     ])->assertRedirect();
 

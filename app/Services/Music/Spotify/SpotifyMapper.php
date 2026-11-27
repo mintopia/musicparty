@@ -94,6 +94,7 @@ final class SpotifyMapper
             name: (string) $payload->name,
             ownerName: isset($owner->display_name) ? (string) $owner->display_name : null,
             trackCount: (int) ($tracks->total ?? 0),
+            imageUrl: self::imageUrl($payload),
         );
     }
 

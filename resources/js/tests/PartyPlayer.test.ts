@@ -198,14 +198,14 @@ describe('PartyPlayer', () => {
         expect(wrapper.find('[role="progressbar"]').exists()).toBe(false);
     });
 
-    it('shows requested-by or Fallback Track next to the rating', () => {
+    it('shows requested-by or From Fallback Playlist next to the rating', () => {
         const requested = mount(PartyPlayer, {props: {code: 'ABC', initialState: rated()}});
         expect(requested.get('[data-test="requested-by"]').text()).toBe('Requested by Ref Member');
 
         const fallback = mount(PartyPlayer, {
             props: {code: 'ABC', initialState: rated(0, {current: {id: 7, provider_track_id: 't1', user: null}})},
         });
-        expect(fallback.get('[data-test="requested-by"]').text()).toBe('Fallback Track');
+        expect(fallback.get('[data-test="requested-by"]').text()).toBe('From Fallback Playlist');
     });
 
     it('folds Up Next into the band with its decoration tag and accent, and no separate card', () => {

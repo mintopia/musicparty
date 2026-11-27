@@ -39,6 +39,11 @@ class PartyPolicy
         return $user->hasRole('admin') || $party->canBeManagedBy($user);
     }
 
+    public function moderate(User $user, Party $party): bool
+    {
+        return $user->hasRole('admin') || $party->canBeModeratedBy($user);
+    }
+
     public function player(User $user, Party $party): bool
     {
         if ($user->hasRole('admin')) {

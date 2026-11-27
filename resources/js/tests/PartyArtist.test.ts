@@ -42,7 +42,7 @@ describe('Party artist page', () => {
             },
         });
 
-        const items = wrapper.findAll('.breadcrumb-item');
+        const items = wrapper.findAll('.breadcrumb-item:not([data-test="crumb-toggle"])');
 
         expect(items.map((item) => item.text())).toEqual(['Home', 'Party', 'Search', 'ABBA']);
         expect(items[2].get('a').attributes('href')).toBe('/parties/ABCD/search?query=abba');
@@ -78,7 +78,7 @@ describe('Party artist page', () => {
             props: {party, query: null, artist: null, tracks: null, albums: null, retry: false, playerState: idle},
         });
 
-        expect(wrapper.findAll('.breadcrumb-item').at(-1)?.text()).toBe('Artist');
+        expect(wrapper.findAll('.breadcrumb-item:not([data-test="crumb-toggle"])').at(-1)?.text()).toBe('Artist');
         expect(wrapper.get('a.btn').attributes('href')).toBe('/parties/ABCD/search');
     });
 });

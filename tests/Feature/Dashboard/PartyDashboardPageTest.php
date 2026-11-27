@@ -193,12 +193,12 @@ it('says polling is off in the stale detail when polling is disabled', function 
     expect($issues[0]['detail'])->toBe($detail);
 })->with([[true, 'Polling is checking Spotify'], [false, 'Polling is off']]);
 
-it('flags a site admin who is not a member as unable to moderate', function () {
+it('lets a site admin who is not a member moderate but not manage', function () {
     $admin = dashboardUser($this->party, 'admin');
 
     $this->actingAs($admin)->get($this->url)->assertInertia(fn (Assert $page) => $page
         ->where('can.control', true)
-        ->where('can.moderate', false)
+        ->where('can.moderate', true)
         ->where('party.canManage', false));
 });
 

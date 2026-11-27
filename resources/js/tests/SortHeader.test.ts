@@ -36,9 +36,9 @@ describe('SortHeader', () => {
     it('toggles and shows caret on the active field', () => {
         const asc = render({order: 'name', orderDirection: 'asc'});
         expect(asc.get('a').attributes('href')).toContain('order_direction=desc');
-        expect(asc.get('i').classes()).toEqual(expect.arrayContaining(['icon', 'ti', 'ti-caret-down-filled']));
+        expect(asc.get('i').classes()).toEqual(expect.arrayContaining(['icon', 'ti', 'ti-caret-up-filled']));
         const desc = render({order: 'name', orderDirection: 'desc'});
         expect(desc.get('a').attributes('href')).toContain('order_direction=asc');
-        expect(desc.get('i').classes()).toContain('ti-caret-up-filled');
+        expect(desc.get('i').classes()).toContain('ti-caret-down-filled');
     });
 });

@@ -26,6 +26,11 @@ class PartyMemberRoleFactory extends Factory
         return $this->state(['code' => 'owner', 'name' => 'Owner']);
     }
 
+    public function moderator(): static
+    {
+        return $this->state(['code' => 'moderator', 'name' => 'Moderator']);
+    }
+
     public function vip(): static
     {
         return $this->state(['code' => 'vip', 'name' => 'VIP']);

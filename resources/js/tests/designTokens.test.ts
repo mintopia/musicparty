@@ -98,4 +98,12 @@ describe('dashboard deck component styles', () => {
         expect(style).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i);
         expect(style).not.toMatch(/color:[^;]*!important/);
     });
+
+    it('stills the playback equaliser bars under reduced motion', async () => {
+        const css = await builtCss(appCssEntry);
+
+        expect(css).toMatch(
+            /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[^@]*\.mp-eq\s*>\s*i\s*\{\s*animation:\s*none/,
+        );
+    });
 });

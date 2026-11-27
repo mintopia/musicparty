@@ -3,6 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ModerationForm from '@/components/ModerationForm.vue';
+import PageHead from '@/components/PageHead.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {LegacyPartyState} from '@/types';
@@ -48,33 +49,33 @@ function submit(): void {
 <template>
     <AppLayout :title="`Add rule - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Add rule'}]" />
+            <Breadcrumbs
+                :items="[
+                    ...moderationCrumbs(party),
+                    {label: 'Rules', href: `/parties/${party.code}/moderation`},
+                    {label: 'Add rule'},
+                ]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Add rule - ${party.name}`" />
-        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-            <div class="page-header mt-0">
-                <h1>Add rule</h1>
-            </div>
+        <div :class="track ? 'mp-touch' : 'mp-narrow mp-touch'">
+            <PageHead title="Add rule" summary="Rules look at every new Request before it reaches the Queue." />
             <div class="row">
                 <div :class="track ? 'col-12 col-lg-6' : 'col-12'">
                     <form class="card" @submit.prevent="submit">
                         <ModerationForm :form="form" :types="types" :actions="actions" />
-                        <div class="card-footer text-end">
-                            <div class="d-flex">
-                                <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                                <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
-                                    Save
-                                </button>
-                            </div>
+                        <div class="card-footer d-flex gap-2">
+                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link ms-auto">Cancel</Link>
+                            <button type="submit" class="btn btn-primary" :disabled="form.processing">Save rule</button>
                         </div>
                     </form>
                 </div>
 
                 <div v-if="track" class="col-12 col-lg-6" data-test="track-data">
-                    <h3>Track Data</h3>
+                    <h2>Track Data</h2>
 
                     <div class="datagrid">
                         <div>

@@ -75,7 +75,7 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * @return array<int, array{code: string, name: string, canManage: bool, aiReviewEnabled: bool, flaggedCount: int}>
+     * @return array<int, array{code: string, name: string, canManage: bool, canModerate: bool, aiReviewEnabled: bool, flaggedCount: int}>
      */
     private function partyProps(?User $user): array
     {
@@ -86,13 +86,15 @@ class HandleInertiaRequests extends Middleware
         return $user->partyMembers()->with('party')->get()
             ->map(function (PartyMember $member) use ($user): array {
                 $canManage = $member->party->canBeManagedBy($user);
+                $canModerate = $user->can('moderate', $member->party);
 
                 return [
                     'code' => $member->party->code,
                     'name' => $member->party->name,
                     'canManage' => $canManage,
-                    'aiReviewEnabled' => $canManage && app(PartyMods::class)->isEnabled($member->party, AiRequestReviewMod::CODE),
-                    'flaggedCount' => $canManage ? app(ModerationTabs::class)->flaggedCount($member->party) : 0,
+                    'canModerate' => $canModerate,
+                    'aiReviewEnabled' => $canModerate && app(PartyMods::class)->isEnabled($member->party, AiRequestReviewMod::CODE),
+                    'flaggedCount' => $canModerate ? app(ModerationTabs::class)->flaggedCount($member->party) : 0,
                 ];
             })
             ->values()

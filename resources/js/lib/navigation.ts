@@ -35,7 +35,7 @@ export function partyLinks(party: PartyMembership): NavLink[] {
         {title: 'Search', href: search(party.code).url},
     ];
 
-    if (party.canManage) {
+    if (party.canManage || party.canModerate) {
         links.unshift({title: 'Dashboard', href: dashboard(party.code).url});
         links.push(
             {title: 'Requests', href: songs(party.code).url},
@@ -46,8 +46,15 @@ export function partyLinks(party: PartyMembership): NavLink[] {
                 match: [flaggedUrl(party.code), moderation(party.code).url, aiReviewsUrl(party.code)],
             },
             {title: 'Members', href: partyUsers(party.code).url},
-            {title: 'Settings', href: edit(party.code).url, match: [edit(party.code).url, partyModsUrl(party.code)]},
         );
+    }
+
+    if (party.canManage) {
+        links.push({
+            title: 'Settings',
+            href: edit(party.code).url,
+            match: [edit(party.code).url, partyModsUrl(party.code)],
+        });
     }
 
     return links;

@@ -73,7 +73,7 @@ const nothingFound = computed(() => {
         <div v-else-if="error" class="card mt-4" role="alert" data-test="results-error">
             <div class="card-body text-center py-5">
                 <i class="icon ti ti-cloud-off text-secondary fs-1"></i>
-                <h3 class="mt-3 mb-1">Search didn't load</h3>
+                <h2 class="h3 mt-3 mb-1">Search didn't load</h2>
                 <div class="text-secondary" :class="{'mb-3': error.retryable}">
                     {{ error.message }}
                     <template v-if="error.retryable">Your search is still in the box.</template>
@@ -90,16 +90,17 @@ const nothingFound = computed(() => {
                 </button>
             </div>
         </div>
-        <EmptyState
-            v-else-if="nothingFound"
-            icon="ti-search-off"
-            :title="`No results for &quot;${query}&quot;`"
-            description="Check the spelling or try the artist's name."
-            data-test="results-empty"
-        />
+        <div v-else-if="nothingFound" class="card mt-4" data-test="results-empty">
+            <EmptyState
+                icon="ti-search-off"
+                :title="`No results for “${query}”`"
+                description="Check the spelling or try the artist's name."
+            />
+        </div>
         <SearchOverviewResults
             v-else-if="found && found.view === 'overview'"
             :results="found"
+            :query="query"
             :can-downvote="canDownvote"
             :album-route="albumRoute"
             :artist-route="artistRoute"

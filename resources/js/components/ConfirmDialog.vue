@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import {useId} from 'vue';
+
 const props = withDefaults(
     defineProps<{
         modelValue: boolean;
@@ -9,6 +11,8 @@ const props = withDefaults(
     }>(),
     {confirmLabel: 'Confirm', cancelLabel: 'Cancel'},
 );
+
+const titleId = useId();
 
 const emit = defineEmits<{
     confirm: [];
@@ -34,12 +38,13 @@ function cancel(): void {
             tabindex="-1"
             role="dialog"
             aria-modal="true"
+            :aria-labelledby="titleId"
             @click.self="cancel"
         >
             <div class="modal-dialog modal-sm modal-dialog-centered" role="document">
                 <div class="modal-content">
                     <div class="modal-body">
-                        <div class="modal-title">{{ props.title }}</div>
+                        <div :id="titleId" class="modal-title">{{ props.title }}</div>
                         <div>{{ props.message }}</div>
                         <slot />
                     </div>

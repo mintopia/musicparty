@@ -19,16 +19,16 @@ it('keeps non-admins and guests out of every admin theme route', function (strin
     $this->{$method}($url)->assertRedirect();
     $this->actingAs(User::factory()->create(['first_login' => false]))->{$method}($url)->assertForbidden();
 })->with([
-    ['get', 'admin.settings.themes.create'],
-    ['post', 'admin.settings.themes.store'],
-    ['get', 'admin.settings.themes.edit'],
-    ['patch', 'admin.settings.themes.update'],
-    ['get', 'admin.settings.themes.delete'],
-    ['delete', 'admin.settings.themes.destroy'],
+    ['get', 'admin.themes.create'],
+    ['post', 'admin.themes.store'],
+    ['get', 'admin.themes.edit'],
+    ['patch', 'admin.themes.update'],
+    ['get', 'admin.themes.delete'],
+    ['delete', 'admin.themes.destroy'],
 ]);
 
 it('renders the create form with colour token definitions', function () {
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.create'))
+    $this->actingAs($this->admin)->get(route('admin.themes.create'))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Themes/Create')
@@ -36,23 +36,42 @@ it('renders the create form with colour token definitions', function () {
             ->where('theme.active', false)
             ->where('theme.readonly', false)
             ->has('colourTokens', count(Theme::COLOUR_TOKENS))
-            ->where('colourTokens.0', ['token' => 'primary', 'label' => 'Primary', 'required' => true])
-            ->where('colourTokens.2.required', false));
+            ->where('colourTokens.0', ['token' => 'primary', 'label' => 'Primary', 'default' => '#0054a6'])
+            ->where('colourTokens.2.default', '#ffffff'));
 });
 
-it('creates a theme and validates required colours', function () {
+it('rejects an invalid colour with a message saying what to type', function () {
     $this->actingAs($this->admin)
-        ->post(route('admin.settings.themes.store'), ['name' => 'Fresh', 'tokens' => ['primary' => 'nope']])
-        ->assertSessionHasErrors(['tokens.primary', 'tokens.nav-background']);
+        ->post(route('admin.themes.store'), ['name' => 'Fresh', 'tokens' => ['primary' => 'nope']])
+        ->assertSessionHasErrors(['tokens.primary' => 'That is not a colour. Use #RGB or #RRGGBB, for example #d63939.'])
+        ->assertSessionDoesntHaveErrors(['tokens.nav-background']);
+});
+
+it('saves unset colours as unset rather than black', function () {
+    $this->actingAs($this->admin)
+        ->post(route('admin.themes.store'), ['name' => 'Bare', 'tokens' => ['primary' => '', 'surface' => null]])
+        ->assertRedirect(route('admin.themes.index'));
+
+    $bare = Theme::whereCode('bare')->firstOrFail();
+    expect($bare->tokens)->toBe([])
+        ->and($bare->renderCss())->not->toContain('--mp-primary:')
+        ->and($bare->renderCss())->not->toContain('#000');
 
     $this->actingAs($this->admin)
-        ->post(route('admin.settings.themes.store'), [
+        ->patch(route('admin.themes.update', $this->theme), ['name' => 'Custom Look', 'tokens' => ['primary' => '#112233', 'nav-background' => '']])
+        ->assertSessionHasNoErrors();
+    expect($this->theme->fresh()->tokens)->toBe(['primary' => '#112233']);
+});
+
+it('creates a theme with only the colours that were set', function () {
+    $this->actingAs($this->admin)
+        ->post(route('admin.themes.store'), [
             'name' => 'Fresh',
             'css' => 'body{}',
             'active' => 1,
             'tokens' => ['primary' => '#112233', 'nav-background' => '#445566', 'surface' => ''],
         ])
-        ->assertRedirect(route('admin.settings.index'))
+        ->assertRedirect(route('admin.themes.index'))
         ->assertSessionHas('successMessage');
 
     $created = Theme::whereCode('fresh')->firstOrFail();
@@ -61,7 +80,7 @@ it('creates a theme and validates required colours', function () {
 });
 
 it('renders the edit form and updates a theme', function () {
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.edit', $this->theme))
+    $this->actingAs($this->admin)->get(route('admin.themes.edit', $this->theme))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Themes/Edit')
@@ -71,12 +90,12 @@ it('renders the edit form and updates a theme', function () {
             ->has('colourTokens'));
 
     $this->actingAs($this->admin)
-        ->patch(route('admin.settings.themes.update', $this->theme), [
+        ->patch(route('admin.themes.update', $this->theme), [
             'name' => 'Renamed',
             'dark_mode' => 1,
             'tokens' => ['primary' => '#000000', 'nav-background' => '#ffffff'],
         ])
-        ->assertRedirect(route('admin.settings.index'))
+        ->assertRedirect(route('admin.themes.index'))
         ->assertSessionHas('successMessage');
 
     $fresh = $this->theme->fresh();
@@ -86,12 +105,12 @@ it('renders the edit form and updates a theme', function () {
 it('only changes active and dark mode on a readonly theme', function () {
     $readonly = Theme::factory()->create(['name' => 'Locked', 'readonly' => true]);
 
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.edit', $readonly))
+    $this->actingAs($this->admin)->get(route('admin.themes.edit', $readonly))
         ->assertInertia(fn (Assert $page) => $page->component('Admin/Themes/Edit')->where('theme.readonly', true));
 
     $this->actingAs($this->admin)
-        ->patch(route('admin.settings.themes.update', $readonly), ['name' => 'Hacked', 'active' => 1, 'dark_mode' => 1, 'tokens' => ['primary' => '#000000']])
-        ->assertRedirect(route('admin.settings.index'));
+        ->patch(route('admin.themes.update', $readonly), ['name' => 'Hacked', 'active' => 1, 'dark_mode' => 1, 'tokens' => ['primary' => '#000000']])
+        ->assertRedirect(route('admin.themes.index'));
 
     $fresh = $readonly->fresh();
     expect($fresh->name)->toBe('Locked')
@@ -101,22 +120,41 @@ it('only changes active and dark mode on a readonly theme', function () {
 });
 
 it('confirms and deletes a theme', function () {
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.delete', $this->theme))
+    $this->actingAs($this->admin)->get(route('admin.themes.delete', $this->theme))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Themes/Delete')
-            ->where('theme', ['id' => $this->theme->id, 'name' => 'Custom Look']));
+            ->where('theme', [
+                'id' => $this->theme->id,
+                'name' => 'Custom Look',
+                'active' => false,
+                'dark_mode' => false,
+                'tokens' => ['primary' => '#0054a6', 'nav-background' => '#182433'],
+            ]));
 
-    $this->actingAs($this->admin)->delete(route('admin.settings.themes.destroy', $this->theme))
-        ->assertRedirect(route('admin.settings.index'))
+    $this->actingAs($this->admin)->delete(route('admin.themes.destroy', $this->theme))
+        ->assertRedirect(route('admin.themes.index'))
         ->assertSessionHas('successMessage');
     expect(Theme::find($this->theme->id))->toBeNull();
 });
 
-it('refuses to delete a readonly theme', function () {
-    $readonly = Theme::factory()->create(['readonly' => true]);
+it('redirects with a message instead of erroring when deleting a built-in theme', function () {
+    $builtIn = Theme::factory()->create(['name' => 'Built In', 'readonly' => true]);
 
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.delete', $readonly))->assertStatus(400);
-    $this->actingAs($this->admin)->delete(route('admin.settings.themes.destroy', $readonly))->assertStatus(400);
-    expect($readonly->fresh())->not->toBeNull();
+    $this->actingAs($this->admin)->get(route('admin.themes.delete', $builtIn))
+        ->assertRedirect(route('admin.themes.index'))
+        ->assertSessionHas('errorMessage');
+
+    $this->actingAs($this->admin)->delete(route('admin.themes.destroy', $builtIn))
+        ->assertRedirect(route('admin.themes.index'))
+        ->assertSessionHas('errorMessage');
+    expect(Theme::query()->whereKey($builtIn->id)->exists())->toBeTrue();
+});
+
+it('lists themes on the standalone themes page', function () {
+    $this->actingAs($this->admin)->get(route('admin.themes.index'))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Themes/Index')
+            ->has('themes', fn (Assert $themes) => $themes->etc()));
 });

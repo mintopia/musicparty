@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import {computed, inject, onBeforeUnmount, ref, watch} from 'vue';
 import DevicePicker from '@/components/Dashboard/DevicePicker.vue';
+import StatePill, {type PlaybackState} from '@/components/StatePill.vue';
 import {
-    badgeFor,
     errorCode,
     fetchDevices,
     formatMs,
@@ -12,15 +12,23 @@ import {
     startPlayback,
     type PanelState,
 } from '@/lib/dashboard';
+import type {PlaybackStatus} from '@/lib/playbackStatus';
 import type {DashboardControl} from '@/types';
 
-const props = defineProps<{
-    code: string;
-    host: string;
-    start: DashboardControl['start'];
-    playingFromLabel: string | null;
-    canControl: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        code: string;
+        host: string;
+        start: DashboardControl['start'];
+        status: PlaybackStatus;
+        webPlayerUrl: string | null;
+        relinkUrl: string;
+        playingFromLabel: string | null;
+        canControl: boolean;
+        canStart?: boolean;
+    }>(),
+    {canStart: true},
+);
 
 const notify = inject(notifyKey, () => undefined);
 
@@ -50,14 +58,44 @@ const state = computed<PanelState>(() => {
     if (retryIn.value > 0) {
         return 'rate_limited';
     }
-    return localState.value ?? props.start.state;
+    return localState.value ?? statusState.value;
 });
-const badge = computed(() => badgeFor(state.value));
+const statusState = computed<PanelState>(() => {
+    switch (props.status.kind) {
+        case 'relink':
+            return 'relink_required';
+        case 'no_device':
+            return 'no_device';
+        case 'stale':
+            return 'stale';
+        case 'outside':
+            return 'outside';
+        default:
+            return props.start.state === 'hidden' ? 'idle' : props.start.state;
+    }
+});
+const badge = computed<{text: string; tone: PlaybackState}>(() => {
+    switch (state.value) {
+        case 'starting':
+            return {text: 'Starting', tone: 'live'};
+        case 'rate_limited':
+            return {text: 'Spotify busy', tone: 'warn'};
+        case 'premium_required':
+            return {text: 'Premium required', tone: 'error'};
+        case 'no_device':
+            return {text: 'No device', tone: 'error'};
+        case 'relink_required':
+            return {text: 'Re-link needed', tone: 'error'};
+        default:
+            return {text: props.status.headline, tone: props.status.tone};
+    }
+});
 const target = computed(() => props.start.target);
 const selectedDevice = computed(() => devices.value.find((device) => device.id === selected.value) ?? null);
-const showDevices = computed(() => !['premium_required', 'relink_required'].includes(state.value));
-const showWill = computed(() => ['outside', 'idle'].includes(state.value) && target.value !== null);
-const showButton = computed(() => state.value !== 'relink_required');
+const showDevices = computed(() => props.canStart && !['premium_required', 'relink_required'].includes(state.value));
+const showWill = computed(() => ['outside', 'idle', 'stale'].includes(state.value) && target.value !== null);
+const showButton = computed(() => props.canStart && state.value !== 'relink_required');
+const showRelink = computed(() => props.canStart && state.value === 'relink_required');
 const disabled = computed(
     () =>
         !props.canControl ||
@@ -97,8 +135,9 @@ async function refreshDevices(): Promise<void> {
         if (!devices.value.some((device) => device.id === selected.value)) {
             selected.value = devices.value.find((device) => device.isActive && !device.isRestricted)?.id ?? null;
         }
-        if (devices.value.length > 0 && localState.value === 'no_device') {
+        if (devices.value.length > 0 && (localState.value === 'no_device' || props.status.kind === 'no_device')) {
             localState.value = null;
+            reloadDashboard(['control', 'attention']);
         }
     } catch (error) {
         const failure = errorCode(error);
@@ -150,8 +189,8 @@ onBeforeUnmount(stopCountdown);
 <template>
     <div class="deck-panel" data-bs-theme="dark" data-test="start-panel">
         <div class="d-flex align-items-center mb-2">
-            <h3 class="mb-0 flex-grow-1 text-white">Start Playback</h3>
-            <span class="badge" :class="badge.cls" data-test="start-badge">{{ badge.text }}</span>
+            <h3 class="h2 mb-0 flex-grow-1 text-white">Start Playback</h3>
+            <StatePill :state="badge.tone" data-test="start-badge">{{ badge.text }}</StatePill>
         </div>
 
         <div class="small" data-test="start-message">
@@ -167,6 +206,7 @@ onBeforeUnmount(stopCountdown);
                 >Asking Spotify to start the party on {{ selectedDevice?.name ?? 'your device' }}.</template
             >
             <template v-else-if="state === 'rate_limited'">Spotify is busy, try again in {{ retryIn }} s.</template>
+            <template v-else-if="state === 'stale'">{{ status.panelMessage }}</template>
             <template v-else-if="state === 'no_device'"
                 >No Spotify app is open on {{ host }}'s account. Open Spotify on the DJ laptop or wake the Encore
                 speaker, then refresh.</template
@@ -180,6 +220,16 @@ onBeforeUnmount(stopCountdown);
                 and re-link Spotify.</template
             >
             <template v-else>Nothing is playing on {{ host }}'s Spotify.</template>
+        </div>
+
+        <div v-if="!canStart" class="deck-lock mt-3" data-test="start-owner-only">
+            <i class="ti ti-lock" aria-hidden="true"></i>
+            <div>
+                <div class="fw-medium text-white">Only {{ host }} can start playback on their Spotify.</div>
+                <div class="small">
+                    You can pause, skip, rate and manage the Queue from here. Ask {{ host }} to start the party.
+                </div>
+            </div>
         </div>
 
         <template v-if="showDevices">
@@ -208,6 +258,17 @@ onBeforeUnmount(stopCountdown);
         <div v-if="inlineError" class="deck-error small mt-3" role="alert" data-test="start-error">
             {{ inlineError }}
         </div>
+
+        <template v-if="showRelink">
+            <div class="mt-3">
+                <a :href="relinkUrl" class="btn btn-primary btn-start w-100" data-test="relink-button">
+                    <i class="ti ti-link me-2"></i>Re-link Spotify
+                </a>
+            </div>
+            <div class="text-secondary small mt-2">
+                You will sign in to Spotify again. Playback resumes where it stopped.
+            </div>
+        </template>
 
         <template v-if="showButton">
             <div class="mt-3">
@@ -254,6 +315,19 @@ onBeforeUnmount(stopCountdown);
     height: 40px;
     border-radius: 4px;
     object-fit: cover;
+}
+.deck-lock {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--mp-deck-border);
+    border-radius: 8px;
+    color: var(--mp-deck-muted);
+}
+.deck-lock .ti {
+    font-size: 1.25rem;
+    color: var(--mp-deck-text);
 }
 .deck-error {
     color: var(--mp-deck-accent-danger);

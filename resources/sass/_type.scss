@@ -1,0 +1,146 @@
+// Type scale and skip link. :where() keeps specificity at zero so component-scoped sizes
+// (TV, player band, deck panels, search tiles) still win.
+
+:root,
+:host {
+    --mp-fs-small: 0.8125rem;
+    --mp-fs-body: 0.9375rem;
+    --mp-fs-h4: 1rem;
+    --mp-fs-h3: 1.1875rem;
+    --mp-fs-h2: 1.5rem;
+    --mp-fs-h1: 2rem;
+    --mp-fs-display: 2.5rem;
+}
+
+:where(.page-body) {
+    font-size: var(--mp-fs-body);
+    line-height: 1.55;
+}
+
+:where(.page-body) :where(h1, .h1, .page-title) {
+    font-size: var(--mp-fs-h1);
+    font-weight: 700;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+}
+
+:where(.page-body) :where(h2, .h2) {
+    font-size: var(--mp-fs-h2);
+    font-weight: 650;
+    line-height: 1.25;
+    letter-spacing: -0.015em;
+}
+
+:where(.page-body) :where(h3, .h3, .card-title) {
+    font-size: var(--mp-fs-h3);
+    font-weight: 600;
+    line-height: 1.35;
+    letter-spacing: -0.01em;
+}
+
+:where(.page-body) :where(h4, .h4) {
+    font-size: var(--mp-fs-h4);
+    font-weight: 600;
+    line-height: 1.4;
+}
+
+:where(.page-body) :where(h1, h2, h3, h4) {
+    text-wrap: balance;
+}
+
+:where(.page-body) :where(small, .small, .text-small) {
+    font-size: var(--mp-fs-small);
+}
+
+.mp-page-head h1,
+.page-body .page-header > h1,
+.page-body h1.page-title,
+.mp-display {
+    margin: 0;
+    font-size: var(--mp-fs-display);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
+}
+
+@media (max-width: 575.98px) {
+    .mp-page-head h1,
+    .page-body .page-header > h1,
+    .page-body h1.page-title,
+    .mp-display {
+        font-size: var(--mp-fs-h1);
+    }
+}
+
+// Above Tabler's fixed sidebar (z-index 1030) so focus never lands behind it.
+.mp-skip {
+    position: fixed;
+    inset-block-start: 8px;
+    inset-inline-start: 8px;
+    z-index: 1090;
+    padding: 8px 16px;
+    border-radius: 8px;
+    background: var(--tblr-primary);
+    color: #fff;
+    font-weight: 600;
+    text-decoration: none;
+    box-shadow: 0 4px 16px rgb(0 0 0 / 25%);
+    transform: translateY(calc(-100% - 16px));
+    transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
+
+    &:focus-visible {
+        color: #fff;
+        transform: none;
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-skip {
+        transition: none;
+    }
+}
+
+.mp-breadcrumbs {
+    .breadcrumb {
+        flex-wrap: nowrap;
+        align-items: center;
+    }
+
+    .breadcrumb-item {
+        white-space: nowrap;
+    }
+
+    .breadcrumb-item.active {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        min-inline-size: 0;
+    }
+
+    .mp-crumb-toggle {
+        padding: 0;
+        min-block-size: 44px;
+        min-inline-size: 32px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        margin-inline: -6px;
+    }
+}
+
+// Tabler's phone gutter is 8px, which put setting hints against the screen edge.
+@media (max-width: 575.98px) {
+    .page-body > .container-xl {
+        padding-inline: 16px;
+    }
+}
+
+@media (max-width: 767.98px) {
+    .page-body .row.g-4 {
+        --tblr-gutter-x: 0;
+        margin-inline: 0;
+
+        > * {
+            padding-inline: 0;
+        }
+    }
+}

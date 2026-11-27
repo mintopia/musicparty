@@ -36,7 +36,7 @@ class UpcomingSongPolicy
      */
     public function update(User $user, UpcomingSong $upcomingSong): bool
     {
-        return $upcomingSong->party->canBeManagedBy($user);
+        return $upcomingSong->party->canBeModeratedBy($user);
     }
 
     /**

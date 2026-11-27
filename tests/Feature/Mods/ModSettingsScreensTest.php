@@ -2,6 +2,7 @@
 
 use App\Enums\Purpose;
 use App\Enums\SettingType;
+use App\Models\AiReview;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
@@ -234,7 +235,7 @@ describe('admin Mods screen', function () {
         $this->admin->roles()->attach(Role::query()->firstWhere('code', 'admin') ?? Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']));
     });
 
-    it('lists only instance-only settings, without secret values', function () {
+    it('lists every registered mod, with only instance-only settings and no secret values', function () {
         $this->store->setInstance('foo', 'api_key', 'topsecret');
         Mod::factory()->create(['code' => 'plain', 'name' => 'Plain']);
 
@@ -242,8 +243,10 @@ describe('admin Mods screen', function () {
             ->assertOk()->assertDontSee('topsecret')
             ->assertInertia(fn (Assert $page) => $page
                 ->component('Admin/Mods')
-                ->has('mods', 1)
+                ->has('mods', 2)
                 ->where('mods.0.code', 'foo')
+                ->where('mods.1.code', 'plain')
+                ->where('mods.1.settings', [])
                 ->where('mods.0.settings', fn ($settings) => collect($settings)->pluck('code')->all() === ['api_key', 'instance_name'])
                 ->where('mods.0.settings.0.has_value', true)
                 ->where('mods.0.settings.0.value', null)
@@ -258,6 +261,17 @@ describe('admin Mods screen', function () {
 
         $this->actingAs($this->admin)->put(route('admin.mods.update'), ['mods' => ['foo' => ['settings' => ['title' => 'x', 'hidden' => 'y']]]])
             ->assertSessionHasErrors(['mods.foo.settings.title', 'mods.foo.settings.hidden']);
+    });
+
+    it('reports AI review stats from ai_reviews only', function () {
+        Mod::factory()->create(['code' => 'ai-request-review', 'name' => 'AI Request Review']);
+        AiReview::factory()->count(2)->create();
+
+        $this->actingAs($this->admin)->get(route('admin.mods.edit'))
+            ->assertInertia(fn (Assert $page) => $page
+                ->where('mods', fn ($mods) => collect($mods)->firstWhere('code', 'ai-request-review')['review_stats']['reviews_today'] === 2
+                    && collect($mods)->firstWhere('code', 'foo')['review_stats'] === null)
+            );
     });
 
     it('is admin-only', function () {

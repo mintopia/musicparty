@@ -23,7 +23,9 @@ const navigation = computed(() =>
         auth: {
             ...page.props.auth,
             parties: page.props.auth.parties.map((party) =>
-                party.canManage ? {...party, flaggedCount: flaggedCountFor(party.code, party.flaggedCount)} : party,
+                party.canManage || party.canModerate
+                    ? {...party, flaggedCount: flaggedCountFor(party.code, party.flaggedCount)}
+                    : party,
             ),
         },
     }).map((item) => ({...item, active: isActive(item, page.url)})),
@@ -50,6 +52,7 @@ useFlaggedCountSync();
     <Head :title="title ?? name">
         <link v-if="site.favicon" rel="shortcut icon" :href="site.favicon" />
     </Head>
+    <a class="mp-skip" href="#main">Skip to content</a>
     <div class="page d-flex flex-column" style="min-height: 100vh">
         <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
             <div class="container-fluid">
@@ -63,7 +66,7 @@ useFlaggedCountSync();
                 >
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <h1 id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2">
+                <p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0">
                     <a :href="home().url">
                         <template v-if="site.logoLight">
                             <img
@@ -76,7 +79,7 @@ useFlaggedCountSync();
                         </template>
                         <span v-else class="site-brand-name">{{ name }}</span>
                     </a>
-                </h1>
+                </p>
 
                 <div id="sidebar-menu" class="navbar-collapse collapse" :class="{show: menuOpen}">
                     <ul class="navbar-nav pt-lg-3">
@@ -160,12 +163,12 @@ useFlaggedCountSync();
                 </div>
             </header>
             <slot name="header" />
-            <div class="page-body">
+            <main id="main" class="page-body">
                 <div class="container-xl">
                     <FlashMessages />
                     <slot />
                 </div>
-            </div>
+            </main>
             <footer class="footer footer-transparent ae-footer d-print-none mt-auto">
                 <div class="container-xl">
                     <AppliedEntropyFooter />

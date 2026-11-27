@@ -4,6 +4,7 @@ import {reactive} from 'vue';
 import Home from '@/pages/Home.vue';
 import Edit from '@/pages/Users/Edit.vue';
 import LinkedAccountDelete from '@/pages/Users/LinkedAccountDelete.vue';
+import PartyInviteCard from '@/components/PartyInviteCard.vue';
 import Login from '@/pages/Users/Login.vue';
 import Profile from '@/pages/Users/Profile.vue';
 import Signup from '@/pages/Users/Signup.vue';
@@ -22,8 +23,9 @@ vi.mock('@inertiajs/vue3', () => ({
             ...initial,
             errors: inertia.errors,
             processing: false,
+            clearErrors: () => undefined,
         }) as Record<string, unknown>;
-        for (const method of ['put', 'patch', 'delete']) {
+        for (const method of ['put', 'patch', 'delete', 'post']) {
             form[method] = (url: string) => {
                 const data = Object.fromEntries(Object.keys(initial).map((key) => [key, form[key]]));
                 inertia.submitted.push({method, url, data});
@@ -48,8 +50,8 @@ vi.mock('@/routes/linkedaccounts', () => ({
     deleteMethod: (id: number) => ({url: `/profile/accounts/${id}/delete`}),
     destroy: (id: number) => ({url: `/profile/accounts/${id}`}),
 }));
-vi.mock('@/routes/parties', () => ({create: () => ({url: '/parties/create'})}));
-vi.mock('@/routes/user', () => ({profile: () => ({url: '/profile'})}));
+vi.mock('@/routes/parties', () => ({create: () => ({url: '/parties/create'}), join: () => ({url: '/parties/join'})}));
+vi.mock('@/routes/user', () => ({profile: () => ({url: '/profile'}), spotify: () => ({url: '/profile/spotify'})}));
 vi.mock('@/routes/user/profile', () => ({
     edit: () => ({url: '/profile/edit'}),
     update: () => ({url: '/profile'}),
@@ -58,11 +60,46 @@ vi.mock('@/routes/user/profile', () => ({
 const user = {nickname: 'Ada', email: 'ada@example.test', avatar: 'https://img.test/a.png'};
 
 describe('user pages', () => {
-    it('renders the home profile card', () => {
-        const wrapper = mount(Home, {props: {user}});
-        expect(wrapper.text()).toContain('Ada');
-        expect(wrapper.text()).toContain('ada@example.test');
-        expect(wrapper.find('.avatar').attributes('style')).toContain('https://img.test/a.png');
+    it('renders the home party list with join and create', () => {
+        const wrapper = mount(Home, {
+            props: {
+                parties: [
+                    {
+                        code: 'KXQB',
+                        name: 'Coyote LAN 26',
+                        role: 'Owner',
+                        roleCode: 'owner',
+                        playback: 'playing',
+                        detail: 'Midnight City, M83',
+                        cover: null,
+                        canModerate: true,
+                        url: '/parties/KXQB/dashboard',
+                    },
+                ],
+            },
+        });
+        expect(wrapper.find('h1').text()).toBe('Your parties');
+        expect(wrapper.text()).toContain('Coyote LAN 26');
+        expect(wrapper.text()).toContain('Owner');
+        expect(wrapper.text()).toContain('Playing');
+        expect(wrapper.find('input.mp-code-input').exists()).toBe(true);
+        expect(wrapper.find('a[href="/parties/create"]').exists()).toBe(true);
+    });
+
+    it('shows guests online on the invite card with singular and plural', () => {
+        const party = {
+            code: 'KXQB',
+            name: 'Coyote LAN 26',
+            host: 'Jess',
+            online: 1,
+            playback: 'idle' as const,
+            detail: null,
+            cover: null,
+        };
+        expect(mount(PartyInviteCard, {props: {party}}).text()).toContain('Hosted by Jess, 1 guest online');
+        expect(mount(PartyInviteCard, {props: {party: {...party, online: 5}}}).text()).toContain(
+            'Hosted by Jess, 5 guests online',
+        );
     });
 
     it('renders a login button per provider', () => {
@@ -123,8 +160,9 @@ describe('user pages', () => {
         const removes = wrapper.findAll('a.btn-outline-danger');
         expect(removes).toHaveLength(1);
         expect(removes[0].attributes('href')).toBe('/profile/accounts/1/delete');
-        expect(wrapper.find('img').attributes('src')).toBe('/s.png');
-        expect(wrapper.find('a.btn-github').attributes('href')).toBe('/profile/accounts/github/link');
+        expect(wrapper.find('[aria-label="Spotify Avatar"]').attributes('style')).toContain('/s.png');
+        expect(wrapper.find('a[href="/profile/accounts/github/link"]').text()).toContain('GitHub');
+        expect(wrapper.find('a[href="/profile/spotify"]').exists()).toBe(true);
         expect(wrapper.find('a.btn-primary').attributes('href')).toBe('/profile/edit');
     });
 
@@ -135,6 +173,8 @@ describe('user pages', () => {
 
         const full = mount(Spotify, {props: {spotify: {name: 'Ada'}, search: {name: 'Ada S'}}});
         expect(full.find('a.btn-primary').attributes('href')).toBe('/parties/create');
+        expect(partial.text()).toContain('Search still needs linking.');
+        expect(partial.text()).toContain('Link Spotify for search');
         expect(full.text()).toContain('Ada S');
     });
 
@@ -149,7 +189,7 @@ describe('user pages', () => {
     it('confirms linked account removal with DELETE', async () => {
         inertia.submitted.length = 0;
         const wrapper = mount(LinkedAccountDelete, {props: {account: {id: 7, providerName: 'Discord'}}});
-        expect(wrapper.find('h1').text()).toBe('Remove Linked Discord Account');
+        expect(wrapper.find('h1').text()).toBe('Unlink Discord');
         await wrapper.find('form').trigger('submit');
         expect(inertia.submitted[0]).toMatchObject({method: 'delete', url: '/profile/accounts/7'});
     });

@@ -15,10 +15,12 @@ const props = defineProps<{
 }>();
 
 const hints: Record<string, string> = {
-    owner: 'The user will have full control of the party',
-    vip: 'A VIP user. They can bypass some of the request restrictions.',
-    user: 'An ordinary user of the party, they can request songs',
-    banned: 'This user will not be able to make requests',
+    owner: 'Full control of the party, including Settings, members and playback.',
+    moderator:
+        "Removes, approves and rejects Requests, schedules them and reads AI reviews. Cannot change Settings or roles, or start playback on the owner's Spotify.",
+    vip: 'Skips some Request limits.',
+    user: 'Requests tracks and votes.',
+    banned: 'Cannot make Requests or vote.',
 };
 
 const usersUrl = `/parties/${props.party.code}/users`;
@@ -41,47 +43,57 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Edit ${member.nickname} - ${party.name}`" />
-        <div class="page-header mt-0">
-            <h1>Edit {{ member.nickname }}</h1>
+        <div class="mp-page-head">
+            <div>
+                <h1>Change role for {{ member.nickname }}</h1>
+                <p>The role takes effect straight away.</p>
+            </div>
         </div>
-        <div class="col-md-6 offset-md-3">
+        <div class="mp-narrow" style="margin: 0">
             <form class="card" @submit.prevent="submit">
                 <div class="card-body">
-                    <div class="mb-3">
-                        <h3 class="card-title">Role</h3>
-                        <p class="card-subtitle">A user's role determines what permissions they have for the party.</p>
-                        <div v-if="isSelf" class="alert alert-warning" data-test="self-warning">
-                            <div class="d-flex">
-                                <div class="p-2">
-                                    <i class="icon ti ti-alert-triangle"></i>
-                                </div>
-                                <div>
-                                    You are editing permissions for yourself. If you change your membership from owner,
-                                    you will be unable to manage this party.
-                                </div>
+                    <div v-if="isSelf" class="alert alert-warning" data-test="self-warning">
+                        <div class="d-flex">
+                            <div class="p-2">
+                                <i class="icon ti ti-alert-triangle" aria-hidden="true"></i>
+                            </div>
+                            <div>
+                                You are editing permissions for yourself. If you change your membership from owner, you
+                                will be unable to manage this party.
                             </div>
                         </div>
-                        <div>
-                            <label v-for="role in roles" :key="role.code" class="form-check">
+                    </div>
+                    <fieldset>
+                        <legend class="form-label">Role</legend>
+                        <div class="form-selectgroup form-selectgroup-boxes d-flex flex-column mp-roles">
+                            <label v-for="role in roles" :key="role.code" class="form-selectgroup-item flex-fill">
                                 <input
                                     v-model="form.role"
-                                    class="form-check-input"
+                                    class="form-selectgroup-input"
                                     type="radio"
                                     name="role"
                                     :value="role.code"
                                 />
-                                <span class="form-check-label">{{ role.name }}</span>
-                                <p class="form-hint">{{ hints[role.code] }}</p>
+                                <span class="form-selectgroup-label d-flex align-items-center">
+                                    <span class="me-3"><span class="form-selectgroup-check"></span></span>
+                                    <span>
+                                        <b
+                                            >{{ role.name }}
+                                            <span v-if="role.code === 'moderator'" class="badge bg-azure-lt ms-1"
+                                                >New</span
+                                            ></b
+                                        >
+                                        <span class="d-block">{{ hints[role.code] }}</span>
+                                    </span>
+                                </span>
                             </label>
                         </div>
-                    </div>
+                    </fieldset>
                     <p v-if="form.errors.role" class="invalid-feedback d-block">{{ form.errors.role }}</p>
                 </div>
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link :href="memberUrl" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
-                    </div>
+                <div class="card-footer d-flex">
+                    <Link :href="memberUrl" class="btn btn-link link-secondary">Cancel</Link>
+                    <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save role</button>
                 </div>
             </form>
         </div>

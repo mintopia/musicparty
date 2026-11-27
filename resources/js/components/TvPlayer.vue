@@ -132,7 +132,7 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
                             <template v-if="state.current?.user != null">
                                 Requested by <b>{{ state.current.user }}</b>
                             </template>
-                            <template v-else>Fallback Track</template>
+                            <template v-else>From Fallback Playlist</template>
                         </span>
                         <span v-else class="tv-by"></span>
                         <span v-if="state.current" class="tv-score" data-test="tv-score">
