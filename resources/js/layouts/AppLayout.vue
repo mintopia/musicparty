@@ -4,6 +4,7 @@ import {computed, ref} from 'vue';
 import AppliedEntropyFooter from '@/components/AppliedEntropyFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {useColorMode} from '@/composables/useColorMode';
+import {flaggedCountFor, useFlaggedCountSync} from '@/composables/useFlaggedCounts';
 import {buildNavigation, isActive, isLinkActive} from '@/lib/navigation';
 import {home} from '@/routes';
 import {unimpersonate} from '@/routes/admin';
@@ -17,7 +18,15 @@ const user = computed(() => page.props.auth.user);
 const site = computed(() => page.props.site);
 const name = computed(() => page.props.instanceName ?? '');
 const navigation = computed(() =>
-    buildNavigation(page.props).map((item) => ({...item, active: isActive(item, page.url)})),
+    buildNavigation({
+        ...page.props,
+        auth: {
+            ...page.props.auth,
+            parties: page.props.auth.parties.map((party) =>
+                party.canManage ? {...party, flaggedCount: flaggedCountFor(party.code, party.flaggedCount)} : party,
+            ),
+        },
+    }).map((item) => ({...item, active: isActive(item, page.url)})),
 );
 
 const menuOpen = ref(false);
@@ -34,6 +43,7 @@ function toggleDropdown(key: string, active: boolean): void {
 }
 
 useColorMode();
+useFlaggedCountSync();
 </script>
 
 <template>
