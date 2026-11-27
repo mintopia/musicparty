@@ -9,7 +9,7 @@ use App\Models\Theme;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
-use App\Services\Dashboard\PartyDashboard;
+use App\Services\Dashboard\PartyPlayerControl;
 use App\Services\Dashboard\SystemHealth;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
@@ -100,7 +100,7 @@ it('is not part of the default seeder', function () {
 
 it('seeds the no-device and outside-party dashboard states', function () {
     $this->artisan('review:seed')->assertSuccessful();
-    $dashboard = app(PartyDashboard::class);
+    $dashboard = app(PartyPlayerControl::class);
     $startState = function (string $code) use ($dashboard): string {
         $party = Party::where('code', $code)->firstOrFail();
 

@@ -7,6 +7,8 @@ use Illuminate\Support\Facades\Cache;
 
 final class PartyDashboardCache
 {
+    public const int READ_SECONDS = 10;
+
     public static function playbackKey(Party $party): string
     {
         return "party.{$party->id}.dashboard.playback";
