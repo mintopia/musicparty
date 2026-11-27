@@ -650,6 +650,24 @@ describe('needs attention', () => {
         expect(post('/parties/ABCD/flagged/7/reject')).toHaveLength(1);
     });
 
+    it('shows labelled actions and a why line from stored data only', () => {
+        const ai = {
+            ...flagged(1, 'Last Christmas'),
+            reason: 'Troll pick',
+            ai_review: {criterion: null, confidence: 0.91, reason: null},
+        };
+        const wrapper = mountPage({flagged: [ai, flagged(2, 'Axel F'), {...flagged(3, 'Rule'), reason: 'No loops'}]});
+        const rows = wrapper.findAll('[data-test="flagged-row"]');
+
+        expect(rows[0].find('[data-test="approve"]').text()).toBe('Approve');
+        expect(rows[0].find('[data-test="reject"]').text()).toBe('Reject');
+        expect(rows[0].find('[data-test="flagged-why"]').text()).toBe('Troll pick, 91% confident');
+        expect(rows[1].find('[data-test="flagged-why"]').exists()).toBe(false);
+        expect(rows[2].find('[data-test="flagged-why"]').text()).toBe('No loops');
+        expect(wrapper.text()).toContain('waiting for approval');
+        expect(wrapper.text()).toContain('Open Flagged Requests');
+    });
+
     it('hides approve and reject without moderation rights', () => {
         const wrapper = mountPage({flagged: [flagged(7, 'Last Christmas')], moderate: false});
 

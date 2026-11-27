@@ -54,6 +54,15 @@ function perform(issue: DashboardIssue): Promise<void> {
 
 const artists = (item: FlaggedRequest): string => item.track.artists.map((a) => a.name).join(', ');
 
+function whyFor(item: FlaggedRequest): string | null {
+    const confidence = item.ai_review?.confidence;
+    const parts = [
+        item.reason,
+        confidence === null || confidence === undefined ? null : `${Math.round(confidence * 100)}% confident`,
+    ].filter((part): part is string => Boolean(part));
+    return parts.length > 0 ? parts.join(', ') : null;
+}
+
 async function act(action: () => Promise<unknown>): Promise<void> {
     busy.value = true;
     await run(action);
@@ -114,7 +123,8 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                     >
                         <i class="ti ti-flag na-ico text-danger" aria-hidden="true"></i>
                         <span class="fw-medium flex-grow-1 text-start"
-                            >{{ flaggedTotal }} Flagged Request{{ flaggedTotal === 1 ? '' : 's' }}</span
+                            >{{ flaggedTotal }} Flagged Request{{ flaggedTotal === 1 ? '' : 's' }} waiting for
+                            approval</span
                         >
                         <i class="ti text-secondary" :class="open ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
                     </button>
@@ -124,6 +134,9 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                                 <div class="fw-medium">{{ item.track.name }}</div>
                                 <div class="na-detail">
                                     {{ artists(item) }} · {{ item.requester.name }}
+                                    <template v-if="whyFor(item)">
+                                        · <span data-test="flagged-why">{{ whyFor(item) }}</span>
+                                    </template>
                                     <template v-if="item.ai_review_url">
                                         ·
                                         <a :href="item.ai_review_url" data-test="ai-review-link">AI review</a>
@@ -133,25 +146,25 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                             <div v-if="canModerate" class="na-acts">
                                 <button
                                     type="button"
-                                    class="btn btn-success na-btn"
+                                    class="btn btn-outline-success na-btn lab"
                                     title="Approve"
                                     :aria-label="`Approve ${item.track.name}`"
                                     :disabled="busy"
                                     data-test="approve"
                                     @click="act(() => approveFlagged(code, item.id))"
                                 >
-                                    <i class="ti ti-check"></i>
+                                    <i class="ti ti-check"></i>Approve
                                 </button>
                                 <button
                                     type="button"
-                                    class="btn btn-outline-danger na-btn"
+                                    class="btn btn-outline-danger na-btn lab"
                                     title="Reject"
                                     :aria-label="`Reject ${item.track.name}`"
                                     :disabled="busy"
                                     data-test="reject"
                                     @click="act(() => rejectFlagged(code, item.id))"
                                 >
-                                    <i class="ti ti-x"></i>
+                                    <i class="ti ti-x"></i>Reject
                                 </button>
                             </div>
                         </li>
@@ -159,7 +172,7 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                 </div>
             </div>
             <div class="card-footer py-2">
-                <a :href="flaggedUrl" class="small">Flagged page <i class="ti ti-chevron-right"></i></a>
+                <a :href="flaggedUrl" class="small">Open Flagged Requests <i class="ti ti-chevron-right"></i></a>
             </div>
         </template>
     </div>
@@ -214,6 +227,19 @@ async function act(action: () => Promise<unknown>): Promise<void> {
 .na-btn .ti {
     font-size: 1.35rem;
 }
+.na-btn.lab {
+    width: auto;
+    min-width: 124px;
+    padding: 0 14px;
+    gap: 6px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+}
+.na-btn.lab .ti {
+    font-size: 1.2rem;
+}
 .na-ghead {
     display: flex;
     align-items: center;
@@ -235,8 +261,21 @@ async function act(action: () => Promise<unknown>): Promise<void> {
     padding: 0 0 4px;
 }
 .na-list .na-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    padding-block: 12px;
     padding-left: 56px;
     border-top: 0;
+}
+.na-list .na-acts {
+    justify-content: flex-start;
+}
+@media (max-width: 575.98px) {
+    .na-list .na-row {
+        padding-left: 20px;
+    }
+    .na-acts .na-btn.lab {
+        flex: 1;
+    }
 }
 </style>
