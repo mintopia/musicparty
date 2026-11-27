@@ -243,6 +243,10 @@ describe('admin users', () => {
         expect(wrapper.find('[data-test="token-note"]').text()).toBe('Token expired 12 days ago');
         expect(wrapper.text()).toContain('Needs re-link');
         expect(wrapper.text()).toContain('Retro Room');
+
+        const table = wrapper.find('[data-test="parties-table"]');
+        expect(table.findAll('th').map((th) => th.text())).toEqual(['Party', 'Role']);
+        expect(table.find('.badge').classes()).toContain('bg-blue-lt');
     });
 
     it('submits the delete forms', async () => {

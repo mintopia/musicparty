@@ -7,6 +7,10 @@ import PageHead from '@/components/PageHead.vue';
 import {show as showParty} from '@/routes/parties';
 import AppLayout from '@/layouts/AppLayout.vue';
 
+function roleBadgeClass(role: string): string {
+    return role === 'Owner' ? 'badge bg-blue-lt' : 'badge bg-secondary-lt';
+}
+
 interface ShowUser {
     id: number;
     nickname: string;
@@ -265,21 +269,47 @@ const summary = [
                         <div v-if="parties.length === 0" class="card-body text-center">
                             <p class="mb-0 text-secondary">Not a member of any party</p>
                         </div>
-                        <ul v-else class="list-group list-group-flush">
-                            <li
-                                v-for="party in parties"
-                                :key="party.code"
-                                class="list-group-item p-3 d-flex justify-content-between gap-2"
-                            >
-                                <span>
-                                    <Link :href="showParty(party.code).url">{{ party.name }}</Link>
-                                    <span class="mp-sub">{{ party.code }}</span>
-                                </span>
-                                <span v-if="party.role" class="badge bg-secondary-lt align-self-start">{{
-                                    party.role
-                                }}</span>
-                            </li>
-                        </ul>
+                        <template v-else>
+                            <table class="table table-vcenter card-table d-none d-md-table" data-test="parties-table">
+                                <thead>
+                                    <tr>
+                                        <th>Party</th>
+                                        <th>Role</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="party in parties" :key="party.code">
+                                        <td>
+                                            <Link :href="showParty(party.code).url">{{ party.name }}</Link>
+                                            <span class="mp-sub">{{ party.code }}</span>
+                                        </td>
+                                        <td>
+                                            <span v-if="party.role" :class="roleBadgeClass(party.role)">{{
+                                                party.role
+                                            }}</span>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <ul class="list-group list-group-flush d-md-none" data-test="parties-list">
+                                <li
+                                    v-for="party in parties"
+                                    :key="party.code"
+                                    class="list-group-item p-3 d-flex justify-content-between gap-2"
+                                >
+                                    <span class="min-w-0">
+                                        <Link :href="showParty(party.code).url">{{ party.name }}</Link>
+                                        <span class="mp-sub">{{ party.code }}</span>
+                                    </span>
+                                    <span
+                                        v-if="party.role"
+                                        :class="roleBadgeClass(party.role)"
+                                        class="align-self-start"
+                                        >{{ party.role }}</span
+                                    >
+                                </li>
+                            </ul>
+                        </template>
                     </div>
                 </div>
             </div>
