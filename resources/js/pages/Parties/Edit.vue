@@ -1,16 +1,17 @@
 <script setup lang="ts">
 import {Head, router, useForm} from '@inertiajs/vue3';
 import {computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch} from 'vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import PartyModsTab from '@/components/PartyModsTab.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import PartySettingsFields from '@/components/PartySettingsFields.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {buildSettings, cloneDraft, initialModDraft, isModDirty, partyModUrl, partyModUsersUrl} from '@/lib/mods';
 import type {ModDraft} from '@/lib/mods';
 import {initialPartyForm} from '@/lib/partyForm';
 import type {NamedOption, PartyFormValues} from '@/lib/partyForm';
-import {home} from '@/routes';
-import {edit, show, update} from '@/routes/parties';
+import {update} from '@/routes/parties';
 import type {LegacyPartyState, PartyMod} from '@/types';
 
 const TABS = [
@@ -244,13 +245,9 @@ function holdFlagged(): void {
 <template>
     <AppLayout title="Settings">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="edit(party.code).url">Settings</a>
-            </li>
+            <Breadcrumbs
+                :items="[...partyCrumbs({code: party.code, name: party.name ?? party.code}), {label: 'Settings'}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

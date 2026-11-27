@@ -53,7 +53,7 @@ function err(field: string): string | undefined {
 <template>
     <div>
         <section v-if="tab === 'general'">
-            <h3 class="settings-heading">Party</h3>
+            <h2 class="settings-heading">Party</h2>
             <SettingRow
                 label="Party is running"
                 for="active"
@@ -120,7 +120,7 @@ function err(field: string): string | undefined {
         </section>
 
         <section v-if="tab === 'requests'">
-            <h3 class="settings-heading">Requests</h3>
+            <h2 class="settings-heading">Requests</h2>
             <SettingRow label="Accept requests" for="allow_requests">
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -195,7 +195,7 @@ function err(field: string): string | undefined {
                 </span>
             </SettingRow>
 
-            <h3 class="settings-heading settings-heading-spaced">Limits</h3>
+            <h2 class="settings-heading settings-heading-spaced">Limits</h2>
             <SettingRow
                 label="Requests per person"
                 for="max_requests"
@@ -277,7 +277,7 @@ function err(field: string): string | undefined {
         </section>
 
         <section v-if="tab === 'playback'">
-            <h3 class="settings-heading">Playback</h3>
+            <h2 class="settings-heading">Playback</h2>
             <SettingRow
                 label="Fallback Playlist"
                 for="backup_playlist_id"
@@ -405,7 +405,7 @@ function err(field: string): string | undefined {
         </section>
 
         <section v-if="tab === 'screens'">
-            <h3 class="settings-heading">TV screen</h3>
+            <h2 class="settings-heading">TV screen</h2>
             <SettingRow label="Show join QR code" for="show_qrcode" hint="Shown on the TV screen so guests can join">
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -419,7 +419,7 @@ function err(field: string): string | undefined {
                     />
                 </span>
             </SettingRow>
-            <h3 id="encore-relay" class="settings-heading settings-heading-spaced">Encore relay</h3>
+            <h2 id="encore-relay" class="settings-heading settings-heading-spaced">Encore relay</h2>
             <SettingRow v-for="row in relayRows" :key="row.label" :label="row.label" wide>
                 <code class="text-break">{{ row.value }}</code>
                 <CopyButton :value="row.value" :label="row.copy" />

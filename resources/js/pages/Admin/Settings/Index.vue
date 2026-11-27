@@ -99,7 +99,7 @@ function submit(): void {
             <div class="col-12 col-lg-6">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h3 class="card-title">Themes</h3>
+                        <h2 class="card-title">Themes</h2>
                         <Link class="btn btn-primary ms-auto" href="/admin/settings/themes/create">
                             <i class="icon ti ti-pencil-plus"></i>
                             Add Theme
@@ -159,7 +159,7 @@ function submit(): void {
             <div class="col col-12">
                 <div class="card mb-4">
                     <div class="card-header">
-                        <h3 class="card-title">Social Providers</h3>
+                        <h2 class="card-title">Social Providers</h2>
                     </div>
                     <div class="table-responsive">
                         <table class="table table-vcenter card-table">

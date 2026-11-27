@@ -149,7 +149,7 @@ describe('Party search overview', () => {
 
         expect(wrapper.get('[data-test="top-name"]').text()).toBe('Track top');
         expect(wrapper.get('[data-test="top-artists"]').text()).toContain('Song');
-        expect(wrapper.findAll('[data-test="section-head"] h3').map((h3) => h3.text())).toEqual([
+        expect(wrapper.findAll('[data-test="section-head"] h2').map((h2) => h2.text())).toEqual([
             'Top result',
             'Tracks',
             'Albums',
@@ -289,7 +289,7 @@ describe('Party search states', () => {
         expect(wrapper.findAll('[data-test="track-placeholder"]')).toHaveLength(4);
         expect(wrapper.find('[data-test="album-placeholders"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="artist-placeholders"]').exists()).toBe(true);
-        expect(wrapper.findAll('[data-test="section-head"] h3').map((h3) => h3.text())).toEqual([
+        expect(wrapper.findAll('[data-test="section-head"] h2').map((h2) => h2.text())).toEqual([
             'Top result',
             'Tracks',
             'Albums',

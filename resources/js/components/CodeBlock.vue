@@ -7,7 +7,7 @@ defineProps<{title: string; text: string}>();
 <template>
     <section class="code-block" data-test="code-block">
         <div class="d-flex align-items-center justify-content-between mb-1">
-            <h4 class="m-0 fs-5">{{ title }}</h4>
+            <h3 class="m-0 fs-5">{{ title }}</h3>
             <CopyButton :value="text" :label="`Copy ${title.toLowerCase()}`" />
         </div>
         <pre class="code-block-text border rounded p-3 mb-0"><code>{{ text }}</code></pre>

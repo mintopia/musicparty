@@ -85,6 +85,7 @@ function confirmReject(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Moderation - ${party.name}`" />
+        <h1 class="visually-hidden">Flagged Requests</h1>
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="flagged" />
         <div class="row">
             <div class="col-12">

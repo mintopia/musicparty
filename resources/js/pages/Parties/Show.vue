@@ -59,7 +59,7 @@ onBeforeUnmount(() => {
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" data-test="queue-width">
             <div class="d-flex flex-column flex-sm-row flex-fill align-text-bottom gap-2 gap-sm-0 mb-3 mb-sm-1">
                 <div class="flex-grow-1">
-                    <h3 class="mt-2 mb-0 mb-sm-2">{{ party.weighted ? 'Upcoming Songs' : 'Queue' }}</h3>
+                    <h1 class="mt-2 mb-0 mb-sm-2">{{ party.weighted ? 'Upcoming Songs' : 'Queue' }}</h1>
                 </div>
                 <div class="text-end">
                     <form :action="searchUrl" method="get" @submit.prevent="submit">

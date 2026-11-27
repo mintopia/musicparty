@@ -35,6 +35,7 @@ defineProps<{
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Moderation - ${party.name}`" />
+        <h1 class="visually-hidden">Moderation rules</h1>
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="rules" />
         <div v-if="moderations.data.length > 0" class="d-flex justify-content-end mb-3 d-print-none">
             <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">

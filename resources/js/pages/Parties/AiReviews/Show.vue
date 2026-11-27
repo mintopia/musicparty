@@ -62,7 +62,7 @@ const tokens = computed(
 
         <div class="d-flex flex-wrap align-items-start gap-3 mb-4">
             <div class="me-auto">
-                <h2 class="page-title text-break" data-test="review-title">{{ review.track.title }}</h2>
+                <h1 class="page-title text-break" data-test="review-title">{{ review.track.title }}</h1>
                 <div class="text-secondary" data-test="review-artists">{{ review.track.artists }}</div>
             </div>
             <div class="text-secondary text-md-end">
@@ -90,7 +90,7 @@ const tokens = computed(
                 >
             </div>
             <div v-if="criterionBreakdown.length > 0" class="card-body border-top" data-test="criterion-breakdown">
-                <h3 class="fs-5 mb-3">Criterion probabilities</h3>
+                <h2 class="fs-5 mb-3">Criterion probabilities</h2>
                 <div
                     v-for="p in criterionBreakdown"
                     :key="p.key"
@@ -116,7 +116,7 @@ const tokens = computed(
         <div class="row g-4 mb-4">
             <div class="col-lg-4">
                 <div class="card h-100">
-                    <div class="card-header"><h3 class="card-title">Review</h3></div>
+                    <div class="card-header"><h2 class="card-title">Review</h2></div>
                     <div class="card-body">
                         <dl class="row mb-0">
                             <dt class="col-5 text-secondary fw-normal">Model</dt>
@@ -147,7 +147,7 @@ const tokens = computed(
             </div>
             <div class="col-lg-8">
                 <div class="card h-100" data-test="answers">
-                    <div class="card-header"><h3 class="card-title">Model answers</h3></div>
+                    <div class="card-header"><h2 class="card-title">Model answers</h2></div>
                     <div v-if="answers.length > 0" class="table-responsive">
                         <table class="table table-vcenter card-table">
                             <thead>

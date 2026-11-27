@@ -65,6 +65,7 @@ const showUrl = (review: AiReviewRow): string =>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`AI reviews - ${party.name}`" />
+        <h1 class="visually-hidden">AI reviews</h1>
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
 
         <div v-if="!holdsFlagged" class="alert alert-warning py-2" role="status" data-test="not-held-notice">
@@ -77,7 +78,7 @@ const showUrl = (review: AiReviewRow): string =>
             <div class="col-md-12 col-lg-3 mb-4">
                 <form :action="listUrl" method="get" class="card" data-test="filters" @submit.prevent="submit">
                     <div class="card-header">
-                        <h3 class="card-title">Search</h3>
+                        <h2 class="card-title">Search</h2>
                         <button
                             type="button"
                             class="btn btn-sm btn-ghost-secondary ms-auto d-lg-none"

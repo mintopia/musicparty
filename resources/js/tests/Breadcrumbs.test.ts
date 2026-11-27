@@ -10,7 +10,7 @@ describe('Breadcrumbs', () => {
         });
 
         expect(wrapper.get('nav').attributes('aria-label')).toBe('Breadcrumb');
-        const items = wrapper.findAll('.breadcrumb-item');
+        const items = wrapper.findAll('.breadcrumb-item:not([data-test="crumb-toggle"])');
         expect(items.map((item) => item.text())).toEqual(['Home', 'Party', 'Moderation']);
         expect(items[1].get('a').attributes('href')).toBe('/parties/ab');
         expect(items[2].find('a').exists()).toBe(false);
@@ -29,5 +29,33 @@ describe('Breadcrumbs', () => {
             '/admin/users',
             '/admin/users/3',
         ]);
+    });
+});
+
+describe('Breadcrumbs phone collapse', () => {
+    const items = [
+        {label: 'Home', href: '/'},
+        {label: 'Party', href: '/p'},
+        {label: 'Members', href: '/m'},
+        {label: 'Mina'},
+    ];
+
+    it('hides middle crumbs behind a labelled toggle until expanded', async () => {
+        const wrapper = mount(Breadcrumbs, {props: {items}});
+
+        const toggle = wrapper.get('[data-test="crumb-toggle"] button');
+        expect(toggle.attributes('aria-label')).toBe('Show full path: Party, Members');
+        expect(wrapper.findAll('.breadcrumb-item.d-none')).toHaveLength(2);
+
+        await toggle.trigger('click');
+
+        expect(wrapper.find('.breadcrumb-item.d-none').exists()).toBe(false);
+        expect(wrapper.find('[data-test="crumb-toggle"]').exists()).toBe(false);
+    });
+
+    it('does not collapse a two-item trail', () => {
+        const wrapper = mount(Breadcrumbs, {props: {items: items.slice(0, 2)}});
+
+        expect(wrapper.find('[data-test="crumb-toggle"]').exists()).toBe(false);
     });
 });

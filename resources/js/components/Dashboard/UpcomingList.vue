@@ -35,7 +35,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
 <template>
     <div class="upcoming-list" data-test="upcoming-list">
         <div class="hdr d-flex align-items-center mt-4 mb-2">
-            <h3 class="mb-0 flex-grow-1">Upcoming Songs</h3>
+            <h2 class="mb-0 flex-grow-1">Upcoming Songs</h2>
             <a :href="queueUrl" data-test="manage-link"
                 >Manage all {{ total }} requests <i class="ti ti-chevron-right"></i
             ></a>

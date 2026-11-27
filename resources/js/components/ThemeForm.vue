@@ -121,7 +121,7 @@ onBeforeUnmount(() => {
         </div>
         <div class="row">
             <div class="col-md-6">
-                <h3 class="my-4">Site Colours</h3>
+                <h2 class="h3 my-4">Site Colours</h2>
                 <div v-for="item in colourTokens" :key="item.token" class="mb-3">
                     <label class="form-label" :class="{required: item.required}">{{ item.label }} Colour</label>
                     <div class="col-12 col-sm-10 col-md-12 col-lg-9">

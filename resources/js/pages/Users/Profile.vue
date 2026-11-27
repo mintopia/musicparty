@@ -53,7 +53,7 @@ defineProps<{
                                 </div>
                                 <div class="col">
                                     <div class="card-body p-2">
-                                        <h3 class="card-title">{{ account.providerName }}</h3>
+                                        <h2 class="card-title">{{ account.providerName }}</h2>
                                         <p class="text-secondary">{{ account.name }}</p>
                                         <Link
                                             v-if="account.canDelete"

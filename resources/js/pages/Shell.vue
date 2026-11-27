@@ -14,7 +14,7 @@ const page = usePage<SharedProps>();
         </template>
         <div class="card">
             <div class="card-body">
-                <h2 class="card-title">{{ page.props.instanceName }}</h2>
+                <h1 class="card-title">{{ page.props.instanceName }}</h1>
                 <p v-if="page.props.auth.user">Signed in as {{ page.props.auth.user.nickname }}</p>
                 <p v-else>Guest</p>
                 <Link href="/ui/shell">Reload</Link>
