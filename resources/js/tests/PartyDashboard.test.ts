@@ -254,6 +254,35 @@ describe('control room strip', () => {
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
     });
 
+    it('drives play/pause, next and previous from the keyboard', async () => {
+        const wrapper = mountPage();
+        const press = (init: KeyboardEventInit) =>
+            window.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true, ...init}));
+        const actions = () =>
+            post('/api/v1/parties/ABCD/control').map((call) => JSON.parse(call.data ?? '{}').action as string);
+
+        press({key: ' ', code: 'Space'});
+        await flushPromises();
+        press({key: 'n'});
+        await flushPromises();
+        press({key: 'p'});
+        await flushPromises();
+
+        expect(actions()).toEqual(['pause', 'next', 'previous']);
+        wrapper.unmount();
+    });
+
+    it('ignores keyboard shortcuts without control permission', async () => {
+        const props = makeProps();
+        const wrapper = mount(Dashboard, {props: {...props, can: {...props.can, control: false}}});
+
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: 'n', bubbles: true}));
+        await flushPromises();
+
+        expect(post('/api/v1/parties/ABCD/control')).toHaveLength(0);
+        wrapper.unmount();
+    });
+
     it('labels a playing fallback track instead of naming a requester', () => {
         const wrapper = mountPage({nowPlaying: {isRequest: false, isFallback: true, requestedBy: null}});
 
