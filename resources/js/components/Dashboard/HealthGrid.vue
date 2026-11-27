@@ -13,6 +13,14 @@ const props = defineProps<{
 const live = computed(() => props.health.player.connected === true);
 const relink = computed(() => props.health.link === 'relink_required' || props.status.kind === 'relink');
 const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as backup'})[props.health.polling]);
+const pollingDetail = computed(
+    () =>
+        ({
+            off: 'Spotify is not polled; the Player reports playback.',
+            on: 'Spotify is polled for playback.',
+            backup: 'Spotify is polled only while the Player is not reporting.',
+        })[props.health.polling],
+);
 </script>
 
 <template>
@@ -27,6 +35,10 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
                     ></span
                     >{{ health.player.label }}
                 </div>
+            </div>
+            <div>
+                <div class="lbl">Device</div>
+                <div class="val" data-test="health-device">{{ health.device.name ?? 'None' }}</div>
             </div>
             <div>
                 <div class="lbl">Last update</div>
@@ -49,19 +61,23 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
                 </div>
                 <a v-if="relink" :href="relinkUrl" class="fix" data-test="health-relink">Re-link Spotify</a>
             </div>
+            <div>
+                <div class="lbl">Polling</div>
+                <div class="val" data-test="health-polling">{{ pollingLabel }}</div>
+            </div>
         </div>
         <details class="diag" data-test="diagnostics">
             <summary>Diagnostics</summary>
-            <div class="health">
-                <div>
-                    <div class="lbl">Device</div>
-                    <div class="val" data-test="health-device">{{ health.device.name ?? 'None' }}</div>
-                </div>
-                <div>
-                    <div class="lbl">Polling</div>
-                    <div class="val" data-test="health-polling">{{ pollingLabel }}</div>
-                </div>
-            </div>
+            <dl class="diag-list">
+                <dt>Player source</dt>
+                <dd data-test="diag-source">{{ health.player.source ?? 'None' }}</dd>
+                <dt>Device ID</dt>
+                <dd data-test="diag-device-id">{{ health.device.id ?? 'None' }}</dd>
+                <dt>Last report</dt>
+                <dd data-test="diag-received-at">{{ health.receivedAt ?? 'Never' }}</dd>
+                <dt>Polling</dt>
+                <dd data-test="diag-polling">{{ pollingDetail }}</dd>
+            </dl>
         </details>
     </div>
 </template>
@@ -103,8 +119,20 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
     font-size: 0.8rem;
     color: var(--mp-deck-muted);
 }
-.diag .health {
-    margin-top: 6px;
+.diag-list {
+    display: grid;
+    grid-template-columns: max-content minmax(0, 1fr);
+    gap: 2px 14px;
+    margin: 6px 0 0;
+    font-size: 0.8rem;
+}
+.diag-list dt {
+    color: var(--mp-deck-muted);
+    font-weight: 400;
+}
+.diag-list dd {
+    margin: 0;
+    overflow-wrap: anywhere;
 }
 .warn {
     color: var(--mp-deck-accent-warn);

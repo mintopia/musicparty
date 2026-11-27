@@ -259,7 +259,7 @@ describe('control room strip', () => {
     it('labels a playing fallback track instead of naming a requester', () => {
         const wrapper = mountPage({nowPlaying: {isRequest: false, isFallback: true, requestedBy: null}});
 
-        expect(wrapper.get('[data-test="now-origin"]').text()).toBe('Fallback Track');
+        expect(wrapper.get('[data-test="now-origin"]').text()).toBe('From the party’s Fallback Playlist');
     });
 
     it('shows the Up Next deck while the party is playing', () => {
@@ -659,13 +659,34 @@ describe('one playback status', () => {
         expect(wrapper.find('[data-test="device-picker"]').exists()).toBe(false);
     });
 
-    it('keeps polling and device details inside a collapsed Diagnostics section', () => {
+    it('keeps the five health cells visible and the extra detail in a collapsed Diagnostics section', () => {
         const wrapper = mountPage();
         const diagnostics = wrapper.get('[data-test="diagnostics"]');
+        const grid = wrapper.get('[data-test="health-grid"] .health');
 
+        expect(grid.findAll('.lbl').map((label) => label.text())).toEqual([
+            'Player',
+            'Device',
+            'Last update',
+            'Spotify link',
+            'Polling',
+        ]);
+        expect(diagnostics.element.tagName).toBe('DETAILS');
         expect(diagnostics.element.hasAttribute('open')).toBe(false);
-        expect(diagnostics.find('[data-test="health-polling"]').exists()).toBe(true);
-        expect(diagnostics.find('[data-test="health-device"]').exists()).toBe(true);
+        expect(diagnostics.find('[data-test="health-polling"]').exists()).toBe(false);
+        expect(diagnostics.find('[data-test="health-device"]').exists()).toBe(false);
+        expect(diagnostics.find('[data-test="diag-device-id"]').exists()).toBe(true);
+        expect(diagnostics.find('[data-test="diag-polling"]').exists()).toBe(true);
+        expect(diagnostics.find('[data-test="diag-received-at"]').exists()).toBe(true);
+    });
+
+    it('words the stale panel message as the mockup does and still offers the device picker', () => {
+        const wrapper = mountPage({state: 'idle', connected: null, receivedAt: longAgo()});
+
+        expect(wrapper.get('[data-test="start-message"]').text()).toMatch(
+            /stopped reporting 10 minutes ago, so Music Party can't tell what is playing\. Open the Web Player or check the .+ speaker\.$/,
+        );
+        expect(wrapper.find('[data-test="device-picker"]').exists()).toBe(true);
     });
 
     it('follows the player as it reports over the websocket', async () => {

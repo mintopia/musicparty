@@ -106,7 +106,7 @@ const {pressed, score, rate} = useRating({
                             Requested by {{ control.nowPlaying.requestedBy }}
                         </span>
                         <span v-else-if="control.nowPlaying.isFallback" class="np-meta small" data-test="now-fallback">
-                            Fallback Track
+                            From the party’s Fallback Playlist
                         </span>
                         <span v-else class="badge bg-white-lt text-white">Not a party request</span>
                     </div>

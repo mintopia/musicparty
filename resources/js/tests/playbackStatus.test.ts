@@ -98,6 +98,23 @@ describe('derivePlaybackStatus', () => {
         expect(JSON.stringify(old)).not.toMatch(/\d+ min\b/);
     });
 
+    it('names the player and its last report in the paused detail', () => {
+        const paused = derivePlaybackStatus(input({playing: false, receivedAgo: 4}));
+
+        expect(paused.detail).toMatch(/^Paused on .+\. .+ last reported 4 seconds ago\.$/);
+    });
+
+    it('words the stale panel message with the player name and age', () => {
+        const stale = derivePlaybackStatus(input({connected: null, receivedAgo: 180}));
+        const noWebPlayer = derivePlaybackStatus(input({connected: null, receivedAgo: 180, webPlayer: false}));
+
+        expect(stale.panelMessage).toMatch(
+            /^.+ stopped reporting 3 minutes ago, so Music Party can't tell what is playing\. Open the Web Player or check the .+ speaker\.$/,
+        );
+        expect(noWebPlayer.panelMessage).toContain('Check the');
+        expect(noWebPlayer.panelMessage).not.toContain('Web Player');
+    });
+
     it('says Never when nothing has been received', () => {
         expect(derivePlaybackStatus(input({connected: null, receivedAgo: null})).age.text).toBe('Never');
     });

@@ -93,7 +93,7 @@ const badge = computed<{text: string; tone: PlaybackState}>(() => {
 const target = computed(() => props.start.target);
 const selectedDevice = computed(() => devices.value.find((device) => device.id === selected.value) ?? null);
 const showDevices = computed(() => props.canStart && !['premium_required', 'relink_required'].includes(state.value));
-const showWill = computed(() => ['outside', 'idle'].includes(state.value) && target.value !== null);
+const showWill = computed(() => ['outside', 'idle', 'stale'].includes(state.value) && target.value !== null);
 const showButton = computed(() => props.canStart && state.value !== 'relink_required');
 const showRelink = computed(() => props.canStart && state.value === 'relink_required');
 const disabled = computed(
@@ -206,7 +206,7 @@ onBeforeUnmount(stopCountdown);
                 >Asking Spotify to start the party on {{ selectedDevice?.name ?? 'your device' }}.</template
             >
             <template v-else-if="state === 'rate_limited'">Spotify is busy, try again in {{ retryIn }} s.</template>
-            <template v-else-if="state === 'stale'">{{ status.attention?.detail }}</template>
+            <template v-else-if="state === 'stale'">{{ status.panelMessage }}</template>
             <template v-else-if="state === 'no_device'"
                 >No Spotify app is open on {{ host }}'s account. Open Spotify on the DJ laptop or wake the Encore
                 speaker, then refresh.</template

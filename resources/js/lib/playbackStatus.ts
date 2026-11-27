@@ -26,6 +26,7 @@ export interface PlaybackStatus {
     action: PlaybackStatusAction | null;
     attention: {fact: string; detail: string} | null;
     age: {text: string; stale: boolean; words: string};
+    panelMessage: string | null;
 }
 
 export interface PlaybackStatusInput {
@@ -77,7 +78,7 @@ export function derivePlaybackStatus({control, state, host, hasWebPlayer, now}: 
         detail: string,
         action: PlaybackStatusAction | null,
         attention: PlaybackStatus['attention'] = null,
-    ): PlaybackStatus => ({kind, tone, headline, detail, action, attention, age});
+    ): PlaybackStatus => ({kind, tone, headline, detail, action, attention, age, panelMessage: null});
 
     if (health.link === 'relink_required' || start.state === 'relink_required') {
         return make(
@@ -106,10 +107,14 @@ export function derivePlaybackStatus({control, state, host, hasWebPlayer, now}: 
         );
     }
     if (stale) {
-        return make('stale', 'stale', 'Player stale', `Last heard: ${lastHeard}.`, webPlayerAction, {
+        const result = make('stale', 'stale', 'Player stale', `Last heard: ${lastHeard}.`, webPlayerAction, {
             fact: 'Player stale',
             detail: `${player} stopped reporting ${ageWords}.${hasWebPlayer ? ' Open the Web Player to keep the party going.' : ''}`,
         });
+        result.panelMessage = `${player} stopped reporting ${ageWords}, so Music Party can't tell what is playing. ${
+            hasWebPlayer ? `Open the Web Player or check the ${player} speaker.` : `Check the ${player} speaker.`
+        }`;
+        return result;
     }
     if (playingFrom.kind === 'outside' || start.state === 'outside') {
         const label = playingFrom.label ?? 'something else';
@@ -132,7 +137,8 @@ export function derivePlaybackStatus({control, state, host, hasWebPlayer, now}: 
         return make('playing', 'playing', 'Playing', detail, null);
     }
     if (track !== null) {
-        return make('paused', 'paused', 'Paused', `Paused on ${device}.`, null);
+        const reported = ageSeconds === null ? '' : ` ${player} last reported ${ageWords}.`;
+        return make('paused', 'paused', 'Paused', `Paused on ${device}.${reported}`, null);
     }
     return make('idle', 'idle', 'Nothing playing', 'Pick a device and start the party.', 'start');
 }
