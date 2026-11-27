@@ -22,8 +22,9 @@ vi.mock('@inertiajs/vue3', () => ({
             ...initial,
             errors: inertia.errors,
             processing: false,
+            clearErrors: () => undefined,
         }) as Record<string, unknown>;
-        for (const method of ['put', 'patch', 'delete']) {
+        for (const method of ['put', 'patch', 'delete', 'post']) {
             form[method] = (url: string) => {
                 const data = Object.fromEntries(Object.keys(initial).map((key) => [key, form[key]]));
                 inertia.submitted.push({method, url, data});
@@ -48,7 +49,7 @@ vi.mock('@/routes/linkedaccounts', () => ({
     deleteMethod: (id: number) => ({url: `/profile/accounts/${id}/delete`}),
     destroy: (id: number) => ({url: `/profile/accounts/${id}`}),
 }));
-vi.mock('@/routes/parties', () => ({create: () => ({url: '/parties/create'})}));
+vi.mock('@/routes/parties', () => ({create: () => ({url: '/parties/create'}), join: () => ({url: '/parties/join'})}));
 vi.mock('@/routes/user', () => ({profile: () => ({url: '/profile'})}));
 vi.mock('@/routes/user/profile', () => ({
     edit: () => ({url: '/profile/edit'}),
@@ -58,11 +59,30 @@ vi.mock('@/routes/user/profile', () => ({
 const user = {nickname: 'Ada', email: 'ada@example.test', avatar: 'https://img.test/a.png'};
 
 describe('user pages', () => {
-    it('renders the home profile card', () => {
-        const wrapper = mount(Home, {props: {user}});
-        expect(wrapper.text()).toContain('Ada');
-        expect(wrapper.text()).toContain('ada@example.test');
-        expect(wrapper.find('.avatar').attributes('style')).toContain('https://img.test/a.png');
+    it('renders the home party list with join and create', () => {
+        const wrapper = mount(Home, {
+            props: {
+                parties: [
+                    {
+                        code: 'KXQB',
+                        name: 'Coyote LAN 26',
+                        role: 'Owner',
+                        roleCode: 'owner',
+                        playback: 'playing',
+                        detail: 'Midnight City, M83',
+                        cover: null,
+                        canManage: true,
+                        url: '/parties/KXQB/dashboard',
+                    },
+                ],
+            },
+        });
+        expect(wrapper.find('h1').text()).toBe('Your parties');
+        expect(wrapper.text()).toContain('Coyote LAN 26');
+        expect(wrapper.text()).toContain('Owner');
+        expect(wrapper.text()).toContain('Playing');
+        expect(wrapper.find('input.mp-code-input').exists()).toBe(true);
+        expect(wrapper.find('a[href="/parties/create"]').exists()).toBe(true);
     });
 
     it('renders a login button per provider', () => {

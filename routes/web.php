@@ -15,6 +15,7 @@ use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyAiReviewController;
 use App\Http\Controllers\PartyController;
 use App\Http\Controllers\PartyDashboardController;
+use App\Http\Controllers\PartyJoinController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PartyModsController;
@@ -31,6 +32,8 @@ Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', 
 if (app()->environment('testing')) {
     Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
 }
+Route::get('/', [HomeController::class, 'home'])->name('home');
+Route::post('parties/join', [PartyJoinController::class, 'store'])->name('parties.join');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
@@ -41,8 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::match(['PUT', 'PATCH'], 'login/signup', [UserController::class, 'signup_process'])->name('login.signup.process');
 
     Route::middleware(RedirectOnFirstLoginMiddleware::class)->group(function () {
-
-        Route::get('/', [HomeController::class, 'home'])->name('home');
 
         Route::get('/profile', [UserController::class, 'profile'])->name('user.profile');
         Route::get('/profile/edit', [UserController::class, 'edit'])->name('user.profile.edit');

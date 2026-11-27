@@ -8,6 +8,7 @@ use App\Http\Requests\UserSignupRequest;
 use App\Models\Party;
 use App\Models\Setting;
 use App\Models\SocialProvider;
+use App\Services\PartyInvite;
 use Carbon\Carbon;
 use Exception;
 use Illuminate\Http\RedirectResponse;
@@ -66,7 +67,7 @@ class UserController extends Controller
         return $socialprovider->redirect();
     }
 
-    public function login_return(SocialProvider $socialprovider): RedirectResponse
+    public function login_return(Request $request, SocialProvider $socialprovider): RedirectResponse
     {
         if (Auth::hasUser()) {
             return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
@@ -80,11 +81,16 @@ class UserController extends Controller
                 if ($user->suspended) {
                     return response()->redirectToRoute('login')->with('errorMessage', 'Your account has been suspended');
                 }
+                $intended = $request->session()->get('url.intended');
                 Auth::login($user);
                 $user->last_login = Carbon::now();
                 $user->save();
+                $response = response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
+                if ($user->first_login && $intended !== null) {
+                    $request->session()->put('url.intended', $intended);
+                }
 
-                return response()->redirectToIntended(route('home'))->with('successMessage', 'You have been logged in');
+                return $response;
             }
         } catch (SocialProviderException $ex) {
             return response()->redirectToRoute('login')->with('errorMessage', $ex->getMessage());
@@ -95,11 +101,12 @@ class UserController extends Controller
         return response()->redirectToRoute('login')->with('errorMessage', 'Unable to login');
     }
 
-    public function login(): Response
+    public function login(Request $request, PartyInvite $invite): Response
     {
         $providers = SocialProvider::whereAuthEnabled(true)->whereEnabled(true)->get();
 
         return Inertia::render('Users/Login', [
+            'party' => $invite->fromIntended($request),
             'providers' => $providers->map(fn ($provider) => [
                 'code' => $provider->code,
                 'name' => $provider->name,
@@ -107,11 +114,12 @@ class UserController extends Controller
         ]);
     }
 
-    public function signup(Request $request): Response
+    public function signup(Request $request, PartyInvite $invite): Response
     {
         $user = $this->resolveAuthenticatedUser($request);
 
         return Inertia::render('Users/Signup', [
+            'party' => $invite->fromIntended($request),
             'user' => [
                 'nickname' => $user->nickname,
                 'avatar' => $user->avatarUrl(),
@@ -129,7 +137,7 @@ class UserController extends Controller
         $user->terms_agreed_at = now();
         $user->save();
 
-        return response()->redirectToRoute('home')->with('successMessage', 'Your account has been created');
+        return response()->redirectToIntended(route('home'))->with('successMessage', 'Your account has been created');
     }
 
     public function edit(Request $request): Response

@@ -14,6 +14,7 @@
     --mp-fs-small: 0.8125rem;
     --mp-tint-hover: color-mix(in oklab, var(--tblr-body-color) 7%, transparent);
     --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --mp-radius-control: 8px;
 }
 
 /* Dark in both themes by design, like the player band. */
@@ -1212,5 +1213,124 @@
             grid-column: 2;
             justify-self: start;
         }
+    }
+}
+
+.mp-code-input {
+    inline-size: 100%;
+    max-inline-size: 9ch;
+    min-block-size: 56px;
+    padding: 0 var(--mp-space-3);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--mp-radius-control);
+    background: var(--tblr-bg-forms, var(--tblr-bg-surface));
+    color: var(--tblr-body-color);
+    font: inherit;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.mp-code-input:focus {
+    border-color: var(--tblr-primary);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem color-mix(in oklab, var(--tblr-primary) 25%, transparent);
+}
+
+.mp-code-input.is-invalid {
+    border-color: var(--tblr-danger);
+}
+
+.mp-join-form {
+    display: flex;
+    gap: var(--mp-space-2);
+    align-items: center;
+}
+
+.mp-join-form .mp-code-input {
+    flex: none;
+    inline-size: 9ch;
+}
+
+.mp-join-form .btn {
+    min-block-size: 44px;
+}
+
+.mp-invite {
+    display: flex;
+    gap: var(--mp-space-4);
+    align-items: center;
+    padding: var(--mp-space-4);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 12px;
+    background: var(--tblr-bg-surface);
+    margin-block-end: var(--mp-space-5);
+}
+
+.mp-invite .avatar {
+    flex: none;
+}
+
+.mp-invite > div {
+    min-inline-size: 0;
+}
+
+.mp-invite p {
+    margin: 0;
+}
+
+.mp-invite .status-dot {
+    margin-inline-end: 6px;
+}
+
+.mp-party-list .list-group-item {
+    flex-wrap: wrap;
+    gap: var(--mp-space-3) var(--mp-space-4);
+}
+
+.mp-party-info {
+    flex: 1 1 200px;
+    min-inline-size: 0;
+}
+
+.mp-party-info b {
+    display: block;
+    font-size: 1rem;
+}
+
+.mp-party-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px var(--mp-space-2);
+    margin-block-start: 4px;
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+}
+
+.mp-party-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mp-code {
+    font-family: var(--tblr-font-monospace);
+    letter-spacing: 0.2em;
+    font-weight: 700;
+}
+
+.mp-party-cover {
+    background-image: var(--mp-art-wash);
+    background-size: cover;
+    background-position: center;
+}
+
+@media (pointer: coarse), (max-width: 575.98px) {
+    .mp-party-list .btn,
+    .mp-join-form .btn {
+        min-block-size: 44px;
     }
 }
