@@ -56,3 +56,49 @@ html #nprogress .bar {
 html #nprogress .peg {
     box-shadow: 0 0 10px var(--tblr-primary), 0 0 5px var(--tblr-primary);
 }
+
+.mp-link-card .card-body {
+    display: grid;
+    gap: 12px;
+}
+
+.mp-link-card p {
+    margin: 0;
+}
+
+.mp-link-head {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+
+    .avatar {
+        flex: none;
+    }
+}
+
+.mp-link-state {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--tblr-secondary-color);
+    font-size: 0.8125rem;
+}
+
+.mp-who {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+
+    .avatar {
+        flex: none;
+    }
+
+    h2 {
+        margin: 0;
+    }
+}
+
+.mp-dialog {
+    max-inline-size: 440px;
+    margin-inline: auto;
+}

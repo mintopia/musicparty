@@ -2,9 +2,11 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
+import PageHead from '@/components/PageHead.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {create as linkAccount, deleteMethod as removeAccount} from '@/routes/linkedaccounts';
 import {edit as editProfile} from '@/routes/user/profile';
+import {spotify as spotifyLinks} from '@/routes/user';
 
 defineProps<{
     user: {nickname: string; email: string; avatar: string};
@@ -26,80 +28,80 @@ defineProps<{
             <Breadcrumbs :items="[...homeCrumbs(), {label: 'Profile'}]" />
         </template>
         <Head title="Profile" />
-        <div class="row">
-            <div class="col-xl-9 col-sm-8">
-                <div class="row row-deck mb-4">
-                    <div class="col-12 page-header mt-2">
-                        <h1>Linked Accounts</h1>
-                    </div>
-                    <div v-for="account in accounts" :key="account.id" class="col-xl-4 col-sm-6 my-2 mh-100">
-                        <div class="card">
-                            <div class="ribbon ribbon-top" :class="`bg-${account.providerCode}`">
-                                <i :class="`icon ti ti-brand-${account.providerCode}`"></i>
-                            </div>
-                            <div class="row row-0">
-                                <div class="col-auto w-7 d-flex align-items-center">
-                                    <img
-                                        v-if="account.avatarUrl"
-                                        :src="account.avatarUrl"
-                                        class="w-100 h-100 mh-100 object-cover card-img-start"
-                                        :alt="`${account.providerName} Avatar`"
-                                    />
-                                    <i
-                                        v-else
-                                        :class="`icon ti ti-brand-${account.providerCode} icon-lg text-muted m-auto d-block`"
-                                        :title="`No ${account.providerName} Avatar`"
-                                    ></i>
-                                </div>
-                                <div class="col">
-                                    <div class="card-body p-2">
-                                        <h2 class="card-title">{{ account.providerName }}</h2>
-                                        <p class="text-secondary">{{ account.name }}</p>
-                                        <Link
-                                            v-if="account.canDelete"
-                                            class="btn btn-sm btn-outline-danger"
-                                            :href="removeAccount(account.id).url"
-                                            >Remove</Link
-                                        >
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div v-if="availableLinks.length" class="col-12 btn-list">
-                        <a
-                            v-for="provider in availableLinks"
-                            :key="provider.code"
-                            :class="`btn btn-${provider.code}`"
-                            :href="linkAccount(provider.code).url"
-                        >
-                            <i :class="`icon ti ti-brand-${provider.code}`"></i>
-                            Link with {{ provider.name }}
-                        </a>
+        <div class="mp-narrow">
+            <PageHead title="Profile" summary="Your name at parties and the accounts you login with.">
+                <Link :href="editProfile().url" class="btn btn-primary">
+                    <i class="icon ti ti-edit"></i>
+                    Edit profile
+                </Link>
+            </PageHead>
+
+            <div class="card mb-4">
+                <div class="card-body mp-who">
+                    <span
+                        class="avatar avatar-xl rounded"
+                        role="img"
+                        aria-label="Your avatar"
+                        :style="{backgroundImage: `url('${user.avatar}')`}"
+                    ></span>
+                    <div>
+                        <h2 class="h3">{{ user.nickname }}</h2>
+                        <p class="text-secondary mb-0">{{ user.email }}</p>
                     </div>
                 </div>
             </div>
-            <div class="col-xl-3 col-sm-4">
-                <div class="card">
-                    <div class="card-body text-center">
-                        <div class="mb-3">
-                            <span
-                                class="avatar avatar-xl rounded"
-                                :style="{backgroundImage: `url('${user.avatar}')`}"
-                            ></span>
+
+            <h2 class="mb-3">Linked accounts</h2>
+            <div class="row g-3 mb-3">
+                <div v-for="account in accounts" :key="account.id" class="col-md-6">
+                    <div class="card mp-link-card h-100">
+                        <div class="card-body">
+                            <div class="mp-link-head">
+                                <span
+                                    v-if="account.avatarUrl"
+                                    class="avatar avatar-md rounded"
+                                    role="img"
+                                    :aria-label="`${account.providerName} Avatar`"
+                                    :style="{backgroundImage: `url('${account.avatarUrl}')`}"
+                                ></span>
+                                <span v-else class="avatar avatar-md rounded text-white" :class="`bg-${account.providerCode}`">
+                                    <i :class="`icon ti ti-brand-${account.providerCode}`"></i>
+                                </span>
+                                <div>
+                                    <h3 class="card-title mb-0">{{ account.providerName }}</h3>
+                                    <p class="text-secondary">{{ account.name }}</p>
+                                </div>
+                            </div>
+                            <div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+                            <Link
+                                v-if="account.canDelete"
+                                class="btn btn-outline-danger btn-sm"
+                                :href="removeAccount(account.id).url"
+                            >
+                                <i class="icon ti ti-link-off"></i>
+                                Unlink
+                            </Link>
+                            <p v-else class="text-secondary small">
+                                Your login. It can't be unlinked while it is your only one.
+                            </p>
                         </div>
-                        <div class="card-title mb-1">{{ user.nickname }}</div>
-                        <div class="text-secondary">
-                            <span class="text-muted">{{ user.email }}</span>
-                        </div>
-                    </div>
-                    <div class="card-footer d-flex">
-                        <Link :href="editProfile().url" class="btn btn-primary ms-auto">
-                            <i class="icon ti ti-edit"></i>
-                            Edit
-                        </Link>
                     </div>
                 </div>
+            </div>
+            <div class="btn-list">
+                <Link :href="spotifyLinks().url" class="btn btn-outline-success">
+                    <i class="icon ti ti-brand-spotify"></i>
+                    Manage Spotify links
+                </Link>
+                <a
+                    v-for="provider in availableLinks"
+                    :key="provider.code"
+                    class="btn btn-outline-secondary"
+                    :href="linkAccount(provider.code).url"
+                >
+                    <i :class="`icon ti ti-brand-${provider.code}`"></i>
+                    Link {{ provider.name }}
+                </a>
             </div>
         </div>
     </AppLayout>
