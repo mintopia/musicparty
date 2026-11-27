@@ -141,7 +141,7 @@ it('paginates twenty at a time and keeps the filters in the links', function () 
         ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 5));
 });
 
-it('renders the review as its own page with the request, response, party state and error', function () {
+it('renders the review as its own page with the request, response and error', function () {
     $review = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Error)->create([
         'request' => ['model' => 'jev-latest', 'state' => json_encode(['title' => 'x', 'party' => ['artists' => [['name' => 'Wham!', 'plays' => 2]]], 'party_context' => 'Tracks played: 3']), 'questions' => []],
         'response' => ['status' => 500, 'body' => 'boom'],
@@ -155,8 +155,8 @@ it('renders the review as its own page with the request, response, party state a
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/AiReviews/Show')
             ->where('review.id', $review->id)
-            ->where('review.partyContext', 'Tracks played: 3')
-            ->where('review.partyState.artists.0.plays', 2)
+            ->missing('review.partyContext')
+            ->missing('review.partyState')
             ->where('review.request.model', 'jev-latest')
             ->where('review.response.status', 500)
             ->where('review.errorClass', 'RuntimeException')
@@ -171,16 +171,6 @@ it('links back to the list with the filters it was opened from', function () {
 
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review, 'outcome' => 'flag', 'q' => 'wham', 'page' => 2]))
         ->assertInertia(fn (Assert $page) => $page->where('backUrl', route('parties.ai-reviews.index', [$this->party->code, 'outcome' => 'flag', 'q' => 'wham', 'page' => 2])));
-});
-
-it('extracts the party context from a chat user message', function () {
-    $review = AiReview::factory()->for($this->party)->create([
-        'driver' => 'openai-compatible',
-        'request' => ['messages' => [['role' => 'system', 'content' => 'sys'], ['role' => 'user', 'content' => json_encode(['title' => 'x', 'party_context' => 'Recent: a'])]]],
-    ]);
-
-    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
-        ->assertInertia(fn (Assert $page) => $page->where('review.partyContext', 'Recent: a')->where('review.partyState', null));
 });
 
 it('does not show a review from another party under this party', function () {

@@ -65,8 +65,6 @@ function detail(id: number, extra: Partial<AiReviewDetail> = {}): AiReviewDetail
             questions: {},
         },
         response: {answers: {suitability: {score: 4}}},
-        partyContext: 'Tracks played: 3',
-        partyState: null,
         errorClass: null,
         errorMessage: null,
         trackId: 't1',
@@ -300,34 +298,6 @@ describe('AI review page', () => {
         const bars = wrapper.findAll('[data-test="criterion-probability"]').map((bar) => bar.text());
         expect(bars).toEqual(['Troll91%', 'None9%']);
         expect(mountShow(detail(1)).find('[data-test="failing-criterion"]').exists()).toBe(false);
-    });
-
-    it('renders the structured party state as readable lists', () => {
-        const wrapper = mountShow(
-            detail(1, {
-                partyState: {
-                    stats: {tracks_played: 12, running_minutes: 90},
-                    artists: [{name: 'Wham!', plays: 3}],
-                    recent: [{title: 'Last Christmas', artist: 'Wham!'}],
-                    downvoted: [],
-                },
-            }),
-        );
-
-        expect(wrapper.get('[data-test="party-stats"]').text()).toContain('12 tracks played');
-        expect(wrapper.get('[data-test="party-artists"]').text()).toContain('Wham!');
-        expect(wrapper.get('[data-test="party-artists"]').text()).toContain('3 plays');
-        expect(wrapper.get('[data-test="party-recent"]').text()).toContain('Last Christmas');
-        expect(wrapper.find('[data-test="party-downvoted"]').exists()).toBe(false);
-    });
-
-    it('falls back to the party context text, then to a note', () => {
-        expect(mountShow(detail(1)).get('[data-test="party-context-text"]').text()).toBe('Tracks played: 3');
-        expect(
-            mountShow(detail(1, {partyContext: null}))
-                .find('[data-test="no-party-context"]')
-                .exists(),
-        ).toBe(true);
     });
 
     it('shows the error class and message and notes a missing response', () => {
