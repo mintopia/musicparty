@@ -86,7 +86,7 @@ class PartyRequest extends FormRequest
             'country' => 'sometimes|string|alpha|size:2',
             'timezone' => 'sometimes|nullable|string|timezone:all',
             'backup_playlist_id' => [
-                'required',
+                $party instanceof Party ? 'required' : 'nullable',
                 'string',
                 'in:other,'.collect($playlists)->pluck('id')->implode(','),
             ],

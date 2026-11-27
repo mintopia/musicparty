@@ -127,6 +127,7 @@ class PartyController extends Controller
         return Inertia::render('Parties/Create', $this->formProps($options, $draft, $user) + [
             'party' => $this->formValues(new Party),
             'providerIds' => $factory->selectableIds(),
+            'createdParty' => $request->session()->get('createdParty'),
         ]);
     }
 
@@ -138,7 +139,14 @@ class PartyController extends Controller
         $this->updateObject($party, $request);
         PartyUpdate::dispatch($party);
 
-        return response()->redirectToRoute('parties.show', $party->code)->with('successMessage', 'The party has been created');
+        $joinUrl = route('parties.show', $party->code);
+
+        return response()->redirectToRoute('parties.create')->with('createdParty', [
+            'code' => $party->code,
+            'name' => $party->name,
+            'joinUrl' => $joinUrl,
+            'qr' => QrCode::svg($joinUrl),
+        ]);
     }
 
     public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): Response
@@ -625,14 +633,11 @@ class PartyController extends Controller
         } else {
             $party->backup_playlist_id = $request->input('backup_playlist_id');
         }
-        $party->allow_requests = (bool) $request->input('allow_requests');
-        $party->active = (bool) $request->input('active');
-        $party->explicit = (bool) $request->input('explicit');
-        $party->downvotes = (bool) $request->input('downvotes');
-        $party->force = (bool) $request->input('force');
-        $party->poll = (bool) $request->input('poll');
-        $party->show_qrcode = (bool) $request->input('show_qrcode');
-        $party->flag_requests = (bool) $request->input('flag_requests');
+        foreach (['allow_requests', 'active', 'explicit', 'downvotes', 'force', 'poll', 'show_qrcode', 'flag_requests', 'weighted'] as $flag) {
+            if ($party->exists || $request->has($flag)) {
+                $party->{$flag} = $request->boolean($flag);
+            }
+        }
         $deviceId = $request->input('device_id') ?: null;
         if ($deviceId === null) {
             $party->device_name = null;
@@ -641,7 +646,6 @@ class PartyController extends Controller
             $party->device_name = app(PlaybackControl::class)->deviceName($party, $deviceId);
         }
         $party->device_id = $deviceId;
-        $party->weighted = (bool) $request->input('weighted');
         if ($request->input('downvotes_per_hour')) {
             $party->downvotes_per_hour = $request->input('downvotes_per_hour');
         } else {

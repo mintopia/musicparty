@@ -191,3 +191,70 @@ it('rejects an invalid Party country', function () {
     $this->actingAs($this->owner)->post(route('parties.store'), payload('spotify', 'sp-list') + ['country' => 'GBR'])
         ->assertSessionHasErrors('country');
 });
+
+it('creates a party from the name alone using model defaults and flashes the created party', function () {
+    $this->actingAs($this->owner)->post(route('parties.store'), ['name' => 'Quick'])
+        ->assertSessionHasNoErrors()
+        ->assertRedirect(route('parties.create'))
+        ->assertSessionMissing('successMessage');
+
+    $party = Party::query()->where('name', 'Quick')->firstOrFail();
+    expect($party->backup_playlist_id)->toBeNull()
+        ->and($party->allow_requests)->toBeTrue()
+        ->and($party->downvotes)->toBeTrue()
+        ->and($party->explicit)->toBeTrue()
+        ->and($party->active)->toBeTrue()
+        ->and($party->show_qrcode)->toBeFalse();
+
+    $created = session('createdParty');
+    expect($created['code'])->toBe($party->code)
+        ->and($created['name'])->toBe('Quick')
+        ->and($created['joinUrl'])->toBe(route('parties.show', $party->code))
+        ->and($created['qr'])->toContain('<svg');
+
+    $this->actingAs($this->owner)->get(route('parties.create'))
+        ->assertInertia(fn ($page) => $page->where('createdParty.code', $party->code)->where('party.downvotes', true));
+    $this->actingAs($this->owner)->get(route('parties.create'))
+        ->assertInertia(fn ($page) => $page->where('createdParty', null));
+});
+
+it('creates a party with every wizard field filled', function () {
+    $this->actingAs($this->owner)->post(route('parties.store'), [
+        'name' => 'Full',
+        'backup_playlist_id' => 'sp-list',
+        'history_playlist_id' => 'sp-list',
+        'device_id' => 'sp-device',
+        'allow_requests' => false,
+        'downvotes' => false,
+        'explicit' => false,
+        'show_qrcode' => true,
+        'flag_requests' => true,
+        'max_requests' => 3,
+        'downvotes_per_hour' => 5,
+        'min_song_length' => 30,
+        'max_song_length' => 600,
+        'no_repeat_interval' => 60,
+    ])->assertSessionHasNoErrors()->assertRedirect(route('parties.create'));
+
+    $party = Party::query()->where('name', 'Full')->firstOrFail();
+    expect($party->backup_playlist_id)->toBe('sp-list')
+        ->and($party->history_playlist_id)->toBe('sp-list')
+        ->and($party->device_id)->toBe('sp-device')
+        ->and($party->device_name)->toBe('Spotify Speaker')
+        ->and($party->allow_requests)->toBeFalse()
+        ->and($party->downvotes)->toBeFalse()
+        ->and($party->explicit)->toBeFalse()
+        ->and($party->show_qrcode)->toBeTrue()
+        ->and($party->flag_requests)->toBeTrue()
+        ->and($party->max_requests)->toBe(3)
+        ->and($party->downvotes_per_hour)->toBe(5)
+        ->and($party->min_song_length)->toBe(30)
+        ->and($party->max_song_length)->toBe(600)
+        ->and($party->no_repeat_interval)->toBe(60);
+});
+
+it('rejects a missing name and a fallback playlist outside the host list with field-keyed errors', function () {
+    $this->actingAs($this->owner)->post(route('parties.store'), ['backup_playlist_id' => 'nope'])
+        ->assertSessionHasErrors(['name', 'backup_playlist_id']);
+    expect(Party::count())->toBe(0);
+});

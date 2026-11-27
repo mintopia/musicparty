@@ -58,6 +58,13 @@ export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[
     };
 }
 
+export function initialCreateForm(party: PartyFormValues, playlists: NamedOption[], defaultCountry: string) {
+    const {custom_backup_playlist_id: _custom, ...values} = initialPartyForm(party, playlists, defaultCountry);
+    const listed = playlists.some((playlist) => playlist.id === party.backup_playlist_id);
+
+    return {...values, backup_playlist_id: listed ? (party.backup_playlist_id as string) : (playlists[0]?.id ?? '')};
+}
+
 export type PartyFormData = ReturnType<typeof initialPartyForm> & {provider_id?: string};
 export type PartyFormState = InertiaForm<PartyFormData>;
 export type SwitchField = 'active' | 'allow_requests' | 'downvotes' | 'weighted' | 'show_qrcode' | 'flag_requests';
