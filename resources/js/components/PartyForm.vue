@@ -18,10 +18,8 @@ defineProps<{
 defineEmits<{submit: []}>();
 
 const switches: {name: SwitchField; label: string}[] = [
-    {name: 'active', label: 'Party is running'},
     {name: 'allow_requests', label: 'Accept requests'},
     {name: 'downvotes', label: 'Allow downvotes'},
-    {name: 'weighted', label: 'Raffle mode'},
     {name: 'show_qrcode', label: 'Show join QR code'},
     {name: 'flag_requests', label: 'Hold Flagged Requests for approval'},
 ];
@@ -163,9 +161,7 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                         }"
                         placeholder="Spotify Playlist ID"
                     />
-                    <small class="form-hint"
-                        >Plays when the Queue is empty</small
-                    >
+                    <small class="form-hint">Plays when the Queue is empty</small>
                     <p v-if="form.errors.backup_playlist_id" class="invalid-feedback">
                         {{ form.errors.backup_playlist_id }}
                     </p>

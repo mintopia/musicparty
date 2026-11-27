@@ -13,7 +13,7 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
 </script>
 
 <template>
-    <AppLayout title="Link Spotify Account">
+    <AppLayout title="Spotify">
         <template #breadcrumbs>
             <Breadcrumbs :items="[...homeCrumbs(), {label: 'Spotify'}]" />
         </template>
@@ -76,7 +76,8 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                     Create party
                 </button>
                 <p class="text-secondary mt-2 mb-0" data-test="link-missing">
-                    Link both to host a party. {{ missing.join(' and ') }} {{ missing.length === 1 ? 'still needs' : 'still need' }} linking.
+                    Link both to host a party. {{ missing.join(' and ') }}
+                    {{ missing.length === 1 ? 'still needs' : 'still need' }} linking.
                 </p>
             </template>
         </div>
