@@ -110,7 +110,7 @@ function submit(): void {
                             <thead>
                                 <tr>
                                     <th>Name</th>
-                                    <th class="w-1">Active</th>
+                                    <th class="w-1">Status</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -118,9 +118,8 @@ function submit(): void {
                                 <tr v-for="theme in themes" :key="theme.id">
                                     <td>{{ theme.name }}</td>
                                     <td>
-                                        <span class="status" :class="theme.active ? 'status-green' : 'status-muted'">
-                                            {{ theme.active ? 'Yes' : 'No' }}
-                                        </span>
+                                        <span v-if="theme.active" class="mp-state is-ok">Active</span>
+                                        <span v-else class="text-secondary">Not in use</span>
                                     </td>
                                     <td>
                                         <div class="btn-list justify-content-end">

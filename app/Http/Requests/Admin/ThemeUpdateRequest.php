@@ -43,13 +43,19 @@ class ThemeUpdateRequest extends FormRequest
                     },
                 ],
                 'css' => 'sometimes|string|nullable',
-                'tokens' => 'required|array',
-                'tokens.primary' => 'required|hex_color',
-                'tokens.nav-background' => 'required|hex_color',
+                'tokens' => 'sometimes|array',
                 'tokens.*' => 'nullable|hex_color',
             ]);
         }
 
         return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return ['tokens.*.hex_color' => 'That is not a colour. Use #RGB or #RRGGBB, for example #d63939.'];
     }
 }
