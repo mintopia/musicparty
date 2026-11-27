@@ -7,7 +7,7 @@ import BareLayout from '@/layouts/BareLayout.vue';
 import type {LegacyTvPartyState} from '@/types';
 
 const props = defineProps<{
-    party: {code: string; name: string; url: string; qrSvg: string};
+    party: {code: string; name: string; qrSvg: string};
     state: LegacyTvPartyState;
 }>();
 
