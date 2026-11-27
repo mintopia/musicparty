@@ -12,7 +12,6 @@ use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -204,10 +203,6 @@ class UserController extends Controller
                 'linked_human' => $account->created_at?->diffForHumans(),
                 'linked_at' => $account->created_at?->format('Y-m-d H:i:s'),
                 'needs_relink' => $account->needs_relink_at !== null,
-                'token_expires_human' => $account->access_token_expires_at
-                    ? Carbon::parse($account->access_token_expires_at)->diffForHumans()
-                    : null,
-                'token_expired' => $account->access_token_expires_at && Carbon::parse($account->access_token_expires_at)->isPast(),
                 'can_delete' => $account->canDelete(),
             ])->values(),
             'parties' => $user->partyMembers

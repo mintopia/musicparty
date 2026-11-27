@@ -36,8 +36,6 @@ interface LinkedAccountRow {
     linked_human: string | null;
     linked_at: string | null;
     needs_relink: boolean;
-    token_expires_human: string | null;
-    token_expired: boolean;
     can_delete: boolean;
 }
 
@@ -48,15 +46,6 @@ interface PartyRow {
 }
 
 const props = defineProps<{user: ShowUser; accounts: LinkedAccountRow[]; parties: PartyRow[]}>();
-
-function tokenNote(account: LinkedAccountRow): string | null {
-    if (account.token_expires_human === null) {
-        return null;
-    }
-    return account.token_expired
-        ? `Token expired ${account.token_expires_human}`
-        : `Token expires ${account.token_expires_human}`;
-}
 
 const summary = [
     `User ${props.user.id}`,
@@ -208,9 +197,6 @@ const summary = [
                                                 <StatePill :state="account.needs_relink ? 'warn' : 'ok'">{{
                                                     account.needs_relink ? 'Needs re-link' : 'Working'
                                                 }}</StatePill>
-                                                <span v-if="tokenNote(account)" class="mp-sub" data-test="token-note">{{
-                                                    tokenNote(account)
-                                                }}</span>
                                             </td>
                                             <td class="text-end">
                                                 <Link
@@ -242,10 +228,7 @@ const summary = [
                                         }}</StatePill>
                                     </div>
                                     <span class="mp-sub text-wrap"
-                                        >{{ account.name }} &middot; linked {{ account.linked_human
-                                        }}<template v-if="tokenNote(account)">
-                                            &middot; {{ tokenNote(account) }}</template
-                                        ></span
+                                        >{{ account.name }} &middot; linked {{ account.linked_human }}</span
                                     >
                                     <div class="mt-2">
                                         <Link
