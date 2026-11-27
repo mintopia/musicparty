@@ -146,7 +146,7 @@ describe('Upcoming safe remove', () => {
 
     it('offers a retry when the queue fails to load', async () => {
         loaderState.fail = true;
-        const wrapper = mount(Upcoming, {props: {party: 'ABC', initialState: []}});
+        const wrapper = mount(Upcoming, {props: {party: 'ABC', initialState: null}});
 
         expect(wrapper.get('[data-test="queue-error"]').text()).toContain('The Queue didn’t load');
 
