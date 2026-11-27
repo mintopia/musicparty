@@ -45,7 +45,7 @@ function notify(message: string): void {
 }
 
 provide(notifyKey, notify);
-useDashboardSync(props.party.code, (next) => {
+const {connected} = useDashboardSync(props.party.code, (next) => {
     state.value = next;
 });
 
@@ -72,6 +72,8 @@ onBeforeUnmount(() => {
                 :queue-url="links.songs"
                 :can-control="can.control"
                 :can-moderate="can.moderate"
+                :my-rating="myRating"
+                :connected="connected"
                 @delete="deleting = $event"
             />
         </template>

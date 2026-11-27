@@ -1,5 +1,5 @@
 import {router} from '@inertiajs/vue3';
-import {onBeforeUnmount} from 'vue';
+import {onBeforeUnmount, type Ref} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import type {LegacyPartyState} from '@/types';
 
@@ -10,9 +10,9 @@ type Subscription = {
 
 const QUEUE = ['upNext', 'upcoming'];
 const CONNECTION_REFRESH_MS = 15000;
-const ALL = ['playerState', 'control', 'upNext', 'upcoming', 'attention'];
+const ALL = ['playerState', 'myRating', 'control', 'upNext', 'upcoming', 'attention'];
 
-export function useDashboardSync(code: string, onState: (state: LegacyPartyState) => void): void {
+export function useDashboardSync(code: string, onState: (state: LegacyPartyState) => void): {connected: Ref<boolean>} {
     const pending = new Set<string>();
     let timer: ReturnType<typeof setTimeout> | null = null;
 
@@ -48,6 +48,7 @@ export function useDashboardSync(code: string, onState: (state: LegacyPartyState
     managers.listen('FlaggedRequestResolved', onManagers);
     const connectionTimer = setInterval(() => router.reload({only: ['control', 'attention']}), CONNECTION_REFRESH_MS);
     echo.onReconnect(() => router.reload({only: ALL}));
+    const connected = echo.trackConnection();
 
     onBeforeUnmount(() => {
         clearInterval(connectionTimer);
@@ -61,4 +62,5 @@ export function useDashboardSync(code: string, onState: (state: LegacyPartyState
             timer = null;
         }
     });
+    return {connected};
 }
