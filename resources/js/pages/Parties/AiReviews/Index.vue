@@ -2,13 +2,13 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {computed, reactive, ref} from 'vue';
+import {computed, reactive} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
-import SearchSelectField from '@/components/SearchSelectField.vue';
-import SearchTextField from '@/components/SearchTextField.vue';
+import SearchBar from '@/components/SearchBar.vue';
+import type {SearchChip} from '@/components/SearchBar.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {aiReviewsUrl, aiReviewUrl, outcomeBadge} from '@/lib/aiReviews';
 import type {AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
@@ -22,6 +22,7 @@ const props = defineProps<{
     holdsFlagged: boolean;
     moderationTabs: ModerationTabsProps;
     settingsUrl: string;
+    counts: {total: number; outcome: Record<string, number>; criterion: Record<string, number>};
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
 
@@ -31,9 +32,38 @@ const filtered = computed(
     () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.criterion !== '',
 );
 
-const filtersOpen = ref(filtered.value);
+const chips = computed<SearchChip[]>(() => [
+    ...props.outcomes.map((outcome) => ({
+        key: `outcome:${outcome.code}`,
+        label: outcome.name,
+        count: props.counts.outcome[outcome.code] ?? 0,
+        pressed: form.outcome === outcome.code,
+    })),
+    ...props.criteria.map((criterion) => ({
+        key: `criterion:${criterion.code}`,
+        label: criterion.name,
+        count: props.counts.criterion[criterion.code] ?? 0,
+        pressed: form.criterion === criterion.code,
+    })),
+]);
 
-function submit(): void {
+const activeSummary = computed(() => {
+    const parts: string[] = [];
+    if (props.filters.q !== '') {
+        parts.push(`\u201c${props.filters.q}\u201d`);
+    }
+    const outcome = props.outcomes.find((item) => item.code === props.filters.outcome);
+    if (outcome) {
+        parts.push(`outcome ${outcome.name}`);
+    }
+    const criterion = props.criteria.find((item) => item.code === props.filters.criterion);
+    if (criterion) {
+        parts.push(`criterion ${criterion.name}`);
+    }
+    return parts.join(', ');
+});
+
+function apply(): void {
     const query: Record<string, string> = {};
     if (form.q.trim() !== '') {
         query.q = form.q.trim();
@@ -44,7 +74,18 @@ function submit(): void {
     if (form.criterion !== '') {
         query.criterion = form.criterion;
     }
-    router.get(listUrl, query);
+    router.get(listUrl, query, {preserveState: true, replace: true});
+}
+
+function setQuery(value: string): void {
+    form.q = value;
+    apply();
+}
+
+function toggleChip(key: string): void {
+    const [field, code] = key.split(':') as ['outcome' | 'criterion', string];
+    form[field] = form[field] === code ? '' : code;
+    apply();
 }
 
 const showUrl = (review: AiReviewRow): string =>
@@ -74,62 +115,27 @@ const showUrl = (review: AiReviewRow): string =>
             <a :href="settingsUrl" class="ms-1" data-test="turn-on-approval">Turn on approval</a>
         </div>
 
-        <div class="row">
-            <div class="col-md-12 col-lg-3 mb-4">
-                <form :action="listUrl" method="get" class="card" data-test="filters" @submit.prevent="submit">
-                    <div class="card-header">
-                        <h2 class="card-title">Search</h2>
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-ghost-secondary ms-auto d-lg-none"
-                            :aria-expanded="filtersOpen"
-                            aria-controls="ai-review-filter-fields"
-                            data-test="toggle-filters"
-                            @click="filtersOpen = !filtersOpen"
-                        >
-                            {{ filtersOpen ? 'Hide' : 'Show' }}
-                            <i
-                                class="icon ti ms-1"
-                                :class="filtersOpen ? 'ti-chevron-up' : 'ti-chevron-down'"
-                                aria-hidden="true"
-                            ></i>
-                        </button>
-                    </div>
-                    <div id="ai-review-filter-fields" class="card-body d-lg-block" :class="{'d-none': !filtersOpen}">
-                        <SearchTextField v-model="form.q" name="Track, artist or user" property="q" />
-                        <SearchSelectField
-                            v-model="form.outcome"
-                            name="Outcome"
-                            property="outcome"
-                            :options="outcomes"
-                            value-key="code"
-                            label-key="name"
-                        />
-                        <SearchSelectField
-                            v-model="form.criterion"
-                            name="Criterion"
-                            property="criterion"
-                            :options="criteria"
-                            value-key="code"
-                            label-key="name"
-                        />
-                    </div>
-                    <div class="card-footer d-lg-flex" :class="filtersOpen ? 'd-flex' : 'd-none'">
-                        <Link v-if="filtered" :href="listUrl" class="btn btn-link ms-auto" data-test="clear-filters"
-                            >Clear</Link
-                        >
-                        <button class="btn btn-primary" :class="{'ms-auto': !filtered}" type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
-            <div class="col-lg-9 col-md-12">
+        <SearchBar
+            :model-value="form.q"
+            placeholder="Search tracks, artists, people"
+            label="Search AI reviews"
+            :result-count="reviews.total"
+            :total="counts.total"
+            noun="reviews"
+            :chips="chips"
+            @update:model-value="setQuery"
+            @submit="setQuery"
+            @toggle-chip="toggleChip"
+        />
+        <div>
+            <div>
                 <EmptyState
                     v-if="reviews.data.length === 0 && filtered"
                     icon="ti-filter-off"
                     title="No matching reviews"
-                    description="Try a different search or outcome."
+                    :description="`Nothing matches ${activeSummary}.`"
                 >
-                    <Link :href="listUrl" class="btn btn-primary">Clear filters</Link>
+                    <Link :href="listUrl" class="btn btn-primary" data-test="clear-filters">Clear filters</Link>
                 </EmptyState>
                 <EmptyState
                     v-else-if="reviews.data.length === 0"

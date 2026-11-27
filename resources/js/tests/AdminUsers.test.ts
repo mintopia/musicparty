@@ -46,18 +46,21 @@ beforeEach(() => {
 });
 
 describe('admin users', () => {
-    it('renders the index rows with a Never fallback and preserves order on search', async () => {
+    it('renders rows and cards, and searches with chips while preserving order', async () => {
         const wrapper = mount(UserIndex, {
             props: {
                 users: {
-                    data: [{...user}],
+                    data: [{...user, is_admin: true}],
+                    total: 1,
                     current_page: 1,
                     last_page: 1,
                     prev_page_url: null,
                     next_page_url: null,
                     links: [],
                 },
-                filters: {id: null, nickname: 'ali'},
+                filters: {q: 'ali', role: '', suspended: false, first_login: false, provider: ''},
+                providers: [{code: 'discord', name: 'Discord'}],
+                total: 9,
                 order: 'nickname',
                 order_direction: 'desc',
             },
@@ -65,12 +68,48 @@ describe('admin users', () => {
 
         expect(wrapper.find('a[href="/admin/users/7"]').text()).toBe('alice');
         expect(wrapper.text()).toContain('Never');
+        expect(wrapper.find('[data-test="users-list"] .user-open').attributes('aria-label')).toBe('Open alice');
+        expect(wrapper.find('[data-test="search-count"]').text()).toBe('1 of 9 users');
+
         await wrapper.find('form').trigger('submit');
-        expect(inertia.get).toHaveBeenCalledWith('/admin/users', {
-            order: 'nickname',
-            order_direction: 'desc',
-            nickname: 'ali',
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/admin/users',
+            {order: 'nickname', order_direction: 'desc', q: 'ali'},
+            {preserveState: true, replace: true},
+        );
+
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+        expect(chips.map((chip) => chip.text())).toEqual(['Admin', 'Suspended', 'Signup not finished', 'Discord']);
+        await chips[0]!.trigger('click');
+        await chips[3]!.trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/admin/users',
+            {order: 'nickname', order_direction: 'desc', q: 'ali', role: 'admin', provider: 'discord'},
+            {preserveState: true, replace: true},
+        );
+    });
+
+    it('repeats the query in the empty state with one clear button', () => {
+        const wrapper = mount(UserIndex, {
+            props: {
+                users: {
+                    data: [],
+                    total: 0,
+                    current_page: 1,
+                    last_page: 1,
+                    prev_page_url: null,
+                    next_page_url: null,
+                    links: [],
+                },
+                filters: {q: 'id:99', role: '', suspended: true, first_login: false, provider: ''},
+                providers: [],
+                total: 9,
+                order: 'id',
+                order_direction: 'asc',
+            },
         });
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201cid:99\u201d, Suspended');
+        expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
     });
 
     it('uses a plain anchor for impersonation and disables undeletable accounts', () => {

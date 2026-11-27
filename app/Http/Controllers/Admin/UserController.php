@@ -7,6 +7,7 @@ use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Models\LinkedAccount;
 use App\Models\Role;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -17,17 +18,50 @@ class UserController extends Controller
 {
     public function index(Request $request): Response
     {
+        $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'role' => ['nullable', 'in:admin'],
+            'suspended' => ['nullable', 'boolean'],
+            'first_login' => ['nullable', 'boolean'],
+            'provider' => ['nullable', 'string', 'max:50'],
+        ]);
         $filters = (object) [];
         $query = User::query();
+        $total = User::query()->count();
 
-        if ($request->input('id')) {
-            $filters->id = $request->input('id');
-            $query = $query->whereId($filters->id);
+        $search = $this->searchTerms($request);
+        if ($search['q'] !== '') {
+            $filters->q = $search['q'];
+        }
+        if ($search['id'] !== null) {
+            $query->whereKey($search['id']);
+        }
+        if ($search['nickname'] !== null) {
+            $query->where('nickname', 'LIKE', '%'.addcslashes($search['nickname'], '%_\\').'%');
+        }
+        if ($search['text'] !== '') {
+            $like = '%'.addcslashes($search['text'], '%_\\').'%';
+            $query->where(fn ($inner) => $inner
+                ->where('nickname', 'LIKE', $like)
+                ->when(ctype_digit($search['text']), fn ($digits) => $digits->orWhere('id', (int) $search['text'])));
         }
 
-        if ($request->input('nickname')) {
-            $filters->nickname = $request->input('nickname');
-            $query = $query->where('nickname', 'LIKE', "%{$filters->nickname}%");
+        if ($request->input('role') === 'admin') {
+            $filters->role = 'admin';
+            $query->whereHas('roles', fn ($roles) => $roles->where('code', 'admin'));
+        }
+        if ($request->boolean('suspended')) {
+            $filters->suspended = 1;
+            $query->where('suspended', true);
+        }
+        if ($request->boolean('first_login')) {
+            $filters->first_login = 1;
+            $query->where('first_login', true);
+        }
+        $provider = (string) $request->input('provider', '');
+        if ($provider !== '') {
+            $filters->provider = $provider;
+            $query->whereHas('accounts.provider', fn ($providers) => $providers->where('code', $provider));
         }
 
         $params = (array) $filters;
@@ -57,11 +91,14 @@ class UserController extends Controller
         $params['page'] = $request->input('page', 1);
         $params['perPage'] = $request->input('perPage', 20);
 
-        $users = $query->paginate($params['perPage'])->appends($params);
+        $users = $query->withExists(['roles as is_admin' => fn ($roles) => $roles->where('code', 'admin')])
+            ->paginate($params['perPage'])->appends($params);
 
         $users->through(fn (User $row): array => [
             'id' => $row->id,
             'nickname' => $row->nickname,
+            'is_admin' => (bool) $row->getAttribute('is_admin'),
+            'suspended' => (bool) $row->suspended,
             'last_login' => $row->last_login?->format('Y-m-d H:i:s'),
             'last_login_human' => $row->last_login?->diffForHumans(),
             'created_at' => $row->created_at?->format('Y-m-d H:i:s'),
@@ -71,12 +108,49 @@ class UserController extends Controller
         return Inertia::render('Admin/Users/Index', [
             'users' => $users,
             'filters' => [
-                'id' => $filters->id ?? null,
-                'nickname' => $filters->nickname ?? null,
+                'q' => $filters->q ?? '',
+                'role' => $filters->role ?? '',
+                'suspended' => isset($filters->suspended),
+                'first_login' => isset($filters->first_login),
+                'provider' => $filters->provider ?? '',
             ],
+            'providers' => SocialProvider::query()->orderBy('name')->get(['code', 'name'])
+                ->map(fn (SocialProvider $row): array => ['code' => $row->code, 'name' => $row->name])->all(),
+            'total' => $total,
             'order' => $params['order'],
             'order_direction' => $params['order_direction'],
         ]);
+    }
+
+    /**
+     * Splits the search box into `id:`/`nickname:` terms and free text; the legacy `id` and `nickname` query parameters are folded in.
+     *
+     * @return array{q: string, id: int|null, nickname: string|null, text: string}
+     */
+    protected function searchTerms(Request $request): array
+    {
+        $raw = trim((string) $request->input('q', ''));
+        if ($raw === '') {
+            $legacy = array_filter([
+                $request->input('id') ? 'id:'.$request->input('id') : null,
+                $request->input('nickname') ? 'nickname:'.$request->input('nickname') : null,
+            ]);
+            $raw = implode(' ', $legacy);
+        }
+
+        $id = null;
+        $nickname = null;
+        $text = preg_replace_callback('/\b(id|nickname):(\S+)/i', function (array $match) use (&$id, &$nickname): string {
+            if (strtolower($match[1]) === 'id') {
+                $id = (int) $match[2];
+            } else {
+                $nickname = $match[2];
+            }
+
+            return '';
+        }, $raw) ?? $raw;
+
+        return ['q' => $raw, 'id' => $id, 'nickname' => $nickname, 'text' => trim($text)];
     }
 
     public function show(User $user): Response

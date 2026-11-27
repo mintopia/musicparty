@@ -3,11 +3,11 @@ import EmptyState from '@/components/EmptyState.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {computed, reactive} from 'vue';
+import {computed, ref} from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
-import SearchSelectField from '@/components/SearchSelectField.vue';
-import SearchTextField from '@/components/SearchTextField.vue';
+import SearchBar from '@/components/SearchBar.vue';
+import type {SearchChip} from '@/components/SearchBar.vue';
 import SortHeader from '@/components/SortHeader.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {LegacyPartyState, Paginator, When} from '@/types';
@@ -32,7 +32,7 @@ const props = defineProps<{
         order: string;
         order_direction: 'asc' | 'desc';
     };
-    members: Paginator<MemberRow>;
+    members: Paginator<MemberRow> & {total: number};
 }>();
 
 const roleBadges: Record<string, string> = {
@@ -47,26 +47,40 @@ function roleBadge(role: string): string {
     return roleBadges[role.toLowerCase()] ?? 'bg-secondary-lt';
 }
 
-const form = reactive({nickname: props.filters.nickname ?? '', role: props.filters.role ?? ''});
 const usersUrl = `/parties/${props.party.code}/users`;
+
+const query = ref(props.filters.nickname ?? '');
 
 const filtered = computed(() => Boolean(props.filters.nickname || props.filters.role));
 
-function submit(): void {
-    const query: Record<string, string | number> = {
+const chips = computed<SearchChip[]>(() =>
+    props.roles.map((role) => ({key: role.code, label: role.name, pressed: props.filters.role === role.code})),
+);
+
+function visit(nickname: string, role: string): void {
+    const next: Record<string, string | number> = {
         order: props.filters.order,
         order_direction: props.filters.order_direction,
     };
     if (props.filters.per_page !== undefined) {
-        query.per_page = props.filters.per_page;
+        next.per_page = props.filters.per_page;
     }
-    if (form.nickname) {
-        query.nickname = form.nickname;
+    if (nickname) {
+        next.nickname = nickname;
     }
-    if (form.role) {
-        query.role = form.role;
+    if (role) {
+        next.role = role;
     }
-    router.get(usersUrl, query);
+    router.get(usersUrl, next);
+}
+
+function onSearch(value: string): void {
+    query.value = value;
+    visit(value, props.filters.role ?? '');
+}
+
+function toggleChip(code: string): void {
+    visit(query.value, props.filters.role === code ? '' : code);
 }
 </script>
 
@@ -96,102 +110,88 @@ function submit(): void {
             </div>
         </div>
 
-        <div class="row">
-            <div class="col-md-12 col-lg-3 mb-4">
-                <form :action="usersUrl" method="get" class="card" @submit.prevent="submit">
-                    <div class="card-header">
-                        <h2 class="card-title">Search</h2>
-                    </div>
-                    <div class="card-body">
-                        <SearchTextField v-model="form.nickname" name="Nickname" property="nickname" />
-                        <SearchSelectField
-                            v-model="form.role"
-                            name="Role"
-                            property="role"
-                            :options="roles"
-                            value-key="code"
-                            label-key="name"
-                        />
-                    </div>
-                    <div class="card-footer d-flex">
-                        <button class="btn btn-primary ms-auto" type="submit">Search</button>
-                    </div>
-                </form>
+        <SearchBar
+            :model-value="query"
+            placeholder="Search members by nickname"
+            label="Search Members"
+            :result-count="members.total"
+            noun="Members"
+            :chips="chips"
+            @update:model-value="onSearch"
+            @toggle-chip="toggleChip"
+        />
+        <div class="card">
+            <div v-if="members.data.length > 0" class="table-responsive">
+                <table class="table table-hover table-vcenter text-nowrap card-table">
+                    <thead>
+                        <tr>
+                            <th>
+                                <SortHeader
+                                    title="Nickname"
+                                    field="nickname"
+                                    :order="filters.order"
+                                    :order-direction="filters.order_direction"
+                                />
+                            </th>
+                            <th>
+                                <SortHeader
+                                    title="Role"
+                                    field="role"
+                                    :order="filters.order"
+                                    :order-direction="filters.order_direction"
+                                />
+                            </th>
+                            <th>
+                                <SortHeader
+                                    title="Joined"
+                                    field="created_at"
+                                    direction="desc"
+                                    :order="filters.order"
+                                    :order-direction="filters.order_direction"
+                                />
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="member in members.data" :key="member.id" data-test="member-row">
+                            <td>
+                                <Link :href="member.url">{{ member.nickname }}</Link>
+                            </td>
+                            <td>
+                                <span
+                                    class="badge"
+                                    :class="roleBadge(member.roleCode ?? member.role)"
+                                    data-test="role-badge"
+                                    >{{ member.role }}</span
+                                >
+                            </td>
+                            <td>
+                                <span v-if="member.createdAt" :title="member.createdAt.iso">{{
+                                    member.createdAt.human
+                                }}</span>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
             </div>
-
-            <div class="col-lg-9 col-md-12">
-                <div class="card">
-                    <div v-if="members.data.length > 0" class="table-responsive">
-                        <table class="table table-hover table-vcenter text-nowrap card-table">
-                            <thead>
-                                <tr>
-                                    <th>
-                                        <SortHeader
-                                            title="Nickname"
-                                            field="nickname"
-                                            :order="filters.order"
-                                            :order-direction="filters.order_direction"
-                                        />
-                                    </th>
-                                    <th>
-                                        <SortHeader
-                                            title="Role"
-                                            field="role"
-                                            :order="filters.order"
-                                            :order-direction="filters.order_direction"
-                                        />
-                                    </th>
-                                    <th>
-                                        <SortHeader
-                                            title="Joined"
-                                            field="created_at"
-                                            direction="desc"
-                                            :order="filters.order"
-                                            :order-direction="filters.order_direction"
-                                        />
-                                    </th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="member in members.data" :key="member.id" data-test="member-row">
-                                    <td>
-                                        <Link :href="member.url">{{ member.nickname }}</Link>
-                                    </td>
-                                    <td>
-                                        <span
-                                            class="badge"
-                                            :class="roleBadge(member.roleCode ?? member.role)"
-                                            data-test="role-badge"
-                                            >{{ member.role }}</span
-                                        >
-                                    </td>
-                                    <td>
-                                        <span v-if="member.createdAt" :title="member.createdAt.iso">{{
-                                            member.createdAt.human
-                                        }}</span>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <EmptyState
-                        v-else-if="filtered"
-                        icon="ti-users-off"
-                        title="No matching members"
-                        description="Try a different nickname or role."
-                    >
-                        <Link :href="usersUrl" class="btn btn-primary">Clear filters</Link>
-                    </EmptyState>
-                    <EmptyState
-                        v-else
-                        icon="ti-users-off"
-                        title="No members yet"
-                        description="People who join this party will appear here."
-                    />
-                    <div v-if="members.last_page > 1" class="card-footer d-flex">
-                        <Pagination class="ms-auto" :paginator="members" />
-                    </div>
-                </div>
+            <EmptyState
+                v-else-if="filtered"
+                icon="ti-users-off"
+                title="No matching members"
+                :description="
+                    filters.nickname ? `Nothing matches “${filters.nickname}”.` : 'Nothing matches these filters.'
+                "
+            >
+                <Link :href="usersUrl" class="btn btn-primary">Clear filters</Link>
+            </EmptyState>
+            <EmptyState
+                v-else
+                icon="ti-users-off"
+                title="No members yet"
+                description="People who join this party will appear here."
+            />
+            <div v-if="members.last_page > 1" class="card-footer d-flex">
+                <Pagination class="ms-auto" :paginator="members" />
             </div>
         </div>
     </AppLayout>

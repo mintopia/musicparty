@@ -1,6 +1,7 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import Edit from '@/pages/Parties/Members/Edit.vue';
+import SearchBar from '@/components/SearchBar.vue';
 import Index from '@/pages/Parties/Members/Index.vue';
 import Show from '@/pages/Parties/Members/Show.vue';
 import type {LegacyPartyState} from '@/types';
@@ -59,13 +60,25 @@ describe('party members', () => {
         });
 
         expect(wrapper.find('a[href="/parties/ABCD/users/5"]').text()).toBe('alice');
-        await wrapper.find('form').trigger('submit');
-        expect(inertia.get).toHaveBeenCalledWith('/parties/ABCD/users', {
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+        expect(chips.map((chip) => chip.attributes('aria-pressed'))).toContain('true');
+
+        wrapper.getComponent(SearchBar).vm.$emit('update:modelValue', 'bob');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/users', {
             order: 'role',
             order_direction: 'desc',
             per_page: 5,
-            nickname: 'ali',
+            nickname: 'bob',
             role: 'banned',
+        });
+
+        const pressed = chips.find((chip) => chip.attributes('aria-pressed') === 'true')!;
+        await pressed.trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/users', {
+            order: 'role',
+            order_direction: 'desc',
+            per_page: 5,
+            nickname: 'bob',
         });
     });
 

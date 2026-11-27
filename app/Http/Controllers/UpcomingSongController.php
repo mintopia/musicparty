@@ -34,6 +34,16 @@ class UpcomingSongController extends Controller
             $params['per_page'] = $perPage;
         }
 
+        if ($request->input('q')) {
+            $params['q'] = $request->input('q');
+            $term = "%{$params['q']}%";
+            $query = $query->where(function ($query) use ($term) {
+                $query->whereHas('song', fn ($song) => $song->where('name', 'LIKE', $term))
+                    ->orWhereHas('song.album', fn ($album) => $album->where('name', 'LIKE', $term))
+                    ->orWhereHas('song.artists', fn ($artist) => $artist->where('name', 'LIKE', $term));
+            });
+        }
+
         if ($request->input('name')) {
             $params['name'] = $request->input('name');
             $query = $query->whereHas('song', function ($query) use ($params) {
@@ -57,11 +67,9 @@ class UpcomingSongController extends Controller
 
         if ($request->input('type')) {
             $params['type'] = $request->input('type');
-            if ($request->input('type') === 'queued') {
-                $query = $query->whereNull('queued_at');
-            } else {
-                $query = $query->whereNotNull('queued_at');
-            }
+            $query = $request->input('type') === 'queued'
+                ? $query->whereNull('queued_at')
+                : $query->whereNotNull('queued_at');
         }
 
         // Sorting
@@ -102,10 +110,6 @@ class UpcomingSongController extends Controller
         return Inertia::render('Parties/Songs/Index', [
             'party' => $this->partyProps($party),
             'providerName' => $providerName,
-            'types' => [
-                ['code' => 'queued', 'name' => 'Queued'],
-                ['code' => 'spotify', 'name' => "Sent to {$providerName}"],
-            ],
             'filters' => $params,
             'songs' => $songs,
             'playerState' => $party->getState(),

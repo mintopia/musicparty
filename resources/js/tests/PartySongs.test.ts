@@ -1,5 +1,6 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import SearchBar from '@/components/SearchBar.vue';
 import Index from '@/pages/Parties/Songs/Index.vue';
 import ShowSong from '@/pages/Parties/Songs/Show.vue';
 import type {LegacyPartyState} from '@/types';
@@ -57,7 +58,6 @@ describe('Party songs index', () => {
         playerState: idle,
         providerName: 'Spotify',
         filters: {order: 'created_at', order_direction: 'desc' as const, artist: 'abba'},
-        types: [{code: 'queued', name: 'Queued'}],
         songs: paginator([row(1), row(2, when)]),
     };
 
@@ -69,25 +69,59 @@ describe('Party songs index', () => {
 
         expect(rows).toHaveLength(2);
         expect(rows[0].text()).toContain('A, B');
-        expect(rows[0].text()).toContain('Not Sent to Spotify');
+        expect(rows[0].text()).toContain('Not yet');
+        expect(rows[0].text()).not.toContain('Not Sent');
         expect(rows[1].text()).toContain('3 hours ago');
         expect(rows[0].get('a').attributes('href')).toBe('/parties/ABCD/songs/1');
         expect(wrapper.text()).toContain('Showing 1 to 2 of 2 entries');
-        expect(wrapper.text()).toContain('Sent to Spotify');
+        expect(wrapper.text()).toContain('Sent to Player');
+        expect(wrapper.find('.table-responsive').exists()).toBe(true);
     });
 
-    it('submits only the filled filters, keeping the sort order', async () => {
-        const wrapper = mount(Index, {props});
+    it('searches with the query and keeps filters and sort order', async () => {
+        const wrapper = mount(Index, {props: {...props, filters: {...props.filters, type: 'sent'}}});
 
-        await wrapper.get('#name').setValue('hit');
-        await wrapper.get('form').trigger('submit');
+        wrapper.getComponent(SearchBar).vm.$emit('update:modelValue', 'hit');
 
         expect(inertia.get).toHaveBeenCalledWith('/parties/ABCD/songs', {
-            name: 'hit',
+            q: 'hit',
             artist: 'abba',
+            type: 'sent',
             order: 'created_at',
             order_direction: 'desc',
         });
+    });
+
+    it('toggles the status chips and removes artist chips', async () => {
+        const wrapper = mount(Index, {props: {...props, filters: {...props.filters, type: 'sent'}}});
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+
+        expect(chips.map((chip) => chip.text())).toEqual(['Waiting', 'Sent to Player', 'Artist: abba']);
+        expect(chips[1].attributes('aria-pressed')).toBe('true');
+
+        await chips[0].trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/songs', {
+            artist: 'abba',
+            type: 'queued',
+            order: 'created_at',
+            order_direction: 'desc',
+        });
+
+        await chips[2].trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/songs', {
+            type: 'sent',
+            order: 'created_at',
+            order_direction: 'desc',
+        });
+    });
+
+    it('repeats the query in the empty state with a clear button', () => {
+        const wrapper = mount(Index, {
+            props: {...props, filters: {...props.filters, q: 'zzz'}, songs: {...paginator([]), from: null, to: null}},
+        });
+
+        expect(wrapper.text()).toContain('“zzz”');
+        expect(wrapper.findAll('a').filter((link) => link.text() === 'Clear filters')).toHaveLength(1);
     });
 });
 

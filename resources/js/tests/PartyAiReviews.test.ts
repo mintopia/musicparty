@@ -103,6 +103,7 @@ function mountIndex(
             outcomes,
             criteria: [{code: 'troll', name: 'Troll'}],
             holdsFlagged: true,
+            counts: {total: 5, outcome: {flag: 2}, criterion: {troll: 1}},
             settingsUrl: '/parties/ABCD/edit#flag_requests',
             reviews: paginator(data, extra),
             ...props,
@@ -174,28 +175,52 @@ describe('AI reviews list', () => {
         const wrapper = mountIndex([], {outcome: 'flag', criterion: '', q: 'zzz'});
 
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No matching reviews');
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201czzz\u201d, outcome Flagged');
+        expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
         expect(wrapper.find('[data-test="clear-filters"]').attributes('href')).toBe('/parties/ABCD/ai-reviews');
     });
 
-    it('submits the search and outcome as query parameters and omits empty ones', async () => {
+    it('searches and toggles outcome and criterion chips as query parameters, omitting empty ones', async () => {
         const wrapper = mountIndex([row(1)]);
+        const chips = wrapper.findAll('[data-test="search-chip"]');
 
-        await wrapper.get('input[name="q"]').setValue('  wham ');
-        await wrapper.get('select[name="outcome"]').setValue('flag');
-        await wrapper.get('form').trigger('submit');
-        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/ai-reviews', {q: 'wham', outcome: 'flag'});
+        await chips[1]!.trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/ai-reviews', {outcome: 'flag'}, expect.anything());
+        await chips[4]!.trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/parties/ABCD/ai-reviews',
+            {outcome: 'flag', criterion: 'troll'},
+            expect.anything(),
+        );
 
-        await wrapper.get('input[name="q"]').setValue('');
-        await wrapper.get('select[name="outcome"]').setValue('');
+        await wrapper.get('[data-test="search-input"]').setValue('  wham ');
         await wrapper.get('form').trigger('submit');
-        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/ai-reviews', {});
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/parties/ABCD/ai-reviews',
+            {q: 'wham', outcome: 'flag', criterion: 'troll'},
+            expect.anything(),
+        );
+
+        await chips[1]!.trigger('click');
+        await chips[4]!.trigger('click');
+        await wrapper.get('[data-test="search-input"]').setValue('');
+        await wrapper.get('form').trigger('submit');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/ai-reviews', {}, expect.anything());
     });
 
-    it('starts the form from the active filters', () => {
+    it('starts from the active filters and shows chip counts', () => {
         const wrapper = mountIndex([row(1)], {outcome: 'reject', criterion: '', q: 'brightside'});
 
-        expect((wrapper.get('input[name="q"]').element as HTMLInputElement).value).toBe('brightside');
-        expect((wrapper.get('select[name="outcome"]').element as HTMLSelectElement).value).toBe('reject');
+        expect((wrapper.get('[data-test="search-input"]').element as HTMLInputElement).value).toBe('brightside');
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+        expect(chips.map((chip) => chip.attributes('aria-pressed'))).toEqual([
+            'false',
+            'false',
+            'true',
+            'false',
+            'false',
+        ]);
+        expect(chips[1]!.text()).toContain('2');
     });
 
     it('renders the pagination when there are several pages', () => {

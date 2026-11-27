@@ -19,22 +19,48 @@ class PartyModerationController extends Controller
 {
     public function index(Request $request, Party $party): Response
     {
-        $params = [
-            'order' => 'id',
-            'order_direction' => 'asc',
-        ];
-        $perPage = $request->input('per_page', 20);
-        if ($perPage !== 20) {
-            $params['per_page'] = $perPage;
-        }
+        $filters = $request->validate([
+            'q' => ['nullable', 'string', 'max:100'],
+            'state' => ['nullable', 'in:on,off'],
+            'action' => ['nullable', 'in:'.implode(',', array_column(PartyModerationAction::cases(), 'value'))],
+            'pattern' => ['nullable', 'boolean'],
+            'per_page' => ['nullable', 'integer', 'min:1', 'max:100'],
+        ]);
+        $search = trim($filters['q'] ?? '');
+        $state = $filters['state'] ?? null;
+        $action = $filters['action'] ?? null;
+        $pattern = (bool) ($filters['pattern'] ?? false);
 
-        $moderations = $party->moderations()->paginate($perPage)->appends($params);
+        $moderations = $party->moderations()
+            ->when($search !== '', function ($query) use ($search): void {
+                $like = '%'.addcslashes($search, '%_\\').'%';
+                $query->where(fn ($inner) => $inner->where('value', 'like', $like)->orWhere('notes', 'like', $like));
+            })
+            ->when($state !== null, fn ($query) => $query->where('enabled', $state === 'on'))
+            ->when($action !== null, fn ($query) => $query->where('action', $action))
+            ->when($pattern, fn ($query) => $query->where('regex', true))
+            ->orderBy('id')
+            ->paginate((int) ($filters['per_page'] ?? 20))
+            ->withQueryString();
         $moderations->through(fn (PartyModeration $row): array => $this->present($row));
+
+        $counts = $party->moderations()->toBase()
+            ->selectRaw('count(*) as total, sum(enabled = 1) as enabled, sum(action = ?) as flag, sum(action = ?) as reject, sum(regex = 1) as pattern', [PartyModerationAction::Flag->value, PartyModerationAction::Reject->value])
+            ->first();
 
         return Inertia::render('Parties/Moderation/Index', [
             'party' => $this->partyProps($party),
             'playerState' => $party->getState(),
             'moderations' => $moderations,
+            'filters' => ['q' => $search, 'state' => $state ?? '', 'action' => $action ?? '', 'pattern' => $pattern],
+            'counts' => [
+                'total' => (int) ($counts->total ?? 0),
+                'on' => (int) ($counts->enabled ?? 0),
+                'off' => (int) ($counts->total ?? 0) - (int) ($counts->enabled ?? 0),
+                'flag' => (int) ($counts->flag ?? 0),
+                'reject' => (int) ($counts->reject ?? 0),
+                'pattern' => (int) ($counts->pattern ?? 0),
+            ],
             'moderationTabs' => app(ModerationTabs::class)->for($party),
         ]);
     }

@@ -5,7 +5,8 @@ import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
-import SearchTextField from '@/components/SearchTextField.vue';
+import SearchBar from '@/components/SearchBar.vue';
+import type {SearchChip} from '@/components/SearchBar.vue';
 import SortHeader from '@/components/SortHeader.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {Paginator} from '@/types';
@@ -13,6 +14,8 @@ import type {Paginator} from '@/types';
 interface AdminUserRow {
     id: number;
     nickname: string;
+    is_admin?: boolean;
+    suspended?: boolean;
     last_login: string | null;
     last_login_human: string | null;
     created_at: string;
@@ -20,25 +23,84 @@ interface AdminUserRow {
 }
 
 const props = defineProps<{
-    users: Paginator<AdminUserRow>;
-    filters: {id: string | null; nickname: string | null};
+    users: Paginator<AdminUserRow> & {total?: number};
+    filters: {q: string; role: string; suspended: boolean; first_login: boolean; provider: string};
+    providers: {code: string; name: string}[];
+    total: number;
     order: string;
     order_direction: 'asc' | 'desc';
 }>();
 
-const search = reactive({id: props.filters.id, nickname: props.filters.nickname});
+const form = reactive({...props.filters});
 
-const filtered = computed(() => Boolean(props.filters.id || props.filters.nickname));
+const filtered = computed(
+    () =>
+        props.filters.q !== '' ||
+        props.filters.role !== '' ||
+        props.filters.suspended ||
+        props.filters.first_login ||
+        props.filters.provider !== '',
+);
 
-function submit(): void {
+const chips = computed<SearchChip[]>(() => [
+    {key: 'role', label: 'Admin', pressed: form.role === 'admin'},
+    {key: 'suspended', label: 'Suspended', pressed: form.suspended},
+    {key: 'first_login', label: 'Signup not finished', pressed: form.first_login},
+    ...props.providers.map((provider) => ({
+        key: `provider:${provider.code}`,
+        label: provider.name,
+        pressed: form.provider === provider.code,
+    })),
+]);
+
+const activeSummary = computed(() => {
+    const parts: string[] = [];
+    if (props.filters.q !== '') {
+        parts.push(`\u201c${props.filters.q}\u201d`);
+    }
+    for (const chip of chips.value) {
+        if (chip.pressed) {
+            parts.push(chip.label);
+        }
+    }
+    return parts.join(', ');
+});
+
+function apply(): void {
     const query: Record<string, string> = {order: props.order, order_direction: props.order_direction};
-    if (search.id) {
-        query.id = search.id;
+    if (form.q.trim() !== '') {
+        query.q = form.q.trim();
     }
-    if (search.nickname) {
-        query.nickname = search.nickname;
+    if (form.role !== '') {
+        query.role = form.role;
     }
-    router.get('/admin/users', query);
+    if (form.suspended) {
+        query.suspended = '1';
+    }
+    if (form.first_login) {
+        query.first_login = '1';
+    }
+    if (form.provider !== '') {
+        query.provider = form.provider;
+    }
+    router.get('/admin/users', query, {preserveState: true, replace: true});
+}
+
+function setQuery(value: string): void {
+    form.q = value;
+    apply();
+}
+
+function toggleChip(key: string): void {
+    if (key === 'role') {
+        form.role = form.role === 'admin' ? '' : 'admin';
+    } else if (key === 'suspended' || key === 'first_login') {
+        form[key] = !form[key];
+    } else {
+        const code = key.slice('provider:'.length);
+        form.provider = form.provider === code ? '' : code;
+    }
+    apply();
 }
 </script>
 
@@ -52,25 +114,54 @@ function submit(): void {
             <h1>Users</h1>
         </div>
 
-        <div class="row">
-            <div class="col-md-12 col-lg-3 mb-4">
-                <form class="card" @submit.prevent="submit">
-                    <div class="card-header">
-                        <h2 class="card-title">Search</h2>
-                    </div>
-                    <div class="card-body">
-                        <SearchTextField v-model="search.id" name="ID" property="id" />
-                        <SearchTextField v-model="search.nickname" name="Nickname" property="nickname" />
-                    </div>
-                    <div class="card-footer d-flex">
-                        <button class="btn btn-primary ms-auto" type="submit">Search</button>
-                    </div>
-                </form>
-            </div>
+        <SearchBar
+            :model-value="form.q"
+            placeholder="Search by id or nickname. Try id:42 or nickname:alice"
+            label="Search users"
+            :result-count="users.total"
+            :total="total"
+            noun="users"
+            :chips="chips"
+            @update:model-value="setQuery"
+            @submit="setQuery"
+            @toggle-chip="toggleChip"
+        />
 
-            <div class="col-lg-9 col-md-12">
+        <div>
+            <div>
                 <div class="card">
-                    <div v-if="users.data.length > 0" class="table-responsive">
+                    <ul
+                        v-if="users.data.length > 0"
+                        class="list-group list-group-flush d-md-none"
+                        data-test="users-list"
+                    >
+                        <li v-for="user in users.data" :key="user.id" class="list-group-item p-3">
+                            <div class="d-flex gap-3 align-items-start">
+                                <div class="flex-fill min-w-0">
+                                    <Link :href="`/admin/users/${user.id}`" class="fw-medium">{{ user.nickname }}</Link>
+                                    <span v-if="user.is_admin" class="badge bg-primary text-primary-fg ms-1"
+                                        >Admin</span
+                                    >
+                                    <span v-if="user.suspended" class="badge bg-red-lt ms-1">Suspended</span>
+                                    <div class="text-secondary small mt-1">
+                                        #{{ user.id }} &middot;
+                                        <template v-if="user.last_login"
+                                            >last login {{ user.last_login_human }}</template
+                                        >
+                                        <template v-else>never logged in</template>
+                                    </div>
+                                </div>
+                                <Link
+                                    :href="`/admin/users/${user.id}`"
+                                    class="btn btn-icon btn-ghost-secondary user-open"
+                                    :aria-label="`Open ${user.nickname}`"
+                                >
+                                    <i class="icon ti ti-chevron-right" aria-hidden="true"></i>
+                                </Link>
+                            </div>
+                        </li>
+                    </ul>
+                    <div v-if="users.data.length > 0" class="table-responsive d-none d-md-block">
                         <table class="table table-hover table-vcenter text-nowrap card-table">
                             <thead>
                                 <tr>
@@ -133,9 +224,11 @@ function submit(): void {
                         v-else-if="filtered"
                         icon="ti-users-off"
                         title="No matching users"
-                        description="Try a different ID or nickname."
+                        :description="`Nothing matches ${activeSummary}.`"
                     >
-                        <Link :href="'/admin/users'" class="btn btn-primary">Clear filters</Link>
+                        <Link :href="'/admin/users'" class="btn btn-primary" data-test="clear-filters"
+                            >Clear filters</Link
+                        >
                     </EmptyState>
                     <EmptyState
                         v-else
@@ -151,3 +244,10 @@ function submit(): void {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.user-open {
+    min-inline-size: 44px;
+    min-block-size: 44px;
+}
+</style>

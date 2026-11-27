@@ -11,6 +11,8 @@
     --mp-stage-muted: rgb(255 255 255 / 74%);
     --mp-stage-veil: linear-gradient(rgb(10 10 14 / 50%), rgb(10 10 14 / 78%));
     --mp-art-wash: linear-gradient(135deg, oklch(55% 0.2 250), oklch(62% 0.16 137) 55%, oklch(80% 0.15 25));
+    --mp-fs-small: 0.8125rem;
+    --mp-tint-hover: color-mix(in oklab, var(--tblr-body-color) 7%, transparent);
     --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -297,4 +299,104 @@
     color: #fff;
     font-size: 2rem;
     box-shadow: 0 0 0 8px color-mix(in oklab, var(--tblr-success) 22%, transparent);
+}
+
+.mp-narrow {
+    max-inline-size: 960px;
+    margin-inline: auto;
+}
+
+.mp-searchbar {
+    display: grid;
+    gap: var(--mp-space-3);
+    margin-block-end: var(--mp-space-4);
+}
+
+.mp-searchbar-row {
+    display: flex;
+    align-items: center;
+    gap: var(--mp-space-3);
+}
+
+.mp-searchbar-row > .mp-search {
+    flex: 1 1 auto;
+}
+
+.mp-searchbar .mp-hint {
+    margin: 0;
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+}
+
+.mp-search {
+    position: relative;
+}
+
+.mp-search > .ti {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 14px;
+    transform: translateY(-50%);
+    color: var(--tblr-secondary-color);
+    font-size: 1.25rem;
+    pointer-events: none;
+}
+
+.mp-search .form-control {
+    min-block-size: 44px;
+    padding-inline-start: 44px;
+}
+
+.mp-search .mp-search-count {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 14px;
+    transform: translateY(-50%);
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.mp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mp-space-2);
+}
+
+.mp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-block-size: 32px;
+    padding: 0 var(--mp-space-3);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 999px;
+    background: var(--tblr-bg-surface);
+    color: var(--tblr-body-color);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.mp-chip:hover {
+    background: var(--mp-tint-hover);
+}
+
+.mp-chip[aria-pressed='true'] {
+    border-color: var(--tblr-primary);
+    background: color-mix(in oklab, var(--tblr-primary) 12%, transparent);
+    color: var(--mp-text-primary, var(--tblr-primary));
+    font-weight: 600;
+}
+
+.mp-chip .mp-num {
+    color: var(--tblr-secondary-color);
+}
+
+@media (pointer: coarse) {
+    .mp-chip {
+        min-block-size: 44px;
+    }
 }

@@ -53,6 +53,7 @@ class PartyAiReviewController extends Controller
             'outcomes' => array_map(fn (AiReviewOutcome $case): array => ['code' => $case->value, 'name' => $case->label()], AiReviewOutcome::cases()),
             'holdsFlagged' => (bool) $party->flag_requests,
             'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
+            'counts' => $this->counts($party),
             'reviews' => $reviews,
             'moderationTabs' => app(ModerationTabs::class)->for($party),
         ]);
@@ -87,6 +88,21 @@ class PartyAiReviewController extends Controller
                 'trackProvider' => $aiReview->track_provider,
             ],
         ]);
+    }
+
+    /**
+     * @return array{total: int, outcome: array<string, int>, criterion: array<string, int>}
+     */
+    protected function counts(Party $party): array
+    {
+        $byOutcome = $party->aiReviews()->toBase()->selectRaw('outcome, count(*) as total')->groupBy('outcome')->pluck('total', 'outcome');
+        $byCriterion = $party->aiReviews()->toBase()->whereNotNull('criterion')->selectRaw('criterion, count(*) as total')->groupBy('criterion')->pluck('total', 'criterion');
+
+        return [
+            'total' => (int) $byOutcome->sum(),
+            'outcome' => $byOutcome->map(fn (mixed $total): int => (int) $total)->all(),
+            'criterion' => $byCriterion->map(fn (mixed $total): int => (int) $total)->all(),
+        ];
     }
 
     protected function ensureEnabled(Party $party): void
