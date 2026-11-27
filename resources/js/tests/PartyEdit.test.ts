@@ -206,7 +206,10 @@ describe('Parties/Edit save bar', () => {
 
         await w.find('[data-test="tab-general"]').trigger('click');
         await w.find('#country').trigger('click');
-        await w.findAll('[data-test="picker-option"]').find((o) => o.text().includes('Canada'))!.trigger('click');
+        await w
+            .findAll('[data-test="picker-option"]')
+            .find((o) => o.text().includes('Canada'))!
+            .trigger('click');
         expect(w.find('[data-test="save-summary"]').text()).toBe('1 change: General');
     });
 

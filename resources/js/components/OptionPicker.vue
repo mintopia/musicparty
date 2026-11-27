@@ -70,7 +70,9 @@ function choose(option: PickerOption): void {
                     :aria-selected="option.value === model"
                     @click="choose(option)"
                 >
-                    <span class="mp-opt-text"><span class="mp-opt-name">{{ option.label }}</span></span>
+                    <span class="mp-opt-text"
+                        ><span class="mp-opt-name">{{ option.label }}</span></span
+                    >
                     <small v-if="option.meta" class="mp-opt-meta">{{ option.meta }}</small>
                     <i v-if="option.value === model" class="icon ti ti-check" aria-hidden="true"></i>
                 </button>

@@ -32,7 +32,11 @@ const relayRows = computed(() => [
 ]);
 
 const countryOptions = computed(() =>
-    countryOptionsFor(props.form.country).map((option) => ({value: option.code, label: option.name, meta: option.code})),
+    countryOptionsFor(props.form.country).map((option) => ({
+        value: option.code,
+        label: option.name,
+        meta: option.code,
+    })),
 );
 const timezoneOptions = computed(() => [
     {value: '', label: `Use instance timezone (${props.instanceTimezone})`},
