@@ -178,7 +178,7 @@ onBeforeUnmount(() => {
                     </SettingRow>
                     <SettingRow
                         label="Dark mode"
-                        hint="Everyone sees the dark version while this theme is active. Off shows the light version."
+                        hint="Everyone sees the dark version while this theme is active. Off follows each user's own light or dark choice."
                     >
                         <label class="form-check form-switch m-0">
                             <input

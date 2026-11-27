@@ -77,11 +77,22 @@ describe('admin settings pages', () => {
         });
 
         expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
+        await wrapper.find('form').trigger('submit');
+        expect(inertia.patch).toHaveBeenCalledWith('/admin/settings');
+        expect(wrapper.findAll('[data-test^=tab-]').map((tab) => tab.text())).toEqual([
+            'General',
+            'Sign-in providers',
+            'Themes',
+        ]);
+        expect(wrapper.find('.mp-thumb').exists()).toBe(false);
+        await wrapper.get('[data-test=tab-themes]').trigger('click');
+        expect(wrapper.get('h1').text()).toBe('Themes');
+        expect(wrapper.text()).toContain('Look and feel for the whole site.');
+        expect(wrapper.text()).toContain('Purple, dark');
         expect(wrapper.findAll('.mp-thumb')).toHaveLength(2);
         expect(wrapper.text()).toContain('Always dark');
         expect(wrapper.text()).toContain('Follows each user');
         expect(wrapper.text()).toContain('Built in');
-        expect(wrapper.text()).toContain('Dark, 1 colour set');
         const coreActions = wrapper.findAll('tbody tr')[0].findAll('.btn-list .btn');
         expect(coreActions.map((action) => action.text())).toEqual(['View']);
         expect(wrapper.get('a[href="/admin/settings/themes/2/edit"].fw-medium').text()).toBe('Mine');
@@ -94,9 +105,8 @@ describe('admin settings pages', () => {
         );
         expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
+        await wrapper.get('[data-test=tab-providers]').trigger('click');
         expect(wrapper.text()).toContain('http://x/login/discord/return');
-        await wrapper.find('form').trigger('submit');
-        expect(inertia.patch).toHaveBeenCalledWith('/admin/settings');
     });
 
     it('shows rename and auth fields only when supported and patches the provider', async () => {
