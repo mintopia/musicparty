@@ -114,19 +114,19 @@ class PlayedSong extends Model
 
     public function like(User $user): ?SongRating
     {
-        return $this->addRating($user, 1);
+        return $this->setRating($user, 1);
     }
 
     public function dislike(User $user): ?SongRating
     {
-        return $this->addRating($user, -1);
+        return $this->setRating($user, -1);
     }
 
-    protected function addRating(User $user, int $value): ?SongRating
+    public function setRating(User $user, int $value): ?SongRating
     {
         $rating = $this->ratings()->whereUserId($user->id)->first();
-        if ($rating && $rating->value !== $value) {
-            $rating->delete();
+        if ($value === 0) {
+            $rating?->delete();
 
             return null;
         }
@@ -135,8 +135,10 @@ class PlayedSong extends Model
             $rating->song()->associate($this);
             $rating->user()->associate($user);
         }
-        $rating->value = $value;
-        $rating->save();
+        if ($rating->value !== $value) {
+            $rating->value = $value;
+            $rating->save();
+        }
 
         return $rating;
     }

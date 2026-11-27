@@ -31,14 +31,14 @@ function voteMember(Party $party, ?string $state = null): User
     return $user;
 }
 
-function castVote(Party $party, UpcomingSong $song, User $user, int $value)
+function castVote(Party $party, UpcomingSong $song, User $user, int|string $value)
 {
     Sanctum::actingAs($user);
 
     return test()->postJson(route('api.v1.parties.upcomingsongs.vote.store', [$party, $song]), ['vote' => $value]);
 }
 
-function castRating(Party $party, PlayedSong $played, User $user, int $value)
+function castRating(Party $party, PlayedSong $played, User $user, int|string $value)
 {
     Sanctum::actingAs($user);
 
@@ -343,15 +343,15 @@ describe('played track ratings', function () {
         expect($played->fresh()->rating)->toBe(-1);
     });
 
-    it('removes the rating and returns null when the opposite rating is sent', function () {
+    it('switches the rating in place when the opposite rating is sent (set semantics)', function () {
         [$party, $played] = ratedParty();
         $user = voteMember($party);
 
         $played->like($user);
 
-        expect($played->dislike($user))->toBeNull()
-            ->and(SongRating::count())->toBe(0)
-            ->and($played->fresh()->rating)->toBe(0);
+        expect($played->dislike($user)->value)->toBe(-1)
+            ->and(SongRating::count())->toBe(1)
+            ->and($played->fresh()->rating)->toBe(-1);
     });
 
     it('keeps one row when the same rating is sent twice', function () {
@@ -371,25 +371,38 @@ describe('played track ratings', function () {
         expect($played->like(voteMember($party, 'banned')))->toBeInstanceOf(SongRating::class);
     });
 
-    it('rates the current played song through the endpoint', function () {
+    it('sets, switches, repeats and clears a rating through the endpoint (set semantics)', function () {
         [$party, $played] = ratedParty();
         $user = voteMember($party);
 
-        castRating($party, $played, $user, 1)->assertOk();
+        castRating($party, $played, $user, 1)->assertOk()->assertJsonPath('data.rated', 1);
         expect($played->fresh()->rating)->toBe(1);
 
-        castRating($party, $played, $user, -1)->assertOk();
-        expect(SongRating::count())->toBe(0)
-            ->and($played->fresh()->rating)->toBe(0);
+        castRating($party, $played, $user, 1)->assertOk();
+        expect(SongRating::count())->toBe(1)->and($played->fresh()->rating)->toBe(1);
+
+        castRating($party, $played, $user, -1)->assertOk()->assertJsonPath('data.rated', -1);
+        expect(SongRating::count())->toBe(1)->and($played->fresh()->rating)->toBe(-1);
+
+        castRating($party, $played, $user, 0)->assertOk()->assertJsonPath('data.rated', null);
+        expect(SongRating::count())->toBe(0)->and($played->fresh()->rating)->toBe(0);
     });
 
-    it('treats a zero rating as a no-op', function () {
+    it('treats clearing a missing rating as a no-op', function () {
         [$party, $played] = ratedParty();
 
         castRating($party, $played, voteMember($party), 0)->assertOk();
 
         expect(SongRating::count())->toBe(0);
     });
+
+    it('rejects ratings outside -1, 0 and 1', function (mixed $value) {
+        [$party, $played] = ratedParty();
+
+        castRating($party, $played, voteMember($party), $value)->assertUnprocessable();
+
+        expect(SongRating::count())->toBe(0);
+    })->with([5, -2, 'up']);
 
     it('returns 400 when rating a played song that is no longer the current one', function () {
         [$party, $played] = ratedParty();
