@@ -261,8 +261,21 @@ async function act(action: () => Promise<unknown>): Promise<void> {
     padding: 0 0 4px;
 }
 .na-list .na-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
+    row-gap: 10px;
+    padding-block: 12px;
     padding-left: 56px;
     border-top: 0;
+}
+.na-list .na-acts {
+    justify-content: flex-start;
+}
+@media (max-width: 575.98px) {
+    .na-list .na-row {
+        padding-left: 20px;
+    }
+    .na-acts .na-btn.lab {
+        flex: 1;
+    }
 }
 </style>
