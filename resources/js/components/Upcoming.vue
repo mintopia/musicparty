@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {usePage} from '@inertiajs/vue3';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import axios from 'axios';
@@ -6,12 +7,13 @@ import {onBeforeUnmount, ref} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
 import Toast from '@/components/Toast.vue';
+import VoteControl from '@/components/VoteControl.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 import {formatMs} from '@/lib/dashboard';
 import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
 import {destroy, index} from '@/routes/api/v1/parties/upcomingsongs';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyArtist, LegacyUpcomingSong} from '@/types';
+import type {LegacyArtist, LegacyUpcomingSong, SharedProps} from '@/types';
 
 const props = withDefaults(
     defineProps<{
@@ -23,6 +25,17 @@ const props = withDefaults(
     }>(),
     {canManage: false, canDownvote: false, timezone: 'UTC'},
 );
+
+const currentUserId = usePage<SharedProps>().props.auth?.user?.id ?? null;
+const isMine = (song: LegacyUpcomingSong): boolean => currentUserId !== null && song.user_id === currentUserId;
+
+const customFallbackName = (song: LegacyUpcomingSong): string | null => {
+    const name = legacyFallbackName(song);
+
+    return name === null || name === 'Fallback Track' ? null : name;
+};
+
+const focusSearch = (): void => document.getElementById('query')?.focus();
 
 const page = ref(1);
 const upcoming = ref<LegacyUpcomingSong[]>([]);
@@ -156,115 +169,72 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <div>
-        <div v-if="upcoming.length > 0" class="card" data-test="queue-card">
+        <div v-if="upcoming.length > 0" class="card queue-card" data-test="queue-card">
             <TransitionGroup name="queue" tag="div" class="list-group list-group-flush">
-                <div v-for="song in upcoming" :key="song.id" class="list-group-item">
-                    <div :class="legacyRowClasses(song)" :style="legacyAccentStyle(song)" data-test="track-row">
-                        <div class="col-auto">
-                            <img
-                                :src="song.album.image_url"
-                                :title="song.album.name"
-                                :alt="song.album.name"
-                                class="rounded"
-                                width="60"
-                                height="60"
-                                loading="lazy"
-                                decoding="async"
-                            />
+                <div
+                    v-for="(song, index) in upcoming"
+                    :key="song.id"
+                    class="list-group-item mp-qrow"
+                    :class="[{'is-mine': isMine(song)}, ...legacyRowClasses(song).split(' ').filter((c) => !['row', 'g-2', 'align-items-center'].includes(c))]"
+                    :style="legacyAccentStyle(song)"
+                    data-test="track-row"
+                >
+                    <div class="q-pos" aria-hidden="true">{{ index + 1 }}</div>
+                    <div class="q-art">
+                        <img
+                            :src="song.album.image_url"
+                            :title="song.album.name"
+                            :alt="song.album.name"
+                            class="rounded"
+                            width="48"
+                            height="48"
+                            loading="lazy"
+                            decoding="async"
+                        />
+                    </div>
+                    <div class="q-main">
+                        <div class="q-title">
+                            <span>{{ song.name }}</span>
+                            <span v-if="isMine(song)" class="badge bg-blue-lt" data-test="your-request">You</span>
+                            <span v-if="song.decoration?.label" class="badge bg-azure-lt" data-test="decoration-label">{{
+                                song.decoration.label
+                            }}</span>
                         </div>
-                        <div class="col">
-                            {{ song.name }}
-                            <span
-                                v-if="song.decoration?.label"
-                                class="badge bg-azure-lt ms-1"
-                                data-test="decoration-label"
-                                >{{ song.decoration.label }}</span
-                            >
-                            <div class="text-secondary">{{ combineArtists(song.artists) }}</div>
-                            <div v-if="song.scheduled_for" class="text-info" data-test="scheduled-time">
-                                <i class="icon ti ti-clock"></i>
-                                Scheduled for {{ formatScheduled(song.scheduled_for) }}
-                            </div>
-                            <div class="text-muted">
-                                <template v-if="song.user">Requested by {{ song.user }}</template>
-                                <template v-else>{{ legacyFallbackName(song) }}</template>
-                            </div>
+                        <div class="q-by">
+                            {{ combineArtists(song.artists) }} &middot;
+                            <template v-if="isMine(song)">Requested by <b>you</b></template>
+                            <template v-else-if="song.user">Requested by <b>{{ song.user }}</b></template>
+                            <template v-else-if="customFallbackName(song)">{{ customFallbackName(song) }}</template>
+                            <span v-else class="mp-credit" data-test="fallback-credit">
+                                <i class="icon ti ti-playlist"></i>From the party&rsquo;s Fallback Playlist
+                            </span>
+                            <span class="q-length-inline"> &middot; {{ formatMs(song.length) }}</span>
                         </div>
-                        <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
-                        <div class="col-auto text-center">
-                            <div class="row">
-                                <template v-if="canDownvote">
-                                    <div class="col-3">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Upvote ${song.name}`"
-                                            :aria-pressed="song.vote === 1"
-                                            data-test="upvote"
-                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="
-                                                    song.vote === 1
-                                                        ? 'ti-arrow-big-up-filled text-success'
-                                                        : 'ti-arrow-big-up'
-                                                "
-                                            ></i>
-                                        </button>
-                                    </div>
-                                    <div class="col-6" data-test="score">{{ song.score }}</div>
-                                    <div class="col-3">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Downvote ${song.name}`"
-                                            :aria-pressed="song.vote === -1"
-                                            data-test="downvote"
-                                            @click="vote(song.id, song.vote === -1 ? 0 : -1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="
-                                                    song.vote === -1
-                                                        ? 'ti-arrow-big-down-filled text-danger'
-                                                        : 'ti-arrow-big-down'
-                                                "
-                                            ></i>
-                                        </button>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <div class="col-4">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Like ${song.name}`"
-                                            :aria-pressed="song.vote === 1"
-                                            data-test="heart"
-                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="song.vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"
-                                            ></i>
-                                        </button>
-                                    </div>
-                                    <div class="col-8" data-test="score">{{ song.score }}</div>
-                                </template>
-                            </div>
+                        <div v-if="song.scheduled_for" class="text-info small" data-test="scheduled-time">
+                            <i class="icon ti ti-clock"></i>
+                            Scheduled for {{ formatScheduled(song.scheduled_for) }}
                         </div>
-                        <div v-if="canManage" class="col-auto lh-1">
-                            <button
-                                type="button"
-                                class="vote-icon"
-                                :aria-label="`Remove ${song.name}`"
-                                data-test="remove"
-                                @click="deleteSong(song.id)"
-                            >
-                                <i class="icon ti ti-x"></i>
-                            </button>
-                        </div>
+                    </div>
+                    <div class="q-len text-secondary">{{ formatMs(song.length) }}</div>
+                    <div class="q-votes">
+                        <VoteControl
+                            :score="song.score"
+                            :vote="song.vote"
+                            :can-downvote="canDownvote"
+                            :label="song.name"
+                            @vote="(value) => vote(song.id, value)"
+                        />
+                    </div>
+                    <div v-if="canManage" class="q-manage">
+                        <button
+                            type="button"
+                            class="btn btn-ghost-danger btn-icon"
+                            :aria-label="`Remove ${song.name}`"
+                            data-test="remove"
+                            @click="deleteSong(song.id)"
+                        >
+                            <i class="icon ti ti-x"></i>
+                        </button>
                     </div>
                 </div>
             </TransitionGroup>
@@ -282,9 +252,13 @@ onBeforeUnmount(() => {
                 <div class="card">
                     <EmptyState
                         icon="ti-playlist-off"
-                        title="The queue is empty"
-                        description="Search for a track to add one."
-                    />
+                        title="The Queue is empty"
+                        description="The party is waiting on you. Search for a track to add the first one."
+                    >
+                        <button type="button" class="btn btn-primary" data-test="empty-search" @click="focusSearch">
+                            <i class="icon ti ti-music-search me-1"></i>Search for a track
+                        </button>
+                    </EmptyState>
                 </div>
             </template>
 
@@ -299,22 +273,162 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-.song-length {
-    padding-right: 1rem;
+.mp-qrow {
+    display: grid;
+    grid-template-columns: 2ch 48px minmax(0, 1fr) auto auto auto;
+    grid-template-areas: 'pos art main len votes manage';
+    align-items: center;
+    gap: 8px 14px;
+    padding: 10px 12px;
 }
 
-.vote-icon {
-    background: none;
+.q-pos {
+    grid-area: pos;
+    text-align: end;
+    color: var(--tblr-secondary-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.q-art {
+    grid-area: art;
+}
+
+.q-art img {
+    inline-size: 48px;
+    block-size: 48px;
+    object-fit: cover;
+    border-radius: 8px;
+}
+
+.q-main {
+    grid-area: main;
+    min-width: 0;
+    overflow-wrap: anywhere;
+}
+
+.q-title {
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 6px;
+}
+
+.q-by {
+    font-size: 0.875rem;
+    color: var(--tblr-secondary-color);
+}
+
+.q-by b {
+    color: var(--tblr-body-color);
+    font-weight: 600;
+}
+
+.mp-credit {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35em;
+}
+
+.q-length-inline {
+    display: none;
+}
+
+.q-len {
+    grid-area: len;
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
+}
+
+.q-votes {
+    grid-area: votes;
+}
+
+.q-votes :deep(.vote-control) {
+    background: var(--tblr-bg-surface-secondary);
+    border-radius: 99px;
+    padding: 2px 4px;
+}
+
+.q-votes :deep(.vote-button) {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.q-votes :deep(.vote-button .icon) {
+    font-size: 1.375rem;
+}
+
+.q-votes :deep(.vote-score) {
+    font-weight: 600;
+    min-width: 2ch;
+}
+
+.q-manage {
+    grid-area: manage;
+}
+
+.q-manage .btn {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.queue-card {
     border: 0;
-    padding: 0;
-    color: inherit;
-    line-height: 1;
-    cursor: pointer;
+    box-shadow: none;
+    background: transparent;
 }
 
-.vote-icon:focus-visible {
-    outline: 2px solid currentColor;
-    outline-offset: 2px;
+.list-group-flush > .mp-qrow {
+    border: 0;
+    border-top: 1px solid var(--tblr-border-color);
+    border-radius: 0;
+    background: transparent;
+}
+
+.list-group-flush > .mp-qrow:first-child {
+    border-top: 0;
+}
+
+.list-group-flush > .mp-qrow.is-mine {
+    background: color-mix(in oklab, var(--tblr-primary) 6%, transparent);
+    border-radius: 10px;
+    border-color: transparent;
+}
+
+.list-group-flush > .mp-qrow.is-mine + .mp-qrow {
+    border-top-color: transparent;
+}
+
+@media (max-width: 575px) {
+    .mp-qrow {
+        grid-template-columns: 48px minmax(0, 1fr) auto;
+        grid-template-areas:
+            'art main manage'
+            'art votes votes';
+        gap: 4px 12px;
+        padding: 12px 10px;
+    }
+
+    .q-pos,
+    .q-len {
+        display: none;
+    }
+
+    .q-length-inline {
+        display: inline;
+    }
+
+    .q-votes {
+        justify-self: start;
+        margin-inline-start: -4px;
+    }
+
+    .q-votes :deep(.vote-control) {
+        inline-size: fit-content;
+        justify-content: flex-start;
+    }
 }
 
 .queue-move,

@@ -77,7 +77,7 @@ it('broadcasts an upcoming song update on the private party channel with the son
         ->and($channels[0])->toBeInstanceOf(PrivateChannel::class)
         ->and($channels[0]->name)->toBe('private-party.RTPT')
         ->and($payload)->toHaveKeys([
-            'score', 'queued_at', 'user', 'fallback_name', 'css_classes', 'id', 'created_at', 'updated_at', 'vote',
+            'score', 'queued_at', 'user', 'user_id', 'fallback_name', 'css_classes', 'id', 'created_at', 'updated_at', 'vote',
         ])
         ->and($payload['id'])->toBe($song->id)
         ->and($payload['vote'])->toBeNull()

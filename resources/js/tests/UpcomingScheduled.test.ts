@@ -3,7 +3,7 @@ import {describe, expect, it, vi} from 'vitest';
 import Upcoming from '../components/Upcoming.vue';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
-vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}, auth: {user: {id: 7}}}})}));
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({onReconnect: () => undefined, privateChannel: () => ({listen: () => undefined})}),
 }));
@@ -65,5 +65,38 @@ describe('Upcoming decoration', () => {
         expect(rows[0].text()).toContain('Mod Name');
         expect(rows[0].text()).not.toContain('Fallback');
         expect(rows[1].text()).toContain('Plain');
+    });
+});
+
+describe('Upcoming guest rows', () => {
+    it('uses the shared vote control, marks own requests and credits the Fallback Playlist', async () => {
+        const wrapper = mount(Upcoming, {
+            props: {
+                party: 'ABC',
+                canDownvote: true,
+                initialState: [song(1, {user_id: 7, user: 'me'}), song(2, {user: null, user_id: null}), song(3, {user_id: 9})],
+            },
+        });
+
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findAllComponents({name: 'VoteControl'})).toHaveLength(3);
+        expect(wrapper.findAll('[data-test="your-request"]')).toHaveLength(1);
+        expect(wrapper.text()).toContain('Requested by you');
+        expect(wrapper.text()).toContain("From the party’s Fallback Playlist");
+        expect(wrapper.text()).not.toContain('Fallback Track');
+    });
+});
+
+describe('Upcoming layout', () => {
+    it('numbers rows, keeps artist and requester on one line, and offers search when empty', async () => {
+        const wrapper = mount(Upcoming, {props: {party: 'ABC', initialState: [song(1), song(2)]}});
+
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findAll('.q-pos').map((n) => n.text())).toEqual(['1', '2']);
+        expect(wrapper.get('.q-by').text()).toContain('A · Requested by u');
+
+        const empty = mount(Upcoming, {props: {party: 'ABC', initialState: []}});
+        await empty.vm.$nextTick();
+        expect(empty.find('[data-test="queue-card"]').exists()).toBe(false);
     });
 });
