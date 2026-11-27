@@ -79,7 +79,7 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                     >
                         <i class="ti ti-flag na-ico text-danger" aria-hidden="true"></i>
                         <span class="fw-medium flex-grow-1 text-start"
-                            >{{ flaggedTotal }} flagged request{{ flaggedTotal === 1 ? '' : 's' }}</span
+                            >{{ flaggedTotal }} Flagged Request{{ flaggedTotal === 1 ? '' : 's' }}</span
                         >
                         <i class="ti text-secondary" :class="open ? 'ti-chevron-up' : 'ti-chevron-down'"></i>
                     </button>

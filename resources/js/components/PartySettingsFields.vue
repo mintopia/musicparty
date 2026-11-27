@@ -38,7 +38,7 @@ function err(field: string): string | undefined {
             <SettingRow
                 label="Party is running"
                 for="active"
-                hint="Turn off to pause the queue. Requests wait until it's back on."
+                hint="Turn off to pause the Queue. Requests wait until it's back on."
             >
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -164,9 +164,9 @@ function err(field: string): string | undefined {
                 </span>
             </SettingRow>
             <SettingRow
-                label="Hold flagged requests for approval"
+                label="Hold Flagged Requests for approval"
                 for="flag_requests"
-                hint="They wait on the Flagged page until a manager decides"
+                hint="They wait in Moderation until a manager or moderator decides"
             >
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">
                     <input
@@ -265,9 +265,9 @@ function err(field: string): string | undefined {
         <section v-if="tab === 'playback'">
             <h3 class="settings-heading">Playback</h3>
             <SettingRow
-                label="Fallback playlist"
+                label="Fallback Playlist"
                 for="backup_playlist_id"
-                hint="Plays when the queue is empty"
+                hint="Plays when the Queue is empty"
                 :error="err('backup_playlist_id') ?? err('custom_backup_playlist_id')"
             >
                 <select

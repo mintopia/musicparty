@@ -69,7 +69,7 @@ const showUrl = (review: AiReviewRow): string =>
 
         <div v-if="!holdsFlagged" class="alert alert-warning py-2" role="status" data-test="not-held-notice">
             <i class="icon ti ti-flag me-2" aria-hidden="true"></i>
-            Flagged requests aren't held. They go straight to the queue.
+            Flagged Requests aren't held. They go straight to the Queue.
             <a :href="settingsUrl" class="ms-1" data-test="turn-on-approval">Turn on approval</a>
         </div>
 

@@ -20,14 +20,19 @@ defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
         </div>
 
         <p>
-            For Music Party to work, we need to link your Spotify account twice. The first link is for controlling the
-            party and the second link is for guests to search for music.
+            Music Party uses your Spotify account for two separate jobs, so there are two links. Playback lets Music
+            Party play on your Spotify for parties you host. Search lets guests search Spotify's catalogue. Create a
+            party once both are linked.
         </p>
 
         <div class="row row-deck">
             <div class="col-md-3 offset-md-3">
                 <div class="card">
                     <div class="card-body">
+                        <h2 class="h4 text-center mb-1">Playback</h2>
+                        <p class="text-muted text-center small mb-0">
+                            Lets Music Party play on your Spotify for parties you host.
+                        </p>
                         <template v-if="spotify">
                             <p class="text-center">
                                 <i class="icon ti ti-music-bolt icon-lg text-success m-6"></i>
@@ -41,7 +46,7 @@ defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
                             <div class="mt-2">
                                 <a class="btn btn-success w-100" :href="linkAccount('spotify').url">
                                     <i class="icon ti ti-brand-spotify"></i>
-                                    Link with Spotify
+                                    Link Playback
                                 </a>
                             </div>
                         </template>
@@ -51,6 +56,8 @@ defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
             <div class="col-md-3">
                 <div class="card">
                     <div class="card-body">
+                        <h2 class="h4 text-center mb-1">Search</h2>
+                        <p class="text-muted text-center small mb-0">Lets guests search Spotify's catalogue.</p>
                         <template v-if="search">
                             <p class="text-center">
                                 <i class="icon ti ti-music-search icon-lg text-success m-6"></i>
@@ -64,7 +71,7 @@ defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
                             <div class="mt-2">
                                 <a class="btn btn-success w-100" :href="linkAccount('spotifysearch').url">
                                     <i class="icon ti ti-brand-spotify"></i>
-                                    Link with Spotify (Search)
+                                    Link Search
                                 </a>
                             </div>
                         </template>

@@ -12,18 +12,18 @@ describe('ModerationTabs', () => {
         const links = wrapper.findAll('a').map((a) => [a.text(), a.attributes('href')]);
 
         expect(links).toEqual([
-            ['Flagged', '/parties/ABCD/flagged'],
+            ['Flagged Requests', '/parties/ABCD/flagged'],
             ['Rules', '/parties/ABCD/moderation'],
         ]);
-        expect(wrapper.get('a.active').text()).toBe('Flagged');
+        expect(wrapper.get('a.active').text()).toBe('Flagged Requests');
     });
 
     it('shows the flagged count only when there is something to review', () => {
         expect(mountTabs({flaggedCount: 0, aiReviewEnabled: false}).get('[data-test="tab-flagged"]').text()).toBe(
-            'Flagged',
+            'Flagged Requests',
         );
         expect(mountTabs({flaggedCount: 3, aiReviewEnabled: false}).get('[data-test="tab-flagged"]').text()).toBe(
-            'Flagged3',
+            'Flagged Requests3',
         );
     });
 

@@ -27,14 +27,14 @@ defineProps<{
 </script>
 
 <template>
-    <AppLayout :title="`Rules - ${party.name}`">
+    <AppLayout :title="`Moderation - ${party.name}`">
         <template #breadcrumbs>
             <Breadcrumbs :items="moderationCrumbs(party)" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Rules - ${party.name}`" />
+        <Head :title="`Moderation - ${party.name}`" />
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="rules" />
         <div v-if="moderations.data.length > 0" class="d-flex justify-content-end mb-3 d-print-none">
             <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">

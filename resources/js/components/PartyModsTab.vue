@@ -69,7 +69,7 @@ function generalErrors(modCode: string): string[] {
                         role="status"
                         data-test="mod-notice"
                     >
-                        Flagged requests aren't held. They go straight to the queue.
+                        Flagged Requests aren't held. They go straight to the Queue.
                         <button
                             type="button"
                             class="btn btn-link p-0 ms-1 align-baseline"

@@ -47,7 +47,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                     :href="fallbackSettingsUrl"
                     class="btn btn-outline-secondary"
                     data-test="set-fallback"
-                    >Set fallback</a
+                    >Set Fallback Playlist</a
                 >
             </EmptyState>
             <div v-else class="list-group card-list-group">
@@ -72,7 +72,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             </div>
                             <div class="text-muted small">
                                 <template v-if="request.user">Requested by {{ request.user }}</template>
-                                <template v-else>Fallback: {{ legacyFallbackName(request) }}</template>
+                                <template v-else>Fallback Playlist: {{ legacyFallbackName(request) }}</template>
                             </div>
                         </div>
                         <div class="col-auto text-secondary">{{ formatMs(request.length) }}</div>
