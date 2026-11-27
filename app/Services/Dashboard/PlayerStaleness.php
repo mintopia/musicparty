@@ -25,6 +25,6 @@ class PlayerStaleness
 
     public function words(?CarbonInterface $at): string
     {
-        return $at === null ? 'a while' : $at->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE);
+        return $at?->diffForHumans(syntax: CarbonInterface::DIFF_ABSOLUTE) ?? 'a while';
     }
 }

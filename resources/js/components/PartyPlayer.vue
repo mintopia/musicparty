@@ -154,4 +154,5 @@ onBeforeUnmount(clearNotice);
         inset-block-start: 6px;
         inset-inline-end: 8px;
     }
-}</style>
+}
+</style>

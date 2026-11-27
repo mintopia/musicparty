@@ -32,11 +32,7 @@ const nextArtists = computed(() => combineArtists(props.next?.artists));
                 <span
                     v-if="next.decoration?.label"
                     class="player-next-tag"
-                    :style="
-                        next.decoration.accent
-                            ? {backgroundColor: next.decoration.accent}
-                            : undefined
-                    "
+                    :style="next.decoration.accent ? {backgroundColor: next.decoration.accent} : undefined"
                     data-test="decoration-label"
                     >{{ next.decoration.label }}</span
                 >
@@ -44,9 +40,7 @@ const nextArtists = computed(() => combineArtists(props.next?.artists));
             </span>
             <span class="player-time end">{{ formatClock(next.length) }}</span>
         </template>
-        <span v-else class="player-next-meta" data-test="nothing-queued">
-            Nothing queued, search to add a track
-        </span>
+        <span v-else class="player-next-meta" data-test="nothing-queued"> Nothing queued, search to add a track </span>
     </div>
 </template>
 

@@ -56,9 +56,7 @@ function setThreshold(raw: string): void {
                         data-test="threshold-range"
                         @input="setThreshold(($event.target as HTMLInputElement).value)"
                     />
-                    <div class="ai-range-ends">
-                        <span>0 · acts on every rating</span><span>100 · never acts</span>
-                    </div>
+                    <div class="ai-range-ends"><span>0 · acts on every rating</span><span>100 · never acts</span></div>
                 </div>
                 <div class="input-group ai-number">
                     <input
@@ -95,21 +93,21 @@ function setThreshold(raw: string): void {
             </div>
             <div class="ai-explain" aria-live="polite" data-test="threshold-explanation">
                 <p class="ai-explain-lead">
-                    At {{ threshold }}%, the model has to be at least {{ threshold }}% sure before its rating is
-                    acted on. When it is less sure, the Request is allowed.
+                    At {{ threshold }}%, the model has to be at least {{ threshold }}% sure before its rating is acted
+                    on. When it is less sure, the Request is allowed.
                 </p>
                 <p class="ai-explain-line">
                     <i class="ti ti-flag ai-flag" aria-hidden="true"></i>
                     <span>
-                        <strong>{{ sureAbove }}% sure</strong> a Request breaks your guidelines: flagged for
-                        managers or rejected with a reason.
+                        <strong>{{ sureAbove }}% sure</strong> a Request breaks your guidelines: flagged for managers or
+                        rejected with a reason.
                     </span>
                 </p>
                 <p class="ai-explain-line">
                     <i class="ti ti-check ai-ok" aria-hidden="true"></i>
                     <span>
-                        <strong>{{ sureBelow }}% sure</strong>: allowed. Raise the threshold for fewer false
-                        alarms, lower it to catch more.
+                        <strong>{{ sureBelow }}% sure</strong>: allowed. Raise the threshold for fewer false alarms,
+                        lower it to catch more.
                     </span>
                 </p>
             </div>

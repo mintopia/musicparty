@@ -10,7 +10,7 @@ class SearchTokens
      */
     public static function parse(string $query, array $allowedKeys): array
     {
-        $allowed = array_map('strtolower', $allowedKeys);
+        $allowed = array_map(strtolower(...), $allowedKeys);
         $words = [];
         $tokens = [];
 

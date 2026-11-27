@@ -65,7 +65,6 @@ const isCurrentTrack = computed(
 </template>
 
 <style scoped>
-
 .tv-now {
     display: flex;
     align-items: stretch;

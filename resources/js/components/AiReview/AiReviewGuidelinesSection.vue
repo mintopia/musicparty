@@ -88,16 +88,12 @@ function addExample(text: string): void {
             </div>
         </div>
         <div class="ai-section-body ai-context-wrap">
-            <label
-                v-if="hasContextSetting"
-                class="ai-context"
-                data-setting="include_party_context"
-            >
+            <label v-if="hasContextSetting" class="ai-context" data-setting="include_party_context">
                 <span>
                     <span class="ai-context-name">Include party context</span>
                     <span class="ai-context-hint">
-                        Sends the model a short music-only summary of this party: recent, best-rated and most
-                        downvoted tracks, top artists and a few stats. No names or user data.
+                        Sends the model a short music-only summary of this party: recent, best-rated and most downvoted
+                        tracks, top artists and a few stats. No names or user data.
                     </span>
                 </span>
                 <span class="form-check form-switch mb-0 ps-0 min-height-0">

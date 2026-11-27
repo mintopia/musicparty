@@ -15,22 +15,14 @@ const accent = computed(() =>
 
 <template>
     <section
-            class="tv-next"
+        class="tv-next"
         :class="{decorated: accent !== undefined}"
         :style="accent"
         aria-label="Up next"
         data-test="up-next"
     >
         <span class="tv-next-label">Up next</span>
-        <img
-            v-if="art"
-            class="tv-next-art"
-            :src="art"
-            alt=""
-            width="112"
-            height="112"
-            decoding="async"
-        />
+        <img v-if="art" class="tv-next-art" :src="art" alt="" width="112" height="112" decoding="async" />
         <span v-else class="tv-next-art tv-next-blank" aria-hidden="true">
             <i class="ti ti-vinyl"></i>
         </span>
@@ -39,9 +31,7 @@ const accent = computed(() =>
             <span
                 v-if="track.decoration?.label"
                 class="tv-next-tag"
-                :style="
-                    track.decoration.accent ? {backgroundColor: track.decoration.accent} : undefined
-                "
+                :style="track.decoration.accent ? {backgroundColor: track.decoration.accent} : undefined"
                 data-test="decoration-label"
                 >{{ track.decoration.label }}</span
             >
@@ -55,7 +45,6 @@ const accent = computed(() =>
 </template>
 
 <style scoped>
-
 .tv-next {
     margin-block-start: auto;
     margin-inline: calc(32 * var(--u));

@@ -13,9 +13,7 @@ defineProps<{
             <h2 class="tv-empty-title">Nothing playing</h2>
             <p>
                 {{
-                    showQr
-                        ? 'Scan to add the first track, or join with code'
-                        : 'Join with code to add the first track'
+                    showQr ? 'Scan to add the first track, or join with code' : 'Join with code to add the first track'
                 }}
             </p>
             <b class="tv-empty-code" data-test="join-code">{{ code }}</b>
@@ -34,7 +32,6 @@ defineProps<{
 </template>
 
 <style scoped>
-
 .tv-qr {
     display: block;
     flex: none;

@@ -14,11 +14,7 @@ const props = defineProps<{
 const href = (target: LinkTarget): string => (typeof target === 'string' ? target : target.url);
 const queryUrl = (query: string): string => `${props.searchUrl}?query=${encodeURIComponent(query)}`;
 const requestsLabel = (count: number): string => `${count} ${count === 1 ? 'Request' : 'Requests'}`;
-const hasAny = computed(
-    () =>
-        props.suggestions.nowPlaying !== null ||
-        props.suggestions.artists.length > 0,
-);
+const hasAny = computed(() => props.suggestions.nowPlaying !== null || props.suggestions.artists.length > 0);
 </script>
 
 <template>

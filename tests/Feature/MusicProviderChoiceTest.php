@@ -169,7 +169,7 @@ it('rejects creating a party when the chosen provider account is not linked', fu
 it('does not register or resolve the Fake provider in production', function () {
     app()->detectEnvironment(fn (): string => 'production');
     app()->forgetInstance(MusicProviderFactory::class);
-    (new AppServiceProvider(app()))->register();
+    new AppServiceProvider(app())->register();
 
     $factory = app(MusicProviderFactory::class);
 
