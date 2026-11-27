@@ -128,13 +128,14 @@ describe('Party show page', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
-    it('uses the full page width while the queue has songs and centres it when empty', () => {
-        expect(mount(Show, {props}).get('[data-test="queue-width"]').classes()).not.toContain('col-xl-8');
-        expect(
-            mount(Show, {props: {...props, upcoming: []}})
+    it('keeps the queue in the narrow centred column whether or not it has songs', () => {
+        for (const upcoming of [props.upcoming, []]) {
+            const classes = mount(Show, {props: {...props, upcoming}})
                 .get('[data-test="queue-width"]')
-                .classes(),
-        ).toContain('col-xl-8');
+                .classes();
+
+            expect(classes).toEqual(expect.arrayContaining(['col-xl-8', 'offset-xl-2', 'col-lg-10', 'offset-lg-1']));
+        }
     });
 
     it('has no YouTube entry point', () => {

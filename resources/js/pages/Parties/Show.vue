@@ -2,7 +2,7 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, router} from '@inertiajs/vue3';
-import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {onBeforeUnmount, onMounted, ref} from 'vue';
 import Next from '@/components/Next.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Upcoming from '@/components/Upcoming.vue';
@@ -21,8 +21,6 @@ const props = defineProps<{
 }>();
 
 const query = ref('');
-const queueCount = ref(props.upcoming.length);
-const sparse = computed(() => queueCount.value === 0);
 let keepalive: ReturnType<typeof setInterval> | null = null;
 
 function submit(): void {
@@ -58,7 +56,7 @@ onBeforeUnmount(() => {
                 to resume playback updates.
             </div>
         </div>
-        <div :class="{'col-xl-8 offset-xl-2 col-lg-10 offset-lg-1': sparse}" data-test="queue-width">
+        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" data-test="queue-width">
             <Next :code="party.code" :initial-state="playerState" />
             <div class="d-flex flex-fill align-text-bottom mb-1">
                 <div class="flex-grow-1">
@@ -98,7 +96,6 @@ onBeforeUnmount(() => {
                 :can-downvote="party.downvotes"
                 :timezone="timezone"
                 :initial-state="upcoming"
-                @count="queueCount = $event"
             />
         </div>
     </AppLayout>
