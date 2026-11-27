@@ -10,6 +10,7 @@ import type {DashboardControl, DashboardProps, DashboardRequest, LegacyPartyStat
 const props = withDefaults(
     defineProps<{
         code: string;
+        partyName: string;
         host: string;
         state: LegacyPartyState;
         control: DashboardControl;
@@ -28,8 +29,10 @@ const props = withDefaults(
 );
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
-const hidden = computed(
-    () => props.control.start.state === 'hidden' && ['playing', 'paused'].includes(props.status.kind),
+const showDeck = computed(
+    () =>
+        ['playing', 'paused'].includes(props.status.kind) &&
+        !['relink_required', 'premium_required'].includes(props.control.start.state),
 );
 const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
 </script>
@@ -38,6 +41,12 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
     <div data-test="control-room">
         <NowPlayingBackdrop :image="bannerImage" class="py-4 border-bottom border-primary">
             <div class="container-fluid px-4">
+                <div class="band-head" data-test="band-head">
+                    <h1><b>Dashboard</b> &middot; {{ partyName }}</h1>
+                    <span class="code" data-test="band-code"
+                        >Join code <b>{{ code }}</b></span
+                    >
+                </div>
                 <div class="row g-4 align-items-stretch">
                     <div class="col-xl-7 col-lg-6">
                         <PlayerUnit
@@ -54,7 +63,7 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
                     </div>
                     <div class="col-xl-5 col-lg-6">
                         <UpNextDeck
-                            v-if="hidden"
+                            v-if="showDeck"
                             :code="code"
                             :items="upNext"
                             :total="total"
@@ -80,3 +89,33 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
         </NowPlayingBackdrop>
     </div>
 </template>
+
+<style scoped>
+.band-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 16px;
+    margin: 0 0 22px;
+}
+.band-head h1 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 500;
+    color: var(--mp-deck-muted);
+    letter-spacing: 0;
+}
+.band-head h1 b {
+    color: var(--mp-deck-text);
+    font-weight: 650;
+}
+.band-head .code {
+    font-size: 0.8125rem;
+    color: var(--mp-deck-muted);
+    white-space: nowrap;
+}
+.band-head .code b {
+    color: var(--mp-deck-text);
+    letter-spacing: 0.1em;
+}
+</style>

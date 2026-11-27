@@ -300,8 +300,34 @@ describe('control room strip', () => {
         expect(wrapper.find('[data-test="up-next-card"]').exists()).toBe(false);
     });
 
+    it('shows the Up Next deck while paused, and the Start Playback panel only when nothing plays', () => {
+        const paused = mountPage({state: 'idle', paused: true});
+
+        expect(paused.find('[data-test="up-next-deck"]').exists()).toBe(true);
+        expect(paused.find('[data-test="start-panel"]').exists()).toBe(false);
+    });
+
+    it('names the dashboard, party and join code in the band and shows the join path', () => {
+        const wrapper = mountPage({state: 'hidden'});
+
+        expect(wrapper.find('[data-test="band-head"] h1').text()).toBe('Dashboard · Main Hall');
+        expect(wrapper.find('[data-test="band-code"]').text()).toBe('Join code ABCD');
+        expect(wrapper.find('[data-test="join-url"]').text()).toBe('Guests join at /parties/ABCD');
+        expect(wrapper.find('[data-test="copy-join"]').classes()).toContain('btn-outline-secondary');
+    });
+
+    it('numbers upcoming rows and shows Plays at only for scheduled requests', () => {
+        const scheduled = {...request(4, 'Kernkraft 400'), scheduled_for: '2026-11-27T21:40:00Z'};
+        const wrapper = mountPage({state: 'hidden', upcoming: [scheduled, request(5, 'Other')]});
+        const rows = wrapper.findAll('[data-test="upcoming-row"]');
+
+        expect(rows.map((row) => row.find('[data-test="position"]').text())).toEqual(['1', '2']);
+        expect(rows[0].find('[data-test="plays-at"]').exists()).toBe(true);
+        expect(rows[1].find('[data-test="plays-at"]').exists()).toBe(false);
+    });
+
     it('shows the Start Playback panel, when not playing in the party', () => {
-        const wrapper = mountPage({state: 'idle'});
+        const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="up-next-deck"]').exists()).toBe(false);
@@ -321,6 +347,7 @@ describe('control room strip', () => {
     it('posts the selected device when starting, and disables restricted devices', async () => {
         const wrapper = mountPage({
             state: 'idle',
+            nothingPlaying: true,
             devices: [device('d1', {isActive: true}), device('d2'), device('d3', {isRestricted: true})],
         });
 
@@ -337,7 +364,7 @@ describe('control room strip', () => {
     it('shows a spinner and locks devices while starting', async () => {
         let release: (value: unknown) => void = () => undefined;
         responder = () => new Promise((resolve) => (release = resolve));
-        const wrapper = mountPage({state: 'idle'});
+        const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
         await wrapper.find('[data-test="start-button"]').trigger('click');
 
@@ -371,7 +398,7 @@ describe('control room strip', () => {
             '/api/v1/parties/ABCD/playback/start',
             failure(503, {message: 'busy', code: 'rate_limited', retryAfter: 3}) as never,
         );
-        const wrapper = mountPage({state: 'idle'});
+        const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
         await wrapper.find('[data-test="start-button"]').trigger('click');
         await flushPromises();
@@ -390,7 +417,7 @@ describe('control room strip', () => {
         expect(outside.find('[data-test="start-message"]').text()).toContain("Kestrel's Liked Songs");
 
         expect(mountPage({state: 'hidden'}).find('[data-test="skip-hint"]').exists()).toBe(false);
-        expect(mountPage({state: 'idle'}).find('[data-test="skip-hint"]').exists()).toBe(false);
+        expect(mountPage({state: 'idle', nothingPlaying: true}).find('[data-test="skip-hint"]').exists()).toBe(false);
     });
 });
 

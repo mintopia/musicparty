@@ -78,9 +78,9 @@ onBeforeUnmount(() => {
             <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Dashboard'}]" />
         </template>
         <template #header>
-            <h1 class="visually-hidden">Dashboard</h1>
             <ControlRoom
                 :code="party.code"
+                :party-name="party.name"
                 :host="host.name"
                 :state="state"
                 :control="control"
