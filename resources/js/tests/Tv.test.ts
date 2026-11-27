@@ -66,7 +66,12 @@ const state = (extra: Record<string, unknown> = {}) => ({
     ...extra,
 });
 
-const party = {code: 'ABC', name: 'P', url: 'https://x/parties/ABC'};
+const party = {
+    code: 'ABC',
+    name: 'P',
+    url: 'https://x/parties/ABC',
+    qrSvg: '<svg xmlns="http://www.w3.org/2000/svg"></svg>',
+};
 
 describe('Parties/Tv', () => {
     beforeEach(() => {
@@ -135,6 +140,25 @@ describe('Parties/Tv', () => {
         const wrapper = mount(Tv, {props: {party, state: state()}});
         mocks.reconnect?.();
         expect(mocks.reload).toHaveBeenCalledWith({only: ['state']});
+        wrapper.unmount();
+    });
+
+    it('renders the local QR code as an inline image with a descriptive alt and no external host', () => {
+        const wrapper = mount(Tv, {props: {party, state: state({show_qrcode: true})}});
+        const qr = wrapper.get('[data-test="tv-qr"]');
+
+        expect(qr.attributes('src')).toMatch(/^data:image\/svg\+xml/);
+        expect(qr.attributes('alt')).toBe('Scan to join ABC');
+        expect(wrapper.html()).not.toContain('qrserver');
+        wrapper.unmount();
+    });
+
+    it('scales the progress bar with a transform rather than width', () => {
+        const wrapper = mount(Tv, {props: {party, state: state()}});
+        const fill = wrapper.get('[role="progressbar"] > div');
+
+        expect(fill.attributes('style')).toContain('scaleX(0.2)');
+        expect(fill.attributes('style')).not.toContain('width');
         wrapper.unmount();
     });
 });

@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {create as linkAccount, deleteMethod as removeAccount} from '@/routes/linkedaccounts';
-import {profile} from '@/routes/user';
 import {edit as editProfile} from '@/routes/user/profile';
 
 defineProps<{
@@ -23,10 +23,7 @@ defineProps<{
 <template>
     <AppLayout title="Profile">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="profile().url">Profile</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Profile'}]" />
         </template>
         <Head title="Profile" />
         <div class="row">

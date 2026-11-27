@@ -3,6 +3,7 @@ import {describe, expect, it, vi} from 'vitest';
 import Upcoming from '../components/Upcoming.vue';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({onReconnect: () => undefined, privateChannel: () => ({listen: () => undefined})}),
 }));
@@ -33,7 +34,7 @@ describe('Upcoming scheduled time', () => {
         });
 
         await wrapper.vm.$nextTick();
-        const labels = wrapper.findAll('.scheduled-time');
+        const labels = wrapper.findAll('[data-test="scheduled-time"]');
         expect(labels).toHaveLength(1);
         expect(labels[0].text()).toMatch(/Jan 1, 2030.*8:00/);
     });
@@ -58,7 +59,7 @@ describe('Upcoming decoration', () => {
         });
 
         await wrapper.vm.$nextTick();
-        const rows = wrapper.findAll('.list-group-item > .row');
+        const rows = wrapper.findAll('[data-test="track-row"]');
         expect(rows[0].classes().filter((c) => c === 'mod-row')).toHaveLength(1);
         expect(rows[0].classes()).toEqual(expect.arrayContaining(['old', 'extra']));
         expect(rows[0].text()).toContain('Mod Name');

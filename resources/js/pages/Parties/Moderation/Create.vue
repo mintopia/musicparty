@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -47,11 +48,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Add rule - ${party.name}`">
         <template #breadcrumbs>
-            <ModerationBreadcrumbs :party="party">
-                <li class="breadcrumb-item active">
-                    <a :href="`/parties/${party.code}/moderation/create`">Add rule</a>
-                </li>
-            </ModerationBreadcrumbs>
+            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Add rule'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

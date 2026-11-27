@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed} from 'vue';
+import VoteControl from '@/components/VoteControl.vue';
 import type {LinkTarget, TrackAnnotation, TrackDecoration} from '@/types';
 
 const props = withDefaults(
@@ -11,6 +12,10 @@ const props = withDefaults(
         awaitingApproval?: boolean;
         hideActions?: boolean;
         compact?: boolean;
+        scoreOnly?: boolean;
+        removable?: boolean;
+        scheduledLabel?: string;
+        fallbackName?: string;
         decoration?: TrackDecoration;
         albumRoute?: (id: string) => LinkTarget;
         artistRoute?: (id: string) => LinkTarget;
@@ -22,6 +27,10 @@ const props = withDefaults(
         awaitingApproval: false,
         hideActions: false,
         compact: false,
+        scoreOnly: false,
+        removable: false,
+        scheduledLabel: undefined,
+        fallbackName: undefined,
     },
 );
 
@@ -29,6 +38,7 @@ const emit = defineEmits<{
     request: [track: TrackAnnotation];
     vote: [track: TrackAnnotation, value: -1 | 0 | 1];
     withdraw: [track: TrackAnnotation];
+    remove: [track: TrackAnnotation];
 }>();
 
 const href = (target: LinkTarget): string => (typeof target === 'string' ? target : target.url);
@@ -48,6 +58,9 @@ const canRequest = computed(() => props.track.eligibility.allowed && !props.requ
 const flagged = computed(() => props.needsApproval || props.track.eligibility.outcome === 'flag');
 const requestLabel = computed(() => (flagged.value ? 'Request approval' : 'Add'));
 
+const scoreText = computed(
+    () => `${props.track.queue.score} ${Math.abs(props.track.queue.score) === 1 ? 'vote' : 'votes'}`,
+);
 const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 </script>
 
@@ -70,6 +83,8 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                         :src="track.album.image_url"
                         :title="track.album.name"
                         :alt="track.album.name"
+                        loading="lazy"
+                        decoding="async"
                         class="rounded"
                         :class="{'track-art-compact': compact}"
                         :width="compact ? undefined : 60"
@@ -101,10 +116,14 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                     <a v-if="albumRoute" :href="href(albumRoute(track.album.id))">{{ track.album.name }}</a>
                     <template v-else>{{ track.album.name }}</template>
                 </div>
+                <div v-if="scheduledLabel" class="text-info" data-test="scheduled-time">
+                    <i class="icon ti ti-clock"></i>
+                    Scheduled for {{ scheduledLabel }}
+                </div>
                 <div class="text-muted">
                     <template v-if="track.queue.in_queue">
                         <template v-if="track.queue.requested_by">Requested by {{ track.queue.requested_by }}</template>
-                        <template v-else>Fallback Track</template>
+                        <template v-else>{{ fallbackName ?? 'Fallback Track' }}</template>
                     </template>
                     <span v-else-if="!track.eligibility.allowed && !isAwaiting" class="text-warning" data-test="reason">
                         <i class="icon ti ti-alert-triangle"></i>
@@ -123,48 +142,28 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
             >
                 <div
                     v-if="track.queue.in_queue"
-                    class="btn-list flex-nowrap justify-content-center align-items-center gap-1"
+                    class="d-flex flex-nowrap justify-content-center align-items-center gap-1"
                     data-test="queue-state"
                 >
-                    <template v-if="canDownvote">
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-link"
-                            aria-label="Upvote"
-                            data-test="upvote"
-                            @click="castVote(vote === 1 ? 0 : 1)"
-                        >
-                            <i
-                                class="icon ti"
-                                :class="vote === 1 ? 'ti-arrow-big-up-filled text-success' : 'ti-arrow-big-up'"
-                            ></i>
-                        </button>
-                        <span data-test="score">{{ track.queue.score }}</span>
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-link"
-                            aria-label="Downvote"
-                            data-test="downvote"
-                            @click="castVote(vote === -1 ? 0 : -1)"
-                        >
-                            <i
-                                class="icon ti"
-                                :class="vote === -1 ? 'ti-arrow-big-down-filled text-danger' : 'ti-arrow-big-down'"
-                            ></i>
-                        </button>
-                    </template>
-                    <template v-else>
-                        <button
-                            type="button"
-                            class="btn btn-sm btn-link"
-                            aria-label="Like"
-                            data-test="heart"
-                            @click="castVote(vote === 1 ? 0 : 1)"
-                        >
-                            <i class="icon ti" :class="vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"></i>
-                        </button>
-                        <span data-test="score">{{ track.queue.score }}</span>
-                    </template>
+                    <span v-if="scoreOnly" class="text-muted" data-test="score">{{ scoreText }}</span>
+                    <VoteControl
+                        v-else
+                        :score="track.queue.score"
+                        :vote="vote"
+                        :can-downvote="canDownvote"
+                        :label="displayName"
+                        @vote="castVote"
+                    />
+                    <button
+                        v-if="removable"
+                        type="button"
+                        class="btn btn-sm btn-ghost-danger btn-icon remove-button"
+                        :aria-label="`Remove ${displayName}`"
+                        data-test="remove"
+                        @click="emit('remove', track)"
+                    >
+                        <i class="icon ti ti-x"></i>
+                    </button>
                 </div>
                 <template v-else>
                     <button
@@ -210,13 +209,53 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
 }
 
 .track-actions.compact {
-    width: 7rem;
+    width: 7.5rem;
+}
+
+@media (pointer: coarse) {
+    .track-actions,
+    .track-actions.compact {
+        width: auto;
+        min-width: 7.5rem;
+    }
 }
 
 .track-art-compact {
     width: 48px;
     height: 48px;
     object-fit: cover;
+}
+
+.remove-button {
+    min-width: 28px;
+    min-height: 28px;
+}
+
+.whamageddon {
+    padding-top: 2rem;
+}
+
+.whamageddon::before {
+    content: 'Whamageddon!';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    box-sizing: border-box;
+    padding: 0.25rem 1rem;
+    background-color: #990000;
+    color: #fff;
+    font-size: 0.8125rem;
+    font-weight: 700;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+@media (pointer: coarse) {
+    .remove-button {
+        min-width: 44px;
+        min-height: 44px;
+    }
 }
 
 .btn-compact {

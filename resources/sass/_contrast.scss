@@ -1,0 +1,82 @@
+// Text-colour fixes for Tabler defaults that fail WCAG 1.4.3 (4.5:1). Text variants come from
+// the per-mode --mp-text-* tokens in _tokens.scss; fills (badges, buttons, backgrounds) are untouched.
+
+.text-primary {
+    color: var(--mp-text-primary) !important;
+}
+
+.text-danger {
+    color: var(--mp-text-danger) !important;
+}
+
+.text-success {
+    color: var(--mp-text-success) !important;
+}
+
+.text-warning {
+    color: var(--mp-text-warning) !important;
+}
+
+.text-info {
+    color: var(--mp-text-info) !important;
+}
+
+.btn-link {
+    color: var(--mp-text-primary);
+}
+
+.bg-red {
+    --tblr-red-fg: #fff;
+}
+
+.bg-danger {
+    --tblr-danger-fg: #fff;
+}
+
+.btn-outline-primary {
+    --tblr-btn-color: var(--mp-text-primary);
+    --tblr-btn-border-color: var(--mp-text-primary);
+}
+
+.btn-outline-danger {
+    --tblr-btn-color: var(--mp-text-danger);
+    --tblr-btn-border-color: var(--mp-text-danger);
+}
+
+.status-green {
+    --tblr-status-color: var(--mp-text-success);
+}
+
+.status-red {
+    --tblr-status-color: var(--mp-text-danger);
+}
+
+.status-blue {
+    --tblr-status-color: var(--mp-text-primary);
+}
+
+.status-yellow,
+.status-orange {
+    --tblr-status-color: var(--mp-text-warning);
+}
+
+.status-muted {
+    --tblr-status-color: var(--tblr-muted);
+}
+
+.bg-green-lt {
+    color: var(--mp-text-success) !important;
+}
+
+.bg-secondary {
+    --tblr-secondary: var(--mp-secondary-fill, var(--mp-default-secondary-fill));
+    --tblr-secondary-fg: #fff;
+}
+
+.badge.bg-secondary {
+    --tblr-badge-color: var(--tblr-secondary-fg);
+}
+
+.alert-info.alert-important {
+    --tblr-alert-variant-color: color-mix(in oklab, var(--tblr-info) 70%, black);
+}

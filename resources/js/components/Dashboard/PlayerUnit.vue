@@ -3,6 +3,7 @@ import axios from 'axios';
 import {computed, inject, ref} from 'vue';
 import HealthGrid from '@/components/Dashboard/HealthGrid.vue';
 import SeekBar from '@/components/Dashboard/SeekBar.vue';
+import RateControl from '@/components/RateControl.vue';
 import {useTicker} from '@/composables/useProgress';
 import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
 import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
@@ -139,15 +140,12 @@ async function rate(value: number): Promise<void> {
                 </button>
             </div>
             <div class="pu-rate">
-                <template v-if="state.current">
-                    <button type="button" class="btn btn-ondark" aria-label="Rate down" @click="rate(-1)">
-                        <i class="ti ti-thumb-down"></i>
-                    </button>
-                    <span class="mx-2" data-test="rating">{{ state.current.rating ?? 0 }}</span>
-                    <button type="button" class="btn btn-ondark" aria-label="Rate up" @click="rate(1)">
-                        <i class="ti ti-thumb-up"></i>
-                    </button>
-                </template>
+                <RateControl
+                    v-if="state.current"
+                    :rating="state.current.rating"
+                    button-class="btn-ondark"
+                    @rate="rate"
+                />
             </div>
         </div>
 
@@ -163,11 +161,13 @@ async function rate(value: number): Promise<void> {
 <style scoped>
 .pu {
     container-type: inline-size;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--mp-deck-surface);
+    border: 1px solid var(--mp-deck-border);
     border-radius: 14px;
     padding: 20px;
-    color: #fff;
+    color: var(--mp-deck-text);
+    --tblr-secondary: var(--mp-deck-muted);
+    --tblr-muted: var(--mp-deck-muted);
     height: 100%;
 }
 .pu-art {
@@ -182,10 +182,10 @@ async function rate(value: number): Promise<void> {
     height: 168px;
     border-radius: 4px;
     object-fit: cover;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 0 0 1px var(--mp-deck-cover-edge);
 }
 .pu-cover-blank {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--mp-deck-raised);
 }
 .pu-title {
     font-size: 1.9rem;
@@ -194,7 +194,7 @@ async function rate(value: number): Promise<void> {
     letter-spacing: -0.01em;
 }
 .np-meta {
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--mp-deck-muted);
 }
 .np-meta .ti {
     opacity: 0.8;
@@ -233,34 +233,34 @@ async function rate(value: number): Promise<void> {
     font-size: 2.4rem;
 }
 .btn-ondark {
-    --tblr-btn-bg: rgba(255, 255, 255, 0.1);
-    --tblr-btn-border-color: rgba(255, 255, 255, 0.22);
-    --tblr-btn-color: #fff;
-    --tblr-btn-hover-bg: rgba(255, 255, 255, 0.2);
-    --tblr-btn-hover-border-color: rgba(255, 255, 255, 0.35);
-    --tblr-btn-hover-color: #fff;
-    --tblr-btn-disabled-color: rgba(255, 255, 255, 0.4);
+    --tblr-btn-bg: var(--mp-deck-raised);
+    --tblr-btn-border-color: var(--mp-deck-border-strong);
+    --tblr-btn-color: var(--mp-deck-text);
+    --tblr-btn-hover-bg: var(--mp-deck-raised-hover);
+    --tblr-btn-hover-border-color: var(--mp-deck-border-strong);
+    --tblr-btn-hover-color: var(--mp-deck-text);
+    --tblr-btn-disabled-color: var(--mp-deck-disabled);
 }
 .pu-rate {
     justify-self: end;
     display: flex;
     align-items: center;
     gap: 4px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--mp-deck-muted);
 }
-.pu-rate .btn {
+.pu-rate :deep(.btn) {
     width: 40px;
     height: 40px;
     padding: 0;
     border-radius: 50%;
 }
-.pu-rate .ti {
+.pu-rate :deep(.ti) {
     font-size: 1.3rem;
 }
 .pu-hint {
     margin-top: 12px;
     font-size: 0.8rem;
-    color: #fde68a;
+    color: var(--mp-deck-accent-warn);
     display: flex;
     gap: 6px;
     align-items: flex-start;

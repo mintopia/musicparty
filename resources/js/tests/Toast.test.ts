@@ -24,6 +24,19 @@ describe('Toast', () => {
         expect(wrapper.text()).not.toContain('Saved');
     });
 
+    it('shows a one-off message and emits dismiss', async () => {
+        const wrapper = mount(Toast, {props: {message: 'Already requested', variant: 'danger'}});
+
+        expect(wrapper.findAll('.toast')).toHaveLength(1);
+        expect(wrapper.get('.toast').classes()).toContain('text-bg-danger');
+        expect(wrapper.text()).toContain('Already requested');
+        expect(wrapper.text()).not.toContain('Saved');
+
+        await wrapper.get('.btn-close').trigger('click');
+
+        expect(wrapper.emitted('dismiss')).toHaveLength(1);
+    });
+
     it('auto-dismisses after the timeout', async () => {
         vi.useFakeTimers();
         const wrapper = mount(Toast, {props: {autoDismissMs: 1000}});

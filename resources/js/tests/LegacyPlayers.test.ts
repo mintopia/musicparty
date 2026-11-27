@@ -6,6 +6,7 @@ import Upcoming from '../components/Upcoming.vue';
 import {legacyAccentStyle} from '../lib/decoration';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
 
 const echo = vi.hoisted(() => ({
     publicNames: [] as string[],
@@ -71,7 +72,7 @@ describe('legacy decoration rendering', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.find('.row').attributes('style')).toContain('border-left');
+        expect(wrapper.find('[data-test="track-row"]').attributes('style')).toContain('border-left');
     });
 
     it('renders label and accent in the up next view', async () => {
@@ -82,14 +83,14 @@ describe('legacy decoration rendering', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.find('.row').attributes('style')).toContain('border-left');
+        expect(wrapper.find('[data-test="track-row"]').attributes('style')).toContain('border-left');
     });
 
     it('renders label, accent and display name for the next track on the TV view', async () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyUrl: 'x',
+
                 state: {
                     name: 'P',
                     now: track(),
@@ -121,7 +122,7 @@ describe('TvPlayer progress', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyUrl: 'x',
+
                 state: {
                     name: 'P',
                     now: track(),

@@ -1,0 +1,61 @@
+// Third-party brand colours. Fills come from --mp-brand-* (see _tokens.scss); hover mixes the fill
+// towards black (or white for Steam, whose label is dark) instead of fading it with alpha, which
+// pulled the white label below 4.5:1.
+
+@mixin brand-button($fill, $fg, $hover) {
+    --tblr-btn-border-color: transparent;
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-border-color: transparent;
+    --tblr-btn-color: #{$fg};
+    --tblr-btn-bg: #{$fill};
+    --tblr-btn-hover-color: #{$fg};
+    --tblr-btn-hover-bg: #{$hover};
+    --tblr-btn-active-color: #{$fg};
+    --tblr-btn-active-bg: #{$hover};
+    --tblr-btn-disabled-bg: #{$fill};
+    --tblr-btn-disabled-color: #{$fg};
+    --tblr-btn-box-shadow: var(--tblr-shadow-input);
+}
+
+@mixin brand-fill($fill) {
+    --tblr-bg-opacity: 1;
+    background-color: color-mix(in srgb, #{$fill} calc(var(--tblr-bg-opacity) * 100%), transparent) !important;
+}
+
+.btn-discord {
+    @include brand-button(var(--mp-brand-discord), var(--mp-brand-fg), color-mix(in srgb, var(--mp-brand-discord) 85%, black));
+}
+
+.btn-steam {
+    @include brand-button(var(--mp-brand-steam), var(--mp-brand-steam-fg), color-mix(in srgb, var(--mp-brand-steam) 85%, white));
+}
+
+.btn-twitch {
+    @include brand-button(var(--mp-brand-twitch), var(--mp-brand-fg), color-mix(in srgb, var(--mp-brand-twitch) 85%, black));
+}
+
+.bg-discord {
+    @include brand-fill(var(--mp-brand-discord));
+}
+
+.bg-spotify,
+.bg-spotifysearch {
+    @include brand-fill(var(--mp-brand-spotify));
+}
+
+.bg-steam {
+    @include brand-fill(var(--mp-brand-steam));
+}
+
+.bg-twitch {
+    @include brand-fill(var(--mp-brand-twitch));
+}
+
+.text-discord-fg,
+.text-twitch-fg {
+    color: var(--mp-brand-fg) !important;
+}
+
+.text-steam-fg {
+    color: var(--mp-brand-steam-fg) !important;
+}

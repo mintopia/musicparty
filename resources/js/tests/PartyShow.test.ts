@@ -15,6 +15,7 @@ vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
     Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     router: inertia,
+    usePage: () => ({props: {flash: {}}}),
 }));
 vi.mock('@/layouts/AppLayout.vue', () => ({
     default: {template: '<div><slot name="breadcrumbs" /><slot name="header" /><slot /></div>'},
@@ -83,7 +84,7 @@ describe('Party show page', () => {
         expect(wrapper.text()).toContain('Up Next');
         expect(wrapper.text()).toContain('Coming Up');
         expect(wrapper.get('h3.mt-2').text()).toBe('Queue');
-        expect(wrapper.findAll('.list-group-item')).toHaveLength(3);
+        expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(3);
         expect(wrapper.text()).not.toContain('more likely to be played');
     });
 
@@ -127,6 +128,15 @@ describe('Party show page', () => {
         expect(fetchMock).toHaveBeenCalledTimes(2);
     });
 
+    it('uses the full page width while the queue has songs and centres it when empty', () => {
+        expect(mount(Show, {props}).get('[data-test="queue-width"]').classes()).not.toContain('col-xl-8');
+        expect(
+            mount(Show, {props: {...props, upcoming: []}})
+                .get('[data-test="queue-width"]')
+                .classes(),
+        ).toContain('col-xl-8');
+    });
+
     it('has no YouTube entry point', () => {
         expect(mount(Show, {props}).html().toLowerCase()).not.toContain('youtube');
     });
@@ -147,11 +157,12 @@ describe('Upcoming queue', () => {
         axios.defaults.adapter = () => Promise.resolve(response({data: song(2, {score: 5, vote: 1})}));
         const wrapper = mountQueue();
 
-        await wrapper.findAll('.ti-heart')[1].trigger('click');
+        await wrapper.findAll('[data-test="heart"]')[1].trigger('click');
         await flushPromises();
 
-        expect(wrapper.findAll('.list-group-item')[0].text()).toContain('Song 2');
-        expect(wrapper.find('.ti-heart-filled').exists()).toBe(true);
+        expect(wrapper.findAll('[data-test="track-row"]')[0].text()).toContain('Song 2');
+        expect(wrapper.find('[data-test="heart"] .ti-heart-filled').exists()).toBe(true);
+        expect(wrapper.find('[data-test="heart"]').attributes('aria-pressed')).toBe('true');
     });
 
     it('shows the server message when a vote is refused', async () => {
@@ -165,10 +176,10 @@ describe('Upcoming queue', () => {
             );
         const wrapper = mountQueue();
 
-        await wrapper.get('.ti-heart').trigger('click');
+        await wrapper.get('[data-test="heart"]').trigger('click');
         await flushPromises();
 
-        expect(wrapper.text()).toContain('No voting for your own track');
+        expect(wrapper.get('[role="alert"]').text()).toContain('No voting for your own track');
     });
 
     it('removes a row and calls the delete route for managers', async () => {
@@ -179,7 +190,7 @@ describe('Upcoming queue', () => {
         };
         const wrapper = mountQueue({canManage: true});
 
-        await wrapper.get('.ti-x').trigger('click');
+        await wrapper.get('[data-test="remove"]').trigger('click');
 
         expect(requests).toEqual(['delete /api/v1/parties/ABCD/upcomingsongs/1']);
         expect(wrapper.text()).not.toContain('Song 1');
@@ -192,7 +203,7 @@ describe('Upcoming queue', () => {
         echo.handlers['UpcomingSong\\RemovedEvent']({id: 1});
         await wrapper.vm.$nextTick();
 
-        const rows = wrapper.findAll('.list-group-item');
+        const rows = wrapper.findAll('[data-test="track-row"]');
         expect(rows).toHaveLength(2);
         expect(rows[0].text()).toContain('Song 3');
     });

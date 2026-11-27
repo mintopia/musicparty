@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {profile} from '@/routes/user';
-import {edit as editProfile, update as updateProfile} from '@/routes/user/profile';
+import {update as updateProfile} from '@/routes/user/profile';
 
 const props = defineProps<{user: {nickname: string}}>();
 
@@ -17,13 +18,7 @@ function submit(): void {
 <template>
     <AppLayout title="Edit Profile">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <Link :href="profile().url">Profile</Link>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="editProfile().url">Edit Profile</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Profile', href: profile().url}, {label: 'Edit Profile'}]" />
         </template>
         <Head title="Edit Profile" />
         <div class="page-header mt-0">

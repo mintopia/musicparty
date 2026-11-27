@@ -19,6 +19,18 @@ it('renders the TV page for guests as an Inertia page with the party state', fun
             ->has('state.show_qrcode'));
 });
 
+it('provides a locally generated QR code and no external QR service URL', function () {
+    $party = Party::factory()->create();
+
+    $this->get(route('parties.tv', $party->code))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('party.qrSvg', fn ($svg) => str_contains((string) $svg, '<svg'))
+            ->etc());
+
+    expect(file_get_contents(resource_path('js/components/TvPlayer.vue')))->not->toContain('qrserver');
+});
+
 it('supports a state-only partial reload for reconnect resync', function () {
     $party = Party::factory()->create(['name' => 'Renamed']);
 

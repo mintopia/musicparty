@@ -101,16 +101,15 @@ async function playNow(request: DashboardRequest): Promise<void> {
 
 <style scoped>
 .deck-panel {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: var(--mp-deck-surface);
+    border: 1px solid var(--mp-deck-border);
     border-radius: 12px;
     padding: 16px 18px;
-    color: #fff;
+    color: var(--mp-deck-text);
+    --tblr-secondary: var(--mp-deck-muted);
+    --tblr-muted: var(--mp-deck-muted);
     height: 100%;
     container-type: inline-size;
-}
-.deck-panel .text-secondary {
-    color: rgba(255, 255, 255, 0.68) !important;
 }
 .und {
     display: grid;
@@ -129,11 +128,11 @@ async function playNow(request: DashboardRequest): Promise<void> {
     border: 0;
 }
 .und-row + .und-row {
-    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    border-top: 1px solid var(--mp-deck-divider);
     border-radius: 0;
 }
 .und-row:hover {
-    background: rgba(255, 255, 255, 0.05);
+    background: var(--mp-deck-surface);
 }
 .und-art {
     grid-column: 1;
@@ -152,13 +151,13 @@ async function playNow(request: DashboardRequest): Promise<void> {
 }
 .und-sub {
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.62);
+    color: var(--mp-deck-muted);
 }
 .und-meta {
     grid-column: 3;
     text-align: right;
     font-size: 0.8rem;
-    color: rgba(255, 255, 255, 0.62);
+    color: var(--mp-deck-muted);
     white-space: nowrap;
     font-variant-numeric: tabular-nums;
     line-height: 1.5;
@@ -182,15 +181,15 @@ async function playNow(request: DashboardRequest): Promise<void> {
     border-radius: 50%;
     border: 0;
     background: transparent;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--mp-deck-muted);
 }
 .und-btn:hover {
-    background: rgba(255, 255, 255, 0.12);
-    color: #fff;
+    background: var(--mp-deck-raised);
+    color: var(--mp-deck-text);
 }
 .und-btn:disabled {
     opacity: 1;
-    color: rgba(255, 255, 255, 0.22);
+    color: var(--mp-deck-disabled);
     background: transparent;
     border: 0;
     box-shadow: none;

@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
+import Toast from '@/components/Toast.vue';
 import {Head, Link, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref} from 'vue';
@@ -8,9 +11,8 @@ import TrackList from '@/components/TrackList.vue';
 import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import {show, search} from '@/routes/parties';
+import {search} from '@/routes/parties';
 import {show as showArtist} from '@/routes/parties/artists';
 import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
 
@@ -74,14 +76,9 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
 <template>
     <AppLayout :title="title">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a :href="searchUrl">Search</a>
-            </li>
-            <li class="breadcrumb-item active">{{ album?.name ?? 'Album' }}</li>
+            <Breadcrumbs
+                :items="[...partyCrumbs(party), {label: 'Search', href: searchUrl}, {label: album?.name ?? 'Album'}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -154,8 +151,6 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                 </div>
             </template>
         </div>
-        <div v-if="message" class="position-fixed z-3 p-2 top-50 start-50 translate-middle" data-test="message">
-            <div class="alert alert-important alert-danger" role="alert">{{ message }}</div>
-        </div>
+        <Toast v-if="message" :message="message" variant="danger" data-test="message" @dismiss="message = null" />
     </AppLayout>
 </template>

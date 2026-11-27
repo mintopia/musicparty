@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import EmptyState from '@/components/EmptyState.vue';
+import VoteControl from '@/components/VoteControl.vue';
 import {formatMs, useRun} from '@/lib/dashboard';
 import {legacyFallbackName} from '@/lib/decoration';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
@@ -79,48 +80,13 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             <span class="badge bg-green-lt" title="Already in Spotify's queue">Sent to Spotify</span>
                         </div>
                         <div v-if="!request.sent" class="col-auto votes">
-                            <template v-if="canDownvote">
-                                <button
-                                    type="button"
-                                    class="vote-btn"
-                                    :class="{'text-success fw-bold': request.vote === 1}"
-                                    :aria-label="request.vote === 1 ? 'Remove upvote' : 'Upvote'"
-                                    data-test="vote-up"
-                                    @click="vote(request, request.vote === 1 ? 0 : 1)"
-                                >
-                                    <i
-                                        class="ti"
-                                        :class="request.vote === 1 ? 'ti-arrow-big-up-filled' : 'ti-arrow-big-up'"
-                                    ></i>
-                                </button>
-                                <span class="mx-2">{{ request.score }}</span>
-                                <button
-                                    type="button"
-                                    class="vote-btn"
-                                    :class="{'text-danger fw-bold': request.vote === -1}"
-                                    :aria-label="request.vote === -1 ? 'Remove downvote' : 'Downvote'"
-                                    data-test="vote-down"
-                                    @click="vote(request, request.vote === -1 ? 0 : -1)"
-                                >
-                                    <i
-                                        class="ti"
-                                        :class="request.vote === -1 ? 'ti-arrow-big-down-filled' : 'ti-arrow-big-down'"
-                                    ></i>
-                                </button>
-                            </template>
-                            <template v-else>
-                                <button
-                                    type="button"
-                                    class="vote-btn"
-                                    :class="{'text-success': request.vote === 1}"
-                                    :aria-label="request.vote === 1 ? 'Remove vote' : 'Vote'"
-                                    data-test="vote-up"
-                                    @click="vote(request, request.vote === 1 ? 0 : 1)"
-                                >
-                                    <i class="ti" :class="request.vote === 1 ? 'ti-heart-filled' : 'ti-heart'"></i>
-                                </button>
-                                <span class="mx-2">{{ request.score }}</span>
-                            </template>
+                            <VoteControl
+                                :score="request.score"
+                                :vote="request.vote"
+                                :can-downvote="canDownvote"
+                                :label="request.name"
+                                @vote="(value) => vote(request, value)"
+                            />
                         </div>
                         <div v-if="!request.sent" class="col-auto qa">
                             <a
@@ -158,22 +124,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     font-weight: 500;
 }
 .votes {
-    display: flex;
-    align-items: center;
-    gap: 4px;
     min-width: 88px;
-    justify-content: center;
-}
-.votes .ti {
-    font-size: 1.25rem;
-}
-.vote-btn {
-    background: none;
-    border: 0;
-    padding: 0;
-    color: inherit;
-    line-height: 1;
-    cursor: pointer;
 }
 .qa .btn {
     width: 36px;

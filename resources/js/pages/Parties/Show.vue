@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, router} from '@inertiajs/vue3';
-import {onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import Next from '@/components/Next.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Upcoming from '@/components/Upcoming.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {ping} from '@/routes/api/v1';
-import {show} from '@/routes/parties';
 import type {LegacyPartyState, LegacyUpcomingSong} from '@/types';
 
 const props = defineProps<{
@@ -21,6 +21,8 @@ const props = defineProps<{
 }>();
 
 const query = ref('');
+const queueCount = ref(props.upcoming.length);
+const sparse = computed(() => queueCount.value === 0);
 let keepalive: ReturnType<typeof setInterval> | null = null;
 
 function submit(): void {
@@ -43,10 +45,7 @@ onBeforeUnmount(() => {
 <template>
     <AppLayout :title="party.name">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: party.name}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -59,7 +58,7 @@ onBeforeUnmount(() => {
                 to resume playback updates.
             </div>
         </div>
-        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
+        <div :class="{'col-xl-8 offset-xl-2 col-lg-10 offset-lg-1': sparse}" data-test="queue-width">
             <Next :code="party.code" :initial-state="playerState" />
             <div class="d-flex flex-fill align-text-bottom mb-1">
                 <div class="flex-grow-1">
@@ -99,6 +98,7 @@ onBeforeUnmount(() => {
                 :can-downvote="party.downvotes"
                 :timezone="timezone"
                 :initial-state="upcoming"
+                @count="queueCount = $event"
             />
         </div>
     </AppLayout>

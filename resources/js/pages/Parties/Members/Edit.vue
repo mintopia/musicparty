@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import type {LegacyPartyState} from '@/types';
 
 const props = defineProps<{
@@ -33,16 +33,9 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${member.nickname} - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a :href="usersUrl">Users</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="memberUrl">{{ member.nickname }}</a>
-            </li>
+            <Breadcrumbs
+                :items="[...partyCrumbs(party), {label: 'Members', href: usersUrl}, {label: member.nickname}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

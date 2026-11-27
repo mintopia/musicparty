@@ -1,12 +1,12 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import EmptyState from '@/components/EmptyState.vue';
 import ScheduleRequestControl from '@/components/ScheduleRequestControl.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Pagination from '@/components/Pagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import {index, update} from '@/routes/parties/songs';
 import type {LegacyPartyState, Paginator, When} from '@/types';
 
@@ -59,16 +59,9 @@ function clearSchedule(): void {
 <template>
     <AppLayout :title="`${song.name} - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a :href="index(party.code).url">Songs</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a href="#" @click.prevent>{{ song.name }}</a>
-            </li>
+            <Breadcrumbs
+                :items="[...partyCrumbs(party), {label: 'Requests', href: index(party.code).url}, {label: song.name}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -84,7 +77,14 @@ function clearSchedule(): void {
                     <div class="card-body">
                         <div class="row">
                             <div class="col-lg-2 d-lg-block d-none">
-                                <img :src="song.imageUrl" class="rounded" :title="song.albumName" />
+                                <img
+                                    :src="song.imageUrl"
+                                    alt=""
+                                    class="rounded"
+                                    loading="lazy"
+                                    decoding="async"
+                                    :title="song.albumName"
+                                />
                             </div>
                             <div class="col-lg-10">
                                 <div class="datagrid">

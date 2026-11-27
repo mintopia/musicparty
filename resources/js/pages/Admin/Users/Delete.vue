@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import UserBreadcrumbs from '@/components/UserBreadcrumbs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{user: {id: number; nickname: string}}>();
@@ -15,9 +16,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Delete ${user.nickname}`">
         <template #breadcrumbs>
-            <UserBreadcrumbs :user="user">
-                <li class="breadcrumb-item active"><a :href="`/admin/users/${user.id}/delete`">Delete</a></li>
-            </UserBreadcrumbs>
+            <Breadcrumbs :items="[...adminUserCrumbs(user), {label: 'Delete'}]" />
         </template>
         <Head :title="`Delete ${user.nickname}`" />
         <div class="page-header mt-0">

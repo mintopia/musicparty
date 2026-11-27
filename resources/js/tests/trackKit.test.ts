@@ -228,3 +228,26 @@ describe('TrackList', () => {
         expect(wrapper.find('[data-test=track-row]').exists()).toBe(false);
     });
 });
+
+describe('TrackRow queue extras', () => {
+    it('lazy-loads sized album art', () => {
+        const img = mount(TrackRow, {props: {track: make()}}).get('img');
+
+        expect(img.attributes('loading')).toBe('lazy');
+        expect(img.attributes('decoding')).toBe('async');
+        expect(img.attributes('width')).toBe('60');
+    });
+
+    it('emits remove, shows the scheduled time and a score-only label', async () => {
+        const track = inQueue(null);
+        const wrapper = mount(TrackRow, {props: {track, removable: true, scheduledLabel: 'Jan 1, 8:00 PM'}});
+
+        expect(wrapper.get('[data-test=scheduled-time]').text()).toContain('Jan 1, 8:00 PM');
+        await wrapper.get('[data-test=remove]').trigger('click');
+        expect(wrapper.emitted('remove')?.[0]).toEqual([track]);
+
+        const scoreOnly = mount(TrackRow, {props: {track, scoreOnly: true}});
+        expect(scoreOnly.get('[data-test=score]').text()).toBe('5 votes');
+        expect(scoreOnly.find('[data-test=heart]').exists()).toBe(false);
+    });
+});

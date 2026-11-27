@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {Link, usePage} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {SharedProps} from '@/types';
@@ -9,7 +10,7 @@ const page = usePage<SharedProps>();
 <template>
     <AppLayout title="Shell">
         <template #breadcrumbs>
-            <li class="breadcrumb-item active">Shell</li>
+            <Breadcrumbs :items="[{label: 'Shell'}]" />
         </template>
         <div class="card">
             <div class="card-body">

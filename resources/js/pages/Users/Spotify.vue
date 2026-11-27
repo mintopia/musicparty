@@ -1,10 +1,10 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {create as linkAccount} from '@/routes/linkedaccounts';
 import {create as createParty} from '@/routes/parties';
-import {profile} from '@/routes/user';
 
 defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
 </script>
@@ -12,10 +12,7 @@ defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
 <template>
     <AppLayout title="Link Spotify Account">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="profile().url">Link Spotify Account</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Link Spotify Account'}]" />
         </template>
         <Head title="Link Spotify Account" />
         <div class="page-header mt-2">

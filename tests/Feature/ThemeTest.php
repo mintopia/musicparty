@@ -43,7 +43,7 @@ it('emits the token block for the light and dark scopes so it beats Tabler dark 
     $css = $this->get($theme->stylesheetUrl())->assertOk()->getContent();
 
     expect($css)->toStartWith(":root, [data-bs-theme=light], [data-bs-theme=dark] {\n")
-        ->and($css)->toContain('--tblr-link-color: var(--mp-primary);');
+        ->and($css)->toContain('--tblr-link-color: var(--mp-text-primary);');
 });
 
 it('applies top-level :root rules in custom css to the dark and light scopes too', function () {

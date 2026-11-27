@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {reactive} from 'vue';
+import {computed, reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import SortHeader from '@/components/SortHeader.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import type {LegacyPartyState, Paginator, When} from '@/types';
 
 interface MemberRow {
@@ -36,6 +37,8 @@ const props = defineProps<{
 const form = reactive({nickname: props.filters.nickname ?? '', role: props.filters.role ?? ''});
 const usersUrl = `/parties/${props.party.code}/users`;
 
+const filtered = computed(() => Boolean(props.filters.nickname || props.filters.role));
+
 function submit(): void {
     const query: Record<string, string | number> = {
         order: props.filters.order,
@@ -57,13 +60,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Members - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="usersUrl">Members</a>
-            </li>
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Members'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -98,7 +95,7 @@ function submit(): void {
 
             <div class="col-lg-9 col-md-12">
                 <div class="card">
-                    <div class="table-responsive">
+                    <div v-if="members.data.length > 0" class="table-responsive">
                         <table class="table table-hover table-vcenter text-nowrap card-table">
                             <thead>
                                 <tr>
@@ -144,6 +141,20 @@ function submit(): void {
                             </tbody>
                         </table>
                     </div>
+                    <EmptyState
+                        v-else-if="filtered"
+                        icon="ti-users-off"
+                        title="No matching members"
+                        description="Try a different nickname or role."
+                    >
+                        <Link :href="usersUrl" class="btn btn-primary">Clear filters</Link>
+                    </EmptyState>
+                    <EmptyState
+                        v-else
+                        icon="ti-users-off"
+                        title="No members yet"
+                        description="People who join this party will appear here."
+                    />
                     <div v-if="members.last_page > 1" class="card-footer d-flex">
                         <Pagination class="ms-auto" :paginator="members" />
                     </div>

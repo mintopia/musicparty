@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
 import EmptyState from '@/components/EmptyState.vue';
-import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
@@ -28,7 +29,7 @@ defineProps<{
 <template>
     <AppLayout :title="`Rules - ${party.name}`">
         <template #breadcrumbs>
-            <ModerationBreadcrumbs :party="party" active />
+            <Breadcrumbs :items="moderationCrumbs(party)" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
