@@ -8,6 +8,7 @@ use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 
 function typesafeMigration(): object
 {
@@ -77,4 +78,25 @@ it('leaves other drivers and disabled parties alone', function () {
     expect(aiReviewValue($chat, 'driver'))->toBe('openai-compatible')
         ->and(aiReviewValue($chat, 'decision_endpoint'))->toBe('https://example.test/decisions')
         ->and(PartyModSetting::query()->where('party_id', $disabled->id)->exists())->toBeFalse();
+});
+
+function confidenceMigration(): object
+{
+    return require database_path('migrations/2026_11_27_110000_convert_ai_review_confidence_threshold_to_percentage.php');
+}
+
+it('converts a stored confidence fraction to a percentage and back', function () {
+    $party = Party::factory()->create();
+    $modId = Mod::whereCode(AiRequestReviewMod::CODE)->value('id');
+    ModSetting::whereMod_id($modId)->whereCode('confidence_percentage')->update(['code' => 'confidence_threshold']);
+    storeRawAiSetting($party, 'confidence_threshold', 0.65);
+
+    confidenceMigration()->up();
+
+    expect(aiReviewValue($party, 'confidence_percentage'))->toBe(65);
+
+    confidenceMigration()->down();
+
+    expect(ModSetting::whereMod_id($modId)->whereCode('confidence_threshold')->exists())->toBeTrue()
+        ->and(DB::table('party_mod_settings')->where('party_id', $party->id)->value('value'))->toBe(serialize(0.65));
 });

@@ -155,7 +155,7 @@ it('presents the settings per party with the driver as a choice', function () {
     $settings = collect($mod['settings'])->keyBy('code');
     $driver = $settings['driver'];
 
-    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_threshold', 'include_party_context', 'timeout', 'guidelines'])
+    expect($settings->keys()->all())->toBe(['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_percentage', 'include_party_context', 'timeout', 'guidelines'])
         ->and($driver['type'])->toBe('choice')
         ->and((array) $driver['options'])->toBe(['decision-model' => 'Decision model (Jev / TypeSafe)', 'openai-compatible' => 'OpenAI-compatible'])
         ->and($settings['model']['value'])->toBe('review-1');
@@ -333,22 +333,23 @@ describe('Decision model', function () {
         'best' => [4.0, RequestOutcome::Allow, null],
     ]);
 
-    it('flags a confident-looking score that is below the confidence threshold', function (float $confidence, RequestOutcome $expected) {
-        Http::fake(['*' => Http::response(decisionAnswer(4.0, $confidence))]);
+    it('acts on the rating only at or above the confidence percentage', function (float $confidence, RequestOutcome $expected) {
+        Http::fake(['*' => Http::response(decisionAnswer(0.0, $confidence))]);
         [$party, $member] = decisionSetup();
-        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'confidence_threshold', 0.6);
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 60);
 
         expect(app(RequestRules::class)->check($party->refresh(), $member, aiReviewTrack())->outcome)->toBe($expected);
     })->with([
-        'low' => [0.3, RequestOutcome::Flag],
-        'enough' => [0.6, RequestOutcome::Allow],
+        'below' => [0.55, RequestOutcome::Allow],
+        'exactly' => [0.6, RequestOutcome::Reject],
+        'above' => [0.65, RequestOutcome::Reject],
     ]);
 
-    it('flags low confidence even on a reject score so a human decides', function () {
+    it('allows a reject score when the confidence is below the default percentage', function () {
         Http::fake(['*' => Http::response(decisionAnswer(0.0, 0.1))]);
         [$party, $member] = decisionSetup();
 
-        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->isFlagged())->toBeTrue();
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
     });
 
     it('allows on timeouts, http errors and malformed answers', function (Closure $fake) {
@@ -390,7 +391,11 @@ describe('Decision model', function () {
 
         expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'http://example.test/decisions'))->toThrow(ValidationException::class)
             ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'not a url'))->toThrow(ValidationException::class)
-            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_threshold', 1.5))->toThrow(ValidationException::class);
+            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 150))->toThrow(ValidationException::class)
+            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', -1))->toThrow(ValidationException::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 0);
+        $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 100);
+        expect($store->value($party, AiRequestReviewMod::CODE, 'confidence_percentage'))->toBe(100);
         $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://example.test/decisions');
         expect($store->value($party, AiRequestReviewMod::CODE, 'decision_endpoint'))->toBe('https://example.test/decisions');
     });
@@ -465,7 +470,7 @@ describe('Debug logging', function () {
         'reject band' => [0.2, 0.9, 'reject', 'reject'],
         'flag band' => [1.4, 0.9, 'flag', 'flag'],
         'allow band' => [4.0, 0.9, 'allow', 'allow'],
-        'low confidence' => [4.0, 0.1, 'low_confidence', 'flag'],
+        'low confidence' => [4.0, 0.1, 'low_confidence', 'allow'],
     ]);
 
     it('logs fail-open errors with a sanitized message and never the key', function (Closure $fake) {
@@ -649,7 +654,7 @@ describe('History', function () {
         'allow' => [4.0, 0.9, AiReviewOutcome::Allow],
         'flag' => [1.4, 0.9, AiReviewOutcome::Flag],
         'reject' => [0.2, 0.9, AiReviewOutcome::Reject],
-        'low confidence is flagged' => [4.0, 0.1, AiReviewOutcome::Flag],
+        'low confidence is allowed' => [1.4, 0.1, AiReviewOutcome::Allow],
     ]);
 
     it('records the review as flagged even when the party has flagging off', function () {
