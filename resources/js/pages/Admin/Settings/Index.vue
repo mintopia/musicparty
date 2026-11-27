@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Head, Link, router, useForm} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CopyButton from '@/components/CopyButton.vue';
@@ -8,7 +8,7 @@ import SettingRow from '@/components/SettingRow.vue';
 import StatePill from '@/components/StatePill.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {adminCrumbs} from '@/lib/breadcrumbs';
-import {colourName, themeThumbStyle} from '@/lib/themeThumb';
+import {index as adminThemes} from '@/routes/admin/themes';
 
 interface SettingField {
     code: string;
@@ -26,22 +26,13 @@ interface SocialProviderRow {
     supports_auth: boolean;
     enabled: boolean;
     auth_enabled: boolean;
+    needs_secret: boolean;
     login_return_url: string;
     linked_account_url: string;
 }
 
 const props = defineProps<{
     settings: SettingField[];
-    themes: {
-        id: number;
-        name: string;
-        active: boolean;
-        readonly: boolean;
-        dark_mode: boolean;
-        tokens: Record<string, string>;
-        css: string;
-        updated_at: string | null;
-    }[];
     socialProviders: SocialProviderRow[];
 }>();
 
@@ -49,7 +40,6 @@ const TABS = [
     {id: 'general', label: 'General'},
     {id: 'branding', label: 'Branding'},
     {id: 'providers', label: 'Sign-in providers'},
-    {id: 'themes', label: 'Themes'},
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -140,37 +130,6 @@ function onTabKeydown(event: KeyboardEvent): void {
     document.getElementById(`tab-${next.id}`)?.focus();
 }
 
-function makeActive(theme: {
-    id: number;
-    name: string;
-    css: string;
-    dark_mode: boolean;
-    tokens: Record<string, string>;
-}): void {
-    router.patch(
-        `/admin/settings/themes/${theme.id}`,
-        {
-            name: theme.name,
-            css: theme.css,
-            dark_mode: theme.dark_mode,
-            tokens: theme.tokens,
-            active: true,
-        },
-        {preserveState: true, preserveScroll: true},
-    );
-}
-
-function modeLabel(theme: {dark_mode: boolean}): string {
-    return theme.dark_mode ? 'Always dark' : 'Follows each user';
-}
-
-function subtitle(theme: {readonly: boolean; dark_mode: boolean; tokens: Record<string, string>}): string {
-    if (theme.readonly) {
-        return 'Built in';
-    }
-    return `${colourName(theme.tokens.primary)}, ${theme.dark_mode ? 'dark' : 'light'}`;
-}
-
 const providerIcons: Record<string, string> = {
     discord: 'ti-brand-discord',
     spotify: 'ti-brand-spotify',
@@ -180,12 +139,15 @@ const providerIcons: Record<string, string> = {
 };
 
 function providerStatus(provider: SocialProviderRow): {
-    state: 'ok' | 'live' | 'idle';
+    state: 'ok' | 'live' | 'idle' | 'warn';
     label: string;
     note: string | null;
 } {
     if (!provider.enabled) {
         return {state: 'idle', label: 'Off', note: provider.supports_auth ? null : 'Search only, cannot log in'};
+    }
+    if (provider.needs_secret) {
+        return {state: 'warn', label: 'Needs a secret', note: 'On, but the client secret is empty'};
     }
     if (provider.auth_enabled) {
         return {state: 'ok', label: 'Sign-in on', note: null};
@@ -224,6 +186,10 @@ function providerStatus(provider: SocialProviderRow): {
                 >
                     {{ t.label }}
                 </button>
+                <Link :href="adminThemes().url" class="underline-tab" data-test="themes-link">
+                    Themes
+                    <i class="icon ti ti-arrow-up-right" aria-hidden="true"></i>
+                </Link>
             </div>
 
             <form v-show="formTabs.includes(tab)" data-test="settings-form" @submit.prevent="submit">
@@ -487,94 +453,6 @@ function providerStatus(provider: SocialProviderRow): {
                             </tbody>
                         </table>
                     </div>
-                </div>
-            </div>
-
-            <div v-show="tab === 'themes'" id="panel-themes" role="tabpanel" aria-labelledby="tab-themes">
-                <div class="card">
-                    <div class="card-header">
-                        <h2 class="card-title">Themes</h2>
-                        <Link class="btn btn-primary ms-auto" href="/admin/settings/themes/create">
-                            <i class="icon ti ti-plus" aria-hidden="true"></i>
-                            Add theme
-                        </Link>
-                    </div>
-                    <div class="table-responsive">
-                        <table class="table table-vcenter card-table">
-                            <thead>
-                                <tr>
-                                    <th>Theme</th>
-                                    <th>Status</th>
-                                    <th>Mode</th>
-                                    <th>Updated</th>
-                                    <th class="w-1"></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr v-for="theme in themes" :key="theme.id">
-                                    <td>
-                                        <div class="mp-cell">
-                                            <span
-                                                class="mp-thumb"
-                                                :style="themeThumbStyle(theme)"
-                                                role="img"
-                                                :aria-label="`Preview of ${theme.name}`"
-                                                ><i></i><b></b
-                                            ></span>
-                                            <div>
-                                                <Link
-                                                    :href="`/admin/settings/themes/${theme.id}/edit`"
-                                                    class="fw-medium"
-                                                    >{{ theme.name }}</Link
-                                                >
-                                                <span class="mp-sub">{{ subtitle(theme) }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <StatePill v-if="theme.active" state="ok">Active</StatePill>
-                                        <span v-else class="text-secondary">Not in use</span>
-                                    </td>
-                                    <td>{{ modeLabel(theme) }}</td>
-                                    <td class="text-secondary">{{ theme.updated_at ?? 'Built in' }}</td>
-                                    <td>
-                                        <div class="btn-list flex-nowrap justify-content-end">
-                                            <button
-                                                v-if="!theme.active"
-                                                type="button"
-                                                class="btn btn-sm"
-                                                data-test="make-active"
-                                                @click="makeActive(theme)"
-                                            >
-                                                Make active
-                                            </button>
-                                            <Link
-                                                :href="`/admin/settings/themes/${theme.id}/edit`"
-                                                class="btn btn-sm btn-outline-secondary"
-                                            >
-                                                <i class="icon ti ti-edit" aria-hidden="true"></i>
-                                                {{ theme.readonly ? 'View' : 'Edit' }}
-                                            </Link>
-                                            <Link
-                                                v-if="!theme.readonly"
-                                                :href="`/admin/settings/themes/${theme.id}/delete`"
-                                                class="btn btn-sm btn-outline-danger"
-                                            >
-                                                <i class="icon ti ti-trash" aria-hidden="true"></i>
-                                                Delete
-                                            </Link>
-                                        </div>
-                                    </td>
-                                </tr>
-                                <tr v-if="themes.length === 0">
-                                    <td colspan="5" class="text-center p-4">
-                                        <p class="mb-0">There are no themes</p>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="card-footer text-secondary small">Only one theme is active, and everyone sees it.</div>
                 </div>
             </div>
         </div>

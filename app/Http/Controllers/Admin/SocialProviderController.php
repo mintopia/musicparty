@@ -23,6 +23,7 @@ class SocialProviderController extends Controller
                 'supports_auth' => (bool) $provider->supports_auth,
                 'enabled' => (bool) $provider->enabled,
                 'auth_enabled' => (bool) $provider->auth_enabled,
+                'needs_secret' => $provider->settings->contains(fn (ProviderSetting $setting): bool => $setting->encrypted && $setting->isRequired() && ($setting->value === null || $setting->value === '')),
                 'login_return_url' => route('login.return', $provider->code),
                 'linked_account_url' => route('linkedaccounts.store', $provider->code),
             ],

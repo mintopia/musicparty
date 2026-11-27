@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
+import {adminThemesCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import ThemeForm from '@/components/ThemeForm.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -28,14 +28,14 @@ const form = useForm({
 });
 
 function submit(): void {
-    form.patch(`/admin/settings/themes/${props.theme.id}`);
+    form.patch(`/admin/themes/${props.theme.id}`);
 }
 </script>
 
 <template>
     <AppLayout :title="`Edit ${theme.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: `Edit ${theme.name}`}]" />
+            <Breadcrumbs :items="[...adminThemesCrumbs(), {label: `Edit ${theme.name}`}]" />
         </template>
         <Head :title="`Edit ${theme.name}`" />
         <form @submit.prevent="submit">
@@ -44,8 +44,8 @@ function submit(): void {
                     <h1>Edit {{ theme.name }}</h1>
                     <p>{{ theme.active ? `Active since ${theme.updated_at}.` : 'Not in use.' }}</p>
                 </div>
-                <div class="btn-list">
-                    <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
+                <div class="btn-list mp-btn-row">
+                    <Link href="/admin/themes" class="btn btn-link">Cancel</Link>
                     <button type="submit" class="btn btn-primary" :disabled="form.processing">Save changes</button>
                 </div>
             </div>

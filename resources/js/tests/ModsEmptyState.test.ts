@@ -34,7 +34,7 @@ describe.each([['Admin/Mods', AdminMods, {}, adminMod]])('%s', (_name, component
     it('shows the empty state and no Save button when there are no mods', () => {
         const wrapper = mount(component, {props: {...extra, mods: []} as never});
 
-        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No mods available');
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No mods installed');
         expect(wrapper.find('[data-test="save"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="mod"]').exists()).toBe(false);
     });

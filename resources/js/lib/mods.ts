@@ -188,3 +188,35 @@ export function whamageddonStats(settings: ModSetting[], values: Record<string, 
         {label: 'Quiet hours', value: '2AM to 10AM'},
     ];
 }
+
+export function formatRelativeTime(iso: string, now: Date = new Date()): string {
+    const seconds = Math.round((new Date(iso).getTime() - now.getTime()) / 1000);
+    const units: [Intl.RelativeTimeFormatUnit, number][] = [
+        ['day', 86400],
+        ['hour', 3600],
+        ['minute', 60],
+    ];
+    const formatter = new Intl.RelativeTimeFormat('en', {numeric: 'auto'});
+    for (const [unit, size] of units) {
+        if (Math.abs(seconds) >= size) {
+            return formatter.format(Math.round(seconds / size), unit);
+        }
+    }
+    return 'just now';
+}
+
+export function aiReviewActivityStats(
+    reviewStats: {last_review_at: string | null; reviews_today: number} | null | undefined,
+    now: Date = new Date(),
+): ModStat[] {
+    if (!reviewStats) {
+        return [];
+    }
+    return [
+        {
+            label: 'Last review',
+            value: reviewStats.last_review_at ? formatRelativeTime(reviewStats.last_review_at, now) : 'Never',
+        },
+        {label: 'Reviews today', value: String(reviewStats.reviews_today)},
+    ];
+}

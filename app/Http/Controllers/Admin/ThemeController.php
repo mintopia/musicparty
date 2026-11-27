@@ -12,6 +12,22 @@ use Inertia\Response;
 
 class ThemeController extends Controller
 {
+    public function index(): Response
+    {
+        return Inertia::render('Admin/Themes/Index', [
+            'themes' => Theme::get()->map(fn (Theme $theme): array => [
+                'id' => $theme->id,
+                'name' => $theme->name,
+                'active' => (bool) $theme->active,
+                'readonly' => (bool) $theme->readonly,
+                'dark_mode' => (bool) $theme->dark_mode,
+                'tokens' => $theme->validTokens(),
+                'css' => (string) $theme->css,
+                'updated_at' => $theme->updated_at?->diffForHumans(),
+            ])->values(),
+        ]);
+    }
+
     public function create(): Response
     {
         $default = Theme::whereCode('default')->first();
@@ -35,7 +51,7 @@ class ThemeController extends Controller
         $theme = new Theme;
         $this->updateObject($theme, $request);
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been created');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been created');
     }
 
     public function edit(Theme $theme): Response
@@ -50,7 +66,7 @@ class ThemeController extends Controller
     {
         $this->updateObject($theme, $request);
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been updated');
     }
 
     public function delete(Theme $theme): Response|RedirectResponse
@@ -77,12 +93,12 @@ class ThemeController extends Controller
         }
         $theme->delete();
 
-        return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
+        return response()->redirectToRoute('admin.themes.index')->with('successMessage', 'The theme has been deleted');
     }
 
     protected function builtInThemeRefusal(): RedirectResponse
     {
-        return response()->redirectToRoute('admin.settings.index')->with('errorMessage', 'Built-in themes can\'t be deleted.');
+        return response()->redirectToRoute('admin.themes.index')->with('errorMessage', 'Built-in themes can\'t be deleted.');
     }
 
     /**

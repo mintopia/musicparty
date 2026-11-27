@@ -27,6 +27,14 @@
     .mp-page-head .btn-list {
         inline-size: 100%;
     }
+
+    .mp-page-head .btn-list.mp-btn-row {
+        flex-wrap: nowrap;
+
+        > .btn {
+            flex: 1 1 0;
+        }
+    }
 }
 
 .mp-narrow {
