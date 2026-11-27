@@ -121,7 +121,7 @@ class Party extends Model
         'downvotes' => true,
         'poll' => false,
         'active' => true,
-        'show_qrcode' => false,
+        'show_qrcode' => true,
         'flag_requests' => false,
     ];
 

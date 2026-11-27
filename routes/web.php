@@ -125,3 +125,5 @@ Route::middleware('guest')->group(function () {
     Route::get('login/{socialprovider:code}', [UserController::class, 'login_redirect'])->name('login.redirect');
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
 });
+
+Route::fallback(fn () => abort(404));

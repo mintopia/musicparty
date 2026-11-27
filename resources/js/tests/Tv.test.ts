@@ -173,6 +173,7 @@ describe('Parties/Tv', () => {
 
         expect(wrapper.get('.tv-join').text()).toContain('Scan or join with code');
         expect(wrapper.get('.tv-join [data-test="join-code"]').text()).toBe('ABC');
+        expect(wrapper.get('.tv-join [data-test="join-url"]').text()).toBe('x/parties/ABC');
         expect(wrapper.get('.tv-join [data-test="tv-qr"]').classes()).toContain('tv-qr-small');
         wrapper.unmount();
     });
@@ -196,6 +197,7 @@ describe('Parties/Tv', () => {
         );
         expect(wrapper.get('[data-test="nothing-playing"] [data-test="tv-qr"]').classes()).toContain('tv-qr-large');
         expect(wrapper.get('[data-test="join-code"]').text()).toBe('ABC');
+        expect(wrapper.get('[data-test="nothing-playing"] [data-test="join-url"]').text()).toBe('x/parties/ABC');
         wrapper.unmount();
     });
 
