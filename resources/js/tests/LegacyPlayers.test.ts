@@ -71,7 +71,7 @@ describe('legacy decoration rendering', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.find('.row').attributes('style')).toContain('border-left');
+        expect(wrapper.find('[data-test="track-row"]').attributes('style')).toContain('border-left');
     });
 
     it('renders label and accent in the up next view', async () => {
@@ -82,7 +82,7 @@ describe('legacy decoration rendering', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.find('.row').attributes('style')).toContain('border-left');
+        expect(wrapper.find('[data-test="track-row"]').attributes('style')).toContain('border-left');
     });
 
     it('renders label, accent and display name for the next track on the TV view', async () => {

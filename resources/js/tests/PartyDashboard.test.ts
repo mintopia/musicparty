@@ -361,9 +361,9 @@ describe('health grid and upcoming list', () => {
         const rows = wrapper.findAll('[data-test="upcoming-row"]');
 
         expect(rows[0].find('[data-test="sent-badge"]').exists()).toBe(true);
-        expect(rows[0].find('[data-test="vote-up"]').exists()).toBe(false);
+        expect(rows[0].find('[data-test="upvote"]').exists()).toBe(false);
         expect(rows[0].find('[data-test="remove"]').exists()).toBe(false);
-        expect(rows[1].find('[data-test="vote-up"]').exists()).toBe(true);
+        expect(rows[1].find('[data-test="upvote"]').exists()).toBe(true);
     });
 });
 
