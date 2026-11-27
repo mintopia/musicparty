@@ -102,8 +102,9 @@ const summaryDay = computed(() =>
 const saving = ref(false);
 
 const POPOVER_WIDTH = 340;
+const isPopover = Boolean(props.anchor) && window.matchMedia?.('(min-width: 768px)').matches === true;
 const popoverStyle = computed(() => {
-    if (!props.anchor) {
+    if (!props.anchor || !isPopover) {
         return undefined;
     }
     const left = Math.max(16, Math.min(props.anchor.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 16));
@@ -167,8 +168,9 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
     <div class="sheet-dim" data-test="schedule-dim" @click="emit('close')"></div>
     <div
         class="sched-sheet"
-        :class="{'is-anchored': anchor}"
+        :class="{'is-anchored': isPopover}"
         :style="popoverStyle"
+        :aria-modal="isPopover ? undefined : 'true'"
         role="dialog"
         aria-labelledby="sched-title"
         data-test="schedule-sheet"
