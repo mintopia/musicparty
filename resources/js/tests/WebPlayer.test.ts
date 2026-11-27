@@ -204,7 +204,7 @@ describe('WebPlayer', () => {
 
         spotify.listeners.account_error({message: 'premium required'});
         await flushPromises();
-        expect(wrapper.get('[data-test="error"]').text()).toBe('premium required');
+        expect(wrapper.get('[data-test="error"]').text()).toContain('Free plan');
     });
 
     describe('recovery', () => {
@@ -429,5 +429,87 @@ describe('WebPlayer', () => {
         expect(wrapper.find('[data-test="taken-over"]').exists()).toBe(false);
         expect(echo.whispers.filter(([event]) => event === 'claim')).toHaveLength(2);
         expect(wrapper.get('[data-test="status"]').text()).toBe('Ready');
+    });
+
+    describe('failure frames', () => {
+        const checkText = (wrapper: Awaited<ReturnType<typeof mountPlayer>>) =>
+            wrapper.get('[data-test="player-checks"]').text();
+
+        it('explains a non-Premium account and links to the Spotify account page', async () => {
+            const wrapper = await mountPlayer();
+            spotify.listeners.account_error({message: 'premium required'});
+            await flushPromises();
+
+            expect(wrapper.get('[data-test="status"]').text()).toBe('Not connected');
+            expect(wrapper.get('h2.wp-title').text()).toBe('Spotify Premium needed');
+            expect(wrapper.get('[data-test="error"]').text()).toContain('Free plan');
+            const action = wrapper.get('[data-test="error-action"]');
+            expect(action.text()).toBe('Open Spotify account');
+            expect(action.attributes('href')).toBe('https://www.spotify.com/account/');
+            expect(checkText(wrapper)).toContain('Connected, but the account is Spotify Free');
+            expect(wrapper.find('[data-test="start"]').exists()).toBe(false);
+            expect(wrapper.find('.status-red').exists()).toBe(true);
+        });
+
+        it('asks to log in again when the token endpoint rejects the saved login', async () => {
+            vi.mocked(axios.get)
+                .mockReset()
+                .mockRejectedValue({response: {status: 409}});
+            const wrapper = mount(WebPlayer, {
+                props: {
+                    party: {code: 'ABC', name: 'Friday'},
+                    tokenUrl: '/token',
+                    activateUrl: '/activate',
+                    deviceName: 'Music Party',
+                },
+            });
+            mounted.push(wrapper);
+            await flushPromises();
+
+            expect(wrapper.get('[data-test="status"]').text()).toBe('Not connected');
+            expect(wrapper.get('h2.wp-title').text()).toBe('Log in to Spotify again');
+            expect(wrapper.get('[data-test="error"]').text()).toContain('Nobody else needs to do anything');
+            const action = wrapper.get('[data-test="error-action"]');
+            expect(action.text()).toBe('Log in with Spotify');
+            expect(action.attributes('href')).toContain('/profile/accounts/spotify/link');
+            expect(checkText(wrapper)).toContain('Spotify no longer accepts the saved login');
+        });
+
+        it('shows the login frame only after a second authentication_error', async () => {
+            vi.useFakeTimers();
+            const wrapper = await mountPlayer();
+            vi.mocked(axios.get).mockResolvedValue({data: {accessToken: 'tok2'}});
+
+            spotify.listeners.authentication_error({message: 'expired'});
+            expect(wrapper.find('[data-test="error"]').exists()).toBe(false);
+            spotify.listeners.authentication_error({message: 'expired'});
+            await flushPromises();
+
+            expect(wrapper.get('h2.wp-title').text()).toBe('Log in to Spotify again');
+            vi.useRealTimers();
+        });
+
+        it('keeps an initialization error generic with the SDK message', async () => {
+            const wrapper = await mountPlayer();
+            spotify.listeners.initialization_error({message: 'no browser support'});
+            await flushPromises();
+
+            expect(wrapper.get('h2.wp-title').text()).toBe("This tab can't play");
+            expect(wrapper.get('[data-test="error"]').text()).toBe('no browser support');
+            expect(wrapper.find('[data-test="error-action"]').exists()).toBe(false);
+        });
+
+        it('names the takeover and offers to use this tab instead', async () => {
+            const wrapper = await mountPlayer();
+            spotify.listeners.ready({device_id: 'dev1'});
+            echo.whisperHandlers.claim({instanceId: 'zzz', claimedAt: Date.now() + 1000} as never);
+            await flushPromises();
+
+            expect(wrapper.get('[data-test="status"]').text()).toBe('Taken over');
+            expect(wrapper.get('h2.wp-title').text()).toBe('Another player took over');
+            expect(wrapper.get('[data-test="use-this-tab"]').text()).toBe('Use this tab instead');
+            expect(checkText(wrapper)).toContain('Active Web Player');
+            expect(checkText(wrapper)).toContain('This tab stopped reporting');
+        });
     });
 });

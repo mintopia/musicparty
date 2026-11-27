@@ -8,6 +8,7 @@ import {useEcho} from '@/composables/useEcho';
 import {formatClock, useTicker} from '@/composables/useProgress';
 import {useTransportShortcuts} from '@/composables/useTransportShortcuts';
 import BareLayout from '@/layouts/BareLayout.vue';
+import {create as linkAccount} from '@/routes/linkedaccounts';
 
 type SpotifyTrack = {
     name: string;
@@ -52,6 +53,11 @@ type WhisperChannel = {
 const SDK_URL = 'https://sdk.scdn.co/spotify-player.js';
 const REPEAT_MODES = ['off', 'context', 'track'] as const;
 const MAX_RECONNECT_DELAY_MS = 30000;
+const SPOTIFY_ACCOUNT_URL = 'https://www.spotify.com/account/';
+const PREMIUM_COPY =
+    'The linked Spotify account is on the Free plan, and Spotify only lets Premium accounts play in a browser. Upgrade the account, or play on another device from the Dashboard.';
+const LOGIN_COPY =
+    "Spotify stopped accepting the saved login, so this tab can't play. Log in again and playback resumes here. Nobody else needs to do anything.";
 const LEAVE_WARNING = 'This is the active Web Player for the Party. Leaving will stop playback.';
 
 const props = defineProps<{
@@ -63,6 +69,7 @@ const props = defineProps<{
 
 const status = ref('Connecting...');
 const error = ref<string | null>(null);
+const errorKind = ref<'premium' | 'login' | 'generic'>('generic');
 const track = ref<SpotifyTrack | null>(null);
 const paused = ref(true);
 const position = ref(0);
@@ -108,6 +115,97 @@ const lastUpdateLabel = computed(() => {
     return `${minutes} ${minutes === 1 ? 'minute' : 'minutes'} ago`;
 });
 const reporting = computed(() => deviceReady.value && !takenOver.value && error.value === null);
+const spotifyLoginUrl = linkAccount('spotify').url;
+const errorTitle = computed(() =>
+    errorKind.value === 'premium'
+        ? 'Spotify Premium needed'
+        : errorKind.value === 'login'
+          ? 'Log in to Spotify again'
+          : "This tab can't play",
+);
+const errorCopy = computed(() =>
+    errorKind.value === 'premium' ? PREMIUM_COPY : errorKind.value === 'login' ? LOGIN_COPY : (error.value ?? ''),
+);
+const errorIcon = computed(() =>
+    errorKind.value === 'login'
+        ? 'ti-key-off'
+        : errorKind.value === 'premium'
+          ? 'ti-brand-spotify'
+          : 'ti-alert-triangle',
+);
+type Check = {label: string; detail: string; tone: string; action?: {label: string; href: string; primary: boolean}};
+const spotifyCheck = computed<Check>(() => {
+    if (error.value !== null && errorKind.value === 'premium') {
+        return {
+            label: 'Spotify link',
+            detail: 'Connected, but the account is Spotify Free',
+            tone: 'red',
+            action: {label: 'Open Spotify account', href: SPOTIFY_ACCOUNT_URL, primary: false},
+        };
+    }
+    if (error.value !== null && errorKind.value === 'login') {
+        return {
+            label: 'Spotify link',
+            detail: 'Spotify no longer accepts the saved login',
+            tone: 'red',
+            action: {label: 'Log in with Spotify', href: spotifyLoginUrl, primary: true},
+        };
+    }
+    if (error.value !== null) {
+        return {label: 'Spotify link', detail: error.value, tone: 'red'};
+    }
+
+    return tokenOk.value
+        ? {label: 'Spotify link', detail: 'Connected', tone: 'green'}
+        : {label: 'Spotify link', detail: 'Connecting...', tone: 'secondary'};
+});
+const deviceCheck = computed<Check>(() => {
+    if (takenOver.value) {
+        return {
+            label: 'Device',
+            detail: `${props.deviceName} (this tab) is no longer the active Web Player`,
+            tone: 'yellow',
+        };
+    }
+
+    return deviceReady.value
+        ? {label: 'Device', detail: `${props.deviceName} (this tab)`, tone: 'green'}
+        : {label: 'Device', detail: 'Not registered', tone: 'secondary'};
+});
+const reportingCheck = computed<Check>(() => {
+    if (reporting.value) {
+        return {label: 'Reporting', detail: 'Reporting to Music Party', tone: 'green'};
+    }
+
+    return takenOver.value
+        ? {label: 'Reporting', detail: 'This tab stopped reporting', tone: 'secondary'}
+        : {label: 'Reporting', detail: 'Not reporting to Music Party', tone: 'red'};
+});
+const updateCheck = computed<Check>(() => {
+    if (lastUpdateAt.value === null) {
+        return {label: 'Last update', detail: 'Never', tone: 'secondary'};
+    }
+    if (error.value !== null && errorKind.value === 'login') {
+        return {label: 'Last update', detail: `${lastUpdateLabel.value}, before the login expired`, tone: 'yellow'};
+    }
+
+    return {label: 'Last update', detail: lastUpdateLabel.value, tone: 'green'};
+});
+const checks = computed<Check[]>(() => {
+    if (takenOver.value) {
+        return [
+            deviceCheck.value,
+            {label: 'Active Web Player', detail: 'Another Web Player has claimed this party', tone: 'green'},
+            reportingCheck.value,
+            spotifyCheck.value,
+        ];
+    }
+    if (error.value !== null) {
+        return [spotifyCheck.value, deviceCheck.value, reportingCheck.value, updateCheck.value];
+    }
+
+    return [deviceCheck.value, reportingCheck.value, updateCheck.value, spotifyCheck.value];
+});
 const pillLabel = computed(() => {
     if (takenOver.value) {
         return 'Taken over';
@@ -130,6 +228,7 @@ let currentToken = '';
 let deviceId: string | null = null;
 let player: SpotifyPlayer | null = null;
 let reconnectAttempts = 0;
+let authFailures = 0;
 let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
 
 const channel = useEcho().privateChannel(`webplayer.${props.party.code}`) as WhisperChannel;
@@ -184,13 +283,25 @@ function useThisTab(): void {
     claimedAt = Date.now();
     reconnectAttempts = 0;
     player = null;
-    void fetchToken().then((ok) => (ok ? createPlayer() : fail('Could not fetch a Spotify access token.')));
+    void fetchToken().then((ok) => (ok ? createPlayer() : failToken()));
 }
 
-function fail(message: string): void {
+function fail(message: string, kind: 'premium' | 'login' | 'generic' = 'generic'): void {
     error.value = message;
+    errorKind.value = kind;
+    deviceReady.value = deviceReady.value && kind === 'generic';
     status.value = 'Unavailable';
     active.value = false;
+}
+
+let tokenRejected = false;
+
+function failToken(): void {
+    if (tokenRejected) {
+        fail('Spotify needs re-linking.', 'login');
+    } else {
+        fail('Could not fetch a Spotify access token.');
+    }
 }
 
 async function fetchToken(): Promise<boolean> {
@@ -200,7 +311,9 @@ async function fetchToken(): Promise<boolean> {
         tokenOk.value = true;
 
         return true;
-    } catch {
+    } catch (caught) {
+        const code = (caught as {response?: {status?: number}}).response?.status;
+        tokenRejected = code === 401 || code === 404 || code === 409;
         tokenOk.value = false;
 
         return false;
@@ -213,7 +326,11 @@ async function reconnect(): Promise<void> {
         return;
     }
     if (!(await fetchToken())) {
-        scheduleReconnect();
+        if (tokenRejected) {
+            failToken();
+        } else {
+            scheduleReconnect();
+        }
 
         return;
     }
@@ -273,6 +390,7 @@ function createPlayer(): void {
         active.value = true;
         deviceReady.value = true;
         reconnectAttempts = 0;
+        authFailures = 0;
         claim();
     });
     player.addListener('not_ready', () => {
@@ -281,15 +399,20 @@ function createPlayer(): void {
         scheduleReconnect();
     });
     player.addListener('authentication_error', () => {
+        authFailures++;
+        if (authFailures > 1) {
+            fail('Spotify no longer accepts the saved login.', 'login');
+
+            return;
+        }
         status.value = 'Refreshing session...';
         scheduleReconnect();
     });
     player.addListener('autoplay_failed', () => {
         autoplayBlocked.value = true;
     });
-    for (const event of ['initialization_error', 'account_error']) {
-        player.addListener(event, ({message}: {message: string}) => fail(message));
-    }
+    player.addListener('account_error', ({message}: {message: string}) => fail(message, 'premium'));
+    player.addListener('initialization_error', ({message}: {message: string}) => fail(message));
     player.addListener('player_state_changed', onStateChanged);
     void player.connect();
 }
@@ -320,8 +443,12 @@ async function startPlayback(): Promise<void> {
     }
     try {
         await axios.post(props.activateUrl, {device_id: deviceId});
-    } catch {
-        fail('Could not start playback.');
+    } catch (caught) {
+        if ((caught as {response?: {status?: number}}).response?.status === 409) {
+            fail('Spotify needs re-linking.', 'login');
+        } else {
+            fail('Could not start playback.');
+        }
     }
 }
 
@@ -367,7 +494,7 @@ onMounted(async () => {
         }
     });
     if (!(await fetchToken())) {
-        fail('Could not fetch a Spotify access token.');
+        failToken();
         return;
     }
     loadSdk();
@@ -399,7 +526,7 @@ onBeforeUnmount(() => {
                         <div v-else class="wp-art wp-art-blank">
                             <i
                                 class="ti"
-                                :class="takenOver ? 'ti-switch-horizontal' : error ? 'ti-brand-spotify' : 'ti-music'"
+                                :class="takenOver ? 'ti-switch-horizontal' : error ? errorIcon : 'ti-music'"
                                 aria-hidden="true"
                             ></i>
                         </div>
@@ -421,8 +548,21 @@ onBeforeUnmount(() => {
                             </div>
                         </div>
                         <div v-else-if="error">
-                            <h2 class="wp-title">This tab can't play</h2>
-                            <p class="wp-copy" role="alert" data-test="error">{{ error }}</p>
+                            <h2 class="wp-title">{{ errorTitle }}</h2>
+                            <p class="wp-copy" data-test="error">{{ errorCopy }}</p>
+                            <div v-if="spotifyCheck.action" class="wp-action">
+                                <a
+                                    :href="spotifyCheck.action.href"
+                                    class="btn btn-light btn-lg"
+                                    data-test="error-action"
+                                >
+                                    <i
+                                        class="icon ti me-1"
+                                        :class="errorKind === 'login' ? 'ti-brand-spotify' : 'ti-external-link'"
+                                    ></i
+                                    >{{ spotifyCheck.action.label }}
+                                </a>
+                            </div>
                         </div>
                         <div v-else-if="track" data-test="now-playing">
                             <h2 class="wp-title" data-test="track-name">{{ track.name }}</h2>
@@ -512,69 +652,20 @@ onBeforeUnmount(() => {
                     <div class="card">
                         <div class="card-header"><h2 class="card-title">Player status</h2></div>
                         <ul class="mp-checks" data-test="player-checks">
-                            <li>
-                                <span
-                                    class="status-dot"
-                                    :class="
-                                        takenOver ? 'status-yellow' : deviceReady ? 'status-green' : 'status-secondary'
-                                    "
-                                    aria-hidden="true"
-                                ></span>
+                            <li v-for="check in checks" :key="check.label">
+                                <span class="status-dot" :class="`status-${check.tone}`" aria-hidden="true"></span>
                                 <span>
-                                    <span class="mp-check-label">Device</span>
-                                    <span class="mp-check-detail">{{
-                                        takenOver
-                                            ? `${deviceName} (this tab) is no longer the active Web Player`
-                                            : deviceReady
-                                              ? `${deviceName} (this tab)`
-                                              : 'Not registered'
-                                    }}</span>
+                                    <span class="mp-check-label">{{ check.label }}</span>
+                                    <span class="mp-check-detail">{{ check.detail }}</span>
                                 </span>
-                                <span></span>
-                            </li>
-                            <li>
-                                <span
-                                    class="status-dot"
-                                    :class="reporting ? 'status-green' : takenOver ? 'status-secondary' : 'status-red'"
-                                    aria-hidden="true"
-                                ></span>
-                                <span>
-                                    <span class="mp-check-label">Reporting</span>
-                                    <span class="mp-check-detail">{{
-                                        reporting
-                                            ? 'Reporting to Music Party'
-                                            : takenOver
-                                              ? 'This tab stopped reporting'
-                                              : 'Not reporting to Music Party'
-                                    }}</span>
-                                </span>
-                                <span></span>
-                            </li>
-                            <li>
-                                <span
-                                    class="status-dot"
-                                    :class="lastUpdateAt === null ? 'status-secondary' : 'status-green'"
-                                    aria-hidden="true"
-                                ></span>
-                                <span>
-                                    <span class="mp-check-label">Last update</span>
-                                    <span class="mp-check-detail" data-test="last-update">{{ lastUpdateLabel }}</span>
-                                </span>
-                                <span></span>
-                            </li>
-                            <li>
-                                <span
-                                    class="status-dot"
-                                    :class="tokenOk ? 'status-green' : 'status-red'"
-                                    aria-hidden="true"
-                                ></span>
-                                <span>
-                                    <span class="mp-check-label">Spotify link</span>
-                                    <span class="mp-check-detail">{{
-                                        tokenOk ? 'Connected' : 'Spotify is not accepting the saved login'
-                                    }}</span>
-                                </span>
-                                <span></span>
+                                <a
+                                    v-if="check.action"
+                                    class="btn btn-sm"
+                                    :class="check.action.primary ? 'btn-primary' : 'btn-outline-primary'"
+                                    :href="check.action.href"
+                                    >{{ check.action.label }}</a
+                                >
+                                <span v-else></span>
                             </li>
                         </ul>
                     </div>
