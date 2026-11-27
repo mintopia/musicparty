@@ -14,9 +14,7 @@
     --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-/* ---------- Stage ----------
-   <section class="mp-stage" style="--np-image: url(art/cover-1.svg)">. The band's recipe: blurred cover at
-   55% over near-black, darkened by a veil. Text is white on it in both themes. */
+/* Dark in both themes by design, like the player band. */
 .mp-stage {
     position: relative;
     isolation: isolate;
@@ -74,13 +72,11 @@
     outline-offset: 2px;
 }
 
-/* Page head on a stage (Home): same h1 and summary, on the band's surface. */
 .mp-page-head.mp-stage {
     align-items: center;
     padding: var(--mp-space-6);
 }
 
-/* Huge numeral or code on a stage: 404, 500, the party code. */
 .mp-stage-mark {
     display: block;
     margin-block-end: var(--mp-space-3);
@@ -96,7 +92,6 @@
     margin-inline-end: -0.12em;
 }
 
-/* A cover tile sitting on the stage, same edge as the band's art. */
 .mp-stage-art {
     flex: none;
     inline-size: 88px;
@@ -122,8 +117,6 @@
     }
 }
 
-/* ---------- Section head ----------
-   h2 + count + actions. Heavier than a card title, lighter than the page head. */
 .mp-section-head {
     display: flex;
     flex-wrap: wrap;
@@ -167,9 +160,6 @@
     color: #fff;
 }
 
-/* ---------- Empty states ----------
-   Tabler .empty inside page content: the icon becomes a pair of record sleeves in the album-art colours,
-   the title steps up. Copy stays the app's (what is empty, what to do). */
 .page-body .empty:not(.pu-empty) {
     padding-block: var(--mp-space-7);
 }
@@ -228,14 +218,10 @@
     margin-inline: auto;
 }
 
-/* All clear: a success empty state (nothing flagged, no checks failing). Green sleeve, no art. */
 .page-body .empty.mp-all-clear {
     --mp-sleeve: var(--tblr-success);
 }
 
-/* ---------- State pill ----------
-   One colour per playback state, everywhere a party's state is listed (Home, Admin, Dashboard lists).
-   Playing carries three moving bars: the only looping motion outside the TV, and it means "live". */
 .mp-state {
     display: inline-flex;
     align-items: center;
@@ -300,8 +286,6 @@
     .mp-eq > i:nth-child(3) { transform: scaleY(0.4); }
 }
 
-/* ---------- Success mark ----------
-   A ring with a check that draws once (400ms, ease-out) when something worked: party created, theme saved. */
 .mp-success-mark {
     display: inline-grid;
     place-items: center;
