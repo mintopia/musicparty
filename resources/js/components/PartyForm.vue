@@ -19,10 +19,10 @@ defineEmits<{submit: []}>();
 
 const switches: {name: SwitchField; label: string}[] = [
     {name: 'active', label: 'Party is running'},
-    {name: 'allow_requests', label: 'Allow new songs to be added to the queue'},
-    {name: 'downvotes', label: 'Allow songs to be downvoted'},
+    {name: 'allow_requests', label: 'Accept requests'},
+    {name: 'downvotes', label: 'Allow downvotes'},
     {name: 'weighted', label: 'Raffle mode'},
-    {name: 'show_qrcode', label: 'Show QR Code on TV view'},
+    {name: 'show_qrcode', label: 'Show join QR code'},
     {name: 'flag_requests', label: 'Hold Flagged Requests for approval'},
 ];
 

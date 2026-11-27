@@ -76,7 +76,7 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                     Create party
                 </button>
                 <p class="text-secondary mt-2 mb-0" data-test="link-missing">
-                    Link both to host a party. {{ missing.join(' and ') }} still needs linking.
+                    Link both to host a party. {{ missing.join(' and ') }} {{ missing.length === 1 ? 'still needs' : 'still need' }} linking.
                 </p>
             </template>
         </div>
