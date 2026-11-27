@@ -246,6 +246,7 @@ class PartyDashboard
             'tv' => route('parties.tv', $party->code),
             'webPlayer' => $viewer->can('player', $party) ? route('parties.player', $party->code) : null,
             'encoreRelay' => $settings.'#encore-relay',
+            'relink' => route('linkedaccounts.create', 'spotify'),
             'join' => route('parties.show', $party->code),
             'fallbackSettings' => $settings,
         ];

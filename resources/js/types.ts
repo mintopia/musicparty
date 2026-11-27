@@ -271,13 +271,16 @@ export interface DashboardRequest extends LegacyUpcomingSong {
     sent: boolean;
 }
 
-export type DashboardIssueCode = 'relink_required' | 'party_inactive' | 'player_stale' | 'premium_required';
+export type DashboardIssueCode =
+    'relink_required' | 'party_inactive' | 'player_stale' | 'premium_required' | 'no_device' | 'outside';
+
+export type DashboardIssueAction = 'activate' | 'open_web_player' | 'start' | 'relink' | 'refresh_devices';
 
 export interface DashboardIssue {
     code: DashboardIssueCode;
     fact: string;
     detail: string;
-    action: {label: string; kind: 'activate'} | null;
+    action: {label: string; kind: DashboardIssueAction} | null;
 }
 
 export interface DashboardProps {
@@ -309,6 +312,7 @@ export interface DashboardProps {
         tv: string;
         webPlayer: string | null;
         encoreRelay: string;
+        relink: string;
         join: string;
         fallbackSettings: string;
     };

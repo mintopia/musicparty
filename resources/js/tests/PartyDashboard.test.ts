@@ -171,6 +171,7 @@ interface Options {
     nowPlaying?: DashboardProps['control']['nowPlaying'];
     nothingPlaying?: boolean;
     paused?: boolean;
+    link?: 'connected' | 'relink_required';
     myRating?: DashboardProps['myRating'];
 }
 
@@ -205,7 +206,7 @@ function makeProps(options: Options = {}): DashboardProps {
                 },
                 device: {id: 'd1', name: 'Main Hall Speaker'},
                 receivedAt: options.receivedAt ?? new Date().toISOString(),
-                link: 'connected',
+                link: options.link ?? 'connected',
                 polling: 'backup',
             },
             start: {
@@ -229,6 +230,7 @@ function makeProps(options: Options = {}): DashboardProps {
             tv: '/tv',
             webPlayer: options.webPlayer === undefined ? '/player' : options.webPlayer,
             encoreRelay: '/settings#encore-relay',
+            relink: '/profile/accounts/spotify/link',
             join: 'https://mp.test/parties/ABCD',
             fallbackSettings: '/settings#fallback',
         },
@@ -248,7 +250,7 @@ describe('control room strip', () => {
     it('shows only the empty state when nothing is playing, leaving Start Playback as the action', () => {
         const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
-        expect(wrapper.find('[data-test="nothing-playing"]').text()).toBe('Nothing playing');
+        expect(wrapper.find('[data-test="status-headline"]').text()).toBe('Nothing playing');
         expect(wrapper.find('[data-test="play-pause"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="rating"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
@@ -280,11 +282,11 @@ describe('control room strip', () => {
     });
 
     it('labels the resume button plainly and keeps the track and position in the message', () => {
-        const wrapper = mountPage({state: 'resume', target: target('resume', 72000)});
+        const wrapper = mountPage({state: 'resume', target: target('resume', 72000), nothingPlaying: true});
 
         expect(wrapper.find('[data-test="start-button"]').text()).toBe('Resume');
         expect(wrapper.find('[data-test="start-message"]').text()).toContain('Mr. Brightside at 1:12');
-        expect(wrapper.find('[data-test="start-badge"]').text()).toBe('Not playing');
+        expect(wrapper.find('[data-test="start-badge"]').text()).toBe('Nothing playing');
     });
 
     it('posts the selected device when starting, and disables restricted devices', async () => {
@@ -326,7 +328,7 @@ describe('control room strip', () => {
         ['relink_required', 409, 'Re-link needed'],
     ])('renders the %s state from a failed start', async (code, status, badge) => {
         respondWith('/api/v1/parties/ABCD/playback/start', failure(status, {message: 'nope', code}) as never);
-        const wrapper = mountPage({state: 'idle'});
+        const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
         await wrapper.find('[data-test="start-button"]').trigger('click');
         await flushPromises();
@@ -611,16 +613,71 @@ describe('needs attention', () => {
 describe('stale player issue', () => {
     const stale = {code: 'player_stale' as const, fact: 'Player not reporting', detail: 'Polling is off', action: null};
 
+    const longAgo = () => new Date(Date.now() - 600000).toISOString();
+
     it('is hidden while Encore is connected, even if the attention data is older', () => {
-        const wrapper = mountPage({connected: true, issues: [stale]});
+        const wrapper = mountPage({connected: true, issues: [stale], receivedAt: longAgo()});
 
         expect(wrapper.findAll('[data-test="issue-row"]')).toHaveLength(0);
     });
 
-    it('is shown when Encore is not known to be connected', () => {
-        const wrapper = mountPage({connected: null, issues: [stale]});
+    it('is shown once, from the derived status, when the player has gone quiet', () => {
+        const wrapper = mountPage({connected: null, issues: [stale], receivedAt: longAgo()});
+        const rows = wrapper.findAll('[data-test="issue-row"]');
 
-        expect(wrapper.findAll('[data-test="issue-row"]')).toHaveLength(1);
+        expect(rows).toHaveLength(1);
+        expect(rows[0].text()).toContain('stopped reporting 10 minutes ago');
+        expect(rows[0].find('[data-test="issue-action"]').attributes('href')).toBe('/player');
+    });
+});
+
+describe('one playback status', () => {
+    const longAgo = () => new Date(Date.now() - 600000).toISOString();
+
+    it('makes the status headline the first h2 and names it in the badge and attention item', () => {
+        const wrapper = mountPage({state: 'idle', connected: null, receivedAt: longAgo()});
+
+        expect(wrapper.find('h2').attributes('data-test')).toBe('status-headline');
+        expect(wrapper.get('[data-test="status-headline"]').text()).toBe('Player stale');
+        expect(wrapper.get('[data-test="start-badge"]').text()).toBe('Player stale');
+        expect(wrapper.get('[data-test="issue-row"]').text()).toContain('Player stale');
+        expect(wrapper.get('[data-test="health-age"]').text()).toBe('10 minutes ago · stale');
+    });
+
+    it('shows Re-link needed over every other state with the re-link action', () => {
+        const wrapper = mountPage({
+            state: 'no_device',
+            link: 'relink_required',
+            connected: null,
+            receivedAt: longAgo(),
+        });
+
+        expect(wrapper.get('[data-test="status-headline"]').text()).toBe('Re-link needed');
+        expect(wrapper.get('[data-test="start-badge"]').text()).toBe('Re-link needed');
+        expect(wrapper.get('[data-test="relink-button"]').attributes('href')).toBe('/profile/accounts/spotify/link');
+        expect(wrapper.get('[data-test="issue-action"]').text()).toBe('Re-link Spotify');
+        expect(wrapper.find('[data-test="device-picker"]').exists()).toBe(false);
+    });
+
+    it('keeps polling and device details inside a collapsed Diagnostics section', () => {
+        const wrapper = mountPage();
+        const diagnostics = wrapper.get('[data-test="diagnostics"]');
+
+        expect(diagnostics.element.hasAttribute('open')).toBe(false);
+        expect(diagnostics.find('[data-test="health-polling"]').exists()).toBe(true);
+        expect(diagnostics.find('[data-test="health-device"]').exists()).toBe(true);
+    });
+
+    it('follows the player as it reports over the websocket', async () => {
+        const wrapper = mountPage();
+        expect(wrapper.get('[data-test="status-headline"]').text()).toBe('Playing');
+
+        const next = {...makeProps().playerState};
+        next.status = {...next.status!, isPlaying: false};
+        echo.handlers['Party\\UpdatedEvent'](next as never);
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get('[data-test="status-headline"]').text()).toBe('Paused');
     });
 });
 
