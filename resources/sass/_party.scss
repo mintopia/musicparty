@@ -387,6 +387,10 @@
 
 .mp-pick { position: relative; inline-size: 100%; max-inline-size: 28rem; }
 .mp-pick .form-select { display: flex; align-items: center; gap: 0.625rem; min-block-size: 44px; text-align: start; }
+.mp-pick .form-select > small { color: var(--tblr-secondary-color); font-size: 0.8125rem; flex: none; }
+.mp-pick img.mp-cover, .mp-pick .mp-cover { inline-size: 32px; block-size: 32px; border-radius: 4px; object-fit: cover; flex: none; }
+.mp-cover-empty { display: block; flex: none; inline-size: 36px; block-size: 36px; border-radius: 4px; background: var(--tblr-bg-surface-secondary); border: 1px solid var(--tblr-border-color); }
+.mp-pick .mp-cover.mp-cover-empty { inline-size: 32px; block-size: 32px; }
 .mp-pick .mp-pick-label { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
 .mp-pick-menu.dropdown-menu.show {
@@ -400,6 +404,7 @@
 }
 
 .mp-pick-menu .mp-pick-head { padding: 0.5rem; border-block-end: 1px solid var(--tblr-border-color); }
+.mp-pick-menu .mp-pick-meta { padding: 0.5rem 0.75rem 0.25rem; color: var(--tblr-secondary-color); font-size: 0.8125rem; }
 .mp-pick-menu .mp-pick-list { max-block-size: 20rem; overflow-y: auto; }
 .mp-pick-menu .mp-pick-empty { padding: 0.75rem; color: var(--tblr-secondary-color); }
 
@@ -417,7 +422,11 @@
 }
 
 .mp-opt:hover { background: var(--tblr-bg-surface-secondary); }
-.mp-opt .mp-opt-name { flex: 1; min-inline-size: 0; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-opt img { inline-size: 36px; block-size: 36px; border-radius: 4px; object-fit: cover; flex: none; }
+.mp-opt .mp-opt-text { flex: 1; min-inline-size: 0; }
+.mp-opt .mp-opt-name { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-opt small { display: block; color: var(--tblr-secondary-color); }
+.mp-pick-foot { border-block-start: 1px solid var(--tblr-border-color); }
 .mp-opt[aria-selected='true'] { background: color-mix(in oklab, var(--tblr-primary) 10%, transparent); }
 .mp-opt[aria-selected='true'] .mp-opt-name { font-weight: 650; }
 .mp-opt .ti-check { color: var(--tblr-primary); }

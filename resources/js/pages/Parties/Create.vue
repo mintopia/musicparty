@@ -11,7 +11,7 @@ import SuccessMark from '@/components/SuccessMark.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {countryOptionsFor} from '@/lib/countries';
 import {initialCreateForm} from '@/lib/partyForm';
-import type {NamedOption, PartyFormValues} from '@/lib/partyForm';
+import type {NamedOption, PartyFormValues, PlaylistOption} from '@/lib/partyForm';
 import {dashboard, edit, store, tv} from '@/routes/parties';
 
 interface CreatedParty {
@@ -23,7 +23,8 @@ interface CreatedParty {
 
 const props = defineProps<{
     party: PartyFormValues;
-    playlists: NamedOption[];
+    playlists: PlaylistOption[];
+    hostName?: string;
     devices: NamedOption[];
     providerIds: string[];
     defaultCountry: string;
@@ -41,6 +42,7 @@ const STEP_FIELDS: Record<number, string[]> = {
 const form = useForm({
     provider_id: props.providerIds[0] ?? 'spotify',
     ...initialCreateForm(props.party, props.playlists, props.defaultCountry),
+    custom_backup_playlist_id: '',
 });
 
 const step = ref(1);
@@ -233,8 +235,11 @@ const spokenCode = computed(() => (props.createdParty?.code ?? '').split('').joi
                             <PlaylistPicker
                                 id="backup_playlist_id"
                                 v-model="form.backup_playlist_id"
+                                v-model:custom="form.custom_backup_playlist_id"
                                 :playlists="playlists"
-                                :invalid="Boolean(err('backup_playlist_id'))"
+                                :host-name="hostName"
+                                :provider-name="ucfirst(form.provider_id)"
+                                :invalid="Boolean(err('backup_playlist_id') ?? err('custom_backup_playlist_id'))"
                             />
                         </SettingRow>
                         <SettingRow

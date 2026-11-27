@@ -29,6 +29,12 @@ export interface NamedOption {
     name: string;
 }
 
+export interface PlaylistOption extends NamedOption {
+    imageUrl?: string | null;
+    trackCount?: number;
+    ownerName?: string | null;
+}
+
 export function initialPartyForm(party: PartyFormValues, playlists: NamedOption[], defaultCountry: string) {
     const listed = playlists.some((playlist) => playlist.id === party.backup_playlist_id);
 

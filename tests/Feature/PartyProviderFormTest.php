@@ -258,3 +258,27 @@ it('rejects a missing name and a fallback playlist outside the host list with fi
         ->assertSessionHasErrors(['name', 'backup_playlist_id']);
     expect(Party::count())->toBe(0);
 });
+
+it('sends cover, track count and owner for each playlist plus the host name on create', function () {
+    $this->actingAs($this->owner)->get(route('parties.create'))
+        ->assertInertia(fn ($page) => $page->where('playlists.0.trackCount', 1)->where('playlists.0.ownerName', 'me')->where('playlists.0.imageUrl', null)->where('hostName', $this->owner->nickname));
+});
+
+it('normalises a pasted playlist link or URI to the bare ID on create', function (string $pasted) {
+    $this->actingAs($this->owner)->post(route('parties.store'), [
+        'name' => 'Test', 'provider_id' => 'spotify', 'backup_playlist_id' => 'other', 'custom_backup_playlist_id' => $pasted,
+    ])->assertSessionDoesntHaveErrors();
+
+    expect(Party::query()->latest('id')->firstOrFail()->backup_playlist_id)->toBe('37i9dQZF1DXcBWIGoYBM5M');
+})->with([
+    'url' => 'https://open.spotify.com/playlist/37i9dQZF1DXcBWIGoYBM5M?si=abc123',
+    'localised url' => 'https://open.spotify.com/intl-de/playlist/37i9dQZF1DXcBWIGoYBM5M',
+    'uri' => 'spotify:playlist:37i9dQZF1DXcBWIGoYBM5M',
+    'bare id' => ' 37i9dQZF1DXcBWIGoYBM5M ',
+]);
+
+it('rejects a pasted playlist value that is not an ID', function (string $pasted) {
+    $this->actingAs($this->owner)->post(route('parties.store'), [
+        'name' => 'Test', 'provider_id' => 'spotify', 'backup_playlist_id' => 'other', 'custom_backup_playlist_id' => $pasted,
+    ])->assertSessionHasErrors('custom_backup_playlist_id');
+})->with(['empty' => '', 'junk' => 'not a playlist!', 'other site' => 'https://example.com/playlist/abc']);

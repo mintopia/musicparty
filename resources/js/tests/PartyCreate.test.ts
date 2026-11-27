@@ -65,8 +65,8 @@ const party: PartyFormValues = {
     max_requests: 2,
 };
 const playlists = [
-    {id: 'pl1', name: 'Chill'},
-    {id: 'pl2', name: 'Throwback'},
+    {id: 'pl1', name: 'Chill', imageUrl: 'https://img/chill.jpg', trackCount: 38, ownerName: 'Jess'},
+    {id: 'pl2', name: 'Throwback', imageUrl: null, trackCount: 1, ownerName: 'Jess'},
 ];
 const common = {
     playlists,
@@ -99,7 +99,7 @@ describe('create party wizard and edit form', () => {
     it('walks the three steps and requires only a name', async () => {
         inertia.submitted.length = 0;
         const wrapper = mount(Create, {
-            props: {...common, party: {...party, name: null}, providerIds: ['spotify', 'fake']},
+            props: {...common, hostName: 'Jess', party: {...party, name: null}, providerIds: ['spotify', 'fake']},
         });
 
         expect(wrapper.find('[aria-current="step"]').text()).toBe('Name');
@@ -115,7 +115,11 @@ describe('create party wizard and edit form', () => {
 
         await wrapper.find('#backup_playlist_id').trigger('click');
         const options = wrapper.findAll('[data-test="playlist-option"]');
-        expect(options.map((o) => o.text())).toEqual(['Chill', 'Throwback']);
+        expect(options.map((o) => o.text())).toEqual(['Chill38 tracks', 'Throwback1 track']);
+        expect(wrapper.find('[data-test="playlist-heading"]').text()).toBe("Jess's Spotify playlists");
+        expect(options[0]!.find('img').attributes('src')).toBe('https://img/chill.jpg');
+        expect(options[1]!.find('img').exists()).toBe(false);
+        expect(wrapper.find('[data-test="playlist-link-option"]').text()).toContain('Use a playlist link or ID');
         await options[1]!.trigger('click');
         await wrapper.find('form').trigger('submit');
         expect(wrapper.find('[aria-current="step"]').text()).toBe('Defaults');
@@ -133,7 +137,23 @@ describe('create party wizard and edit form', () => {
             name: 'Disco',
             backup_playlist_id: 'pl2',
         });
-        expect(inertia.submitted[0]!.data).not.toHaveProperty('custom_backup_playlist_id');
+        expect(inertia.submitted[0]!.data).toMatchObject({custom_backup_playlist_id: ''});
+    });
+
+    it('submits a pasted playlist link through the other path', async () => {
+        inertia.submitted.length = 0;
+        const wrapper = mount(Create, {props: {...common, hostName: 'Jess', party: {...party, name: 'Disco'}, providerIds: ['spotify']}});
+
+        await wrapper.find('form').trigger('submit');
+        await wrapper.find('#backup_playlist_id').trigger('click');
+        await wrapper.find('[data-test="playlist-link-option"]').trigger('click');
+        await wrapper.find('[data-test="playlist-link-input"]').setValue('https://open.spotify.com/playlist/abc123?si=x');
+        await wrapper.find('[data-test="create-defaults"]').trigger('click');
+
+        expect(inertia.submitted[0]!.data).toMatchObject({
+            backup_playlist_id: 'other',
+            custom_backup_playlist_id: 'https://open.spotify.com/playlist/abc123?si=x',
+        });
     });
 
     it('creates with defaults from the first step', async () => {
