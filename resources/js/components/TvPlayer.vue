@@ -294,6 +294,10 @@
         width: 100%;
     }
 
+    .tv-track-name {
+        -webkit-line-clamp: 3;
+    }
+
     .tv-art {
         width: 100%;
     }
@@ -301,6 +305,51 @@
     .tv-qr {
         position: static;
         align-self: center;
+    }
+}
+
+@media (max-width: 575px) {
+    .tv {
+        --gap: 1em;
+        padding: 1.25em 1.25em;
+    }
+
+    .tv-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 0.5em;
+    }
+
+    .tv-stage {
+        justify-content: flex-start;
+        gap: var(--gap);
+    }
+
+    .tv-now {
+        flex-wrap: nowrap;
+        align-items: flex-start;
+    }
+
+    .tv-art {
+        width: 9em;
+        flex: none;
+    }
+
+    .tv-now-body {
+        font-size: 1.1em;
+    }
+
+    .tv-track-name {
+        font-size: 1.3em;
+        margin-bottom: 0.3em;
+    }
+
+    .tv-line {
+        padding-bottom: 0.15em;
+    }
+
+    .tv-next-heading {
+        margin-bottom: 0.35em;
     }
 }
 </style>
