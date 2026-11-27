@@ -57,6 +57,8 @@ class ApplyPushedPlaybackState implements ShouldQueue
             return;
         }
 
-        $sync->apply($party, $state);
+        if (! $sync->apply($party, $state)) {
+            Log::warning("{$party}: Lost pushed frame {$this->event} because another sync holds the lock");
+        }
     }
 }

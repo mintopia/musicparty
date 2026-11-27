@@ -24,6 +24,7 @@ use App\Services\PlaybackSync;
 use Illuminate\Broadcasting\BroadcastManager;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection as ConnectionContract;
@@ -275,5 +276,97 @@ describe('Encore activity signal', function () {
 
         Cache::put(EncoreConnection::seenKey('ABC'), time(), EncoreConnection::seenSeconds());
         expect($connection->isConnected($party))->toBeTrue();
+    });
+});
+
+function encoreFrame(Party $party, array $frame): void
+{
+    new ApplyPushedPlaybackState("private-encore.{$party->code}", "client-{$frame['type']}", $frame)
+        ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
+}
+
+function encorePlaybackState(string $trackId, int $positionMs, int $timestampMs): array
+{
+    return [
+        'type' => 'playback_state',
+        'status' => 'playing',
+        'position' => ['position_ms' => $positionMs, 'timestamp_ms' => $timestampMs, 'speed' => 1.0],
+        'item' => ['uri' => "fake:track:{$trackId}", 'decorations' => ['playback' => ['duration_ms' => 180000]]],
+        'logged_in' => true,
+    ];
+}
+
+describe('Encore as the source of truth', function () {
+    beforeEach(function () {
+        $this->freezeSecond();
+        $provider = app(FakeMusicProvider::class);
+        foreach (['t1', 't2'] as $id) {
+            $provider->withTrack(new Track('fake', $id, "T {$id}", 180000, false, true, new AlbumRef("album-{$id}", 'Album', null), [new ArtistRef('artist1', 'Artist')]));
+        }
+    });
+
+    it('applies playback_state frames whose device timestamp is older than a preceding track_changed', function () {
+        $party = encoreParty();
+        $deviceNow = now()->getTimestampMs() - 3000;
+
+        encoreFrame($party, ['type' => 'track_changed', 'item' => ['uri' => 'fake:track:t1', 'decorations' => ['playback' => ['duration_ms' => 180000]]]]);
+        encoreFrame($party, encorePlaybackState('t2', 1000, $deviceNow));
+        encoreFrame($party, encorePlaybackState('t2', 2000, $deviceNow + 1000));
+
+        $fresh = $party->fresh();
+        expect($fresh->song->provider_track_id)->toBe('t2')
+            ->and(app(PlaybackStatus::class)->recall($fresh)->progressMs)->toBe(2000)
+            ->and($fresh->song_started_at->getTimestampMs())->toBe($deviceNow - 1000);
+    });
+
+    it('clamps a device timestamp from the future to server now', function () {
+        $party = encoreParty();
+
+        encoreFrame($party, encorePlaybackState('t1', 5000, now()->getTimestampMs() + 60000));
+
+        $fresh = $party->fresh();
+        expect($fresh->playback_sampled_at->getTimestampMs())->toBe(now()->getTimestampMs())
+            ->and($fresh->song_started_at->getTimestampMs())->toBe(now()->getTimestampMs() - 5000);
+    });
+
+    it('neither polls nor forces playback over fresh Encore state', function () {
+        $party = Party::factory()->create(['provider_id' => 'fake', 'active' => false, 'poll' => true, 'force' => true, 'device_id' => 'other']);
+        $provider = app(FakeMusicProvider::class);
+        encoreFrame($party, encorePlaybackState('t1', 1000, now()->getTimestampMs()));
+
+        $this->travel(10)->seconds();
+        app(PlaybackSync::class)->sync($party->fresh());
+
+        expect($provider->callsTo('currentPlayback'))->toBe([])
+            ->and($provider->callsTo('devices'))->toBe([])
+            ->and($party->fresh()->song->provider_track_id)->toBe('t1');
+    });
+
+    it('logs a failed command_result at warning with its error', function () {
+        Log::spy();
+
+        encoreFrame(encoreParty(), ['type' => 'command_result', 'command' => 'next', 'success' => false, 'error' => 'no next track']);
+
+        Log::shouldHaveReceived('warning')->once()->with(Mockery::pattern('/next.*no next track/'));
+    });
+
+    it('does not warn for a successful command_result', function () {
+        Log::spy();
+
+        encoreFrame(encoreParty(), ['type' => 'command_result', 'command' => 'next', 'success' => true]);
+
+        Log::shouldNotHaveReceived('warning');
+    });
+
+    it('warns when a frame is lost because another sync holds the lock', function () {
+        config(['musicparty.prevent_overlapping_updates' => true]);
+        $party = encoreParty();
+        Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS)->get();
+        Log::spy();
+
+        encoreFrame($party, encorePlaybackState('t1', 1000, now()->getTimestampMs()));
+
+        Log::shouldHaveReceived('warning')->once()->with(Mockery::pattern('/playback_state.*another sync/'));
+        expect($party->fresh()->song_id)->toBeNull();
     });
 });

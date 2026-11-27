@@ -69,13 +69,14 @@ class PlaybackSync
 
     /**
      * Single entry point for a known playback state: updates the current track, records the Played Track, tops up the Queue and broadcasts.
+     * Encore is authoritative, so its frames always apply; other sources drop states sampled before the last applied one.
      * Returns false when another sync holds the lock.
      */
     public function apply(Party $party, PlaybackState $state): bool
     {
         return $this->withLock($party, function () use ($party, $state): void {
             $party->refresh();
-            if ($party->playback_sampled_at !== null && $state->sampledAt->lessThan($party->playback_sampled_at)) {
+            if ($state->source !== PlaybackSource::Encore && $party->playback_sampled_at !== null && $state->sampledAt->lessThan($party->playback_sampled_at)) {
                 Log::debug("{$party}: Dropping stale-ordered playback state from {$state->source->value}");
 
                 return;
