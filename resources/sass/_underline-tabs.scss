@@ -33,3 +33,9 @@
         border-radius: 2px;
     }
 }
+
+@media (max-width: 575.98px) {
+    .underline-tabs {
+        gap: 1rem;
+    }
+}
