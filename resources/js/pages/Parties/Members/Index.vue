@@ -8,6 +8,7 @@ import Pagination from '@/components/Pagination.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchBar from '@/components/SearchBar.vue';
 import type {SearchChip} from '@/components/SearchBar.vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import RowMenu from '@/components/RowMenu.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {LegacyPartyState, Paginator, When} from '@/types';
@@ -111,6 +112,27 @@ function toggleChip(code: string): void {
     visit(query.value);
 }
 
+const banTarget = ref<MemberRow | null>(null);
+const banOpen = computed({
+    get: () => banTarget.value !== null,
+    set: (value: boolean) => {
+        if (!value) {
+            banTarget.value = null;
+        }
+    },
+});
+
+function canBan(member: MemberRow): boolean {
+    return member.roleCode !== 'owner' && member.roleCode !== 'banned';
+}
+
+function confirmBan(): void {
+    const member = banTarget.value;
+    if (member) {
+        router.patch(member.url, {role: 'banned'});
+    }
+}
+
 function initials(name: string): string {
     return name.slice(0, 2).toUpperCase();
 }
@@ -135,12 +157,7 @@ function initials(name: string): string {
             </div>
         </div>
 
-        <div
-            v-if="!party.canManage"
-            class="alert alert-info d-flex gap-3 align-items-center"
-            role="status"
-            data-test="members-readonly"
-        >
+        <div v-if="!party.canManage" class="alert alert-info mp-readonly" role="status" data-test="members-readonly">
             <i class="icon ti ti-eye" aria-hidden="true"></i>
             <div>
                 <b>Read-only for Moderators.</b> You can see everyone and their activity. Only the owner can change
@@ -187,9 +204,15 @@ function initials(name: string): string {
                                 ><i class="icon ti ti-list-details me-2" aria-hidden="true"></i>View activity</Link
                             >
                             <div class="dropdown-divider"></div>
-                            <Link class="dropdown-item text-danger" :href="member.editUrl ?? `${member.url}/edit`"
-                                ><i class="icon ti ti-ban me-2" aria-hidden="true"></i>Ban {{ member.nickname }}</Link
+                            <button
+                                v-if="canBan(member)"
+                                type="button"
+                                class="dropdown-item text-danger"
+                                data-test="ban-member"
+                                @click="banTarget = member"
                             >
+                                <i class="icon ti ti-ban me-2" aria-hidden="true"></i>Ban {{ member.nickname }}
+                            </button>
                         </RowMenu>
                     </div>
                 </li>
@@ -248,13 +271,15 @@ function initials(name: string): string {
                                         activity</Link
                                     >
                                     <div class="dropdown-divider"></div>
-                                    <Link
+                                    <button
+                                        v-if="canBan(member)"
+                                        type="button"
                                         class="dropdown-item text-danger"
-                                        :href="member.editUrl ?? `${member.url}/edit`"
                                         data-test="ban-member"
-                                        ><i class="icon ti ti-ban me-2" aria-hidden="true"></i>Ban
-                                        {{ member.nickname }}</Link
+                                        @click="banTarget = member"
                                     >
+                                        <i class="icon ti ti-ban me-2" aria-hidden="true"></i>Ban {{ member.nickname }}
+                                    </button>
                                 </RowMenu>
                             </td>
                         </tr>
@@ -282,5 +307,12 @@ function initials(name: string): string {
                 <Pagination class="ms-auto" :paginator="members" />
             </div>
         </div>
+        <ConfirmDialog
+            v-model="banOpen"
+            :title="`Ban ${banTarget?.nickname}?`"
+            :message="`${banTarget?.nickname} will not be able to make Requests or vote. You can change their role back at any time.`"
+            :confirm-label="`Ban ${banTarget?.nickname}`"
+            @confirm="confirmBan"
+        />
     </AppLayout>
 </template>
