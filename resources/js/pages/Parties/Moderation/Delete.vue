@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {LegacyPartyState} from '@/types';
@@ -22,11 +23,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Delete ${moderation.type_name} rule`">
         <template #breadcrumbs>
-            <ModerationBreadcrumbs :party="party">
-                <li class="breadcrumb-item active">
-                    <a :href="`${base}/delete`">Delete rule</a>
-                </li>
-            </ModerationBreadcrumbs>
+            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Delete rule'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

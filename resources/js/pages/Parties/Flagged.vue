@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {ref} from 'vue';
@@ -8,10 +10,8 @@ import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import TrackRow from '@/components/TrackRow.vue';
 import {useEcho} from '@/composables/useEcho';
-import {flaggedApproveUrl, flaggedRejectUrl, flaggedUrl} from '@/lib/flagged';
+import {flaggedApproveUrl, flaggedRejectUrl} from '@/lib/flagged';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import type {FlaggedRequest, LegacyPartyState, ModerationTabsProps} from '@/types';
 
 const props = defineProps<{
@@ -79,13 +79,7 @@ function confirmReject(): void {
 <template>
     <AppLayout :title="`Flagged requests - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="flaggedUrl(party.code)">Flagged</a>
-            </li>
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Flagged'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

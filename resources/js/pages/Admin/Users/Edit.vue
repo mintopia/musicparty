@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import UserBreadcrumbs from '@/components/UserBreadcrumbs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
@@ -31,9 +32,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${user.nickname}`">
         <template #breadcrumbs>
-            <UserBreadcrumbs :user="user">
-                <li class="breadcrumb-item active"><a :href="`/admin/users/${user.id}/edit`">Edit</a></li>
-            </UserBreadcrumbs>
+            <Breadcrumbs :items="[...adminUserCrumbs(user), {label: 'Edit'}]" />
         </template>
         <Head :title="`Edit ${user.nickname}`" />
         <div class="page-header mt-0">

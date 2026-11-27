@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {deleteMethod as confirmRemove, destroy} from '@/routes/linkedaccounts';
+import {destroy} from '@/routes/linkedaccounts';
 import {profile} from '@/routes/user';
 
 const props = defineProps<{account: {id: number; providerName: string}}>();
@@ -17,13 +18,13 @@ function submit(): void {
 <template>
     <AppLayout :title="`Remove Linked ${account.providerName} Account`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <Link :href="profile().url">Profile</Link>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="confirmRemove(account.id).url">Remove Linked {{ account.providerName }} Account</a>
-            </li>
+            <Breadcrumbs
+                :items="[
+                    ...homeCrumbs(),
+                    {label: 'Profile', href: profile().url},
+                    {label: `Remove Linked ${account.providerName} Account`},
+                ]"
+            />
         </template>
         <Head :title="`Remove Linked ${account.providerName} Account`" />
         <div class="page-header mt-0">

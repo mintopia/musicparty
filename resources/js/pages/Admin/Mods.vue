@@ -1,9 +1,11 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head} from '@inertiajs/vue3';
 import EmptyState from '@/components/EmptyState.vue';
 import ModPanel from '@/components/ModPanel.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {adminModUrl, adminModUsersUrl, adminModsUrl} from '@/lib/mods';
+import {adminModUrl, adminModUsersUrl} from '@/lib/mods';
 import type {AdminMod} from '@/types';
 
 defineProps<{mods: AdminMod[]}>();
@@ -12,8 +14,7 @@ defineProps<{mods: AdminMod[]}>();
 <template>
     <AppLayout title="Mod settings">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="'/'">Home</a></li>
-            <li class="breadcrumb-item active"><a :href="adminModsUrl()">Mods</a></li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Mods'}]" />
         </template>
         <Head title="Mod settings" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">

@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
-import UserBreadcrumbs from '@/components/UserBreadcrumbs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 interface ShowUser {
@@ -33,7 +34,7 @@ defineProps<{user: ShowUser; accounts: LinkedAccountRow[]}>();
 <template>
     <AppLayout :title="user.nickname">
         <template #breadcrumbs>
-            <UserBreadcrumbs :user="user" active />
+            <Breadcrumbs :items="adminUserCrumbs(user)" />
         </template>
         <Head :title="user.nickname" />
         <div class="page-header mt-0">

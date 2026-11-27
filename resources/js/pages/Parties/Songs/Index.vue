@@ -1,14 +1,15 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {reactive} from 'vue';
+import {computed, reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import SortHeader from '@/components/SortHeader.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import {index} from '@/routes/parties/songs';
 import type {LegacyPartyState, Paginator, When} from '@/types';
 
@@ -50,6 +51,10 @@ const form = reactive({
 
 const songsUrl = index(props.party.code).url;
 
+const filtered = computed(() =>
+    Boolean(props.filters.name || props.filters.artist || props.filters.album || props.filters.type),
+);
+
 function submit(): void {
     const query = Object.fromEntries(Object.entries(form).filter(([, value]) => value !== ''));
     router.get(songsUrl, {...query, order: props.filters.order, order_direction: props.filters.order_direction});
@@ -59,13 +64,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Requests - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="songsUrl">Requests</a>
-            </li>
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Requests'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -97,7 +96,7 @@ function submit(): void {
             </div>
             <div class="col-lg-9 col-md-12">
                 <div class="card">
-                    <div class="table-responsive">
+                    <div v-if="songs.data.length > 0" class="table-responsive">
                         <table class="table table-hover table-vcenter text-nowrap card-table">
                             <thead>
                                 <tr>
@@ -143,6 +142,9 @@ function submit(): void {
                                             <div class="col-auto">
                                                 <img
                                                     :src="song.imageUrl"
+                                                    alt=""
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     height="40"
                                                     width="40"
                                                     :title="song.albumName"
@@ -171,6 +173,20 @@ function submit(): void {
                             </tbody>
                         </table>
                     </div>
+                    <EmptyState
+                        v-else-if="filtered"
+                        icon="ti-music-off"
+                        title="No matching requests"
+                        description="Try a different name, artist, album or type."
+                    >
+                        <Link :href="songsUrl" class="btn btn-primary">Clear filters</Link>
+                    </EmptyState>
+                    <EmptyState
+                        v-else
+                        icon="ti-music-off"
+                        title="No requests yet"
+                        description="Songs requested at this party will appear here."
+                    />
                     <div class="card-footer d-flex align-items-center">
                         <p class="m-0 mb-1 text-muted">
                             Showing <span>{{ songs.from ?? 0 }}</span> to <span>{{ songs.to ?? 0 }}</span> of

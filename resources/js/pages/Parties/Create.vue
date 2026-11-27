@@ -1,11 +1,13 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, useForm} from '@inertiajs/vue3';
 import PartyForm from '@/components/PartyForm.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {initialPartyForm} from '@/lib/partyForm';
 import type {NamedOption, PartyFormValues} from '@/lib/partyForm';
 import {home} from '@/routes';
-import {create, store} from '@/routes/parties';
+import {store} from '@/routes/parties';
 
 const props = defineProps<{
     party: PartyFormValues;
@@ -30,10 +32,7 @@ function submit(): void {
 <template>
     <AppLayout title="Create Party">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="create().url">Create Party</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Create Party'}]" />
         </template>
         <Head title="Create Party" />
         <div class="page-header mt-0">

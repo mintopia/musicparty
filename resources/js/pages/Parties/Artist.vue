@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
+import Toast from '@/components/Toast.vue';
 import {Head, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, ref} from 'vue';
@@ -9,9 +12,8 @@ import TrackList from '@/components/TrackList.vue';
 import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import {show, search} from '@/routes/parties';
+import {search} from '@/routes/parties';
 import {show as showAlbum} from '@/routes/parties/albums';
 import type {LegacyPartyState, Paginator, TrackAnnotation} from '@/types';
 
@@ -70,14 +72,9 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
 <template>
     <AppLayout :title="title">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a :href="searchUrl">Search</a>
-            </li>
-            <li class="breadcrumb-item active">{{ artist?.name ?? 'Artist' }}</li>
+            <Breadcrumbs
+                :items="[...partyCrumbs(party), {label: 'Search', href: searchUrl}, {label: artist?.name ?? 'Artist'}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -140,6 +137,8 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                                     :src="album.image_url"
                                     :alt="album.name"
                                     class="card-img-top"
+                                    loading="lazy"
+                                    decoding="async"
                                 />
                                 <div class="card-body">{{ album.name }}</div>
                             </a>
@@ -151,8 +150,6 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                 </template>
             </template>
         </div>
-        <div v-if="message" class="position-fixed z-3 p-2 top-50 start-50 translate-middle" data-test="message">
-            <div class="alert alert-important alert-danger" role="alert">{{ message }}</div>
-        </div>
+        <Toast v-if="message" :message="message" variant="danger" data-test="message" @dismiss="message = null" />
     </AppLayout>
 </template>
