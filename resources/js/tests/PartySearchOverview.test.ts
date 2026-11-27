@@ -251,7 +251,7 @@ describe('Party search overview', () => {
         });
 
         expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "Clozing Tyme"');
-        expect(wrapper.text()).toContain("Check the spelling, or try the artist's name.");
+        expect(wrapper.text()).toContain("Check the spelling or try the artist's name.");
         expect(wrapper.find('[data-test="section-head"]').exists()).toBe(false);
     });
 });

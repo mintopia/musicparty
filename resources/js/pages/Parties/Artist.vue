@@ -86,6 +86,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <EmptyState
                 v-if="retry"
+                icon="ti-plug-connected-x"
                 title="Try again shortly"
                 description="The music provider is busy right now."
                 data-test="artist-retry"
@@ -94,6 +95,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
             </EmptyState>
             <EmptyState
                 v-else-if="artist === null"
+                icon="ti-user-off"
                 title="Artist not found"
                 description="This artist does not exist or is not available from this Party's music provider."
                 data-test="artist-not-found"
@@ -125,7 +127,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                     />
                 </div>
                 <h2 class="h3">Albums and singles</h2>
-                <EmptyState v-if="albums && albums.data.length === 0" title="No albums or singles" />
+                <EmptyState v-if="albums && albums.data.length === 0" icon="ti-disc-off" title="No albums or singles" />
                 <template v-else-if="albums">
                     <div class="row row-cards" data-test="artist-albums">
                         <div v-for="album in albums.data" :key="album.id" class="col-6 col-md-4 col-lg-3">

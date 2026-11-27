@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {Head, Link, useForm} from '@inertiajs/vue3';
+import EmptyState from '@/components/EmptyState.vue';
 import ScheduleRequestControl from '@/components/ScheduleRequestControl.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -227,9 +228,7 @@ function clearSchedule(): void {
                         <Pagination class="ms-auto" :paginator="votes" />
                     </div>
                 </div>
-                <div v-else class="empty" data-test="no-votes">
-                    <p>There have been no votes</p>
-                </div>
+                <EmptyState v-else icon="ti-thumb-up-off" title="No votes yet" data-test="no-votes" />
             </div>
             <div class="col-md-6">
                 <h2>Other Appearances</h2>
@@ -264,9 +263,7 @@ function clearSchedule(): void {
                         </table>
                     </div>
                 </div>
-                <div v-else class="empty" data-test="no-other">
-                    <p>This song has no other appearances</p>
-                </div>
+                <EmptyState v-else icon="ti-playlist-off" title="No other appearances" data-test="no-other" />
             </div>
         </div>
         <div class="row mt-4">
@@ -302,9 +299,7 @@ function clearSchedule(): void {
                         <Pagination class="ms-auto" :paginator="ratings" />
                     </div>
                 </div>
-                <div v-else class="empty" data-test="no-ratings">
-                    <p>There have been no ratings</p>
-                </div>
+                <EmptyState v-else icon="ti-star-off" title="No ratings yet" data-test="no-ratings" />
             </div>
         </div>
     </AppLayout>

@@ -40,7 +40,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             ></a>
         </div>
         <div class="card">
-            <EmptyState v-if="items.length === 0" title="Queue empty">
+            <EmptyState v-if="items.length === 0" icon="ti-playlist-off" title="Queue empty">
                 <a
                     v-if="!hasFallbackPlaylist"
                     :href="fallbackSettingsUrl"

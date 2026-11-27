@@ -50,7 +50,6 @@ class PartyAiReviewController extends Controller
             'playerState' => $party->getState(),
             'filters' => ['outcome' => $outcome ?? '', 'q' => $search, 'review' => $focus],
             'outcomes' => array_map(fn (AiReviewOutcome $case): array => ['code' => $case->value, 'name' => $case->label()], AiReviewOutcome::cases()),
-            'retentionDays' => max(1, (int) config('musicparty.ai_review_retention_days')),
             'holdsFlagged' => (bool) $party->flag_requests,
             'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
             'reviews' => $reviews,

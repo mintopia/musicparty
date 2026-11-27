@@ -23,7 +23,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <EmptyState v-if="tracks.data.length === 0" :title="emptyTitle" />
+    <EmptyState v-if="tracks.data.length === 0" icon="ti-music-off" :title="emptyTitle" />
     <div v-else>
         <div class="list-group list-group-flush">
             <TrackRow

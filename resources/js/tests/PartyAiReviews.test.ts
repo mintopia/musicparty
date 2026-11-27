@@ -99,7 +99,6 @@ function mountIndex(
             moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
             filters,
             outcomes,
-            retentionDays: 30,
             holdsFlagged: true,
             settingsUrl: '/parties/ABCD/edit#flag_requests',
             reviews: paginator(data, extra),
@@ -136,7 +135,6 @@ describe('AI reviews list', () => {
         expect(rows[1]?.find('[data-test="review-user"]').text()).toBe('Unknown');
         expect(rows[1]?.find('[data-test="review-reason"]').text()).toBe('None');
         expect(wrapper.text()).toContain('1-2 of 2');
-        expect(wrapper.text()).toContain('Kept for 30 days');
     });
 
     it('hides the not-held notice when flagged requests are held', () => {
@@ -174,7 +172,7 @@ describe('AI reviews list', () => {
     it('shows a no-match empty state with a way back when filters are active', () => {
         const wrapper = mountIndex([], {outcome: 'flag', q: 'zzz', review: null});
 
-        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No reviews match these filters');
+        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No matching reviews');
         expect(wrapper.find('[data-test="clear-filters"]').attributes('href')).toBe('/parties/ABCD/ai-reviews');
     });
 

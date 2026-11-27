@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed} from 'vue';
+import EmptyState from '@/components/EmptyState.vue';
 import SearchOverviewPlaceholder from '@/components/Search/SearchOverviewPlaceholder.vue';
 import SearchOverviewResults from '@/components/Search/SearchOverviewResults.vue';
 import SearchTypeResults from '@/components/Search/SearchTypeResults.vue';
@@ -89,13 +90,13 @@ const nothingFound = computed(() => {
                 </button>
             </div>
         </div>
-        <div v-else-if="nothingFound" class="card mt-4" data-test="results-empty">
-            <div class="card-body text-center py-5">
-                <i class="icon ti ti-mood-empty text-secondary fs-1"></i>
-                <h3 class="mt-3 mb-1">No results for "{{ query }}"</h3>
-                <div class="text-secondary">Check the spelling, or try the artist's name.</div>
-            </div>
-        </div>
+        <EmptyState
+            v-else-if="nothingFound"
+            icon="ti-search-off"
+            :title="`No results for &quot;${query}&quot;`"
+            description="Check the spelling or try the artist's name."
+            data-test="results-empty"
+        />
         <SearchOverviewResults
             v-else-if="found && found.view === 'overview'"
             :results="found"
