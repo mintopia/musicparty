@@ -5,7 +5,7 @@ export interface PartyInvite {
     code: string;
     name: string;
     host: string;
-    guests: number;
+    online: number;
     playback: PlaybackState;
     detail: string | null;
     cover: string | null;
@@ -32,7 +32,7 @@ const labels: Partial<Record<PlaybackState, string>> = {playing: 'Playing', paus
         <div>
             <h1 class="h3 mb-1">{{ party.name }}</h1>
             <p class="text-secondary">
-                Hosted by {{ party.host }}, {{ party.guests }} {{ party.guests === 1 ? 'guest' : 'guests' }}
+                Hosted by {{ party.host }}, {{ party.online }} {{ party.online === 1 ? 'guest' : 'guests' }} online
             </p>
             <p class="small">
                 <span class="status-dot" :class="dots[party.playback] ?? 'status-secondary'"></span

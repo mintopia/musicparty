@@ -4,6 +4,7 @@ import {reactive} from 'vue';
 import Home from '@/pages/Home.vue';
 import Edit from '@/pages/Users/Edit.vue';
 import LinkedAccountDelete from '@/pages/Users/LinkedAccountDelete.vue';
+import PartyInviteCard from '@/components/PartyInviteCard.vue';
 import Login from '@/pages/Users/Login.vue';
 import Profile from '@/pages/Users/Profile.vue';
 import Signup from '@/pages/Users/Signup.vue';
@@ -83,6 +84,12 @@ describe('user pages', () => {
         expect(wrapper.text()).toContain('Playing');
         expect(wrapper.find('input.mp-code-input').exists()).toBe(true);
         expect(wrapper.find('a[href="/parties/create"]').exists()).toBe(true);
+    });
+
+    it('shows guests online on the invite card with singular and plural', () => {
+        const party = {code: 'KXQB', name: 'Coyote LAN 26', host: 'Jess', online: 1, playback: 'idle' as const, detail: null, cover: null};
+        expect(mount(PartyInviteCard, {props: {party}}).text()).toContain('Hosted by Jess, 1 guest online');
+        expect(mount(PartyInviteCard, {props: {party: {...party, online: 5}}}).text()).toContain('Hosted by Jess, 5 guests online');
     });
 
     it('renders a login button per provider', () => {

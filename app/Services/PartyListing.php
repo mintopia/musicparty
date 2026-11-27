@@ -14,7 +14,7 @@ class PartyListing
     public function __construct(private readonly PlaybackStatus $status) {}
 
     /**
-     * @return Collection<int, array<string, mixed>>
+     * @return Collection<int, array{code: string, name: string, role: string, roleCode: string, playback: string, detail: ?string, cover: ?string, canManage: bool, canModerate: bool, url: string}>
      */
     public function forMember(User $user): Collection
     {
@@ -56,20 +56,16 @@ class PartyListing
         $sampledAt = $state?->sampledAt;
         $related = $party->getRelation('song');
         $song = $related instanceof Song ? $related : null;
-        $playback = match (true) {
-            $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES)) => 'stale',
-            $state === null || $song === null || $state->trackId !== $song->provider_track_id => 'idle',
-            $state->isPlaying => 'playing',
-            default => 'paused',
+        [$playback, $detail] = match (true) {
+            $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES)) => ['stale', 'last update '.$sampledAt->diffForHumans()],
+            $state === null || $song === null || $state->trackId !== $song->provider_track_id => ['idle', $party->backup_playlist_id !== null ? 'Fallback Playlist is next' : null],
+            $state->isPlaying => ['playing', $song->name],
+            default => ['paused', $song->name],
         };
 
         return [
             'playback' => $playback,
-            'detail' => match ($playback) {
-                'stale' => 'last update '.$sampledAt?->diffForHumans(),
-                'playing', 'paused' => $song?->name,
-                default => $party->backup_playlist_id !== null ? 'Fallback Playlist is next' : null,
-            },
+            'detail' => $detail,
             'cover' => $song?->album->image_url ?: null,
         ];
     }

@@ -3,7 +3,10 @@
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyMember;
+use App\Models\UpcomingSong;
 use App\Models\User;
+use App\Models\Vote;
 use App\Services\SocialProviders\DiscordProvider;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -70,6 +73,27 @@ it('shows the party on the login page for a guest who came from its link', funct
         ->where('party.code', 'KXQB')
         ->where('party.name', $party->name)
         ->where('party.host', $party->user->nickname));
+});
+
+it('counts only members active in the last 15 minutes as guests online', function () {
+    $this->seed(RolesSeeder::class);
+    $party = Party::factory()->create(['code' => 'KXQB']);
+    $song = UpcomingSong::factory()->create(['party_id' => $party->id]);
+    $member = fn () => PartyMember::factory()->create(['party_id' => $party->id]);
+
+    $voter = $member();
+    Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $voter->user_id]);
+    $requester = $member();
+    UpcomingSong::factory()->create(['party_id' => $party->id, 'user_id' => $requester->user_id]);
+    $idle = $member();
+    Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $idle->user_id, 'updated_at' => now()->subMinutes(20)]);
+    $banned = PartyMember::factory()->create(['party_id' => $party->id, 'banned' => true]);
+    Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $banned->user_id]);
+    Vote::factory()->create(['upcoming_song_id' => $song->id]);
+
+    $this->get('/parties/KXQB');
+
+    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('party.online', 2));
 });
 
 it('shows no party on the login page without a party link', function () {
