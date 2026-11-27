@@ -548,7 +548,7 @@
 .mp-wizard .card-footer { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .mp-wizard h2.mp-step-title { font-size: 1.25rem; margin: 0 0 0.25rem; }
 .mp-wizard .setting-row:last-child { border-bottom: 0; }
-.mp-wizard .mp-sub { margin: 0.25rem 0 0; color: var(--tblr-secondary-color); }
+.mp-wizard .mp-sub { margin: 0.25rem 0 0; color: var(--tblr-secondary-color); white-space: normal; }
 
 .mp-sec {
     margin: 0;

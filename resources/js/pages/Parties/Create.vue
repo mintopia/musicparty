@@ -5,11 +5,13 @@ import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed, ref, watch} from 'vue';
 import CopyButton from '@/components/CopyButton.vue';
 import PlaylistPicker from '@/components/PlaylistPicker.vue';
+import OptionPicker from '@/components/OptionPicker.vue';
 import SettingRow from '@/components/SettingRow.vue';
 import StageSurface from '@/components/StageSurface.vue';
 import SuccessMark from '@/components/SuccessMark.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {countryOptionsFor} from '@/lib/countries';
+import {timezoneOffsetLabel} from '@/lib/timezones';
 import {initialCreateForm} from '@/lib/partyForm';
 import type {NamedOption, PartyFormValues, PlaylistOption} from '@/lib/partyForm';
 import {dashboard, edit, store, tv} from '@/routes/parties';
@@ -33,6 +35,7 @@ const props = defineProps<{
     createdParty?: CreatedParty | null;
 }>();
 
+const DEFAULT_MAX_REQUESTS = 3;
 const STEPS = ['Name', 'Music', 'Defaults'];
 const STEP_FIELDS: Record<number, string[]> = {
     1: ['name', 'provider_id'],
@@ -44,10 +47,21 @@ const form = useForm({
     ...initialCreateForm(props.party, props.playlists, props.defaultCountry),
     custom_backup_playlist_id: '',
 });
+form.max_requests = props.party.max_requests ?? DEFAULT_MAX_REQUESTS;
 
 const step = ref(1);
 const nameError = ref('');
-const countries = computed(() => countryOptionsFor(form.country));
+const countryOptions = computed(() =>
+    countryOptionsFor(form.country).map((option) => ({value: option.code, label: option.name, meta: option.code})),
+);
+const timezoneOptions = computed(() => [
+    {value: '', label: `Use instance timezone (${props.instanceTimezone})`},
+    ...props.timezones.map((identifier) => ({
+        value: identifier,
+        label: identifier,
+        meta: timezoneOffsetLabel(identifier),
+    })),
+]);
 const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value.slice(1);
 
 const switches: {name: 'allow_requests' | 'downvotes' | 'explicit' | 'flag_requests'; label: string; hint?: string}[] =
@@ -327,17 +341,13 @@ const spokenCode = computed(() => (props.createdParty?.code ?? '').split('').joi
                             hint="Used for search and browse results"
                             :error="err('country')"
                         >
-                            <select
+                            <OptionPicker
                                 id="country"
                                 v-model="form.country"
-                                name="country"
-                                class="form-select"
-                                :class="{'is-invalid': err('country')}"
-                            >
-                                <option v-for="option in countries" :key="option.code" :value="option.code">
-                                    {{ option.name }} · {{ option.code }}
-                                </option>
-                            </select>
+                                label="Country"
+                                :options="countryOptions"
+                                :invalid="Boolean(err('country'))"
+                            />
                         </SettingRow>
                         <SettingRow
                             label="Timezone"
@@ -345,18 +355,13 @@ const spokenCode = computed(() => (props.createdParty?.code ?? '').split('').joi
                             hint="Used by time-based mods and Scheduled Requests. Blank uses the instance timezone"
                             :error="err('timezone')"
                         >
-                            <select
+                            <OptionPicker
                                 id="timezone"
                                 v-model="form.timezone"
-                                name="timezone"
-                                class="form-select"
-                                :class="{'is-invalid': err('timezone')}"
-                            >
-                                <option value="">Use instance timezone ({{ instanceTimezone }})</option>
-                                <option v-for="identifier in timezones" :key="identifier" :value="identifier">
-                                    {{ identifier }}
-                                </option>
-                            </select>
+                                label="Timezone"
+                                :options="timezoneOptions"
+                                :invalid="Boolean(err('timezone'))"
+                            />
                         </SettingRow>
                     </template>
                 </div>

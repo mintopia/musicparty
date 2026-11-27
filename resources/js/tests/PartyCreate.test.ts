@@ -123,8 +123,12 @@ describe('create party wizard and edit form', () => {
         await options[1]!.trigger('click');
         await wrapper.find('form').trigger('submit');
         expect(wrapper.find('[aria-current="step"]').text()).toBe('Defaults');
-        for (const name of ['country', 'timezone', 'max_requests', 'show_qrcode']) {
+        for (const name of ['max_requests', 'show_qrcode']) {
             expect(wrapper.find(`[name="${name}"]`).exists(), name).toBe(true);
+        }
+        for (const id of ['country', 'timezone']) {
+            expect(wrapper.find(`#${id}`).exists(), id).toBe(true);
+            expect(wrapper.find(`select#${id}`).exists(), id).toBe(false);
         }
 
         await wrapper.find('[data-test="back"]').trigger('click');
@@ -138,6 +142,17 @@ describe('create party wizard and edit form', () => {
             backup_playlist_id: 'pl2',
         });
         expect(inertia.submitted[0]!.data).toMatchObject({custom_backup_playlist_id: ''});
+    });
+
+    it('defaults requests per person to 3 when the party has none', async () => {
+        const wrapper = mount(Create, {
+            props: {...common, party: {...party, name: 'Disco', max_requests: null}, providerIds: ['spotify']},
+        });
+
+        await wrapper.find('form').trigger('submit');
+        await wrapper.find('form').trigger('submit');
+
+        expect((wrapper.find('#max_requests').element as HTMLInputElement).value).toBe('3');
     });
 
     it('submits a pasted playlist link through the other path', async () => {
