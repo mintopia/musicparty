@@ -41,6 +41,11 @@ When working in a worktree you can use docker to create an environment using doc
 Ensure you set the compose project name correctly to avoid clashes.
 You may need to do a vite build to create a vite manifest within the worktree.
 
+`docker compose exec` bypasses the entrypoint and runs as root, so anything it writes
+(Wayfinder output, `storage/`, `public/build`) ends up root-owned and breaks worktree
+cleanup. Always exec as the checkout owner:
+`docker compose -p <project> exec --user "$(id -u):$(id -g)" musicparty php artisan ...`
+
 ### Testing
 
 While editing, run specific unit tests only. CI will be configured to do full
@@ -99,7 +104,8 @@ used or there should be an explicit ADR why not.
 
 ### Laravel Boost MCP
 
-`.mcp.json` starts `laravel-boost` with `docker compose -p musicparty exec -T musicparty php artisan boost:mcp`,
+`.mcp.json` starts `laravel-boost` with `docker compose -p musicparty exec -T --user "$(id -u):$(id -g)" musicparty php artisan boost:mcp`
+(via `sh -c` so the uid expands),
 so it runs in the dev container (PHP 8.5, vendor installed, DB and Redis reachable).
 The host PHP is older than the `^8.5` requirement and worktrees have no `vendor/`,
 so `php artisan boost:mcp` on the host fails and the client times out after 30 s.
