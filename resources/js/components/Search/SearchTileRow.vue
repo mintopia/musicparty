@@ -1,9 +1,36 @@
 <script setup lang="ts">
+import {onBeforeUnmount, onMounted, onUpdated, ref} from 'vue';
+
 defineProps<{round?: boolean}>();
+
+const row = ref<HTMLElement | null>(null);
+let observer: ResizeObserver | null = null;
+
+function hideOverflow(): void {
+    const el = row.value;
+    if (!el) {
+        return;
+    }
+    const columns = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length;
+    Array.from(el.children).forEach((child, index) => {
+        (child as HTMLElement).inert = index >= columns;
+    });
+}
+
+onMounted(() => {
+    hideOverflow();
+    if (typeof ResizeObserver !== 'undefined' && row.value) {
+        observer = new ResizeObserver(hideOverflow);
+        observer.observe(row.value);
+    }
+});
+
+onUpdated(hideOverflow);
+onBeforeUnmount(() => observer?.disconnect());
 </script>
 
 <template>
-    <div class="search-tile-row" :class="{'search-tile-row-round': round}">
+    <div ref="row" class="search-tile-row" :class="{'search-tile-row-round': round}">
         <slot />
     </div>
 </template>
