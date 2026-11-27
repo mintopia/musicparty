@@ -1,4 +1,5 @@
 // @vitest-environment node
+import {readFileSync} from 'node:fs';
 import {build} from 'vite';
 import {cssTarget} from '../../../vite.css-target';
 import {describe, expect, it} from 'vitest';
@@ -54,5 +55,43 @@ describe('design token defaults in the built CSS', () => {
         const css = await builtCss(appCssEntry);
 
         expect(css).not.toContain('--lightningcss-');
+    });
+
+    it('declares per-mode muted and text variants, and re-resolves secondary text in the dark scope', async () => {
+        const css = await builtCss(appCssEntry);
+
+        expect(css).toMatch(/\[data-bs-theme=dark\][^{]*\{[^}]*--mp-default-muted:/);
+        expect(css).toMatch(/\[data-bs-theme=dark\][^{]*\{[^}]*--mp-default-primary-text:/);
+        expect(css).toMatch(/\[data-bs-theme=dark\][^{]*\{[^}]*--tblr-secondary-color:/);
+        expect(css).not.toMatch(/(^|[},])\s*:(root|host)[^{]*\{[^}]*--mp-(primary|muted|danger|warning|success)\s*:/);
+    });
+
+    it('self-hosts Inter instead of importing it from a CDN', async () => {
+        const css = await builtCss(appCssEntry);
+
+        expect(css).not.toContain('rsms.me');
+        expect(css).toMatch(/font-family:\s*"?Inter Variable"?/);
+        expect(css).toMatch(/font-display:\s*swap/);
+    });
+});
+
+describe('dashboard deck component styles', () => {
+    const deckComponents = [
+        'PlayerUnit',
+        'UpNextDeck',
+        'DevicePicker',
+        'SeekBar',
+        'StartPlaybackPanel',
+        'HealthGrid',
+        'NeedsAttention',
+        'QuickLinks',
+    ];
+
+    it.each(deckComponents)('%s uses tokens, not raw colour literals', (name) => {
+        const source = readFileSync(new URL(`../components/Dashboard/${name}.vue`, import.meta.url).pathname, 'utf8');
+        const style = source.slice(source.indexOf('<style'));
+
+        expect(style).not.toMatch(/rgba?\(|#[0-9a-f]{3,8}\b/i);
+        expect(style).not.toMatch(/color:[^;]*!important/);
     });
 });

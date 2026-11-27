@@ -74,7 +74,7 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
     display: grid;
     grid-template-columns: repeat(5, minmax(0, 1fr));
     margin-top: 16px;
-    border-top: 1px solid rgba(255, 255, 255, 0.12);
+    border-top: 1px solid var(--mp-deck-divider);
 }
 .health > div {
     padding: 10px 12px 0 0;
@@ -82,7 +82,7 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
 }
 .lbl {
     font-size: 0.72rem;
-    color: rgba(255, 255, 255, 0.6);
+    color: var(--mp-deck-muted);
 }
 .val {
     font-weight: 600;
@@ -92,7 +92,7 @@ const pollingLabel = computed(() => ({off: 'Off', on: 'On', backup: 'On, as back
     text-overflow: ellipsis;
 }
 .warn {
-    color: #fde68a;
+    color: var(--mp-deck-accent-warn);
 }
 @container (max-width: 620px) {
     .health {

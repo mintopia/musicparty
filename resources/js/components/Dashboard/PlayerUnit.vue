@@ -163,11 +163,13 @@ async function rate(value: number): Promise<void> {
 <style scoped>
 .pu {
     container-type: inline-size;
-    background: rgba(255, 255, 255, 0.05);
-    border: 1px solid rgba(255, 255, 255, 0.12);
+    background: var(--mp-deck-surface);
+    border: 1px solid var(--mp-deck-border);
     border-radius: 14px;
     padding: 20px;
-    color: #fff;
+    color: var(--mp-deck-text);
+    --tblr-secondary: var(--mp-deck-muted);
+    --tblr-muted: var(--mp-deck-muted);
     height: 100%;
 }
 .pu-art {
@@ -182,10 +184,10 @@ async function rate(value: number): Promise<void> {
     height: 168px;
     border-radius: 4px;
     object-fit: cover;
-    box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+    box-shadow: inset 0 0 0 1px var(--mp-deck-cover-edge);
 }
 .pu-cover-blank {
-    background: rgba(255, 255, 255, 0.1);
+    background: var(--mp-deck-raised);
 }
 .pu-title {
     font-size: 1.9rem;
@@ -194,7 +196,7 @@ async function rate(value: number): Promise<void> {
     letter-spacing: -0.01em;
 }
 .np-meta {
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--mp-deck-muted);
 }
 .np-meta .ti {
     opacity: 0.8;
@@ -233,20 +235,20 @@ async function rate(value: number): Promise<void> {
     font-size: 2.4rem;
 }
 .btn-ondark {
-    --tblr-btn-bg: rgba(255, 255, 255, 0.1);
-    --tblr-btn-border-color: rgba(255, 255, 255, 0.22);
-    --tblr-btn-color: #fff;
-    --tblr-btn-hover-bg: rgba(255, 255, 255, 0.2);
-    --tblr-btn-hover-border-color: rgba(255, 255, 255, 0.35);
-    --tblr-btn-hover-color: #fff;
-    --tblr-btn-disabled-color: rgba(255, 255, 255, 0.4);
+    --tblr-btn-bg: var(--mp-deck-raised);
+    --tblr-btn-border-color: var(--mp-deck-border-strong);
+    --tblr-btn-color: var(--mp-deck-text);
+    --tblr-btn-hover-bg: var(--mp-deck-raised-hover);
+    --tblr-btn-hover-border-color: var(--mp-deck-border-strong);
+    --tblr-btn-hover-color: var(--mp-deck-text);
+    --tblr-btn-disabled-color: var(--mp-deck-disabled);
 }
 .pu-rate {
     justify-self: end;
     display: flex;
     align-items: center;
     gap: 4px;
-    color: rgba(255, 255, 255, 0.8);
+    color: var(--mp-deck-muted);
 }
 .pu-rate .btn {
     width: 40px;
@@ -260,7 +262,7 @@ async function rate(value: number): Promise<void> {
 .pu-hint {
     margin-top: 12px;
     font-size: 0.8rem;
-    color: #fde68a;
+    color: var(--mp-deck-accent-warn);
     display: flex;
     gap: 6px;
     align-items: flex-start;

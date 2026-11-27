@@ -123,12 +123,12 @@ class Theme extends Model
         }
         if (isset($this->validTokens()['primary'])) {
             $css .= "    --mp-primary-rgb: {$this->rgb('primary')};\n";
-            $css .= "    --tblr-link-color: var(--mp-primary);\n    --tblr-link-color-rgb: var(--mp-primary-rgb);\n";
-            $css .= "    --tblr-link-hover-color: var(--mp-primary);\n    --tblr-link-hover-color-rgb: var(--mp-primary-rgb);\n";
+            $css .= "    --tblr-link-color: var(--mp-text-primary);\n    --tblr-link-color-rgb: var(--mp-primary-rgb);\n";
+            $css .= "    --tblr-link-hover-color: var(--mp-text-primary);\n    --tblr-link-hover-color-rgb: var(--mp-primary-rgb);\n";
         }
         $css .= "}\n\n";
-        $css .= ".breadcrumb a {\n    --tblr-breadcrumb-link-color: var(--mp-primary);\n}\n\n";
-        $css .= ".btn-link, .btn-link:hover {\n    color: var(--mp-primary);\n}\n\n";
+        $css .= ".breadcrumb a {\n    --tblr-breadcrumb-link-color: var(--mp-text-primary);\n}\n\n";
+        $css .= ".btn-link, .btn-link:hover {\n    color: var(--mp-text-primary);\n}\n\n";
         $css .= ".border-primary {\n    border-color: var(--mp-primary) !important;\n}\n";
         if (trim((string) $this->css) !== '') {
             $css .= "\n/* Custom stylesheet */\n{$this->scopedCustomCss()}\n";
