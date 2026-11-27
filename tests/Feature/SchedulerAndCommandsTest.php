@@ -58,6 +58,7 @@ dataset('scheduled entries', [
     'minute mods' => ['mods:minute', '* * * * *'],
     'hour mods' => ['mods:hour', '0 * * * *'],
     'day mods' => ['mods:day', '0 0 * * *'],
+    'scheduler heartbeat' => ['admin:scheduler-heartbeat', '* * * * *'],
 ]);
 
 it('registers every scheduled entry with its frequency and onOneServer', function (string $key, string $expression) {
@@ -71,7 +72,7 @@ it('registers every scheduled entry with its frequency and onOneServer', functio
 it('registers exactly the known scheduled entries', function () {
     expect(array_keys(scheduledEvents()))->toEqualCanonicalizing([
         'sanctum:prune-expired --hours=24', 'model:prune --model='.escapeshellarg(AiReview::class), 'party:fallback', 'party:force', 'party:contextplaylist',
-        'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day',
+        'party:refreshaccesstokens', 'mods:minute', 'mods:hour', 'mods:day', 'admin:scheduler-heartbeat',
     ]);
 });
 

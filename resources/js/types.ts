@@ -399,3 +399,35 @@ export interface AiReviewDetail extends AiReviewRow {
     trackId: string;
     trackProvider: string;
 }
+
+export interface AdminDashboardAction {
+    label: string;
+    url: string;
+}
+
+export interface AdminDashboardParty {
+    code: string;
+    name: string;
+    url: string;
+    owner: string;
+    state: 'playing' | 'paused' | 'stale' | 'idle' | 'error';
+    stateLabel: string | null;
+    stateDetail: string | null;
+    track: {name: string; artists: string; image: string | null; lastKnown: boolean} | null;
+    guestsOnline: number | null;
+    requestsWaiting: number;
+    flagged: number;
+}
+
+export interface AdminDashboardProps {
+    generatedAt: string;
+    liveParties: AdminDashboardParty[];
+    quietFor: string | null;
+    attention: {key: string; severity: 'error' | 'warn'; title: string; detail: string; action: AdminDashboardAction}[];
+    health: {key: string; label: string; status: 'ok' | 'warn' | 'error'; detail: string; link: string | null}[];
+    activity: {
+        stats: {signUpsThisWeek: number; partiesThisWeek: number; playedToday: number; users: number};
+        recent: {icon: string; text: string; at: string}[];
+    };
+    links: {pulse: string; horizon: string; createParty: string};
+}

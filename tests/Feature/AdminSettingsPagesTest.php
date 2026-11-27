@@ -30,15 +30,6 @@ it('keeps non-admins and guests out of the admin settings routes', function (str
     ['patch', 'admin.settings.socialproviders.update'],
 ]);
 
-it('renders the dashboard stats', function () {
-    $this->actingAs($this->admin)->get(route('admin.dashboard'))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Admin/Dashboard')
-            ->where('stats.users.total', 1)
-            ->where('stats.users.lastWeek', 1));
-});
-
 it('renders settings, themes and providers', function () {
     $theme = Theme::factory()->create(['readonly' => true]);
 

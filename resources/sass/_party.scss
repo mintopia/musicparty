@@ -1055,3 +1055,83 @@
 .mp-cell > div { min-inline-size: 0; }
 .table td:first-child a.fw-medium { white-space: nowrap; }
 @media (max-width: 575.98px) { .btn-list .btn-sm, .mp-cell a.fw-medium { min-block-size: 44px; } .mp-cell a.fw-medium { display: inline-flex; align-items: center; } }
+
+.mp-num {
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-grid-7-5 {
+    display: grid;
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+    gap: var(--mp-space-5);
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .mp-grid-7-5 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.mp-sub {
+    display: block;
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+}
+
+.mp-cell {
+    display: flex;
+    align-items: center;
+    gap: var(--mp-space-3);
+    min-inline-size: 0;
+
+    > div {
+        min-inline-size: 0;
+    }
+
+    .mp-sub {
+        white-space: nowrap;
+    }
+}
+
+.mp-ellip {
+    display: block;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.mp-admin-dash {
+    img.mp-art {
+        inline-size: 32px;
+        block-size: 32px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex: none;
+    }
+
+    .mp-checks .btn {
+        white-space: nowrap;
+    }
+
+    @media (pointer: coarse), (max-width: 575.98px) {
+        .btn {
+            min-block-size: 44px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .mp-page-head .btn-list {
+            inline-size: 100%;
+        }
+
+        .mp-checks > li {
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+
+        .mp-checks > li > .btn {
+            grid-column: 2;
+            justify-self: start;
+        }
+    }
+}
