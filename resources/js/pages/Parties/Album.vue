@@ -90,6 +90,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
             <EmptyState
                 v-if="retry"
+                icon="ti-plug-connected-x"
                 title="Try again shortly"
                 description="The music provider is busy right now."
                 data-test="album-retry"
@@ -98,6 +99,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
             </EmptyState>
             <EmptyState
                 v-else-if="album === null"
+                icon="ti-disc-off"
                 title="Album not found"
                 description="This album does not exist or is not available from this Party's music provider."
                 data-test="album-not-found"

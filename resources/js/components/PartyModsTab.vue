@@ -35,8 +35,9 @@ function generalErrors(modCode: string): string[] {
 <template>
     <EmptyState
         v-if="mods.length === 0"
+        icon="ti-puzzle-off"
         title="No mods available"
-        description="There are no mods installed on this instance yet."
+        description="No mods are installed on this instance."
     />
     <div v-else>
         <section v-for="group in groups" :key="group.name" class="mod-group" :data-group="group.name">

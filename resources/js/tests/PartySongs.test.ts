@@ -128,9 +128,9 @@ describe('Party songs show', () => {
 
         expect(wrapper.text()).toContain('Fallback Track');
         expect(wrapper.text()).toContain('Not Sent');
-        expect(wrapper.text()).toContain('There have been no votes');
-        expect(wrapper.text()).toContain('This song has no other appearances');
-        expect(wrapper.text()).toContain('There have been no ratings');
+        expect(wrapper.text()).toContain('No votes yet');
+        expect(wrapper.text()).toContain('No other appearances');
+        expect(wrapper.text()).toContain('No ratings yet');
         expect(wrapper.text()).not.toContain('View on Spotify');
         expect(wrapper.text()).toContain('Moderate');
     });

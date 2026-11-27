@@ -95,9 +95,14 @@ function confirmReject(): void {
         <div class="row">
             <div class="col-12">
                 <div v-if="error" class="alert alert-danger" role="alert" data-test="error">{{ error }}</div>
-                <div class="card">
-                    <EmptyState v-if="items.length === 0" title="No flagged requests" />
-                    <div v-else class="list-group list-group-flush">
+                <EmptyState
+                    v-if="items.length === 0"
+                    icon="ti-flag-off"
+                    title="No flagged requests"
+                    description="Requests held for approval appear here."
+                />
+                <div v-else class="card">
+                    <div class="list-group list-group-flush">
                         <TrackRow v-for="item in items" :key="item.id" :track="item.track" hide-actions>
                             <template #decoration>
                                 <div class="mt-1" data-test="flagged-item">

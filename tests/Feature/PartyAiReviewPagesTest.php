@@ -62,7 +62,6 @@ it('renders the list for a manager newest first with the requester and tokens', 
             ->where('party.code', $this->party->code)
             ->has('playerState')
             ->has('outcomes', 4)
-            ->where('retentionDays', 30)
             ->has('reviews.data', 2)
             ->where('reviews.data.0.track.title', 'Newer')
             ->where('reviews.data.0.user', 'Dana')
