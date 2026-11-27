@@ -13,7 +13,7 @@ import type {
     LegacyTrack,
 } from '@/types';
 
-const inertia = vi.hoisted(() => ({reload: vi.fn()}));
+const inertia = vi.hoisted(() => ({reload: vi.fn(), put: vi.fn()}));
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
@@ -818,7 +818,7 @@ describe('upcoming list', () => {
         expect(rows[1].find('[data-test="plays-at"]').exists()).toBe(false);
     });
 
-    it('opens a schedule sheet from the menu that links to the song and closes three ways', async () => {
+    it('opens a schedule sheet from the menu, saves via Inertia and closes three ways', async () => {
         const wrapper = mountPage({state: 'hidden'});
         const row = wrapper.find('[data-test="upcoming-row"]');
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
@@ -831,19 +831,31 @@ describe('upcoming list', () => {
         expect(wrapper.find('[data-test="schedule-dim"]').exists()).toBe(true);
         expect(wrapper.find('#sched-title').text()).toBe('Schedule Kernkraft 400');
         expect(wrapper.findAll('[data-test="schedule-day"]').length).toBeGreaterThanOrEqual(28);
-        expect(wrapper.find('[data-test="schedule-confirm"]').attributes('href')).toMatch(
-            /^\/songs\/4\?scheduled_for=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}$/,
+
+        const chips = wrapper.findAll('[data-test="schedule-chip"]').map((chip) => chip.text());
+        expect(chips.slice(0, 2)).toEqual(['In 15 minutes', 'After this track']);
+        expect(chips).not.toContain('In 30 minutes');
+
+        await wrapper.findAll('[data-test="schedule-chip"]')[1].trigger('click');
+        expect(wrapper.find('[data-test="schedule-summary"]').text()).toMatch(
+            /^Plays at \d\d:\d\d today, after Sandstorm\.$/,
         );
 
-        await wrapper.find('[data-test="schedule-chip"]').trigger('click');
-        expect(wrapper.find('[data-test="schedule-summary"]').text()).toContain('Plays at');
-
-        await wrapper.find('[data-test="schedule-cancel"]').trigger('click');
+        inertia.put.mockImplementation((_url: string, _data: unknown, options: {onSuccess?: () => void}) =>
+            options.onSuccess?.(),
+        );
+        const time = (wrapper.find('[data-test="schedule-time"]').element as HTMLInputElement).value;
+        await wrapper.find('[data-test="schedule-confirm"]').trigger('click');
+        const [url, data] = inertia.put.mock.calls[0];
+        expect(url).toBe('/parties/ABCD/songs/4');
+        expect((data as {scheduled_for: string}).scheduled_for).toMatch(new RegExp(`^\\d{4}-\\d{2}-\\d{2}T${time}$`));
+        await wrapper.vm.$nextTick();
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
 
         for (const close of [
             () => wrapper.find('[data-test="schedule-handle"]').trigger('click'),
             () => document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})),
+            () => wrapper.find('[data-test="schedule-cancel"]').trigger('click'),
         ]) {
             await row.find('[data-test="row-menu-toggle"]').trigger('click');
             await row.find('[data-test="menu-schedule"]').trigger('click');
@@ -852,5 +864,29 @@ describe('upcoming list', () => {
             await wrapper.vm.$nextTick();
             expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
         }
+    });
+
+    it('estimates each phone row start from the playing track and preceding lengths', () => {
+        vi.useFakeTimers({toFake: ['Date']});
+        vi.setSystemTime(new Date('2026-11-27T21:30:00Z'));
+        const base = makeProps();
+        const first = {...request(4, 'A'), length: 200000};
+        const second = {...request(5, 'B'), length: 180000};
+        const pinned = {...request(6, 'C'), scheduled_for: '2026-11-27T22:30:00Z'};
+        const wrapper = mount(Dashboard, {
+            props: {
+                ...base,
+                playerState: {
+                    ...base.playerState,
+                    status: {isPlaying: true, sampledAt: '2026-11-27T21:30:00Z', progressMs: 100000, length: 160000},
+                },
+                upcoming: {items: [first, second, pinned], total: 3},
+            },
+        });
+        vi.useRealTimers();
+
+        const est = wrapper.findAll('[data-test="est-start"]').map((node) => node.text());
+        expect(est).toEqual(['About 21:31', 'About 21:34']);
+        expect(wrapper.findAll('[data-test="plays-at"]')).toHaveLength(1);
     });
 });

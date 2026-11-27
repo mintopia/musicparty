@@ -1,5 +1,8 @@
 <script setup lang="ts">
+import {router} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
+import {update} from '@/routes/parties/songs';
+import type {StartEstimate} from '@/lib/dashboard';
 
 interface Ymd {
     y: number;
@@ -9,7 +12,9 @@ interface Ymd {
 
 const props = defineProps<{
     title: string;
-    href: string;
+    party: string;
+    song: number;
+    afterTrack?: StartEstimate | null;
     timezone: string;
     scheduledFor?: string | null;
 }>();
@@ -95,27 +100,43 @@ const summaryDay = computed(() =>
               new Date(Date.UTC(selected.value.y, selected.value.m - 1, selected.value.d)),
           ),
 );
-const submitHref = computed(() => `${props.href}?scheduled_for=${encodeURIComponent(scheduledInput.value)}`);
+const afterPicked = ref(false);
+const afterName = computed(() => (afterPicked.value ? props.afterTrack?.precedingName : null));
+const saving = ref(false);
 
 const chips = computed(() => {
     const soon = partsIn(plusMinutes(15));
-    const half = partsIn(plusMinutes(30));
     const nextHour = partsIn(plusMinutes(60 - today.mm));
+    const after = props.afterTrack ? partsIn(new Date(props.afterTrack.precedingEnd)) : null;
     return [
-        {label: 'In 15 minutes', at: soon},
-        {label: 'In 30 minutes', at: half},
-        {label: `${pad(nextHour.hh)}:00`, at: nextHour},
+        {label: 'In 15 minutes', at: soon, after: false},
+        ...(after ? [{label: 'After this track', at: after, after: true}] : []),
+        {label: `${pad(nextHour.hh)}:00`, at: nextHour, after: false},
     ];
 });
 
 function pick(value: Ymd): void {
+    afterPicked.value = false;
     selected.value = value;
     month.value = {y: value.y, m: value.m};
 }
 
-function pickChip(at: Ymd & {hh: number; mm: number}): void {
-    pick({y: at.y, m: at.m, d: at.d});
-    time.value = `${pad(at.hh)}:${pad(at.mm)}`;
+function pickChip(chip: {at: Ymd & {hh: number; mm: number}; after: boolean}): void {
+    pick({y: chip.at.y, m: chip.at.m, d: chip.at.d});
+    time.value = `${pad(chip.at.hh)}:${pad(chip.at.mm)}`;
+    afterPicked.value = chip.after;
+}
+
+function save(): void {
+    if (!validTime.value || saving.value) {
+        return;
+    }
+    saving.value = true;
+    router.put(
+        update({party: props.party, song: props.song}).url,
+        {scheduled_for: scheduledInput.value},
+        {preserveScroll: true, onSuccess: () => emit('close'), onFinish: () => (saving.value = false)},
+    );
 }
 
 function shiftMonth(delta: number): void {
@@ -206,6 +227,7 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
                     class="form-control"
                     aria-describedby="sched-sum"
                     data-test="schedule-time"
+                    @input="afterPicked = false"
                 />
             </div>
             <div class="sched-chips">
@@ -215,24 +237,27 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
                     type="button"
                     class="btn btn-sm"
                     data-test="schedule-chip"
-                    @click="pickChip(chip.at)"
+                    @click="pickChip(chip)"
                 >
                     {{ chip.label }}
                 </button>
             </div>
         </div>
         <p id="sched-sum" class="sched-sum" data-test="schedule-summary">
-            <i class="ti ti-calendar-time"></i>Plays at {{ time }} {{ summaryDay }}.
+            <i class="ti ti-calendar-time"></i>Plays at {{ time }} {{ summaryDay
+            }}<template v-if="afterName">, after {{ afterName }}</template
+            >.
         </p>
         <div class="sched-acts">
-            <a
-                :href="submitHref"
+            <button
+                type="button"
                 class="btn btn-primary"
-                :class="{disabled: !validTime}"
-                :aria-disabled="!validTime"
+                :disabled="!validTime || saving"
                 data-test="schedule-confirm"
-                >Schedule for {{ time }}</a
+                @click="save"
             >
+                Schedule for {{ time }}
+            </button>
             <button type="button" class="btn" data-test="schedule-cancel" @click="emit('close')">Cancel</button>
         </div>
     </div>

@@ -131,8 +131,15 @@
     .page-body > .container-xl {
         padding-inline: 16px;
     }
+}
 
+@media (max-width: 767.98px) {
     .page-body .row.g-4 {
-        --tblr-gutter-x: 1rem;
+        --tblr-gutter-x: 0;
+        margin-inline: 0;
+
+        > * {
+            padding-inline: 0;
+        }
     }
 }

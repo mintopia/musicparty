@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import axios from 'axios';
-import {onBeforeUnmount, onMounted, ref} from 'vue';
+import {computed, onBeforeUnmount, onMounted, ref} from 'vue';
 import ScheduleSheet from '@/components/Dashboard/ScheduleSheet.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import VoteControl from '@/components/VoteControl.vue';
-import {formatMs, useRun} from '@/lib/dashboard';
+import {estimateStarts, formatMs, useRun} from '@/lib/dashboard';
 import {legacyFallbackName} from '@/lib/decoration';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {DashboardRequest} from '@/types';
+import type {DashboardRequest, LegacyPlaybackStatus} from '@/types';
 
 const props = defineProps<{
     code: string;
@@ -20,12 +20,19 @@ const props = defineProps<{
     canModerate: boolean;
     canDownvote: boolean;
     timezone: string;
+    status?: LegacyPlaybackStatus | null;
+    nowTrackName?: string | null;
+    now?: number;
 }>();
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
 const run = useRun();
 const openMenuId = ref<number | null>(null);
 const scheduling = ref<DashboardRequest | null>(null);
+const estimates = computed(() =>
+    estimateStarts(props.items, props.status, props.nowTrackName ?? null, props.now ?? Date.now()),
+);
+const schedulingIndex = computed(() => props.items.findIndex((item) => item.id === scheduling.value?.id));
 
 function toggleMenu(request: DashboardRequest): void {
     openMenuId.value = openMenuId.value === request.id ? null : request.id;
@@ -63,6 +70,12 @@ onBeforeUnmount(() => {
     document.removeEventListener('keydown', closeMenuOnEscape);
 });
 
+function formatClock(value: string | number): string {
+    return new Intl.DateTimeFormat('en-GB', {timeStyle: 'short', timeZone: props.timezone, hourCycle: 'h23'}).format(
+        new Date(value),
+    );
+}
+
 function formatScheduled(iso: string): string {
     return new Intl.DateTimeFormat(undefined, {timeStyle: 'short', timeZone: props.timezone}).format(new Date(iso));
 }
@@ -92,7 +105,12 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                 >
             </EmptyState>
             <div v-else class="list-group card-list-group">
-                <div v-for="request in items" :key="request.id" class="list-group-item py-2" data-test="upcoming-row">
+                <div
+                    v-for="(request, index) in items"
+                    :key="request.id"
+                    class="list-group-item py-2"
+                    data-test="upcoming-row"
+                >
                     <div class="row align-items-center g-3 qrow" :class="{'is-sent': request.sent}">
                         <div class="col-auto">
                             <img
@@ -190,6 +208,12 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 ><i class="ti ti-calendar-time"></i>Plays at
                                 {{ formatScheduled(request.scheduled_for) }}</span
                             >
+                            <span
+                                v-if="!request.scheduled_for && estimates[index]"
+                                class="est d-md-none"
+                                data-test="est-start"
+                                >About {{ formatClock(estimates[index]!.startsAt) }}</span
+                            >
                             <span>{{ formatMs(request.length) }}</span>
                         </div>
                         <div v-if="request.sent" class="col-auto qsent" data-test="sent-badge">
@@ -233,9 +257,11 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             v-if="scheduling"
             :key="scheduling.id"
             :title="`Schedule ${scheduling.name}`"
-            :href="`${queueUrl}/${scheduling.id}`"
+            :party="code"
+            :song="scheduling.id"
             :timezone="timezone"
             :scheduled-for="scheduling.scheduled_for"
+            :after-track="schedulingIndex >= 0 ? estimates[schedulingIndex] : null"
             @close="scheduling = null"
         />
     </div>
@@ -292,6 +318,10 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     font-weight: 600;
     background: color-mix(in oklab, var(--tblr-yellow) 22%, var(--tblr-bg-surface));
     color: color-mix(in oklab, var(--tblr-yellow) 45%, var(--tblr-body-color));
+}
+.qtime .est {
+    color: var(--tblr-body-color);
+    font-weight: 500;
 }
 .by b {
     font-weight: 600;
