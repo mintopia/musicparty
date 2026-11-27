@@ -157,7 +157,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
         <Head :title="`Search - ${party.name}`" />
         <div class="mp-search-touch">
             <div class="search-form mx-auto">
-                <div class="page-header mt-0 text-center">
+                <div class="mt-0 mb-3 text-center">
                     <h1>Search</h1>
                 </div>
                 <form :action="searchUrl" method="get" @submit.prevent="submit">

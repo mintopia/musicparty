@@ -39,3 +39,96 @@
         gap: 1rem;
     }
 }
+
+@media (max-width: 575.98px) {
+    .underline-tab {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+
+    .navbar-toggler,
+    .navbar .nav-link.d-flex.lh-1 {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-block-size: 44px;
+        min-inline-size: 44px;
+    }
+
+    .navbar-brand,
+    .navbar-brand > a {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+
+    .breadcrumb-item a,
+    .mp-breadcrumbs .mp-crumb-toggle {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+        min-inline-size: 44px;
+    }
+
+    .ae-footer a {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+
+    .btn-icon {
+        min-block-size: 44px;
+        min-inline-size: 44px;
+    }
+
+    .vote-button {
+        min-block-size: 44px;
+        min-inline-size: 44px;
+    }
+
+    .rate-control .rate-button.rate-button {
+        inline-size: 44px;
+        block-size: 44px;
+    }
+
+    .table td a:not(.btn) {
+        display: inline-flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+
+    .form-check {
+        min-block-size: 44px;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding-inline-start: 0;
+    }
+
+    .form-check .form-check-input {
+        position: relative;
+        float: none;
+        margin: 0;
+        flex: none;
+    }
+
+    .form-check .form-check-input::after {
+        content: '';
+        position: absolute;
+        inset: -12px;
+    }
+
+    .form-check .form-check-label {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
+
+    .mp-menu-anchor > .dropdown-menu {
+        min-inline-size: 0;
+        inline-size: min(15rem, calc(100vw - 32px));
+        max-inline-size: calc(100vw - 32px);
+    }
+}

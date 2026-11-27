@@ -63,8 +63,8 @@ return Application::configure(basePath: dirname(__DIR__))
             StartSession::class,
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
-            SubstituteBindings::class,
             HandleInertiaRequests::class,
+            SubstituteBindings::class,
         ]);
 
         $middleware->group('api', [

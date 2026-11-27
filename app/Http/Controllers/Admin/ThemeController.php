@@ -53,10 +53,10 @@ class ThemeController extends Controller
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been updated');
     }
 
-    public function delete(Theme $theme): Response
+    public function delete(Theme $theme): Response|RedirectResponse
     {
         if ($theme->readonly) {
-            abort(400);
+            return $this->builtInThemeRefusal();
         }
 
         return Inertia::render('Admin/Themes/Delete', [
@@ -73,11 +73,16 @@ class ThemeController extends Controller
     public function destroy(Theme $theme): RedirectResponse
     {
         if ($theme->readonly) {
-            abort(400);
+            return $this->builtInThemeRefusal();
         }
         $theme->delete();
 
         return response()->redirectToRoute('admin.settings.index')->with('successMessage', 'The theme has been deleted');
+    }
+
+    protected function builtInThemeRefusal(): RedirectResponse
+    {
+        return response()->redirectToRoute('admin.settings.index')->with('errorMessage', 'Built-in themes can\'t be deleted.');
     }
 
     /**

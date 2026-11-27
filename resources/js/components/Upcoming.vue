@@ -32,7 +32,7 @@ const isMine = (song: LegacyUpcomingSong): boolean => currentUserId !== null && 
 const customFallbackName = (song: LegacyUpcomingSong): string | null => {
     const name = legacyFallbackName(song);
 
-    return name === null || name === 'Fallback Track' ? null : name;
+    return name === null || name === 'Fallback Track' || name === 'From Fallback Playlist' ? null : name;
 };
 
 const focusSearch = (): void => document.getElementById('query')?.focus();

@@ -47,7 +47,7 @@ const track = (extra: Record<string, unknown> = {}) => ({
     score: 1,
     user: null,
     css_classes: '',
-    fallback_name: 'Fallback Track',
+    fallback_name: 'From Fallback Playlist',
     ...extra,
 });
 
@@ -266,7 +266,7 @@ describe('Parties/Tv', () => {
         wrapper.unmount();
     });
 
-    it('shows the requester or Fallback Track with a read-only score and no progress when the length is unknown', () => {
+    it('shows the requester or From Fallback Playlist with a read-only score and no progress when the length is unknown', () => {
         const wrapper = mount(Tv, {
             props: {
                 party,

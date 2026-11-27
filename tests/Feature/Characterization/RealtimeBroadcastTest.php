@@ -82,7 +82,7 @@ it('broadcasts an upcoming song update on the private party channel with the son
         ->and($payload['id'])->toBe($song->id)
         ->and($payload['vote'])->toBeNull()
         ->and($payload['queued_at'])->toBeNull()
-        ->and($payload['fallback_name'])->toBe('Fallback Track')
+        ->and($payload['fallback_name'])->toBe('From Fallback Playlist')
         ->and($payload['created_at'])->toBe($song->created_at->toIso8601String());
 });
 

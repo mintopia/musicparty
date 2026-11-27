@@ -1,4 +1,5 @@
-.mp-page-head {
+.mp-page-head.mp-page-head {
+    flex-direction: row;
     display: flex;
     flex-wrap: wrap;
     align-items: flex-end;

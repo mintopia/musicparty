@@ -41,6 +41,15 @@ class PartyRequest extends FormRequest
     {
         return [function (Validator $validator): void {
             $party = $this->route('party');
+            $newProviderId = $this->input('provider_id');
+            if (! $party instanceof Party && is_string($newProviderId) && ! $validator->errors()->has('provider_id')) {
+                $factory = app(MusicProviderFactory::class);
+                if (! $factory->forUser($newProviderId, $this->resolveAuthenticatedUser($this), Purpose::Control)->isLinked()) {
+                    $validator->errors()->add('provider_id', 'Link your account for this music provider before creating a party.');
+                }
+
+                return;
+            }
             $playlistId = $this->input('context_playlist_id');
             if (! $party instanceof Party || ! is_string($playlistId) || $playlistId === '' || $playlistId === $party->context_playlist_id || $validator->errors()->has('context_playlist_id')) {
                 return;

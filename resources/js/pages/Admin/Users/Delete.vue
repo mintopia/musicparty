@@ -26,11 +26,13 @@ function submit(): void {
                 <div class="card-status-top bg-danger"></div>
                 <div class="card-body text-center">
                     <i class="icon ti ti-alert-triangle icon-lg text-danger" aria-hidden="true"></i>
-                    <p class="mt-4">
+                    <p class="mt-4 text-body">
                         Delete <strong>{{ user.nickname }}</strong
                         >? This cannot be undone.
                     </p>
-                    <label class="d-block mb-2" for="confirm"> To continue, type <strong>delete</strong> below. </label>
+                    <label class="d-block mb-2 text-body" for="confirm">
+                        To continue, type <strong>delete</strong> below.
+                    </label>
                     <div class="mx-auto" style="max-inline-size: 14rem">
                         <input
                             id="confirm"

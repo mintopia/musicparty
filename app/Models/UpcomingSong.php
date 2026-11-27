@@ -115,7 +115,7 @@ class UpcomingSong extends Model
         $data['user'] = $this->user->nickname ?? null;
         $data['user_id'] = $this->user_id;
         $decoration = app(ModExtensions::class)->decorationFor($this->party, $this->song, $this);
-        $data['fallback_name'] = $decoration->displayName ?? 'Fallback Track';
+        $data['fallback_name'] = $decoration->displayName ?? 'From Fallback Playlist';
         $data['css_classes'] = $decoration->cssClass ?? '';
         $data['decoration'] = $decoration?->toArray();
 

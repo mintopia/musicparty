@@ -28,13 +28,13 @@ class ErrorPageResponder
     ];
 
     private const array PAGE_LABELS = [
-        'dashboard' => 'Dashboard',
+        'dashboard' => 'the Dashboard',
         'ai-reviews' => 'AI reviews',
         'moderation' => 'Moderation',
         'users' => 'Members',
         'songs' => 'Requests',
         'mods' => 'Settings',
-        'player' => 'Player',
+        'player' => 'the Player',
     ];
 
     public function __invoke(Response $response, Throwable $e, Request $request): Response

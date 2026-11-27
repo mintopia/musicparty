@@ -111,9 +111,9 @@ onBeforeUnmount(clearNotice);
                             <i class="ti ti-vinyl" aria-hidden="true"></i>
                         </div>
                         <div class="player-text">
-                            <h2 class="player-title" :title="state.now.name" data-test="now-name">
+                            <div class="player-title" :title="state.now.name" data-test="now-name">
                                 {{ state.now.name }}
-                            </h2>
+                            </div>
                             <p class="player-artists" :title="artists">{{ artists }}</p>
                             <p v-if="state.now.album?.name" class="player-album" :title="state.now.album.name">
                                 {{ state.now.album.name }}
@@ -129,7 +129,7 @@ onBeforeUnmount(clearNotice);
                                 <template v-if="state.current?.user">
                                     Requested by <b>{{ state.current.user }}</b>
                                 </template>
-                                <template v-else>Fallback Track</template>
+                                <template v-else>From Fallback Playlist</template>
                             </span>
                             <span v-else class="player-by"></span>
                             <RateControl v-if="state.current" :rating="score" :pressed="pressed" @rate="rate" />
@@ -137,7 +137,7 @@ onBeforeUnmount(clearNotice);
                     </div>
                     <div v-else class="player-empty" data-test="nothing-playing">
                         <i class="ti ti-music-off player-empty-icon" aria-hidden="true"></i>
-                        <h2 class="player-empty-title">Nothing playing</h2>
+                        <div class="player-empty-title">Nothing playing</div>
                         <p>Search for a track to get the party started.</p>
                     </div>
 
