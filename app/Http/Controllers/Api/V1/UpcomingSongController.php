@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\Purpose;
+use App\Events\FlaggedRequestResolved;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
@@ -175,7 +176,12 @@ class UpcomingSongController extends Controller
         if ($upcomingsong->queued_at) {
             abort(400, 'Unable to delete an upcoming song that has been queued');
         }
+        $wasFlagged = $upcomingsong->flagged_at !== null;
+        $id = $upcomingsong->id;
         $upcomingsong->delete();
+        if ($wasFlagged) {
+            FlaggedRequestResolved::dispatch($party, $id);
+        }
         PartyDashboardCache::forget($party);
 
         return response()->noContent();

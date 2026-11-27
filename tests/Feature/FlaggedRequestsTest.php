@@ -326,3 +326,36 @@ describe('AI review link', function () {
         expect($queries())->toBe($one);
     });
 });
+
+describe('live moderation counts', function () {
+    it('carries the authoritative flagged count on Added and Resolved', function () {
+        Event::fake([FlaggedRequestResolved::class]);
+        $first = flaggedRequest($this->party);
+        $second = flaggedRequest($this->party);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $first]));
+
+        Event::assertDispatched(FlaggedRequestResolved::class, fn ($event) => $event->broadcastWith() === ['id' => $first->id, 'flaggedCount' => 1]);
+
+        $added = new FlaggedRequestAdded($this->party, ['id' => $second->id]);
+        expect($added->broadcastWith())->toBe(['id' => $second->id, 'flaggedCount' => 1]);
+    });
+
+    it('broadcasts Resolved when a flagged request is deleted through the API', function () {
+        Event::fake([FlaggedRequestResolved::class]);
+        $request = flaggedRequest($this->party);
+
+        $this->actingAs($this->manager, 'sanctum')->deleteJson(route('api.v1.parties.upcomingsongs.destroy', [$this->party, $request]))->assertNoContent();
+
+        Event::assertDispatched(FlaggedRequestResolved::class, fn ($event) => $event->broadcastWith() === ['id' => $request->id, 'flaggedCount' => 0]);
+    });
+
+    it('does not broadcast Resolved when an unflagged request is deleted through the API', function () {
+        Event::fake([FlaggedRequestResolved::class]);
+        $request = flaggedRequest($this->party, null, ['flagged_at' => null]);
+
+        $this->actingAs($this->manager, 'sanctum')->deleteJson(route('api.v1.parties.upcomingsongs.destroy', [$this->party, $request]))->assertNoContent();
+
+        Event::assertNotDispatched(FlaggedRequestResolved::class);
+    });
+});

@@ -1,5 +1,6 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import ModerationTabs from '@/components/ModerationTabs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {buildNavigation, isActive, isLinkActive, partyLinks} from '@/lib/navigation';
 import type {NavItem} from '@/lib/navigation';
@@ -13,6 +14,33 @@ vi.mock('@inertiajs/vue3', () => ({
 }));
 vi.mock('@/components/FlashMessages.vue', () => ({default: {render: () => null}}));
 vi.mock('@/composables/useColorMode', () => ({useColorMode: () => undefined}));
+
+const echo = vi.hoisted(() => ({
+    channels: [] as string[],
+    handlers: {} as Record<string, Array<(payload: unknown) => void>>,
+    stopped: [] as string[],
+}));
+
+vi.mock('@/composables/useEcho', () => ({
+    useEcho: () => ({
+        onReconnect: () => undefined,
+        publicChannel: () => undefined,
+        privateChannel: (name: string) => {
+            echo.channels.push(name);
+            const channel = {
+                listen: (event: string, cb: (payload: unknown) => void) => {
+                    (echo.handlers[event] ??= []).push(cb);
+                    return channel;
+                },
+                stopListening: (event: string) => {
+                    echo.stopped.push(event);
+                    return channel;
+                },
+            };
+            return channel;
+        },
+    }),
+}));
 
 const {route, party} = vi.hoisted(() => ({
     route: (url: string) => () => ({url}),
@@ -265,5 +293,71 @@ describe('AppLayout navigation', () => {
         const wrapper = mountLayout(makeProps({can: {admin: true}}), '/admin/users');
 
         expect(wrapper.get('a.dropdown-toggle').attributes('aria-expanded')).toBe('true');
+    });
+});
+
+describe('live moderation badges', () => {
+    beforeEach(() => {
+        echo.channels.length = 0;
+        echo.stopped.length = 0;
+        for (const key of Object.keys(echo.handlers)) {
+            delete echo.handlers[key];
+        }
+    });
+
+    function mountLive(parties: SharedProps['auth']['parties']) {
+        state.props = {...makeProps({parties}), reverb: {key: 'k'}};
+        state.url = '/';
+        return mount(AppLayout);
+    }
+
+    const fire = (event: string, payload: unknown) => echo.handlers[event]?.forEach((cb) => cb(payload));
+
+    it('updates the navbar badge from the authoritative count in Added and Resolved events', async () => {
+        const wrapper = mountLive([{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 2}]);
+        const badge = () => wrapper.find('#sidebar-menu .badge').text();
+
+        expect(echo.channels).toEqual(['party.ABC.managers']);
+        expect(badge()).toBe('2');
+
+        fire('FlaggedRequestAdded', {id: 9, flaggedCount: 3});
+        await wrapper.vm.$nextTick();
+        expect(badge()).toBe('3');
+
+        fire('FlaggedRequestResolved', {id: 9, flaggedCount: 3});
+        fire('FlaggedRequestResolved', {id: 9, flaggedCount: 3});
+        await wrapper.vm.$nextTick();
+        expect(badge()).toBe('3');
+
+        fire('FlaggedRequestResolved', {id: 8, flaggedCount: 0});
+        await wrapper.vm.$nextTick();
+        expect(wrapper.find('#sidebar-menu .badge').exists()).toBe(false);
+    });
+
+    it('only subscribes to parties the user can manage and stops listening on unmount', () => {
+        const wrapper = mountLive([
+            {code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 1},
+            {code: 'XYZ', name: 'Other', canManage: false},
+        ]);
+
+        expect(echo.channels).toEqual(['party.ABC.managers']);
+
+        wrapper.unmount();
+        expect(echo.stopped).toEqual(['FlaggedRequestAdded', 'FlaggedRequestResolved']);
+    });
+
+    it('updates the Flagged tab badge from the same events', async () => {
+        const wrapper = mountLive([{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 1}]);
+        const tabs = mount(ModerationTabs, {
+            props: {code: 'ABC', tabs: {flaggedCount: 1, aiReviewEnabled: false}, active: 'flagged'},
+        });
+
+        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged1');
+
+        fire('FlaggedRequestAdded', {id: 5, flaggedCount: 4});
+        await tabs.vm.$nextTick();
+        expect(tabs.get('[data-test="tab-flagged"]').text()).toBe('Flagged4');
+
+        wrapper.unmount();
     });
 });

@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Party;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -15,10 +16,15 @@ class FlaggedRequestAdded implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
+    public int $flaggedCount;
+
     /**
      * @param  array<string, mixed>  $item
      */
-    public function __construct(public Party $party, public array $item) {}
+    public function __construct(public Party $party, public array $item)
+    {
+        $this->flaggedCount = app(ModerationTabs::class)->flaggedCount($party);
+    }
 
     public function broadcastAs(): string
     {
@@ -28,7 +34,7 @@ class FlaggedRequestAdded implements ShouldBroadcast
     /** @return array<string, mixed> */
     public function broadcastWith(): array
     {
-        return $this->item;
+        return [...$this->item, 'flaggedCount' => $this->flaggedCount];
     }
 
     public function broadcastOn(): PrivateChannel

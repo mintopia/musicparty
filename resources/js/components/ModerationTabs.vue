@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import {computed} from 'vue';
+import {computed, watch} from 'vue';
+import {flaggedCountFor, setFlaggedCount} from '@/composables/useFlaggedCounts';
 import {aiReviewsUrl} from '@/lib/aiReviews';
 import {flaggedUrl} from '@/lib/flagged';
 import {index as moderationIndex} from '@/routes/parties/moderation';
@@ -11,8 +12,19 @@ const props = defineProps<{
     active: 'flagged' | 'rules' | 'ai-reviews';
 }>();
 
+watch(
+    () => props.tabs.flaggedCount,
+    (count) => setFlaggedCount(props.code, count),
+    {immediate: true},
+);
+
 const items = computed(() => [
-    {key: 'flagged', label: 'Flagged', href: flaggedUrl(props.code), count: props.tabs.flaggedCount},
+    {
+        key: 'flagged',
+        label: 'Flagged',
+        href: flaggedUrl(props.code),
+        count: flaggedCountFor(props.code, props.tabs.flaggedCount),
+    },
     {key: 'rules', label: 'Rules', href: moderationIndex(props.code).url, count: 0},
     ...(props.tabs.aiReviewEnabled
         ? [{key: 'ai-reviews', label: 'AI reviews', href: aiReviewsUrl(props.code), count: 0}]

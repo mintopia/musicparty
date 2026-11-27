@@ -3,6 +3,7 @@
 namespace App\Events;
 
 use App\Models\Party;
+use App\Services\Requests\ModerationTabs;
 use Illuminate\Broadcasting\InteractsWithSockets;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
@@ -15,17 +16,22 @@ class FlaggedRequestResolved implements ShouldBroadcast
     use InteractsWithSockets;
     use SerializesModels;
 
-    public function __construct(public Party $party, public int $id) {}
+    public int $flaggedCount;
+
+    public function __construct(public Party $party, public int $id)
+    {
+        $this->flaggedCount = app(ModerationTabs::class)->flaggedCount($party);
+    }
 
     public function broadcastAs(): string
     {
         return 'FlaggedRequestResolved';
     }
 
-    /** @return array{id: int} */
+    /** @return array{id: int, flaggedCount: int} */
     public function broadcastWith(): array
     {
-        return ['id' => $this->id];
+        return ['id' => $this->id, 'flaggedCount' => $this->flaggedCount];
     }
 
     public function broadcastOn(): PrivateChannel
