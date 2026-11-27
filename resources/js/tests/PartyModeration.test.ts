@@ -105,7 +105,7 @@ describe('party moderation pages', () => {
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201czzz\u201d, Flag');
         expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
         expect(wrapper.find('a[href="/parties/ABCD/moderation/create"]').exists()).toBe(true);
-        expect(wrapper.find('[data-test="searchbar"] a[href="/parties/ABCD/moderation/create"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="searchbar"] a[href="/parties/ABCD/moderation/create"]').exists()).toBe(true);
 
         const chips = wrapper.findAll('[data-test="search-chip"]');
         expect(chips.map((chip) => chip.attributes('aria-pressed'))).toEqual([
@@ -206,7 +206,7 @@ describe('party moderation pages', () => {
 
     it('patches the edit form and links to delete', async () => {
         const wrapper = mount(Edit, {props: {party, playerState, types, actions, moderation}});
-        expect(wrapper.find('h1').text()).toBe('Edit Track Name rule');
+        expect(wrapper.find('h1').text()).toBe('Edit rule');
         expect(wrapper.find('a[href="/parties/ABCD/moderation/5/delete"]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
         expect(inertia.patch).toHaveBeenCalledWith('/parties/ABCD/moderation/5');
@@ -214,7 +214,8 @@ describe('party moderation pages', () => {
 
     it('confirms and deletes', async () => {
         const wrapper = mount(Delete, {props: {party, playerState, moderation}});
-        expect(wrapper.text()).toContain('bad');
+        expect(wrapper.text()).toContain('Delete this rule?');
+        expect(wrapper.get('[data-test="delete-copy"]').text()).toContain('Track Name is bad');
         await wrapper.find('form').trigger('submit');
         expect(inertia.delete).toHaveBeenCalledWith('/parties/ABCD/moderation/5');
     });

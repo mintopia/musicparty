@@ -75,6 +75,8 @@ export interface FlaggedRequest {
     flagged_at: string;
     requester: {id: number; name: string};
     ai_review_url: string | null;
+    rule_url?: string | null;
+    ai_review?: {criterion: string | null; confidence: number | null; reason: string | null} | null;
     track: TrackAnnotation;
 }
 
@@ -398,6 +400,19 @@ export interface AiReviewDetail extends AiReviewRow {
     errorMessage: string | null;
     trackId: string;
     trackProvider: string;
+    threshold: number;
+    rejectBelow: number;
+    flagBelow: number;
+    fate: AiReviewFate;
+}
+
+export interface AiReviewFate {
+    state: 'held' | 'queued' | 'played' | 'rejected' | 'gone';
+    requestUrl: string | null;
+    approveUrl: string | null;
+    rejectUrl: string | null;
+    flaggedAt: {iso: string; human: string} | null;
+    playedAt: {iso: string; human: string} | null;
 }
 
 export interface AdminDashboardAction {

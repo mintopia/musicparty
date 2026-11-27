@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import SettingRow from '@/components/SettingRow.vue';
+
 export interface ModerationFormData {
     type: string;
     action: string;
@@ -14,86 +16,95 @@ defineProps<{
     types: Record<string, string>;
     actions: Record<string, string>;
 }>();
+
+const actionDetails: Record<string, {title: string; text: string}> = {
+    flag: {
+        title: 'Flag for approval',
+        text: 'Hold the Request in Flagged Requests until someone approves or rejects it.',
+    },
+    reject: {
+        title: 'Reject the Request',
+        text: 'Turn it away straight away. The requester is told it was rejected.',
+    },
+};
 </script>
 
 <template>
-    <div class="card-body">
-        <div class="mb-3 col-md-4">
-            <label class="form-label required" for="type">Type</label>
-            <div>
-                <select
-                    id="type"
-                    v-model="form.type"
-                    name="type"
-                    class="form-control"
-                    :class="{'is-invalid': form.errors.type}"
-                >
-                    <option value="">Select...</option>
-                    <option v-for="(text, name) in types" :key="name" :value="name">{{ text }}</option>
-                </select>
-                <small class="form-hint">The type of filter to create</small>
-                <p v-if="form.errors.type" class="invalid-feedback">{{ form.errors.type }}</p>
-            </div>
-        </div>
-        <div class="mb-3 col-md-4">
-            <label class="form-label" for="action">Action</label>
-            <div>
-                <select
-                    id="action"
-                    v-model="form.action"
-                    name="action"
-                    class="form-control"
-                    :class="{'is-invalid': form.errors.action}"
-                >
-                    <option v-for="(text, value) in actions" :key="value" :value="value">{{ text }}</option>
-                </select>
-                <small class="form-hint">What happens when a request matches this filter</small>
-                <p v-if="form.errors.action" class="invalid-feedback">{{ form.errors.action }}</p>
-            </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-label required" for="value">Value</label>
-            <div>
+    <div class="card-body pt-2 pb-0">
+        <SettingRow label="Type" for="type" hint="What part of the track to look at." :error="form.errors.type">
+            <select
+                id="type"
+                v-model="form.type"
+                name="type"
+                class="form-select"
+                :class="{'is-invalid': form.errors.type}"
+            >
+                <option value="">Select...</option>
+                <option v-for="(text, name) in types" :key="name" :value="name">{{ text }}</option>
+            </select>
+        </SettingRow>
+        <SettingRow
+            label="Value"
+            for="value"
+            hint='What to look for. With "Match as a pattern" on, this is a regular expression.'
+            :error="form.errors.value"
+        >
+            <input
+                id="value"
+                v-model="form.value"
+                type="text"
+                name="value"
+                class="form-control"
+                :class="{'is-invalid': form.errors.value}"
+            />
+        </SettingRow>
+        <SettingRow label="Match as a pattern" for="regex" hint="Use a regular expression instead of an exact match.">
+            <span class="form-check form-switch mb-0 ps-0 min-height-0">
                 <input
-                    id="value"
-                    v-model="form.value"
-                    type="text"
-                    name="value"
-                    class="form-control"
-                    :class="{'is-invalid': form.errors.value}"
-                    placeholder="Filter Text"
+                    id="regex"
+                    v-model="form.regex"
+                    type="checkbox"
+                    role="switch"
+                    class="form-check-input m-0"
+                    name="regex"
                 />
-                <small class="form-hint">The value to filter</small>
-                <p v-if="form.errors.value" class="invalid-feedback">{{ form.errors.value }}</p>
+            </span>
+        </SettingRow>
+        <SettingRow label="When a Request matches" stacked :error="form.errors.action">
+            <div role="radiogroup" aria-label="When a Request matches">
+                <label
+                    v-for="(_text, value) in actions"
+                    :key="value"
+                    class="mp-rule-opt"
+                    :class="{'is-on': form.action === value}"
+                >
+                    <input v-model="form.action" class="form-check-input" type="radio" name="action" :value="value" />
+                    <b>{{ actionDetails[value]?.title ?? actions[value] }}</b>
+                    <span>{{ actionDetails[value]?.text ?? '' }}</span>
+                </label>
             </div>
-        </div>
-        <div class="mb-3">
-            <label class="form-check form-switch">
-                <input v-model="form.enabled" type="checkbox" class="form-check-input" name="enabled" />
-                Enable this filter
-            </label>
-        </div>
-        <div class="mb-3">
-            <label class="form-check form-switch">
-                <input v-model="form.regex" type="checkbox" class="form-check-input" name="regex" />
-                Apply filter as a regular expression
-            </label>
-        </div>
-        <div class="mb-3">
-            <label class="form-label" for="notes">Notes</label>
-            <div>
+        </SettingRow>
+        <SettingRow label="Enabled" for="enabled" hint="Turn a rule off to keep it without using it.">
+            <span class="form-check form-switch mb-0 ps-0 min-height-0">
                 <input
-                    id="notes"
-                    v-model="form.notes"
-                    type="text"
-                    name="notes"
-                    class="form-control"
-                    :class="{'is-invalid': form.errors.notes}"
-                    placeholder="Notes"
+                    id="enabled"
+                    v-model="form.enabled"
+                    type="checkbox"
+                    role="switch"
+                    class="form-check-input m-0"
+                    name="enabled"
                 />
-                <small class="form-hint">Notes for your own reference</small>
-                <p v-if="form.errors.notes" class="invalid-feedback">{{ form.errors.notes }}</p>
-            </div>
-        </div>
+            </span>
+        </SettingRow>
+        <SettingRow label="Notes" for="notes" hint="Only the owner and moderators see this." :error="form.errors.notes">
+            <input
+                id="notes"
+                v-model="form.notes"
+                type="text"
+                name="notes"
+                class="form-control"
+                :class="{'is-invalid': form.errors.notes}"
+            />
+        </SettingRow>
     </div>
 </template>

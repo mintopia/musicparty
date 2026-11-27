@@ -202,6 +202,7 @@ describe('Party songs show', () => {
         scheduledForInput: '',
         requestedBy: null,
         moderateUrl: '/parties/ABCD/moderation/create?track=t',
+        removeUrl: '/parties/ABCD/songs/1',
     };
     const base = {
         party,
@@ -210,39 +211,54 @@ describe('Party songs show', () => {
         trackUrl: null,
         song,
         votes: paginator([]),
-        other: [],
-        ratings: paginator([]),
+        aiReview: null,
+        history: [{icon: 'ti-music-plus', text: 'Fallback requested it', at: when, url: null}],
     };
 
     it('shows fallback requester, empty states and no external link', () => {
         const wrapper = mount(ShowSong, {props: base});
 
         expect(wrapper.text()).toContain('Fallback Track');
-        expect(wrapper.text()).toContain('Not Sent');
+        expect(wrapper.text()).toContain('Not yet');
         expect(wrapper.text()).toContain('No votes yet');
-        expect(wrapper.text()).toContain('No other appearances');
-        expect(wrapper.text()).toContain('No ratings yet');
+        expect(wrapper.text()).toContain('This Request was not reviewed by AI.');
         expect(wrapper.text()).not.toContain('View on Spotify');
-        expect(wrapper.text()).toContain('Moderate');
     });
 
-    it('lists votes, appearances and ratings with the track link', () => {
+    it('shows votes, the AI review outcome, history and the track link', () => {
         const wrapper = mount(ShowSong, {
             props: {
                 ...base,
                 trackUrl: 'https://open.spotify.com/track/t',
                 song: {...song, requestedBy: {nickname: 'Sam', url: '/parties/ABCD/users/1'}},
                 votes: paginator([{nickname: 'Kim', userUrl: '/u/2', value: 1, createdAt: when}]),
-                other: [{id: 5, url: '/parties/ABCD/songs/5', votes: 1, score: 1, createdAt: when, queuedAt: null}],
-                ratings: paginator([{nickname: 'Lee', userUrl: '/u/3', value: -1, createdAt: when}]),
+                aiReview: {outcome: 'allow', outcomeLabel: 'Allowed', reason: 'Fits.', criterion: null, url: '/parties/ABCD/ai-reviews/9'},
+                history: [
+                    {icon: 'ti-music-plus', text: 'Sam requested it', at: when, url: null},
+                    {icon: 'ti-history', text: 'Requested again', at: when, url: '/parties/ABCD/songs/5'},
+                ],
             },
         });
 
         expect(wrapper.text()).toContain('View on Spotify');
         expect(wrapper.get('[data-test="votes"]').find('.ti-arrow-big-up-filled').exists()).toBe(true);
-        expect(wrapper.get('[data-test="ratings"]').find('.ti-thumb-down-filled').exists()).toBe(true);
-        expect(wrapper.get('[data-test="other"]').text()).toContain('3 hours ago');
-        expect(wrapper.findAll('a').map((link) => link.attributes('href'))).toContain('/parties/ABCD/users/1');
+        expect(wrapper.get('[data-test="vote-summary"]').text()).toBe('2 votes, score +1');
+        expect(wrapper.get('[data-test="ai-outcome"]').text()).toBe('Allowed');
+        expect(wrapper.get('[data-test="ai-reason"]').text()).toContain('No criterion applied.');
+        expect(wrapper.get('[data-test="history"]').text()).toContain('Sam requested it');
+        const links = wrapper.findAll('a').map((link) => link.attributes('href'));
+        expect(links).toContain('/parties/ABCD/users/1');
+        expect(links).toContain('/parties/ABCD/ai-reviews/9');
+        expect(links).toContain('/parties/ABCD/songs/5');
+    });
+
+    it('removes the request from the page menu', async () => {
+        const wrapper = mount(ShowSong, {props: base});
+
+        await wrapper.get('[data-test="row-menu-toggle"]').trigger('click');
+        await wrapper.get('[data-test="remove-request"]').trigger('click');
+
+        expect(inertia.delete).toHaveBeenCalledWith('/parties/ABCD/songs/1');
     });
 
     it('hides the schedule editor from non-moderators', () => {

@@ -1,6 +1,8 @@
 <?php
 
+use App\Enums\AiReviewOutcome;
 use App\Enums\Purpose;
+use App\Models\AiReview;
 use App\Models\PlayedSong;
 use App\Models\Song;
 use App\Models\SongRating;
@@ -136,9 +138,31 @@ it('shows a song detail page for a manager', function () {
             ->where('song.id', $this->upcoming->id)
             ->where('song.requestedBy.nickname', $this->member->user->nickname)
             ->has('votes.data', 0)
-            ->has('other', 0)
-            ->has('ratings.data', 0)
+            ->where('aiReview', null)
+            ->where('song.removeUrl', route('parties.songs.destroy', [$this->party->code, $this->upcoming->id]))
+            ->has('history', 1)
+            ->where('history.0.text', $this->member->user->nickname.' requested it')
             ->has('playerState'));
+});
+
+it('shows the AI review outcome and a history of what happened on the detail page', function () {
+    $this->upcoming->forceFill(['created_at' => now()->subMinutes(5), 'queued_at' => now()])->save();
+    $review = AiReview::factory()->outcome(AiReviewOutcome::Flag)->create([
+        'party_id' => $this->party->id,
+        'upcoming_song_id' => $this->upcoming->id,
+        'reason' => 'Possibly explicit',
+        'created_at' => now()->subMinute(),
+    ]);
+
+    $this->actingAs($this->owner)->get(route('parties.songs.show', [$this->party->code, $this->upcoming->id]))
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('aiReview.outcomeLabel', 'Flagged')
+            ->where('aiReview.reason', 'Possibly explicit')
+            ->where('aiReview.url', route('parties.ai-reviews.show', [$this->party->code, $review->id]))
+            ->has('history', 3)
+            ->where('history.1.text', 'AI review flagged it for a moderator')
+            ->where('history.2.text', 'Sent to the Player'));
 });
 
 it('forbids non-managers from the songs pages', function () {
