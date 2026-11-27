@@ -436,7 +436,8 @@
     .wp-btn.is-play { width: 80px; height: 80px; }
     .wp-hints { display: none; }
     .wp-body { padding: 16px; }
-    .mp-checks > li { grid-template-columns: auto minmax(0, 1fr); }
+    .mp-checks > li { grid-template-columns: auto minmax(0, 1fr) auto; }
+    .mp-checks > li > .btn { min-block-size: 44px; display: inline-flex; align-items: center; }
 }
 
 @media (min-width: 1600px) {
