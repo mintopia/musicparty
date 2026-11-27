@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {adminCrumbs} from '@/lib/breadcrumbs';
-import {Head, Link, useForm} from '@inertiajs/vue3';
+import {Head, Link, router, useForm} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 interface SettingField {
@@ -22,6 +22,8 @@ const props = defineProps<{
         readonly: boolean;
         dark_mode: boolean;
         tokens: Record<string, string>;
+        css: string;
+        updated_at: string | null;
     }[];
     socialProviders: {
         id: number;
@@ -41,6 +43,22 @@ const form = useForm<Record<string, string | boolean>>(
 
 function submit(): void {
     form.patch('/admin/settings');
+}
+
+function makeActive(theme: {
+    id: number;
+    name: string;
+    css: string;
+    dark_mode: boolean;
+    tokens: Record<string, string>;
+}): void {
+    router.patch(`/admin/settings/themes/${theme.id}`, {
+        name: theme.name,
+        css: theme.css,
+        dark_mode: theme.dark_mode,
+        tokens: theme.tokens,
+        active: true,
+    });
 }
 
 function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>}): Record<string, string> {
@@ -128,6 +146,8 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                 <tr>
                                     <th>Name</th>
                                     <th class="w-1">Status</th>
+                                    <th>Mode</th>
+                                    <th>Updated</th>
                                     <th></th>
                                 </tr>
                             </thead>
@@ -149,24 +169,32 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                         <span v-if="theme.active" class="mp-state is-ok">Active</span>
                                         <span v-else class="text-secondary">Not in use</span>
                                     </td>
+                                    <td>{{ theme.dark_mode ? 'Always dark' : 'Light' }}</td>
+                                    <td class="text-secondary">{{ theme.updated_at ?? 'Built in' }}</td>
                                     <td>
-                                        <div class="btn-list justify-content-end">
-                                            <Link
-                                                :href="`/admin/settings/themes/${theme.id}/edit`"
-                                                class="btn btn-outline-primary"
+                                        <div class="btn-list justify-content-end flex-nowrap">
+                                            <button
+                                                v-if="!theme.active"
+                                                type="button"
+                                                class="btn btn-sm"
+                                                data-test="make-active"
+                                                @click="makeActive(theme)"
                                             >
+                                                Make active
+                                            </button>
+                                            <Link :href="`/admin/settings/themes/${theme.id}/edit`" class="btn btn-sm">
                                                 <i class="icon ti ti-edit"></i>
                                                 Edit
                                             </Link>
                                             <Link
                                                 v-if="!theme.readonly"
                                                 :href="`/admin/settings/themes/${theme.id}/delete`"
-                                                class="btn btn-outline-danger"
+                                                class="btn btn-sm btn-outline-danger"
                                             >
                                                 <i class="icon ti ti-trash"></i>
                                                 Delete
                                             </Link>
-                                            <a v-else class="btn btn-outline-danger disabled">
+                                            <a v-else class="btn btn-sm btn-outline-danger disabled">
                                                 <i class="icon ti ti-trash"></i>
                                                 Delete
                                             </a>
@@ -174,7 +202,7 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                     </td>
                                 </tr>
                                 <tr v-if="themes.length === 0">
-                                    <td colspan="3" class="text-center p-4">
+                                    <td colspan="5" class="text-center p-4">
                                         <p>There are no themes</p>
                                     </td>
                                 </tr>
@@ -235,7 +263,7 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                         <div class="btn-list justify-content-end">
                                             <Link
                                                 :href="`/admin/settings/socialproviders/${provider.id}/edit`"
-                                                class="btn btn-outline-primary"
+                                                class="btn btn-sm"
                                             >
                                                 <i class="icon ti ti-edit"></i>
                                                 Edit

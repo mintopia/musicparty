@@ -1012,3 +1012,4 @@
     .mp-swatch-pick { align-items: center; min-inline-size: 28px; }
 }
 .mp-cell { display: flex; align-items: center; gap: var(--mp-space-3); }
+@media (max-width: 575.98px) { .card-table .btn-sm { min-block-size: 44px; } }

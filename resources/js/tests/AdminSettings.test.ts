@@ -4,13 +4,14 @@ import Dashboard from '@/pages/Admin/Dashboard.vue';
 import SettingsIndex from '@/pages/Admin/Settings/Index.vue';
 import ProviderEdit from '@/pages/Admin/SocialProviders/Edit.vue';
 
-const inertia = vi.hoisted(() => ({patch: vi.fn()}));
+const inertia = vi.hoisted(() => ({patch: vi.fn(), routerPatch: vi.fn()}));
 
 vi.mock('@inertiajs/vue3', async () => {
     const {reactive} = await import('vue');
     return {
         Head: {render: () => null},
         Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
+        router: {patch: inertia.routerPatch},
         useForm: (data: Record<string, unknown>) =>
             reactive({...data, errors: {}, processing: false, patch: inertia.patch}),
     };
@@ -39,7 +40,16 @@ describe('admin settings pages', () => {
                     {code: 'flag', name: 'Flag', description: null, type: 'boolean', required: false, value: true},
                 ],
                 themes: [
-                    {id: 1, name: 'Core', active: true, readonly: true, dark_mode: false, tokens: {}},
+                    {
+                        id: 1,
+                        name: 'Core',
+                        active: true,
+                        readonly: true,
+                        dark_mode: false,
+                        tokens: {},
+                        css: '',
+                        updated_at: null,
+                    },
                     {
                         id: 2,
                         name: 'Mine',
@@ -47,6 +57,8 @@ describe('admin settings pages', () => {
                         readonly: false,
                         dark_mode: true,
                         tokens: {primary: '#8a2be2'},
+                        css: 'a{}',
+                        updated_at: '3 days ago',
                     },
                 ],
                 socialProviders: [
@@ -66,6 +78,14 @@ describe('admin settings pages', () => {
 
         expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
         expect(wrapper.findAll('.mp-thumb')).toHaveLength(2);
+        expect(wrapper.text()).toContain('Always dark');
+        expect(wrapper.text()).toContain('3 days ago');
+        expect(wrapper.findAll('[data-test=make-active]')).toHaveLength(1);
+        await wrapper.get('[data-test=make-active]').trigger('click');
+        expect(inertia.routerPatch).toHaveBeenCalledWith(
+            '/admin/settings/themes/2',
+            expect.objectContaining({active: true, name: 'Mine', css: 'a{}'}),
+        );
         expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
         expect(wrapper.text()).toContain('http://x/login/discord/return');
