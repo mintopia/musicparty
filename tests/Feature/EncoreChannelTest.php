@@ -16,17 +16,21 @@ use App\Services\Music\Data\PlaybackConnectionStatus;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\Track;
 use App\Services\Music\Fake\FakeMusicProvider;
+use App\Services\Playback\EncoreConnection;
 use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\PlaybackStatus;
 use App\Services\PlaybackSync;
 use Illuminate\Broadcasting\BroadcastManager;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
 use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection as ConnectionContract;
 use Laravel\Reverb\Contracts\WebSocketConnection;
+use Laravel\Reverb\Events\ChannelRemoved;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Channels\Channel;
 use Ratchet\RFC6455\Messaging\Frame;
 
 function soloistFrame(string $name): array
@@ -186,4 +190,90 @@ it('records the Played Track, tops up the Queue and broadcasts once from an Enco
         ->and($upcoming->fresh()->queued_at)->not->toBeNull()
         ->and($provider->callsTo('sendToPlayer'))->toHaveCount(1);
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+});
+
+function encoreConnection(): ConnectionContract
+{
+    return new class(Mockery::mock(WebSocketConnection::class), new Application('1', 'key', 's3cret', 60, 30, ['*'], 10000), null) extends ConnectionContract
+    {
+        public function identifier(): string
+        {
+            return '123.456';
+        }
+
+        public function id(): string
+        {
+            return '123.456';
+        }
+
+        public function send(string $message): void {}
+
+        public function control(string $type = Frame::OP_PING): void {}
+
+        public function terminate(): void {}
+    };
+}
+
+function frameFromEncore(array $frame): void
+{
+    (new DispatchPushedPlaybackState)->handle(new MessageReceived(encoreConnection(), json_encode($frame)));
+}
+
+function encoreSubscribeFrame(string $channel, ?string $auth = null): array
+{
+    return ['event' => 'pusher:subscribe', 'data' => ['channel' => $channel, 'auth' => $auth ?? 'key:'.hash_hmac('sha256', "123.456:{$channel}", 's3cret')]];
+}
+
+describe('Encore activity signal', function () {
+    beforeEach(function () {
+        Cache::flush();
+        DispatchPushedPlaybackState::reset();
+        Queue::fake();
+    });
+
+    it('is recorded on a verified subscribe and refreshed by later frames, not by a forged subscribe', function () {
+        frameFromEncore(encoreSubscribeFrame('private-encore.EVIL', 'key:forged'));
+        expect(Cache::has(EncoreConnection::seenKey('EVIL')))->toBeFalse();
+
+        frameFromEncore(encoreSubscribeFrame('private-encore.ABC'));
+        expect(Cache::has(EncoreConnection::seenKey('ABC')))->toBeTrue();
+
+        Cache::forget(EncoreConnection::seenKey('ABC'));
+        $this->travel(6)->seconds();
+        frameFromEncore(['event' => 'pusher:pong']);
+        expect(Cache::has(EncoreConnection::seenKey('ABC')))->toBeTrue();
+    });
+
+    it('writes at most once per throttle window', function () {
+        frameFromEncore(encoreSubscribeFrame('private-encore.ABC'));
+        Cache::forget(EncoreConnection::seenKey('ABC'));
+
+        frameFromEncore(['event' => 'pusher:pong']);
+
+        expect(Cache::has(EncoreConnection::seenKey('ABC')))->toBeFalse();
+    });
+
+    it('is cleared when the channel empties, and expires without frames', function () {
+        frameFromEncore(encoreSubscribeFrame('private-encore.ABC'));
+        $channel = Mockery::mock(Channel::class);
+        $channel->shouldReceive('name')->andReturn('private-encore.ABC');
+
+        (new DispatchPushedPlaybackState)->handleChannelRemoved(new ChannelRemoved($channel));
+        expect(Cache::has(EncoreConnection::seenKey('ABC')))->toBeFalse();
+
+        frameFromEncore(encoreSubscribeFrame('private-encore.XYZ'));
+        $this->travel(EncoreConnection::seenSeconds() + 1)->seconds();
+        expect(Cache::has(EncoreConnection::seenKey('XYZ')))->toBeFalse();
+    });
+
+    it('makes isConnected true without asking Reverb, and falls back to Reverb otherwise', function () {
+        config(['broadcasting.default' => 'null']);
+        $connection = app(EncoreConnection::class);
+        $party = Party::factory()->make(['code' => 'ABC']);
+
+        expect($connection->isConnected($party))->toBeNull();
+
+        Cache::put(EncoreConnection::seenKey('ABC'), time(), EncoreConnection::seenSeconds());
+        expect($connection->isConnected($party))->toBeTrue();
+    });
 });

@@ -43,6 +43,7 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
 use Laravel\Pulse\Facades\Pulse;
+use Laravel\Reverb\Events\ChannelRemoved;
 use Laravel\Reverb\Events\MessageReceived;
 use Random\Randomizer;
 use SocialiteProviders\Discord\DiscordExtendSocialite;
@@ -106,6 +107,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MessageLogged::class, MessageLoggedListener::class);
         Event::listen(SpotifyAccessTokenUpdatedEvent::class, BroadcastWebPlayerToken::class);
         Event::listen(MessageReceived::class, DispatchPushedPlaybackState::class);
+        Event::listen(ChannelRemoved::class, [DispatchPushedPlaybackState::class, 'handleChannelRemoved']);
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
 

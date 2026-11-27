@@ -9,6 +9,7 @@ type Subscription = {
 };
 
 const QUEUE = ['upNext', 'upcoming'];
+const CONNECTION_REFRESH_MS = 15000;
 const ALL = ['playerState', 'control', 'upNext', 'upcoming', 'attention'];
 
 export function useDashboardSync(code: string, onState: (state: LegacyPartyState) => void): void {
@@ -30,7 +31,7 @@ export function useDashboardSync(code: string, onState: (state: LegacyPartyState
 
     const onParty = (payload: LegacyPartyState): void => {
         onState(payload);
-        schedule(['control', ...QUEUE]);
+        schedule(['control', 'attention', ...QUEUE]);
     };
     const onQueue = (): void => schedule(QUEUE);
     const onManagers = (): void => schedule(['attention', ...QUEUE]);
@@ -45,9 +46,11 @@ export function useDashboardSync(code: string, onState: (state: LegacyPartyState
     queue.listen('UpcomingSong\\RemovedEvent', onQueue);
     managers.listen('FlaggedRequestAdded', onManagers);
     managers.listen('FlaggedRequestResolved', onManagers);
+    const connectionTimer = setInterval(() => router.reload({only: ['control', 'attention']}), CONNECTION_REFRESH_MS);
     echo.onReconnect(() => router.reload({only: ALL}));
 
     onBeforeUnmount(() => {
+        clearInterval(connectionTimer);
         party.stopListening('Party\\UpdatedEvent', onParty);
         queue.stopListening('UpcomingSong\\UpdatedEvent', onQueue);
         queue.stopListening('UpcomingSong\\RemovedEvent', onQueue);

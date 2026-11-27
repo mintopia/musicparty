@@ -322,7 +322,7 @@ class PartyDashboard
             'device' => ['id' => $state->deviceId ?? $party->recent_device_id, 'name' => $state->deviceName ?? $party->device_name],
             'receivedAt' => $party->playback_received_at?->toIso8601String(),
             'link' => $needsRelink ? 'relink_required' : 'connected',
-            'polling' => ! $party->poll ? 'off' : ($party->hasFreshPushedPlayback() ? 'backup' : 'on'),
+            'polling' => ! $party->poll ? 'off' : ($connected === true || $party->hasFreshPushedPlayback() ? 'backup' : 'on'),
         ];
     }
 
