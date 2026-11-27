@@ -15,6 +15,7 @@ const props = defineProps<{
     song: number;
     timezone: string;
     scheduledFor?: string | null;
+    anchor?: {bottom: number; right: number} | null;
 }>();
 const emit = defineEmits<{close: []; saved: []}>();
 
@@ -100,6 +101,15 @@ const summaryDay = computed(() =>
 );
 const saving = ref(false);
 
+const POPOVER_WIDTH = 340;
+const popoverStyle = computed(() => {
+    if (!props.anchor) {
+        return undefined;
+    }
+    const left = Math.max(16, Math.min(props.anchor.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 16));
+    return {top: `${props.anchor.bottom + 8}px`, left: `${left}px`};
+});
+
 const chips = computed(() => {
     const soon = partsIn(plusMinutes(15));
     const nextHour = partsIn(plusMinutes(60 - today.mm));
@@ -155,7 +165,14 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 
 <template>
     <div class="sheet-dim" data-test="schedule-dim" @click="emit('close')"></div>
-    <div class="sched-sheet" role="dialog" aria-modal="true" aria-labelledby="sched-title" data-test="schedule-sheet">
+    <div
+        class="sched-sheet"
+        :class="{'is-anchored': anchor}"
+        :style="popoverStyle"
+        role="dialog"
+        aria-labelledby="sched-title"
+        data-test="schedule-sheet"
+    >
         <button type="button" class="sched-grab" aria-label="Close" data-test="schedule-handle" @click="emit('close')">
             <span></span>
         </button>
@@ -410,11 +427,20 @@ onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
     .sched-sheet {
         inset: 50% auto auto 50%;
         translate: -50% -50%;
-        inline-size: 420px;
+        inline-size: 340px;
         max-inline-size: calc(100vw - 32px);
         max-block-size: calc(100dvh - 32px);
-        border-radius: 12px;
-        box-shadow: 0 16px 48px rgb(0 0 0 / 28%);
+        padding: 16px;
+        border: 1px solid var(--tblr-border-color);
+        border-radius: 14px;
+        box-shadow: 0 12px 40px rgb(0 0 0 / 22%);
+    }
+    .sched-sheet.is-anchored {
+        inset: auto;
+        translate: none;
+    }
+    .sheet-dim {
+        background: transparent;
     }
     .sched-grab {
         display: none;

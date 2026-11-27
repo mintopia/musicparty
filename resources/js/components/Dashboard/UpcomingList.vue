@@ -29,6 +29,13 @@ const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 const run = useRun();
 const openMenuId = ref<number | null>(null);
 const scheduling = ref<DashboardRequest | null>(null);
+const scheduleAnchor = ref<{bottom: number; right: number} | null>(null);
+
+function openSchedule(request: DashboardRequest, event: MouseEvent): void {
+    const rect = (event.currentTarget as HTMLElement).getBoundingClientRect();
+    scheduleAnchor.value = {bottom: rect.bottom, right: rect.right};
+    scheduling.value = request;
+}
 const estimates = computed(() =>
     estimateStarts(props.items, props.status, props.nowTrackName ?? null, props.now ?? Date.now()),
 );
@@ -44,6 +51,7 @@ function removeFromMenu(request: DashboardRequest): void {
 
 function scheduleFromMenu(request: DashboardRequest): void {
     openMenuId.value = null;
+    scheduleAnchor.value = null;
     scheduling.value = request;
 }
 
@@ -231,7 +239,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 aria-label="Schedule"
                                 title="Schedule"
                                 data-test="schedule"
-                                @click="scheduling = request"
+                                @click="openSchedule(request, $event)"
                             >
                                 <i class="ti ti-calendar-clock"></i>
                             </button>
@@ -259,6 +267,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             :song="scheduling.id"
             :timezone="timezone"
             :scheduled-for="scheduling.scheduled_for"
+            :anchor="scheduleAnchor"
             @close="scheduling = null"
         />
     </div>

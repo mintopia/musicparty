@@ -49,6 +49,7 @@ const notice = ref<Notice | null>(null);
 const failedIds = ref(new Set<number>());
 const openMenuId = ref<number | null>(null);
 const scheduling = ref<LegacyUpcomingSong | null>(null);
+const scheduleAnchor = ref<{bottom: number; right: number} | null>(null);
 const message = computed(() => notice.value?.text ?? '');
 let messageTimer: ReturnType<typeof setTimeout> | null = null;
 let pending: {song: LegacyUpcomingSong; timer: ReturnType<typeof setTimeout> | null} | null = null;
@@ -86,8 +87,10 @@ function formatPlaysAt(iso: string): string {
     return `${new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', timeZone: props.timezone}).format(date)}, ${time}`;
 }
 
-function openSchedule(song: LegacyUpcomingSong): void {
+function openSchedule(song: LegacyUpcomingSong, event?: MouseEvent): void {
     openMenuId.value = null;
+    const rect = (event?.currentTarget as HTMLElement | null)?.getBoundingClientRect();
+    scheduleAnchor.value = rect ? {bottom: rect.bottom, right: rect.right} : null;
     scheduling.value = song;
 }
 
@@ -370,7 +373,7 @@ onBeforeUnmount(() => {
                             :aria-label="`${song.scheduled_for ? 'Change schedule for' : 'Schedule'} ${song.name}`"
                             :title="song.scheduled_for ? 'Change schedule' : 'Schedule'"
                             data-test="schedule"
-                            @click="openSchedule(song)"
+                            @click="openSchedule(song, $event)"
                         >
                             <i class="icon ti ti-calendar-clock"></i>
                         </button>
@@ -486,6 +489,7 @@ onBeforeUnmount(() => {
             :song="scheduling.id"
             :timezone="timezone"
             :scheduled-for="scheduling.scheduled_for"
+            :anchor="scheduleAnchor"
             @saved="resync"
             @close="scheduling = null"
         />
