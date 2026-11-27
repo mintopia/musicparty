@@ -2,7 +2,7 @@
 
 it('no longer serves the Spotify cookie relay', function () {
     $this->post('/proxy', ['cookies' => ['sp_dc' => 'x'], 'code' => '1'])
-        ->assertNotFound();
+        ->assertStatus(405);
 });
 
 it('keeps cookies.json untracked', function () {
