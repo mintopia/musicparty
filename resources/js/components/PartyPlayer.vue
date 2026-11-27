@@ -2,7 +2,11 @@
 import axios from 'axios';
 import {router} from '@inertiajs/vue3';
 import {computed, ref, watch} from 'vue';
+import EmptyState from '@/components/EmptyState.vue';
 import {useEcho} from '@/composables/useEcho';
+import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
+import PlaybackProgress from '@/components/PlaybackProgress.vue';
+import RateControl from '@/components/RateControl.vue';
 import {useTicker} from '@/composables/useProgress';
 import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
 import type {LegacyArtist, LegacyPartyState} from '@/types';
@@ -28,9 +32,7 @@ const progress = computed(() =>
 );
 const currentTime = computed(() => (status.value === null ? '' : formatMs(elapsedMs.value)));
 const endTime = computed(() => (status.value === null ? '' : formatMs(status.value.length)));
-const backgroundStyle = computed(() =>
-    state.value.now?.album?.image_url ? `background-image: url('${state.value.now.album.image_url}');` : '',
-);
+const backgroundImage = computed(() => state.value.now?.album?.image_url ?? null);
 
 function formatMs(ms: number): string {
     const minutes = Math.floor(ms / 60000);
@@ -71,13 +73,20 @@ echo.onReconnect(() => router.reload({only: ['playerState']}));
 </script>
 
 <template>
-    <div class="player p-0" data-test="party-player">
-        <div class="blur-bg py-3 border-bottom border-primary text-white" :style="backgroundStyle">
+    <div data-test="party-player">
+        <NowPlayingBackdrop :image="backgroundImage" class="py-3 border-bottom border-primary">
             <div class="container-xl">
                 <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
                     <div v-if="state.now !== null" class="row">
                         <div class="col-auto">
-                            <img class="albumart" :src="state.now.album?.image_url" alt="" />
+                            <img
+                                class="party-player-art"
+                                :src="state.now.album?.image_url"
+                                alt=""
+                                width="176"
+                                height="176"
+                                decoding="async"
+                            />
                         </div>
                         <div class="col">
                             <div class="fs-2 pb-3 overflow-hidden" data-test="now-name">
@@ -99,63 +108,36 @@ echo.onReconnect(() => router.reload({only: ['playerState']}));
                                 <template v-if="state.current.user">Requested by {{ state.current.user }}</template>
                                 <template v-else>Fallback Track</template>
                             </div>
-                            <div class="progress">
-                                <div
-                                    class="progress-bar smooth-progress-bar"
-                                    role="progressbar"
-                                    :style="`width: ${progress}%;`"
-                                ></div>
-                            </div>
+                            <PlaybackProgress class="mb-1" :percent="progress" />
                             <div class="d-flex">
                                 <div class="w-25">{{ currentTime }}</div>
                                 <div class="w-50 text-center"></div>
                                 <div class="w-25 text-end">{{ endTime }}</div>
                             </div>
                             <div v-if="state.current" class="mt-3 text-center">
-                                <i
-                                    class="icon ti ti-thumb-down cursor-pointer d-inline-block me-4"
-                                    @click="rate(-1)"
-                                ></i>
-                                <span class="d-inline-block mx-2">{{ state.current.rating }}</span>
-                                <i class="icon ti ti-thumb-up cursor-pointer d-inline-block ms-4" @click="rate(1)"></i>
+                                <RateControl :rating="state.current.rating" @rate="rate" />
                             </div>
                         </div>
                     </div>
-                    <div v-else class="empty text-muted" data-test="nothing-playing">
-                        <i class="icon icon-lg ti ti-music-off"></i>
-                        There is nothing playing
-                    </div>
+                    <EmptyState
+                        v-else
+                        class="text-white"
+                        title="There is nothing playing"
+                        icon="ti-music-off"
+                        data-test="nothing-playing"
+                    />
                 </div>
             </div>
-        </div>
+        </NowPlayingBackdrop>
     </div>
 </template>
 
-<style>
-.player {
-    overflow: hidden;
-    padding: 1em;
-}
-
-.blur-bg {
-    backdrop-filter: blur(2px);
-    background-repeat: no-repeat;
-    background-size: 100%;
-    background-position: center center;
-    background-blend-mode: darken;
-    background-color: rgba(0, 0, 0, 0.9);
-}
-
-img.albumart {
-    max-width: 11em;
-}
-
-.progress {
-    height: 5px;
-    margin-bottom: 5px;
-}
-
-.smooth-progress-bar {
-    transition: width 1s linear;
+<style scoped>
+.party-player-art {
+    width: 11rem;
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    object-fit: cover;
 }
 </style>

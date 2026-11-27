@@ -30,6 +30,7 @@ use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
+use App\Support\QrCode;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -132,6 +133,7 @@ class PartyController extends Controller
                 'code' => $party->code,
                 'name' => $party->name,
                 'url' => route('parties.show', $party->code),
+                'qrSvg' => QrCode::svg(route('parties.show', $party->code)),
             ],
             'state' => $party->getState(...),
         ]);

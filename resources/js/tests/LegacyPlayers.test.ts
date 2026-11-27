@@ -89,7 +89,7 @@ describe('legacy decoration rendering', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyUrl: 'x',
+                
                 state: {
                     name: 'P',
                     now: track(),
@@ -121,7 +121,7 @@ describe('TvPlayer progress', () => {
         const wrapper = mount(TvPlayer, {
             props: {
                 code: 'ABC',
-                partyUrl: 'x',
+                
                 state: {
                     name: 'P',
                     now: track(),

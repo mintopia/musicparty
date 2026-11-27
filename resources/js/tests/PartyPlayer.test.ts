@@ -42,7 +42,7 @@ const playing = (sampledAt: string, progressMs = 0): LegacyPartyState => ({
     status: {isPlaying: true, sampledAt, progressMs, length: 200000},
 });
 
-const width = (wrapper: ReturnType<typeof mount>): string => wrapper.get('.progress-bar').attributes('style') ?? '';
+const width = (wrapper: ReturnType<typeof mount>): string => wrapper.get('[role="progressbar"] > div').attributes('style') ?? '';
 
 describe('PartyPlayer', () => {
     beforeEach(() => {
@@ -67,7 +67,7 @@ describe('PartyPlayer', () => {
         await vi.advanceTimersByTimeAsync(3000);
 
         expect(wrapper.text()).toContain('0:33');
-        expect(width(wrapper)).toContain('16.5%');
+        expect(width(wrapper)).toContain('scaleX(0.165)');
     });
 
     it('clears its timer when unmounted', () => {
@@ -84,7 +84,7 @@ describe('PartyPlayer', () => {
             props: {code: 'ABC', initialState: {now, next: null, current: null, status: null}},
         });
 
-        expect(wrapper.find('.ti-thumb-up').exists()).toBe(false);
+        expect(wrapper.find('[data-test="rate-control"]').exists()).toBe(false);
 
         echo.update?.({now: {name: 'Bare'}, next: null, current: null, status: null});
         await wrapper.vm.$nextTick();
