@@ -12,7 +12,7 @@ it('renders the TV page for guests as an Inertia page with the party state', fun
             ->component('Parties/Tv')
             ->where('party.code', $party->code)
             ->where('party.name', $party->name)
-            ->where('party.url', route('parties.show', $party->code))
+            ->missing('party.url')
             ->where('state.name', $party->name)
             ->where('state.now', null)
             ->where('state.current', null)

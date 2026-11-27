@@ -158,7 +158,6 @@ class PartyController extends Controller
             'party' => [
                 'code' => $party->code,
                 'name' => $party->name,
-                'url' => route('parties.show', $party->code),
                 'qrSvg' => QrCode::svg(route('parties.show', $party->code)),
             ],
             'state' => $party->getState(...),
