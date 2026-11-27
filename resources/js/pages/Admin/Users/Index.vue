@@ -11,6 +11,7 @@ import Pagination from '@/components/Pagination.vue';
 import SearchBar from '@/components/SearchBar.vue';
 import type {SearchChip} from '@/components/SearchBar.vue';
 import SortHeader from '@/components/SortHeader.vue';
+import PageHead from '@/components/PageHead.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {Paginator} from '@/types';
 
@@ -29,7 +30,7 @@ interface AdminUserRow {
 }
 
 const props = defineProps<{
-    users: Paginator<AdminUserRow> & {total?: number};
+    users: Paginator<AdminUserRow> & {total: number; from: number | null; to: number | null};
     filters: {
         q: string;
         role: string;
@@ -43,6 +44,10 @@ const props = defineProps<{
     order: string;
     order_direction: 'asc' | 'desc';
 }>();
+
+function accountLabel(account: {name: string | null; needs_relink: boolean}): string {
+    return account.needs_relink ? `${account.name}, needs re-link` : (account.name ?? '');
+}
 
 const spec: TokenSpec = {
     role: ['admin'],
@@ -69,6 +74,11 @@ const filtered = computed(
         props.filters.first_login ||
         props.filters.spotify_relink ||
         props.filters.provider !== '',
+);
+const subtitle = computed(() =>
+    filtered.value
+        ? `${props.users.total} of ${props.total} users match.`
+        : `${props.total} users on this site, newest login first.`,
 );
 const resolved = computed(() => resolveSearch(form.q, spec));
 
@@ -144,9 +154,7 @@ function toggleChip(key: string): void {
             <Breadcrumbs :items="adminUserCrumbs()" />
         </template>
         <Head title="Users" />
-        <div class="page-header mt-0">
-            <h1>Users</h1>
-        </div>
+        <PageHead title="Users" :summary="subtitle" />
 
         <SearchBar
             :model-value="form.q"
@@ -171,27 +179,63 @@ function toggleChip(key: string): void {
                     >
                         <li v-for="user in users.data" :key="user.id" class="list-group-item p-3">
                             <div class="d-flex gap-3 align-items-start">
+                                <span
+                                    class="avatar avatar-sm"
+                                    :style="{backgroundImage: `url(${user.avatar_url})`}"
+                                    data-test="user-avatar"
+                                ></span>
                                 <div class="flex-fill min-w-0">
-                                    <Link :href="`/admin/users/${user.id}`" class="fw-medium">{{ user.nickname }}</Link>
-                                    <span v-if="user.is_admin" class="badge bg-primary text-primary-fg ms-1"
-                                        >Admin</span
-                                    >
-                                    <span v-if="user.suspended" class="badge bg-red-lt ms-1">Suspended</span>
-                                    <div class="text-secondary small mt-1">
-                                        #{{ user.id }} &middot;
+                                    <div>
+                                        <Link :href="`/admin/users/${user.id}`" class="fw-medium">{{
+                                            user.nickname
+                                        }}</Link>
+                                        <span v-if="user.is_admin" class="badge bg-primary text-primary-fg ms-1"
+                                            >Admin</span
+                                        >
+                                        <span v-if="user.suspended" class="badge bg-red-lt ms-1">Suspended</span>
+                                    </div>
+                                    <div v-if="(user.accounts ?? []).length > 0" class="mt-1">
+                                        <span class="mp-provs" data-test="user-accounts">
+                                            <i
+                                                v-for="(account, index) in user.accounts ?? []"
+                                                :key="index"
+                                                class="ti"
+                                                :class="[
+                                                    `ti-brand-${account.provider}`,
+                                                    {'is-warn': account.needs_relink},
+                                                ]"
+                                                role="img"
+                                                :title="accountLabel(account)"
+                                                :aria-label="accountLabel(account)"
+                                            ></i>
+                                        </span>
+                                    </div>
+                                    <div class="mp-sub mt-1 text-wrap">
+                                        {{ user.parties_count ?? 0 }}
+                                        {{ user.parties_count === 1 ? 'party' : 'parties' }}
+                                        &middot;
                                         <template v-if="user.last_login"
                                             >last login {{ user.last_login_human }}</template
                                         >
                                         <template v-else>never logged in</template>
                                     </div>
                                 </div>
-                                <Link
-                                    :href="`/admin/users/${user.id}`"
-                                    class="btn btn-icon btn-ghost-secondary user-open"
-                                    :aria-label="`Open ${user.nickname}`"
-                                >
-                                    <i class="icon ti ti-chevron-right" aria-hidden="true"></i>
-                                </Link>
+                                <RowMenu :label="`Actions for ${user.nickname}`">
+                                    <Link class="dropdown-item" :href="`/admin/users/${user.id}`"
+                                        ><i class="icon ti ti-user me-2" aria-hidden="true"></i>View</Link
+                                    >
+                                    <Link class="dropdown-item" :href="`/admin/users/${user.id}/edit`"
+                                        ><i class="icon ti ti-edit me-2" aria-hidden="true"></i>Edit</Link
+                                    >
+                                    <a class="dropdown-item" :href="`/admin/users/${user.id}/impersonate`"
+                                        ><i class="icon ti ti-spy me-2" aria-hidden="true"></i>Impersonate
+                                        {{ user.nickname }}</a
+                                    >
+                                    <div class="dropdown-divider"></div>
+                                    <Link class="dropdown-item text-danger" :href="`/admin/users/${user.id}/delete`"
+                                        ><i class="icon ti ti-trash me-2" aria-hidden="true"></i>Delete</Link
+                                    >
+                                </RowMenu>
                             </div>
                         </li>
                     </ul>
@@ -266,26 +310,18 @@ function toggleChip(key: string): void {
                                         </div>
                                     </td>
                                     <td>
-                                        <span class="d-inline-flex gap-2" data-test="user-accounts">
+                                        <span class="mp-provs" data-test="user-accounts">
                                             <i
                                                 v-for="(account, index) in user.accounts ?? []"
                                                 :key="index"
                                                 class="ti"
                                                 :class="[
                                                     `ti-brand-${account.provider}`,
-                                                    account.needs_relink ? 'text-warning' : 'text-secondary',
+                                                    {'is-warn': account.needs_relink},
                                                 ]"
                                                 role="img"
-                                                :title="
-                                                    account.needs_relink
-                                                        ? `${account.name}, needs re-link`
-                                                        : (account.name ?? '')
-                                                "
-                                                :aria-label="
-                                                    account.needs_relink
-                                                        ? `${account.name}, needs re-link`
-                                                        : (account.name ?? '')
-                                                "
+                                                :title="accountLabel(account)"
+                                                :aria-label="accountLabel(account)"
                                             ></i>
                                         </span>
                                     </td>
@@ -342,7 +378,10 @@ function toggleChip(key: string): void {
                         title="No users yet"
                         description="Users appear here once they have signed in."
                     />
-                    <div v-if="users.last_page > 1" class="card-footer d-flex">
+                    <div v-if="users.data.length > 0" class="card-footer d-flex align-items-center">
+                        <p class="m-0 text-secondary" data-test="users-range">
+                            Showing <b>{{ users.from }}</b> to <b>{{ users.to }}</b> of <b>{{ users.total }}</b> users
+                        </p>
                         <Pagination class="ms-auto" :paginator="users" />
                     </div>
                 </div>
@@ -350,10 +389,3 @@ function toggleChip(key: string): void {
         </div>
     </AppLayout>
 </template>
-
-<style scoped>
-.user-open {
-    min-inline-size: 44px;
-    min-block-size: 44px;
-}
-</style>
