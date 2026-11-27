@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin themes</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Admin themes</h1>
+<p>Theme editor (U8). The old form was one narrow column where every unset colour showed black and Dark Mode sat at the bottom. The editor now has the form on the left and a live preview of the app on the right, so a colour is judged where it lands.</p>
+</header>
+
+<section class="mock-section">
+<h2>Themes list <span class="mock-tag is-changed">Changed</span></h2>
+<p>Lives under Settings, in the Themes tab. Thumbnails come from each theme's own colours.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-themes-list-desktop">
+<figcaption><b>Themes list</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Themes</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Themes</h1><p>Look and feel for the whole site.</p></div></div><ul class="nav nav-tabs mb-4"><li class="nav-item"><a class="nav-link" href="#">General</a></li><li class="nav-item"><a class="nav-link" href="#">Branding</a></li><li class="nav-item"><a class="nav-link" href="#">Sign-in providers</a></li><li class="nav-item"><a class="nav-link active" href="#" aria-selected="true">Themes</a></li></ul><div class="card"><div class="card-header"><h2 class="card-title">Themes</h2><a href="#" class="btn btn-primary ms-auto"><i class="icon ti ti-plus"></i>Add theme</a></div><table class="table table-vcenter card-table"><thead><tr><th>Theme</th><th>Status</th><th>Mode</th><th>Updated</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#182433;--t-bg:#f6f8fb;--t-surf:#ffffff;--t-pri:#0054a6;--t-text:#182433" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><span class="fw-medium">Default</span><span class="mp-sub">Built in</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td class="text-secondary">Built in</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm">View</a></div></td></tr>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#080b12;--t-bg:#080b12;--t-surf:#15151f;--t-pri:#8a2be2;--t-text:#e6e6f2" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">StratLAN</a><span class="mp-sub">Purple on near-black</span></div></div></td><td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Active</span></td><td>Always dark</td><td>3 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#1d2b2a;--t-bg:#f4f7f6;--t-surf:#ffffff;--t-pri:#0f766e;--t-text:#14201f" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">Reference Theme</a><span class="mp-sub">Teal, light</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td>45 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
+</tbody></table></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Active is a badge with the same green dot as other states; "Make active" is a row action instead of a form toggle you have to open the editor for.</li><li><b>Open question:</b> the built-in Default is shown as a row you can activate (switching back to it). Today it is Edit and a disabled Delete.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Create theme <span class="mock-tag is-changed">Changed</span></h2>
+<p>Starts empty: every colour reads "Default" with a dashed swatch showing the colour it falls back to. Nothing is black.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-theme-create-desktop">
+<figcaption><b>Add theme</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Add theme</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Add theme</h1><p>Start from the defaults and change only what you need.</p></div><div class="btn-list"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary" type="button">Create theme</button></div></div><form><div class="mp-editor"><div class="mp-stack">
+<div class="card"><div class="card-header"><h2 class="card-title">Details</h2></div><div class="card-body pt-0">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tn">Name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the themes list.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tn" class="form-control" value=""></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Dark mode</label><p class="setting-hint" data-v-cc5ef5d9>Everyone sees the dark version while this theme is active. Off shows the light version.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Dark mode"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Active</label><p class="setting-hint" data-v-cc5ef5d9>Use this theme for the whole site. Only one theme is active.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Active"></label></div></div>
+</div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Colours</h2><span class="ms-auto text-secondary small">Anything left on Default keeps the standard look.</span></div>
+<div class="mp-tokens"><div class="mp-token"><label class="form-label" for="tok0">Primary</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#0054a6"></span></span>
+<input id="tok0" class="form-control" placeholder="#0054a6" aria-describedby="tokh0" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh0">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok1">Navigation background</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#182433"></span></span>
+<input id="tok1" class="form-control" placeholder="#182433" aria-describedby="tokh1" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh1">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok2">Surface</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#ffffff"></span></span>
+<input id="tok2" class="form-control" placeholder="#ffffff" aria-describedby="tokh2" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh2">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok3">Text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#182433"></span></span>
+<input id="tok3" class="form-control" placeholder="#182433" aria-describedby="tokh3" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh3">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok4">Muted text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#667382"></span></span>
+<input id="tok4" class="form-control" placeholder="#667382" aria-describedby="tokh4" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh4">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok5">Border</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#e6e7e9"></span></span>
+<input id="tok5" class="form-control" placeholder="#e6e7e9" aria-describedby="tokh5" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh5">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok6">Success</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#2fb344"></span></span>
+<input id="tok6" class="form-control" placeholder="#2fb344" aria-describedby="tokh6" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh6">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok7">Danger</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#d63939"></span></span>
+<input id="tok7" class="form-control" placeholder="#d63939" aria-describedby="tokh7" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh7">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok8">Warning</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#f76707"></span></span>
+<input id="tok8" class="form-control" placeholder="#f76707" aria-describedby="tokh8" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh8">Using the Music Party default</div></div></div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Custom CSS</h2></div><div class="card-body"><pre class="mp-code" tabindex="0" aria-label="Custom CSS editor"><span data-n="1">/* Custom CSS is optional */</span><span data-n="2"></span></pre><small class="form-hint d-block mt-2">Press <kbd>Ctrl</kbd>+<kbd>M</kbd> to let Tab move focus out of the editor. <code>:root</code> rules apply to light and dark.</small></div></div>
+</div><div><div class="card mp-sticky"><div class="card-header"><h2 class="card-title">Preview</h2><div class="ms-auto mp-chips" role="group" aria-label="Preview mode"><button class="mp-chip" type="button" aria-pressed="true"><i class="ti ti-sun"></i>Light</button><button class="mp-chip" type="button" aria-pressed="false"><i class="ti ti-moon"></i>Dark</button></div></div>
+<div class="card-body"><div class="pv" style="--pv-nav:#182433;--pv-bg:#f6f8fb;--pv-surf:#fff;--pv-text:#182433;--pv-muted:#667382;--pv-border:#e6e7e9;--pv-primary:#0054a6;--pv-danger:#d63939;--pv-success:#2fb344;--pv-warning:#f76707"><div class="pv-nav"><b>Music Party</b><span>Home</span><span class="on">Coyote LAN 26</span><span>Profile</span><span>Admin</span></div>
+<div class="pv-main"><h3>Requests</h3><div class="pv-card"><div class="pv-row"><span>Midnight City <span class="pv-muted">· M83</span></span><span class="pv-badge" style="background:var(--pv-success)">Played</span></div><div class="pv-row"><span>Sandstorm <span class="pv-muted">· Darude</span></span><span class="pv-badge" style="background:var(--pv-warning)">Flagged</span></div><span class="pv-muted">Muted text and a <a href="#">link</a></span></div>
+<div class="pv-btns"><span class="pv-btn">Primary</span><span class="pv-btn o">Outline</span><span class="pv-btn d">Delete</span></div></div></div>
+<p class="text-secondary small mt-3 mb-0">Shows  with your unsaved changes. Nothing is changed yet.</p></div></div></div></div></form></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Unset colours</b> (U8): the swatch shows the default colour dashed and labelled "Default"; the field shows the default as a placeholder. Setting a value shows the swatch solid and replaces the label with <b>Reset</b>.</li><li><b>Order</b> (U8): Name, Dark mode, Active at the top in the Settings row pattern; colours in a two-up grid; Custom CSS last and full width, because it is the advanced option.</li><li><b>Required</b> stars on Primary and Navigation background are dropped: with defaults shown they can never be empty. <b>Open question:</b> confirm the backend accepts them unset.</li><li>Save is the one filled button, in the page head, so it is visible next to the preview without scrolling a long form.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Edit a dark theme <span class="mock-tag is-changed">Changed</span></h2>
+<p>The StratLAN theme from the approved mockup, rebuilt in the editor. The preview switches to Dark because the theme is always dark.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-theme-edit-stratlan-desktop-dark" data-theme="dark">
+<figcaption><b>Edit StratLAN</b> 1440px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Edit StratLAN</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Edit StratLAN</h1><p>Active since 3 days ago.</p></div><div class="btn-list"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary" type="button">Save changes</button></div></div><form><div class="mp-editor"><div class="mp-stack">
+<div class="card"><div class="card-header"><h2 class="card-title">Details</h2></div><div class="card-body pt-0">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tn">Name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the themes list.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tn" class="form-control" value="StratLAN"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Dark mode</label><p class="setting-hint" data-v-cc5ef5d9>Everyone sees the dark version while this theme is active. Off shows the light version.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Dark mode"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Active</label><p class="setting-hint" data-v-cc5ef5d9>Use this theme for the whole site. Only one theme is active.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Active"></label></div></div>
+</div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Colours</h2><span class="ms-auto text-secondary small">Anything left on Default keeps the standard look.</span></div>
+<div class="mp-tokens"><div class="mp-token"><label class="form-label" for="tok0">Primary</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#8a2be2"></span></span>
+<input id="tok0" class="form-control" value="#8a2be2" aria-describedby="tokh0" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh0">Default is #0054a6</div></div><div class="mp-token"><label class="form-label" for="tok1">Navigation background</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#080b12"></span></span>
+<input id="tok1" class="form-control" value="#080b12" aria-describedby="tokh1" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh1">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok2">Surface</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#15151f"></span></span>
+<input id="tok2" class="form-control" value="#15151f" aria-describedby="tokh2" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh2">Default is #ffffff</div></div><div class="mp-token"><label class="form-label" for="tok3">Text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#e6e6f2"></span></span>
+<input id="tok3" class="form-control" value="#e6e6f2" aria-describedby="tokh3" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh3">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok4">Muted text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#a9a9c4"></span></span>
+<input id="tok4" class="form-control" value="#a9a9c4" aria-describedby="tokh4" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh4">Default is #667382</div></div><div class="mp-token"><label class="form-label" for="tok5">Border</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#26263a"></span></span>
+<input id="tok5" class="form-control" value="#26263a" aria-describedby="tokh5" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh5">Default is #e6e7e9</div></div><div class="mp-token"><label class="form-label" for="tok6">Success</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#4ade80"></span></span>
+<input id="tok6" class="form-control" value="#4ade80" aria-describedby="tokh6" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh6">Default is #2fb344</div></div><div class="mp-token"><label class="form-label" for="tok7">Danger</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#fb5c5c"></span></span>
+<input id="tok7" class="form-control" value="#fb5c5c" aria-describedby="tokh7" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh7">Default is #d63939</div></div><div class="mp-token"><label class="form-label" for="tok8">Warning</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#e38902"></span></span>
+<input id="tok8" class="form-control" value="#e38902" aria-describedby="tokh8" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh8">Default is #f76707</div></div></div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Custom CSS</h2></div><div class="card-body"><pre class="mp-code" tabindex="0" aria-label="Custom CSS editor"><span data-n="1">.card a:not(.btn) { color: var(--tblr-muted); }</span><span data-n="2">.card a:not(.btn):hover { color: #c9a6ff; }</span><span data-n="3">.badge.bg-secondary {</span><span data-n="4">    background-color: #2f2f45 !important;</span><span data-n="5">    text-transform: uppercase;</span><span data-n="6">}</span><span data-n="7">.navbar-vertical { border-right: 1px solid rgba(138,43,226,.22); }</span></pre><small class="form-hint d-block mt-2">Press <kbd>Ctrl</kbd>+<kbd>M</kbd> to let Tab move focus out of the editor. <code>:root</code> rules apply to light and dark.</small></div></div>
+</div><div><div class="card mp-sticky"><div class="card-header"><h2 class="card-title">Preview</h2><div class="ms-auto mp-chips" role="group" aria-label="Preview mode"><button class="mp-chip" type="button" aria-pressed="false"><i class="ti ti-sun"></i>Light</button><button class="mp-chip" type="button" aria-pressed="true"><i class="ti ti-moon"></i>Dark</button></div></div>
+<div class="card-body"><div class="pv" style="--pv-nav:#080b12;--pv-bg:#080b12;--pv-surf:#15151f;--pv-text:#e6e6f2;--pv-muted:#a9a9c4;--pv-border:#26263a;--pv-primary:#8a2be2;--pv-danger:#fb5c5c;--pv-success:#4ade80;--pv-warning:#e38902"><div class="pv-nav"><b>Music Party</b><span>Home</span><span class="on">Coyote LAN 26</span><span>Profile</span><span>Admin</span></div>
+<div class="pv-main"><h3>Requests</h3><div class="pv-card"><div class="pv-row"><span>Midnight City <span class="pv-muted">· M83</span></span><span class="pv-badge" style="background:var(--pv-success)">Played</span></div><div class="pv-row"><span>Sandstorm <span class="pv-muted">· Darude</span></span><span class="pv-badge" style="background:var(--pv-warning)">Flagged</span></div><span class="pv-muted">Muted text and a <a href="#">link</a></span></div>
+<div class="pv-btns"><span class="pv-btn">Primary</span><span class="pv-btn o">Outline</span><span class="pv-btn d">Delete</span></div></div></div>
+<p class="text-secondary small mt-3 mb-0">Shows StratLAN with your unsaved changes. </p></div></div></div></div></form></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Live preview</b> (U8): a small app shell (sidebar, a card with two rows, a badge, three buttons, a link) painted from the unsaved values, with a Light / Dark switch. It sticks while the form scrolls.</li><li>Preview is a mock of the app, not the real app, so it covers the tokens (primary, nav, surface, text, muted, border, success, danger, warning). Rules in Custom CSS are not previewed. <b>Open question:</b> render the real app in an iframe instead? More faithful, much more work.</li><li>Custom CSS shows the existing code editor; the note about <code>:root</code> applying to light and dark comes from ADR 0013.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Invalid colour and delete <span class="mock-tag is-changed">Changed</span></h2>
+<p>Validation says what was wrong and what to type; delete names the theme and says what happens to the site.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-theme-invalid-desktop">
+<figcaption><b>Invalid colour</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Edit Reference Theme</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Edit Reference Theme</h1><p>Not in use.</p></div><div class="btn-list"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary" type="button">Save changes</button></div></div><form><div class="mp-editor"><div class="mp-stack">
+<div class="card"><div class="card-header"><h2 class="card-title">Details</h2></div><div class="card-body pt-0">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tn">Name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the themes list.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tn" class="form-control" value="Reference Theme"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Dark mode</label><p class="setting-hint" data-v-cc5ef5d9>Everyone sees the dark version while this theme is active. Off shows the light version.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Dark mode"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Active</label><p class="setting-hint" data-v-cc5ef5d9>Use this theme for the whole site. Only one theme is active.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Active"></label></div></div>
+</div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Colours</h2><span class="badge bg-red-lt ms-auto">1 colour needs fixing</span></div>
+<div class="mp-tokens"><div class="mp-token"><label class="form-label" for="tok0">Primary</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#0f766e"></span></span>
+<input id="tok0" class="form-control" value="#0f766e" aria-describedby="tokh0" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh0">Default is #0054a6</div></div><div class="mp-token"><label class="form-label" for="tok1">Navigation background</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#1d2b2a"></span></span>
+<input id="tok1" class="form-control" value="#1d2b2a" aria-describedby="tokh1" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh1">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok2">Surface</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#ffffff"></span></span>
+<input id="tok2" class="form-control" placeholder="#ffffff" aria-describedby="tokh2" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh2">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok3">Text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#14201f"></span></span>
+<input id="tok3" class="form-control" value="#14201f" aria-describedby="tokh3" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh3">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok4">Muted text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#667382"></span></span>
+<input id="tok4" class="form-control" placeholder="#667382" aria-describedby="tokh4" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh4">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok5">Border</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#e6e7e9"></span></span>
+<input id="tok5" class="form-control" placeholder="#e6e7e9" aria-describedby="tokh5" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh5">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok6">Success</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#2fb344"></span></span>
+<input id="tok6" class="form-control" placeholder="#2fb344" aria-describedby="tokh6" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh6">Using the Music Party default</div></div><div class="mp-token"><label class="form-label" for="tok7">Danger</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#d63939"></span></span>
+<input id="tok7" class="form-control is-invalid" value="#d6393" aria-describedby="tokh7" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="invalid-feedback d-block" id="tokh7">That is not a colour. Use #RGB or #RRGGBB, for example #d63939.</div></div><div class="mp-token"><label class="form-label" for="tok8">Warning</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch is-unset" style="--swatch:#f76707"></span></span>
+<input id="tok8" class="form-control" placeholder="#f76707" aria-describedby="tokh8" spellcheck="false">
+<span class="input-group-text mp-tag">Default</span></div>
+<div class="form-hint" id="tokh8">Using the Music Party default</div></div></div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Custom CSS</h2></div><div class="card-body"><pre class="mp-code" tabindex="0" aria-label="Custom CSS editor"><span data-n="1">.card { border-radius: 12px; }</span><span data-n="2"></span></pre><small class="form-hint d-block mt-2">Press <kbd>Ctrl</kbd>+<kbd>M</kbd> to let Tab move focus out of the editor. <code>:root</code> rules apply to light and dark.</small></div></div>
+</div><div><div class="card mp-sticky"><div class="card-header"><h2 class="card-title">Preview</h2><div class="ms-auto mp-chips" role="group" aria-label="Preview mode"><button class="mp-chip" type="button" aria-pressed="true"><i class="ti ti-sun"></i>Light</button><button class="mp-chip" type="button" aria-pressed="false"><i class="ti ti-moon"></i>Dark</button></div></div>
+<div class="card-body"><div class="pv" style="--pv-nav:#182433;--pv-bg:#f6f8fb;--pv-surf:#fff;--pv-text:#182433;--pv-muted:#667382;--pv-border:#e6e7e9;--pv-primary:#0054a6;--pv-danger:#d63939;--pv-success:#2fb344;--pv-warning:#f76707"><div class="pv-nav"><b>Music Party</b><span>Home</span><span class="on">Coyote LAN 26</span><span>Profile</span><span>Admin</span></div>
+<div class="pv-main"><h3>Requests</h3><div class="pv-card"><div class="pv-row"><span>Midnight City <span class="pv-muted">· M83</span></span><span class="pv-badge" style="background:var(--pv-success)">Played</span></div><div class="pv-row"><span>Sandstorm <span class="pv-muted">· Darude</span></span><span class="pv-badge" style="background:var(--pv-warning)">Flagged</span></div><span class="pv-muted">Muted text and a <a href="#">link</a></span></div>
+<div class="pv-btns"><span class="pv-btn">Primary</span><span class="pv-btn o">Outline</span><span class="pv-btn d">Delete</span></div></div></div>
+<p class="text-secondary small mt-3 mb-0">Shows Reference Theme with your unsaved changes. Danger keeps the default until the value is valid.</p></div></div></div></div></form></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-theme-delete-desktop-dark" data-theme="dark">
+<figcaption><b>Delete StratLAN</b> 1440px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Delete StratLAN</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Delete StratLAN</h1><p>This cannot be undone.</p></div></div><form class="card" style="max-inline-size:560px;margin-inline:auto"><div class="card-status-top bg-danger"></div><div class="card-body text-center"><i class="icon mb-3 ti ti-alert-triangle icon-lg text-danger"></i>
+<p class="mt-3">Delete the theme <strong>StratLAN</strong>?</p><div class="d-inline-flex mb-3"><span class="mp-thumb" style="--t-nav:#080b12;--t-bg:#080b12;--t-surf:#15151f;--t-pri:#8a2be2;--t-text:#e6e6f2"><i></i><b></b></span></div>
+<p class="text-secondary">It is the active theme. The site goes back to the Default theme straight away, for everyone.</p></div>
+<div class="card-footer d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-danger ms-auto" type="button">Delete StratLAN</button></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Invalid: the field turns red with "That is not a colour. Use #RGB or #RRGGBB, for example #d63939." The card header counts the problems. The preview keeps the default until the value is valid.</li><li>Delete: names StratLAN in the title and button, shows its thumbnail and says it is active and the site returns to Default. No typed confirmation: the theme is recoverable only by re-creating it, so this is lighter than deleting a user (open question).</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Phone <span class="mock-tag is-changed">Changed</span></h2>
+<p>Editing a theme on a phone is a stretch, but a quick fix at a venue should work: the preview moves below the form and stays static.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="phone" id="admin-theme-edit-phone">
+<figcaption><b>Edit StratLAN</b> 390px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h3{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Edit StratLAN</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Edit StratLAN</h1><p>Active since 3 days ago.</p></div><div class="btn-list"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary" type="button">Save changes</button></div></div><form><div class="mp-editor"><div class="mp-stack">
+<div class="card"><div class="card-header"><h2 class="card-title">Details</h2></div><div class="card-body pt-0">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tn">Name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the themes list.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tn" class="form-control" value="StratLAN"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Dark mode</label><p class="setting-hint" data-v-cc5ef5d9>Everyone sees the dark version while this theme is active. Off shows the light version.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Dark mode"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Active</label><p class="setting-hint" data-v-cc5ef5d9>Use this theme for the whole site. Only one theme is active.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Active"></label></div></div>
+</div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Colours</h2><span class="ms-auto text-secondary small">Anything left on Default keeps the standard look.</span></div>
+<div class="mp-tokens"><div class="mp-token"><label class="form-label" for="tok0">Primary</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#8a2be2"></span></span>
+<input id="tok0" class="form-control" value="#8a2be2" aria-describedby="tokh0" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh0">Default is #0054a6</div></div><div class="mp-token"><label class="form-label" for="tok1">Navigation background</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#080b12"></span></span>
+<input id="tok1" class="form-control" value="#080b12" aria-describedby="tokh1" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh1">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok2">Surface</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#15151f"></span></span>
+<input id="tok2" class="form-control" value="#15151f" aria-describedby="tokh2" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh2">Default is #ffffff</div></div><div class="mp-token"><label class="form-label" for="tok3">Text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#e6e6f2"></span></span>
+<input id="tok3" class="form-control" value="#e6e6f2" aria-describedby="tokh3" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh3">Default is #182433</div></div><div class="mp-token"><label class="form-label" for="tok4">Muted text</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#a9a9c4"></span></span>
+<input id="tok4" class="form-control" value="#a9a9c4" aria-describedby="tokh4" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh4">Default is #667382</div></div><div class="mp-token"><label class="form-label" for="tok5">Border</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#26263a"></span></span>
+<input id="tok5" class="form-control" value="#26263a" aria-describedby="tokh5" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh5">Default is #e6e7e9</div></div><div class="mp-token"><label class="form-label" for="tok6">Success</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#4ade80"></span></span>
+<input id="tok6" class="form-control" value="#4ade80" aria-describedby="tokh6" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh6">Default is #2fb344</div></div><div class="mp-token"><label class="form-label" for="tok7">Danger</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#fb5c5c"></span></span>
+<input id="tok7" class="form-control" value="#fb5c5c" aria-describedby="tokh7" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh7">Default is #d63939</div></div><div class="mp-token"><label class="form-label" for="tok8">Warning</label>
+<div class="input-group has-validation"><span class="input-group-text"><span class="mp-swatch" style="--swatch:#e38902"></span></span>
+<input id="tok8" class="form-control" value="#e38902" aria-describedby="tokh8" spellcheck="false">
+<button class="btn" type="button" title="Back to the default colour"><i class="icon ti ti-restore"></i>Reset</button></div>
+<div class="form-hint" id="tokh8">Default is #f76707</div></div></div></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Custom CSS</h2></div><div class="card-body"><pre class="mp-code" tabindex="0" aria-label="Custom CSS editor"><span data-n="1">.card a:not(.btn) { color: var(--tblr-muted); }</span><span data-n="2">.card a:not(.btn):hover { color: #c9a6ff; }</span><span data-n="3">.badge.bg-secondary {</span><span data-n="4">    background-color: #2f2f45 !important;</span><span data-n="5">    text-transform: uppercase;</span><span data-n="6">}</span><span data-n="7">.navbar-vertical { border-right: 1px solid rgba(138,43,226,.22); }</span></pre><small class="form-hint d-block mt-2">Press <kbd>Ctrl</kbd>+<kbd>M</kbd> to let Tab move focus out of the editor. <code>:root</code> rules apply to light and dark.</small></div></div>
+</div><div><div class="card mp-sticky"><div class="card-header"><h2 class="card-title">Preview</h2><div class="ms-auto mp-chips" role="group" aria-label="Preview mode"><button class="mp-chip" type="button" aria-pressed="false"><i class="ti ti-sun"></i>Light</button><button class="mp-chip" type="button" aria-pressed="true"><i class="ti ti-moon"></i>Dark</button></div></div>
+<div class="card-body"><div class="pv" style="--pv-nav:#080b12;--pv-bg:#080b12;--pv-surf:#15151f;--pv-text:#e6e6f2;--pv-muted:#a9a9c4;--pv-border:#26263a;--pv-primary:#8a2be2;--pv-danger:#fb5c5c;--pv-success:#4ade80;--pv-warning:#e38902"><div class="pv-nav"><b>Music Party</b><span>Home</span><span class="on">Coyote LAN 26</span><span>Profile</span><span>Admin</span></div>
+<div class="pv-main"><h3>Requests</h3><div class="pv-card"><div class="pv-row"><span>Midnight City <span class="pv-muted">· M83</span></span><span class="pv-badge" style="background:var(--pv-success)">Played</span></div><div class="pv-row"><span>Sandstorm <span class="pv-muted">· Darude</span></span><span class="pv-badge" style="background:var(--pv-warning)">Flagged</span></div><span class="pv-muted">Muted text and a <a href="#">link</a></span></div>
+<div class="pv-btns"><span class="pv-btn">Primary</span><span class="pv-btn o">Outline</span><span class="pv-btn d">Delete</span></div></div></div>
+<p class="text-secondary small mt-3 mb-0">Shows StratLAN with your unsaved changes. </p></div></div></div></div></form></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Colour fields are one per row; the preview follows the form (not sticky). Save stays in the page head at full width.</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

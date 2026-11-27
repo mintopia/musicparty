@@ -1,0 +1,780 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin settings and Mods</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Admin settings and Mods</h1>
+<p>Instance Settings (U8). Same pattern as party Settings: tabs that share one width, SettingRow rows with a reason under every label, previews where the setting is visual, a compact table instead of wrapped URLs.</p>
+</header>
+
+<section class="mock-section">
+<h2>General <span class="mock-tag is-changed">Changed</span></h2>
+<p>Site, Defaults and Music providers on one tab. Each setting says what it does in a line; the change bar appears only when something is unsaved.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-settings-general-desktop">
+<figcaption><b>General</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Settings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Settings</h1><p>Site-wide settings for this Music Party instance.</p></div></div><ul class="nav nav-tabs mb-4" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" href="#" role="tab" aria-selected="true">General</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Branding</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Sign-in providers</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Themes</a></li></ul>
+<div class="card"><h2 class="mp-section-h">Site</h2><div class="mp-sec">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="sn">Site name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the sidebar, the browser tab and emails.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="sn" class="form-control" value="Coyote LAN"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tc">Terms and Conditions URL</label><p class="setting-hint" data-v-cc5ef5d9>Guests must agree to this on first login. Leave empty to skip.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tc" class="form-control" value=""></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="pp">Privacy Policy URL</label><p class="setting-hint" data-v-cc5ef5d9>Linked from the login page.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="pp" class="form-control" value=""></div></div>
+</div><div class="mp-sec"><h2 class="mp-section-h px-0">Defaults</h2>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="dc">Default party code</label><p class="setting-hint" data-v-cc5ef5d9>Four letters, no digits. Anyone who opens the site goes straight to this party.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="dc" class="form-control mp-code-input" value="KXQB" maxlength="4" autocapitalize="characters" spellcheck="false"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tz">Timezone</label><p class="setting-hint" data-v-cc5ef5d9>Used by time-based Mods and Scheduled Requests. Parties can override it.</p></div><div class="setting-control" data-v-cc5ef5d9><select id="tz" class="form-select"><option>Europe/London (UTC+00:00)</option></select></div></div>
+</div><div class="mp-sec"><h2 class="mp-section-h px-0">Music providers</h2>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Spotify</label><p class="setting-hint" data-v-cc5ef5d9>Lets parties use Spotify as their Music Provider.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Spotify"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Fake Music Provider</label><p class="setting-hint" data-v-cc5ef5d9>For local development only. Turn off on a real instance.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Fake Music Provider"></label></div></div>
+</div></div><div class="mp-savebar"><span class="mp-grow" role="status">2 unsaved changes</span><a href="#" class="btn btn-link">Discard</a><button class="btn btn-primary" type="button">Save changes</button></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Grouped sections</b> (U8) with h2 headings: Site, Defaults, Music providers. The old page was one 14-field column with a Themes card beside it and Social Providers underneath.</li><li><b>Default party code</b> uses <code>.mp-code-input</code> and the four-letter rule in the hint (decision 4). It was "Default Party Code, NPRN" with a digit-bearing example.</li><li><b>Timezone</b> is a picker (it was an empty text box); <b>Fake Music Provider</b> says local only and defaults off.</li><li><b>Sticky save bar</b> "2 unsaved changes, Discard, Save changes" replaces the Save button at the end of a long form (same bar as party Settings).</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Branding <span class="mock-tag is-changed">Changed</span></h2>
+<p>The four visual settings, each with a live preview on the surface it will appear on.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-settings-branding-desktop-dark" data-theme="dark">
+<figcaption><b>Branding</b> 1440px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Settings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Settings</h1><p>Site-wide settings for this Music Party instance.</p></div></div><ul class="nav nav-tabs mb-4" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">General</a></li><li class="nav-item" role="presentation"><a class="nav-link active" href="#" role="tab" aria-selected="true">Branding</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Sign-in providers</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Themes</a></li></ul>
+<div class="card"><h2 class="mp-section-h">Logos</h2><div class="mp-sec">
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="l1">Logo for dark backgrounds</label><p class="setting-hint" data-v-cc5ef5d9>A light version, used in the sidebar and on the login page.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="l1" class="form-control" value="/storage/brand/mark-reversed.svg"><div><div class="mp-preview-tile" style="background:#182433"><img src="assets/mark-small-reversed.svg" alt=""></div><span class="mp-sub mt-1">Preview on the sidebar colour</span></div></div></div>
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="l2">Logo for light backgrounds</label><p class="setting-hint" data-v-cc5ef5d9>A dark version, used in emails and on light pages.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="l2" class="form-control" value="/storage/brand/mark.svg"><div><div class="mp-preview-tile" style="background:#ffffff"><img src="assets/mark-small.svg" alt=""></div><span class="mp-sub mt-1">Preview on white</span></div></div></div>
+</div><div class="mp-sec"><h2 class="mp-section-h px-0">Login and browser</h2>
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="cv">Login cover image</label><p class="setting-hint" data-v-cc5ef5d9>The large photo beside the Discord button.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="cv" class="form-control" value="/storage/brand/lan-hall.jpg"><div class="mt-2"><div class="mp-preview-tile" style="background:url(assets/cover.jpg) center/cover;block-size:140px"></div><span class="mp-sub mt-1">Preview, cropped as on a laptop</span></div></div></div>
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="fv">Favicon</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the browser tab. Square, at least 64 pixels.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="fv" class="form-control" value="/storage/brand/favicon.png"><div class="d-flex align-items-center gap-2 mt-2"><img src="assets/mark-small.svg" alt="" width="32" height="32" style="border:1px solid var(--tblr-border-color);border-radius:6px;padding:4px"><span class="mp-sub">32 pixels, as in a tab</span></div></div></div>
+</div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Previews</b> (U8): the light-on-dark logo is previewed on the sidebar colour, the dark logo on white, the cover cropped as on a laptop, the favicon at tab size. The old fields were four bare URL boxes with no way to tell whether the URL worked.</li><li><b>Open question:</b> keep URL fields, or add file upload (the app stores URLs today)? Mocked as URL plus preview so no backend change is implied.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Sign-in providers <span class="mock-tag is-changed">Changed</span></h2>
+<p>Six providers in a table that fits the page: status as one badge, return URLs behind copy buttons.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-settings-providers-desktop">
+<figcaption><b>Sign-in providers</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Settings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Settings</h1><p>Site-wide settings for this Music Party instance.</p></div></div><ul class="nav nav-tabs mb-4" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">General</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Branding</a></li><li class="nav-item" role="presentation"><a class="nav-link active" href="#" role="tab" aria-selected="true">Sign-in providers</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Themes</a></li></ul><div class="card"><div class="card-header"><h2 class="card-title">Sign-in providers</h2><span class="ms-auto text-secondary small">Copy a return URL into the provider's developer console.</span></div>
+<table class="table table-vcenter card-table"><thead><tr><th>Provider</th><th>Status</th><th>Return URLs</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr><td><div class="mp-cell"><i class="icon ti ti-brand-discord fs-2 text-secondary"></i><div><span class="fw-medium">Discord</span><span class="mp-sub">discord</span></div></div></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Sign-in on</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/discord/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/discord/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr><tr><td><div class="mp-cell"><i class="icon ti ti-brand-spotify fs-2 text-secondary"></i><div><span class="fw-medium">Spotify</span><span class="mp-sub">spotify</span></div></div></td>
+<td><span class="badge bg-blue-lt mp-state"><span class="status-dot status-blue"></span>Linking only</span><span class="mp-sub">Used to play and search, not to log in</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/spotify/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/spotify/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr><tr><td><div class="mp-cell"><i class="icon ti ti-brand-steam fs-2 text-secondary"></i><div><span class="fw-medium">Steam</span><span class="mp-sub">steam</span></div></div></td>
+<td><span class="badge bg-yellow-lt mp-state"><span class="status-dot status-yellow"></span>Needs a secret</span><span class="mp-sub">On, but the client secret is empty</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/steam/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/steam/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr><tr><td><div class="mp-cell"><i class="icon ti ti-brand-twitch fs-2 text-secondary"></i><div><span class="fw-medium">Twitch</span><span class="mp-sub">twitch</span></div></div></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Off</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/twitch/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/twitch/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr><tr><td><div class="mp-cell"><i class="icon ti ti-key fs-2 text-secondary"></i><div><span class="fw-medium">Laravel Passport</span><span class="mp-sub">laravelpassport</span></div></div></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Off</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/laravelpassport/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/laravelpassport/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr><tr><td><div class="mp-cell"><i class="icon ti ti-brand-spotify fs-2 text-secondary"></i><div><span class="fw-medium">Spotify Search</span><span class="mp-sub">spotifysearch</span></div></div></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Off</span><span class="mp-sub">Search only, cannot log in</span></td>
+<td><div class="mp-copy"><button class="btn btn-sm" type="button" title="https://musicparty.example/login/spotifysearch/return"><i class="icon ti ti-copy"></i>Sign-in URL</button><button class="btn btn-sm" type="button" title="https://musicparty.example/profile/accounts/spotifysearch/return"><i class="icon ti ti-copy"></i>Linking URL</button></div></td>
+<td class="text-end"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a></td></tr></tbody></table></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-settings-provider-edit-desktop">
+<figcaption><b>Edit Steam</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Settings</a></li><li class="breadcrumb-item active" aria-current="page">Edit Steam</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Edit Steam</h1><p>Steam can be used to log in and to link an account.</p></div></div>
+<form class="card"><div class="card-body">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="ci">Client ID</label><p class="setting-hint" data-v-cc5ef5d9>From the Steam developer console.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="ci" class="form-control" value="2f19a8c0b4d7"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="cs">Client secret</label><p class="setting-hint" data-v-cc5ef5d9>Stored encrypted. Shown only once; paste a new one to replace it.</p></div><div class="setting-control" data-v-cc5ef5d9><div class="input-group"><input id="cs" class="form-control" value=""  placeholder="Paste the secret"><button class="btn" type="button">Save</button></div><p class="invalid-feedback d-block mb-0 mt-1" data-v-cc5ef5d9>Steam sign-in is turned on but has no secret, so guests who pick Steam see an error.</p></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Enabled</label><p class="setting-hint" data-v-cc5ef5d9>Lets users link a Steam account.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Enabled"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Sign-in enabled</label><p class="setting-hint" data-v-cc5ef5d9>Shows Steam on the login page.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Sign-in enabled"></label></div></div>
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="r1">Sign-in return URL</label><p class="setting-hint" data-v-cc5ef5d9>Add this to Steam as an allowed redirect.</p></div><div class="setting-control" data-v-cc5ef5d9><div class="input-group"><input id="r1" class="form-control" readonly value="https://musicparty.example/login/steam/return"><button class="btn" type="button"><i class="icon ti ti-check"></i>Copied</button></div></div></div>
+<div class="setting-row setting-row-stacked" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="r2">Linking return URL</label><p class="setting-hint" data-v-cc5ef5d9>Used when a signed-in user links Steam from their Profile.</p></div><div class="setting-control" data-v-cc5ef5d9><div class="input-group"><input id="r2" class="form-control" readonly value="https://musicparty.example/profile/accounts/steam/return"><button class="btn" type="button"><i class="icon ti ti-copy"></i>Copy</button></div></div></div>
+</div><div class="card-footer d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary ms-auto" type="button">Save changes</button></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Status badge</b> merges three Yes/No columns (Supports auth, Enabled, Auth enabled) into one word: Sign-in on, Linking only, Needs a secret, Off. The misconfigured one (Steam) says why.</li><li><b>Return URLs</b> are two copy buttons, "Sign-in URL" and "Linking URL" (hover shows the URL). Wrapped 90-character URLs are gone. The edit page shows them in read-only fields with a Copy button and a "Copied" state.</li><li><b>Provider edit</b>: secret is write-only ("Replace"), with the error stated in plain words under the field. Enabled and Sign-in enabled keep their meaning.</li><li><b>New data</b>: the "Needs a secret" status is derived from enabled plus an empty required setting (also feeds Admin dashboard Needs attention).</li><li>The word "Sign-in" replaces "Social" in the tab name; the nav and breadcrumbs for the old "Social Providers" heading would follow. <b>Open question:</b> confirm the naming.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Themes tab <span class="mock-tag is-changed">Changed</span></h2>
+<p>The Themes card moves out of the Settings form into its own tab. Editing a theme opens the editor on the next page (33).</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-settings-themes-desktop">
+<figcaption><b>Themes</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Settings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Settings</h1><p>Site-wide settings for this Music Party instance.</p></div></div><ul class="nav nav-tabs mb-4" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">General</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Branding</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Sign-in providers</a></li><li class="nav-item" role="presentation"><a class="nav-link active" href="#" role="tab" aria-selected="true">Themes</a></li></ul><div class="card"><div class="card-header"><h2 class="card-title">Themes</h2><a href="#" class="btn btn-primary ms-auto"><i class="icon ti ti-plus"></i>Add theme</a></div><table class="table table-vcenter card-table"><thead><tr><th>Theme</th><th>Status</th><th>Mode</th><th>Updated</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#182433;--t-bg:#f6f8fb;--t-surf:#ffffff;--t-pri:#0054a6;--t-text:#182433" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><span class="fw-medium">Default</span><span class="mp-sub">Built in</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td class="text-secondary">Built in</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm">View</a></div></td></tr>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#080b12;--t-bg:#080b12;--t-surf:#15151f;--t-pri:#8a2be2;--t-text:#e6e6f2" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">StratLAN</a><span class="mp-sub">Purple on near-black</span></div></div></td><td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Active</span></td><td>Always dark</td><td>3 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#1d2b2a;--t-bg:#f4f7f6;--t-surf:#ffffff;--t-pri:#0f766e;--t-text:#14201f" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">Reference Theme</a><span class="mp-sub">Teal, light</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td>45 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
+</tbody></table><div class="card-footer text-secondary small">Only one theme is active, and everyone sees it.</div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>List shows a thumbnail built from the theme's own colours, Active as a badge, mode and last update in words. "Make active" is a button on the row; Delete is outline-danger and absent on the built-in Default.</li><li><b>New data</b>: thumbnail colours come from the theme tokens already stored; "Updated" needs the updated_at timestamp (exists on the model).</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Mods (instance) <span class="mock-tag is-changed">Changed</span></h2>
+<p>Installed mods as rows with a switch, description and a one-line state. Settings expand inline, as in the party Mods tab.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-mods-list-desktop">
+<figcaption><b>Mods</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Mods</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Mods</h1><p>Installed on this instance. Turn a mod on here to let parties use it.</p></div></div>
+<div class="card"><ul class="list-group list-group-flush">
+<li class="list-group-item p-3"><div class="d-flex align-items-start gap-3"><span class="avatar bg-secondary-lt"><i class="icon ti ti-robot"></i></span><div class="flex-fill"><div class="fw-medium">AI Request Review</div><div class="text-secondary">Asks an AI model to review each new Request, allowing it, flagging it for managers or rejecting it with a reason.</div><span class="mp-sub mt-1">On. 4 parties use it.</span></div><div class="d-flex align-items-center gap-3"><button class="btn btn-sm" type="button" aria-expanded="true"><i class="icon ti ti-chevron-up"></i>Settings</button><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="AI Request Review"></label></div></div>
+<div class="mt-3 ms-6 ps-3 border-start">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Review engine</label><p class="setting-hint" data-v-cc5ef5d9>Which model reads the Request. Parties can pick a cheaper one.</p></div><div class="setting-control" data-v-cc5ef5d9><select class="form-select" aria-label="Review engine"><option>Claude Haiku 5.5</option></select></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>API key</label><p class="setting-hint" data-v-cc5ef5d9>Instance-wide key. A party can use its own instead.</p></div><div class="setting-control" data-v-cc5ef5d9><div class="input-group"><input class="form-control" readonly value="Saved" aria-label="API key"><button class="btn" type="button">Replace</button></div></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Default confidence threshold</label><p class="setting-hint" data-v-cc5ef5d9>Below this, a review lets the Request through. Parties can change it.</p></div><div class="setting-control" data-v-cc5ef5d9><div class="input-group"><input class="form-control" value="70" aria-label="Confidence threshold"><span class="input-group-text">%</span></div></div></div>
+<div class="py-2"><button class="btn btn-primary" type="button">Save</button></div></div></li><li class="list-group-item p-3"><div class="d-flex align-items-start gap-3"><span class="avatar bg-secondary-lt"><i class="icon ti ti-heart-handshake"></i></span><div class="flex-fill"><div class="fw-medium">Trust</div><div class="text-secondary">Builds a reputation for each member from the endorsements their requests receive and gives requests from trusted members a small score bonus, never blocking anyone.</div><span class="mp-sub mt-1">On. 2 parties use it.</span></div><div class="d-flex align-items-center gap-3"><button class="btn btn-sm" type="button" aria-expanded="false"><i class="icon ti ti-chevron-down"></i>Settings</button><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Trust"></label></div></div>
+</li><li class="list-group-item p-3"><div class="d-flex align-items-start gap-3"><span class="avatar bg-secondary-lt"><i class="icon ti ti-snowflake"></i></span><div class="flex-fill"><div class="fw-medium">Whamageddon</div><div class="text-secondary">Last Christmas will be added to the queue. Every hour except between 2AM and 10AM, the Score will be bumped. Will the party be able to avoid it?</div><span class="mp-sub mt-1">Off. Parties cannot turn it on.</span></div><div class="d-flex align-items-center gap-3"><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Whamageddon"></label></div></div>
+</li>
+</ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-mods-empty-desktop">
+<figcaption><b>No mods installed</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Mods</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Mods</h1><p>Installed on this instance. Turn a mod on here to let parties use it.</p></div></div><div class="card"><div class="empty py-5"><div class="empty-icon"><i class="icon ti ti-puzzle-off"></i></div><p class="empty-title">No mods installed</p><p class="empty-subtitle text-secondary">Mods add features such as AI Request Review. Nothing is installed on this instance, so parties see no Mods tab.</p></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Row language matches the party Mods tab (#417): one switch per mod, settings only when on. The page was an accordion titled "Mod settings" with Save per panel.</li><li>The empty state says what mods are and what the party sees. <b>Open question:</b> instance on/off and per-party enablement are separate today? Mocked as "on here lets parties turn it on"; the instance defaults under AI Request Review are my assumption from ADR 0014.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Phone <span class="mock-tag is-changed">Changed</span></h2>
+<p>Setting rows stack, hints get the same side padding as labels (critique-b: hint 8px from the edge).</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="phone" id="admin-settings-general-phone">
+<figcaption><b>General</b> 390px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Settings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Settings</h1><p>Site-wide settings for this Music Party instance.</p></div></div><ul class="nav nav-tabs mb-4" role="tablist"><li class="nav-item" role="presentation"><a class="nav-link active" href="#" role="tab" aria-selected="true">General</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Branding</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Sign-in providers</a></li><li class="nav-item" role="presentation"><a class="nav-link" href="#" role="tab" aria-selected="false">Themes</a></li></ul>
+<div class="card"><h2 class="mp-section-h">Site</h2><div class="mp-sec">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="sn">Site name</label><p class="setting-hint" data-v-cc5ef5d9>Shown in the sidebar, the browser tab and emails.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="sn" class="form-control" value="Coyote LAN"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tc">Terms and Conditions URL</label><p class="setting-hint" data-v-cc5ef5d9>Guests must agree to this on first login. Leave empty to skip.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="tc" class="form-control" value=""></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="pp">Privacy Policy URL</label><p class="setting-hint" data-v-cc5ef5d9>Linked from the login page.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="pp" class="form-control" value=""></div></div>
+</div><div class="mp-sec"><h2 class="mp-section-h px-0">Defaults</h2>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="dc">Default party code</label><p class="setting-hint" data-v-cc5ef5d9>Four letters, no digits. Anyone who opens the site goes straight to this party.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="dc" class="form-control mp-code-input" value="KXQB" maxlength="4" autocapitalize="characters" spellcheck="false"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="tz">Timezone</label><p class="setting-hint" data-v-cc5ef5d9>Used by time-based Mods and Scheduled Requests. Parties can override it.</p></div><div class="setting-control" data-v-cc5ef5d9><select id="tz" class="form-select"><option>Europe/London (UTC+00:00)</option></select></div></div>
+</div><div class="mp-sec"><h2 class="mp-section-h px-0">Music providers</h2>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Spotify</label><p class="setting-hint" data-v-cc5ef5d9>Lets parties use Spotify as their Music Provider.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Spotify"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Fake Music Provider</label><p class="setting-hint" data-v-cc5ef5d9>For local development only. Turn off on a real instance.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Fake Music Provider"></label></div></div>
+</div></div><div class="mp-savebar"><span class="mp-grow" role="status">2 unsaved changes</span><a href="#" class="btn btn-link">Discard</a><button class="btn btn-primary" type="button">Save changes</button></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Tabs scroll horizontally inside their own row, the page does not. Save bar stays at the bottom of the viewport.</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

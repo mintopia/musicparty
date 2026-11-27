@@ -1,0 +1,661 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin users</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Admin users</h1>
+<p>Instance Users (#426, U7, U8). Same table language as the party pages: one search above a full-width table, filters as chips, no sidebar form. Adds linked-account state, parties, last login in words and the impersonate action.</p>
+</header>
+
+<section class="mock-section">
+<h2>Users list <span class="mock-tag is-changed">Changed</span></h2>
+<p>Replaces the ID and Nickname sidebar form. Typing searches id, nickname and linked provider at once; <code>role:admin</code>, <code>provider:discord</code> and <code>suspended</code> work as typed filters and as chips.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-users-list-desktop">
+<figcaption><b>Users, row menu open</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Users</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Users</h1><p>48 users on this site, newest login first.</p></div></div><div class="mp-searchbar"><div class="mp-search" role="search"><i class="ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" aria-label="Search users" placeholder="Search by id, nickname or linked account. Try role:admin or provider:discord" value=""><span class="mp-search-count">48 users</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Admin</button><button type="button" class="mp-chip" aria-pressed="false">Suspended</button><button type="button" class="mp-chip" aria-pressed="false">Signup not finished</button><button type="button" class="mp-chip" aria-pressed="false">Spotify needs re-link</button><button type="button" class="mp-chip" aria-pressed="false">Discord</button><button type="button" class="mp-chip" aria-pressed="false">Steam</button><button type="button" class="mp-chip" aria-pressed="false">Twitch</button></div></div><div class="card"><table class="table table-hover table-vcenter card-table"><thead><tr>
+<th class="mp-th"><a href="#">ID</a></th><th>User</th><th>Linked accounts</th><th class="text-end">Parties</th><th class="mp-th"><a href="#">Last login <i class="ti ti-chevron-down" aria-label="sorted newest first"></i></a></th><th class="mp-th"><a href="#">Created</a></th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+<tr><td class="text-secondary mp-num">1</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-blue-lt">JS</span><div><a href="#" class="fw-medium">Jess</a> <span class="badge bg-primary text-primary-fg me-1">Admin</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify" title="Spotify" role="img" aria-label="Spotify"></i><i class="ti ti-brand-steam" title="Steam" role="img" aria-label="Steam"></i></span></td><td class="text-end mp-num">3</td><td>2 minutes ago</td><td>8 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Jess" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">2</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-green-lt">DV</span><div><a href="#" class="fw-medium">Dev</a> </div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i></span></td><td class="text-end mp-num">1</td><td>1 hour ago</td><td>8 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Dev" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">3</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-orange-lt">RA</span><div><a href="#" class="fw-medium">Ravi</a> </div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-steam" title="Steam" role="img" aria-label="Steam"></i></span></td><td class="text-end mp-num">2</td><td>1 day ago</td><td>5 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Ravi" aria-expanded="true"><i class="icon ti ti-dots"></i></button><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="icon ti ti-user"></i>View</a><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="icon ti ti-edit"></i>Edit</a><a class="dropdown-item d-flex align-items-center gap-2" href="#"><i class="icon ti ti-spy"></i>Impersonate Ravi</a><div class="dropdown-divider"></div><a class="dropdown-item d-flex align-items-center gap-2 text-danger" href="#"><i class="icon ti ti-trash"></i>Delete</a></div></span></td></tr><tr><td class="text-secondary mp-num">4</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-pink-lt">MI</span><div><a href="#" class="fw-medium">Mina</a> </div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify is-warn" title="Spotify, needs re-link" role="img" aria-label="Spotify, needs re-link"></i></span></td><td class="text-end mp-num">1</td><td>3 hours ago</td><td>3 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Mina" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">5</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-purple-lt">PR</span><div><a href="#" class="fw-medium">Priya</a> </div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i></span></td><td class="text-end mp-num">1</td><td>4 minutes ago</td><td>4 minutes ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Priya" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">6</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-azure-lt">SA</span><div><a href="#" class="fw-medium">Sam</a> <span class="badge bg-red-lt">Suspended</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-twitch" title="Twitch" role="img" aria-label="Twitch"></i></span></td><td class="text-end mp-num">1</td><td>6 days ago</td><td>2 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Sam" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">7</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-teal-lt">AS</span><div><a href="#" class="fw-medium">Ash</a> <span class="badge bg-primary text-primary-fg me-1">Admin</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify" title="Spotify" role="img" aria-label="Spotify"></i></span></td><td class="text-end mp-num">2</td><td>45 days ago</td><td>8 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Ash" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">8</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-yellow-lt">KA</span><div><a href="#" class="fw-medium">Kai</a> <span class="badge bg-yellow-lt">Signup not finished</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-twitch" title="Twitch" role="img" aria-label="Twitch"></i></span></td><td class="text-end mp-num">0</td><td>Never</td><td>5 hours ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Kai" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr></tbody></table>
+<div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary">Showing <b>1</b> to <b>8</b> of <b>48</b> users</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-users-filtered-desktop-dark" data-theme="dark">
+<figcaption><b>Filtered role:admin</b> 1440px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Users</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Users</h1><p>2 of 48 users match.</p></div></div><div class="mp-searchbar"><div class="mp-search" role="search"><i class="ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" aria-label="Search users" placeholder="Search by id, nickname or linked account. Try role:admin or provider:discord" value="role:admin"><span class="mp-search-count">2 of 48</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="true">Admin<i class="ti ti-x" aria-hidden="true"></i></button><button type="button" class="mp-chip" aria-pressed="false">Suspended</button><button type="button" class="mp-chip" aria-pressed="false">Signup not finished</button><button type="button" class="mp-chip" aria-pressed="false">Spotify needs re-link</button><button type="button" class="mp-chip" aria-pressed="false">Discord</button><button type="button" class="mp-chip" aria-pressed="false">Steam</button><button type="button" class="mp-chip" aria-pressed="false">Twitch</button></div></div><div class="card"><table class="table table-hover table-vcenter card-table"><thead><tr>
+<th class="mp-th"><a href="#">ID</a></th><th>User</th><th>Linked accounts</th><th class="text-end">Parties</th><th class="mp-th"><a href="#">Last login <i class="ti ti-chevron-down" aria-label="sorted newest first"></i></a></th><th class="mp-th"><a href="#">Created</a></th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
+<tr><td class="text-secondary mp-num">1</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-blue-lt">JS</span><div><a href="#" class="fw-medium">Jess</a> <span class="badge bg-primary text-primary-fg me-1">Admin</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify" title="Spotify" role="img" aria-label="Spotify"></i><i class="ti ti-brand-steam" title="Steam" role="img" aria-label="Steam"></i></span></td><td class="text-end mp-num">3</td><td>2 minutes ago</td><td>8 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Jess" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr><tr><td class="text-secondary mp-num">7</td><td><div class="mp-cell"><span class="avatar avatar-sm bg-teal-lt">AS</span><div><a href="#" class="fw-medium">Ash</a> <span class="badge bg-primary text-primary-fg me-1">Admin</span></div></div></td><td><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify" title="Spotify" role="img" aria-label="Spotify"></i></span></td><td class="text-end mp-num">2</td><td>45 days ago</td><td>8 months ago</td>
+<td class="text-end"><span class="mp-menu-anchor"><button class="btn btn-icon btn-ghost-secondary" type="button" aria-label="Actions for Ash" aria-expanded="false"><i class="icon ti ti-dots"></i></button></span></td></tr></tbody></table>
+<div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary">Showing <b>1</b> to <b>2</b> of <b>2</b> users</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Combined search</b> (#426, U7): one field, chips below carrying the same filters, result count inside the field. The sidebar card is gone, so the table gets the full 1440 width.</li><li><b>Columns</b>: avatar and nickname (with Admin, Suspended and Signup-not-finished badges), linked-account icons (a yellow icon means that link needs re-linking), parties, last login and created in words ("45 days ago"), never timestamps. Sort stays on ID, Last login, Created.</li><li><b>Row actions</b> in a labelled overflow: View, Edit, Impersonate, Delete (danger, separated). They were reachable only through the user page before. Impersonate names the user so it cannot be hit by habit.</li><li><b>New data</b>: parties count per user, linked provider per user, Spotify re-link state, and the <code>provider:</code>, <code>role:</code>, <code>suspended</code> filters.</li><li><b>Open question:</b> only one role (Admin) exists on the instance today; the Role filter chip is shown for it.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>User detail <span class="mock-tag is-changed">Changed</span></h2>
+<p>The same facts as today, plus where the user plays and which of their Spotify or Discord links work. This is the page an admin lands on when someone says "it will not let me log in".</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-user-detail-desktop">
+<figcaption><b>Mina</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Users</a></li><li class="breadcrumb-item active" aria-current="page">Mina</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div class="mp-cell"><span class="avatar avatar-lg bg-pink-lt">MI</span><div><h1>Mina</h1><p>User 4 · joined 3 months ago · last login 3 hours ago</p></div></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-spy"></i>Impersonate Mina</a><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit</a></div></div>
+<div class="mp-grid-5-7"><div class="card"><div class="card-header"><h2 class="card-title">Account</h2></div><div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Email</div><div><a href="#">mina@example.com</a></div></div>
+<div><div class="datagrid-title">Roles</div><div><span class="text-secondary">None</span></div></div>
+<div><div class="datagrid-title">Completed signup</div><div><span class="status status-green">Yes</span></div></div>
+<div><div class="datagrid-title">Agreed terms</div><div><span class="status status-green">Yes</span></div></div>
+<div><div class="datagrid-title">Suspended</div><div><span class="status status-green">No</span></div></div>
+<div><div class="datagrid-title">Last login</div><div>3 hours ago</div></div></div></div>
+<div class="card-footer d-flex"><a href="#" class="btn btn-outline-danger ms-auto"><i class="icon ti ti-trash"></i>Delete Mina</a></div></div>
+<div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Linked accounts</h2></div><table class="table table-vcenter card-table"><thead><tr><th>Provider</th><th>Account</th><th>Linked</th><th>State</th><th></th></tr></thead><tbody>
+<tr><td><i class="ti ti-brand-discord me-2"></i>Discord</td><td>mina#2041</td><td>3 months ago</td><td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Working</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr>
+<tr><td><i class="ti ti-brand-spotify me-2"></i>Spotify</td><td>mina.plays</td><td>3 months ago</td><td><span class="badge bg-yellow-lt mp-state"><span class="status-dot status-yellow"></span>Needs re-link</span><span class="mp-sub">Token expired 12 days ago</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr></tbody></table></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Parties</h2></div><table class="table table-vcenter card-table"><thead><tr><th>Party</th><th>Role</th><th>Last active</th></tr></thead><tbody>
+<tr><td><a href="#">Retro Room</a><span class="mp-sub">HZMN</span></td><td><span class="badge bg-blue-lt">Owner</span></td><td>3 hours ago</td></tr>
+<tr><td><a href="#">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td><td><span class="badge bg-secondary-lt">User</span></td><td>1 day ago</td></tr></tbody></table></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Account facts stay in the datagrid; the actions move to the page head: <b>Edit</b> is the one filled button, <b>Impersonate Mina</b> is outline and names the target. Delete moves to the account card footer, away from Edit.</li><li><b>Linked accounts</b> (U8) as a table with provider icon, account, linked date and state. Mina's Spotify shows "Needs re-link, token expired 12 days ago" with the same yellow state used on the Admin dashboard.</li><li><b>Parties</b>: each party the user belongs to with their role and last activity. <b>New data</b>: party memberships on the admin user page.</li><li>Heading outline: h1 name, h2 per card. The old page jumped h1 to h2 for Linked Accounts outside a card.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Edit and delete <span class="mock-tag is-changed">Changed</span></h2>
+<p>Edit uses the Settings row pattern (label and one-line reason left, control right). Delete keeps the typed confirmation but says what goes with the user.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-user-edit-desktop">
+<figcaption><b>Edit Ravi</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Users</a></li><li class="breadcrumb-item"><a href="#">Ravi</a></li><li class="breadcrumb-item active" aria-current="page">Edit</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Edit Ravi</h1><p>User 3. Changes apply the next time they load a page.</p></div></div>
+<form class="card"><div class="card-body">
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9 for="nick">Nickname</label><p class="setting-hint" data-v-cc5ef5d9>Shown on Requests, votes and the Members list.</p></div><div class="setting-control" data-v-cc5ef5d9><input id="nick" class="form-control" value="Ravi"></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Roles</label><p class="setting-hint" data-v-cc5ef5d9>Admins can open everything under Admin.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check m-0"><input class="form-check-input" type="checkbox"><span class="form-check-label">Admin</span></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Accepted Terms and Conditions</label></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Accepted Terms and Conditions"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Completed signup</label><p class="setting-hint" data-v-cc5ef5d9>Off sends them back to the signup form on next login.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" checked aria-label="Completed signup"></label></div></div>
+<div class="setting-row" data-v-cc5ef5d9><div class="setting-text" data-v-cc5ef5d9><label class="setting-label" data-v-cc5ef5d9>Suspended</label><p class="setting-hint" data-v-cc5ef5d9>Suspended users cannot log in.</p></div><div class="setting-control" data-v-cc5ef5d9><label class="form-check form-switch m-0"><input class="form-check-input" type="checkbox" role="switch" aria-label="Suspended"></label></div></div>
+</div><div class="card-footer d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary ms-auto" type="button">Save changes</button></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-user-delete-desktop">
+<figcaption><b>Delete Mina</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Users</a></li><li class="breadcrumb-item"><a href="#">Mina</a></li><li class="breadcrumb-item active" aria-current="page">Delete</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Delete Mina</h1></div></div><form class="card" style="max-inline-size:560px;margin-inline:auto"><div class="card-status-top bg-danger"></div><div class="card-body text-center">
+<i class="icon mb-3 ti ti-alert-triangle icon-lg text-danger"></i><p class="mt-3">Delete <strong>Mina</strong>? This cannot be undone.</p>
+<p class="text-secondary">Removes 2 linked accounts (Discord, Spotify) and their membership of 2 parties. Mina owns <b>Retro Room</b>, so that party needs a new owner first.</p>
+<p>To continue, type <b>delete</b> below.</p><div class="mx-auto" style="max-inline-size:14rem"><input class="form-control text-center" aria-label="Type delete to confirm" value="delete"></div></div>
+<div class="card-footer d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-danger ms-auto" type="button">Delete Mina</button></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Edit: SettingRow layout with a hint under each label (the switches had none). One filled button, Cancel as a link.</li><li>Delete: names the user in the title and button, lists what is removed and blocks on ownership of a party. <b>Copy to confirm with backend:</b> what deletion removes and the owner-first rule are proposed, not read from code.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Phone <span class="mock-tag is-changed">Changed</span></h2>
+<p>Table rows become cards with 16px padding (critique-b: cramped padding on the phone table). Overflow button is a 44px target.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="phone" id="admin-users-list-phone">
+<figcaption><b>Users</b> 390px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Users</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Users</h1><p>48 users.</p></div></div><div class="mp-searchbar"><div class="mp-search" role="search"><i class="ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" aria-label="Search users" placeholder="Search users" value=""><span class="mp-search-count">48</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Admin</button><button type="button" class="mp-chip" aria-pressed="false">Suspended</button><button type="button" class="mp-chip" aria-pressed="false">Signup not finished</button><button type="button" class="mp-chip" aria-pressed="false">Spotify needs re-link</button><button type="button" class="mp-chip" aria-pressed="false">Discord</button><button type="button" class="mp-chip" aria-pressed="false">Steam</button><button type="button" class="mp-chip" aria-pressed="false">Twitch</button></div></div>
+<ul class="list-group"><li class="list-group-item p-3"><div class="d-flex gap-3 align-items-start"><span class="avatar avatar-sm bg-blue-lt">JS</span><div class="flex-fill min-w-0"><div><a href="#" class="fw-medium">Jess</a> <span class="badge bg-primary text-primary-fg me-1">Admin</span></div><div class="mt-1"><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify" title="Spotify" role="img" aria-label="Spotify"></i><i class="ti ti-brand-steam" title="Steam" role="img" aria-label="Steam"></i></span></div><div class="mp-sub mt-1">3 parties · last login 2 minutes ago</div></div><button class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Jess"><i class="icon ti ti-dots"></i></button></div></li><li class="list-group-item p-3"><div class="d-flex gap-3 align-items-start"><span class="avatar avatar-sm bg-green-lt">DV</span><div class="flex-fill min-w-0"><div><a href="#" class="fw-medium">Dev</a> </div><div class="mt-1"><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i></span></div><div class="mp-sub mt-1">1 party · last login 1 hour ago</div></div><button class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dev"><i class="icon ti ti-dots"></i></button></div></li><li class="list-group-item p-3"><div class="d-flex gap-3 align-items-start"><span class="avatar avatar-sm bg-orange-lt">RA</span><div class="flex-fill min-w-0"><div><a href="#" class="fw-medium">Ravi</a> </div><div class="mt-1"><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-steam" title="Steam" role="img" aria-label="Steam"></i></span></div><div class="mp-sub mt-1">2 parties · last login 1 day ago</div></div><button class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Ravi"><i class="icon ti ti-dots"></i></button></div></li><li class="list-group-item p-3"><div class="d-flex gap-3 align-items-start"><span class="avatar avatar-sm bg-pink-lt">MI</span><div class="flex-fill min-w-0"><div><a href="#" class="fw-medium">Mina</a> </div><div class="mt-1"><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i><i class="ti ti-brand-spotify is-warn" title="Spotify, needs re-link" role="img" aria-label="Spotify, needs re-link"></i></span></div><div class="mp-sub mt-1">1 party · last login 3 hours ago</div></div><button class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Mina"><i class="icon ti ti-dots"></i></button></div></li><li class="list-group-item p-3"><div class="d-flex gap-3 align-items-start"><span class="avatar avatar-sm bg-purple-lt">PR</span><div class="flex-fill min-w-0"><div><a href="#" class="fw-medium">Priya</a> </div><div class="mt-1"><span class="mp-provs"><i class="ti ti-brand-discord" title="Discord" role="img" aria-label="Discord"></i></span></div><div class="mp-sub mt-1">1 party · last login 4 minutes ago</div></div><button class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Priya"><i class="icon ti ti-dots"></i></button></div></li></ul>
+<p class="text-secondary text-center mt-3 mb-0">Showing 1 to 5 of 48 <a href="#" class="ms-2">Next</a></p></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="admin-user-detail-phone">
+<figcaption><b>Mina</b> 390px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Users</a></li><li class="breadcrumb-item active" aria-current="page">Mina</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div class="mp-cell"><span class="avatar avatar-sm bg-pink-lt">MI</span><div><h1>Mina</h1><p>User 4 · last login 3 hours ago</p></div></div><div class="btn-list w-100"><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn"><i class="icon ti ti-spy"></i>Impersonate</a></div></div>
+<div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Linked accounts</h2></div><ul class="list-group list-group-flush"><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-discord me-2"></i>Discord</span><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Working</span></div><span class="mp-sub">mina#2041 · linked 3 months ago</span></li><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-spotify me-2"></i>Spotify</span><span class="badge bg-yellow-lt mp-state"><span class="status-dot status-yellow"></span>Needs re-link</span></div><span class="mp-sub">mina.plays · token expired 12 days ago</span></li></ul></div>
+<div class="card"><div class="card-header"><h2 class="card-title">Parties</h2></div><ul class="list-group list-group-flush"><li class="list-group-item p-3 d-flex justify-content-between"><span><a href="#">Retro Room</a><span class="mp-sub">Owner · 3 hours ago</span></span><span class="badge bg-blue-lt align-self-start">Owner</span></li><li class="list-group-item p-3 d-flex justify-content-between"><span><a href="#">Coyote LAN 26</a><span class="mp-sub">User · 1 day ago</span></span><span class="badge bg-secondary-lt align-self-start">User</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>List cards: avatar, name and badges, provider icons, then "1 party · last login 3 hours ago". Search field and chips wrap; chips are 44px on touch (shared rule).</li><li>Detail: actions sit under the title at full width, cards stack, Linked accounts and Parties become two-line list rows.</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

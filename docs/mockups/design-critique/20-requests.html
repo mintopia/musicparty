@@ -1,0 +1,1122 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Requests</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Requests</h1>
+<p>The Requests table and Request detail, with combined search (#426), and the manager and moderator actions (U5, U7). Party "Coyote LAN 26", code KXQB.</p>
+</header>
+<section class="mock-section">
+<h2>Requests list <span class="mock-tag is-changed">Changed</span></h2>
+<p>The table keeps its columns and gains a combined search, filter chips, a Requested by column and a row menu. It runs full width because it is a dense table. Moderators see the same page as the owner.</p>
+<div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="requests-default-desktop" data-height="1000">
+<figcaption><b>Owner, default</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="" placeholder="Search tracks, artists, people… or try sent:no" aria-label="Search Requests"><span class="mp-search-count">42 Requests</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="false">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><table class="table table-hover table-vcenter card-table mp-tbl"><thead><tr><th>Request</th><th>Requested by</th><th class="text-end"><a class="mp-sort" href="#">Votes</a></th><th class="text-end"><a class="mp-sort" href="#">Score</a></th><th><a class="mp-sort" href="#">Requested<i class="icon ti ti-caret-down-filled"></i></a></th><th><a class="mp-sort" href="#">Sent to Player</a></th><th class="w-1"><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-1.svg" alt="" title="Hot Fuss"><div class="text-wrap"><div class="mp-title"><a href="#">Mr. Brightside</a></div><div class="text-secondary">The Killers</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">6</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">3 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Mr. Brightside" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-2.svg" alt="" title="Before the Storm"><div class="text-wrap"><div class="mp-title"><a href="#">Sandstorm</a> <span class="badge bg-azure-lt"><i class="icon ti ti-clock me-1"></i>Scheduled 22:30</span></div><div class="text-secondary">Darude</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">4</td><td class="text-end mp-num">+4</td>
+<td class="mp-time">11 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Sandstorm" aria-expanded="true"><i class="icon ti ti-dots"></i></button><div class="dropdown-menu dropdown-menu-end show" data-bs-popper="static">
+<a class="dropdown-item" href="#"><i class="icon ti ti-external-link me-2"></i>Open Request</a>
+<a class="dropdown-item" href="#"><i class="icon ti ti-clock me-2"></i>Schedule Request</a>
+<div class="dropdown-divider"></div>
+<a class="dropdown-item text-danger" href="#"><i class="icon ti ti-trash me-2"></i>Remove Request<small>Takes it out of the Queue</small></a></div></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival"><div class="text-wrap"><div class="mp-title"><a href="#">Dancing Queen</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">18 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dancing Queen" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-8.svg" alt="" title="Whenever You Need Somebody"><div class="text-wrap"><div class="mp-title"><a href="#">Never Gonna Give You Up</a> <span class="badge bg-yellow-lt">Flagged</span></div><div class="text-secondary">Rick Astley</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">SA</span>Sam</span></td>
+<td class="text-end mp-num">1</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">22 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Never Gonna Give You Up" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-7.svg" alt="" title="Waterloo"><div class="text-wrap"><div class="mp-title"><a href="#">Waterloo</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess <span class="badge bg-blue-lt ms-1">You</span></span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">27 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Waterloo" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-5.svg" alt="" title="Millennium"><div class="text-wrap"><div class="mp-title"><a href="#">Everybody (Backstreet's Back)</a></div><div class="text-secondary">Backstreet Boys</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">5</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">34 minutes ago</td><td><span class="mp-time">6 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Everybody (Backstreet's Back)" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-6.svg" alt="" title="Hurry Up, We're Dreaming"><div class="text-wrap"><div class="mp-title"><a href="#">Midnight City</a></div><div class="text-secondary">M83</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+3</td>
+<td class="mp-time">41 minutes ago</td><td><span class="mp-time">14 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Midnight City" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-4.svg" alt="" title="Random Access Memories"><div class="text-wrap"><div class="mp-title"><a href="#">Get Lucky</a></div><div class="text-secondary">Daft Punk</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">52 minutes ago</td><td><span class="mp-time">31 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Get Lucky" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Hotel California"><div class="text-wrap"><div class="mp-title"><a href="#">Hotel California</a></div><div class="text-secondary">Eagles</div></div></div></td>
+<td><span class="text-secondary">Fallback Playlist</span></td>
+<td class="text-end mp-num">0</td><td class="text-end mp-num">0</td>
+<td class="mp-time">1 hour ago</td><td><span class="mp-time">1 hour ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Hotel California" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr></tbody></table><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 9 of 42 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-label="Previous page"><i class="icon ti ti-chevron-left"></i></a></li><li class="page-item active"><a class="page-link" href="#" aria-current="page">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">3</a></li><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="desktop" id="requests-default-desktop-dark" data-theme="dark" data-height="1000">
+<figcaption><b>Owner, default</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="" placeholder="Search tracks, artists, people… or try sent:no" aria-label="Search Requests"><span class="mp-search-count">42 Requests</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="false">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><table class="table table-hover table-vcenter card-table mp-tbl"><thead><tr><th>Request</th><th>Requested by</th><th class="text-end"><a class="mp-sort" href="#">Votes</a></th><th class="text-end"><a class="mp-sort" href="#">Score</a></th><th><a class="mp-sort" href="#">Requested<i class="icon ti ti-caret-down-filled"></i></a></th><th><a class="mp-sort" href="#">Sent to Player</a></th><th class="w-1"><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-1.svg" alt="" title="Hot Fuss"><div class="text-wrap"><div class="mp-title"><a href="#">Mr. Brightside</a></div><div class="text-secondary">The Killers</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">6</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">3 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Mr. Brightside" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-2.svg" alt="" title="Before the Storm"><div class="text-wrap"><div class="mp-title"><a href="#">Sandstorm</a> <span class="badge bg-azure-lt"><i class="icon ti ti-clock me-1"></i>Scheduled 22:30</span></div><div class="text-secondary">Darude</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">4</td><td class="text-end mp-num">+4</td>
+<td class="mp-time">11 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Sandstorm" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival"><div class="text-wrap"><div class="mp-title"><a href="#">Dancing Queen</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">18 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dancing Queen" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-8.svg" alt="" title="Whenever You Need Somebody"><div class="text-wrap"><div class="mp-title"><a href="#">Never Gonna Give You Up</a> <span class="badge bg-yellow-lt">Flagged</span></div><div class="text-secondary">Rick Astley</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">SA</span>Sam</span></td>
+<td class="text-end mp-num">1</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">22 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Never Gonna Give You Up" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-7.svg" alt="" title="Waterloo"><div class="text-wrap"><div class="mp-title"><a href="#">Waterloo</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess <span class="badge bg-blue-lt ms-1">You</span></span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">27 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Waterloo" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-5.svg" alt="" title="Millennium"><div class="text-wrap"><div class="mp-title"><a href="#">Everybody (Backstreet's Back)</a></div><div class="text-secondary">Backstreet Boys</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">5</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">34 minutes ago</td><td><span class="mp-time">6 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Everybody (Backstreet's Back)" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-6.svg" alt="" title="Hurry Up, We're Dreaming"><div class="text-wrap"><div class="mp-title"><a href="#">Midnight City</a></div><div class="text-secondary">M83</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+3</td>
+<td class="mp-time">41 minutes ago</td><td><span class="mp-time">14 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Midnight City" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-4.svg" alt="" title="Random Access Memories"><div class="text-wrap"><div class="mp-title"><a href="#">Get Lucky</a></div><div class="text-secondary">Daft Punk</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">52 minutes ago</td><td><span class="mp-time">31 minutes ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Get Lucky" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Hotel California"><div class="text-wrap"><div class="mp-title"><a href="#">Hotel California</a></div><div class="text-secondary">Eagles</div></div></div></td>
+<td><span class="text-secondary">Fallback Playlist</span></td>
+<td class="text-end mp-num">0</td><td class="text-end mp-num">0</td>
+<td class="mp-time">1 hour ago</td><td><span class="mp-time">1 hour ago</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Hotel California" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr></tbody></table><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 9 of 42 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-label="Previous page"><i class="icon ti ti-chevron-left"></i></a></li><li class="page-item active"><a class="page-link" href="#" aria-current="page">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">3</a></li><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<ul class="mock-notes"><li>One search field above the table matches every text column and understands typed filters; the chips set the same filters. The sidebar of four fields is gone. #426, U7.</li><li>"Sent to Player" is one column: a time in words or "Not yet". It used to read "Not Sent to Spotify" or a time. A pending schedule shows as a badge on the Request, not in this column.</li><li>The Requested by column is new data on this page, so moderators can see who asked for a Flagged or removed Request. Fallback Playlist Requests say so. U5.</li><li>Remove and Schedule moved into a labelled row menu (Open Request, Schedule Request, Remove Request) shown open on the second row. Remove says why it may not apply. Moderators have the same menu. U5.</li><li>Ages in words; sort carets only on the sorted column. The Votes column is the count, Score is up minus down.</li></ul>
+</div>
+</section>
+<section class="mock-section">
+<h2>Filtering and no matches <span class="mock-tag is-changed">Changed</span></h2>
+<p>Typed filters and chips are the same thing: typing <code>sent:no artist:abba</code> presses Waiting and adds a removable Artist chip. When nothing matches, the page says what was asked and offers the way out.</p>
+<div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="requests-filtered-desktop" data-height="700">
+<figcaption><b>Typed filter</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="sent:no artist:abba" placeholder="Search tracks, artists, people… or try sent:no" aria-label="Search Requests"><span class="mp-search-count">2 of 42 Requests</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="true">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button><button type="button" class="mp-chip" aria-pressed="true">Artist: ABBA<i class="icon ti ti-x" aria-hidden="true"></i></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><table class="table table-hover table-vcenter card-table mp-tbl"><thead><tr><th>Request</th><th>Requested by</th><th class="text-end"><a class="mp-sort" href="#">Votes</a></th><th class="text-end"><a class="mp-sort" href="#">Score</a></th><th><a class="mp-sort" href="#">Requested<i class="icon ti ti-caret-down-filled"></i></a></th><th><a class="mp-sort" href="#">Sent to Player</a></th><th class="w-1"><span class="visually-hidden">Actions</span></th></tr></thead><tbody><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival"><div class="text-wrap"><div class="mp-title"><a href="#">Dancing Queen</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">18 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dancing Queen" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-7.svg" alt="" title="Waterloo"><div class="text-wrap"><div class="mp-title"><a href="#">Waterloo</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess <span class="badge bg-blue-lt ms-1">You</span></span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">27 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+<td class="text-end"><div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Waterloo" aria-expanded="false"><i class="icon ti ti-dots"></i></button></div></td>
+</tr></tbody></table><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 2 of 2 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-label="Previous page"><i class="icon ti ti-chevron-left"></i></a></li><li class="page-item active"><a class="page-link" href="#" aria-current="page">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">3</a></li><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="desktop" id="requests-nomatch-desktop" data-height="700">
+<figcaption><b>No matches</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="sent:yes artist:abba" placeholder="Search tracks, artists, people… or try sent:no" aria-label="Search Requests"><span class="mp-search-count">0 of 42 Requests</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="true">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="false">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button><button type="button" class="mp-chip" aria-pressed="true">Artist: ABBA<i class="icon ti ti-x" aria-hidden="true"></i></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><div class="empty text-center py-5"><div class="empty-icon"><i class="icon ti ti-music-off"></i></div><p class="empty-title">No Requests match <code>sent:yes artist:abba</code></p><p class="empty-subtitle text-secondary">Nothing by ABBA has been sent to the Player yet. Remove sent:yes to see the 2 waiting.</p><div class="empty-action"><a href="#" class="btn btn-primary">Clear filters</a></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<ul class="mock-notes"><li>The count in the field says "2 of 42 Requests" so the effect of a filter is visible before the table. #426.</li><li>The empty state repeats the query and says which part to drop. One filled button: Clear filters. Today it says only "Try a different name, artist, album or type".</li><li>Filter keys in the hint line are the same words as the column names, so they can be learned from the table.</li></ul>
+</div>
+</section>
+<section class="mock-section">
+<h2>Request detail <span class="mock-tag is-changed">Changed</span></h2>
+<p>The detail page uses the same page head, cards and avatars as the list. It adds the AI review outcome with a link and a history of what happened to the Request. Schedule stays for managers and moderators.</p>
+<div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="request-detail-desktop" data-height="1000">
+<figcaption><b>Owner</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item"><a href="#">Requests</a></li><li class="breadcrumb-item active" aria-current="page">Mr. Brightside</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Mr. Brightside</h1><p>The Killers &middot; Request from Ravi, 3 minutes ago</p></div><div class="btn-list"><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-brand-spotify"></i>View on Spotify</a><div class="mp-menu-anchor"><button class="btn btn-icon btn-outline-secondary" aria-label="More actions"><i class="icon ti ti-dots"></i></button></div></div></div><div class="row g-4"><div class="col-lg-8"><div class="mp-stack"><div class="card"><div class="card-body"><div class="row g-4"><div class="col-auto"><img class="rounded" src="assets/art/cover-1.svg" alt="" width="168" height="168"></div><div class="col-12 col-md"><dl class="mp-facts">
+<dt>Artist</dt><dd><a href="#">The Killers</a></dd>
+<dt>Album</dt><dd><a href="#">Hot Fuss</a></dd>
+<dt>Duration</dt><dd class="mp-num">3:42</dd>
+<dt>Requested by</dt><dd><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></dd>
+<dt>Requested</dt><dd>3 minutes ago</dd>
+<dt>Sent to Player</dt><dd class="text-secondary">Not yet</dd>
+<dt>Votes</dt><dd class="mp-num">6 votes, score +5</dd></dl></div></div></div></div><div class="card"><div class="card-header"><h2 class="card-title">AI review</h2></div><div class="card-body d-flex flex-wrap align-items-center gap-3"><span class="badge bg-green-lt fs-4 py-2 px-3"><i class="icon ti ti-check me-1"></i>Allowed</span><span class="text-secondary flex-fill">Fits the party guidelines. No criterion applied.</span><a href="#">View AI review</a></div></div><div class="card"><div class="card-header"><h2 class="card-title">History</h2></div><ul class="mp-timeline">
+<li><i class="icon ti ti-music-plus"></i><span>Ravi requested it</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-robot"></i><span>AI review allowed it</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-list-numbers"></i><span>Added to the Queue at position 4</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-history"></i><span>Played at this party before: <a href="#">Played Tracks</a>, yesterday at 21:14</span><span class="text-secondary">1 day ago</span></li></ul></div></div></div><div class="col-lg-4"><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Schedule</h2></div><div class="card-body"><p class="text-secondary mb-3">Not scheduled. Pick a time and Music Party sends this Request to the Player then.</p><label class="form-label" for="sched">Send at (party time)</label><input id="sched" class="form-control" type="datetime-local" style="max-inline-size:20rem"></div><div class="card-footer d-flex gap-2"><button class="btn btn-outline-secondary" disabled>Clear schedule</button><button class="btn btn-primary ms-auto">Save schedule</button></div></div><div class="card"><div class="card-header"><h2 class="card-title">Votes</h2></div><ul class="mp-timeline">
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></span><span class="text-secondary">2 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></span><span class="text-secondary">2 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">SA</span>Sam</span></span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-down text-danger"></i><span><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess</span></span><span class="text-secondary">1 minute ago</span></li></ul></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="phone" id="request-detail-phone" data-height="844">
+<figcaption><b>Owner</b> 390px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item"><a href="#">Requests</a></li><li class="breadcrumb-item active" aria-current="page">Mr. Brightside</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Mr. Brightside</h1><p>The Killers &middot; Request from Ravi, 3 minutes ago</p></div><div class="btn-list"><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-brand-spotify"></i>View on Spotify</a><div class="mp-menu-anchor"><button class="btn btn-icon btn-outline-secondary" aria-label="More actions"><i class="icon ti ti-dots"></i></button></div></div></div><div class="mp-stack"><div class="card"><div class="card-body"><div class="row g-4"><div class="col-auto"><img class="rounded" src="assets/art/cover-1.svg" alt="" width="96" height="96"></div><div class="col-12 col-md"><dl class="mp-facts">
+<dt>Artist</dt><dd><a href="#">The Killers</a></dd>
+<dt>Album</dt><dd><a href="#">Hot Fuss</a></dd>
+<dt>Duration</dt><dd class="mp-num">3:42</dd>
+<dt>Requested by</dt><dd><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></dd>
+<dt>Requested</dt><dd>3 minutes ago</dd>
+<dt>Sent to Player</dt><dd class="text-secondary">Not yet</dd>
+<dt>Votes</dt><dd class="mp-num">6 votes, score +5</dd></dl></div></div></div></div><div class="card"><div class="card-header"><h2 class="card-title">AI review</h2></div><div class="card-body d-flex flex-wrap align-items-center gap-3"><span class="badge bg-green-lt fs-4 py-2 px-3"><i class="icon ti ti-check me-1"></i>Allowed</span><span class="text-secondary flex-fill">Fits the party guidelines. No criterion applied.</span><a href="#">View AI review</a></div></div><div class="card"><div class="card-header"><h2 class="card-title">Schedule</h2></div><div class="card-body"><p class="text-secondary mb-3">Not scheduled. Pick a time and Music Party sends this Request to the Player then.</p><label class="form-label" for="sched">Send at (party time)</label><input id="sched" class="form-control" type="datetime-local" style="max-inline-size:20rem"></div><div class="card-footer d-flex gap-2"><button class="btn btn-outline-secondary" disabled>Clear schedule</button><button class="btn btn-primary ms-auto">Save schedule</button></div></div><div class="card"><div class="card-header"><h2 class="card-title">Votes</h2></div><ul class="mp-timeline">
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></span><span class="text-secondary">2 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></span><span class="text-secondary">2 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-up-filled text-success"></i><span><span class="mp-who"><span class="avatar rounded-circle">SA</span>Sam</span></span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-arrow-big-down text-danger"></i><span><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess</span></span><span class="text-secondary">1 minute ago</span></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">History</h2></div><ul class="mp-timeline">
+<li><i class="icon ti ti-music-plus"></i><span>Ravi requested it</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-robot"></i><span>AI review allowed it</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-list-numbers"></i><span>Added to the Queue at position 4</span><span class="text-secondary">3 minutes ago</span></li>
+<li><i class="icon ti ti-history"></i><span>Played at this party before: <a href="#">Played Tracks</a>, yesterday at 21:14</span><span class="text-secondary">1 day ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<ul class="mock-notes"><li>h1 is the track; Schedule, Votes and History are h2 card titles, so the outline never skips a level. #425.</li><li>AI review outcome (Allowed, no criterion) links to the review in Moderation. The "Moderate" button is gone; Remove Request lives in the page menu (More actions). U5, U4.</li><li>History merges the old Votes, Other Appearances and Ratings empty cards into one list of what happened, with Played Tracks as a link.</li><li>Only the Save schedule button is filled; View on Spotify is outlined (it was a green filled button).</li></ul>
+</div>
+</section>
+<section class="mock-section">
+<h2>Guest view <span class="mock-tag is-changed">Changed</span></h2>
+<p>If guests are allowed to see Requests, they get the same table without the row menu and without the Flagged chip. Their own Requests carry a "You" marker.</p>
+<div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="requests-guest-desktop" data-height="900">
+<figcaption><b>Guest (Priya)</b> 1440px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">PR</span><div class="d-none d-sm-block ps-2"><div>Priya</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26, newest first.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="" placeholder="Search tracks, artists, people… or try sent:no" aria-label="Search Requests"><span class="mp-search-count">42 Requests</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="false">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">4</span></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><table class="table table-hover table-vcenter card-table mp-tbl"><thead><tr><th>Request</th><th>Requested by</th><th class="text-end"><a class="mp-sort" href="#">Votes</a></th><th class="text-end"><a class="mp-sort" href="#">Score</a></th><th><a class="mp-sort" href="#">Requested<i class="icon ti ti-caret-down-filled"></i></a></th><th><a class="mp-sort" href="#">Sent to Player</a></th></tr></thead><tbody><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-1.svg" alt="" title="Hot Fuss"><div class="text-wrap"><div class="mp-title"><a href="#">Mr. Brightside</a></div><div class="text-secondary">The Killers</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">6</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">3 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-2.svg" alt="" title="Before the Storm"><div class="text-wrap"><div class="mp-title"><a href="#">Sandstorm</a> <span class="badge bg-azure-lt"><i class="icon ti ti-clock me-1"></i>Scheduled 22:30</span></div><div class="text-secondary">Darude</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">4</td><td class="text-end mp-num">+4</td>
+<td class="mp-time">11 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival"><div class="text-wrap"><div class="mp-title"><a href="#">Dancing Queen</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya</span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">18 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-8.svg" alt="" title="Whenever You Need Somebody"><div class="text-wrap"><div class="mp-title"><a href="#">Never Gonna Give You Up</a> <span class="badge bg-yellow-lt">Flagged</span></div><div class="text-secondary">Rick Astley</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">SA</span>Sam</span></td>
+<td class="text-end mp-num">1</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">22 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-7.svg" alt="" title="Waterloo"><div class="text-wrap"><div class="mp-title"><a href="#">Waterloo</a></div><div class="text-secondary">ABBA</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">JS</span>Jess</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+2</td>
+<td class="mp-time">27 minutes ago</td><td><span class="text-secondary">Not yet</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-5.svg" alt="" title="Millennium"><div class="text-wrap"><div class="mp-title"><a href="#">Everybody (Backstreet's Back)</a></div><div class="text-secondary">Backstreet Boys</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">RA</span>Ravi</span></td>
+<td class="text-end mp-num">5</td><td class="text-end mp-num">+5</td>
+<td class="mp-time">34 minutes ago</td><td><span class="mp-time">6 minutes ago</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-6.svg" alt="" title="Hurry Up, We're Dreaming"><div class="text-wrap"><div class="mp-title"><a href="#">Midnight City</a></div><div class="text-secondary">M83</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">PR</span>Priya <span class="badge bg-blue-lt ms-1">You</span></span></td>
+<td class="text-end mp-num">3</td><td class="text-end mp-num">+3</td>
+<td class="mp-time">41 minutes ago</td><td><span class="mp-time">14 minutes ago</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-4.svg" alt="" title="Random Access Memories"><div class="text-wrap"><div class="mp-title"><a href="#">Get Lucky</a></div><div class="text-secondary">Daft Punk</div></div></div></td>
+<td><span class="mp-who"><span class="avatar rounded-circle">MI</span>Mina</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">+1</td>
+<td class="mp-time">52 minutes ago</td><td><span class="mp-time">31 minutes ago</span></td>
+
+</tr><tr>
+<td><div class="d-flex align-items-center gap-3"><img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Hotel California"><div class="text-wrap"><div class="mp-title"><a href="#">Hotel California</a></div><div class="text-secondary">Eagles</div></div></div></td>
+<td><span class="text-secondary">Fallback Playlist</span></td>
+<td class="text-end mp-num">0</td><td class="text-end mp-num">0</td>
+<td class="mp-time">1 hour ago</td><td><span class="mp-time">1 hour ago</span></td>
+
+</tr></tbody></table><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 9 of 42 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1" aria-label="Previous page"><i class="icon ti ti-chevron-left"></i></a></li><li class="page-item active"><a class="page-link" href="#" aria-current="page">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">3</a></li><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<ul class="mock-notes"><li>Open question, not decided here: today guests do not see Requests in the sidebar (navigation.ts shows Queue and Search only), though the page can be opened by URL. Shown with the nav item to illustrate the choice.</li><li>No remove or schedule control for non-managers, as on the Queue. U5.</li></ul>
+</div>
+</section>
+<section class="mock-section">
+<h2>Requests on a phone <span class="mock-tag is-changed">Changed</span></h2>
+<p>At 390px the table becomes a list: track and artist on full width, who and when beneath, send state and votes on the last line, and the row menu at the end.</p>
+<div class="mock-row">
+<figure class="mock-frame" data-frame="phone" id="requests-list-phone" data-height="844">
+<figcaption><b>List</b> 390px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="" placeholder="Search or try sent:no" aria-label="Search Requests"><span class="mp-search-count">42</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="false">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><div class="list-group list-group-flush mp-rowlist"><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-1.svg" alt="" title="Hot Fuss">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Mr. Brightside</a></div><div class="text-secondary mp-line">The Killers</div>
+<div class="small text-secondary mt-1">Ravi &middot; 3 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">6 votes</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Mr. Brightside"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-2.svg" alt="" title="Before the Storm">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Sandstorm</a></div><div class="text-secondary mp-line">Darude</div>
+<div class="small text-secondary mt-1">Mina &middot; 11 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">4 votes</span><span class="badge bg-azure-lt"><i class="icon ti ti-clock me-1"></i>Scheduled 22:30</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Sandstorm"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Dancing Queen</a></div><div class="text-secondary mp-line">ABBA</div>
+<div class="small text-secondary mt-1">Priya &middot; 18 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">3 votes</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dancing Queen"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-8.svg" alt="" title="Whenever You Need Somebody">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Never Gonna Give You Up</a></div><div class="text-secondary mp-line">Rick Astley</div>
+<div class="small text-secondary mt-1">Sam &middot; 22 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">1 vote</span><span class="badge bg-yellow-lt">Flagged</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Never Gonna Give You Up"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-7.svg" alt="" title="Waterloo">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Waterloo</a></div><div class="text-secondary mp-line">ABBA</div>
+<div class="small text-secondary mt-1">Jess &middot; 27 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">2 votes</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Waterloo"><i class="icon ti ti-dots"></i></button></div>
+</div></div></div><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 9 of 42 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="phone" id="requests-menu-phone" data-height="844">
+<figcaption><b>Filtered, row menu open</b> 390px</figcaption>
+<template><style>
+.mp-chip-label{font-size:.75rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--tblr-secondary-color);margin-inline-end:2px}
+.mp-chips-row{display:flex;flex-wrap:wrap;gap:var(--mp-space-2) var(--mp-space-5);align-items:center}
+.mp-hint{margin:0;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-hint code{font-size:inherit}
+.mp-tbl th{white-space:nowrap}
+.mp-tbl td{vertical-align:middle}
+.mp-tbl .mp-title{font-weight:500}
+.mp-tbl img.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-who{display:inline-flex;align-items:center;gap:8px;white-space:nowrap}
+.mp-who .avatar{--tblr-avatar-size:1.5rem;font-size:.6875rem}
+.mp-time{white-space:nowrap}
+.mp-sort{color:inherit;text-decoration:none}
+.mp-sort .ti{font-size:.875rem;margin-inline-start:2px}
+.mp-rowlist .mp-row{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-rowlist img.mp-art{inline-size:56px;block-size:56px;border-radius:6px;object-fit:cover;flex:none}
+.mp-rowlist .mp-main{flex:1;min-inline-size:0}
+.mp-rowlist .mp-line{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-flag-row{padding:var(--mp-space-4) var(--mp-space-4)}
+.mp-flag-row.is-selected{background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-flag-row img.mp-art{inline-size:64px;block-size:64px;border-radius:6px;object-fit:cover;flex:none}
+.mp-flag-row .form-check-input{inline-size:1.25rem;block-size:1.25rem;margin:0}
+.mp-flag-row .btn{min-block-size:44px;min-inline-size:7.5rem}
+.mp-flag-actions{display:flex;gap:8px}
+.mp-reason{display:flex;gap:8px;align-items:flex-start;margin-block-start:var(--mp-space-2);font-size:var(--mp-fs-small)}
+.mp-reason .ti{margin-block-start:2px;color:var(--tblr-yellow)}
+.mp-reason q{quotes:"\201C" "\201D"}
+.mp-bulkbar{display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);border-block-end:1px solid var(--tblr-border-color)}
+.mp-bulkbar .btn{min-block-size:44px}
+.mp-selectall{display:flex;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border-block-end:1px solid var(--tblr-border-color);color:var(--tblr-secondary-color)}
+.mp-selectall .form-check-input{margin:0;inline-size:1.25rem;block-size:1.25rem}
+.mp-scale{margin-block:var(--mp-space-3) var(--mp-space-2)}
+.mp-scale-track{position:relative;display:flex;block-size:14px;border-radius:999px;overflow:visible}
+.mp-scale-track .mp-seg{block-size:100%}
+.mp-scale-track .mp-seg:first-child{border-start-start-radius:999px;border-end-start-radius:999px}
+.mp-scale-track .mp-seg:last-of-type{border-start-end-radius:999px;border-end-end-radius:999px}
+.mp-seg.is-reject{background:var(--tblr-red);opacity:.5}.mp-seg.is-flag{background:var(--tblr-yellow);opacity:.5}.mp-seg.is-allow{background:var(--tblr-green);opacity:.5}
+.mp-scale-marker{position:absolute;inset-block:-5px;inline-size:4px;margin-inline-start:-2px;border-radius:2px;background:var(--tblr-body-color);box-shadow:0 0 0 2px var(--tblr-bg-surface)}
+.mp-scale-tick{position:absolute;inset-block:-4px;inline-size:2px;margin-inline-start:-1px;background:var(--tblr-secondary-color);opacity:.9}
+.mp-scale-labels{position:relative;block-size:1.4em;font-size:var(--mp-fs-small);color:var(--tblr-secondary-color)}
+.mp-scale-labels span{position:absolute;white-space:nowrap}
+.mp-scale-fill{block-size:100%;border-radius:999px 0 0 999px;background:var(--tblr-primary)}
+.mp-fate{display:flex;gap:var(--mp-space-3);align-items:flex-start}
+.mp-fate .avatar{flex:none}
+.mp-clamp{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;line-clamp:2;overflow:hidden}
+.mp-facts{display:grid;grid-template-columns:auto 1fr;gap:var(--mp-space-2) var(--mp-space-4);margin:0}
+.mp-facts dt{font-weight:400;color:var(--tblr-secondary-color)}
+.mp-facts dd{margin:0;overflow-wrap:anywhere}
+.mp-timeline{margin:0;padding:0;list-style:none}
+.mp-timeline li{display:grid;grid-template-columns:auto 1fr auto;gap:var(--mp-space-3);align-items:start;padding:var(--mp-space-3) var(--mp-space-4)}
+.mp-timeline li+li{border-block-start:1px solid var(--tblr-border-color)}
+.mp-timeline .ti{font-size:1.25rem;margin-block-start:1px;color:var(--tblr-secondary-color)}
+.mp-opt{display:grid;inline-size:100%;grid-template-columns:auto 1fr;gap:2px var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-control);cursor:pointer}
+.mp-opt+.mp-opt{margin-block-start:var(--mp-space-2)}
+.mp-opt.is-on{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 8%,transparent)}
+.mp-opt .form-check-input{margin:3px 0 0;grid-row:span 2}
+.mp-opt b{font-weight:600}
+.mp-opt span{color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-sticky-bottom{position:sticky;inset-block-end:0;z-index:3}
+.mp-lock{display:flex;gap:8px;align-items:center;color:var(--tblr-secondary-color)}
+@media (max-width:575px){
+.mp-flag-row .mp-flag-actions{display:grid;grid-template-columns:1fr 1fr;gap:var(--mp-space-2);inline-size:100%}
+.mp-flag-row img.mp-art{inline-size:56px;block-size:56px}
+.mp-page-head .btn{inline-size:100%}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Requests</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<div data-v-c50676bf="" data-test="party-player"><div data-v-7fc06ba4="" data-v-c50676bf="" class="now-playing-backdrop player-band border-bottom border-primary" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div data-v-c50676bf="" class="container-xl"><div data-v-c50676bf="" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1 player-frame"><div data-v-c50676bf="" class="player-status" role="status" aria-live="polite"></div><div data-v-c50676bf="" class="player-main"><img data-v-c50676bf="" class="player-art" src="assets/art/cover-1.svg" alt="" width="168" height="168" decoding="async"><div data-v-c50676bf="" class="player-text"><h2 data-v-c50676bf="" class="player-title" title="Midnight City" data-test="now-name">Midnight City</h2><p data-v-c50676bf="" class="player-artists" title="M83">M83</p><p data-v-c50676bf="" class="player-album" title="Hurry Up, We're Dreaming">Hurry Up, We're Dreaming</p></div><div data-v-c50676bf="" class="player-progress" data-test="progress-row"><span data-v-c50676bf="" class="player-time">1:40</span><div data-v-9c5a2093="" data-v-c50676bf="" class="playback-progress player-bar" role="progressbar" aria-label="Track progress" aria-valuemin="0" aria-valuemax="100" aria-valuenow="41"><div data-v-9c5a2093="" class="playback-progress-fill" style="transform: scaleX(0.41);"></div></div><span data-v-c50676bf="" class="player-time end">4:03</span></div><div data-v-c50676bf="" class="player-bottom"><span data-v-c50676bf="" class="player-by" data-test="requested-by">Requested by <b data-v-c50676bf="">Ravi</b></span><div data-v-b14253ee="" data-v-c50676bf="" class="rate-control" data-test="rate-control"><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate up" aria-pressed="false" data-test="rate-up"><i data-v-b14253ee="" class="icon ti ti-thumb-up" aria-hidden="true"></i></button><span data-v-b14253ee="" class="rate-count" data-test="rating">2</span><button data-v-b14253ee="" type="button" class="rate-button" aria-label="Rate down" aria-pressed="false" data-test="rate-down"><i data-v-b14253ee="" class="icon ti ti-thumb-down" aria-hidden="true"></i></button></div></div></div><div data-v-c50676bf="" class="player-next" data-test="up-next"><span data-v-c50676bf="" class="player-next-label">Up next</span><img data-v-c50676bf="" class="player-next-art" src="assets/art/cover-2.svg" alt="" width="32" height="32" decoding="async"><span data-v-c50676bf="" class="player-next-meta" title="Mr. Brightside · The Killers"><b data-v-c50676bf="">Mr. Brightside</b> · The Killers</span><span data-v-c50676bf="" class="player-time end">3:42</span></div></div></div></div></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Requests</h1><p>Everything requested at Coyote LAN 26. Schedule or remove a Request from its menu.</p></div></div>
+<div class="mp-searchbar"><div class="mp-search" role="search"><i class="icon ti ti-search" aria-hidden="true"></i><input class="form-control" type="search" value="sent:no" placeholder="Search or try sent:no" aria-label="Search Requests"><span class="mp-search-count">11 of 42</span></div><div class="mp-chips" role="group" aria-label="Filters"><button type="button" class="mp-chip" aria-pressed="false">Sent to Player <span class="mp-num">31</span></button><button type="button" class="mp-chip" aria-pressed="true">Waiting <span class="mp-num">11</span></button><button type="button" class="mp-chip" aria-pressed="false">Scheduled <span class="mp-num">2</span></button><button type="button" class="mp-chip" aria-pressed="false">Flagged <span class="mp-num">3</span></button><button type="button" class="mp-chip" aria-pressed="false">Mine <span class="mp-num">5</span></button></div>
+<p class="mp-hint">Words match every column. Add filters like <code>sent:no</code>, <code>artist:abba</code> or <code>by:ravi</code>; the chips set the same filters.</p></div>
+<div class="card"><div class="list-group list-group-flush mp-rowlist"><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-1.svg" alt="" title="Hot Fuss">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Mr. Brightside</a></div><div class="text-secondary mp-line">The Killers</div>
+<div class="small text-secondary mt-1">Ravi &middot; 3 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">6 votes</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Mr. Brightside"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-2.svg" alt="" title="Before the Storm">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Sandstorm</a></div><div class="text-secondary mp-line">Darude</div>
+<div class="small text-secondary mt-1">Mina &middot; 11 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">4 votes</span><span class="badge bg-azure-lt"><i class="icon ti ti-clock me-1"></i>Scheduled 22:30</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Sandstorm"><i class="icon ti ti-dots"></i></button><div class="dropdown-menu dropdown-menu-end show" data-bs-popper="static">
+<a class="dropdown-item" href="#"><i class="icon ti ti-external-link me-2"></i>Open Request</a>
+<a class="dropdown-item" href="#"><i class="icon ti ti-clock me-2"></i>Schedule Request</a>
+<div class="dropdown-divider"></div>
+<a class="dropdown-item text-danger" href="#"><i class="icon ti ti-trash me-2"></i>Remove Request<small>Takes it out of the Queue</small></a></div></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-3.svg" alt="" title="Arrival">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Dancing Queen</a></div><div class="text-secondary mp-line">ABBA</div>
+<div class="small text-secondary mt-1">Priya &middot; 18 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">3 votes</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Dancing Queen"><i class="icon ti ti-dots"></i></button></div>
+</div></div><div class="list-group-item"><div class="mp-row">
+<img class="mp-art" src="assets/art/cover-8.svg" alt="" title="Whenever You Need Somebody">
+<div class="mp-main"><div class="mp-title fw-medium"><a href="#">Never Gonna Give You Up</a></div><div class="text-secondary mp-line">Rick Astley</div>
+<div class="small text-secondary mt-1">Sam &middot; 22 minutes ago</div>
+<div class="small mt-1 d-flex flex-wrap align-items-center gap-2"><span class="text-secondary"><i class="icon ti ti-hourglass me-1"></i>Not yet sent</span><span class="text-secondary mp-num">1 vote</span><span class="badge bg-yellow-lt">Flagged</span></div></div>
+<div class="mp-menu-anchor"><button type="button" class="btn btn-icon btn-ghost-secondary" aria-label="Actions for Never Gonna Give You Up"><i class="icon ti ti-dots"></i></button></div>
+</div></div></div><div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary mp-num">Showing 1 to 4 of 11 Requests</p><ul class="pagination m-0 ms-auto"><li class="page-item"><a class="page-link" href="#" aria-label="Next page"><i class="icon ti ti-chevron-right"></i></a></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template>
+</figure>
+<ul class="mock-notes"><li>Title and artist are never squeezed into a column beside numbers. Chips wrap beneath the field and are 44px tall on touch.</li><li>The row menu items are 44px with labels, so Remove is not a bare icon. U5.</li></ul>
+</div>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

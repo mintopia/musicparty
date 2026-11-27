@@ -1,0 +1,615 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Type scale and page shell</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Type scale and page shell</h1>
+<p>The shared reference for every page: type scale, heading levels, breadcrumbs, the skip link, and the sidebar for each role. Ticket #425.</p>
+</header>
+<section class="mock-section">
+<h2>Type scale <span class="mock-tag is-changed">Changed</span></h2>
+<p>Six sizes, applied inside the page body only so the TV, player band and deck panels keep their own sizes.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="type-light-desktop" >
+<figcaption><b>Type scale</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Type</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Type scale</h1><p>The same scale in every page body. Component sizes (TV, player band, deck panels) are untouched.</p></div></div>
+<div class="card"><div class="card-body">
+<div class="mp-spec"><code>h1 · page title</code><h1>Coyote LAN 26</h1><span class="meta">32 / 1.15 / 700</span></div>
+<div class="mp-spec"><code>h2 · section</code><h2>Upcoming songs</h2><span class="meta">24 / 1.25 / 650</span></div>
+<div class="mp-spec"><code>h3 · card title</code><h3>Needs attention</h3><span class="meta">19 / 1.35 / 600</span></div>
+<div class="mp-spec"><code>h4 · group</code><h4>Sent to Player</h4><span class="meta">16 / 1.4 / 600</span></div>
+<div class="mp-spec"><code>body</code><p>Requests are checked, then sent to the Player when they reach the front of the Queue.</p><span class="meta">15 / 1.55 / 400</span></div>
+<div class="mp-spec"><code>small</code><small>Added 12 minutes ago by Ravi</small><span class="meta">13 / 1.55</span></div>
+</div></div>
+<p class="text-secondary small mt-3 mb-0">One h1 per page. Headings never skip a level. Sentence case everywhere. Numbers use tabular figures so times and counts line up.</p></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="type-dark-desktop-dark" data-theme="dark">
+<figcaption><b>Type scale</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Type</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Type scale</h1><p>The same scale in every page body. Component sizes (TV, player band, deck panels) are untouched.</p></div></div>
+<div class="card"><div class="card-body">
+<div class="mp-spec"><code>h1 · page title</code><h1>Coyote LAN 26</h1><span class="meta">32 / 1.15 / 700</span></div>
+<div class="mp-spec"><code>h2 · section</code><h2>Upcoming songs</h2><span class="meta">24 / 1.25 / 650</span></div>
+<div class="mp-spec"><code>h3 · card title</code><h3>Needs attention</h3><span class="meta">19 / 1.35 / 600</span></div>
+<div class="mp-spec"><code>h4 · group</code><h4>Sent to Player</h4><span class="meta">16 / 1.4 / 600</span></div>
+<div class="mp-spec"><code>body</code><p>Requests are checked, then sent to the Player when they reach the front of the Queue.</p><span class="meta">15 / 1.55 / 400</span></div>
+<div class="mp-spec"><code>small</code><small>Added 12 minutes ago by Ravi</small><span class="meta">13 / 1.55</span></div>
+</div></div>
+<p class="text-secondary small mt-3 mb-0">One h1 per page. Headings never skip a level. Sentence case everywhere. Numbers use tabular figures so times and counts line up.</p></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="type-phone" >
+<figcaption><b>Type scale</b> Phone 390px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Queue</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Type scale</h1><p>The same scale in every page body. Component sizes (TV, player band, deck panels) are untouched.</p></div></div>
+<div class="card"><div class="card-body">
+<div class="mp-spec"><code>h1 · page title</code><h1>Coyote LAN 26</h1><span class="meta">32 / 1.15 / 700</span></div>
+<div class="mp-spec"><code>h2 · section</code><h2>Upcoming songs</h2><span class="meta">24 / 1.25 / 650</span></div>
+<div class="mp-spec"><code>h3 · card title</code><h3>Needs attention</h3><span class="meta">19 / 1.35 / 600</span></div>
+<div class="mp-spec"><code>h4 · group</code><h4>Sent to Player</h4><span class="meta">16 / 1.4 / 600</span></div>
+<div class="mp-spec"><code>body</code><p>Requests are checked, then sent to the Player when they reach the front of the Queue.</p><span class="meta">15 / 1.55 / 400</span></div>
+<div class="mp-spec"><code>small</code><small>Added 12 minutes ago by Ravi</small><span class="meta">13 / 1.55</span></div>
+</div></div>
+<p class="text-secondary small mt-3 mb-0">One h1 per page. Headings never skip a level. Sentence case everywhere. Numbers use tabular figures so times and counts line up.</p></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="type-phone-dark" data-theme="dark">
+<figcaption><b>Type scale</b> Phone 390px, dark</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Queue</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Type scale</h1><p>The same scale in every page body. Component sizes (TV, player band, deck panels) are untouched.</p></div></div>
+<div class="card"><div class="card-body">
+<div class="mp-spec"><code>h1 · page title</code><h1>Coyote LAN 26</h1><span class="meta">32 / 1.15 / 700</span></div>
+<div class="mp-spec"><code>h2 · section</code><h2>Upcoming songs</h2><span class="meta">24 / 1.25 / 650</span></div>
+<div class="mp-spec"><code>h3 · card title</code><h3>Needs attention</h3><span class="meta">19 / 1.35 / 600</span></div>
+<div class="mp-spec"><code>h4 · group</code><h4>Sent to Player</h4><span class="meta">16 / 1.4 / 600</span></div>
+<div class="mp-spec"><code>body</code><p>Requests are checked, then sent to the Player when they reach the front of the Queue.</p><span class="meta">15 / 1.55 / 400</span></div>
+<div class="mp-spec"><code>small</code><small>Added 12 minutes ago by Ravi</small><span class="meta">13 / 1.55</span></div>
+</div></div>
+<p class="text-secondary small mt-3 mb-0">One h1 per page. Headings never skip a level. Sentence case everywhere. Numbers use tabular figures so times and counts line up.</p></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>h1 32, h2 24, h3 19, h4 16, body 15, small 13 replace Tabler's flat 14/16/18/20 steps. #425.</li><li>Headings use <code>text-wrap: balance</code>; numbers use tabular figures.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Heading levels <span class="mock-tag is-changed">Changed</span></h2>
+<p>Outline of three real pages. Dashboard and Settings skipped from h1 to h3 and h1 repeated per section.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="heading-outline-desktop" data-height="700">
+<figcaption><b>Heading outline</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Headings</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Heading outline</h1><p>Real pages after the fix. No level is skipped; card titles follow the section above them.</p></div></div>
+<div class="mp-outlines">
+<div class="mp-outline"><h2 class="h3">Dashboard</h2><p class="src">Was h1 then h3 (critique-b).</p><ul><li class="l1"><b>h1</b>Dashboard</li><li class="l2"><b>h2</b>Player</li><li class="l3"><b>h3</b>Start playback</li><li class="l3"><b>h3</b>Health</li><li class="l2"><b>h2</b>Needs attention</li><li class="l2"><b>h2</b>Quick links</li><li class="l2"><b>h2</b>Upcoming songs</li></ul></div>
+<div class="mp-outline"><h2 class="h3">Settings</h2><p class="src">Was h1 then h1 per section.</p><ul><li class="l1"><b>h1</b>Settings</li><li class="l2"><b>h2</b>General</li><li class="l3"><b>h3</b>Party name</li><li class="l3"><b>h3</b>Country and timezone</li><li class="l2"><b>h2</b>Requests</li><li class="l2"><b>h2</b>Playback</li><li class="l3"><b>h3</b>Fallback Playlist</li><li class="l2"><b>h2</b>Screens</li><li class="l2"><b>h2</b>Mods</li><li class="l3"><b>h3</b>AI Request Review</li></ul></div>
+<div class="mp-outline"><h2 class="h3">Members</h2><p class="src">List and detail.</p><ul><li class="l1"><b>h1</b>Members</li><li class="l2"><b>h2</b>People in this party</li><li class="l1"><b>h1</b>Mina (detail page)</li><li class="l2"><b>h2</b>Requests</li><li class="l2"><b>h2</b>Votes</li><li class="l2"><b>h2</b>Flags</li></ul></div>
+</div>
+<h2 class="mt-5 mb-3">Page titles and breadcrumbs</h2>
+<p class="text-secondary">The breadcrumb always starts at Home; the last item is the page and is not a link.</p>
+<div class="mp-crumb-demo"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item"><a href="#">Members</a></li><li class="breadcrumb-item active" aria-current="page">Mina</li></ol></nav></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Rule: h1 is the page, h2 a section or card group, h3 a card title inside it. Critique-b skipped heading findings on Dashboard, Profile and Settings.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Breadcrumbs <span class="mock-tag is-changed">Changed</span></h2>
+<p>Separators come from Tabler; the trail collapses on a phone instead of wrapping or overflowing.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="phone" id="breadcrumbs-phone" >
+<figcaption><b>Breadcrumbs</b> Phone 390px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#"><i class="ti ti-dots"></i></a></li><li class="breadcrumb-item active" aria-current="page">Mina Okafor-Lindqvist</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Breadcrumbs</h1><p>On a phone the middle collapses behind a labelled button; the current page truncates with an ellipsis.</p></div></div>
+<div class="mp-crumb-label">Short trail fits</div>
+<div class="mp-crumb-demo"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Parties</li></ol></nav></div>
+<div class="mp-crumb-label">Long trail, middle collapsed</div><div class="mp-crumb-demo"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><button class="btn btn-link" aria-label="Show full path: Coyote LAN 26, Members"><i class="icon ti ti-dots"></i></button></li><li class="breadcrumb-item active mp-crumb-current" aria-current="page">Mina Okafor-Lindqvist</li></ol></nav></div>
+<div class="mp-crumb-label">Full path opened</div>
+<div class="mp-crumb-demo"><div class="list-group list-group-flush"><a class="list-group-item" href="#">Home</a><a class="list-group-item" href="#">Coyote LAN 26</a><a class="list-group-item" href="#">Members</a><span class="list-group-item active" aria-current="page">Mina Okafor-Lindqvist</span></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Middle crumbs collapse behind a 44px "Show full path" button; the current page truncates. No horizontal scroll at 390px.</li><li>Desktop trail is shown in the heading-outline frame above.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Skip link <span class="mock-tag is-changed">Changed</span></h2>
+<p>Focused over the sidebar.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="skip-link-desktop" data-height="420" data-fixed>
+<figcaption><b>Skip link focused</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip is-visible mp-skip-focus-ring" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Skip link</h1><p>Keyboard users press Tab once on any page to jump past the sidebar.</p></div></div>
+<p>The link is fixed, above the sidebar, and sits first in the tab order. In round 1 it was absolutely positioned at z-index 1000, under the sidebar (1030), so it was never visible when focused.</p></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Fixed position, z-index 1090, above the sidebar (1030). It was absolute at 1000 and hidden behind the sidebar. #425.</li><li>Targets <code>main#main</code>, the first landmark after the header.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Sidebar by role <span class="mock-tag is-changed">Changed</span></h2>
+<p>The same shell for guest, moderator, owner and admin.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="sidebars-desktop" data-height="700">
+<figcaption><b>Sidebars</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Roles</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Sidebar by role</h1><p>One shell, the links change with what the member can do in the party.</p></div></div>
+<div class="mp-sb-grid">
+<div><h2 class="h3">Guest</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Queue and Search only. No manager links.</p></div>
+<div><h2 class="h3">Moderator</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">No Settings. Moderation shows the flagged count. Members is read-only.</p></div>
+<div><h2 class="h3">Owner</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Everything in the party, plus Create party.</p></div>
+<div><h2 class="h3">Admin</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Owner links plus the Admin group (Dashboard, Users, Settings, Mods, Pulse, Horizon).</p></div>
+</div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="sidebars-desktop-dark" data-theme="dark" data-height="700">
+<figcaption><b>Sidebars</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-spec{display:grid;grid-template-columns:140px 1fr 160px;gap:8px 24px;align-items:baseline;padding-block:14px;border-block-end:1px solid var(--tblr-border-color)}
+.mp-spec code{color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-spec .meta{color:var(--tblr-secondary-color);font-size:.8125rem;font-variant-numeric:tabular-nums}
+.mp-spec > :nth-child(2){margin:0}
+@media (max-width:575px){.mp-spec{grid-template-columns:1fr}}
+.mp-outlines{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:24px}
+.mp-outline h3{margin:0 0 4px}
+.mp-outline ul{list-style:none;margin:0;padding:0;border-inline-start:2px solid var(--tblr-border-color)}
+.mp-outline li{padding:3px 0 3px 12px;font-size:.875rem}
+.mp-outline li.l2{margin-inline-start:16px}
+.mp-outline li.l3{margin-inline-start:32px}
+.mp-outline li b{display:inline-block;inline-size:26px;color:var(--tblr-secondary-color);font-weight:600;font-variant-numeric:tabular-nums}
+.mp-outline .src{color:var(--tblr-secondary-color);font-size:.8125rem;margin:0 0 12px}
+.mp-sb-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px}
+.mp-sb-grid .navbar-vertical{position:static;inline-size:auto;min-block-size:0;block-size:auto;border-radius:12px;padding-block:8px}
+.mp-sb-grid .navbar-collapse{display:block!important}
+.mp-sb-grid .navbar-toggler{display:none}
+.mp-sb-grid h3{margin:0 0 8px}
+.mp-sb-grid .navbar-vertical .container-fluid{flex-direction:column;align-items:stretch}
+.mp-sb-note{color:var(--tblr-secondary-color);font-size:.8125rem;margin:8px 0 0}
+.mp-crumb-demo{padding:12px 16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:16px}
+.mp-crumb-demo .breadcrumb{margin:0;flex-wrap:nowrap;align-items:center}
+.mp-crumb-demo .breadcrumb-item{white-space:nowrap}
+.mp-crumb-demo .breadcrumb-item.mp-crumb-current{overflow:hidden;text-overflow:ellipsis;min-inline-size:0}
+.mp-crumb-demo .btn-link{padding:0;min-block-size:44px;min-inline-size:32px;display:inline-flex;align-items:center;justify-content:center}
+.mp-crumb-label{font-size:.8125rem;color:var(--tblr-secondary-color);margin:0 0 6px}
+.mp-skip-stage{position:relative;min-block-size:300px}
+.mp-skip-focus-ring{outline:3px solid var(--tblr-primary);outline-offset:2px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Roles</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Sidebar by role</h1><p>One shell, the links change with what the member can do in the party.</p></div></div>
+<div class="mp-sb-grid">
+<div><h2 class="h3">Guest</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Queue and Search only. No manager links.</p></div>
+<div><h2 class="h3">Moderator</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">No Settings. Moderation shows the flagged count. Members is read-only.</p></div>
+<div><h2 class="h3">Owner</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Everything in the party, plus Create party.</p></div>
+<div><h2 class="h3">Admin</h2><aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside><p class="mp-sb-note">Owner links plus the Admin group (Dashboard, Users, Settings, Mods, Pulse, Horizon).</p></div>
+</div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Moderator is new: sees Dashboard, Queue, Search, Requests, Moderation and Members, never Settings. Decision 6.</li><li>Nav labels follow <code>resources/js/lib/navigation.ts</code>. "Create party" is the one wording change (sentence case).</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

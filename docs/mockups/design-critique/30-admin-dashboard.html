@@ -1,0 +1,729 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin dashboard</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Admin dashboard</h1>
+<p>Instance admin home (U9). The old page showed "3 Users, 0 in the last week". This one answers three questions on a LAN night: what is live, what is broken, what do I fix first. Operate mode: no hero metrics, full width, every problem has an action.</p>
+</header>
+
+<section class="mock-section">
+<h2>Busy LAN night <span class="mock-tag is-new">New</span></h2>
+<p>Live parties first, with the same playback words as each party Dashboard (Playing, Paused, Nothing playing, Player stale). Problems sit next to system health, activity underneath.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-dash-busy-desktop">
+<figcaption><b>Busy night</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties <span class="badge bg-secondary-lt ms-2">4</span></h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div>
+<table class="table table-vcenter card-table d-none d-md-table"><thead><tr><th>Party</th><th>Playback</th><th>Now playing</th><th class="text-end">Guests online</th><th class="text-end">Requests waiting</th><th class="text-end">Flagged</th><th>Owner</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>
+<tr><td><a href="#" class="fw-medium text-nowrap">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub text-nowrap">M83</span></div></div></td>
+<td class="text-end mp-num">38</td><td class="text-end mp-num">12</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">2</span></td><td>Jess</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Friday Night Disco</a><span class="mp-sub">PQRT</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span><span class="mp-sub">Paused for 2 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub text-nowrap">ABBA</span></div></div></td>
+<td class="text-end mp-num">14</td><td class="text-end mp-num">5</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Ash</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Retro Room</a><span class="mp-sub">HZMN</span></td>
+<td><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span><span class="mp-sub">No report for 6 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub text-nowrap">Darude · last known</span></div></div></td>
+<td class="text-end mp-num">9</td><td class="text-end mp-num">3</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">1</span></td><td>Mina</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Quiet Corner</a><span class="mp-sub">WDLM</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span><span class="mp-sub">Nothing queued</span></td>
+<td><span class="text-secondary">Nothing to play</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">0</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Sam</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr></tbody></table>
+<ul class="list-group list-group-flush d-md-none"><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Coyote LAN 26</a><span class="mp-sub">KXQB · Jess</span></div><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub">M83</span></div></div>
+
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>38 online</span><span>12 waiting</span><span>2 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Friday Night Disco</a><span class="mp-sub">PQRT · Ash</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub">ABBA</span></div></div>
+<div class="mp-sub mt-2">Paused for 2 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>14 online</span><span>5 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Retro Room</a><span class="mp-sub">HZMN · Mina</span></div><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub">Darude</span></div></div>
+<div class="mp-sub mt-2">No report for 6 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>9 online</span><span>3 waiting</span><span>1 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Quiet Corner</a><span class="mp-sub">WDLM · Sam</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span></div>
+
+<div class="mp-sub mt-2">Nothing queued</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>2 online</span><span>0 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li></ul></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention <span class="badge bg-red text-red-fg ms-2">5</span></h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-red"></span><div><span class="mp-check-label">Player stale in Retro Room</span><span class="mp-check-detail">Encore stopped reporting 6 minutes ago, so Requests are not reaching Spotify. Mina hosts it.</span></div><a href="#" class="btn btn-sm">Open Dashboard</a></li><li><span class="status-dot status-red"></span><div><span class="mp-check-label">2 Spotify links need re-linking</span><span class="mp-check-detail">Mina and Sam must sign in to Spotify again. Mina hosts Retro Room, which cannot start playback until then.</span></div><a href="#" class="btn btn-sm">View users</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">3 jobs failed in the last hour</span><span class="mp-check-detail">All 3 are Spotify rate limits on Coyote LAN 26. They retry automatically.</span></div><a href="#" class="btn btn-sm">Open Horizon</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">4 AI reviews let a Request through by mistake</span><span class="mp-check-detail">The review service timed out, so the Requests were allowed without a review. Last one 11 minutes ago in Coyote LAN 26.</span></div><a href="#" class="btn btn-sm">See reviews</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Steam sign-in is on but has no client secret</span><span class="mp-check-detail">Guests who pick Steam on the login page will see an error.</span></div><a href="#" class="btn btn-sm">Fix provider</a></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">212 live connections from 61 devices.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Client ID and secret are set. Last token refresh 3 minutes ago.</span></div></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">14</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">3</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">212</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">61</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Priya signed up with Discord.</span><span class="text-secondary small text-nowrap">4 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-flag text-secondary mt-1"></i><span class="flex-fill">AI review flagged Sandstorm (Remix) in Coyote LAN 26.</span><span class="text-secondary small text-nowrap">11 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-playlist-add text-secondary mt-1"></i><span class="flex-fill">Ash created Retro Room.</span><span class="text-secondary small text-nowrap">2 hours ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Kai signed up with Twitch.</span><span class="text-secondary small text-nowrap">5 hours ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-dash-busy-desktop-dark" data-theme="dark">
+<figcaption><b>Busy night</b> 1440px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties <span class="badge bg-secondary-lt ms-2">4</span></h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div>
+<table class="table table-vcenter card-table d-none d-md-table"><thead><tr><th>Party</th><th>Playback</th><th>Now playing</th><th class="text-end">Guests online</th><th class="text-end">Requests waiting</th><th class="text-end">Flagged</th><th>Owner</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>
+<tr><td><a href="#" class="fw-medium text-nowrap">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub text-nowrap">M83</span></div></div></td>
+<td class="text-end mp-num">38</td><td class="text-end mp-num">12</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">2</span></td><td>Jess</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Friday Night Disco</a><span class="mp-sub">PQRT</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span><span class="mp-sub">Paused for 2 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub text-nowrap">ABBA</span></div></div></td>
+<td class="text-end mp-num">14</td><td class="text-end mp-num">5</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Ash</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Retro Room</a><span class="mp-sub">HZMN</span></td>
+<td><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span><span class="mp-sub">No report for 6 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub text-nowrap">Darude · last known</span></div></div></td>
+<td class="text-end mp-num">9</td><td class="text-end mp-num">3</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">1</span></td><td>Mina</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Quiet Corner</a><span class="mp-sub">WDLM</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span><span class="mp-sub">Nothing queued</span></td>
+<td><span class="text-secondary">Nothing to play</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">0</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Sam</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr></tbody></table>
+<ul class="list-group list-group-flush d-md-none"><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Coyote LAN 26</a><span class="mp-sub">KXQB · Jess</span></div><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub">M83</span></div></div>
+
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>38 online</span><span>12 waiting</span><span>2 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Friday Night Disco</a><span class="mp-sub">PQRT · Ash</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub">ABBA</span></div></div>
+<div class="mp-sub mt-2">Paused for 2 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>14 online</span><span>5 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Retro Room</a><span class="mp-sub">HZMN · Mina</span></div><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub">Darude</span></div></div>
+<div class="mp-sub mt-2">No report for 6 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>9 online</span><span>3 waiting</span><span>1 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Quiet Corner</a><span class="mp-sub">WDLM · Sam</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span></div>
+
+<div class="mp-sub mt-2">Nothing queued</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>2 online</span><span>0 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li></ul></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention <span class="badge bg-red text-red-fg ms-2">5</span></h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-red"></span><div><span class="mp-check-label">Player stale in Retro Room</span><span class="mp-check-detail">Encore stopped reporting 6 minutes ago, so Requests are not reaching Spotify. Mina hosts it.</span></div><a href="#" class="btn btn-sm">Open Dashboard</a></li><li><span class="status-dot status-red"></span><div><span class="mp-check-label">2 Spotify links need re-linking</span><span class="mp-check-detail">Mina and Sam must sign in to Spotify again. Mina hosts Retro Room, which cannot start playback until then.</span></div><a href="#" class="btn btn-sm">View users</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">3 jobs failed in the last hour</span><span class="mp-check-detail">All 3 are Spotify rate limits on Coyote LAN 26. They retry automatically.</span></div><a href="#" class="btn btn-sm">Open Horizon</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">4 AI reviews let a Request through by mistake</span><span class="mp-check-detail">The review service timed out, so the Requests were allowed without a review. Last one 11 minutes ago in Coyote LAN 26.</span></div><a href="#" class="btn btn-sm">See reviews</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Steam sign-in is on but has no client secret</span><span class="mp-check-detail">Guests who pick Steam on the login page will see an error.</span></div><a href="#" class="btn btn-sm">Fix provider</a></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">212 live connections from 61 devices.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Rate limited by Spotify for 4 minutes. Playback and search may be slow.</span></div><a href="#" class="btn btn-sm">Open Pulse</a></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">14</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">3</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">212</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">61</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Priya signed up with Discord.</span><span class="text-secondary small text-nowrap">4 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-flag text-secondary mt-1"></i><span class="flex-fill">AI review flagged Sandstorm (Remix) in Coyote LAN 26.</span><span class="text-secondary small text-nowrap">11 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-playlist-add text-secondary mt-1"></i><span class="flex-fill">Ash created Retro Room.</span><span class="text-secondary small text-nowrap">2 hours ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Kai signed up with Twitch.</span><span class="text-secondary small text-nowrap">5 hours ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li><b>Live parties</b> (U9): one row per active party with name and code, playback state, what is playing, guests online, Requests waiting, Flagged waiting, owner, and a link to that party's Dashboard. A stale Player shows its fix reason under the badge, in words.</li><li><b>Needs attention</b> (U9): every row is an instruction with its own action ("Open Dashboard", "View users", "Open Horizon", "See reviews", "Fix provider"). Red rows block playback; yellow rows degrade it. Same wording as the party Dashboard's Needs attention (#418).</li><li><b>System health</b> (U9): workers, scheduler, Reverb, Redis, database and Spotify app credentials as plain rows with a fact in words. The dark frame shows a degraded row (Spotify rate limited). Links to Pulse and Horizon are repeated here because that is where an admin goes next.</li><li><b>Activity</b>: sign-ups and parties created this week, Played Tracks today, a four-line recent list. Small datagrid, not hero tiles.</li><li><b>New data</b> the app does not expose today (Admin HomeController returns only user totals): live party list with playback state, guests online, Requests waiting and Flagged waiting per party (Party, UpcomingSong, AiReview queries; guests online from Reverb presence); stale Player detection and Spotify link expiry (LinkedAccount token state); failed jobs in the last hour (Horizon failed_jobs); AI reviews that failed open (AiReview outcome <code>low_confidence</code> from a timeout); provider misconfiguration (SocialProvider enabled with a missing required setting); worker, scheduler, Reverb, Redis, database and Spotify credential checks; sign-ups, parties created and Played Tracks counts; the recent events list.</li><li>Width: full container, because the page is dense (width rule 12). Heading outline: h1 Dashboard, then h2 per card (critique-b skipped heading).</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>All clear and quiet instance <span class="mock-tag is-new">New</span></h2>
+<p>The two calm states. All clear still names what was checked so silence is not mistaken for broken. A quiet instance explains what "live" means and offers the one next step.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="admin-dash-clear-desktop">
+<figcaption><b>All clear</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties <span class="badge bg-secondary-lt ms-2">2</span></h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div>
+<table class="table table-vcenter card-table d-none d-md-table"><thead><tr><th>Party</th><th>Playback</th><th>Now playing</th><th class="text-end">Guests online</th><th class="text-end">Requests waiting</th><th class="text-end">Flagged</th><th>Owner</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>
+<tr><td><a href="#" class="fw-medium text-nowrap">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub text-nowrap">M83</span></div></div></td>
+<td class="text-end mp-num">38</td><td class="text-end mp-num">12</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">2</span></td><td>Jess</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Friday Night Disco</a><span class="mp-sub">PQRT</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span><span class="mp-sub">Paused for 2 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub text-nowrap">ABBA</span></div></div></td>
+<td class="text-end mp-num">14</td><td class="text-end mp-num">5</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Ash</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr></tbody></table>
+<ul class="list-group list-group-flush d-md-none"><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Coyote LAN 26</a><span class="mp-sub">KXQB · Jess</span></div><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub">M83</span></div></div>
+
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>38 online</span><span>12 waiting</span><span>2 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Friday Night Disco</a><span class="mp-sub">PQRT · Ash</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub">ABBA</span></div></div>
+<div class="mp-sub mt-2">Paused for 2 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>14 online</span><span>5 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li></ul></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention</h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Nothing needs attention</span><span class="mp-check-detail">No expired Spotify links, stale Players, failed jobs or misconfigured sign-in providers. Checked 20 seconds ago.</span></div></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">212 live connections from 61 devices.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Client ID and secret are set. Last token refresh 3 minutes ago.</span></div></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">9</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">2</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">148</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">47</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Priya signed up with Discord.</span><span class="text-secondary small text-nowrap">4 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-flag text-secondary mt-1"></i><span class="flex-fill">AI review flagged Sandstorm (Remix) in Coyote LAN 26.</span><span class="text-secondary small text-nowrap">11 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-playlist-add text-secondary mt-1"></i><span class="flex-fill">Ash created Retro Room.</span><span class="text-secondary small text-nowrap">2 hours ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="admin-dash-quiet-desktop">
+<figcaption><b>No parties</b> 1440px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties</h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div><div class="empty py-5"><div class="empty-icon"><i class="icon ti ti-playlist-off"></i></div><p class="empty-title">No parties are live</p><p class="empty-subtitle text-secondary">A party is live while its Player is reporting or guests are connected. Nobody has been on this instance for 3 days.</p><div class="empty-action"><a href="#" class="btn btn-primary"><i class="icon ti ti-plus"></i>Create a party</a></div></div></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention</h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Nothing needs attention</span><span class="mp-check-detail">No expired Spotify links, stale Players, failed jobs or misconfigured sign-in providers. Checked 20 seconds ago.</span></div></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">1 live connection from 1 device.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Client ID and secret are set. Last token refresh 3 minutes ago.</span></div></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">0</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">0</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">0</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">1</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item text-secondary">Nothing yet this week.</li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>All clear keeps the Needs attention card (green row, "Nothing needs attention") so the layout does not jump when something breaks.</li><li>No parties: empty state with "Create a party" as the only filled button on the page. <b>Open question:</b> the definition of live ("Player reporting or guests connected") is a proposal; it decides which parties appear.</li></ul>
+</section>
+
+<section class="mock-section">
+<h2>Phone <span class="mock-tag is-new">New</span></h2>
+<p>An admin checking from a phone at the venue. Live parties become cards, problems keep their action under the text, nothing scrolls sideways.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="phone" id="admin-dash-busy-phone">
+<figcaption><b>Busy night</b> 390px</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties <span class="badge bg-secondary-lt ms-2">4</span></h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div>
+<table class="table table-vcenter card-table d-none d-md-table"><thead><tr><th>Party</th><th>Playback</th><th>Now playing</th><th class="text-end">Guests online</th><th class="text-end">Requests waiting</th><th class="text-end">Flagged</th><th>Owner</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>
+<tr><td><a href="#" class="fw-medium text-nowrap">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub text-nowrap">M83</span></div></div></td>
+<td class="text-end mp-num">38</td><td class="text-end mp-num">12</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">2</span></td><td>Jess</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Friday Night Disco</a><span class="mp-sub">PQRT</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span><span class="mp-sub">Paused for 2 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub text-nowrap">ABBA</span></div></div></td>
+<td class="text-end mp-num">14</td><td class="text-end mp-num">5</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Ash</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Retro Room</a><span class="mp-sub">HZMN</span></td>
+<td><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span><span class="mp-sub">No report for 6 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub text-nowrap">Darude · last known</span></div></div></td>
+<td class="text-end mp-num">9</td><td class="text-end mp-num">3</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">1</span></td><td>Mina</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Quiet Corner</a><span class="mp-sub">WDLM</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span><span class="mp-sub">Nothing queued</span></td>
+<td><span class="text-secondary">Nothing to play</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">0</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Sam</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr></tbody></table>
+<ul class="list-group list-group-flush d-md-none"><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Coyote LAN 26</a><span class="mp-sub">KXQB · Jess</span></div><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub">M83</span></div></div>
+
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>38 online</span><span>12 waiting</span><span>2 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Friday Night Disco</a><span class="mp-sub">PQRT · Ash</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub">ABBA</span></div></div>
+<div class="mp-sub mt-2">Paused for 2 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>14 online</span><span>5 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Retro Room</a><span class="mp-sub">HZMN · Mina</span></div><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub">Darude</span></div></div>
+<div class="mp-sub mt-2">No report for 6 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>9 online</span><span>3 waiting</span><span>1 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Quiet Corner</a><span class="mp-sub">WDLM · Sam</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span></div>
+
+<div class="mp-sub mt-2">Nothing queued</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>2 online</span><span>0 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li></ul></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention <span class="badge bg-red text-red-fg ms-2">5</span></h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-red"></span><div><span class="mp-check-label">Player stale in Retro Room</span><span class="mp-check-detail">Encore stopped reporting 6 minutes ago, so Requests are not reaching Spotify. Mina hosts it.</span></div><a href="#" class="btn btn-sm">Open Dashboard</a></li><li><span class="status-dot status-red"></span><div><span class="mp-check-label">2 Spotify links need re-linking</span><span class="mp-check-detail">Mina and Sam must sign in to Spotify again. Mina hosts Retro Room, which cannot start playback until then.</span></div><a href="#" class="btn btn-sm">View users</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">3 jobs failed in the last hour</span><span class="mp-check-detail">All 3 are Spotify rate limits on Coyote LAN 26. They retry automatically.</span></div><a href="#" class="btn btn-sm">Open Horizon</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">4 AI reviews let a Request through by mistake</span><span class="mp-check-detail">The review service timed out, so the Requests were allowed without a review. Last one 11 minutes ago in Coyote LAN 26.</span></div><a href="#" class="btn btn-sm">See reviews</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Steam sign-in is on but has no client secret</span><span class="mp-check-detail">Guests who pick Steam on the login page will see an error.</span></div><a href="#" class="btn btn-sm">Fix provider</a></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">212 live connections from 61 devices.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Client ID and secret are set. Last token refresh 3 minutes ago.</span></div></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">14</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">3</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">212</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">61</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Priya signed up with Discord.</span><span class="text-secondary small text-nowrap">4 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-flag text-secondary mt-1"></i><span class="flex-fill">AI review flagged Sandstorm (Remix) in Coyote LAN 26.</span><span class="text-secondary small text-nowrap">11 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-playlist-add text-secondary mt-1"></i><span class="flex-fill">Ash created Retro Room.</span><span class="text-secondary small text-nowrap">2 hours ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Kai signed up with Twitch.</span><span class="text-secondary small text-nowrap">5 hours ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="admin-dash-busy-phone-dark" data-theme="dark">
+<figcaption><b>Busy night</b> 390px dark</figcaption>
+<template><style>
+.mp-art{inline-size:40px;block-size:40px;border-radius:6px;object-fit:cover;flex:none}
+.mp-art-sm{inline-size:32px;block-size:32px}
+.mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
+.mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
+@media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
+.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+.mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
+.mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
+.mp-cell>div{min-inline-size:0}
+.mp-cell .mp-sub{white-space:nowrap}
+.table td:first-child a.fw-medium{white-space:nowrap}
+.mp-ellip{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.mp-provs{display:inline-flex;gap:var(--mp-space-2);color:var(--tblr-secondary-color);font-size:1.25rem;align-items:center}
+.mp-provs .is-warn{color:var(--tblr-warning)}
+.mp-th a{color:inherit;text-decoration:none}
+.mp-savebar{position:sticky;inset-block-end:0;display:flex;flex-wrap:wrap;align-items:center;gap:var(--mp-space-3);padding:var(--mp-space-3) var(--mp-space-4);margin-block-start:var(--mp-space-5);background:var(--tblr-bg-surface);border:1px solid var(--tblr-border-color);border-radius:var(--tblr-border-radius);box-shadow:0 -6px 18px rgb(0 0 0 / .08)}
+.mp-savebar .mp-grow{flex:1 1 auto;color:var(--tblr-secondary-color)}
+.mp-section-h{font-size:var(--mp-fs-h3,19px);margin:0;padding:var(--mp-space-4) var(--mp-space-4) 0}
+.mp-sec{padding:0 var(--mp-space-4) var(--mp-space-4)}
+.mp-sec+.mp-sec{border-block-start:1px solid var(--tblr-border-color)}
+.mp-sec .setting-row:last-child{border-bottom:0}
+.mp-preview-tile{display:grid;place-items:center;block-size:72px;border-radius:8px;border:1px solid var(--tblr-border-color)}
+.mp-preview-tile img{max-block-size:36px;max-inline-size:80%}
+.mp-copy{display:inline-flex;gap:var(--mp-space-2);flex-wrap:wrap}
+.mp-thumb{display:grid;grid-template-columns:18px 1fr;inline-size:84px;block-size:52px;border-radius:6px;overflow:hidden;border:1px solid var(--tblr-border-color);background:var(--t-bg);flex:none}
+.mp-thumb i{background:var(--t-nav)}
+.mp-thumb b{display:block;margin:7px 6px;border-radius:3px;background:var(--t-surf);position:relative}
+.mp-thumb b::after{content:'';position:absolute;inset:auto 5px 5px auto;inline-size:20px;block-size:7px;border-radius:2px;background:var(--t-pri)}
+.mp-thumb b::before{content:'';position:absolute;inset:6px auto auto 5px;inline-size:26px;block-size:4px;border-radius:2px;background:var(--t-text);opacity:.8}
+.mp-editor{display:grid;grid-template-columns:minmax(0,1fr) 400px;gap:var(--mp-space-5);align-items:start}
+@media (max-width:1199.98px){.mp-editor{grid-template-columns:minmax(0,1fr)}}
+.mp-sticky{position:sticky;inset-block-start:var(--mp-space-4)}
+@media (max-width:1199.98px){.mp-sticky{position:static}}
+.mp-tokens{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:var(--mp-space-4) var(--mp-space-5);padding:var(--mp-space-4)}
+.mp-token .form-label{margin-block-end:var(--mp-space-1);font-weight:500}
+.mp-token .input-group-text{background:var(--tblr-bg-surface);padding-inline:var(--mp-space-3)}
+.mp-token .mp-tag{font-size:var(--mp-fs-small);color:var(--tblr-secondary-color);min-inline-size:3.2rem;text-align:end}
+.mp-code{margin:0;padding:var(--mp-space-3) 0;background:#0d1117;color:#d6deeb;border-radius:var(--tblr-border-radius);font:13px/1.6 ui-monospace,SFMono-Regular,Menlo,monospace;overflow:auto}
+.mp-code span{display:block;min-block-size:1.6em;padding:0 var(--mp-space-3) 0 52px;position:relative;white-space:pre}
+.mp-code span::before{content:attr(data-n);position:absolute;inset-inline-start:0;inline-size:36px;text-align:end;color:#6b7686}
+.pv{border:1px solid var(--tblr-border-color);border-radius:10px;overflow:hidden;display:grid;grid-template-columns:92px minmax(0,1fr);font-size:13px;line-height:1.45;background:var(--pv-bg);color:var(--pv-text)}
+.pv-nav{background:var(--pv-nav);padding:12px 8px;display:grid;gap:4px;align-content:start;color:#cfd6e2}
+.pv-nav b{font-size:12px;color:#fff;padding:2px 6px 8px}
+.pv-nav span{padding:5px 6px;border-radius:5px;font-size:12px}
+.pv-nav span.on{background:rgb(255 255 255 / .12);color:#fff}
+.pv-main{padding:14px;display:grid;gap:10px}
+.pv h4{margin:0;font-size:15px;color:var(--pv-text)}
+.pv-card{background:var(--pv-surf);border:1px solid var(--pv-border);border-radius:8px;padding:10px 12px;display:grid;gap:8px}
+.pv-muted{color:var(--pv-muted)}
+.pv-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding-block:6px;border-block:1px solid var(--pv-border)}
+.pv-btns{display:flex;gap:6px;flex-wrap:wrap}
+.pv-btn{padding:4px 10px;border-radius:6px;font-size:12px;font-weight:600;border:1px solid var(--pv-primary);background:var(--pv-primary);color:#fff}
+.pv-btn.o{background:transparent;color:var(--pv-primary)}
+.pv-btn.d{background:var(--pv-danger);border-color:var(--pv-danger)}
+.pv-badge{padding:1px 8px;border-radius:99px;font-size:11px;font-weight:600;color:#fff}
+.pv a{color:var(--pv-primary)}
+@media (max-width:575.98px){
+ .mp-page-head .btn-list{inline-size:100%}
+ .mp-tokens{grid-template-columns:minmax(0,1fr)}
+}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation</a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-settings"></i></span><span class="nav-link-title">Admin</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Users</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a><a class="dropdown-item d-flex align-items-center" href="#">Mods</a><a class="dropdown-item d-flex align-items-center" href="#">Pulse</a><a class="dropdown-item d-flex align-items-center" href="#">Horizon</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item active" aria-current="page">Dashboard</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div><h1>Dashboard</h1><p>Live parties and anything on this instance that needs fixing.</p></div><div class="btn-list"><a href="#" class="btn"><i class="icon ti ti-activity"></i>Open Pulse</a><a href="#" class="btn"><i class="icon ti ti-list-details"></i>Open Horizon</a></div></div><div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Live parties <span class="badge bg-secondary-lt ms-2">4</span></h2><span class="ms-auto text-secondary small">Updated 12 seconds ago</span></div>
+<table class="table table-vcenter card-table d-none d-md-table"><thead><tr><th>Party</th><th>Playback</th><th>Now playing</th><th class="text-end">Guests online</th><th class="text-end">Requests waiting</th><th class="text-end">Flagged</th><th>Owner</th><th><span class="visually-hidden">Open</span></th></tr></thead><tbody>
+<tr><td><a href="#" class="fw-medium text-nowrap">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td>
+<td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub text-nowrap">M83</span></div></div></td>
+<td class="text-end mp-num">38</td><td class="text-end mp-num">12</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">2</span></td><td>Jess</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Friday Night Disco</a><span class="mp-sub">PQRT</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span><span class="mp-sub">Paused for 2 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub text-nowrap">ABBA</span></div></div></td>
+<td class="text-end mp-num">14</td><td class="text-end mp-num">5</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Ash</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Retro Room</a><span class="mp-sub">HZMN</span></td>
+<td><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span><span class="mp-sub">No report for 6 minutes</span></td>
+<td><div class="mp-cell"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub text-nowrap">Darude · last known</span></div></div></td>
+<td class="text-end mp-num">9</td><td class="text-end mp-num">3</td><td class="text-end mp-num"><span class="badge bg-red text-red-fg">1</span></td><td>Mina</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr><tr><td><a href="#" class="fw-medium text-nowrap">Quiet Corner</a><span class="mp-sub">WDLM</span></td>
+<td><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span><span class="mp-sub">Nothing queued</span></td>
+<td><span class="text-secondary">Nothing to play</span></td>
+<td class="text-end mp-num">2</td><td class="text-end mp-num">0</td><td class="text-end mp-num"><span class="text-secondary">0</span></td><td>Sam</td>
+<td class="text-end"><a href="#" class="btn btn-sm">Open Dashboard</a></td></tr></tbody></table>
+<ul class="list-group list-group-flush d-md-none"><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Coyote LAN 26</a><span class="mp-sub">KXQB · Jess</span></div><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Playing</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-1.svg" alt=""><div><span class="mp-ellip">Midnight City</span><span class="mp-sub">M83</span></div></div>
+
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>38 online</span><span>12 waiting</span><span>2 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Friday Night Disco</a><span class="mp-sub">PQRT · Ash</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Paused</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-3.svg" alt=""><div><span class="mp-ellip">Dancing Queen</span><span class="mp-sub">ABBA</span></div></div>
+<div class="mp-sub mt-2">Paused for 2 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>14 online</span><span>5 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Retro Room</a><span class="mp-sub">HZMN · Mina</span></div><span class="badge bg-red-lt mp-state"><span class="status-dot status-red"></span>Player stale</span></div>
+<div class="mp-cell mt-2"><img class="mp-art mp-art-sm" src="assets/art/cover-5.svg" alt=""><div><span class="mp-ellip">Sandstorm</span><span class="mp-sub">Darude</span></div></div>
+<div class="mp-sub mt-2">No report for 6 minutes</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>9 online</span><span>3 waiting</span><span>1 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li><li class="list-group-item"><div class="d-flex align-items-start justify-content-between gap-2"><div class="min-w-0"><a href="#" class="fw-medium">Quiet Corner</a><span class="mp-sub">WDLM · Sam</span></div><span class="badge bg-secondary-lt mp-state"><span class="status-dot status-secondary"></span>Nothing playing</span></div>
+
+<div class="mp-sub mt-2">Nothing queued</div>
+<div class="d-flex flex-wrap gap-3 mt-2 small mp-num"><span>2 online</span><span>0 waiting</span><span>0 flagged</span></div>
+<a href="#" class="btn btn-sm mt-3">Open Dashboard</a></li></ul></div><div class="mp-grid-7-5"><div class="card"><div class="card-header"><h2 class="card-title">Needs attention <span class="badge bg-red text-red-fg ms-2">5</span></h2></div>
+<ul class="mp-checks"><li><span class="status-dot status-red"></span><div><span class="mp-check-label">Player stale in Retro Room</span><span class="mp-check-detail">Encore stopped reporting 6 minutes ago, so Requests are not reaching Spotify. Mina hosts it.</span></div><a href="#" class="btn btn-sm">Open Dashboard</a></li><li><span class="status-dot status-red"></span><div><span class="mp-check-label">2 Spotify links need re-linking</span><span class="mp-check-detail">Mina and Sam must sign in to Spotify again. Mina hosts Retro Room, which cannot start playback until then.</span></div><a href="#" class="btn btn-sm">View users</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">3 jobs failed in the last hour</span><span class="mp-check-detail">All 3 are Spotify rate limits on Coyote LAN 26. They retry automatically.</span></div><a href="#" class="btn btn-sm">Open Horizon</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">4 AI reviews let a Request through by mistake</span><span class="mp-check-detail">The review service timed out, so the Requests were allowed without a review. Last one 11 minutes ago in Coyote LAN 26.</span></div><a href="#" class="btn btn-sm">See reviews</a></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Steam sign-in is on but has no client secret</span><span class="mp-check-detail">Guests who pick Steam on the login page will see an error.</span></div><a href="#" class="btn btn-sm">Fix provider</a></li></ul></div><div class="card"><div class="card-header"><h2 class="card-title">System health</h2><span class="ms-auto text-secondary small">Checked 20 seconds ago</span></div><ul class="mp-checks"><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Queue workers</span><span class="mp-check-detail">Horizon is running with 8 workers, 0 waiting jobs.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Horizon</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Scheduler</span><span class="mp-check-detail">Last ran 40 seconds ago.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Reverb</span><span class="mp-check-detail">212 live connections from 61 devices.</span></div><a href="#" class="btn btn-sm btn-ghost-secondary">Pulse</a></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Redis</span><span class="mp-check-detail">Connected, 41 MB in use.</span></div></li><li><span class="status-dot status-green"></span><div><span class="mp-check-label">Database</span><span class="mp-check-detail">Connected, answers in 6 ms.</span></div></li><li><span class="status-dot status-yellow"></span><div><span class="mp-check-label">Spotify app credentials</span><span class="mp-check-detail">Rate limited by Spotify for 4 minutes. Playback and search may be slow.</span></div><a href="#" class="btn btn-sm">Open Pulse</a></li></ul></div></div><div class="card"><div class="card-header"><h2 class="card-title">Activity</h2></div>
+<div class="card-body"><div class="datagrid">
+<div><div class="datagrid-title">Sign-ups this week</div><div class="datagrid-content mp-num">14</div></div>
+<div><div class="datagrid-title">Parties created this week</div><div class="datagrid-content mp-num">3</div></div>
+<div><div class="datagrid-title">Played Tracks today</div><div class="datagrid-content mp-num">212</div></div>
+<div><div class="datagrid-title">Users now</div><div class="datagrid-content mp-num">61</div></div></div></div>
+<ul class="list-group list-group-flush"><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Priya signed up with Discord.</span><span class="text-secondary small text-nowrap">4 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-flag text-secondary mt-1"></i><span class="flex-fill">AI review flagged Sandstorm (Remix) in Coyote LAN 26.</span><span class="text-secondary small text-nowrap">11 minutes ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-playlist-add text-secondary mt-1"></i><span class="flex-fill">Ash created Retro Room.</span><span class="text-secondary small text-nowrap">2 hours ago</span></li><li class="list-group-item d-flex align-items-start gap-3"><i class="icon ti ti-user-plus text-secondary mt-1"></i><span class="flex-fill">Kai signed up with Twitch.</span><span class="text-secondary small text-nowrap">5 hours ago</span></li></ul></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Live parties table becomes a list of cards (same data, title and state first, counts as one line).</li><li>Needs attention rows put the action beneath the detail (page-local rule; a shared <code>.mp-checks</code> mobile rule would be better, see result file).</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

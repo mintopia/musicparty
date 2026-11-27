@@ -1,40 +1,119 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Design critique mockups</title>
-    <link rel="stylesheet" href="assets/app.css">
-    <link rel="stylesheet" href="assets/mockup.css">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design critique mockups</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+<style>
+.mock-toc .mock-tag { margin-inline-start: 4px; vertical-align: 1px; }
+.mock-toc em { font-style: normal; color: #6b7280; }
+.mock-questions { margin: 0; padding-inline-start: 1.4em; max-inline-size: 80ch; }
+.mock-questions li + li { margin-block-start: 6px; }
+.mock-questions a { color: #0a58b5; }
+</style>
 </head>
 <body class="mock-sheet">
 <header>
-    <h1>Design critique mockups</h1>
-    <p>Mockups for epic #414. The TV page and the now-playing strip feel built for a party; the rest of the site reads
-        as a stock admin template. These screens carry the party feel into the rest of the app without restyling
-        Tabler. The design direction is in <code>DIRECTION.md</code>; each implementation ticket follows its approved
-        mockup.</p>
+<h1>Design critique mockups</h1>
+<p>Round 2 for epic #414: 19 files, 224 frames (38 dark, 68 phone). Every screen starts from the app as built (real AppLayout, Tabler, the app's components) and changes only what its section notes list. The TV page and guest player band are final and shown unchanged. Direction and rules are in <code>DIRECTION.md</code>; each implementation ticket follows its approved mockup. Every file has at least one dark frame, using the app's existing dark mode.</p>
 </header>
 
 <section class="mock-section">
-    <h2>Contents</h2>
-    <ol class="mock-toc">
-        <li><a href="01-dashboard-status.html"><b>Dashboard status</b><span>#418 · One playback status with next-step actions; Diagnostics folded away.</span></a></li>
-        <li><a href="02-phone-dashboard.html"><b>Phone Dashboard</b><span>#419 · Upcoming rows stacked at 390px, schedule and remove in an overflow menu.</span></a></li>
-        <li><a href="03-guest-queue.html"><b>Guest queue</b><span>#420 · Shared vote control, "You" on your own Requests, Fallback Playlist tracks credited to the party.</span></a></li>
-        <li><a href="04-queue-remove.html"><b>Safe remove</b><span>#421 · Remove apart from votes, undo toast, failure toast, load retry.</span></a></li>
-        <li><a href="05-web-player.html"><b>Web Player</b><span>#423 · Readable from across the room: art, track, status, keyboard shortcuts.</span></a></li>
-        <li><a href="06-create-party.html"><b>Create Party</b><span>#424 · Three steps: name, music source with Fallback Playlist picker, defaults.</span></a></li>
-        <li><a href="07-errors-tv-join.html"><b>Errors and TV join</b><span>#422 · Branded 404 and 500 with "Enter party code"; join URL and QR on the TV.</span></a></li>
-        <li><a href="08-table-search.html"><b>Search above tables</b><span>#426 · Search bar and filter chips above Requests, Members, Moderation, Admin Users.</span></a></li>
-        <li><a href="09-type-breadcrumbs.html"><b>Type and breadcrumbs</b><span>#425 · Type scale, heading levels, breadcrumbs with separators, skip link.</span></a></li>
-        <li><a href="_template.html"><b>Template</b><span>Page shell and party primitives in one screen; start new mockups from this file.</span></a></li>
-    </ol>
+<h2>Contents, round 2</h2>
+<p>Tags say what each file contains: <span class="mock-tag is-unchanged">Unchanged</span> as built, <span class="mock-tag is-changed">Changed</span> refined from the built page, <span class="mock-tag is-new">New</span> screens that do not exist yet.</p>
+<h3>Dashboard</h3>
+<ol class="mock-toc">
+<li><a href="10-dashboard.html"><b>Dashboard</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#418 · Control room as built with one derived playback status, device picker and health grid always visible, Needs attention with actions, moderator view. <em>12 frames, 2 dark.</em></span></a></li>
+<li><a href="11-dashboard-phone.html"><b>Dashboard on a phone</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#419 · Stacked deck panels, stacked Upcoming rows with a labelled overflow menu, no sideways scroll. <em>8 frames, 3 dark, 7 phone.</em></span></a></li>
+</ol>
+<h3>Guest party pages</h3>
+<ol class="mock-toc">
+<li><a href="12-queue.html"><b>Queue</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#420, #421 · Shared vote control at 44px, "You" marker, Fallback Playlist credit, safe remove with undo, load failure. <em>15 frames, 2 dark, 7 phone.</em></span></a></li>
+<li><a href="13-search.html"><b>Search</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span>#423 · Approved results layout, album and artist pages unchanged; empty page with things to tap, no close matches, Add button states. <em>17 frames, 2 dark, 5 phone.</em></span></a></li>
+<li><a href="14-tv-player.html"><b>TV, player band, Web Player</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span>#423 · TV and guest player band exactly as built; Web Player rebuilt from their language with its own status and fixes. <em>25 frames, 1 dark, 7 phone, 7 TV.</em></span></a></li>
+</ol>
+<h3>Requests and Moderation</h3>
+<ol class="mock-toc">
+<li><a href="20-requests.html"><b>Requests</b> <span class="mock-tag is-changed">Changed</span><span>#426 · One search field with typed filters and chips, "Sent to Player" column, row overflow, Request detail. <em>9 frames, 1 dark, 3 phone.</em></span></a></li>
+<li><a href="21-moderation.html"><b>Moderation: Flagged Requests and Rules</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#426, #417 · Large Approve and Reject, bulk select, why it was flagged, Rules, moderator view. <em>14 frames, 3 dark, 3 phone.</em></span></a></li>
+<li><a href="22-ai-reviews.html"><b>Moderation: AI reviews</b> <span class="mock-tag is-changed">Changed</span><span>#426 · Search with outcome and criterion chips instead of the sidebar, review detail with score and threshold. <em>10 frames, 2 dark, 2 phone.</em></span></a></li>
+</ol>
+<h3>Settings, Members, Create Party</h3>
+<ol class="mock-toc">
+<li><a href="23-settings.html"><b>Party Settings</b> <span class="mock-tag is-changed">Changed</span><span>#417, #424 · Tabbed Settings as built, Fallback Playlist picker, Country and Timezone pickers, Mods tab, sticky save bar. <em>10 frames, 2 dark, 2 phone.</em></span></a></li>
+<li><a href="24-members.html"><b>Members</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#426 · Role chips, member detail, role picker with Moderator, ban confirm, moderator read-only view. <em>9 frames, 1 dark, 2 phone.</em></span></a></li>
+<li><a href="25-create-party.html"><b>Create Party</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#424 · Three steps, Create with defaults, done screen with code, join URL and QR. <em>10 frames, 1 dark, 4 phone.</em></span></a></li>
+</ol>
+<h3>Admin</h3>
+<ol class="mock-toc">
+<li><a href="30-admin-dashboard.html"><b>Admin dashboard</b> <span class="mock-tag is-new">New</span><span>U9 · Live parties, things to fix, system health, activity; all clear and empty states. <em>6 frames, 2 dark, 2 phone.</em></span></a></li>
+<li><a href="31-admin-users.html"><b>Admin users</b> <span class="mock-tag is-changed">Changed</span><span>#426 · Combined search, full-width table, user detail, edit, delete confirm, impersonate. <em>7 frames, 1 dark, 2 phone.</em></span></a></li>
+<li><a href="32-admin-settings.html"><b>Admin settings and Mods</b> <span class="mock-tag is-changed">Changed</span><span>U8 · Grouped site settings, Sign-in providers table and edit, Themes list, Mods and empty state. <em>8 frames, 1 dark, 1 phone.</em></span></a></li>
+<li><a href="33-admin-themes.html"><b>Admin themes</b> <span class="mock-tag is-changed">Changed</span><span>U8 · Two-column editor with defaults shown and a live light/dark preview, delete confirm. <em>6 frames, 2 dark, 1 phone.</em></span></a></li>
+</ol>
+<h3>Entry, account, errors, type</h3>
+<ol class="mock-toc">
+<li><a href="40-home-join.html"><b>Home, join and login</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#416, #417 · Login unchanged; Your parties, four-letter code entry, /parties, join from /parties/KXQB while logged out. <em>19 frames, 4 dark, 8 phone.</em></span></a></li>
+<li><a href="41-errors.html"><b>Errors</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#422 · Branded 404, 500, 403, party not found with code entry, feature off. <em>19 frames, 2 dark, 6 phone.</em></span></a></li>
+<li><a href="42-profile.html"><b>Profile and Spotify</b> <span class="mock-tag is-changed">Changed</span><span>#417 · Heading levels, Spotify links explained, profile edit, unlink confirm. <em>11 frames, 3 dark, 3 phone.</em></span></a></li>
+<li><a href="43-type-shell.html"><b>Type scale and shell</b> <span class="mock-tag is-changed">Changed</span><span>#425 · Type scale, heading outlines, breadcrumbs, skip link, sidebar by role. <em>9 frames, 3 dark, 3 phone.</em></span></a></li>
+</ol>
 </section>
 
 <section class="mock-section" id="review-decisions">
-    <h2>Review decisions</h2>
-    <p>Decisions from the mockup review are recorded here.</p>
+<h2>Review decisions</h2>
+<p>Decisions from the mockup review are recorded here.</p>
+<ul class="mock-notes">
+<li>Round 1 rejected: it did not build on the current app or the approved designs. Round 2 starts from the built pages.</li>
+<li>Dashboard keeps the control room with the device picker and the health grid (Player, Device, Last update, Spotify link, Polling) always visible; no Diagnostics fold.</li>
+<li>TV page and guest player band are final; shown unchanged.</li>
+<li>Search page and the approved results layout (option A) stay.</li>
+<li>Join URL is <code>/parties/KXQB</code>; party codes are four letters, no digits.</li>
+<li>Words follow GLOSSARY.md: Request, Queue, Fallback Playlist, Sent to Player, Flagged Request, Moderator. &ldquo;Sent to Player&rdquo; replaces the built &ldquo;Sent to Spotify&rdquo; on the Dashboard too.</li>
+<li>Moderator is a new party role between Owner and VIP (no Settings, no role changes, cannot start playback on the owner&rsquo;s Spotify).</li>
+<li>Table pages use one search field with typed filters and matching chips; no filter sidebars.</li>
+<li>Dark mode per user is out of scope for #414; dark frames show the app&rsquo;s existing dark mode only.</li>
+<li>Sidebar is identical per role on every page: guest (Queue, Search), moderator (no Settings), owner (plus Create Party), site admin (plus Admin).</li>
+</ul>
 </section>
+
+<section class="mock-section" id="open-questions">
+<h2>Open questions for the user</h2>
+<p>Each is mocked one way so the screen is complete; the page note says which. Answer or change any of them.</p>
+<ol class="mock-questions">
+<li>May moderators pause and skip without starting playback? Mocked yes. <a href="10-dashboard.html">10</a></li>
+<li>Status precedence when several are true: Re-link needed, No device, Player stale, Outside the party, then Playing, Paused or Nothing playing. Mocked in that order. <a href="10-dashboard.html">10</a></li>
+<li>#422 asks for the join URL on the TV; the TV already has code and QR. Proposal: the QR is the URL, no TV change. <a href="14-tv-player.html">14</a></li>
+<li>Web Player &ldquo;Use this tab instead&rdquo; and the Space, N, P shortcuts are new behaviour; build them? <a href="14-tv-player.html">14</a></li>
+<li>Undo window after removing a Request: proposed 8 seconds, paused while the toast has focus. <a href="12-queue.html">12</a></li>
+<li>Recent searches and Most requested tonight on the empty Search page need a per-party search log and Requests grouped by artist; worth building? <a href="13-search.html">13</a></li>
+<li>Should guests see Requests in the sidebar? Today they can only reach it by URL; mocked once with the item. <a href="20-requests.html">20</a></li>
+<li>May moderators edit Rules? Mocked read-only for moderators. <a href="21-moderation.html">21</a></li>
+<li>AI review score scale: a maximum of 4 (five levels) is assumed; confirm against the model. <a href="22-ai-reviews.html">22</a></li>
+<li>May moderators see each member&rsquo;s Flagged count? Mocked yes. <a href="24-members.html">24</a></li>
+<li>Should Ban also remove the member&rsquo;s waiting Requests? Mocked no. <a href="24-members.html">24</a></li>
+<li>Create Party: detect country and timezone from the browser? Mocked pre-filled and editable. <a href="25-create-party.html">25</a></li>
+<li>Create Party step 3 leaves out Party is running and Raffle mode (still in Settings); agreed? <a href="25-create-party.html">25</a></li>
+<li>Admin dashboard: is a party &ldquo;live&rdquo; when its Player reports or when guests are connected? Proposed either. <a href="30-admin-dashboard.html">30</a></li>
+<li>Admin user delete: what it removes and the &ldquo;transfer owned parties first&rdquo; rule are proposed copy; confirm. <a href="31-admin-users.html">31</a></li>
+<li>Admin users Role filter shows only Admin (the only instance role today); keep it? <a href="31-admin-users.html">31</a></li>
+<li>Branding: keep URL fields with a preview, or add file upload? Mocked URLs. <a href="32-admin-settings.html">32</a></li>
+<li>Rename &ldquo;Social Providers&rdquo; to &ldquo;Sign-in providers&rdquo;? Mocked renamed. <a href="32-admin-settings.html">32</a></li>
+<li>Instance Mods: instance on/off versus per-party enablement, and instance defaults for AI Request Review, are assumed; confirm. <a href="32-admin-settings.html">32</a></li>
+<li>Themes: can Primary and Navigation background be left unset (defaults shown), so the required stars go? <a href="33-admin-themes.html">33</a></li>
+<li>Themes: show the built-in Default as a row you can activate? <a href="33-admin-themes.html">33</a></li>
+<li>Themes: delete without typed confirmation? Mocked a plain confirm that names the theme. <a href="33-admin-themes.html">33</a></li>
+<li>Themes: mock preview of the app shell, or the real app in an iframe (more faithful, more work)? Mocked preview. <a href="33-admin-themes.html">33</a></li>
+<li>Banned user opening a party link: show the 403 page? Proposed yes. <a href="40-home-join.html">40</a></li>
+<li>Moderator opening Settings: 403 page or redirect to the Dashboard? Proposed the 403 page. <a href="41-errors.html">41</a></li>
+<li>Unknown and hidden parties show the same not-found page, so codes can&rsquo;t be probed; agreed? <a href="41-errors.html">41</a></li>
+<li>Unlinking Spotify Playback while a party is playing: allow with a warning, or block? Proposed allow. <a href="42-profile.html">42</a></li>
+<li>The app&rsquo;s Tabler yellow badges, warning alerts and green Approve buttons are 2.0&ndash;2.7:1 contrast (below 4.5:1); the mocks keep them as built. Fix the tokens in a separate ticket? <a href="21-moderation.html">21</a></li>
+<li>The Dashboard mocks play Sandstorm while the player band on other pages plays Midnight City (separate mock data sets, not a design difference); align before handing to builders?</li>
+</ol>
+</section>
+
 </body>
 </html>

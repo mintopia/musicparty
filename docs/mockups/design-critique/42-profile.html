@@ -1,0 +1,482 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Profile and Spotify links</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Profile and Spotify links</h1>
+<p>Profile, the Spotify page, profile edit and the unlink confirmation. Heading levels no longer skip; the two Spotify links are explained in plain words. Ticket #417; critique-b skipped heading (h1 to h3).</p>
+</header>
+<section class="mock-section">
+<h2>Profile <span class="mock-tag is-changed">Changed</span></h2>
+<p>Linked accounts moves under the person who owns them. Heading order is h1 Profile, h2 Linked accounts, h3 per account.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="profile-desktop" >
+<figcaption><b>Profile</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Profile</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Profile</h1><p>Your name at parties and the accounts you login with.</p></div><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit profile</a></div>
+<div class="card mb-4"><div class="card-body mp-who"><span class="avatar avatar-xl rounded" style="background-image:url(assets/art/cover-3.svg)" role="img" aria-label="Your avatar"></span>
+<div><h2 class="h3">Jess</h2><p class="text-secondary mb-0">jess@example.com</p></div></div></div>
+<h2 class="mb-3">Linked accounts</h2>
+<div class="row g-3 mb-3"><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-discord text-white"><i class="icon ti ti-brand-discord"></i></span><div><h3 class="card-title mb-0">Discord</h3><p class="text-secondary">jess#0001</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<p class="text-secondary small">Your login. It can't be unlinked while it is your only one.</p>
+</div></div></div><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-spotify text-white"><i class="icon ti ti-brand-spotify"></i></span><div><h3 class="card-title mb-0">Spotify</h3><p class="text-secondary">Jessica Smith</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<a href="#" class="btn btn-outline-danger btn-sm"><i class="icon ti ti-link-off"></i>Unlink</a>
+</div></div></div></div>
+<div class="btn-list"><a href="#" class="btn btn-outline-success"><i class="icon ti ti-brand-spotify"></i>Manage Spotify links</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-plus"></i>Link another account</a></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="profile-phone" >
+<figcaption><b>Profile</b> Phone 390px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Profile</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Profile</h1><p>Your name at parties and the accounts you login with.</p></div><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit profile</a></div>
+<div class="card mb-4"><div class="card-body mp-who"><span class="avatar avatar-xl rounded" style="background-image:url(assets/art/cover-3.svg)" role="img" aria-label="Your avatar"></span>
+<div><h2 class="h3">Jess</h2><p class="text-secondary mb-0">jess@example.com</p></div></div></div>
+<h2 class="mb-3">Linked accounts</h2>
+<div class="row g-3 mb-3"><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-discord text-white"><i class="icon ti ti-brand-discord"></i></span><div><h3 class="card-title mb-0">Discord</h3><p class="text-secondary">jess#0001</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<p class="text-secondary small">Your login. It can't be unlinked while it is your only one.</p>
+</div></div></div><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-spotify text-white"><i class="icon ti ti-brand-spotify"></i></span><div><h3 class="card-title mb-0">Spotify</h3><p class="text-secondary">Jessica Smith</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<a href="#" class="btn btn-outline-danger btn-sm"><i class="icon ti ti-link-off"></i>Unlink</a>
+</div></div></div></div>
+<div class="btn-list"><a href="#" class="btn btn-outline-success"><i class="icon ti ti-brand-spotify"></i>Manage Spotify links</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-plus"></i>Link another account</a></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="profile-desktop-dark" data-theme="dark">
+<figcaption><b>Profile</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Profile</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Profile</h1><p>Your name at parties and the accounts you login with.</p></div><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit profile</a></div>
+<div class="card mb-4"><div class="card-body mp-who"><span class="avatar avatar-xl rounded" style="background-image:url(assets/art/cover-3.svg)" role="img" aria-label="Your avatar"></span>
+<div><h2 class="h3">Jess</h2><p class="text-secondary mb-0">jess@example.com</p></div></div></div>
+<h2 class="mb-3">Linked accounts</h2>
+<div class="row g-3 mb-3"><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-discord text-white"><i class="icon ti ti-brand-discord"></i></span><div><h3 class="card-title mb-0">Discord</h3><p class="text-secondary">jess#0001</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<p class="text-secondary small">Your login. It can't be unlinked while it is your only one.</p>
+</div></div></div><div class="col-md-6"><div class="card mp-link-card"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-spotify text-white"><i class="icon ti ti-brand-spotify"></i></span><div><h3 class="card-title mb-0">Spotify</h3><p class="text-secondary">Jessica Smith</p></div></div>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked</div>
+<a href="#" class="btn btn-outline-danger btn-sm"><i class="icon ti ti-link-off"></i>Unlink</a>
+</div></div></div></div>
+<div class="btn-list"><a href="#" class="btn btn-outline-success"><i class="icon ti ti-brand-spotify"></i>Manage Spotify links</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-plus"></i>Link another account</a></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>h1 "Linked Accounts" jumped to card h3; now h1, h2, h3 in order. Critique-b skipped heading.</li><li>One filled button (Edit profile). Unlink is outlined danger and explains itself on the next page.</li><li>The user card was a side column; now it leads the page so the account list is not squeezed on phone.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Spotify <span class="mock-tag is-changed">Changed</span></h2>
+<p>The page said "link twice" without saying why. Each link gets a card with its job, its state and its action.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="spotify-desktop" >
+<figcaption><b>Spotify, one link missing</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Spotify</h1><p>Music Party uses two Spotify links. Each does one job.</p></div></div>
+<div class="row g-3 mb-4">
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-green-lt text-green"><i class="icon ti ti-music-bolt"></i></span><h2 class="h3 card-title mb-0">Playback</h2></div>
+<p>Lets Music Party play on your Spotify for parties you host.</p>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked as Jessica Smith</div>
+<a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-refresh"></i>Re-link</a></div></div></div>
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-secondary-lt"><i class="icon ti ti-music-search"></i></span><h2 class="h3 card-title mb-0">Search</h2></div>
+<p>Lets guests search Spotify's catalogue.</p>
+<div class="mp-link-state"><span class="status-dot status-secondary"></span>Not linked</div>
+<a href="#" class="btn btn-success"><i class="icon ti ti-brand-spotify"></i>Link Spotify for search</a></div></div></div>
+</div>
+<div class="card"><div class="card-body d-flex flex-wrap align-items-center gap-3"><div class="flex-fill"><h2 class="h3 mb-1">Link both to host a party</h2><p class="text-secondary mb-0">Search still needs linking.</p></div>
+<button class="btn btn-primary" disabled><i class="icon ti ti-playlist-add"></i>Create party</button></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="spotify-ready-desktop" >
+<figcaption><b>Spotify, both linked</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Spotify</h1><p>Music Party uses two Spotify links. Each does one job.</p></div></div>
+<div class="row g-3 mb-4">
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-green-lt text-green"><i class="icon ti ti-music-bolt"></i></span><h2 class="h3 card-title mb-0">Playback</h2></div>
+<p>Lets Music Party play on your Spotify for parties you host.</p>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked as Jessica Smith</div>
+<a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-refresh"></i>Re-link</a></div></div></div>
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-green-lt text-green"><i class="icon ti ti-music-search"></i></span><h2 class="h3 card-title mb-0">Search</h2></div>
+<p>Lets guests search Spotify's catalogue.</p>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked as Jessica Smith</div>
+<a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-refresh"></i>Re-link</a></div></div></div>
+</div>
+<div class="card"><div class="card-body d-flex flex-wrap align-items-center gap-3"><div class="flex-fill"><h2 class="h3 mb-1">Ready to host</h2><p class="text-secondary mb-0">Both links are working. Create a party whenever you like.</p></div>
+<a href="#" class="btn btn-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="spotify-phone" >
+<figcaption><b>Spotify, one link missing</b> Phone 390px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Spotify</h1><p>Music Party uses two Spotify links. Each does one job.</p></div></div>
+<div class="row g-3 mb-4">
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-green-lt text-green"><i class="icon ti ti-music-bolt"></i></span><h2 class="h3 card-title mb-0">Playback</h2></div>
+<p>Lets Music Party play on your Spotify for parties you host.</p>
+<div class="mp-link-state"><span class="status-dot status-green"></span>Linked as Jessica Smith</div>
+<a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-refresh"></i>Re-link</a></div></div></div>
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-secondary-lt"><i class="icon ti ti-music-search"></i></span><h2 class="h3 card-title mb-0">Search</h2></div>
+<p>Lets guests search Spotify's catalogue.</p>
+<div class="mp-link-state"><span class="status-dot status-secondary"></span>Not linked</div>
+<a href="#" class="btn btn-success"><i class="icon ti ti-brand-spotify"></i>Link Spotify for search</a></div></div></div>
+</div>
+<div class="card"><div class="card-body d-flex flex-wrap align-items-center gap-3"><div class="flex-fill"><h2 class="h3 mb-1">Link both to host a party</h2><p class="text-secondary mb-0">Search still needs linking.</p></div>
+<button class="btn btn-primary" disabled><i class="icon ti ti-playlist-add"></i>Create party</button></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="spotify-desktop-dark" data-theme="dark">
+<figcaption><b>Spotify, none linked</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Spotify</h1><p>Music Party uses two Spotify links. Each does one job.</p></div></div>
+<div class="row g-3 mb-4">
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-secondary-lt"><i class="icon ti ti-music-bolt"></i></span><h2 class="h3 card-title mb-0">Playback</h2></div>
+<p>Lets Music Party play on your Spotify for parties you host.</p>
+<div class="mp-link-state"><span class="status-dot status-secondary"></span>Not linked</div>
+<a href="#" class="btn btn-success"><i class="icon ti ti-brand-spotify"></i>Link Spotify for playback</a></div></div></div>
+<div class="col-md-6"><div class="card mp-link-card h-100"><div class="card-body">
+<div class="mp-link-head"><span class="avatar avatar-md rounded bg-secondary-lt"><i class="icon ti ti-music-search"></i></span><h2 class="h3 card-title mb-0">Search</h2></div>
+<p>Lets guests search Spotify's catalogue.</p>
+<div class="mp-link-state"><span class="status-dot status-secondary"></span>Not linked</div>
+<a href="#" class="btn btn-success"><i class="icon ti ti-brand-spotify"></i>Link Spotify for search</a></div></div></div>
+</div>
+<div class="card"><div class="card-body d-flex flex-wrap align-items-center gap-3"><div class="flex-fill"><h2 class="h3 mb-1">Link both to host a party</h2><p class="text-secondary mb-0">Playback still needs linking.</p></div>
+<button class="btn btn-primary" disabled><i class="icon ti ti-playlist-add"></i>Create party</button></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Playback: "Lets Music Party play on your Spotify for parties you host". Search: "Lets guests search Spotify's catalogue". Replaces "link your account twice".</li><li>Each card shows linked or not, as whom, and one action. Create party is disabled until both are linked, and says what is missing.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Edit profile <span class="mock-tag is-changed">Changed</span></h2>
+<p>Nickname only, as built, with the page head and hint in the shared language. Shown in the app&rsquo;s existing dark mode too.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="profile-edit-desktop" >
+<figcaption><b>Edit profile</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Profile</a></li><li class="breadcrumb-item active" aria-current="page">Edit profile</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Edit profile</h1><p>How you appear in parties.</p></div></div>
+<form class="card"><div class="card-body">
+<div><label class="form-label required" for="nick">Nickname</label><input id="nick" class="form-control" value="Jess"><small class="form-hint">Shown next to your Requests.</small></div>
+</div><div class="card-footer"><div class="d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary ms-auto">Save changes</button></div></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="profile-edit-desktop-dark" data-theme="dark">
+<figcaption><b>Edit profile</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Profile</a></li><li class="breadcrumb-item active" aria-current="page">Edit profile</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Edit profile</h1><p>How you appear in parties.</p></div></div>
+<form class="card"><div class="card-body">
+<div><label class="form-label required" for="nick">Nickname</label><input id="nick" class="form-control" value="Jess"><small class="form-hint">Shown next to your Requests.</small></div>
+</div><div class="card-footer"><div class="d-flex"><a href="#" class="btn btn-link">Cancel</a><button class="btn btn-primary ms-auto">Save changes</button></div></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>A per-member dark-mode preference is out of scope for epic #414 (&ldquo;Dark mode per user&rdquo;), so no Appearance setting is mocked. The dark frame shows the app&rsquo;s existing dark mode.</li><li>Hint under Nickname says where it shows (&ldquo;Shown next to your Requests&rdquo;).</li></ul>
+</section>
+<section class="mock-section">
+<h2>Unlink confirmation <span class="mock-tag is-changed">Changed</span></h2>
+<p>Names the account and what stops working, instead of "Are you sure?".</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="unlink-desktop" >
+<figcaption><b>Unlink Spotify</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Profile</a></li><li class="breadcrumb-item active" aria-current="page">Unlink Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Unlink Spotify</h1><p>Check what changes before you confirm.</p></div></div>
+<form class="card mp-dialog"><div class="card-status-top bg-danger"></div><div class="card-body">
+<div class="text-center mb-3"><i class="icon ti ti-alert-triangle icon-lg text-danger"></i></div>
+<h2 class="h3 text-center">Unlink Spotify from Jessica Smith?</h2>
+<p class="text-secondary">Music Party will stop playing on your Spotify. Parties you host keep their Queue but go quiet until you link Spotify again: <b>Coyote LAN 26</b> and <b>Lounge Mix</b>.</p>
+<p class="text-secondary mb-0">Your Discord login is not affected.</p></div>
+<div class="card-footer"><div class="d-flex"><a href="#" class="btn btn-link">Keep linked</a><button class="btn btn-danger ms-auto">Unlink Spotify</button></div></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="unlink-phone" >
+<figcaption><b>Unlink Spotify</b> Phone 390px</figcaption>
+<template><style>
+.mp-link-card .card-body{display:grid;gap:12px}
+.mp-link-head{display:flex;align-items:center;gap:12px}
+.mp-link-head .avatar{flex:none}
+.mp-link-state{display:flex;align-items:center;gap:8px;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-link-card p{margin:0}
+.mp-who{display:flex;align-items:center;gap:16px}
+.mp-who .avatar{flex:none}
+.mp-who h2{margin:0}
+.mp-dialog{max-inline-size:440px;margin-inline:auto}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Profile</a></li><li class="breadcrumb-item active" aria-current="page">Unlink Spotify</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Unlink Spotify</h1><p>Check what changes before you confirm.</p></div></div>
+<form class="card mp-dialog"><div class="card-status-top bg-danger"></div><div class="card-body">
+<div class="text-center mb-3"><i class="icon ti ti-alert-triangle icon-lg text-danger"></i></div>
+<h2 class="h3 text-center">Unlink Spotify from Jessica Smith?</h2>
+<p class="text-secondary">Music Party will stop playing on your Spotify. Parties you host keep their Queue but go quiet until you link Spotify again: <b>Coyote LAN 26</b> and <b>Lounge Mix</b>.</p>
+<p class="text-secondary mb-0">Your Discord login is not affected.</p></div>
+<div class="card-footer"><div class="d-flex"><a href="#" class="btn btn-link">Keep linked</a><button class="btn btn-danger ms-auto">Unlink Spotify</button></div></div></form></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Lists the parties affected. Primary safe action is "Keep linked" on the left, destructive on the right.</li><li>Open question: block unlinking Playback while a party is playing? Proposed: allow, with this warning.</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

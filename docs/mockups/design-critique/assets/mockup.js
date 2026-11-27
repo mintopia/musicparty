@@ -11,7 +11,7 @@
         document.documentElement.dataset.capture = 'true';
     }
     const base = new URL('assets/', document.currentScript.src.replace(/assets\/mockup\.js.*$/, ''));
-    const styles = ['app.css', 'mockup.css'];
+    const styles = ['app.css', 'components.css', 'mockup.css'];
 
     const pending = [];
 
@@ -31,9 +31,11 @@
         const head = [...styles, ...extra]
             .map((file) => `<link rel="stylesheet" href="${new URL(file, base)}">`)
             .join('');
-        const html = `<!doctype html><html lang="en" data-bs-theme="${theme}"><head><meta charset="utf-8">`
+        // The app sets data-bs-theme="dark" on <body> when the active theme has Dark Mode on (app.blade.php).
+        const bodyTheme = theme === 'dark' ? ' data-bs-theme="dark"' : '';
+        const html = `<!doctype html><html lang="en"><head><meta charset="utf-8">`
             + `<meta name="viewport" content="width=device-width, initial-scale=1">${head}</head>`
-            + `<body class="${frame.dataset.bodyClass ?? ''}">${template.innerHTML}</body></html>`;
+            + `<body class="${frame.dataset.bodyClass ?? ''}"${bodyTheme}>${template.innerHTML}</body></html>`;
 
         const screen = document.createElement('div');
         screen.className = 'mock-screen';

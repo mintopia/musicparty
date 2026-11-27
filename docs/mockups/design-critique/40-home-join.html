@@ -1,0 +1,796 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Home, join and login</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+
+</head>
+<body class="mock-sheet">
+<header>
+<p><a href="index.html">Music Party mockups</a></p>
+<h1>Home, join and login</h1>
+<p>Entry screens: where a guest or host lands, how they enter a party code, and how a link from the TV or a friend gets them into the party after login. Party codes are four letters, the join URL is <code>/parties/KXQB</code>. Tickets #416, #417, #422; user feedback U6.</p>
+</header>
+<section class="mock-section">
+<h2>Login <span class="mock-tag is-unchanged">Unchanged</span></h2>
+<p>The photo and one Discord button, exactly as built today.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="login-desktop" >
+<figcaption><b>Login</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="text-center"><p>Login to join the party!</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="login-phone" >
+<figcaption><b>Login</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="text-center"><p>Login to join the party!</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure></div>
+
+</section>
+<section class="mock-section">
+<h2>Home for a member <span class="mock-tag is-changed">Changed</span></h2>
+<p>Home was an empty column with a profile card. It now lists the member's parties with the same playback words as the Dashboard, and gives the code entry the front seat.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="home-desktop" >
+<figcaption><b>Home</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="home-desktop-dark" data-theme="dark">
+<figcaption><b>Home</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="home-phone" >
+<figcaption><b>Home</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="home-phone-dark" data-theme="dark">
+<figcaption><b>Home</b> Phone 390px, dark</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Your parties: name, live state (Playing, Paused, Nothing playing, Player stale), role badge and code per row. Reason: Home showed nothing but a profile card; the profile has its own page (#417).</li><li>Playback wording matches the Dashboard (#418). Managers open the Dashboard, guests open the Queue.</li><li>Enter party code: four letters, uppercased as typed. One filled button per screen (Join); Create party is outlined. U6.</li><li>Profile card dropped from Home; Profile is in the sidebar.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Home states <span class="mock-tag is-new">New</span></h2>
+<p>A new member with no parties, and code entry rejecting digits with a plain message.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="home-empty-desktop" >
+<figcaption><b>No parties yet</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><div class="empty text-center py-5">
+<div class="empty-icon"><i class="icon ti ti-door-enter"></i></div>
+<h2 class="empty-title h3">You're not in any parties yet</h2>
+<p class="empty-subtitle text-secondary">Enter the four-letter code from the TV, or open the link the host shared.</p>
+<div class="empty-action"><a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="home-code-error-desktop" >
+<figcaption><b>Code with a digit</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input is-invalid" value="KX9B" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="invalid-feedback d-block" id="code-hint">Party codes are four letters, no digits.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="home-code-error-phone" >
+<figcaption><b>Code with a digit</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input is-invalid" value="KX9B" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="invalid-feedback d-block" id="code-hint">Party codes are four letters, no digits.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Code fields accept exactly four letters and show "Party codes are four letters, no digits." for digits. Wrong length is covered on the party-not-found page (41). U6.</li></ul>
+</section>
+<section class="mock-section">
+<h2>Home when logged out <span class="mock-tag is-changed">Changed</span></h2>
+<p>Today the anonymous Home redirects straight to Login. It now offers the code field first, so a guest with a code from the TV can start without knowing where to go.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="home-anon-desktop" >
+<figcaption><b>Anonymous Home</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="text-center"><h1 class="h3 mb-1">Join the party</h1><p class="text-secondary">Enter the four-letter code from the TV.</p></div>
+<div class="mb-4"><label class="form-label" for="code-a">Party code</label><div class="mp-join-form"><input id="code-a" class="mp-code-input" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off"><button class="btn btn-primary">Join</button></div></div>
+<div class="hr-text">or</div>
+<div class="text-center"><p class="text-secondary small">Hosting a party? Login to create one.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="home-anon-phone" >
+<figcaption><b>Anonymous Home</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="text-center"><h1 class="h3 mb-1">Join the party</h1><p class="text-secondary">Enter the four-letter code from the TV.</p></div>
+<div class="mb-4"><label class="form-label" for="code-a">Party code</label><div class="mp-join-form"><input id="code-a" class="mp-code-input" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off"><button class="btn btn-primary">Join</button></div></div>
+<div class="hr-text">or</div>
+<div class="text-center"><p class="text-secondary small">Hosting a party? Login to create one.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="home-anon-desktop-dark" data-theme="dark">
+<figcaption><b>Anonymous Home</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="text-center"><h1 class="h3 mb-1">Join the party</h1><p class="text-secondary">Enter the four-letter code from the TV.</p></div>
+<div class="mb-4"><label class="form-label" for="code-a">Party code</label><div class="mp-join-form"><input id="code-a" class="mp-code-input" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off"><button class="btn btn-primary">Join</button></div></div>
+<div class="hr-text">or</div>
+<div class="text-center"><p class="text-secondary small">Hosting a party? Login to create one.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Entering a code goes to <code>/parties/KXQB</code>, which then asks for login (join flow below). U6.</li><li>GuestLayout and the Discord button are unchanged.</li></ul>
+</section>
+<section class="mock-section">
+<h2>/parties list <span class="mock-tag is-changed">Changed</span></h2>
+<p><code>/parties</code> currently crashes with a 500 for a logged-in member (capture: BadMethodCallException, PartyController::index does not exist). It shows the same list as Home.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="parties-desktop" >
+<figcaption><b>Parties</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Parties</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div>
+<div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="parties-phone" >
+<figcaption><b>Parties</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="page d-flex flex-column" style="min-height: 100vh">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item active"><a class="nav-link" href="#" aria-current="page"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown"><a class="nav-link dropdown-toggle" href="#" role="button" aria-expanded="false"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center" href="#">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">3</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+<div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Parties</li></ol></nav></div></div>
+<div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Parties</h1><p>Parties you host or have joined.</p></div>
+<a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div>
+<div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
+<span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
+<a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
+<h2 class="card-title mb-3">Join a party</h2>
+<label class="form-label" for="code">Party code</label>
+<div class="mp-join-form"><input id="code" class="mp-code-input" value="" maxlength="4" placeholder="KXQB" autocapitalize="characters" autocomplete="off" aria-describedby="code-hint"><button class="btn btn-primary">Join</button></div>
+<div class="form-hint mt-2" id="code-hint">Four letters. It's on the TV, or ask the host.</div>
+</div></div></div></div></div></div></main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>Same list and code field as Home with the breadcrumb Home / Parties. #416 (500 on /parties).</li></ul>
+</section>
+<section class="mock-section">
+<h2>Join from a link while logged out <span class="mock-tag is-new">New</span></h2>
+<p>A link or QR to <code>/parties/KXQB</code> shows what the guest is joining, then login, then (first time only) a nickname, then lands in the party Queue.</p>
+<div class="mock-row"><figure class="mock-frame" data-frame="desktop" id="join-login-desktop" >
+<figcaption><b>Join, login</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="mp-invite"><span class="avatar avatar-lg rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div><h1 class="h3 mb-1">Coyote LAN 26</h1><p class="text-secondary">Hosted by Jess, 5 guests online</p>
+<p class="small"><span class="status-dot status-green"></span>Playing Midnight City, M83</p></div></div><ol class="mp-steps mb-4"><li aria-current="step">Login</li><li>Nickname</li><li>In the party</li></ol><div class="text-center"><p class="mb-2">Login to add Requests and vote.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p><p class="text-secondary small">You'll come straight back to this party. First time here? You'll pick a nickname next.</p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="join-login-phone" >
+<figcaption><b>Join, login</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="mp-invite"><span class="avatar avatar-lg rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div><h1 class="h3 mb-1">Coyote LAN 26</h1><p class="text-secondary">Hosted by Jess, 5 guests online</p>
+<p class="small"><span class="status-dot status-green"></span>Playing Midnight City, M83</p></div></div><ol class="mp-steps mb-4"><li aria-current="step">Login</li><li>Nickname</li><li>In the party</li></ol><div class="text-center"><p class="mb-2">Login to add Requests and vote.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p><p class="text-secondary small">You'll come straight back to this party. First time here? You'll pick a nickname next.</p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="join-login-desktop-dark" data-theme="dark">
+<figcaption><b>Join, login</b> Desktop 1440px, dark</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<div class="mp-invite"><span class="avatar avatar-lg rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
+<div><h1 class="h3 mb-1">Coyote LAN 26</h1><p class="text-secondary">Hosted by Jess, 5 guests online</p>
+<p class="small"><span class="status-dot status-green"></span>Playing Midnight City, M83</p></div></div><ol class="mp-steps mb-4"><li aria-current="step">Login</li><li>Nickname</li><li>In the party</li></ol><div class="text-center"><p class="mb-2">Login to add Requests and vote.</p><p><a href="#" class="d-block ms-auto btn btn-discord"><i class="icon ti ti-brand-discord"></i> Login with Discord</a></p><p class="text-secondary small">You'll come straight back to this party. First time here? You'll pick a nickname next.</p></div>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="desktop" id="join-nickname-desktop" >
+<figcaption><b>Join, nickname</b> Desktop 1440px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<ol class="mp-steps mb-4"><li class="is-done">Login</li><li aria-current="step">Nickname</li><li>In the party</li></ol><h1 class="h3 text-center mb-1">Pick a nickname</h1><p class="text-secondary text-center">You're joining <b>Coyote LAN 26</b> (KXQB).</p>
+<div class="mb-3 text-center"><span class="avatar avatar-xl rounded" style="background-image:url(assets/art/cover-3.svg)" role="img" aria-label="Your Discord avatar"></span></div>
+<form><div class="mb-4"><label class="form-label required" for="nick">Nickname</label><input id="nick" class="form-control" value="Ravi"><small class="form-hint">Shown next to your Requests.</small></div>
+<div class="d-flex"><a href="#" class="btn btn-link">Cancel</a><button type="submit" class="btn btn-primary ms-auto">Continue to the party</button></div></form>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure>
+<figure class="mock-frame" data-frame="phone" id="join-nickname-phone" >
+<figcaption><b>Join, nickname</b> Phone 390px</figcaption>
+<template><style>
+.mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
+.mp-party-info{flex:1 1 200px;min-width:0}
+.mp-party-info b{display:block;font-size:1rem}
+.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state .status-dot{margin-inline-end:6px}
+.mp-party-meta{display:flex;align-items:center;gap:10px}
+.mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
+.mp-invite{display:flex;gap:16px;align-items:center;padding:16px;border:1px solid var(--tblr-border-color);border-radius:12px;background:var(--tblr-bg-surface);margin-block-end:24px}
+.mp-invite .avatar{flex:none}
+.mp-invite p{margin:0}
+.mp-invite .status-dot{margin-inline-end:6px}
+</style><a class="mp-skip" href="#main">Skip to content</a>
+<div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
+<div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
+<main id="main" class="container container-tight mt-auto px-lg-5 py-4">
+<p class="mb-4 text-center h1"><a id="site-brand" href="#" class="navbar-brand navbar-brand-autodark"><span class="site-brand-name">Music Party</span></a></p>
+<ol class="mp-steps mb-4"><li class="is-done">Login</li><li aria-current="step">Nickname</li><li>In the party</li></ol><h1 class="h3 text-center mb-1">Pick a nickname</h1><p class="text-secondary text-center">You're joining <b>Coyote LAN 26</b> (KXQB).</p>
+<div class="mb-3 text-center"><span class="avatar avatar-xl rounded" style="background-image:url(assets/art/cover-3.svg)" role="img" aria-label="Your Discord avatar"></span></div>
+<form><div class="mb-4"><label class="form-label required" for="nick">Nickname</label><input id="nick" class="form-control" value="Ravi"><small class="form-hint">Shown next to your Requests.</small></div>
+<div class="d-flex"><a href="#" class="btn btn-link">Cancel</a><button type="submit" class="btn btn-primary ms-auto">Continue to the party</button></div></form>
+</main>
+<footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl text-secondary small">An Applied Entropy project</div></footer>
+</div>
+<div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
+</div></div></template></figure></div>
+<ul class="mock-notes"><li>The party card shows name, host, guests online and what is playing, so the guest knows the link is right before logging in. U6.</li><li>Three-step strip (Login, Nickname, In the party) reuses the Create Party steps. Nickname is skipped for returning members.</li><li>After login the guest returns to the party, not to Home. Open question: should a banned user see this page? Proposal: show the 403 page (41).</li></ul>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>
