@@ -11,7 +11,7 @@ export interface PartyRow {
     playback: PlaybackState;
     detail: string | null;
     cover: string | null;
-    canManage: boolean;
+    canModerate: boolean;
     url: string;
 }
 
@@ -43,7 +43,7 @@ const roleBadges: Record<string, string> = {owner: 'bg-blue-lt', vip: 'bg-purple
                 }}</span>
             </div>
             <Link :href="party.url" class="btn btn-sm btn-outline-secondary">
-                {{ party.canManage ? 'Open Dashboard' : 'Open Queue' }}
+                {{ party.canModerate ? 'Open Dashboard' : 'Open Queue' }}
             </Link>
         </div>
     </div>

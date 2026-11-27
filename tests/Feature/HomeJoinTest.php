@@ -111,3 +111,21 @@ it('keeps the party through the nickname step for a first-time guest', function 
     $this->put(route('login.signup.process'), ['nickname' => 'Ravi'])
         ->assertRedirect(route('parties.show', $party->code));
 });
+
+it('says the Fallback Playlist is next for an idle party that has one', function () {
+    $user = User::factory()->create(['first_login' => false]);
+    Party::factory()->create(['user_id' => $user->id, 'backup_playlist_id' => 'pl1']);
+
+    $this->actingAs($user)->get(route('home'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('parties.0.playback', 'idle')
+            ->where('parties.0.detail', 'Fallback Playlist is next'));
+});
+
+it('throttles code entry', function () {
+    for ($attempt = 0; $attempt < 20; $attempt++) {
+        $this->post(route('parties.join'), ['code' => 'ZZZZ']);
+    }
+
+    $this->post(route('parties.join'), ['code' => 'ZZZZ'])->assertTooManyRequests();
+});

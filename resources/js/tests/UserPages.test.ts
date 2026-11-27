@@ -71,7 +71,7 @@ describe('user pages', () => {
                         playback: 'playing',
                         detail: 'Midnight City, M83',
                         cover: null,
-                        canManage: true,
+                        canModerate: true,
                         url: '/parties/KXQB/dashboard',
                     },
                 ],

@@ -68,7 +68,7 @@ class PartyListing
             'detail' => match ($playback) {
                 'stale' => 'last update '.$sampledAt?->diffForHumans(),
                 'playing', 'paused' => $song?->name,
-                default => null,
+                default => $party->backup_playlist_id !== null ? 'Fallback Playlist is next' : null,
             },
             'cover' => $song?->album->image_url ?: null,
         ];

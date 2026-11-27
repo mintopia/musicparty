@@ -33,7 +33,7 @@ if (app()->environment('testing')) {
     Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
 }
 Route::get('/', [HomeController::class, 'home'])->name('home');
-Route::post('parties/join', [PartyJoinController::class, 'store'])->name('parties.join');
+Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
 Route::get('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
