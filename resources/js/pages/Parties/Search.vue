@@ -150,13 +150,13 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
         </template>
         <Head :title="`Search - ${party.name}`" />
         <div>
-            <div class="page-header mt-0">
-                <h1>Search</h1>
-            </div>
-            <form :action="searchUrl" method="get" @submit.prevent="submit">
-                <div class="d-flex">
-                    <div class="flex-grow-1">
-                        <div class="input-icon">
+            <div class="search-form mx-auto">
+                <div class="page-header mt-0 text-center">
+                    <h1>Search</h1>
+                </div>
+                <form :action="searchUrl" method="get" @submit.prevent="submit">
+                    <div class="d-flex gap-2">
+                        <div class="input-icon flex-grow-1">
                             <input
                                 id="query"
                                 v-model="query"
@@ -169,12 +169,10 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                                 <i class="icon ti ti-music-search"></i>
                             </span>
                         </div>
-                    </div>
-                    <div class="flex-column ps-2">
                         <button type="submit" class="btn btn-primary">Search</button>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
             <template v-if="hasSearch">
                 <SearchResultsSection v-if="searching" loading />
                 <Deferred v-else data="results">
@@ -203,3 +201,9 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
         </div>
     </AppLayout>
 </template>
+
+<style scoped>
+.search-form {
+    max-width: 40rem;
+}
+</style>

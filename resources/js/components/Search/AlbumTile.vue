@@ -15,20 +15,22 @@ const byline = computed(() =>
 <template>
     <a :href="href" class="search-tile text-reset text-decoration-none" data-test="album-tile">
         <SearchCover :src="album.image_url" :alt="album.name" icon="ti-disc" />
-        <div class="fw-medium lh-sm mt-2" data-test="album-name">{{ album.name }}</div>
-        <div class="text-secondary small" data-test="album-byline">{{ byline }}</div>
+        <div class="fw-medium lh-sm mt-2 clamp-2" :title="album.name" data-test="album-name">{{ album.name }}</div>
+        <div class="text-secondary small text-truncate" :title="byline" data-test="album-byline">{{ byline }}</div>
     </a>
 </template>
 
 <style scoped>
 .search-tile {
-    flex: 0 0 auto;
-    width: 132px;
+    min-width: 0;
 }
 
-@media (min-width: 768px) {
-    .search-tile {
-        width: 150px;
-    }
+.clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 </style>

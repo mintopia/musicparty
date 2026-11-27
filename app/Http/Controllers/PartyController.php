@@ -43,7 +43,7 @@ class PartyController extends Controller
 
     private const int SEARCH_PAGE_SIZE = 10;
 
-    private const int SEARCH_OVERVIEW_LIMIT = 5;
+    private const int SEARCH_OVERVIEW_LIMIT = 10;
 
     private const int SEARCH_OVERVIEW_TRACKS = 4;
 

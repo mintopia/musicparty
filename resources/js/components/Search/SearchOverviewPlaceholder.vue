@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SearchTileRow from '@/components/Search/SearchTileRow.vue';
 import SearchSectionHead from '@/components/Search/SearchSectionHead.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 </script>
@@ -29,21 +30,21 @@ import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
             </div>
         </div>
         <SearchSectionHead title="Albums" />
-        <div class="d-flex gap-3 overflow-hidden" data-test="album-placeholders">
-            <div v-for="n in 5" :key="n" class="tile-placeholder album-tile-placeholder">
+        <SearchTileRow data-test="album-placeholders">
+            <div v-for="n in 10" :key="n" class="tile-placeholder album-tile-placeholder">
                 <span class="placeholder rounded d-block w-100 tile-art"></span>
                 <div class="mt-2"><span class="placeholder col-10"></span></div>
                 <div class="mt-1"><span class="placeholder placeholder-sm col-6"></span></div>
             </div>
-        </div>
+        </SearchTileRow>
         <SearchSectionHead title="Artists" />
-        <div class="d-flex gap-3 overflow-hidden" data-test="artist-placeholders">
-            <div v-for="n in 5" :key="n" class="tile-placeholder artist-tile-placeholder">
+        <SearchTileRow round data-test="artist-placeholders">
+            <div v-for="n in 10" :key="n" class="tile-placeholder artist-tile-placeholder">
                 <span class="placeholder rounded-circle d-block w-100 tile-art"></span>
                 <div class="mt-2"><span class="placeholder col-10"></span></div>
                 <div class="mt-1"><span class="placeholder placeholder-sm col-6"></span></div>
             </div>
-        </div>
+        </SearchTileRow>
     </div>
 </template>
 
@@ -63,34 +64,14 @@ import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
     height: 36px;
 }
 
-.tile-placeholder {
-    flex: 0 0 auto;
-}
-
 .tile-art {
     aspect-ratio: 1;
-}
-
-.album-tile-placeholder {
-    width: 132px;
-}
-
-.artist-tile-placeholder {
-    width: 104px;
 }
 
 @media (min-width: 768px) {
     .top-cover-placeholder {
         width: 120px;
         height: 120px;
-    }
-
-    .album-tile-placeholder {
-        width: 150px;
-    }
-
-    .artist-tile-placeholder {
-        width: 130px;
     }
 }
 
