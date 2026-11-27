@@ -41,6 +41,7 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
+        trackConnection: () => ({value: true}),
         privateChannel: () => ({listen: () => undefined}),
         publicChannel: () => ({listen: () => undefined}),
     }),

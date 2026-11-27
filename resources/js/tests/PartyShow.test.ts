@@ -29,6 +29,7 @@ vi.mock('@/composables/useEcho', () => {
     return {
         useEcho: () => ({
             onReconnect: (cb: () => void) => echo.reconnects.push(cb),
+            trackConnection: () => ({value: true}),
             publicChannel: () => ({listen}),
             privateChannel: () => ({listen}),
         }),
@@ -81,11 +82,25 @@ describe('Party show page', () => {
             props: {...props, playerState: {...idle, next: {...song(9), name: 'Coming Up'} as never}},
         });
 
-        expect(wrapper.text()).toContain('Up Next');
-        expect(wrapper.text()).toContain('Coming Up');
+        expect(wrapper.get('[data-test="up-next"]').text()).toContain('Coming Up');
+        expect(wrapper.text()).not.toContain('Up Next');
         expect(wrapper.get('h3.mt-2').text()).toBe('Queue');
-        expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(3);
+        expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(2);
         expect(wrapper.text()).not.toContain('more likely to be played');
+    });
+
+    it('hands the own rating to the player band', async () => {
+        const state = {
+            ...idle,
+            now: {...song(9), provider_track_id: 't9'},
+            current: {id: 5, provider_track_id: 't9', user: 'u', rating: 2},
+        } as never;
+        const wrapper = mount(Show, {
+            props: {...props, playerState: state, myRating: {playedSongId: 5, value: -1}},
+        });
+
+        expect(wrapper.get('[data-test="rate-down"]').attributes('aria-pressed')).toBe('true');
+        expect(wrapper.get('[data-test="rate-up"]').attributes('aria-pressed')).toBe('false');
     });
 
     it('labels weighted parties as upcoming songs', () => {
