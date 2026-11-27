@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {usePage} from '@inertiajs/vue3';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import axios from 'axios';
@@ -6,12 +7,13 @@ import {onBeforeUnmount, ref} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
 import Toast from '@/components/Toast.vue';
+import VoteControl from '@/components/VoteControl.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 import {formatMs} from '@/lib/dashboard';
 import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
 import {destroy, index} from '@/routes/api/v1/parties/upcomingsongs';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyArtist, LegacyUpcomingSong} from '@/types';
+import type {LegacyArtist, LegacyUpcomingSong, SharedProps} from '@/types';
 
 const props = withDefaults(
     defineProps<{
@@ -23,6 +25,15 @@ const props = withDefaults(
     }>(),
     {canManage: false, canDownvote: false, timezone: 'UTC'},
 );
+
+const currentUserId = usePage<SharedProps>().props.auth?.user?.id ?? null;
+const isMine = (song: LegacyUpcomingSong): boolean => currentUserId !== null && song.user_id === currentUserId;
+
+const customFallbackName = (song: LegacyUpcomingSong): string | null => {
+    const name = legacyFallbackName(song);
+
+    return name === null || name === 'Fallback Track' ? null : name;
+};
 
 const page = ref(1);
 const upcoming = ref<LegacyUpcomingSong[]>([]);
@@ -156,9 +167,14 @@ onBeforeUnmount(() => {
 </script>
 <template>
     <div>
-        <div v-if="upcoming.length > 0" class="card" data-test="queue-card">
+        <div v-if="upcoming.length > 0" class="card queue-card" data-test="queue-card">
             <TransitionGroup name="queue" tag="div" class="list-group list-group-flush">
-                <div v-for="song in upcoming" :key="song.id" class="list-group-item">
+                <div
+                    v-for="song in upcoming"
+                    :key="song.id"
+                    class="list-group-item"
+                    :class="{'is-mine': isMine(song)}"
+                >
                     <div :class="legacyRowClasses(song)" :style="legacyAccentStyle(song)" data-test="track-row">
                         <div class="col-auto">
                             <img
@@ -174,6 +190,7 @@ onBeforeUnmount(() => {
                         </div>
                         <div class="col">
                             {{ song.name }}
+                            <span v-if="isMine(song)" class="badge bg-blue-lt ms-1" data-test="your-request">You</span>
                             <span
                                 v-if="song.decoration?.label"
                                 class="badge bg-azure-lt ms-1"
@@ -186,73 +203,24 @@ onBeforeUnmount(() => {
                                 Scheduled for {{ formatScheduled(song.scheduled_for) }}
                             </div>
                             <div class="text-muted">
-                                <template v-if="song.user">Requested by {{ song.user }}</template>
-                                <template v-else>{{ legacyFallbackName(song) }}</template>
+                                <template v-if="isMine(song)">Requested by <b>you</b></template>
+                                <template v-else-if="song.user">Requested by {{ song.user }}</template>
+                                <template v-else-if="customFallbackName(song)">{{ customFallbackName(song) }}</template>
+                                <span v-else data-test="fallback-credit">
+                                    <i class="icon ti ti-playlist"></i>
+                                    From the party&rsquo;s Fallback Playlist
+                                </span>
                             </div>
                         </div>
                         <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
-                        <div class="col-auto text-center">
-                            <div class="row">
-                                <template v-if="canDownvote">
-                                    <div class="col-3">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Upvote ${song.name}`"
-                                            :aria-pressed="song.vote === 1"
-                                            data-test="upvote"
-                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="
-                                                    song.vote === 1
-                                                        ? 'ti-arrow-big-up-filled text-success'
-                                                        : 'ti-arrow-big-up'
-                                                "
-                                            ></i>
-                                        </button>
-                                    </div>
-                                    <div class="col-6" data-test="score">{{ song.score }}</div>
-                                    <div class="col-3">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Downvote ${song.name}`"
-                                            :aria-pressed="song.vote === -1"
-                                            data-test="downvote"
-                                            @click="vote(song.id, song.vote === -1 ? 0 : -1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="
-                                                    song.vote === -1
-                                                        ? 'ti-arrow-big-down-filled text-danger'
-                                                        : 'ti-arrow-big-down'
-                                                "
-                                            ></i>
-                                        </button>
-                                    </div>
-                                </template>
-                                <template v-else>
-                                    <div class="col-4">
-                                        <button
-                                            type="button"
-                                            class="vote-icon"
-                                            :aria-label="`Like ${song.name}`"
-                                            :aria-pressed="song.vote === 1"
-                                            data-test="heart"
-                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
-                                        >
-                                            <i
-                                                class="icon ti"
-                                                :class="song.vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"
-                                            ></i>
-                                        </button>
-                                    </div>
-                                    <div class="col-8" data-test="score">{{ song.score }}</div>
-                                </template>
-                            </div>
+                        <div class="col-auto">
+                            <VoteControl
+                                :score="song.score"
+                                :vote="song.vote"
+                                :can-downvote="canDownvote"
+                                :label="song.name"
+                                @vote="(value) => vote(song.id, value)"
+                            />
                         </div>
                         <div v-if="canManage" class="col-auto lh-1">
                             <button
@@ -315,6 +283,15 @@ onBeforeUnmount(() => {
 .vote-icon:focus-visible {
     outline: 2px solid currentColor;
     outline-offset: 2px;
+}
+
+.queue-card :deep(.vote-button) {
+    min-width: 44px;
+    min-height: 44px;
+}
+
+.is-mine {
+    background-color: color-mix(in srgb, var(--tblr-blue, #206bc4) 6%, transparent);
 }
 
 .queue-move,

@@ -115,6 +115,7 @@ export interface LegacyTrack {
     length: number;
     score: number;
     user: string | null;
+    user_id?: number | null;
     fallback_name: string | null;
     css_classes: string;
     decoration?: TrackDecoration | null;
