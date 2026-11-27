@@ -64,6 +64,7 @@ class ThemeController extends Controller
                 'id' => $theme->id,
                 'name' => $theme->name,
                 'active' => (bool) $theme->active,
+                'dark_mode' => (bool) $theme->dark_mode,
                 'tokens' => $theme->validTokens(),
             ],
         ]);
@@ -92,6 +93,7 @@ class ThemeController extends Controller
             'active' => (bool) $theme->active,
             'dark_mode' => (bool) $theme->dark_mode,
             'readonly' => (bool) $theme->readonly,
+            'updated_at' => $theme->updated_at?->diffForHumans(),
         ];
     }
 

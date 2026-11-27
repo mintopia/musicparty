@@ -79,6 +79,12 @@ describe('admin settings pages', () => {
         expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
         expect(wrapper.findAll('.mp-thumb')).toHaveLength(2);
         expect(wrapper.text()).toContain('Always dark');
+        expect(wrapper.text()).toContain('Follows each user');
+        expect(wrapper.text()).toContain('Built in');
+        expect(wrapper.text()).toContain('Dark, 1 colour set');
+        const coreActions = wrapper.findAll('tbody tr')[0].findAll('.btn-list .btn');
+        expect(coreActions.map((action) => action.text())).toEqual(['View']);
+        expect(wrapper.get('a[href="/admin/settings/themes/2/edit"].fw-medium').text()).toBe('Mine');
         expect(wrapper.text()).toContain('3 days ago');
         expect(wrapper.findAll('[data-test=make-active]')).toHaveLength(1);
         await wrapper.get('[data-test=make-active]').trigger('click');

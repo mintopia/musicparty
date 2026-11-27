@@ -2,6 +2,7 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {adminCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router, useForm} from '@inertiajs/vue3';
+import {themeThumbStyle} from '@/lib/themeThumb';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 interface SettingField {
@@ -61,14 +62,17 @@ function makeActive(theme: {
     });
 }
 
-function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>}): Record<string, string> {
-    return {
-        '--t-nav': theme.tokens['nav-background'] ?? '#182433',
-        '--t-bg': theme.dark_mode ? '#101820' : '#f6f8fb',
-        '--t-surf': theme.tokens.surface ?? (theme.dark_mode ? '#182433' : '#ffffff'),
-        '--t-pri': theme.tokens.primary ?? '#0054a6',
-        '--t-text': theme.tokens.text ?? (theme.dark_mode ? '#e6e7e9' : '#182433'),
-    };
+function modeLabel(theme: {dark_mode: boolean}): string {
+    return theme.dark_mode ? 'Always dark' : 'Follows each user';
+}
+
+function subtitle(theme: {readonly: boolean; dark_mode: boolean; tokens: Record<string, string>}): string {
+    if (theme.readonly) {
+        return 'Built in';
+    }
+    const count = Object.keys(theme.tokens).length;
+    const look = theme.dark_mode ? 'Dark' : 'Light';
+    return count === 0 ? `${look}, default colours` : `${look}, ${count} ${count === 1 ? 'colour' : 'colours'} set`;
 }
 </script>
 
@@ -157,19 +161,26 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                         <div class="mp-cell">
                                             <span
                                                 class="mp-thumb"
-                                                :style="thumbStyle(theme)"
+                                                :style="themeThumbStyle(theme)"
                                                 role="img"
                                                 :aria-label="`Preview of ${theme.name}`"
                                                 ><i></i><b></b
                                             ></span>
-                                            <span class="fw-medium">{{ theme.name }}</span>
+                                            <div>
+                                                <Link
+                                                    :href="`/admin/settings/themes/${theme.id}/edit`"
+                                                    class="fw-medium"
+                                                    >{{ theme.name }}</Link
+                                                >
+                                                <span class="mp-sub">{{ subtitle(theme) }}</span>
+                                            </div>
                                         </div>
                                     </td>
                                     <td>
                                         <span v-if="theme.active" class="mp-state is-ok">Active</span>
                                         <span v-else class="text-secondary">Not in use</span>
                                     </td>
-                                    <td>{{ theme.dark_mode ? 'Always dark' : 'Light' }}</td>
+                                    <td>{{ modeLabel(theme) }}</td>
                                     <td class="text-secondary">{{ theme.updated_at ?? 'Built in' }}</td>
                                     <td>
                                         <div class="btn-list justify-content-end flex-nowrap">
@@ -183,8 +194,8 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                                 Make active
                                             </button>
                                             <Link :href="`/admin/settings/themes/${theme.id}/edit`" class="btn btn-sm">
-                                                <i class="icon ti ti-edit"></i>
-                                                Edit
+                                                <i v-if="!theme.readonly" class="icon ti ti-edit"></i>
+                                                {{ theme.readonly ? 'View' : 'Edit' }}
                                             </Link>
                                             <Link
                                                 v-if="!theme.readonly"
@@ -194,10 +205,6 @@ function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>})
                                                 <i class="icon ti ti-trash"></i>
                                                 Delete
                                             </Link>
-                                            <a v-else class="btn btn-sm btn-outline-danger disabled">
-                                                <i class="icon ti ti-trash"></i>
-                                                Delete
-                                            </a>
                                         </div>
                                     </td>
                                 </tr>

@@ -128,6 +128,7 @@ it('confirms and deletes a theme', function () {
                 'id' => $this->theme->id,
                 'name' => 'Custom Look',
                 'active' => false,
+                'dark_mode' => false,
                 'tokens' => ['primary' => '#0054a6', 'nav-background' => '#182433'],
             ]));
 

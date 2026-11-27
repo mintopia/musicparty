@@ -1013,3 +1013,7 @@
 }
 .mp-cell { display: flex; align-items: center; gap: var(--mp-space-3); }
 @media (max-width: 575.98px) { .card-table .btn-sm { min-block-size: 44px; } }
+.mp-sub { display: block; color: var(--tblr-secondary-color); font-size: var(--mp-fs-small); white-space: nowrap; }
+.mp-cell > div { min-inline-size: 0; }
+.table td:first-child a.fw-medium { white-space: nowrap; }
+@media (max-width: 575.98px) { .btn-list .btn-sm, .mp-cell a.fw-medium { min-block-size: 44px; } .mp-cell a.fw-medium { display: inline-flex; align-items: center; } }

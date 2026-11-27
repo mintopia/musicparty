@@ -3,21 +3,16 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed} from 'vue';
+import {themeThumbStyle} from '@/lib/themeThumb';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
-    theme: {id: number; name: string; active: boolean; tokens: Record<string, string>};
+    theme: {id: number; name: string; active: boolean; dark_mode: boolean; tokens: Record<string, string>};
 }>();
 
 const form = useForm({});
 
-const thumbStyle = computed(() => ({
-    '--t-nav': props.theme.tokens['nav-background'] ?? '#182433',
-    '--t-bg': '#f6f8fb',
-    '--t-surf': props.theme.tokens.surface ?? '#ffffff',
-    '--t-pri': props.theme.tokens.primary ?? '#0054a6',
-    '--t-text': props.theme.tokens.text ?? '#182433',
-}));
+const thumbStyle = computed(() => themeThumbStyle(props.theme));
 
 function submit(): void {
     form.delete(`/admin/settings/themes/${props.theme.id}`);

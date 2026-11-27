@@ -39,6 +39,7 @@ const theme = {
     active: false,
     dark_mode: false,
     readonly: false,
+    updated_at: '3 days ago',
 };
 
 beforeEach(() => {
@@ -72,6 +73,11 @@ describe('admin themes', () => {
         expect(inertia.patch).toHaveBeenCalledWith('/admin/settings/themes/4');
     });
 
+    it('says when an active theme went live', () => {
+        const wrapper = mount(ThemeEdit, {props: {theme: {...theme, active: true}, colourTokens}});
+        expect(wrapper.get('.mp-page-head p').text()).toBe('Active since 3 days ago.');
+    });
+
     it('resets a set colour back to unset', async () => {
         const wrapper = mount(ThemeEdit, {props: {theme, colourTokens}});
 
@@ -100,9 +106,13 @@ describe('admin themes', () => {
     });
 
     it('names the theme on the delete confirmation and submits', async () => {
-        const wrapper = mount(ThemeDelete, {props: {theme: {id: 4, name: 'Custom', active: true, tokens: {}}}});
+        const wrapper = mount(ThemeDelete, {
+            props: {theme: {id: 4, name: 'Custom', active: true, dark_mode: true, tokens: {primary: '#8a2be2'}}},
+        });
 
         expect(wrapper.get('button.btn-danger').text()).toBe('Delete Custom');
+        expect(wrapper.get('.mp-thumb').attributes('style')).toContain('--t-pri: #8a2be2');
+        expect(wrapper.get('.mp-thumb').attributes('style')).toContain('--t-bg: #101820');
         expect(wrapper.find('[data-test=delete-active-note]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
         expect(inertia.delete).toHaveBeenCalledWith('/admin/settings/themes/4');

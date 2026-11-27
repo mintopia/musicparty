@@ -14,6 +14,7 @@ const props = defineProps<{
         active: boolean;
         dark_mode: boolean;
         readonly: boolean;
+        updated_at: string | null;
     };
     colourTokens: {token: string; label: string; default: string}[];
 }>();
@@ -41,7 +42,7 @@ function submit(): void {
             <div class="mp-page-head">
                 <div>
                     <h1>Edit {{ theme.name }}</h1>
-                    <p>{{ theme.active ? 'In use on the whole site.' : 'Not in use.' }}</p>
+                    <p>{{ theme.active ? `Active since ${theme.updated_at}.` : 'Not in use.' }}</p>
                 </div>
                 <div class="btn-list">
                     <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
