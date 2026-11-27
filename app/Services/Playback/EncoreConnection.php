@@ -6,6 +6,7 @@ use App\Models\Party;
 use Illuminate\Broadcasting\Broadcasters\PusherBroadcaster;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -33,7 +34,9 @@ class EncoreConnection
 
                 return (bool) ($broadcaster->getPusher()->getChannelInfo($channel)->occupied ?? false);
             });
-        } catch (Throwable) {
+        } catch (Throwable $e) {
+            Log::warning("{$party}: Could not ask Reverb whether Encore is subscribed to {$channel}: {$e->getMessage()}");
+
             return null;
         }
     }
