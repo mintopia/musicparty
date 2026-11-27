@@ -42,9 +42,7 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
             <i class="icon ti ti-alert-circle fs-2"></i>
             <div>
                 <h2 class="h4 mb-1">No close matches for “{{ query }}”</h2>
-                <div>
-                    These are the nearest results we found. Check the spelling or try the artist's name.
-                </div>
+                <div>These are the nearest results we found. Check the spelling or try the artist's name.</div>
             </div>
         </div>
         <div v-if="topResult || trackRows.length" class="row g-4 mt-0">
