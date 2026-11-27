@@ -112,6 +112,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                     data-test="upcoming-row"
                 >
                     <div class="row align-items-center g-3 qrow" :class="{'is-sent': request.sent}">
+                        <div class="col-auto pos d-none d-md-block" data-test="position">{{ index + 1 }}</div>
                         <div class="col-auto">
                             <img
                                 :src="request.album.image_url"
@@ -135,10 +136,6 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 <span v-else class="credit" title="From the party's Fallback Playlist"
                                     ><i class="ti ti-playlist"></i>Fallback Playlist</span
                                 >
-                            </div>
-                            <div v-if="request.scheduled_for" class="text-info small d-none d-md-block">
-                                <i class="icon ti ti-clock"></i> Scheduled for
-                                {{ formatScheduled(request.scheduled_for) }}
                             </div>
                             <div class="text-muted small d-none d-md-block">
                                 <template v-if="request.user">Requested by {{ request.user }}</template>
@@ -204,7 +201,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                         </div>
                         <div class="qbreak d-md-none"></div>
                         <div class="col-auto text-secondary qtime">
-                            <span v-if="request.scheduled_for" class="plays-at d-md-none" data-test="plays-at"
+                            <span v-if="request.scheduled_for" class="plays-at" data-test="plays-at"
                                 ><i class="ti ti-calendar-time"></i>Plays at
                                 {{ formatScheduled(request.scheduled_for) }}</span
                             >
@@ -235,7 +232,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 aria-label="Schedule"
                                 title="Schedule"
                                 data-test="schedule"
-                                ><i class="ti ti-clock"></i
+                                ><i class="ti ti-calendar-clock"></i
                             ></a>
                             <button
                                 type="button"
@@ -246,7 +243,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 data-test="remove"
                                 @click="emit('delete', request)"
                             >
-                                <i class="ti ti-x"></i>
+                                <i class="ti ti-trash"></i>
                             </button>
                         </div>
                     </div>
@@ -276,6 +273,19 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
 }
 .votes {
     min-width: 88px;
+}
+.votes :deep(.vote-control) {
+    background: var(--tblr-bg-surface-secondary);
+    border-radius: 99px;
+    padding: 2px 4px;
+}
+.pos {
+    inline-size: 2.5ch;
+    padding-inline: 0 !important;
+    text-align: end;
+    color: var(--tblr-secondary-color);
+    font-size: 0.8125rem;
+    font-variant-numeric: tabular-nums;
 }
 .qa .btn {
     width: 36px;
@@ -342,7 +352,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     .qrow > * {
         padding-inline: 0;
     }
-    .qrow > .col-auto:first-child img {
+    .qrow img {
         width: 48px;
         height: 48px;
     }

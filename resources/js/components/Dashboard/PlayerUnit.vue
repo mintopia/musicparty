@@ -339,6 +339,12 @@ const {pressed, score, rate} = useRating({
     gap: 6px;
     align-items: flex-start;
 }
+@container (max-width: 420px) {
+    .pu-headline {
+        font-size: 1.65rem;
+        gap: 8px;
+    }
+}
 @container (max-width: 620px) {
     .pu-cover {
         width: 112px;

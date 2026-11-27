@@ -17,6 +17,14 @@ const items = computed(() => [
         : []),
 ]);
 
+const joinPath = computed(() => {
+    try {
+        return new URL(props.links.join).pathname;
+    } catch {
+        return props.links.join;
+    }
+});
+
 function fallbackCopy(text: string): boolean {
     const area = document.createElement('textarea');
     area.value = text;
@@ -73,11 +81,19 @@ onBeforeUnmount(() => clearTimeout(timer));
                     >
                 </div>
                 <div class="col-6">
-                    <button type="button" class="btn btn-primary w-100" data-test="copy-join" @click="copyJoin">
+                    <button
+                        type="button"
+                        class="btn btn-outline-secondary w-100"
+                        data-test="copy-join"
+                        @click="copyJoin"
+                    >
                         <i class="ti" :class="copied ? 'ti-check' : 'ti-copy'"></i
                         >{{ copied ? 'Copied' : 'Copy join link' }}
                     </button>
                 </div>
+            </div>
+            <div class="text-secondary small mt-3" data-test="join-url">
+                Guests join at <b class="text-body">{{ joinPath }}</b>
             </div>
         </div>
     </div>
