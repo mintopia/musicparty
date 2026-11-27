@@ -90,16 +90,17 @@ const nothingFound = computed(() => {
                 </button>
             </div>
         </div>
-        <EmptyState
-            v-else-if="nothingFound"
-            icon="ti-search-off"
-            :title="`No results for &quot;${query}&quot;`"
-            description="Check the spelling or try the artist's name."
-            data-test="results-empty"
-        />
+        <div v-else-if="nothingFound" class="card mt-4" data-test="results-empty">
+            <EmptyState
+                icon="ti-search-off"
+                :title="`No results for “${query}”`"
+                description="Check the spelling or try the artist's name."
+            />
+        </div>
         <SearchOverviewResults
             v-else-if="found && found.view === 'overview'"
             :results="found"
+            :query="query"
             :can-downvote="canDownvote"
             :album-route="albumRoute"
             :artist-route="artistRoute"

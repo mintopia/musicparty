@@ -20,7 +20,9 @@ use App\Services\ModSettingsStore;
 use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\SearchType;
+use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\PartyListing;
@@ -29,9 +31,11 @@ use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
+use App\Services\Search\PartySearchSuggestions;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
 use App\Support\QrCode;
+use App\Support\SearchRelevance;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +52,10 @@ class PartyController extends Controller
     private const int SEARCH_OVERVIEW_LIMIT = 10;
 
     private const int SEARCH_OVERVIEW_TRACKS = 4;
+
+    private const int SUGGESTED_SEARCHES = 5;
+
+    private const int SUGGESTED_ARTISTS = 6;
 
     public function __construct()
     {
@@ -159,7 +167,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): Response
+    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility, PartySearchSuggestions $suggestions): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
@@ -179,6 +187,9 @@ class PartyController extends Controller
         $results = null;
         if ($query) {
             $text = (string) $query;
+            if ($type === null && $page === 1 && ! $request->hasHeader('X-Inertia-Partial-Data')) {
+                $suggestions->record($party, $member->user, $text);
+            }
             $results = Inertia::defer(
                 fn (): array => $this->searchResults($party, $member, $factory, fn (MusicProvider $provider): array => $type === null
                     ? $this->searchOverview($party, $member, $eligibility, $provider, $text)
@@ -197,6 +208,11 @@ class PartyController extends Controller
             ],
             'params' => ['query' => $query, 'perPage' => $perPage, 'type' => $type?->value],
             'results' => $results,
+            'suggestions' => $query ? null : [
+                'nowPlaying' => $suggestions->nowPlaying($party),
+                'recent' => $suggestions->recent($party, self::SUGGESTED_SEARCHES),
+                'artists' => $suggestions->topArtists($party, self::SUGGESTED_ARTISTS),
+            ],
             'playerState' => $party->getState(),
         ]);
     }
@@ -220,7 +236,7 @@ class PartyController extends Controller
         } catch (ProviderUnavailableException $e) {
             return $this->searchError(
                 $e->timedOut ? 'timeout' : 'unavailable',
-                $e->timedOut ? 'The music provider took too long to answer.' : 'The music provider could not be reached.',
+                $e->timedOut ? "{$factory->forParty($party, Purpose::Search)->displayName()} didn't answer in time." : 'The music provider could not be reached.',
             );
         }
     }
@@ -237,19 +253,18 @@ class PartyController extends Controller
         $topTrack = null;
         if ($topArtist === null && $tracks !== []) {
             $topTrack = $tracks[0];
-            $tracks = array_slice($tracks, 1);
         }
         $tracks = array_slice($tracks, 0, self::SEARCH_OVERVIEW_TRACKS);
 
         $annotated = array_map(
             fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve(),
-            $eligibility->annotate($party, $member, $topTrack === null ? $tracks : [$topTrack, ...$tracks]),
+            $eligibility->annotate($party, $member, $tracks),
         );
         $top = null;
         if ($topArtist !== null) {
             $top = ['kind' => 'artist', 'artist' => $this->artistResult($topArtist)];
         } elseif ($topTrack !== null) {
-            $top = ['kind' => 'track', 'track' => array_shift($annotated)];
+            $top = ['kind' => 'track', 'track' => $annotated[0]];
         }
 
         $albums = array_map($this->albumResult(...), $found->albums->items);
@@ -262,6 +277,21 @@ class PartyController extends Controller
             'albums' => $albums,
             'artists' => $artists,
             'empty' => $top === null && $annotated === [] && $albums === [] && $artists === [],
+            'weak' => SearchRelevance::isWeak($query, $this->overviewCandidates($found)),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function overviewCandidates(SearchOverview $found): array
+    {
+        $names = fn (array $artists): string => implode(' ', array_map(fn (ArtistRef $artist): string => $artist->name, $artists));
+
+        return [
+            ...array_map(fn (Track $track): string => "{$track->name} {$names($track->artists)} {$track->album->name}", $found->tracks->items),
+            ...array_map(fn (AlbumSummary $album): string => "{$album->ref->name} {$names($album->artists)}", $found->albums->items),
+            ...array_map(fn (Artist $artist): string => $artist->ref->name, $found->artists->items),
         ];
     }
 
@@ -494,7 +524,7 @@ class PartyController extends Controller
         return Inertia::render('Parties/Edit', $this->formProps($options, $party, $this->resolveAuthenticatedUser($request)) + [
             'party' => $this->formValues($party) + ['code' => $party->code],
             'providerName' => ucfirst((string) $party->provider_id),
-            'hostName' => $party->user?->nickname,
+            'hostName' => $party->user->nickname,
             'playerState' => $party->getState(),
             'tab' => in_array($request->query('tab'), self::SETTINGS_TABS, true) ? $request->query('tab') : 'general',
             'mods' => fn () => $mods->presentFor($party),

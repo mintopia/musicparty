@@ -74,7 +74,11 @@ describe('Upcoming guest rows', () => {
             props: {
                 party: 'ABC',
                 canDownvote: true,
-                initialState: [song(1, {user_id: 7, user: 'me'}), song(2, {user: null, user_id: null}), song(3, {user_id: 9})],
+                initialState: [
+                    song(1, {user_id: 7, user: 'me'}),
+                    song(2, {user: null, user_id: null}),
+                    song(3, {user_id: 9}),
+                ],
             },
         });
 
@@ -82,7 +86,7 @@ describe('Upcoming guest rows', () => {
         expect(wrapper.findAllComponents({name: 'VoteControl'})).toHaveLength(3);
         expect(wrapper.findAll('[data-test="your-request"]')).toHaveLength(1);
         expect(wrapper.text()).toContain('Requested by you');
-        expect(wrapper.text()).toContain("From the party’s Fallback Playlist");
+        expect(wrapper.text()).toContain('From the party’s Fallback Playlist');
         expect(wrapper.text()).not.toContain('Fallback Track');
     });
 });

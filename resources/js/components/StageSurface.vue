@@ -3,7 +3,9 @@ import {computed} from 'vue';
 
 const props = defineProps<{image?: string | null}>();
 
-const style = computed(() => (props.image ? {'--np-image': `url("${props.image.replace(/["\\]/g, '\\$&')}")`} : undefined));
+const style = computed(() =>
+    props.image ? {'--np-image': `url("${props.image.replace(/["\\]/g, '\\$&')}")`} : undefined,
+);
 </script>
 
 <template>

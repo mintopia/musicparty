@@ -7,6 +7,7 @@ import axios from 'axios';
 import {computed, ref, watch} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchResultsSection from '@/components/SearchResultsSection.vue';
+import SearchSuggestions from '@/components/Search/SearchSuggestions.vue';
 import {useEcho} from '@/composables/useEcho';
 import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
@@ -16,12 +17,21 @@ import {search} from '@/routes/parties';
 import {show as showAlbum} from '@/routes/parties/albums';
 import {show as showArtist} from '@/routes/parties/artists';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyPartyState, SearchError, SearchResults, SearchType, SharedProps, TrackAnnotation} from '@/types';
+import type {
+    LegacyPartyState,
+    SearchError,
+    SearchResults,
+    SearchSuggestions as SearchSuggestionsData,
+    SearchType,
+    SharedProps,
+    TrackAnnotation,
+} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean};
     params: {query: string | null; perPage: number; type?: SearchType | null};
     results?: SearchResults | SearchError | null;
+    suggestions?: SearchSuggestionsData | null;
     playerState: LegacyPartyState;
 }>();
 
@@ -145,7 +155,7 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Search - ${party.name}`" />
-        <div>
+        <div class="mp-search-touch">
             <div class="search-form mx-auto">
                 <div class="page-header mt-0 text-center">
                     <h1>Search</h1>
@@ -191,6 +201,12 @@ async function vote(track: TrackAnnotation, value: -1 | 0 | 1): Promise<void> {
                     />
                 </Deferred>
             </template>
+            <SearchSuggestions
+                v-else-if="suggestions"
+                :suggestions="suggestions"
+                :search-url="searchUrl"
+                :artist-route="(id: string) => showArtist({party: party.code, artist: id}).url"
+            />
         </div>
         <Toast v-if="message" :message="message" variant="danger" data-test="message" @dismiss="message = null" />
     </AppLayout>

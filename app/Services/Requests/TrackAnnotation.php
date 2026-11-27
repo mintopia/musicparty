@@ -22,6 +22,8 @@ final readonly class TrackAnnotation
         public bool $awaitingApproval = false,
         /** @var array<string, string>|null */
         public ?array $decoration = null,
+        public bool $requestedByViewer = false,
+        public ?string $requestedAgo = null,
     ) {}
 
     /**

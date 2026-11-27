@@ -99,11 +99,7 @@ function submit(): void {
                         />
                     </SettingRow>
 
-                    <SettingRow
-                        label="Enabled"
-                        for="enabled"
-                        :hint="`Lets users link a ${provider.name} account.`"
-                    >
+                    <SettingRow label="Enabled" for="enabled" :hint="`Lets users link a ${provider.name} account.`">
                         <span class="form-check form-switch mb-0 ps-0 min-height-0">
                             <input
                                 id="enabled"

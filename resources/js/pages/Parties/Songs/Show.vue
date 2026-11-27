@@ -43,7 +43,13 @@ const props = defineProps<{
         removeUrl: string;
     };
     votes: Paginator<Reaction> & {total?: number};
-    aiReview: {outcome: string; outcomeLabel: string; reason: string | null; criterion: string | null; url: string} | null;
+    aiReview: {
+        outcome: string;
+        outcomeLabel: string;
+        reason: string | null;
+        criterion: string | null;
+        url: string;
+    } | null;
     history: {icon: string; text: string; at: When | null; url: string | null}[];
 }>();
 
@@ -106,7 +112,12 @@ function signed(score: number): string {
                     <i class="icon ti ti-ban me-2" aria-hidden="true"></i>Moderate
                 </a>
                 <div class="dropdown-divider"></div>
-                <button type="button" class="dropdown-item text-danger" data-test="remove-request" @click="removeRequest">
+                <button
+                    type="button"
+                    class="dropdown-item text-danger"
+                    data-test="remove-request"
+                    @click="removeRequest"
+                >
                     <i class="icon ti ti-trash me-2" aria-hidden="true"></i>Remove Request
                     <small class="d-block text-secondary">Takes it out of the Queue</small>
                 </button>

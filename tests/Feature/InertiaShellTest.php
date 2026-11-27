@@ -103,7 +103,7 @@ it('shares empty validation errors, and the errors after a failed submission', f
     $this->actingAs($admin)
         ->from(route('inertia.shell'))
         ->followingRedirects()
-        ->post(route('admin.settings.themes.store'), ['name' => '!!!'])
+        ->post(route('admin.settings.themes.store'), ['name' => '!!!', 'tokens' => ['primary' => 'nope']])
         ->assertInertia(fn (Assert $page) => $page
             ->component('Shell')
             ->has('errors', fn (Assert $errors) => $errors->has('name')->has('tokens.primary')->etc()));

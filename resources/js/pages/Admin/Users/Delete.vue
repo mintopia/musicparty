@@ -30,9 +30,7 @@ function submit(): void {
                         Delete <strong>{{ user.nickname }}</strong
                         >? This cannot be undone.
                     </p>
-                    <label class="d-block mb-2" for="confirm">
-                        To continue, type <strong>delete</strong> below.
-                    </label>
+                    <label class="d-block mb-2" for="confirm"> To continue, type <strong>delete</strong> below. </label>
                     <div class="mx-auto" style="max-inline-size: 14rem">
                         <input
                             id="confirm"

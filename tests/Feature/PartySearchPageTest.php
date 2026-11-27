@@ -75,7 +75,8 @@ it('renders the Inertia search page for a member with results', function () {
                 ->where('results.top.track.id', 'fresh')
                 ->where('results.top.track.eligibility.allowed', true)
                 ->where('results.top.track.queue.in_queue', false)
-                ->where('results.tracks', [])));
+                ->has('results.tracks', 1)
+                ->where('results.tracks.0.id', 'fresh')));
 });
 
 it('renders the page without results when there is no query', function () {
@@ -104,6 +105,20 @@ it('marks queued tracks and reports why a banned member cannot request', functio
                 ->where('results.top.track.queue.score', 5)
                 ->where('results.tracks.0.eligibility.allowed', false)
                 ->whereNot('results.tracks.0.eligibility.reason', null)));
+});
+
+it('tells the requester a queued track is theirs and when it was added', function () {
+    pageSearchUpcoming($this->party, FakeSpotify::track('mine'), $this->member->user);
+    pageSearchUpcoming($this->party, FakeSpotify::track('theirs'), User::factory()->create(['first_login' => false]));
+    pageSearchResults($this->fake, FakeSpotify::track('mine'), FakeSpotify::track('theirs'));
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
+            ->where('results.top.track.queue.requested_by_you', true)
+            ->where('results.top.track.queue.requested_ago', 'just now')
+            ->where('results.tracks.0.queue.requested_by_you', true)
+            ->where('results.tracks.1.queue.requested_by_you', false)));
 });
 
 it('paginates a single type using perPage and page and keeps the query string on page links', function () {
@@ -186,7 +201,7 @@ it('reports every eligibility reason on the search page', function (string $reas
     'similar song waiting' => ['A similar song is already in the queue', function ($party, $member, $track) {
         pageSearchUpcoming($party, (object) [...(array) $track, 'id' => 'other-id'], null, 1);
     }],
-    'played recently' => ['This song has been played recently', function ($party, $member, $track) {
+    'played recently' => ['Played in the last hour', function ($party, $member, $track) {
         $party->forceFill(['no_repeat_interval' => 3600])->save();
         PlayedSong::factory()->for($party)->for(Song::fromTrack(SpotifyMapper::track($track)))->create(['played_at' => now()->subMinute()]);
     }],
@@ -250,6 +265,7 @@ it('maps provider unavailability to a friendly retryable error', function (bool 
     $this->mock(MusicProviderFactory::class, function ($mock) use ($timedOut) {
         $provider = Mockery::mock(MusicProvider::class, ProviderPlayback::class);
         $provider->shouldReceive('searchOverview')->andThrow(new ProviderUnavailableException($timedOut));
+        $provider->shouldReceive('displayName')->andReturn('Spotify');
         $mock->shouldReceive('forParty')->andReturn($provider);
     });
 
@@ -260,7 +276,7 @@ it('maps provider unavailability to a friendly retryable error', function (bool 
             ->where('results.error.message', $message)
             ->where('results.error.retryable', true)));
 })->with([
-    'timeout' => [true, 'timeout', 'The music provider took too long to answer.'],
+    'timeout' => [true, 'timeout', "Spotify didn't answer in time."],
     'unreachable' => [false, 'unavailable', 'The music provider could not be reached.'],
 ]);
 

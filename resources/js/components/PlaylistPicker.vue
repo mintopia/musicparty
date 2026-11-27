@@ -15,7 +15,9 @@ const custom = defineModel<string>('custom', {default: ''});
 const open = ref(false);
 const query = ref('');
 
-const heading = computed(() => `${props.hostName ?? 'Your'}${props.hostName ? "'s" : ''} ${props.providerName ?? 'Spotify'} playlists`);
+const heading = computed(
+    () => `${props.hostName ?? 'Your'}${props.hostName ? "'s" : ''} ${props.providerName ?? 'Spotify'} playlists`,
+);
 const selected = computed(() => props.playlists.find((playlist) => playlist.id === model.value));
 const visible = computed(() => {
     const needle = query.value.trim().toLowerCase();
