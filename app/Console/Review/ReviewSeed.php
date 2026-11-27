@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Console\Commands;
+namespace App\Console\Review;
 
 use App\Models\LinkedAccount;
 use App\Models\Party;

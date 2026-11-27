@@ -2,39 +2,13 @@
 
 use App\Models\Artist;
 use App\Models\Party;
-use App\Models\PartySearch;
 use App\Models\Song;
 use App\Models\UpcomingSong;
-use App\Models\User;
 use App\Services\Search\PartySearchSuggestions;
 
 beforeEach(function () {
     $this->party = Party::factory()->create();
     $this->suggestions = app(PartySearchSuggestions::class);
-});
-
-it('records searches per party and trims them', function () {
-    $this->suggestions->record($this->party, User::factory()->create(), '  daft punk ');
-    $this->suggestions->record($this->party, null, '   ');
-
-    expect(PartySearch::query()->pluck('query')->all())->toBe(['daft punk']);
-});
-
-it('lists recent searches newest first without repeats across guests', function () {
-    $this->suggestions->record($this->party, null, 'Levels');
-    $this->suggestions->record($this->party, null, 'sandstorm');
-    $this->suggestions->record($this->party, null, 'levels');
-    PartySearch::factory()->create(['query' => 'other party']);
-
-    expect($this->suggestions->recent($this->party, 5))->toBe(['levels', 'sandstorm']);
-});
-
-it('limits recent searches', function () {
-    foreach (['a', 'b', 'c'] as $query) {
-        $this->suggestions->record($this->party, null, $query);
-    }
-
-    expect($this->suggestions->recent($this->party, 2))->toBe(['c', 'b']);
 });
 
 it('ranks artists by request count at this party tonight', function () {

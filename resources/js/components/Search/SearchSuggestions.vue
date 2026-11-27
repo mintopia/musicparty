@@ -17,7 +17,6 @@ const requestsLabel = (count: number): string => `${count} ${count === 1 ? 'Requ
 const hasAny = computed(
     () =>
         props.suggestions.nowPlaying !== null ||
-        props.suggestions.recent.length > 0 ||
         props.suggestions.artists.length > 0,
 );
 </script>
@@ -43,17 +42,6 @@ const hasAny = computed(
                     </a>
                 </div>
             </div>
-        </section>
-        <section v-if="suggestions.recent.length" aria-labelledby="recent-h" data-test="suggest-recent">
-            <h2 id="recent-h" class="section-title m-0 mb-2">Recent searches at this party</h2>
-            <ul class="recent">
-                <li v-for="query in suggestions.recent" :key="query">
-                    <a :href="queryUrl(query)" class="mp-chip" data-test="recent-search">
-                        <i class="icon ti ti-history"></i>
-                        {{ query }}
-                    </a>
-                </li>
-            </ul>
         </section>
         <section v-if="suggestions.artists.length" aria-labelledby="tonight-h" data-test="suggest-artists">
             <div class="d-flex align-items-baseline flex-wrap column-gap-3 mb-2">
@@ -92,19 +80,5 @@ const hasAny = computed(
 
 .section-title {
     font-size: 1.05rem;
-}
-
-.recent {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 0.5rem;
-    margin: 0;
-    padding: 0;
-    list-style: none;
-}
-
-.recent .mp-chip {
-    min-height: 44px;
-    text-decoration: none;
 }
 </style>

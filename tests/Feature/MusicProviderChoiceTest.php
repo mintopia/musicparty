@@ -1,12 +1,15 @@
 <?php
 
+use App\Enums\Purpose;
 use App\Enums\SettingType;
+use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\LinkedAccount;
 use App\Models\Party;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Providers\AppServiceProvider;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use Database\Seeders\SettingsSeeder;
@@ -161,4 +164,34 @@ it('rejects creating a party when the chosen provider account is not linked', fu
     $this->actingAs($user)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
         ->assertSessionHasErrors('provider_id');
     expect(Party::count())->toBe(0);
+});
+
+it('does not register or resolve the Fake provider in production', function () {
+    app()->detectEnvironment(fn (): string => 'production');
+    app()->forgetInstance(MusicProviderFactory::class);
+    (new AppServiceProvider(app()))->register();
+
+    $factory = app(MusicProviderFactory::class);
+
+    expect(MusicProviderFactory::fakeAllowed())->toBeFalse()
+        ->and($factory->ids())->toBe(['spotify'])
+        ->and($factory->selectableIds())->not->toContain('fake')
+        ->and(fn () => $factory->forUser('fake', User::factory()->create(), Purpose::Control))
+        ->toThrow(InvalidArgumentException::class, 'Unknown music provider [fake]');
+});
+
+it('hides the Fake provider setting from the admin UI and ignores it in production', function () {
+    $this->seed(SettingsSeeder::class);
+    $admin = adminUser();
+    app()->detectEnvironment(fn (): string => 'production');
+
+    $this->actingAs($admin)->get(route('admin.settings.index'))
+        ->assertOk()->assertInertia(fn ($page) => $page->where('settings', fn ($settings) => ! collect($settings)->contains('code', 'provider-fake-enabled')));
+
+    $this->withoutMiddleware(VerifyCsrfToken::class);
+    $before = Setting::query()->where('code', 'provider-fake-enabled')->first()->getRawOriginal('value');
+    $this->actingAs($admin)->put(route('admin.settings.update'), ['name' => 'Music Party'])->assertRedirect();
+    Setting::query()->get()->each->clearCache();
+
+    expect(Setting::query()->where('code', 'provider-fake-enabled')->first()->getRawOriginal('value'))->toBe($before);
 });

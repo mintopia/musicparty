@@ -15,6 +15,18 @@ class MusicProviderFactory
 {
     public const DEFAULT_PROVIDER_ID = 'spotify';
 
+    public const FAKE_PROVIDER_ID = 'fake';
+
+    public const FAKE_ENABLED_SETTING = 'provider-fake-enabled';
+
+    /**
+     * The Fake Music Provider and its settings exist only in `local` and `testing`, never in production.
+     */
+    public static function fakeAllowed(): bool
+    {
+        return app()->environment(['local', 'testing']);
+    }
+
     /**
      * @param  array<string, Closure(User, Purpose, ?string): (MusicProvider&ProviderPlayback)>  $registry
      */

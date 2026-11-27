@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Enums\SettingType;
 use App\Models\Setting;
+use App\Services\Music\MusicProviderFactory;
 use Illuminate\Database\Seeder;
 use stdClass;
 
@@ -72,6 +73,7 @@ class SettingsSeeder extends Seeder
                 'default' => true,
                 'validation' => 'sometimes|boolean',
                 'description' => 'Allow Parties to use the Fake Music Provider (local environment only)',
+                'hidden' => ! MusicProviderFactory::fakeAllowed(),
             ],
         ];
         foreach ($settings as $code => $setting) {
