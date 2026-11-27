@@ -123,7 +123,7 @@ class AiRequestReviewRule implements RequestRule
             $guidelines = $this->setting($party, 'guidelines');
             $endpoint = $this->setting($party, 'decision_endpoint');
             $model = $this->setting($party, 'decision_model');
-            $threshold = $this->setting($party, 'confidence_threshold');
+            $percentage = $this->setting($party, 'confidence_percentage');
 
             $partyState = $this->partyState($party);
             $log['party_context_included'] = $partyState !== null;
@@ -134,7 +134,7 @@ class AiRequestReviewRule implements RequestRule
                 is_string($guidelines) ? $guidelines : null,
                 ['request' => $this->trackDetails($track)] + ($partyState !== null ? ['party' => $partyState] : []),
                 max(1, (int) ($this->setting($party, 'timeout') ?? 10)),
-                is_numeric($threshold) ? (float) $threshold : DecisionModelReviewer::DEFAULT_CONFIDENCE_THRESHOLD,
+                (is_numeric($percentage) ? (float) $percentage : DecisionModelReviewer::DEFAULT_CONFIDENCE_PERCENTAGE) / 100,
                 $log,
                 $trace,
             );

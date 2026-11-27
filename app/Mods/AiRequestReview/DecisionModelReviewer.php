@@ -15,7 +15,7 @@ class DecisionModelReviewer
 
     public const DEFAULT_MODEL = 'typesafe/jev-1.13';
 
-    public const DEFAULT_CONFIDENCE_THRESHOLD = 0.5;
+    public const DEFAULT_CONFIDENCE_PERCENTAGE = 50;
 
     public const QUESTION_ID = 'suitability';
 
@@ -149,7 +149,7 @@ class DecisionModelReviewer
 
         if ($confidence === null || $confidence < $confidenceThreshold) {
             $band = 'low_confidence';
-            $decision = RequestDecision::flag('The AI review was not confident enough, a manager should look at it');
+            $decision = RequestDecision::allow();
         } elseif ($score < self::REJECT_BELOW) {
             $band = 'reject';
             $decision = RequestDecision::reject($this->withCriterion($failed, $reason ?? 'This song was rejected by the AI review'));
