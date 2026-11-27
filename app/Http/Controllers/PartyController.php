@@ -13,6 +13,7 @@ use App\Http\Resources\V1\UpcomingSongResource;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Contracts\MusicProvider;
@@ -70,30 +71,33 @@ class PartyController extends Controller
             ->get()
             ->map(function (Party $party) use ($user, $isAdmin) {
                 $canManage = $isAdmin || $party->canBeManagedBy($user);
-                $statusService = app(PlaybackStatus::class);
-                $status = $statusService->forParty($party);
-                $sampledAt = $statusService->recall($party)?->sampledAt;
-                $stale = $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES));
+                $state = app(PlaybackStatus::class)->recall($party);
+                $sampledAt = $state?->sampledAt;
+                $lastUpdate = $sampledAt?->diffForHumans();
+                $related = $party->getRelation('song');
+                $song = $related instanceof Song ? $related : null;
                 $playback = match (true) {
-                    $stale => 'stale',
-                    ! $status->active => 'idle',
-                    $status->isPlaying => 'playing',
+                    $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES)) => 'stale',
+                    $state === null || $song === null || $state->trackId !== $song->provider_track_id => 'idle',
+                    $state->isPlaying => 'playing',
                     default => 'paused',
                 };
-                $roleCode = $party->user_id === $user->id ? 'owner' : ($party->members->first()?->role?->code ?? 'user');
+                $member = $party->members->first();
+                $isOwner = $party->user_id === $user->id;
+                $roleCode = $isOwner ? 'owner' : ($member?->role->code ?? 'user');
 
                 return [
                     'code' => $party->code,
                     'name' => $party->name,
-                    'role' => $party->user_id === $user->id ? 'Owner' : ($party->members->first()?->role?->name ?? 'User'),
+                    'role' => $isOwner ? 'Owner' : ($member?->role->name ?? 'User'),
                     'roleCode' => $roleCode,
                     'playback' => $playback,
                     'detail' => match ($playback) {
-                        'stale' => 'last update '.$sampledAt?->diffForHumans(),
-                        'playing', 'paused' => $party->song?->name,
+                        'stale' => 'last update '.$lastUpdate,
+                        'playing', 'paused' => $song->name,
                         default => null,
                     },
-                    'cover' => $party->song?->album?->image_url ?: null,
+                    'cover' => $song?->album->image_url ?: null,
                     'canManage' => $canManage,
                     'url' => route($canManage ? 'parties.dashboard' : 'parties.show', $party->code),
                 ];
