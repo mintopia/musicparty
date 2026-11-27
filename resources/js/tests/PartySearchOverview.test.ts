@@ -237,6 +237,20 @@ describe('Party search overview', () => {
         expect(wrapper.findAll('[data-test="album-tile"]')).toHaveLength(2);
     });
 
+    it('lays albums and artists out in a fluid tile row and exposes full names as titles', () => {
+        const wrapper = mountSearch(overview());
+
+        expect(wrapper.get('[data-test="album-row"]').classes()).toContain('search-tile-row');
+        expect(wrapper.get('[data-test="artist-row"]').classes()).toContain('search-tile-row-round');
+        const albumName = wrapper.get('[data-test="album-name"]');
+        expect(albumName.classes()).toContain('clamp-2');
+        expect(albumName.attributes('title')).toBe(albumName.text());
+        expect(wrapper.get('[data-test="album-byline"]').classes()).toContain('text-truncate');
+        expect(wrapper.get('[data-test="artist-name"]').attributes('title')).toBe(
+            wrapper.get('[data-test="artist-name"]').text(),
+        );
+    });
+
     it('falls back to an icon when an album or artist has no image', () => {
         const wrapper = mountSearch(
             overview({albums: [album('al1', {image_url: null})], artists: [artist('ar1', {image_url: null})]}),

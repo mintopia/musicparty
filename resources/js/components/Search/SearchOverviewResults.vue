@@ -2,6 +2,7 @@
 import AlbumTile from '@/components/Search/AlbumTile.vue';
 import ArtistTile from '@/components/Search/ArtistTile.vue';
 import SearchSectionHead from '@/components/Search/SearchSectionHead.vue';
+import SearchTileRow from '@/components/Search/SearchTileRow.vue';
 import SearchTopResult from '@/components/Search/SearchTopResult.vue';
 import TrackRow from '@/components/TrackRow.vue';
 import type {LinkTarget, SearchOverviewResults, SearchType, TrackAnnotation} from '@/types';
@@ -63,25 +64,25 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
         </div>
         <section v-if="results.albums.length" data-test="albums-section">
             <SearchSectionHead title="Albums" :see-all-href="typeUrl('album')" see-all-label="See all albums" />
-            <div class="d-flex gap-3 overflow-x-auto pb-1">
+            <SearchTileRow data-test="album-row">
                 <AlbumTile
                     v-for="album in results.albums"
                     :key="album.id"
                     :album="album"
                     :href="href(albumRoute(album.id))"
                 />
-            </div>
+            </SearchTileRow>
         </section>
         <section v-if="results.artists.length" data-test="artists-section">
             <SearchSectionHead title="Artists" :see-all-href="typeUrl('artist')" see-all-label="See all artists" />
-            <div class="d-flex gap-3 overflow-x-auto pb-1">
+            <SearchTileRow round data-test="artist-row">
                 <ArtistTile
                     v-for="artist in results.artists"
                     :key="artist.id"
                     :artist="artist"
                     :href="href(artistRoute(artist.id))"
                 />
-            </div>
+            </SearchTileRow>
         </section>
     </div>
 </template>

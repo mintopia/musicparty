@@ -31,7 +31,7 @@ it('asks Spotify once for tracks, albums and artists at the per type limit', fun
     expect($this->fake->callsTo('search'))->toHaveCount(1)
         ->and($this->fake->callsTo('search')[0][0])->toBe('closing time')
         ->and($this->fake->callsTo('search')[0][1])->toBe(['track', 'album', 'artist'])
-        ->and($this->fake->callsTo('search')[0][2])->toMatchArray(['limit' => 5, 'offset' => 0]);
+        ->and($this->fake->callsTo('search')[0][2])->toMatchArray(['limit' => 10, 'offset' => 0]);
 });
 
 it('makes Spotify\'s first track the top result and leaves it out of the tracks list', function () {

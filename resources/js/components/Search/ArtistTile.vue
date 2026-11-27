@@ -8,20 +8,22 @@ defineProps<{artist: ArtistResult; href: string}>();
 <template>
     <a :href="href" class="search-tile text-reset text-decoration-none text-center" data-test="artist-tile">
         <SearchCover :src="artist.image_url" :alt="artist.name" round icon="ti-user" />
-        <div class="fw-medium lh-sm mt-2" data-test="artist-name">{{ artist.name }}</div>
+        <div class="fw-medium lh-sm mt-2 clamp-2" :title="artist.name" data-test="artist-name">{{ artist.name }}</div>
         <div class="text-secondary small">Artist</div>
     </a>
 </template>
 
 <style scoped>
 .search-tile {
-    flex: 0 0 auto;
-    width: 104px;
+    min-width: 0;
 }
 
-@media (min-width: 768px) {
-    .search-tile {
-        width: 130px;
-    }
+.clamp-2 {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 </style>
