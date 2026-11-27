@@ -5,6 +5,7 @@ import {
     badgeFor,
     errorCode,
     fetchDevices,
+    formatMs,
     notifyKey,
     reloadDashboard,
     startLabel,
@@ -67,7 +68,7 @@ const disabled = computed(
         selectedDevice.value.isRestricted ||
         target.value === null,
 );
-const label = computed(() => startLabel(state.value, target.value, props.host));
+const label = computed(() => startLabel(state.value, props.host));
 const targetArtist = computed(() => (target.value?.track.artists ?? []).map((a) => a.name).join(', '));
 
 function stopCountdown(): void {
@@ -160,8 +161,7 @@ onBeforeUnmount(stopCountdown);
             >
             <template v-else-if="state === 'resume' && target"
                 >Nothing is playing on {{ host }}'s Spotify. The party stopped part-way through
-                <strong>{{ target.track.name }}</strong
-                >.</template
+                <strong>{{ target.track.name }}</strong> at {{ formatMs(target.positionMs) }}.</template
             >
             <template v-else-if="state === 'starting'"
                 >Asking Spotify to start the party on {{ selectedDevice?.name ?? 'your device' }}.</template

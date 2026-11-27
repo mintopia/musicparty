@@ -259,10 +259,11 @@ describe('control room strip', () => {
         expect(wrapper.findAll('[data-test="upcoming-row"]')).toHaveLength(1);
     });
 
-    it('labels the resume button with the track and position', () => {
+    it('labels the resume button plainly and keeps the track and position in the message', () => {
         const wrapper = mountPage({state: 'resume', target: target('resume', 72000)});
 
-        expect(wrapper.find('[data-test="start-button"]').text()).toBe('Resume Mr. Brightside at 1:12');
+        expect(wrapper.find('[data-test="start-button"]').text()).toBe('Resume');
+        expect(wrapper.find('[data-test="start-message"]').text()).toContain('Mr. Brightside at 1:12');
         expect(wrapper.find('[data-test="start-badge"]').text()).toBe('Not playing');
     });
 
@@ -509,6 +510,22 @@ describe('needs attention', () => {
     });
 });
 
+describe('stale player issue', () => {
+    const stale = {code: 'player_stale' as const, fact: 'Player not reporting', detail: 'Polling is off', action: null};
+
+    it('is hidden while Encore is connected, even if the attention data is older', () => {
+        const wrapper = mountPage({connected: true, issues: [stale]});
+
+        expect(wrapper.findAll('[data-test="issue-row"]')).toHaveLength(0);
+    });
+
+    it('is shown when Encore is not known to be connected', () => {
+        const wrapper = mountPage({connected: null, issues: [stale]});
+
+        expect(wrapper.findAll('[data-test="issue-row"]')).toHaveLength(1);
+    });
+});
+
 describe('quick links', () => {
     it('hides the Web Player link when there is none', () => {
         expect(mountPage({webPlayer: null}).find('[data-test="quick-links"]').text()).not.toContain('Web Player');
@@ -538,7 +555,16 @@ describe('live updates', () => {
 
         expect(inertia.reload).toHaveBeenCalledTimes(1);
         const only = (inertia.reload.mock.calls[0][0] as {only: string[]}).only;
-        expect([...only].sort()).toEqual(['control', 'upNext', 'upcoming']);
+        expect([...only].sort()).toEqual(['attention', 'control', 'upNext', 'upcoming']);
+    });
+
+    it('refreshes control and attention periodically, since Encore connecting sends no event', () => {
+        vi.useFakeTimers();
+        mountPage();
+
+        vi.advanceTimersByTime(15000);
+
+        expect(inertia.reload).toHaveBeenCalledWith({only: ['control', 'attention']});
     });
 
     it('reloads attention when a flagged request changes', () => {

@@ -1,12 +1,16 @@
 <?php
 
+use App\Events\Party\UpdatedEvent;
 use App\Models\Party;
 use App\Models\Song;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
+use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Playback\EncoreConnection;
+use App\Services\PlaybackSync;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Event;
 use Inertia\Testing\AssertableInertia as Assert;
 
 require_once __DIR__.'/../../Support/DashboardFixtures.php';
@@ -170,13 +174,14 @@ it('does not flag the player as stale while Encore is connected', function (?boo
             return $this->answer;
         }
     });
-    $this->party->forceFill(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(5)])->saveQuietly();
+    $this->party->forceFill(['poll' => true, 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(5)])->saveQuietly();
 
     $props = dashboardControl($this);
 
     expect(array_column($props['attention']['issues'], 'code') === ['player_stale'])->toBe($flagged)
         ->and($props['control']['health']['player']['connected'])->toBe($connected)
-        ->and($props['control']['health']['player']['fresh'])->toBe($connected === true);
+        ->and($props['control']['health']['player']['fresh'])->toBe($connected === true)
+        ->and($props['control']['health']['polling'])->toBe($connected === true ? 'backup' : 'on');
 })->with([[true, false], [false, true], [null, true]]);
 
 it('says polling is off in the stale detail when polling is disabled', function (bool $poll, string $detail) {
@@ -222,4 +227,44 @@ it('does not touch the provider devices on a partial reload of upNext', function
     ])->assertOk()->assertJsonCount(1, 'props.upNext')->assertJsonMissingPath('props.control');
 
     expect(dashboardFake()->callsTo('devices'))->toBeEmpty();
+});
+
+it('treats Encore as connected and not stale while its activity signal is fresh, even when paused', function () {
+    $this->party->forceFill(['poll' => true, 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(10)])->saveQuietly();
+    Cache::put(EncoreConnection::seenKey($this->party->code), time(), EncoreConnection::seenSeconds());
+
+    $props = dashboardControl($this);
+
+    expect($props['attention']['issues'])->toBe([])
+        ->and($props['control']['health']['player']['connected'])->toBeTrue()
+        ->and($props['control']['health']['player']['fresh'])->toBeTrue()
+        ->and($props['control']['health']['polling'])->toBe('backup');
+});
+
+it('warns again once the Encore activity signal expires', function () {
+    config(['broadcasting.default' => 'null']);
+    $this->party->forceFill(['poll' => true, 'playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()->subMinutes(10)])->saveQuietly();
+    Cache::put(EncoreConnection::seenKey($this->party->code), time(), EncoreConnection::seenSeconds());
+    $this->travel(EncoreConnection::seenSeconds() + 1)->seconds();
+
+    $props = dashboardControl($this);
+
+    expect(array_column($props['attention']['issues'], 'code'))->toBe(['player_stale'])
+        ->and($props['control']['health']['player']['connected'])->toBeNull();
+});
+
+it('reports a newer receivedAt after an unchanged Encore frame, which broadcasts nothing', function () {
+    Event::fake([UpdatedEvent::class]);
+    $this->party->forceFill(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => null])->saveQuietly();
+    $state = PlaybackState::idle(PlaybackSource::Encore);
+    $sync = app(PlaybackSync::class);
+
+    $sync->apply($this->party->fresh(), $state);
+    $first = dashboardControl($this, 'control.health.receivedAt');
+    $this->travel(20)->seconds();
+    $sync->apply($this->party->fresh(), $state);
+    $second = dashboardControl($this, 'control.health.receivedAt');
+
+    expect($second)->toBeGreaterThan($first);
+    Event::assertDispatchedTimes(UpdatedEvent::class, 1);
 });

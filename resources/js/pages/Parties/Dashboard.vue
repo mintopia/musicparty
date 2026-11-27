@@ -3,7 +3,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import Toast from '@/components/Toast.vue';
 import {Head} from '@inertiajs/vue3';
-import {onBeforeUnmount, provide, ref, watch} from 'vue';
+import {computed, onBeforeUnmount, provide, ref, watch} from 'vue';
 import ControlRoom from '@/components/Dashboard/ControlRoom.vue';
 import DeleteRequestDialog from '@/components/Dashboard/DeleteRequestDialog.vue';
 import NeedsAttention from '@/components/Dashboard/NeedsAttention.vue';
@@ -17,6 +17,11 @@ import type {DashboardProps, DashboardRequest, LegacyPartyState} from '@/types';
 const props = defineProps<DashboardProps>();
 
 const state = ref<LegacyPartyState>(props.playerState);
+const issues = computed(() =>
+    props.attention.issues.filter(
+        (issue) => issue.code !== 'player_stale' || props.control.health.player.connected !== true,
+    ),
+);
 const deleting = ref<DashboardRequest | null>(null);
 const notice = ref<string | null>(null);
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -90,7 +95,7 @@ onBeforeUnmount(() => {
             <div class="col-lg-5">
                 <NeedsAttention
                     :code="party.code"
-                    :issues="attention.issues"
+                    :issues="issues"
                     :flagged="attention.flagged"
                     :flagged-total="attention.flaggedTotal"
                     :flagged-url="links.flagged"

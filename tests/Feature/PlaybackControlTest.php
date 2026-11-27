@@ -14,6 +14,7 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\PlaybackSync;
 use App\Services\Spotify\SpotifyBackoffException;
 use Carbon\CarbonImmutable;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Queue;
@@ -232,6 +233,16 @@ it('falls back to the pushed play command when the Web API finds no active devic
 
     Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->player === $player && $e->command === ['type' => 'play']);
 })->with([PlaybackSource::Encore, PlaybackSource::WebPlayer]);
+
+it('falls back to the provider instead of erroring when the broadcaster cannot send a pushed command', function () {
+    Event::listen(PlayerCommand::class, fn () => throw new BroadcastException('Pusher error: No matching application for ID [1]'));
+    $fake = app(FakeMusicProvider::class)->withPlayback(playingState('cur'));
+    $party = controlParty(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()]);
+
+    $this->postJson(route('api.v1.parties.control', $party), ['action' => 'seek', 'positionMs' => 5000])->assertOk();
+
+    expect($fake->callsTo('seek'))->toBe([[5000]]);
+});
 
 it('sends commands to the Web Player when it is the Player', function () {
     Event::fake([PlayerCommand::class]);

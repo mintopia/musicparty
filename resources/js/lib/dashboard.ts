@@ -58,12 +58,12 @@ export function badgeFor(state: PanelState): {text: string; cls: string} {
     }
 }
 
-export function startLabel(state: PanelState, target: DashboardStartTarget | null, host: string): string {
+export function startLabel(state: PanelState, host: string): string {
     if (state === 'starting') {
         return `Starting on ${host}'s Spotify…`;
     }
-    if (state === 'resume' && target !== null) {
-        return `Resume ${target.track.name} at ${formatMs(target.positionMs)}`;
+    if (state === 'resume') {
+        return 'Resume';
     }
     return `Start on ${host}'s Spotify`;
 }

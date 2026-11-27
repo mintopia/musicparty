@@ -10,11 +10,23 @@ use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
- * Asks Reverb whether Encore is subscribed to the party's channel, since Encore sends nothing while paused.
+ * Whether Encore is connected, since it sends nothing while paused. Trusts the Reverb-side activity signal first, then asks Reverb's channel occupancy.
  */
 class EncoreConnection
 {
     private const int CACHE_SECONDS = 10;
+
+    private const int SEEN_MARGIN_SECONDS = 10;
+
+    public static function seenSeconds(): int
+    {
+        return (int) config('reverb.apps.apps.0.ping_interval', 60) * 2 + self::SEEN_MARGIN_SECONDS;
+    }
+
+    public static function seenKey(string $code): string
+    {
+        return "encore-seen:{$code}";
+    }
 
     public function __construct(protected EncoreStateMapper $mapper) {}
 
@@ -23,6 +35,10 @@ class EncoreConnection
      */
     public function isConnected(Party $party): ?bool
     {
+        if (Cache::has(self::seenKey($party->code))) {
+            return true;
+        }
+
         $channel = $this->mapper->channelPrefix().$party->code;
 
         try {

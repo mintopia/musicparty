@@ -13,6 +13,7 @@ use App\Services\Music\Data\Device;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\Playback\PartyDashboardCache;
+use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Log;
 use InvalidArgumentException;
 
@@ -96,7 +97,13 @@ class PlaybackControl
         }
 
         Log::debug("{$party}: Playback control -> {$action}() via {$player->value}");
-        PlayerCommand::dispatch($party, $player, $command);
+        try {
+            PlayerCommand::dispatch($party, $player, $command);
+        } catch (BroadcastException $exception) {
+            Log::warning("{$party}: Could not send {$action}() to {$player->value}, using the provider instead: {$exception->getMessage()}");
+
+            return false;
+        }
 
         return true;
     }
