@@ -6,10 +6,7 @@ const mergedClasses = (track: LegacyTrack): string =>
         ' ',
     );
 
-/**
- * Presents a legacy queue payload as the TrackAnnotation that TrackRow renders.
- * The decoration's displayName is deliberately dropped: legacy payloads use it for the fallback label only.
- */
+// displayName is dropped on purpose: legacy payloads use it for the fallback label only.
 export function legacyToAnnotation(track: LegacyTrack | LegacyUpcomingSong): TrackAnnotation {
     const vote = 'vote' in track ? track.vote : null;
     const decoration: TrackDecoration = {

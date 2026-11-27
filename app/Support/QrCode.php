@@ -9,9 +9,6 @@ use BaconQrCode\Writer;
 
 class QrCode
 {
-    /**
-     * Render the content as a self-contained SVG with a one-module quiet zone.
-     */
     public static function svg(string $content): string
     {
         $writer = new Writer(new ImageRenderer(new RendererStyle(256, 1), new SvgImageBackEnd));
