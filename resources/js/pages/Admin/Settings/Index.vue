@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -38,9 +40,7 @@ function submit(): void {
 <template>
     <AppLayout title="Settings">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/admin">Admin</a></li>
-            <li class="breadcrumb-item active"><a href="/admin/settings">Settings</a></li>
+            <Breadcrumbs :items="[...adminCrumbs(), {label: 'Settings'}]" />
         </template>
         <Head title="Settings" />
         <div class="page-header mt-0">

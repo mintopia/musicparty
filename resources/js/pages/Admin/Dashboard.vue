@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -8,8 +10,7 @@ defineProps<{stats: {users: {total: number; lastWeek: number}}}>();
 <template>
     <AppLayout title="Dashboard">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item active"><a href="/admin">Admin</a></li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Admin'}]" />
         </template>
         <Head title="Dashboard" />
         <div class="page-header mt-0">

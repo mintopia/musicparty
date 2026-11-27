@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, router} from '@inertiajs/vue3';
 import {onBeforeUnmount, onMounted, ref} from 'vue';
 import Next from '@/components/Next.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Upcoming from '@/components/Upcoming.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 import {ping} from '@/routes/api/v1';
-import {show} from '@/routes/parties';
 import type {LegacyPartyState, LegacyUpcomingSong} from '@/types';
 
 const props = defineProps<{
@@ -43,10 +43,7 @@ onBeforeUnmount(() => {
 <template>
     <AppLayout :title="party.name">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
+            <Breadcrumbs :items="[...homeCrumbs(), {label: party.name}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

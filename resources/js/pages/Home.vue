@@ -1,7 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {Head} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
 
 defineProps<{user: {nickname: string; email: string; avatar: string}}>();
 </script>
@@ -9,9 +9,7 @@ defineProps<{user: {nickname: string; email: string; avatar: string}}>();
 <template>
     <AppLayout title="Home">
         <template #breadcrumbs>
-            <li class="breadcrumb-item active">
-                <a :href="home().url">Home</a>
-            </li>
+            <Breadcrumbs :items="[{label: 'Home'}]" />
         </template>
         <Head title="Home" />
         <div class="row">

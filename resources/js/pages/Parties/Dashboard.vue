@@ -1,4 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
+import Toast from '@/components/Toast.vue';
 import {Head} from '@inertiajs/vue3';
 import {onBeforeUnmount, provide, ref, watch} from 'vue';
 import ControlRoom from '@/components/Dashboard/ControlRoom.vue';
@@ -9,8 +12,6 @@ import UpcomingList from '@/components/Dashboard/UpcomingList.vue';
 import {useDashboardSync} from '@/composables/useDashboardSync';
 import {notifyKey} from '@/lib/dashboard';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {dashboard, show} from '@/routes/parties';
 import type {DashboardProps, DashboardRequest, LegacyPartyState} from '@/types';
 
 const props = defineProps<DashboardProps>();
@@ -53,13 +54,7 @@ onBeforeUnmount(() => {
 <template>
     <AppLayout :title="`Dashboard - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="dashboard(party.code).url">Dashboard</a>
-            </li>
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Dashboard'}]" />
         </template>
         <template #header>
             <ControlRoom
@@ -76,14 +71,7 @@ onBeforeUnmount(() => {
             />
         </template>
         <Head :title="`Dashboard - ${party.name}`" />
-        <div v-if="notice" class="position-fixed z-3 p-2 top-50 start-50 translate-middle" data-test="notice">
-            <div class="alert alert-important alert-danger" role="alert">
-                <div class="d-flex">
-                    <div><i class="icon ti ti-exclamation-circle"></i></div>
-                    <div class="px-2">{{ notice }}</div>
-                </div>
-            </div>
-        </div>
+        <Toast v-if="notice" :message="notice" variant="danger" data-test="notice" @dismiss="notice = null" />
         <div class="row g-4">
             <div class="col-lg-7">
                 <UpcomingList

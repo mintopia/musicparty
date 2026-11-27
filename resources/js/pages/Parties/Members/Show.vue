@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
 import {reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
@@ -6,8 +8,6 @@ import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import type {LegacyPartyState, Paginator, When} from '@/types';
 
 interface VoteRow {
@@ -52,16 +52,9 @@ function submit(): void {
 <template>
     <AppLayout :title="`${member.nickname} - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item">
-                <a :href="usersUrl">Users</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="memberUrl">{{ member.nickname }}</a>
-            </li>
+            <Breadcrumbs
+                :items="[...partyCrumbs(party), {label: 'Members', href: usersUrl}, {label: member.nickname}]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -147,6 +140,9 @@ function submit(): void {
                                             <div class="col-auto">
                                                 <img
                                                     :src="vote.imageUrl"
+                                                    alt=""
+                                                    loading="lazy"
+                                                    decoding="async"
                                                     height="40"
                                                     width="40"
                                                     :title="vote.albumName"

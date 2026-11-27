@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
 import axios from 'axios';
 import {computed, onMounted, reactive, ref} from 'vue';
@@ -11,8 +13,6 @@ import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {aiReviewsUrl, aiReviewUrl, formatLatency, formatTokens, outcomeBadge} from '@/lib/aiReviews';
-import {home} from '@/routes';
-import {show} from '@/routes/parties';
 import type {AiReviewDetail, AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
 
 const props = defineProps<{
@@ -84,13 +84,7 @@ async function toggle(review: AiReviewRow): Promise<void> {
 <template>
     <AppLayout :title="`AI reviews - ${party.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a :href="home().url">Home</a></li>
-            <li class="breadcrumb-item">
-                <a :href="show(party.code).url">{{ party.name }}</a>
-            </li>
-            <li class="breadcrumb-item active">
-                <a :href="listUrl">AI Reviews</a>
-            </li>
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI Reviews'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

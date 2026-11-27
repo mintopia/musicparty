@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import ThemeBreadcrumbs from '@/components/ThemeBreadcrumbs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{theme: {id: number; name: string}}>();
@@ -15,11 +16,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Delete ${theme.name}`">
         <template #breadcrumbs>
-            <ThemeBreadcrumbs>
-                <li class="breadcrumb-item active">
-                    <a :href="`/admin/settings/themes/${theme.id}/delete`">Delete Theme</a>
-                </li>
-            </ThemeBreadcrumbs>
+            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: 'Delete Theme'}]" />
         </template>
         <Head :title="`Delete ${theme.name}`" />
         <div class="page-header mt-0">

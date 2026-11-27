@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
-import ModerationBreadcrumbs from '@/components/ModerationBreadcrumbs.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -42,11 +43,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${moderation.type_name} rule`">
         <template #breadcrumbs>
-            <ModerationBreadcrumbs :party="party">
-                <li class="breadcrumb-item active">
-                    <a :href="`${base}/edit`">Edit rule</a>
-                </li>
-            </ModerationBreadcrumbs>
+            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Edit rule'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />

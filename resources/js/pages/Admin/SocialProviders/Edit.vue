@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 
@@ -29,12 +31,7 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${provider.name}`">
         <template #breadcrumbs>
-            <li class="breadcrumb-item"><a href="/">Home</a></li>
-            <li class="breadcrumb-item"><a href="/admin">Admin</a></li>
-            <li class="breadcrumb-item"><a href="/admin/settings">Settings</a></li>
-            <li class="breadcrumb-item active">
-                <a :href="`/admin/settings/socialproviders/${provider.id}/edit`">Edit {{ provider.name }}</a>
-            </li>
+            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: `Edit ${provider.name}`}]" />
         </template>
         <Head :title="`Edit ${provider.name}`" />
         <div class="page-header mt-0">

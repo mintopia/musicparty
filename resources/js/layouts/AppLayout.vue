@@ -135,9 +135,7 @@ useColorMode();
                 <div class="container-xl">
                     <div class="navbar-nav flex-row">
                         <div class="d-flex py-2 px-0">
-                            <ol class="breadcrumb" aria-label="breadcrumbs">
-                                <slot name="breadcrumbs" />
-                            </ol>
+                            <slot name="breadcrumbs" />
                         </div>
                     </div>
 

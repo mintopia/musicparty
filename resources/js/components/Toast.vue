@@ -3,7 +3,15 @@ import {usePage} from '@inertiajs/vue3';
 import {computed, onBeforeUnmount, ref, watch} from 'vue';
 import type {SharedProps} from '@/types';
 
-const props = withDefaults(defineProps<{autoDismissMs?: number}>(), {autoDismissMs: 0});
+const props = withDefaults(
+    defineProps<{
+        autoDismissMs?: number;
+        message?: string | null;
+        variant?: 'success' | 'danger' | 'info' | 'warning';
+    }>(),
+    {autoDismissMs: 0, message: undefined, variant: 'danger'},
+);
+const emit = defineEmits<{dismiss: []}>();
 
 const page = usePage<SharedProps>();
 const dismissed = ref(new Set<string>());
@@ -17,13 +25,21 @@ const levels = [
 ] as const;
 
 const toasts = computed(() =>
-    levels.flatMap(({key, cls}) => {
-        const text = page.props.flash[key];
-        return text && !dismissed.value.has(key) ? [{key, cls, text}] : [];
-    }),
+    props.message !== undefined
+        ? props.message
+            ? [{key: 'message', cls: `text-bg-${props.variant}`, text: props.message}]
+            : []
+        : levels.flatMap(({key, cls}) => {
+              const text = page.props.flash[key];
+              return text && !dismissed.value.has(key) ? [{key, cls, text}] : [];
+          }),
 );
 
 function dismiss(key: string): void {
+    if (key === 'message') {
+        emit('dismiss');
+        return;
+    }
     dismissed.value = new Set([...dismissed.value, key]);
 }
 

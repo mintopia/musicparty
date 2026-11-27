@@ -1,10 +1,12 @@
 <script setup lang="ts">
+import EmptyState from '@/components/EmptyState.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {reactive} from 'vue';
+import {computed, reactive} from 'vue';
 import Pagination from '@/components/Pagination.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import SortHeader from '@/components/SortHeader.vue';
-import UserBreadcrumbs from '@/components/UserBreadcrumbs.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {Paginator} from '@/types';
 
@@ -26,6 +28,8 @@ const props = defineProps<{
 
 const search = reactive({id: props.filters.id, nickname: props.filters.nickname});
 
+const filtered = computed(() => Boolean(props.filters.id || props.filters.nickname));
+
 function submit(): void {
     const query: Record<string, string> = {order: props.order, order_direction: props.order_direction};
     if (search.id) {
@@ -41,7 +45,7 @@ function submit(): void {
 <template>
     <AppLayout title="Users">
         <template #breadcrumbs>
-            <UserBreadcrumbs />
+            <Breadcrumbs :items="adminUserCrumbs()" />
         </template>
         <Head title="Users" />
         <div class="page-header mt-0">
@@ -66,7 +70,7 @@ function submit(): void {
 
             <div class="col-lg-9 col-md-12">
                 <div class="card">
-                    <div class="table-responsive">
+                    <div v-if="users.data.length > 0" class="table-responsive">
                         <table class="table table-hover table-vcenter text-nowrap card-table">
                             <thead>
                                 <tr>
@@ -125,6 +129,20 @@ function submit(): void {
                             </tbody>
                         </table>
                     </div>
+                    <EmptyState
+                        v-else-if="filtered"
+                        icon="ti-users-off"
+                        title="No matching users"
+                        description="Try a different ID or nickname."
+                    >
+                        <Link :href="'/admin/users'" class="btn btn-primary">Clear filters</Link>
+                    </EmptyState>
+                    <EmptyState
+                        v-else
+                        icon="ti-users-off"
+                        title="No users yet"
+                        description="Users appear here once they have signed in."
+                    />
                     <div v-if="users.last_page > 1" class="card-footer d-flex">
                         <Pagination class="ms-auto" :paginator="users" />
                     </div>
