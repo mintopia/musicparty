@@ -27,6 +27,7 @@ use App\Services\PartyProviderOptions;
 use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
+use App\Services\PlaybackStatus;
 use App\Services\Requests\TrackEligibility;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
@@ -51,6 +52,43 @@ class PartyController extends Controller
     public function __construct()
     {
         $this->authorizeResource(Party::class, 'party');
+    }
+
+    public function index(Request $request): Response
+    {
+        $user = $this->resolveAuthenticatedUser($request);
+        $isAdmin = $user->hasRole('admin');
+
+        $parties = Party::query()
+            ->where(fn ($query) => $query
+                ->where('user_id', $user->id)
+                ->orWhereHas('members', fn ($members) => $members->where('user_id', $user->id)))
+            ->with(['song', 'members' => fn ($members) => $members->where('user_id', $user->id)->with('role')])
+            ->orderBy('name')
+            ->get()
+            ->map(function (Party $party) use ($user, $isAdmin) {
+                $canManage = $isAdmin || $party->canBeManagedBy($user);
+                $status = app(PlaybackStatus::class)->forParty($party);
+                $playback = match (true) {
+                    ! $status->active => 'idle',
+                    $status->isPlaying => 'playing',
+                    default => 'paused',
+                };
+                $roleName = $party->user_id === $user->id ? 'Owner' : $party->members->first()?->role?->name;
+
+                return [
+                    'code' => $party->code,
+                    'name' => $party->name,
+                    'role' => $roleName ?? 'User',
+                    'playback' => $playback,
+                    'track' => $playback === 'idle' ? null : $party->song?->name,
+                    'canManage' => $canManage,
+                    'url' => route($canManage ? 'parties.dashboard' : 'parties.show', $party->code),
+                ];
+            })
+            ->values();
+
+        return Inertia::render('Parties/Index', ['parties' => $parties]);
     }
 
     public function create(Request $request, PartyProviderOptions $options): RedirectResponse|Response
