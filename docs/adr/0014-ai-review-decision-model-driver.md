@@ -17,3 +17,11 @@ Jev-style TypeSafe models are not chat models: they take `{model, state, questio
 The original `typesafe` driver (laravel/ai `Classification` against `api.typesafe.ai/v1/systemone`) is gone. `decision-model` talks to the same `{model, state, questions}` API, either through OpenRouter or direct TypeSafe, so it replaces `typesafe` rather than sitting beside it. The driver choices are now `decision-model` (the default for new parties) and `openai-compatible`.
 
 A data migration moves every Party that used `typesafe`, explicitly or by default with the mod enabled, to `decision-model` with `decision_endpoint = https://api.typesafe.ai/v1/systemone` and `decision_model` set to its previous `model` setting, or `jev-latest` if it had none. The `api_key` is kept.
+
+## Amendment: a `criterion` choice question says what a request fails
+
+The payload carries a second question, `criterion`, of type `choice`, next to `suitability`. Its keys are `AiReviewCriterion`: `none`, `guidelines`, `explicit`, `vibe`, `troll`, `other`. It has the same untrusted-data warning and party guidelines as the score question. Questions are answered independently, so the criterion cannot be informed by the score.
+
+The criterion never changes the decision: allow, flag and reject still come only from the score bands and confidence threshold. When the outcome is flag or reject and a criterion other than `none` was chosen, its label prefixes the reason ("Vibe: ..."). The chosen key and its probability are stored on `ai_reviews` (`criterion`, `criterion_confidence`) and logged on `ai-review.decision`.
+
+A refusal, a missing answer, a non-`choice` answer or an unknown key leaves the criterion null and the review proceeds as before, so fail-open still holds.

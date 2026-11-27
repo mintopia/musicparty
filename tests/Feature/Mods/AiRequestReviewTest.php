@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AiReviewCriterion;
 use App\Enums\AiReviewOutcome;
 use App\Enums\SettingType;
 use App\Models\AiReview;
@@ -206,7 +207,7 @@ describe('Decision model', function () {
         return [$party->refresh(), $member];
     }
 
-    it('posts one score question to the default endpoint with the key and attribution header', function () {
+    it('posts the score and criterion questions to the default endpoint with the key and attribution header', function () {
         Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer(4))]);
         [$party, $member] = decisionSetup();
 
@@ -224,7 +225,7 @@ describe('Decision model', function () {
                 && str_contains($question['instructions'], 'No explicit lyrics')
                 && isset($request['state']['request']['title'])
                 && ! str_contains($request->body(), 'sk-secret-key')
-                && count($request['questions']) === 1;
+                && array_keys($request['questions']) === ['suitability', 'criterion'];
         });
     });
 
@@ -244,6 +245,78 @@ describe('Decision model', function () {
             && is_array($request['state'])
             && $request['questions']['suitability']['type'] === 'score');
     });
+
+    function criterionAnswer(float $score, mixed $criterion): array
+    {
+        return array_replace_recursive(decisionAnswer($score), ['answers' => ['criterion' => $criterion]]);
+    }
+
+    it('asks a criterion choice question with guidelines and an untrusted data warning', function () {
+        Http::fake(['*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        Http::assertSent(function (Request $request): bool {
+            $question = $request['questions']['criterion'] ?? [];
+
+            return $question['type'] === 'choice'
+                && array_keys($question['criteria']) === ['none', 'guidelines', 'explicit', 'vibe', 'troll', 'other']
+                && str_contains($question['instructions'], 'No explicit lyrics')
+                && str_contains($question['instructions'], 'untrusted data');
+        });
+    });
+
+    it('records the criterion and prefixes the reason on a flag or reject', function (float $score, RequestOutcome $expected, string $reason) {
+        Http::fake(['*' => Http::response(criterionAnswer($score, ['type' => 'choice', 'choice' => 'vibe', 'probabilities' => ['none' => 0.1, 'vibe' => 0.7, 'other' => 0.2], 'confidence' => 0.8]))]);
+        [$party, $member] = decisionSetup();
+
+        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        $review = AiReview::sole();
+        expect($decision->outcome)->toBe($expected)->and($decision->reason)->toBe($reason)
+            ->and($review->criterion)->toBe(AiReviewCriterion::Vibe)
+            ->and($review->criterion_confidence)->toBe(0.7);
+    })->with([
+        'reject' => [0.2, RequestOutcome::Reject, 'Vibe: Against the guidelines'],
+        'flag' => [1.4, RequestOutcome::Flag, 'Vibe: Probably against'],
+    ]);
+
+    it('keeps the plain reason for the none criterion and does not change an allow', function () {
+        Http::fake(['*' => Http::response(criterionAnswer(1.4, ['type' => 'choice', 'choice' => 'none', 'probabilities' => ['none' => 0.9], 'confidence' => 0.9]))]);
+        [$party, $member] = decisionSetup();
+
+        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect($decision->reason)->toBe('Probably against')->and(AiReview::sole()->criterion)->toBe(AiReviewCriterion::None);
+    });
+
+    it('allows a high score whatever criterion was chosen', function () {
+        Http::fake(['*' => Http::response(criterionAnswer(4, ['type' => 'choice', 'choice' => 'troll', 'probabilities' => ['troll' => 0.9], 'confidence' => 0.9]))]);
+        [$party, $member] = decisionSetup();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+    });
+
+    it('ignores a refused, missing, unknown or non-choice criterion without changing the decision', function (?array $criterion) {
+        $response = decisionAnswer(1.4);
+        if ($criterion !== null) {
+            $response['answers']['criterion'] = $criterion;
+        }
+        Http::fake(['*' => Http::response($response)]);
+        [$party, $member] = decisionSetup();
+
+        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        $review = AiReview::sole();
+        expect($decision->outcome)->toBe(RequestOutcome::Flag)->and($decision->reason)->toBe('Probably against')
+            ->and($review->criterion)->toBeNull()->and($review->criterion_confidence)->toBeNull();
+    })->with([
+        'refusal' => [['type' => 'refusal']],
+        'missing' => [null],
+        'unknown key' => [['type' => 'choice', 'choice' => 'bogus', 'probabilities' => [], 'confidence' => 0.9]],
+        'non-choice' => [['type' => 'score', 'score' => 2.0, 'confidence' => 0.9]],
+    ]);
 
     it('maps score bands to a decision with the legend as the reason', function (float $score, RequestOutcome $expected, ?string $reason) {
         Http::fake(['*' => Http::response(decisionAnswer($score))]);

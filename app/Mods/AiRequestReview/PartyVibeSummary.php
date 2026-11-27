@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * @phpstan-type Vibe array{text: string, built_at: string, stats: array{tracks_played: int, running_minutes: int}, recent: list<string>, top_rated: list<string>, downvoted: list<string>, most_upvoted_requests: list<string>, most_downvoted_requests: list<string>, artists: list<string>}
+ * @phpstan-type Vibe array{text: string, built_at: string, stats: array{tracks_played: int, running_minutes: int}, recent: list<array{title: string, artist: string}>, top_rated: list<array{title: string, artist: string}>, downvoted: list<array{title: string, artist: string}>, most_upvoted_requests: list<array{title: string, artist: string}>, most_downvoted_requests: list<array{title: string, artist: string}>, artists: list<array{name: string, plays: int}>}
  */
 class PartyVibeSummary
 {
@@ -26,15 +26,13 @@ class PartyVibeSummary
 
     public const ARTISTS = 8;
 
-    public const MAX_TITLE = 60;
-
     public const MAX_CHARS = 2000;
 
     public const TTL_SECONDS = 3600;
 
     public static function cacheKey(Party $party): string
     {
-        return "party-vibe:v2:{$party->id}";
+        return "party-vibe:v3:{$party->id}";
     }
 
     public function text(Party $party): string
@@ -84,11 +82,13 @@ class PartyVibeSummary
             'Most downvoted by guests' => $downvoted,
             'Most upvoted requests' => $mostUpvoted,
             'Most downvoted requests' => $mostDownvoted,
-            'Most played artists' => $artists,
-        ] as $heading => $items) {
-            if ($items !== []) {
-                $lines[] = "{$heading}: ".implode('; ', $items);
+        ] as $heading => $entries) {
+            if ($entries !== []) {
+                $lines[] = "{$heading}: ".implode('; ', array_map($this->label(...), $entries));
             }
+        }
+        if ($artists !== []) {
+            $lines[] = 'Most played artists: '.implode('; ', array_map(fn (array $artist): string => "{$artist['name']} ({$artist['plays']} plays)", $artists));
         }
 
         return [
@@ -106,25 +106,34 @@ class PartyVibeSummary
 
     /**
      * @param  callable(Builder<PlayedSong>): mixed  $scope
-     * @return list<string>
+     * @return list<array{title: string, artist: string}>
      */
     protected function titles(Party $party, callable $scope, int $limit): array
     {
         $query = PlayedSong::query()->where('party_id', $party->id)->with('song.artists:id,name');
         $scope($query);
 
-        return array_values($query->limit($limit)->get()->map(fn (PlayedSong $played): string => $this->label($played->song))->all());
-    }
-
-    protected function label(Song $song): string
-    {
-        $artists = $song->artists->pluck('name')->implode(', ');
-
-        return Str::limit($song->name.($artists !== '' ? " - {$artists}" : ''), self::MAX_TITLE - 3, '...');
+        return array_values($query->limit($limit)->get()->map(fn (PlayedSong $played): array => $this->entry($played->song))->all());
     }
 
     /**
-     * @return list<string>
+     * @return array{title: string, artist: string}
+     */
+    protected function entry(Song $song): array
+    {
+        return ['title' => $song->name, 'artist' => $song->artists->pluck('name')->implode(', ')];
+    }
+
+    /**
+     * @param  array{title: string, artist: string}  $track
+     */
+    protected function label(array $track): string
+    {
+        return $track['title'].($track['artist'] !== '' ? " - {$track['artist']}" : '');
+    }
+
+    /**
+     * @return list<array{title: string, artist: string}>
      */
     protected function votedRequests(Party $party, bool $up): array
     {
@@ -140,11 +149,11 @@ class PartyVibeSummary
             ->pluck('upcoming_songs.song_id');
         $songs = Song::query()->whereIn('id', $rows)->with('artists:id,name')->get()->keyBy('id');
 
-        return array_values($rows->map(fn (mixed $id): ?string => ($song = $songs->get($id)) instanceof Song ? $this->label($song) : null)->filter()->all());
+        return array_values($rows->map(fn (mixed $id): ?array => ($song = $songs->get($id)) instanceof Song ? $this->entry($song) : null)->filter()->all());
     }
 
     /**
-     * @return list<string>
+     * @return list<array{name: string, plays: int}>
      */
     protected function dominantArtists(Party $party): array
     {
@@ -159,6 +168,6 @@ class PartyVibeSummary
             ->selectRaw('artists.name as name, count(*) as plays')
             ->get();
 
-        return array_values($rows->map(fn (object $row): string => Str::limit((string) $row->name, self::MAX_TITLE - 3, '...')." ({$row->plays})")->all());
+        return array_values($rows->map(fn (object $row): array => ['name' => (string) $row->name, 'plays' => (int) $row->plays])->all());
     }
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Enums\AiReviewCriterion;
 use App\Enums\AiReviewOutcome;
 use App\Models\AiReview;
 use App\Models\Party;
@@ -28,7 +29,7 @@ it('forbids non-managers', function () {
     $review = AiReview::factory()->for($this->party)->create();
 
     $this->actingAs(User::factory()->create(['first_login' => false]))->get(route('parties.ai-reviews.index', $this->party->code))->assertForbidden();
-    $this->actingAs(User::factory()->create(['first_login' => false]))->getJson(route('parties.ai-reviews.show', [$this->party->code, $review]))->assertForbidden();
+    $this->actingAs(User::factory()->create(['first_login' => false]))->get(route('parties.ai-reviews.show', [$this->party->code, $review]))->assertForbidden();
 });
 
 it('sends guests to login', function () {
@@ -47,7 +48,7 @@ it('returns 404 when the mod is not enabled for the party', function () {
     app(PartyMods::class)->disable($this->party, AiRequestReviewMod::CODE);
 
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', $this->party->code))->assertNotFound();
-    $this->actingAs($this->owner)->getJson(route('parties.ai-reviews.show', [$this->party->code, $review]))->assertNotFound();
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))->assertNotFound();
 });
 
 it('renders the list for a manager newest first with the requester and tokens', function () {
@@ -88,12 +89,21 @@ it('filters by outcome', function () {
         ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 1)->where('reviews.data.0.outcome', 'flag')->where('filters.outcome', 'flag'));
 });
 
-it('narrows the list to one review when linked to it', function () {
-    AiReview::factory()->for($this->party)->count(2)->create();
-    $target = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Flag)->create();
+it('filters by criterion and exposes it on each row', function () {
+    AiReview::factory()->for($this->party)->create(['criterion' => AiReviewCriterion::Vibe, 'criterion_confidence' => 0.7]);
+    AiReview::factory()->for($this->party)->create(['criterion' => AiReviewCriterion::Troll]);
+    AiReview::factory()->for($this->party)->create();
 
-    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'review' => $target->id]))
-        ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 1)->where('reviews.data.0.id', $target->id)->where('filters.review', $target->id));
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'criterion' => 'vibe']))
+        ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 1)
+            ->where('reviews.data.0.criterion', 'vibe')
+            ->where('reviews.data.0.criterionLabel', 'Vibe')
+            ->where('reviews.data.0.criterionConfidence', 0.7)
+            ->where('filters.criterion', 'vibe'));
+});
+
+it('rejects an unknown criterion filter', function () {
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'criterion' => 'bogus']))->assertSessionHasErrors('criterion');
 });
 
 it('rejects an unknown outcome filter', function () {
@@ -131,23 +141,36 @@ it('paginates twenty at a time and keeps the filters in the links', function () 
         ->assertInertia(fn (Assert $page) => $page->has('reviews.data', 5));
 });
 
-it('shows the full detail including the request, response, party context and error', function () {
+it('renders the review as its own page with the request, response, party state and error', function () {
     $review = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Error)->create([
-        'request' => ['model' => 'jev-latest', 'state' => json_encode(['title' => 'x', 'party_context' => 'Tracks played: 3']), 'questions' => []],
+        'request' => ['model' => 'jev-latest', 'state' => json_encode(['title' => 'x', 'party' => ['artists' => [['name' => 'Wham!', 'plays' => 2]]], 'party_context' => 'Tracks played: 3']), 'questions' => []],
         'response' => ['status' => 500, 'body' => 'boom'],
         'score' => null,
         'error_class' => 'RuntimeException',
         'error_message' => 'It broke',
     ]);
 
-    $this->actingAs($this->owner)->getJson(route('parties.ai-reviews.show', [$this->party->code, $review]))
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
         ->assertOk()
-        ->assertJsonPath('data.partyContext', 'Tracks played: 3')
-        ->assertJsonPath('data.request.model', 'jev-latest')
-        ->assertJsonPath('data.response.status', 500)
-        ->assertJsonPath('data.errorClass', 'RuntimeException')
-        ->assertJsonPath('data.errorMessage', 'It broke')
-        ->assertJsonPath('data.endpointHost', 'api.typesafe.ai');
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Parties/AiReviews/Show')
+            ->where('review.id', $review->id)
+            ->where('review.partyContext', 'Tracks played: 3')
+            ->where('review.partyState.artists.0.plays', 2)
+            ->where('review.request.model', 'jev-latest')
+            ->where('review.response.status', 500)
+            ->where('review.errorClass', 'RuntimeException')
+            ->where('review.errorMessage', 'It broke')
+            ->where('review.endpointHost', 'api.typesafe.ai')
+            ->where('backUrl', route('parties.ai-reviews.index', $this->party->code))
+            ->has('moderationTabs'));
+});
+
+it('links back to the list with the filters it was opened from', function () {
+    $review = AiReview::factory()->for($this->party)->create();
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review, 'outcome' => 'flag', 'q' => 'wham', 'page' => 2]))
+        ->assertInertia(fn (Assert $page) => $page->where('backUrl', route('parties.ai-reviews.index', [$this->party->code, 'outcome' => 'flag', 'q' => 'wham', 'page' => 2])));
 });
 
 it('extracts the party context from a chat user message', function () {
@@ -156,13 +179,14 @@ it('extracts the party context from a chat user message', function () {
         'request' => ['messages' => [['role' => 'system', 'content' => 'sys'], ['role' => 'user', 'content' => json_encode(['title' => 'x', 'party_context' => 'Recent: a'])]]],
     ]);
 
-    $this->actingAs($this->owner)->getJson(route('parties.ai-reviews.show', [$this->party->code, $review]))->assertJsonPath('data.partyContext', 'Recent: a');
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
+        ->assertInertia(fn (Assert $page) => $page->where('review.partyContext', 'Recent: a')->where('review.partyState', null));
 });
 
 it('does not show a review from another party under this party', function () {
     $other = AiReview::factory()->create();
 
-    $this->actingAs($this->owner)->getJson(route('parties.ai-reviews.show', [$this->party->code, $other]))->assertNotFound();
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $other]))->assertNotFound();
 });
 
 it('shares the nav flag only for managers of a party with the mod enabled', function () {

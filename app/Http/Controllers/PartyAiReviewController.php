@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AiReviewCriterion;
 use App\Enums\AiReviewOutcome;
 use App\Models\AiReview;
 use App\Models\Party;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
 use App\Services\Requests\ModerationTabs;
-use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -22,17 +22,17 @@ class PartyAiReviewController extends Controller
         $this->ensureEnabled($party);
         $filters = $request->validate([
             'outcome' => ['nullable', 'string', 'in:'.implode(',', array_column(AiReviewOutcome::cases(), 'value'))],
+            'criterion' => ['nullable', 'string', 'in:'.implode(',', array_column(AiReviewCriterion::cases(), 'value'))],
             'q' => ['nullable', 'string', 'max:100'],
-            'review' => ['nullable', 'integer'],
         ]);
-        $focus = isset($filters['review']) ? (int) $filters['review'] : null;
         $outcome = $filters['outcome'] ?? null;
+        $criterion = $filters['criterion'] ?? null;
         $search = trim($filters['q'] ?? '');
 
         $reviews = $party->aiReviews()
             ->with('user:id,nickname')
-            ->when($focus !== null, fn ($query) => $query->whereKey($focus))
             ->when($outcome !== null && $outcome !== '', fn ($query) => $query->where('outcome', $outcome))
+            ->when($criterion !== null && $criterion !== '', fn ($query) => $query->where('criterion', $criterion))
             ->when($search !== '', function ($query) use ($search): void {
                 $like = '%'.addcslashes($search, '%_\\').'%';
                 $query->where(fn ($inner) => $inner
@@ -48,7 +48,8 @@ class PartyAiReviewController extends Controller
         return Inertia::render('Parties/AiReviews/Index', [
             'party' => ['code' => $party->code, 'name' => $party->name],
             'playerState' => $party->getState(),
-            'filters' => ['outcome' => $outcome ?? '', 'q' => $search, 'review' => $focus],
+            'filters' => ['outcome' => $outcome ?? '', 'criterion' => $criterion ?? '', 'q' => $search],
+            'criteria' => array_map(fn (AiReviewCriterion $case): array => ['code' => $case->value, 'name' => $case->label()], AiReviewCriterion::cases()),
             'outcomes' => array_map(fn (AiReviewOutcome $case): array => ['code' => $case->value, 'name' => $case->label()], AiReviewOutcome::cases()),
             'holdsFlagged' => (bool) $party->flag_requests,
             'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
@@ -57,23 +58,38 @@ class PartyAiReviewController extends Controller
         ]);
     }
 
-    public function show(Party $party, AiReview $aiReview): JsonResponse
+    public function show(Request $request, Party $party, AiReview $aiReview): Response
     {
         $this->ensureEnabled($party);
+        $filters = $request->validate([
+            'outcome' => ['nullable', 'string', 'in:'.implode(',', array_column(AiReviewOutcome::cases(), 'value'))],
+            'criterion' => ['nullable', 'string', 'in:'.implode(',', array_column(AiReviewCriterion::cases(), 'value'))],
+            'q' => ['nullable', 'string', 'max:100'],
+            'page' => ['nullable', 'integer', 'min:1'],
+        ]);
         $aiReview->loadMissing('user:id,nickname');
+        $state = $this->requestState($aiReview);
 
-        return response()->json(['data' => $this->row($aiReview) + [
-            'endpointHost' => $aiReview->endpoint_host,
-            'score' => $aiReview->score,
-            'confidence' => $aiReview->confidence,
-            'request' => $aiReview->request,
-            'response' => $aiReview->response,
-            'partyContext' => $this->partyContext($aiReview),
-            'errorClass' => $aiReview->error_class,
-            'errorMessage' => $aiReview->error_message,
-            'trackId' => $aiReview->track_id,
-            'trackProvider' => $aiReview->track_provider,
-        ]]);
+        return Inertia::render('Parties/AiReviews/Show', [
+            'party' => ['code' => $party->code, 'name' => $party->name],
+            'playerState' => $party->getState(),
+            'moderationTabs' => app(ModerationTabs::class)->for($party),
+            'criterionLabels' => collect(AiReviewCriterion::cases())->mapWithKeys(fn (AiReviewCriterion $case): array => [$case->value => $case->label()])->all(),
+            'backUrl' => route('parties.ai-reviews.index', [$party->code] + array_filter($filters, fn (mixed $value): bool => $value !== null && $value !== '')),
+            'review' => $this->row($aiReview) + [
+                'endpointHost' => $aiReview->endpoint_host,
+                'score' => $aiReview->score,
+                'confidence' => $aiReview->confidence,
+                'request' => $aiReview->request,
+                'response' => $aiReview->response,
+                'partyContext' => is_string($state['party_context'] ?? null) ? $state['party_context'] : null,
+                'partyState' => is_array($state['party'] ?? null) ? $state['party'] : null,
+                'errorClass' => $aiReview->error_class,
+                'errorMessage' => $aiReview->error_message,
+                'trackId' => $aiReview->track_id,
+                'trackProvider' => $aiReview->track_provider,
+            ],
+        ]);
     }
 
     protected function ensureEnabled(Party $party): void
@@ -97,6 +113,9 @@ class PartyAiReviewController extends Controller
             'outcome' => $review->outcome->value,
             'outcomeLabel' => $review->outcome->label(),
             'reason' => $review->reason,
+            'criterion' => $review->criterion?->value,
+            'criterionLabel' => $review->criterion?->label(),
+            'criterionConfidence' => $review->criterion_confidence,
             'driver' => $review->driver,
             'model' => $review->model,
             'latencyMs' => $review->latency_ms,
@@ -107,13 +126,15 @@ class PartyAiReviewController extends Controller
         ];
     }
 
-    protected function partyContext(AiReview $review): ?string
+    /**
+     * @return array<string, mixed>
+     */
+    protected function requestState(AiReview $review): array
     {
         $request = $review->request;
         $payload = $request['state'] ?? ($request['messages'][1]['content'] ?? null);
-        $decoded = is_string($payload) ? json_decode($payload, true) : null;
-        $context = is_array($decoded) ? ($decoded['party_context'] ?? null) : null;
+        $decoded = is_string($payload) ? json_decode($payload, true) : $payload;
 
-        return is_string($context) ? $context : null;
+        return is_array($decoded) ? $decoded : [];
     }
 }

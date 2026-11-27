@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\AiReviewCriterion;
 use App\Enums\AiReviewOutcome;
 use Database\Factories\AiReviewFactory;
 use Illuminate\Database\Eloquent\Attributes\Unguarded;
@@ -31,6 +32,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $reason
  * @property float|null $score
  * @property float|null $confidence
+ * @property AiReviewCriterion|null $criterion
+ * @property float|null $criterion_confidence
  * @property int $latency_ms
  * @property int|null $prompt_tokens
  * @property int|null $completion_tokens
@@ -65,6 +68,8 @@ class AiReview extends Model
         'outcome' => AiReviewOutcome::class,
         'score' => 'float',
         'confidence' => 'float',
+        'criterion' => AiReviewCriterion::class,
+        'criterion_confidence' => 'float',
     ];
 
     /**

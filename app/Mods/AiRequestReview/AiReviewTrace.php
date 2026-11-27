@@ -2,6 +2,7 @@
 
 namespace App\Mods\AiRequestReview;
 
+use App\Enums\AiReviewCriterion;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Services\Music\Data\Track;
@@ -21,6 +22,10 @@ final class AiReviewTrace
     public ?float $score = null;
 
     public ?float $confidence = null;
+
+    public ?AiReviewCriterion $criterion = null;
+
+    public ?float $criterionConfidence = null;
 
     public ?int $promptTokens = null;
 

@@ -356,6 +356,9 @@ export interface AiReviewRow {
     outcome: AiReviewOutcome;
     outcomeLabel: string;
     reason: string | null;
+    criterion: string | null;
+    criterionLabel: string | null;
+    criterionConfidence: number | null;
     driver: string;
     model: string | null;
     latencyMs: number;
@@ -365,6 +368,21 @@ export interface AiReviewRow {
     requested: boolean;
 }
 
+export interface AiReviewTrackEntry {
+    title: string;
+    artist: string;
+}
+
+export interface AiReviewPartyState {
+    stats?: {tracks_played?: number; running_minutes?: number};
+    artists?: {name: string; plays: number}[];
+    recent?: AiReviewTrackEntry[];
+    top_rated?: AiReviewTrackEntry[];
+    downvoted?: AiReviewTrackEntry[];
+    most_upvoted_requests?: AiReviewTrackEntry[];
+    most_downvoted_requests?: AiReviewTrackEntry[];
+}
+
 export interface AiReviewDetail extends AiReviewRow {
     endpointHost: string | null;
     score: number | null;
@@ -372,6 +390,7 @@ export interface AiReviewDetail extends AiReviewRow {
     request: Record<string, unknown>;
     response: Record<string, unknown> | null;
     partyContext: string | null;
+    partyState: AiReviewPartyState | null;
     errorClass: string | null;
     errorMessage: string | null;
     trackId: string;
