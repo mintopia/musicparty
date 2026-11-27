@@ -39,7 +39,10 @@ const customFallbackName = (song: LegacyUpcomingSong): string | null => {
 
 const focusSearch = (): void => document.getElementById('query')?.focus();
 
-const page = ref(1);
+const PAGE_SIZE = 20;
+const initialCount = props.initialState?.length ?? null;
+const listComplete = ref(initialCount !== null && initialCount < PAGE_SIZE);
+const page = ref(initialCount === PAGE_SIZE ? 2 : 1);
 const upcoming = ref<LegacyUpcomingSong[]>([]);
 const UNDO_WINDOW_MS = 8000;
 
@@ -245,7 +248,7 @@ async function getPage({loaded, error}: LoadAction): Promise<void> {
             items.forEach((item) => addOrUpdateItem(item));
             sortUpcoming();
         }
-        loaded(items.length, 20);
+        loaded(items.length, PAGE_SIZE);
     } catch {
         error();
     }
@@ -441,7 +444,18 @@ onBeforeUnmount(() => {
                 </div>
             </TransitionGroup>
         </div>
-        <VueEternalLoading :load="getPage">
+        <div v-if="listComplete && upcoming.length === 0" class="card" data-test="queue-empty">
+            <EmptyState
+                icon="ti-playlist-off"
+                title="The Queue is empty"
+                description="The party is waiting on you. Search for a track to add the first one."
+            >
+                <button type="button" class="btn btn-primary" data-test="empty-search" @click="focusSearch">
+                    <i class="icon ti ti-music-search me-1"></i>Search for a track
+                </button>
+            </EmptyState>
+        </div>
+        <VueEternalLoading v-if="!listComplete" :load="getPage">
             <template #loading>
                 <div class="card" aria-hidden="true">
                     <div class="list-group list-group-flush">
