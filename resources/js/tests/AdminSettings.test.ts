@@ -39,8 +39,15 @@ describe('admin settings pages', () => {
                     {code: 'flag', name: 'Flag', description: null, type: 'boolean', required: false, value: true},
                 ],
                 themes: [
-                    {id: 1, name: 'Core', active: true, readonly: true},
-                    {id: 2, name: 'Mine', active: false, readonly: false},
+                    {id: 1, name: 'Core', active: true, readonly: true, dark_mode: false, tokens: {}},
+                    {
+                        id: 2,
+                        name: 'Mine',
+                        active: false,
+                        readonly: false,
+                        dark_mode: true,
+                        tokens: {primary: '#8a2be2'},
+                    },
                 ],
                 socialProviders: [
                     {
@@ -58,6 +65,7 @@ describe('admin settings pages', () => {
         });
 
         expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
+        expect(wrapper.findAll('.mp-thumb')).toHaveLength(2);
         expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
         expect(wrapper.text()).toContain('http://x/login/discord/return');

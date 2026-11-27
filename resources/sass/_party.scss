@@ -1011,3 +1011,4 @@
     .mp-token .input-group .btn, .mp-token .input-group .form-control, .mp-token .mp-swatch-pick { min-block-size: 44px; }
     .mp-swatch-pick { align-items: center; min-inline-size: 28px; }
 }
+.mp-cell { display: flex; align-items: center; gap: var(--mp-space-3); }

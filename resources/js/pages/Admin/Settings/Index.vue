@@ -15,7 +15,14 @@ interface SettingField {
 
 const props = defineProps<{
     settings: SettingField[];
-    themes: {id: number; name: string; active: boolean; readonly: boolean}[];
+    themes: {
+        id: number;
+        name: string;
+        active: boolean;
+        readonly: boolean;
+        dark_mode: boolean;
+        tokens: Record<string, string>;
+    }[];
     socialProviders: {
         id: number;
         code: string;
@@ -34,6 +41,16 @@ const form = useForm<Record<string, string | boolean>>(
 
 function submit(): void {
     form.patch('/admin/settings');
+}
+
+function thumbStyle(theme: {dark_mode: boolean; tokens: Record<string, string>}): Record<string, string> {
+    return {
+        '--t-nav': theme.tokens['nav-background'] ?? '#182433',
+        '--t-bg': theme.dark_mode ? '#101820' : '#f6f8fb',
+        '--t-surf': theme.tokens.surface ?? (theme.dark_mode ? '#182433' : '#ffffff'),
+        '--t-pri': theme.tokens.primary ?? '#0054a6',
+        '--t-text': theme.tokens.text ?? (theme.dark_mode ? '#e6e7e9' : '#182433'),
+    };
 }
 </script>
 
@@ -116,7 +133,18 @@ function submit(): void {
                             </thead>
                             <tbody>
                                 <tr v-for="theme in themes" :key="theme.id">
-                                    <td>{{ theme.name }}</td>
+                                    <td>
+                                        <div class="mp-cell">
+                                            <span
+                                                class="mp-thumb"
+                                                :style="thumbStyle(theme)"
+                                                role="img"
+                                                :aria-label="`Preview of ${theme.name}`"
+                                                ><i></i><b></b
+                                            ></span>
+                                            <span class="fw-medium">{{ theme.name }}</span>
+                                        </div>
+                                    </td>
                                     <td>
                                         <span v-if="theme.active" class="mp-state is-ok">Active</span>
                                         <span v-else class="text-secondary">Not in use</span>
