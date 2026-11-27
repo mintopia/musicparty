@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {onBeforeUnmount, ref} from 'vue';
 
-const props = defineProps<{value: string; label: string}>();
+const props = defineProps<{value: string; label: string; text?: string}>();
 
 const copied = ref(false);
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -50,13 +50,15 @@ onBeforeUnmount(() => clearTimeout(timer));
 <template>
     <button
         type="button"
-        class="btn btn-sm btn-icon btn-ghost-secondary flex-shrink-0"
+        class="btn btn-sm flex-shrink-0"
+        :class="text ? 'btn-outline-secondary' : 'btn-icon btn-ghost-secondary'"
         data-test="copy-button"
         :aria-label="label"
         :title="copied ? 'Copied' : label"
         @click="copy"
     >
         <i class="icon ti" :class="copied ? 'ti-check text-success' : 'ti-copy'" aria-hidden="true"></i>
+        <template v-if="text">{{ copied ? 'Copied' : text }}</template>
         <span class="visually-hidden" role="status" aria-live="polite">{{ copied ? 'Copied' : '' }}</span>
     </button>
 </template>
