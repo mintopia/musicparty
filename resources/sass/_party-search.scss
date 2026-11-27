@@ -1,0 +1,96 @@
+.mp-search {
+    position: relative;
+}
+
+.mp-search > .ti {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-start: 14px;
+    transform: translateY(-50%);
+    color: var(--tblr-secondary-color);
+    font-size: 1.25rem;
+    pointer-events: none;
+}
+
+.mp-search .form-control {
+    min-block-size: 44px;
+    padding-inline-start: 44px;
+}
+
+.mp-search .mp-search-count {
+    position: absolute;
+    inset-block-start: 50%;
+    inset-inline-end: 14px;
+    transform: translateY(-50%);
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+}
+
+.mp-chips {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mp-space-2);
+}
+
+.mp-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mp-space-2) var(--mp-space-5);
+}
+
+.mp-chip-label {
+    margin-inline-end: 2px;
+    color: var(--tblr-secondary-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mp-searchbar .mp-hint code {
+    font-size: inherit;
+}
+
+.mp-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4em;
+    min-block-size: 32px;
+    padding: 0 var(--mp-space-3);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 999px;
+    background: var(--tblr-bg-surface);
+    color: var(--tblr-body-color);
+    font: inherit;
+    font-size: 0.8125rem;
+    cursor: pointer;
+}
+
+.mp-chip:hover {
+    background: var(--mp-tint-hover);
+}
+
+.mp-chip[aria-pressed='true'] {
+    border-color: var(--tblr-primary);
+    background: color-mix(in oklab, var(--tblr-primary) 12%, transparent);
+    color: var(--mp-text-primary, var(--tblr-primary));
+    font-weight: 600;
+}
+
+.mp-chip .mp-num {
+    color: var(--tblr-secondary-color);
+}
+
+.mp-chip .ti-x {
+    margin-inline-end: -4px;
+}
+
+@media (pointer: coarse) {
+    .mp-chip {
+        min-block-size: 44px;
+    }
+}

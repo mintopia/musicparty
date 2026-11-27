@@ -1,0 +1,120 @@
+.mp-party-list .list-group-item {
+    flex-wrap: wrap;
+    gap: var(--mp-space-3) var(--mp-space-4);
+}
+
+.mp-party-info {
+    flex: 1 1 200px;
+    min-inline-size: 0;
+}
+
+.mp-party-info b {
+    display: block;
+    font-size: 1rem;
+}
+
+.mp-party-state {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 4px var(--mp-space-2);
+    margin-block-start: 4px;
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+}
+
+.mp-party-meta {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.mp-code {
+    font-family: var(--tblr-font-monospace);
+    letter-spacing: 0.2em;
+    font-weight: 700;
+}
+
+.mp-party-cover {
+    background-image: var(--mp-art-wash);
+    background-size: cover;
+    background-position: center;
+}
+
+@media (pointer: coarse), (max-width: 575.98px) {
+    .mp-party-list .btn,
+    .mp-join-form .btn {
+        min-block-size: 44px;
+    }
+}
+
+.navbar-vertical #site-brand a {
+    color: #fff;
+    text-decoration: none;
+}
+
+@media (max-width: 991.98px) {
+    .mp-request-grid {
+        display: flex;
+        flex-direction: column;
+        gap: var(--mp-space-5);
+        margin: 0;
+
+        > * {
+            display: contents;
+        }
+
+        .mp-stack {
+            display: contents;
+        }
+
+        .card {
+            order: 3;
+            margin: 0;
+        }
+
+        [data-test='track-card'] {
+            order: 0;
+        }
+
+        [data-test='ai-review'] {
+            order: 1;
+        }
+
+        [data-test='schedule-card'] {
+            order: 2;
+        }
+
+        [data-test='votes-card'] {
+            order: 3;
+        }
+
+        [data-test='history'] {
+            order: 4;
+        }
+    }
+}
+
+.mp-sort {
+    color: inherit;
+    text-decoration: none;
+
+    + .ti {
+        font-size: 0.875rem;
+        margin-inline-start: 2px;
+    }
+}
+
+@media (max-width: 575.98px) {
+    .mp-search > .ti {
+        inset-block-start: 22px;
+    }
+
+    .mp-search .mp-search-count {
+        position: static;
+        display: block;
+        transform: none;
+        margin-block-start: var(--mp-space-1);
+        padding-inline: var(--mp-space-1);
+    }
+}

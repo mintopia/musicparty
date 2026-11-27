@@ -1,0 +1,150 @@
+.mp-error {
+    text-align: center;
+    padding-block: 48px 32px;
+    max-inline-size: 560px;
+    margin-inline: auto;
+
+    .mp-error-code {
+        display: block;
+        font-size: 5rem;
+        line-height: 1;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        color: var(--tblr-primary);
+        margin-block-end: 8px;
+    }
+
+    .mp-error-icon {
+        display: inline-grid;
+        place-items: center;
+        inline-size: 72px;
+        block-size: 72px;
+        border-radius: 50%;
+        margin-block-end: 16px;
+        background: color-mix(in oklab, var(--tblr-primary) 12%, transparent);
+        color: var(--tblr-primary);
+        font-size: 2rem;
+    }
+
+    &.is-danger .mp-error-code {
+        color: var(--tblr-danger);
+    }
+
+    &.is-danger .mp-error-icon {
+        background: color-mix(in oklab, var(--tblr-danger) 12%, transparent);
+        color: var(--tblr-danger);
+    }
+
+    p {
+        color: var(--tblr-secondary-color);
+        margin-block-end: 24px;
+    }
+
+    .btn-list {
+        justify-content: center;
+    }
+}
+
+.mp-error.mp-stage {
+    max-inline-size: 760px;
+    margin: var(--mp-space-5) auto 0;
+    padding: 64px 40px 56px;
+    text-align: center;
+
+    h1 {
+        font-size: 2.25rem;
+        font-weight: 800;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-block-end: var(--mp-space-3);
+    }
+
+    p {
+        max-inline-size: 46ch;
+        margin-inline: auto;
+        margin-block-end: var(--mp-space-5);
+    }
+
+    .mp-error-code {
+        display: block;
+        font-size: 6rem;
+        font-weight: 800;
+        letter-spacing: -0.04em;
+        line-height: 0.95;
+        color: #fff;
+        margin-block-end: var(--mp-space-4);
+    }
+
+    .mp-error-icon {
+        display: inline-grid;
+        place-items: center;
+        inline-size: 88px;
+        block-size: 88px;
+        margin-block-end: var(--mp-space-4);
+        border-radius: 50%;
+        font-size: 2.5rem;
+        background: rgb(255 255 255 / 12%);
+        color: #fff;
+        box-shadow: 0 0 0 10px rgb(255 255 255 / 6%);
+
+        .icon {
+            inline-size: 2.5rem;
+            block-size: 2.5rem;
+            font-size: 2.5rem;
+            stroke-width: 1.5;
+        }
+    }
+
+    &.is-danger .mp-error-icon {
+        background: rgb(255 120 120 / 16%);
+        color: oklch(85% 0.1 25);
+    }
+
+    &.is-danger::after {
+        background: linear-gradient(rgb(70 12 16 / 55%), rgb(22 6 8 / 85%));
+    }
+
+    &.is-danger .mp-error-code {
+        color: oklch(78% 0.14 25);
+    }
+}
+
+.mp-error-code-form {
+    max-inline-size: 320px;
+    margin-inline: auto;
+    text-align: start;
+}
+
+.mp-error-code-row {
+    display: flex;
+    gap: var(--mp-space-2);
+}
+
+.mp-error-code-input {
+    flex: 1;
+    min-inline-size: 0;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.3em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.mp-stage .form-hint.text-danger {
+    color: oklch(85% 0.1 25) !important;
+}
+
+@media (max-width: 575.98px) {
+    .mp-error.mp-stage {
+        padding: 40px 20px 32px;
+        margin-block-start: var(--mp-space-2);
+
+        h1 {
+            font-size: 1.75rem;
+        }
+
+        .mp-error-code {
+            font-size: 4.5rem;
+        }
+    }
+}

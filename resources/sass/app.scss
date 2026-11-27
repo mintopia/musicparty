@@ -6,7 +6,18 @@
 @use 'footer';
 @use 'code-editor';
 @use 'underline-tabs';
-@use 'party';
+@use 'party-stage';
+@use 'party-common';
+@use 'party-web-player';
+@use 'party-wizard';
+@use 'party-error';
+@use 'party-search';
+@use 'party-members';
+@use 'party-editor';
+@use 'party-detail';
+@use 'party-admin-dash';
+@use 'party-join';
+@use 'party-list';
 @use 'admin';
 @use 'moderation';
 

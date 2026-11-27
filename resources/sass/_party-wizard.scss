@@ -1,0 +1,159 @@
+.mp-success-mark > .ti-check {
+    animation: mp-check-draw 0.55s var(--mp-ease, ease-out) 0.15s both;
+}
+
+@keyframes mp-check-draw {
+    from { clip-path: inset(0 100% 0 0); }
+    to { clip-path: inset(0 0 0 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-success-mark > .ti-check { animation: none; }
+}
+
+.mp-steps {
+    display: flex;
+    gap: var(--mp-space-2);
+    margin: 0 0 var(--mp-space-5);
+    padding: 0;
+    list-style: none;
+    counter-reset: step;
+}
+
+.mp-steps li {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: var(--mp-space-3);
+    padding-block-start: var(--mp-space-3);
+    border-block-start: 3px solid var(--tblr-border-color);
+    color: var(--tblr-secondary-color);
+    font-weight: 600;
+    counter-increment: step;
+}
+
+.mp-steps li::before {
+    content: counter(step);
+    display: grid;
+    place-items: center;
+    flex: none;
+    inline-size: 28px;
+    block-size: 28px;
+    border-radius: 50%;
+    background: var(--tblr-bg-surface-secondary);
+    font-size: var(--mp-fs-small, 0.8125rem);
+}
+
+.mp-steps li.is-done,
+.mp-steps li[aria-current='step'] {
+    border-color: var(--tblr-primary);
+    color: var(--tblr-body-color);
+}
+
+.mp-steps li.is-done::before {
+    background: color-mix(in oklab, var(--tblr-primary) 18%, transparent);
+    color: var(--mp-text-primary, var(--tblr-primary));
+}
+
+.mp-steps li[aria-current='step']::before {
+    background: var(--tblr-primary);
+    color: #fff;
+}
+
+@media (max-width: 575px) {
+    .mp-steps li:not([aria-current='step']) {
+        flex: 0 0 auto;
+        font-size: 0;
+    }
+}
+
+.mp-wizard { max-inline-size: 720px; margin-inline: auto; }
+.mp-wizard .card-footer { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
+.mp-wizard h2.mp-step-title { font-size: 1.25rem; margin: 0 0 0.25rem; }
+.mp-wizard .setting-row:last-child { border-bottom: 0; }
+.mp-wizard .mp-sec { padding-inline: 0; }
+.mp-wizard .mp-sub { margin: 0.25rem 0 0; color: var(--tblr-secondary-color); white-space: normal; }
+
+.mp-sec {
+    margin: 0;
+    padding-block: 1rem 0.5rem;
+    border-block-end: 1px solid var(--tblr-border-color);
+    color: var(--tblr-secondary-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+}
+
+.mp-pick { position: relative; inline-size: 100%; max-inline-size: 28rem; }
+.mp-pick .form-select { display: flex; align-items: center; gap: 0.625rem; min-block-size: 44px; text-align: start; }
+.mp-pick .form-select > small { color: var(--tblr-secondary-color); font-size: 0.8125rem; flex: none; }
+.mp-pick img.mp-cover, .mp-pick .mp-cover { inline-size: 32px; block-size: 32px; border-radius: 4px; object-fit: cover; flex: none; }
+.mp-cover-empty { display: block; flex: none; inline-size: 36px; block-size: 36px; border-radius: 4px; background: var(--tblr-bg-surface-secondary); border: 1px solid var(--tblr-border-color); }
+.mp-pick .mp-cover.mp-cover-empty { inline-size: 32px; block-size: 32px; }
+.mp-pick .mp-pick-label { flex: 1; min-inline-size: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.mp-pick-menu.dropdown-menu.show {
+    position: static;
+    display: block;
+    inline-size: 100%;
+    margin-block-start: 0.25rem;
+    padding: 0;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 14%);
+    border: 1px solid var(--tblr-border-color);
+}
+
+.mp-pick-menu .mp-pick-head { padding: 0.5rem; border-block-end: 1px solid var(--tblr-border-color); }
+.mp-pick-menu .mp-pick-meta { padding: 0.5rem 0.75rem 0.25rem; color: var(--tblr-secondary-color); font-size: 0.8125rem; }
+.mp-pick-menu .mp-pick-list { max-block-size: 20rem; overflow-y: auto; }
+.mp-pick-menu .mp-pick-empty { padding: 0.75rem; color: var(--tblr-secondary-color); }
+
+.mp-opt {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    inline-size: 100%;
+    min-block-size: 52px;
+    padding: 0.5rem 0.75rem;
+    border: 0;
+    background: none;
+    color: var(--tblr-body-color);
+    text-align: start;
+}
+
+.mp-opt:hover { background: var(--tblr-bg-surface-secondary); }
+.mp-opt img { inline-size: 36px; block-size: 36px; border-radius: 4px; object-fit: cover; flex: none; }
+.mp-opt .mp-opt-text { flex: 1; min-inline-size: 0; }
+.mp-opt .mp-opt-name { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.mp-opt small { display: block; color: var(--tblr-secondary-color); }
+.mp-pick-foot { border-block-start: 1px solid var(--tblr-border-color); }
+.setting-control > .mp-wide-select { max-inline-size: 28rem; }
+.mp-opt.mp-opt-compact { min-block-size: 44px; }
+.mp-opt .mp-opt-meta { display: block; flex: none; }
+.mp-opt[aria-selected='true'] { background: color-mix(in oklab, var(--tblr-primary) 10%, transparent); }
+.mp-opt[aria-selected='true'] .mp-opt-name { font-weight: 650; }
+.mp-opt .ti-check { color: var(--tblr-primary); }
+
+@media (max-width: 575.98px) {
+    .mp-pick { max-inline-size: none; }
+}
+
+.mp-qr { display: block; border-radius: 6px; }
+.mp-qr svg { display: block; inline-size: 168px; block-size: 168px; border-radius: 6px; background: #fff; }
+.mp-done { display: grid; grid-template-columns: 1fr auto; gap: 2rem; align-items: center; }
+.mp-done-card { overflow: hidden; border: 0; }
+.mp-done-card > .mp-stage { border-radius: 0; padding: 2.5rem; }
+.mp-done-card .mp-done-code { font-size: 5.5rem; font-weight: 800; letter-spacing: 0.18em; line-height: 1; color: #fff; font-variant-numeric: tabular-nums; }
+.mp-done-card .text-secondary,
+.mp-done-card .mp-stage-sub { color: var(--mp-stage-muted) !important; }
+.mp-done-card code { color: #fff; background: rgb(255 255 255 / 10%); }
+.mp-done-card .btn-ghost-secondary { --tblr-btn-color: #fff; --tblr-btn-hover-bg: rgb(255 255 255 / 12%); --tblr-btn-hover-color: #fff; }
+.mp-done-card .mp-qr { border: 0; box-shadow: 0 8px 24px rgb(0 0 0 / 40%); }
+.mp-done-card .mp-success-mark { inline-size: 48px; block-size: 48px; font-size: 1.5rem; box-shadow: 0 0 0 6px rgb(47 179 68 / 25%); }
+
+@media (max-width: 575.98px) {
+    .mp-done-card > .mp-stage { padding: 1.5rem 1.25rem; }
+    .mp-done { grid-template-columns: 1fr; }
+    .mp-done-card .mp-done-code { font-size: 3.5rem; }
+    .mp-wizard .card-footer .btn { flex: 1 1 auto; }
+}

@@ -1,0 +1,113 @@
+.mp-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--mp-space-3) var(--mp-space-5);
+    margin-block-end: var(--mp-space-5);
+
+    p {
+        max-inline-size: 64ch;
+        margin: var(--mp-space-2) 0 0;
+        color: var(--tblr-secondary-color);
+        font-size: 1rem;
+    }
+}
+
+.mp-menu-anchor {
+    position: relative;
+    display: inline-block;
+
+    > .dropdown-menu {
+        position: absolute;
+        inset: calc(100% + 4px) 0 auto auto;
+        min-inline-size: 15rem;
+        z-index: 5;
+    }
+}
+
+.mp-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+}
+
+.mp-stat b {
+    display: block;
+    font-size: 1.5rem;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-roles .form-selectgroup-label {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    text-align: start;
+    padding: 0.875rem 1rem;
+
+    b {
+        display: block;
+    }
+
+    span.d-block {
+        color: var(--tblr-secondary-color);
+        font-size: 0.875rem;
+    }
+}
+
+.mp-readonly {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+}
+
+.mp-member-actions .btn {
+    min-block-size: 44px;
+}
+
+.min-w-0 {
+    min-inline-size: 0;
+}
+
+.mp-tbl th,
+.mp-members th,
+.mp-members td {
+    white-space: nowrap;
+}
+
+.mp-tbl img.mp-art {
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex: none;
+}
+
+.mp-rowlist {
+    .mp-row {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--mp-space-3);
+    }
+
+    img.mp-art {
+        inline-size: 56px;
+        block-size: 56px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex: none;
+    }
+
+    .mp-main {
+        flex: 1;
+        min-inline-size: 0;
+    }
+
+    .mp-line {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+}

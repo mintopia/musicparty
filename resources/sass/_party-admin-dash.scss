@@ -1,0 +1,34 @@
+.mp-admin-dash {
+    img.mp-art {
+        inline-size: 32px;
+        block-size: 32px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex: none;
+    }
+
+    .mp-checks .btn {
+        white-space: nowrap;
+    }
+
+    @media (pointer: coarse), (max-width: 575.98px) {
+        .btn {
+            min-block-size: 44px;
+        }
+    }
+
+    @media (max-width: 575.98px) {
+        .mp-page-head .btn-list {
+            inline-size: 100%;
+        }
+
+        .mp-checks > li {
+            grid-template-columns: auto minmax(0, 1fr);
+        }
+
+        .mp-checks > li > .btn {
+            grid-column: 2;
+            justify-self: start;
+        }
+    }
+}

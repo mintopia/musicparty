@@ -1,0 +1,121 @@
+:root {
+    --mp-space-1: 4px;
+    --mp-space-2: 8px;
+    --mp-space-3: 12px;
+    --mp-space-4: 16px;
+    --mp-space-5: 24px;
+    --mp-space-6: 32px;
+    --mp-space-7: 48px;
+    --mp-stage-bg: #16181d;
+    --mp-stage-text: #fff;
+    --mp-stage-muted: rgb(255 255 255 / 74%);
+    --mp-stage-veil: linear-gradient(rgb(10 10 14 / 50%), rgb(10 10 14 / 78%));
+    --mp-art-wash: linear-gradient(135deg, oklch(55% 0.2 250), oklch(62% 0.16 137) 55%, oklch(80% 0.15 25));
+    --mp-fs-small: 0.8125rem;
+    --mp-tint-hover: color-mix(in oklab, var(--tblr-body-color) 7%, transparent);
+    --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
+    --mp-radius-control: 8px;
+}
+
+/* Dark in both themes by design, like the player band. */
+.mp-stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: var(--mp-space-6) var(--mp-space-6);
+    border-radius: 16px;
+    background-color: var(--mp-stage-bg);
+    color: var(--mp-stage-text);
+    --tblr-secondary-color: var(--mp-stage-muted);
+}
+
+.mp-stage::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    z-index: -2;
+    background: var(--np-image, var(--mp-art-wash)) center / cover no-repeat;
+    filter: blur(36px) saturate(1.2);
+    opacity: 0.55;
+}
+
+.mp-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--mp-stage-veil);
+}
+
+.mp-stage :where(h1, h2, h3, p, .h1, .h2) {
+    color: inherit;
+}
+
+.mp-stage :where(p, .mp-stage-sub) {
+    color: var(--mp-stage-muted);
+}
+
+.mp-stage .btn-outline-secondary,
+.mp-stage .btn-outline-primary,
+.mp-stage .btn-ghost {
+    --tblr-btn-color: #fff;
+    --tblr-btn-border-color: rgb(255 255 255 / 40%);
+    --tblr-btn-hover-bg: rgb(255 255 255 / 12%);
+    --tblr-btn-hover-border-color: rgb(255 255 255 / 60%);
+    --tblr-btn-hover-color: #fff;
+}
+
+.mp-stage .form-label,
+.mp-stage .form-hint {
+    color: var(--mp-stage-muted);
+}
+
+.mp-stage :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+.mp-page-head.mp-stage {
+    align-items: center;
+    padding: var(--mp-space-6);
+}
+
+.mp-stage-mark {
+    display: block;
+    margin-block-end: var(--mp-space-3);
+    font-size: clamp(4rem, 10vw, 6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-stage-mark.is-code {
+    letter-spacing: 0.12em;
+    margin-inline-end: -0.12em;
+}
+
+.mp-stage-art {
+    flex: none;
+    inline-size: 88px;
+    block-size: 88px;
+    border-radius: 10px;
+    background: var(--np-image, var(--mp-art-wash)) center / cover;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+@media (max-width: 575.98px) {
+    .mp-stage {
+        padding: var(--mp-space-5) var(--mp-space-4);
+        border-radius: 12px;
+    }
+
+    .mp-page-head.mp-stage {
+        padding: var(--mp-space-5) var(--mp-space-4);
+    }
+
+    .mp-stage-art {
+        inline-size: 64px;
+        block-size: 64px;
+    }
+}
