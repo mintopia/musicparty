@@ -548,6 +548,7 @@
 .mp-wizard .card-footer { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap; }
 .mp-wizard h2.mp-step-title { font-size: 1.25rem; margin: 0 0 0.25rem; }
 .mp-wizard .setting-row:last-child { border-bottom: 0; }
+.mp-wizard .mp-sec { padding-inline: 0; }
 .mp-wizard .mp-sub { margin: 0.25rem 0 0; color: var(--tblr-secondary-color); white-space: normal; }
 
 .mp-sec {
@@ -623,7 +624,8 @@
 .mp-done-card .text-secondary,
 .mp-done-card .mp-stage-sub { color: var(--mp-stage-muted) !important; }
 .mp-done-card code { color: #fff; background: rgb(255 255 255 / 10%); }
-.mp-done-card .mp-qr { box-shadow: 0 8px 24px rgb(0 0 0 / 40%); }
+.mp-done-card .btn-ghost-secondary { --tblr-btn-color: #fff; --tblr-btn-hover-bg: rgb(255 255 255 / 12%); --tblr-btn-hover-color: #fff; }
+.mp-done-card .mp-qr { border: 0; box-shadow: 0 8px 24px rgb(0 0 0 / 40%); }
 .mp-done-card .mp-success-mark { inline-size: 48px; block-size: 48px; font-size: 1.5rem; box-shadow: 0 0 0 6px rgb(47 179 68 / 25%); }
 
 @media (max-width: 575.98px) {
