@@ -13,12 +13,11 @@ const STALE_AFTER_MS = 60000;
 const props = withDefaults(
     defineProps<{
         code: string;
-        url?: string;
         qrSvg?: string;
         state: LegacyTvPartyState;
         connected?: boolean;
     }>(),
-    {url: undefined, qrSvg: undefined, connected: true},
+    {qrSvg: undefined, connected: true},
 );
 
 useWakeLock();
@@ -67,7 +66,6 @@ const showQr = computed(() => props.state.show_qrcode && Boolean(props.qrSvg));
 const qrCodeSrc = computed(() =>
     props.qrSvg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(props.qrSvg)}` : null,
 );
-const joinHost = computed(() => (props.url ? props.url.replace(/^https?:\/\//, '') : null));
 const nowPlaying = computed(() => props.state.now !== null);
 const nextTrack = computed(() => props.state.next);
 const nextAccent = computed(() =>
@@ -95,7 +93,6 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
                 <span class="tv-join-text">
                     <span class="tv-join-label">{{ showQr ? 'Scan or join with code' : 'Join with code' }}</span>
                     <b class="tv-join-code" data-test="join-code">{{ code }}</b>
-                    <span v-if="joinHost" class="tv-join-url" data-test="join-url">{{ joinHost }}</span>
                 </span>
                 <img
                     v-if="showQr"
@@ -161,7 +158,6 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
                         }}
                     </p>
                     <b class="tv-empty-code" data-test="join-code">{{ code }}</b>
-                    <span v-if="joinHost" class="tv-join-url tv-empty-url" data-test="join-url">{{ joinHost }}</span>
                 </div>
                 <img
                     v-if="showQr"
@@ -288,18 +284,6 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
     align-items: flex-end;
     font-size: calc(13 * var(--u));
     color: rgba(255, 255, 255, 0.75);
-}
-
-.tv-join-url {
-    font-size: calc(13 * var(--u));
-    color: rgba(255, 255, 255, 0.75);
-    overflow-wrap: anywhere;
-}
-
-.tv-empty-url {
-    display: block;
-    margin-block-start: calc(8 * var(--u));
-    font-size: calc(18 * var(--u));
 }
 
 .tv-join-code {

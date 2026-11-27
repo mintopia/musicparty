@@ -23,12 +23,6 @@ const emit = defineEmits<{
     withdraw: [track: TrackAnnotation];
 }>();
 
-const providerName = computed(() =>
-    props.results.top?.kind === 'track'
-        ? props.results.top.track.provider_name
-        : (props.results.tracks[0]?.provider_name ?? null),
-);
-
 const topResult = computed(() =>
     props.results.weak && props.results.top?.kind === 'track' ? null : props.results.top,
 );
@@ -49,8 +43,7 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
             <div>
                 <h2 class="h4 mb-1">No close matches for “{{ query }}”</h2>
                 <div>
-                    These are the nearest results {{ providerName ?? 'the music provider' }} returned. Check the
-                    spelling or try the artist's name.
+                    These are the nearest results we found. Check the spelling or try the artist's name.
                 </div>
             </div>
         </div>

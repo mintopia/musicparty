@@ -38,6 +38,6 @@ onReconnect(() => {
 
 <template>
     <BareLayout :title="party.name">
-        <TvPlayer :code="party.code" :url="party.url" :qr-svg="party.qrSvg" :state="state" :connected="connected" />
+        <TvPlayer :code="party.code" :qr-svg="party.qrSvg" :state="state" :connected="connected" />
     </BareLayout>
 </template>

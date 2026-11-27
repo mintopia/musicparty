@@ -331,7 +331,8 @@ describe('Party search suggestions and weak matches', () => {
         const strong = mountSearch(overview());
 
         expect(weak.get('[data-test="no-close-matches"]').text()).toContain('No close matches for “lucky dafft punk”');
-        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('nearest results Spotify returned');
+        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('These are the nearest results we found.')
+        expect(weak.get('[data-test="no-close-matches"]').text()).not.toContain('Spotify');
         expect(strong.find('[data-test="no-close-matches"]').exists()).toBe(false);
     });
 
