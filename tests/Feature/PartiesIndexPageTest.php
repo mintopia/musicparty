@@ -2,8 +2,11 @@
 
 use App\Http\Middleware\VerifyCsrfToken;
 use App\Models\Party;
+use App\Models\PartyMember;
+use App\Models\PartyMemberRole;
 use App\Models\Role;
 use App\Models\User;
+use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -27,6 +30,24 @@ it('lists only the parties the member owns', function () {
             ->where('parties.0.code', $mine->code)
             ->where('parties.0.role', 'Owner')
             ->where('parties.0.canManage', true));
+});
+
+it('lists a joined party with the member role and the Queue link', function () {
+    $this->seed(PartyMemberRoleSeeder::class);
+    $user = User::factory()->create(['first_login' => false]);
+    $party = Party::factory()->create(['name' => 'Joined']);
+    PartyMember::factory()->for($party)->for($user)
+        ->create(['role_id' => PartyMemberRole::whereCode('user')->firstOrFail()->id]);
+
+    $this->actingAs($user)->get('/parties')
+        ->assertOk()
+        ->assertInertia(fn (Assert $page) => $page
+            ->has('parties', 1)
+            ->where('parties.0.code', $party->code)
+            ->where('parties.0.roleCode', 'user')
+            ->where('parties.0.canManage', false)
+            ->where('parties.0.playback', 'idle')
+            ->where('parties.0.url', route('parties.show', $party->code)));
 });
 
 it('renders an empty list for a member with no parties and for admins', function (bool $admin) {

@@ -54,6 +54,8 @@ class PartyController extends Controller
         $this->authorizeResource(Party::class, 'party');
     }
 
+    private const int PLAYER_STALE_MINUTES = 15;
+
     public function index(Request $request): Response
     {
         $user = $this->resolveAuthenticatedUser($request);
@@ -63,25 +65,35 @@ class PartyController extends Controller
             ->where(fn ($query) => $query
                 ->where('user_id', $user->id)
                 ->orWhereHas('members', fn ($members) => $members->where('user_id', $user->id)))
-            ->with(['song', 'members' => fn ($members) => $members->where('user_id', $user->id)->with('role')])
+            ->with(['song.album', 'members' => fn ($members) => $members->where('user_id', $user->id)->with('role')])
             ->orderBy('name')
             ->get()
             ->map(function (Party $party) use ($user, $isAdmin) {
                 $canManage = $isAdmin || $party->canBeManagedBy($user);
-                $status = app(PlaybackStatus::class)->forParty($party);
+                $statusService = app(PlaybackStatus::class);
+                $status = $statusService->forParty($party);
+                $sampledAt = $statusService->recall($party)?->sampledAt;
+                $stale = $sampledAt !== null && $sampledAt->lt(now()->subMinutes(self::PLAYER_STALE_MINUTES));
                 $playback = match (true) {
+                    $stale => 'stale',
                     ! $status->active => 'idle',
                     $status->isPlaying => 'playing',
                     default => 'paused',
                 };
-                $roleName = $party->user_id === $user->id ? 'Owner' : $party->members->first()?->role?->name;
+                $roleCode = $party->user_id === $user->id ? 'owner' : ($party->members->first()?->role?->code ?? 'user');
 
                 return [
                     'code' => $party->code,
                     'name' => $party->name,
-                    'role' => $roleName ?? 'User',
+                    'role' => $party->user_id === $user->id ? 'Owner' : ($party->members->first()?->role?->name ?? 'User'),
+                    'roleCode' => $roleCode,
                     'playback' => $playback,
-                    'track' => $playback === 'idle' ? null : $party->song?->name,
+                    'detail' => match ($playback) {
+                        'stale' => 'last update '.$sampledAt?->diffForHumans(),
+                        'playing', 'paused' => $party->song?->name,
+                        default => null,
+                    },
+                    'cover' => $party->song?->album?->image_url ?: null,
                     'canManage' => $canManage,
                     'url' => route($canManage ? 'parties.dashboard' : 'parties.show', $party->code),
                 ];
