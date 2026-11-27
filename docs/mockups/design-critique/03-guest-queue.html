@@ -1,0 +1,208 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Guest queue</title>
+<link rel="stylesheet" href="assets/app.css"><link rel="stylesheet" href="assets/mockup.css">
+</head><body class="mock-sheet">
+<header><p><a href="index.html">Design critique mockups</a></p><h1>Guest queue</h1><p>Issue #420. Guest Queue on the shared vote control, with You tags and Fallback Playlist credit.</p></header>
+<section class="mock-section"><h2>Queue, guest view (up and down voting)</h2><p>The guest sees the same vote control as the now-playing strip. Their own Requests carry a You tag and a faint tint; Fallback Playlist tracks are credited to the party.</p><div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="queue-desktop">
+<figcaption><b>Desktop</b> 1440px</figcaption>
+<template>
+<a class="mp-skip" href="#main">Skip to content</a><div class="page">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+<nav class="navbar-collapse collapse" aria-label="Main"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+<div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item active" href="#" aria-current="page">Queue</a><a class="dropdown-item" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></nav></div></aside><div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl">
+<nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Queue</li></ol></nav>
+<a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">J</span><span class="d-none d-sm-block">Jess</span></a>
+</div></header>
+<section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing"><div class="container-xl mp-stage-inner"><div class="mp-narrow d-flex align-items-center gap-4">
+<div class="mp-art mp-art-lg" style="--hue: 25"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="flex-fill" style="min-width:0"><span class="mp-pill is-live mb-2">Playing</span>
+<h2 class="mp-display mb-1">Mr. Brightside</h2><p class="mb-3" style="color:var(--mp-on-muted)">The Killers · Hot Fuss</p>
+<p class="mp-small mb-0" style="color:var(--mp-on-muted)">Requested by <b style="color:#fff">Ravi</b> · 12 votes</p></div>
+</div></div></section><main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Queue</h1><p>7 Requests · about 27 minutes</p></div><a href="#" class="btn btn-primary"><i class="ti ti-search me-1"></i>Request a track</a></div><div class="mp-card mp-card-flush"><ol class="mp-tracks"><li class="mp-track is-mine"><span class="mp-track-pos">1</span>
+<div class="mp-art" style="--hue:200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p><p class="mp-track-by">Darude</p></div>
+<div class="mp-track-meta"><span>3:45</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">8</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track"><span class="mp-track-pos">2</span>
+<div class="mp-art" style="--hue:320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+<div class="mp-track-meta"><span>3:51</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up-filled"></i></button><span class="mp-vote-score">5</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track"><span class="mp-track-pos">3</span>
+<div class="mp-art" style="--hue:140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>From the party's Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>3:19</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">0</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track"><span class="mp-track-pos">4</span>
+<div class="mp-art" style="--hue:50"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Take On Me</span></p><p class="mp-track-by">a-ha · Requested by <b>Dev</b></p></div>
+<div class="mp-track-meta"><span>3:48</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Take On Me"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">-2</span><button class="mp-vote-btn is-down" aria-pressed="true" aria-label="Downvote Take On Me"><i class="ti ti-arrow-big-down-filled"></i></button></div></div></li><li class="mp-track is-mine"><span class="mp-track-pos">5</span>
+<div class="mp-art" style="--hue:260"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Blue (Da Ba Dee)</span><span class="mp-you">You</span></p><p class="mp-track-by">Eiffel 65</p></div>
+<div class="mp-track-meta"><span>3:38</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Blue (Da Ba Dee)"><i class="ti ti-arrow-big-up-filled"></i></button><span class="mp-vote-score">3</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Blue (Da Ba Dee)"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track"><span class="mp-track-pos">6</span>
+<div class="mp-art" style="--hue:15"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Smooth Criminal</span></p><p class="mp-track-by">Michael Jackson · Requested by <b>Ravi</b></p></div>
+<div class="mp-track-meta"><span>4:17</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Smooth Criminal"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">1</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Smooth Criminal"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track"><span class="mp-track-pos">7</span>
+<div class="mp-art" style="--hue:175"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Strobe</span></p><p class="mp-track-by">deadmau5 · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>From the party's Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>10:37</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Strobe"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">0</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Strobe"><i class="ti ti-arrow-big-down"></i></button></div></div></li></ol></div></div></div></main></div></div><div class="mp-toasts" role="status"><div class="mp-toast"><i class="ti ti-circle-check" aria-hidden="true"></i><span class="mp-toast-text">Upvoted <b>Dancing Queen</b></span><button class="mp-iconbtn" aria-label="Dismiss"><i class="ti ti-x"></i></button></div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="phone" id="queue-phone">
+<figcaption><b>Phone</b> 390px</figcaption>
+<template><style>
+@media (max-width: 767px) {
+  .mp-track { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'art text' 'art meta' 'actions actions'; }
+  .mp-track-actions { justify-content: flex-start; margin-block-start: var(--mp-space-1); }
+  .mp-track-actions .mp-sep { margin-inline-start: auto; }
+  .mp-track-by { white-space: normal; overflow: visible; text-overflow: clip; }
+}
+</style>
+<a class="mp-skip" href="#main">Skip to content</a><div class="page">
+<header class="navbar navbar-expand-lg" data-bs-theme="dark" style="background: var(--mp-default-nav-background)"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<a class="navbar-brand" href="#"><img src="assets/mark-small-reversed.svg" alt="Music Party" width="32" height="32"></a><span class="avatar avatar-sm">JS</span></div></header>
+<section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing"><div class="mp-stage-inner d-flex gap-3 align-items-center" style="padding:16px">
+<div class="mp-art mp-art-md" style="--hue:25; --size:72px"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div style="min-width:0"><span class="mp-pill is-live mb-1">Playing</span><h2 class="h3 mb-0">Mr. Brightside</h2><p class="mb-0 mp-small" style="color:var(--mp-on-muted)">The Killers</p></div>
+</div></section><main id="main" class="page-body"><div class="container-xl"><nav class="mp-crumbs mb-2" aria-label="Breadcrumb"><ol><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Queue</li></ol></nav><div class="mp-page-head"><div><h1>Queue</h1><p>7 Requests · about 27 minutes</p></div></div><a href="#" class="btn btn-primary w-100 mb-3"><i class="ti ti-search me-1"></i>Request a track</a><div class="mp-card mp-card-flush"><ol class="mp-tracks"><li class="mp-track is-mine">
+<div class="mp-art" style="--hue:200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p><p class="mp-track-by">Darude</p></div>
+<div class="mp-track-meta"><span>3:45</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">8</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+<div class="mp-track-meta"><span>3:51</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up-filled"></i></button><span class="mp-vote-score">5</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>3:19</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">0</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:50"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Take On Me</span></p><p class="mp-track-by">a-ha · Requested by <b>Dev</b></p></div>
+<div class="mp-track-meta"><span>3:48</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Take On Me"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">-2</span><button class="mp-vote-btn is-down" aria-pressed="true" aria-label="Downvote Take On Me"><i class="ti ti-arrow-big-down-filled"></i></button></div></div></li><li class="mp-track is-mine">
+<div class="mp-art" style="--hue:260"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Blue (Da Ba Dee)</span><span class="mp-you">You</span></p><p class="mp-track-by">Eiffel 65</p></div>
+<div class="mp-track-meta"><span>3:38</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Blue (Da Ba Dee)"><i class="ti ti-arrow-big-up-filled"></i></button><span class="mp-vote-score">3</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Blue (Da Ba Dee)"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:15"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Smooth Criminal</span></p><p class="mp-track-by">Michael Jackson · Requested by <b>Ravi</b></p></div>
+<div class="mp-track-meta"><span>4:17</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Smooth Criminal"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">1</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Smooth Criminal"><i class="ti ti-arrow-big-down"></i></button></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:175"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Strobe</span></p><p class="mp-track-by">deadmau5 · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>10:37</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Strobe"><i class="ti ti-arrow-big-up"></i></button><span class="mp-vote-score">0</span><button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Strobe"><i class="ti ti-arrow-big-down"></i></button></div></div></li></ol></div></div></main></div></template>
+</figure><ul class="mock-notes"><li>Vote states in the list: Sandstorm neutral (8), Dancing Queen voted up (5, green), Take On Me voted down (-2, red), Blue (Da Ba Dee) voted up on own Request.</li><li>Vote buttons are 40px on desktop and 44×44 on phone/touch, grouped in one pill so the score sits between the arrows. The visual size matches the strip.</li><li>"You" is a filled tag beside the title, so own Requests are identifiable without colour; the row tint is secondary. Own Requests drop the "Requested by" line.</li><li>Fallback Playlist rows say "From the party's Fallback Playlist" on desktop and the short "Fallback Playlist" on phone, with the confetti icon. Never "Fallback Track".</li><li>The sidebar is Tabler default; the stage band repeats the now-playing strip so the party stays visible while voting.</li></ul></div></section><section class="mock-section"><h2>Queue, like mode</h2><p>Parties that disable downvoting show a single heart and a score (VoteControl's non-downvote branch). Same pill, same 40/44px targets.</p><div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="queue-like-desktop">
+<figcaption><b>Desktop, like mode</b> 1440px</figcaption>
+<template>
+<a class="mp-skip" href="#main">Skip to content</a><div class="page">
+<aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+<nav class="navbar-collapse collapse" aria-label="Main"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+<div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item active" href="#" aria-current="page">Queue</a><a class="dropdown-item" href="#">Search</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></nav></div></aside><div class="page-wrapper">
+<header class="navbar d-print-none"><div class="container-xl">
+<nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Queue</li></ol></nav>
+<a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">J</span><span class="d-none d-sm-block">Jess</span></a>
+</div></header>
+<section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing"><div class="container-xl mp-stage-inner"><div class="mp-narrow d-flex align-items-center gap-4">
+<div class="mp-art mp-art-lg" style="--hue: 25"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="flex-fill" style="min-width:0"><span class="mp-pill is-live mb-2">Playing</span>
+<h2 class="mp-display mb-1">Mr. Brightside</h2><p class="mb-3" style="color:var(--mp-on-muted)">The Killers · Hot Fuss</p>
+<p class="mp-small mb-0" style="color:var(--mp-on-muted)">Requested by <b style="color:#fff">Ravi</b> · 12 votes</p></div>
+</div></div></section><main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Queue</h1><p>7 Requests · about 27 minutes</p></div><a href="#" class="btn btn-primary"><i class="ti ti-search me-1"></i>Request a track</a></div><div class="mp-card mp-card-flush"><ol class="mp-tracks"><li class="mp-track is-mine"><span class="mp-track-pos">1</span>
+<div class="mp-art" style="--hue:200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p><p class="mp-track-by">Darude</p></div>
+<div class="mp-track-meta"><span>3:45</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Sandstorm"><i class="ti ti-heart"></i></button><span class="mp-vote-score">8</span></div></div></li><li class="mp-track"><span class="mp-track-pos">2</span>
+<div class="mp-art" style="--hue:320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+<div class="mp-track-meta"><span>3:51</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="true" aria-label="Like Dancing Queen"><i class="ti ti-heart-filled"></i></button><span class="mp-vote-score">5</span></div></div></li><li class="mp-track"><span class="mp-track-pos">3</span>
+<div class="mp-art" style="--hue:140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>From the party's Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>3:19</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Levels"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li><li class="mp-track"><span class="mp-track-pos">4</span>
+<div class="mp-art" style="--hue:50"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Take On Me</span></p><p class="mp-track-by">a-ha · Requested by <b>Dev</b></p></div>
+<div class="mp-track-meta"><span>3:48</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Take On Me"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li><li class="mp-track is-mine"><span class="mp-track-pos">5</span>
+<div class="mp-art" style="--hue:260"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Blue (Da Ba Dee)</span><span class="mp-you">You</span></p><p class="mp-track-by">Eiffel 65</p></div>
+<div class="mp-track-meta"><span>3:38</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="true" aria-label="Like Blue (Da Ba Dee)"><i class="ti ti-heart-filled"></i></button><span class="mp-vote-score">3</span></div></div></li><li class="mp-track"><span class="mp-track-pos">6</span>
+<div class="mp-art" style="--hue:15"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Smooth Criminal</span></p><p class="mp-track-by">Michael Jackson · Requested by <b>Ravi</b></p></div>
+<div class="mp-track-meta"><span>4:17</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Smooth Criminal"><i class="ti ti-heart"></i></button><span class="mp-vote-score">1</span></div></div></li><li class="mp-track"><span class="mp-track-pos">7</span>
+<div class="mp-art" style="--hue:175"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Strobe</span></p><p class="mp-track-by">deadmau5 · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>From the party's Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>10:37</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Strobe"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li></ol></div></div></div></main></div></div></template>
+</figure>
+<figure class="mock-frame" data-frame="phone" id="queue-like-phone">
+<figcaption><b>Phone, like mode</b> 390px</figcaption>
+<template><style>
+@media (max-width: 767px) {
+  .mp-track { grid-template-columns: auto minmax(0, 1fr); grid-template-areas: 'art text' 'art meta' 'actions actions'; }
+  .mp-track-actions { justify-content: flex-start; margin-block-start: var(--mp-space-1); }
+  .mp-track-actions .mp-sep { margin-inline-start: auto; }
+  .mp-track-by { white-space: normal; overflow: visible; text-overflow: clip; }
+}
+</style>
+<a class="mp-skip" href="#main">Skip to content</a><div class="page">
+<header class="navbar navbar-expand-lg" data-bs-theme="dark" style="background: var(--mp-default-nav-background)"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<a class="navbar-brand" href="#"><img src="assets/mark-small-reversed.svg" alt="Music Party" width="32" height="32"></a><span class="avatar avatar-sm">JS</span></div></header>
+<section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing"><div class="mp-stage-inner d-flex gap-3 align-items-center" style="padding:16px">
+<div class="mp-art mp-art-md" style="--hue:25; --size:72px"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div style="min-width:0"><span class="mp-pill is-live mb-1">Playing</span><h2 class="h3 mb-0">Mr. Brightside</h2><p class="mb-0 mp-small" style="color:var(--mp-on-muted)">The Killers</p></div>
+</div></section><main id="main" class="page-body"><div class="container-xl"><nav class="mp-crumbs mb-2" aria-label="Breadcrumb"><ol><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Queue</li></ol></nav><div class="mp-page-head"><div><h1>Queue</h1><p>7 Requests · about 27 minutes</p></div></div><a href="#" class="btn btn-primary w-100 mb-3"><i class="ti ti-search me-1"></i>Request a track</a><div class="mp-card mp-card-flush"><ol class="mp-tracks"><li class="mp-track is-mine">
+<div class="mp-art" style="--hue:200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p><p class="mp-track-by">Darude</p></div>
+<div class="mp-track-meta"><span>3:45</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Sandstorm"><i class="ti ti-heart"></i></button><span class="mp-vote-score">8</span></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+<div class="mp-track-meta"><span>3:51</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="true" aria-label="Like Dancing Queen"><i class="ti ti-heart-filled"></i></button><span class="mp-vote-score">5</span></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>3:19</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Levels"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:50"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Take On Me</span></p><p class="mp-track-by">a-ha · Requested by <b>Dev</b></p></div>
+<div class="mp-track-meta"><span>3:48</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Take On Me"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li><li class="mp-track is-mine">
+<div class="mp-art" style="--hue:260"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Blue (Da Ba Dee)</span><span class="mp-you">You</span></p><p class="mp-track-by">Eiffel 65</p></div>
+<div class="mp-track-meta"><span>3:38</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="true" aria-label="Like Blue (Da Ba Dee)"><i class="ti ti-heart-filled"></i></button><span class="mp-vote-score">3</span></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:15"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Smooth Criminal</span></p><p class="mp-track-by">Michael Jackson · Requested by <b>Ravi</b></p></div>
+<div class="mp-track-meta"><span>4:17</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Smooth Criminal"><i class="ti ti-heart"></i></button><span class="mp-vote-score">1</span></div></div></li><li class="mp-track">
+<div class="mp-art" style="--hue:175"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+<div class="mp-track-text"><p class="mp-track-title"><span>Strobe</span></p><p class="mp-track-by">deadmau5 · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+<div class="mp-track-meta"><span>10:37</span></div>
+<div class="mp-track-actions"><div class="mp-vote"><button class="mp-vote-btn is-like" aria-pressed="false" aria-label="Like Strobe"><i class="ti ti-heart"></i></button><span class="mp-vote-score">0</span></div></div></li></ol></div></div></main></div></template>
+</figure><ul class="mock-notes"><li>Liked state fills the heart in pink-red (`.is-like`), not green: it is a different signal from an upvote.</li><li>Scores never go below 0 in like mode, so the Take On Me row shows 0 and a neutral heart.</li></ul></div></section>
+<script src="assets/mockup.js"></script></body></html>

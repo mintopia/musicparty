@@ -1,0 +1,901 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dashboard: one playback status</title>
+<link rel="stylesheet" href="assets/app.css">
+<link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+  <p><a href="index.html">Design critique mockups</a></p>
+  <h1>Dashboard: one playback status</h1>
+  <p>Ticket #418. The four overlapping playback messages (top pill, Start Playback panel, Needs attention row, health grid) collapse into one status band at the top of the Dashboard. It answers “is music coming out, and if not, what do I do?”, and its actions are the next steps. Polling and device facts live in a collapsed Diagnostics disclosure.</p>
+</header>
+
+<section class="mock-section">
+  <h2>Playing</h2>
+  <p>The status band is the now-playing strip: album tint, headline, what is playing and where it comes from, plus the controls the moderator needs most.</p>
+  <div class="mock-row"><div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="status-playing-desktop">
+  <figcaption><b>Playing</b> desktop 1440px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+      <nav class="navbar-collapse collapse" aria-label="Main">
+        <ul class="navbar-nav pt-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+          <li class="nav-item dropdown active">
+            <a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+            <div class="dropdown-menu show" data-bs-popper="static">
+              <a class="dropdown-item" href="#">Queue</a><a class="dropdown-item" href="#">Search</a><a class="dropdown-item active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item" href="#">Web Player</a><a class="dropdown-item" href="#">Moderation</a><a class="dropdown-item" href="#">Settings</a>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+  <div class="page-wrapper">
+    <header class="navbar d-print-none">
+      <div class="container-xl">
+        <nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Dashboard</li></ol></nav>
+        <a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">JS</span><span class="d-none d-sm-block">Jess</span></a>
+      </div>
+    </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Playback status">
+  <div class="container-xl mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1><span class="mp-small">Join code <b>KXQB</b></span></div>
+    <div class="mp-status" data-state="playing">
+  <div class="mp-art mp-art-md mp-status-art" style="--hue: 25"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Music is playing</h2>
+  <p class="mp-status-detail"><b style="color:#fff">Mr. Brightside</b> by The Killers, from Spotify on Jess’s laptop. The Player updated 3 seconds ago. Sandstorm is next.</p>
+  <div><div class="st-bar" style="--p:31%" role="img" aria-label="1:12 of 3:42"><span>1:12</span><i></i><span>3:42</span></div>
+  <div class="mp-status-actions">
+    <button class="mp-btn mp-btn-light"><i class="ti ti-player-pause-filled"></i>Pause</button>
+    <button class="mp-btn mp-btn-ghost"><i class="ti ti-player-skip-forward-filled"></i>Skip track</button>
+    <a class="mp-btn mp-btn-ghost" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+  </div></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="st-grid">
+    <div>
+<section class="mp-card mp-card-flush" aria-labelledby="upcoming-h">
+  <div class="mp-card-head"><h2 id="upcoming-h">Upcoming Songs</h2><a href="#" class="small">Manage all 5 Requests <i class="ti ti-chevron-right"></i></a></div>
+  <ol class="mp-tracks">
+<li class="mp-track">
+  <span class="mp-track-pos">1</span><div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span></p><p class="mp-track-by">Darude · Requested by <b>Ravi</b></p></div>
+  <div class="mp-track-meta"><span class="mp-pill is-warn"><i class="ti ti-calendar-time" aria-hidden="true"></i>Plays at 21:40</span><span>3:45</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">8</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Sandstorm"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Sandstorm"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">2</span><div class="mp-art" style="--hue: 320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+  <div class="mp-track-meta"><span>About 21:44</span><span>3:51</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">5</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Dancing Queen"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Dancing Queen"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">3</span><div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+  <div class="mp-track-meta"><span>About 21:48</span><span>3:19</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">0</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Levels"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Levels"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">4</span><div class="mp-art" style="--hue: 55"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Everybody (Backstreet’s Back) (Extended Version)</span></p><p class="mp-track-by">Backstreet Boys · Requested by <b>Dev</b></p></div>
+  <div class="mp-track-meta"><span>About 21:51</span><span>4:47</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">3</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-trash"></i></button>
+  </div>
+</li></ol>
+</section></div>
+    <div>
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+<section class="mp-card mp-card-flush" aria-labelledby="ql-h" style="margin-block-start:24px">
+  <div class="mp-card-head"><h2 id="ql-h">Quick links</h2></div>
+  <nav class="st-ql" aria-label="Quick links">
+    <a href="#"><i class="ti ti-device-tv"></i>Open TV page</a><a href="#"><i class="ti ti-flag"></i>Flagged Requests</a><a href="#"><i class="ti ti-settings"></i>Party settings</a><a href="#"><i class="ti ti-link"></i>Copy join link</a>
+  </nav>
+</section></div>
+  </div>
+  <div style="margin-block-start:24px">
+<details class="mp-disclosure">
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>3 seconds ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Web Player</dd></div>
+      <div><dt>Polling</dt><dd>On<small>Asks Spotify every 5 seconds</small></dd></div>
+      <div><dt>Spotify device</dt><dd>Spotify on Jess’s laptop</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details></div>
+</div></main></div></div></template>
+</figure></div>
+    <ul class="mock-notes"><li>One stage band replaces the pill, panel and health grid. The signal dot beside the headline is the only status colour.</li><li>Controls sit inside the status as its actions: Pause, Skip track, Open Web Player.</li><li>The Needs attention card now only holds Flagged Requests; playback problems can no longer appear there.</li><li>Ages are words: “3 seconds ago”, “45 days ago”. No raw minutes anywhere.</li></ul>
+  </div>
+</section>
+<section class="mock-section">
+  <h2>Not playing, with next steps</h2>
+  <p>Same band, same place; headline and actions change. Amber signal.</p>
+  <div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="status-silent-desktop">
+  <figcaption><b>Not playing</b> desktop 1440px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+      <nav class="navbar-collapse collapse" aria-label="Main">
+        <ul class="navbar-nav pt-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+          <li class="nav-item dropdown active">
+            <a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+            <div class="dropdown-menu show" data-bs-popper="static">
+              <a class="dropdown-item" href="#">Queue</a><a class="dropdown-item" href="#">Search</a><a class="dropdown-item active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item" href="#">Web Player</a><a class="dropdown-item" href="#">Moderation</a><a class="dropdown-item" href="#">Settings</a>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+  <div class="page-wrapper">
+    <header class="navbar d-print-none">
+      <div class="container-xl">
+        <nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Dashboard</li></ol></nav>
+        <a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">JS</span><span class="d-none d-sm-block">Jess</span></a>
+      </div>
+    </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(50% 0.08 85)" aria-label="Playback status">
+  <div class="container-xl mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1><span class="mp-small">Join code <b>KXQB</b></span></div>
+    <div class="mp-status" data-state="silent">
+  <div class="mp-art mp-art-md mp-status-art st-art-off"><i class="ti ti-volume-off" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Nothing is playing</h2>
+  <p class="mp-status-detail">Jess’s Spotify stopped 45 days ago, part-way through Sandstorm at 1:12. Guests can still add Requests, but nothing will play until you start it.</p>
+  <div><div class="mp-status-actions">
+    <a class="mp-btn mp-btn-light" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+    <button class="mp-btn mp-btn-spotify"><i class="ti ti-brand-spotify"></i>Start on Spotify</button>
+  </div>
+  <p class="st-hint"><i class="ti ti-info-circle" aria-hidden="true"></i>Start on Spotify plays Sandstorm next, on Jess’s Spotify account rather than yours.</p></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="st-grid">
+    <div>
+<section class="mp-card mp-card-flush" aria-labelledby="upcoming-h">
+  <div class="mp-card-head"><h2 id="upcoming-h">Upcoming Songs</h2><a href="#" class="small">Manage all 5 Requests <i class="ti ti-chevron-right"></i></a></div>
+  <ol class="mp-tracks">
+<li class="mp-track">
+  <span class="mp-track-pos">1</span><div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span></p><p class="mp-track-by">Darude · Requested by <b>Ravi</b></p></div>
+  <div class="mp-track-meta"><span class="mp-pill is-warn"><i class="ti ti-calendar-time" aria-hidden="true"></i>Plays at 21:40</span><span>3:45</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">8</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Sandstorm"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Sandstorm"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">2</span><div class="mp-art" style="--hue: 320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+  <div class="mp-track-meta"><span>About 21:44</span><span>3:51</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">5</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Dancing Queen"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Dancing Queen"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">3</span><div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+  <div class="mp-track-meta"><span>About 21:48</span><span>3:19</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">0</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Levels"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Levels"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">4</span><div class="mp-art" style="--hue: 55"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Everybody (Backstreet’s Back) (Extended Version)</span></p><p class="mp-track-by">Backstreet Boys · Requested by <b>Dev</b></p></div>
+  <div class="mp-track-meta"><span>About 21:51</span><span>4:47</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">3</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-trash"></i></button>
+  </div>
+</li></ol>
+</section></div>
+    <div>
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+<section class="mp-card mp-card-flush" aria-labelledby="ql-h" style="margin-block-start:24px">
+  <div class="mp-card-head"><h2 id="ql-h">Quick links</h2></div>
+  <nav class="st-ql" aria-label="Quick links">
+    <a href="#"><i class="ti ti-device-tv"></i>Open TV page</a><a href="#"><i class="ti ti-flag"></i>Flagged Requests</a><a href="#"><i class="ti ti-settings"></i>Party settings</a><a href="#"><i class="ti ti-link"></i>Copy join link</a>
+  </nav>
+</section></div>
+  </div>
+  <div style="margin-block-start:24px">
+<details class="mp-disclosure">
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>45 days ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Encore (Coyote DJ rack)</dd></div>
+      <div><dt>Polling</dt><dd>Off<small>Music Party isn’t asking Spotify</small></dd></div>
+      <div><dt>Spotify device</dt><dd>None open</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details></div>
+</div></main></div></div></template>
+</figure>
+    <ul class="mock-notes"><li>“Open Web Player” is the primary light button (it works on any laptop). “Start on Spotify” wears Spotify green and says whose account it will run on.</li><li>The detail line gives the cause and the age in words, and reassures that guests can keep adding Requests.</li></ul>
+  </div>
+</section>
+<section class="mock-section">
+  <h2>Player not reporting (stale)</h2>
+  <p>When updates have stopped we can no longer claim music is playing or stopped, so we say so and offer ways to get a Player back. Red signal.</p>
+  <div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="status-offline-desktop">
+  <figcaption><b>Player not reporting</b> desktop 1440px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+      <nav class="navbar-collapse collapse" aria-label="Main">
+        <ul class="navbar-nav pt-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+          <li class="nav-item dropdown active">
+            <a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+            <div class="dropdown-menu show" data-bs-popper="static">
+              <a class="dropdown-item" href="#">Queue</a><a class="dropdown-item" href="#">Search</a><a class="dropdown-item active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item" href="#">Web Player</a><a class="dropdown-item" href="#">Moderation</a><a class="dropdown-item" href="#">Settings</a>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+  <div class="page-wrapper">
+    <header class="navbar d-print-none">
+      <div class="container-xl">
+        <nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Dashboard</li></ol></nav>
+        <a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">JS</span><span class="d-none d-sm-block">Jess</span></a>
+      </div>
+    </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(48% 0.14 25)" aria-label="Playback status">
+  <div class="container-xl mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1><span class="mp-small">Join code <b>KXQB</b></span></div>
+    <div class="mp-status" data-state="offline">
+  <div class="mp-art mp-art-md mp-status-art st-art-off"><i class="ti ti-antenna-bars-off" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Player not reporting</h2>
+  <p class="mp-status-detail">Music Party last heard from the Player 45 days ago, so it can’t tell whether music is coming out. Check the speakers, then reconnect a Player.</p>
+  <div><div class="mp-status-actions">
+    <a class="mp-btn mp-btn-light" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+    <button class="mp-btn mp-btn-ghost"><i class="ti ti-radar-2"></i>Turn on Polling</button>
+    <button class="mp-btn mp-btn-spotify"><i class="ti ti-brand-spotify"></i>Start on Spotify</button>
+  </div>
+  <p class="st-hint"><i class="ti ti-info-circle" aria-hidden="true"></i>Polling is off, so Music Party isn’t asking Spotify what is playing.</p></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="st-grid">
+    <div>
+<section class="mp-card mp-card-flush" aria-labelledby="upcoming-h">
+  <div class="mp-card-head"><h2 id="upcoming-h">Upcoming Songs</h2><a href="#" class="small">Manage all 5 Requests <i class="ti ti-chevron-right"></i></a></div>
+  <ol class="mp-tracks">
+<li class="mp-track">
+  <span class="mp-track-pos">1</span><div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span></p><p class="mp-track-by">Darude · Requested by <b>Ravi</b></p></div>
+  <div class="mp-track-meta"><span class="mp-pill is-warn"><i class="ti ti-calendar-time" aria-hidden="true"></i>Plays at 21:40</span><span>3:45</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">8</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Sandstorm"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Sandstorm"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">2</span><div class="mp-art" style="--hue: 320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+  <div class="mp-track-meta"><span>About 21:44</span><span>3:51</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">5</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Dancing Queen"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Dancing Queen"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">3</span><div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+  <div class="mp-track-meta"><span>About 21:48</span><span>3:19</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">0</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Levels"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Levels"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">4</span><div class="mp-art" style="--hue: 55"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Everybody (Backstreet’s Back) (Extended Version)</span></p><p class="mp-track-by">Backstreet Boys · Requested by <b>Dev</b></p></div>
+  <div class="mp-track-meta"><span>About 21:51</span><span>4:47</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">3</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-trash"></i></button>
+  </div>
+</li></ol>
+</section></div>
+    <div>
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+<section class="mp-card mp-card-flush" aria-labelledby="ql-h" style="margin-block-start:24px">
+  <div class="mp-card-head"><h2 id="ql-h">Quick links</h2></div>
+  <nav class="st-ql" aria-label="Quick links">
+    <a href="#"><i class="ti ti-device-tv"></i>Open TV page</a><a href="#"><i class="ti ti-flag"></i>Flagged Requests</a><a href="#"><i class="ti ti-settings"></i>Party settings</a><a href="#"><i class="ti ti-link"></i>Copy join link</a>
+  </nav>
+</section></div>
+  </div>
+  <div style="margin-block-start:24px">
+<details class="mp-disclosure">
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>45 days ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Encore (Coyote DJ rack)</dd></div>
+      <div><dt>Polling</dt><dd>Off<small>Music Party isn’t asking Spotify</small></dd></div>
+      <div><dt>Spotify device</dt><dd>None open</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details></div>
+</div></main></div></div></template>
+</figure>
+    <ul class="mock-notes"><li>Different headline, not an extra banner: the stale case replaces the status instead of stacking on it.</li><li>Three next steps in priority order: Open Web Player, Turn on Polling, Start on Spotify.</li></ul>
+  </div>
+</section>
+<section class="mock-section">
+  <h2>Diagnostics expanded</h2>
+  <p>Collapsed by default everywhere; this frame shows the same Not playing state with it open.</p>
+  <div class="mock-row">
+<figure class="mock-frame" data-frame="desktop" id="status-diagnostics-open-desktop">
+  <figcaption><b>Diagnostics open</b> desktop 1440px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#"><img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2"><span class="site-brand-name">Music Party</span></a>
+      <nav class="navbar-collapse collapse" aria-label="Main">
+        <ul class="navbar-nav pt-lg-3">
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+          <li class="nav-item dropdown active">
+            <a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+            <div class="dropdown-menu show" data-bs-popper="static">
+              <a class="dropdown-item" href="#">Queue</a><a class="dropdown-item" href="#">Search</a><a class="dropdown-item active" href="#" aria-current="page">Dashboard</a><a class="dropdown-item" href="#">Web Player</a><a class="dropdown-item" href="#">Moderation</a><a class="dropdown-item" href="#">Settings</a>
+            </div>
+          </li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+          <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+        </ul>
+      </nav>
+    </div>
+  </aside>
+  <div class="page-wrapper">
+    <header class="navbar d-print-none">
+      <div class="container-xl">
+        <nav class="mp-crumbs" aria-label="Breadcrumb"><ol><li><a href="#">Home</a></li><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Dashboard</li></ol></nav>
+        <a href="#" class="nav-link d-flex align-items-center gap-2 p-0"><span class="avatar avatar-sm">JS</span><span class="d-none d-sm-block">Jess</span></a>
+      </div>
+    </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(50% 0.08 85)" aria-label="Playback status">
+  <div class="container-xl mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1><span class="mp-small">Join code <b>KXQB</b></span></div>
+    <div class="mp-status" data-state="silent">
+  <div class="mp-art mp-art-md mp-status-art st-art-off"><i class="ti ti-volume-off" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Nothing is playing</h2>
+  <p class="mp-status-detail">Jess’s Spotify stopped 45 days ago, part-way through Sandstorm at 1:12. Guests can still add Requests, but nothing will play until you start it.</p>
+  <div><div class="mp-status-actions">
+    <a class="mp-btn mp-btn-light" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+    <button class="mp-btn mp-btn-spotify"><i class="ti ti-brand-spotify"></i>Start on Spotify</button>
+  </div>
+  <p class="st-hint"><i class="ti ti-info-circle" aria-hidden="true"></i>Start on Spotify plays Sandstorm next, on Jess’s Spotify account rather than yours.</p></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="st-grid">
+    <div>
+<section class="mp-card mp-card-flush" aria-labelledby="upcoming-h">
+  <div class="mp-card-head"><h2 id="upcoming-h">Upcoming Songs</h2><a href="#" class="small">Manage all 5 Requests <i class="ti ti-chevron-right"></i></a></div>
+  <ol class="mp-tracks">
+<li class="mp-track">
+  <span class="mp-track-pos">1</span><div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Sandstorm</span></p><p class="mp-track-by">Darude · Requested by <b>Ravi</b></p></div>
+  <div class="mp-track-meta"><span class="mp-pill is-warn"><i class="ti ti-calendar-time" aria-hidden="true"></i>Plays at 21:40</span><span>3:45</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">8</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Sandstorm"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Sandstorm"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">2</span><div class="mp-art" style="--hue: 320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Dancing Queen</span></p><p class="mp-track-by">ABBA · Requested by <b>Mina</b></p></div>
+  <div class="mp-track-meta"><span>About 21:44</span><span>3:51</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">5</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Dancing Queen"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Dancing Queen"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">3</span><div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Levels</span></p><p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></p></div>
+  <div class="mp-track-meta"><span>About 21:48</span><span>3:19</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">0</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Levels"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Levels"><i class="ti ti-trash"></i></button>
+  </div>
+</li>
+<li class="mp-track">
+  <span class="mp-track-pos">4</span><div class="mp-art" style="--hue: 55"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+  <div class="mp-track-text"><p class="mp-track-title"><span>Everybody (Backstreet’s Back) (Extended Version)</span></p><p class="mp-track-by">Backstreet Boys · Requested by <b>Dev</b></p></div>
+  <div class="mp-track-meta"><span>About 21:51</span><span>4:47</span></div>
+  <div class="mp-track-actions"><div class="mp-vote">
+<button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-up"></i></button>
+<span class="mp-vote-score">3</span>
+<button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-arrow-big-down"></i></button></div><span class="mp-sep"></span>
+    <button class="mp-iconbtn" aria-label="Schedule Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-calendar-time"></i></button>
+    <button class="mp-iconbtn is-danger" aria-label="Remove Everybody (Backstreet’s Back) (Extended Version)"><i class="ti ti-trash"></i></button>
+  </div>
+</li></ol>
+</section></div>
+    <div>
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+<section class="mp-card mp-card-flush" aria-labelledby="ql-h" style="margin-block-start:24px">
+  <div class="mp-card-head"><h2 id="ql-h">Quick links</h2></div>
+  <nav class="st-ql" aria-label="Quick links">
+    <a href="#"><i class="ti ti-device-tv"></i>Open TV page</a><a href="#"><i class="ti ti-flag"></i>Flagged Requests</a><a href="#"><i class="ti ti-settings"></i>Party settings</a><a href="#"><i class="ti ti-link"></i>Copy join link</a>
+  </nav>
+</section></div>
+  </div>
+  <div style="margin-block-start:24px">
+<details class="mp-disclosure" open>
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>45 days ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Encore (Coyote DJ rack)</dd></div>
+      <div><dt>Polling</dt><dd>Off<small>Music Party isn’t asking Spotify</small></dd></div>
+      <div><dt>Spotify device</dt><dd>None open</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details></div>
+</div></main></div></div></template>
+</figure>
+    <ul class="mock-notes"><li>Facts are label/value pairs with a small qualifier, in the app’s own vocabulary (Player, Polling, Context Playlist).</li><li>The summary row says what is inside so moderators know when to open it.</li></ul>
+  </div>
+</section>
+<section class="mock-section">
+  <h2>Phone</h2>
+  <p>The status band stacks: headline, detail, then full-width 44px actions. The queue is in 02-phone-dashboard.html.</p>
+  <div class="mock-row">
+<figure class="mock-frame" data-frame="phone" id="status-silent-phone">
+  <figcaption><b>Not playing</b> phone 390px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <header class="navbar navbar-expand-lg" data-bs-theme="dark" style="background: var(--mp-default-nav-background)">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand" href="#"><img src="assets/mark-small-reversed.svg" alt="Music Party" width="32" height="32"></a>
+      <span class="avatar avatar-sm">JS</span>
+    </div>
+  </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(50% 0.08 85)" aria-label="Playback status">
+  <div class="mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1></div>
+    <div class="mp-status" data-state="silent">
+  <div class="mp-art mp-art-md mp-status-art st-art-off"><i class="ti ti-volume-off" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Nothing is playing</h2>
+  <p class="mp-status-detail">Jess’s Spotify stopped 45 days ago, part-way through Sandstorm at 1:12. Guests can still add Requests, but nothing will play until you start it.</p>
+  <div><div class="mp-status-actions">
+    <a class="mp-btn mp-btn-light" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+    <button class="mp-btn mp-btn-spotify"><i class="ti ti-brand-spotify"></i>Start on Spotify</button>
+  </div>
+  <p class="st-hint"><i class="ti ti-info-circle" aria-hidden="true"></i>Start on Spotify plays Sandstorm next, on Jess’s Spotify account rather than yours.</p></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="mp-stack">
+    
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+    <section class="mp-card" aria-labelledby="up-h"><div class="mp-card-head"><h2 id="up-h">Upcoming Songs</h2><a href="#" class="small">All 5</a></div>
+      <div class="mp-card-body"><p class="mb-0 text-secondary">Sandstorm is next · 5 Requests, about 19 minutes. <a href="02-phone-dashboard.html">See the phone queue.</a></p></div></section>
+    
+<details class="mp-disclosure">
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>45 days ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Encore (Coyote DJ rack)</dd></div>
+      <div><dt>Polling</dt><dd>Off<small>Music Party isn’t asking Spotify</small></dd></div>
+      <div><dt>Spotify device</dt><dd>None open</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details>
+  </div>
+</div></main></div></template>
+</figure>
+<figure class="mock-frame" data-frame="phone" id="status-offline-phone">
+  <figcaption><b>Player not reporting</b> phone 390px</figcaption>
+  <template>
+<a class="mp-skip" href="#main">Skip to content</a>
+<div class="page">
+  <header class="navbar navbar-expand-lg" data-bs-theme="dark" style="background: var(--mp-default-nav-background)">
+    <div class="container-fluid">
+      <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+      <a class="navbar-brand" href="#"><img src="assets/mark-small-reversed.svg" alt="Music Party" width="32" height="32"></a>
+      <span class="avatar avatar-sm">JS</span>
+    </div>
+  </header><style>
+.st-grid .mp-track{grid-template-columns:2ch auto minmax(0,1fr) 8em auto}.st-grid .mp-track-by{white-space:normal}.st-grid .mp-track-meta{flex-direction:column;align-items:flex-end;gap:2px}.st-top{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-block-end:24px;flex-wrap:wrap}
+.st-top h1{margin:0;font-size:var(--mp-fs-h3);font-weight:600;letter-spacing:-.01em;color:var(--mp-on-muted)}
+.st-top h1 b{color:#fff;font-weight:650}
+.st-top .mp-small{color:var(--mp-on-muted)}
+.st-top .mp-small b{color:#fff;letter-spacing:.08em}
+.st-hint{margin:12px 0 0;font-size:var(--mp-fs-small);color:var(--mp-on-muted);display:flex;gap:8px;align-items:center}
+.st-bar{display:flex;align-items:center;gap:12px;margin-block-start:16px;max-inline-size:560px;font-size:var(--mp-fs-small);font-variant-numeric:tabular-nums;color:var(--mp-on-muted)}
+.st-bar i{flex:1;block-size:6px;border-radius:99px;background:rgb(255 255 255/18%);overflow:hidden}
+.st-bar i::after{content:'';display:block;inline-size:var(--p,30%);block-size:100%;background:#fff}
+.st-art-off{background:radial-gradient(120% 120% at 20% 10%,oklch(38% .03 270),oklch(24% .02 270))}
+.st-art-off .ti{color:var(--mp-signal);opacity:.9}
+.st-grid{display:grid;grid-template-columns:minmax(0,2fr) minmax(0,1fr);gap:24px;align-items:start}
+.st-attn-item{display:flex;align-items:center;gap:12px;padding:12px 0}
+.st-attn-item + .st-attn-item{border-block-start:1px solid var(--tblr-border-color)}
+.st-attn-item div{flex:1;min-inline-size:0}
+.st-attn-item p{margin:0}
+.st-ql{display:grid;gap:4px;padding:8px 12px 16px}
+.st-ql a{display:flex;align-items:center;gap:12px;min-block-size:44px;padding:0 12px;border-radius:8px;color:var(--tblr-body-color);text-decoration:none}
+.st-ql a:hover{background:color-mix(in oklab,var(--tblr-body-color) 7%,transparent)}
+.st-ql .ti{color:var(--tblr-secondary-color);font-size:1.25rem}
+.mp-disclosure .mp-facts dd small{display:block;font-weight:400;color:var(--tblr-secondary-color)}
+@media (max-width:991px){.st-grid{grid-template-columns:minmax(0,1fr)}}
+@media (max-width:575px){
+ .mp-stage-inner{padding:20px 16px 24px}
+ .mp-status{grid-template-columns:minmax(0,1fr)}
+ .mp-status-art{display:none}
+ .mp-status-actions{flex-direction:column;align-items:stretch}
+ .mp-status-actions .mp-btn{inline-size:100%}
+ .st-top{margin-block-end:16px}
+ .mp-page-head .btn{display:none}
+}
+</style>
+<section class="mp-stage" style="--mp-stage-tint: oklch(48% 0.14 25)" aria-label="Playback status">
+  <div class="mp-stage-inner">
+    <div class="st-top"><h1><b>Dashboard</b> · Coyote LAN 26</h1></div>
+    <div class="mp-status" data-state="offline">
+  <div class="mp-art mp-art-md mp-status-art st-art-off"><i class="ti ti-antenna-bars-off" aria-hidden="true"></i></div>
+  <h2 class="mp-status-headline">Player not reporting</h2>
+  <p class="mp-status-detail">Music Party last heard from the Player 45 days ago, so it can’t tell whether music is coming out. Check the speakers, then reconnect a Player.</p>
+  <div><div class="mp-status-actions">
+    <a class="mp-btn mp-btn-light" href="#"><i class="ti ti-external-link"></i>Open Web Player</a>
+    <button class="mp-btn mp-btn-ghost"><i class="ti ti-radar-2"></i>Turn on Polling</button>
+    <button class="mp-btn mp-btn-spotify"><i class="ti ti-brand-spotify"></i>Start on Spotify</button>
+  </div>
+  <p class="st-hint"><i class="ti ti-info-circle" aria-hidden="true"></i>Polling is off, so Music Party isn’t asking Spotify what is playing.</p></div>
+</div>
+  </div>
+</section>
+<main id="main" class="page-body"><div class="container-xl">
+  <div class="mp-stack">
+    
+<section class="mp-card" aria-labelledby="attn-h">
+  <div class="mp-card-head"><h2 id="attn-h">Needs attention</h2><span class="mp-pill is-alert">2 Flagged Requests</span></div>
+  <div class="mp-card-body" style="padding-block:4px">
+    <div class="st-attn-item"><div><p style="font-weight:600">Gangnam Style</p><p class="mp-small text-secondary">PSY · Requested by Dev · flagged 4 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Gangnam Style"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Gangnam Style"><i class="ti ti-x"></i></button></div>
+    <div class="st-attn-item"><div><p style="font-weight:600">Baby Shark</p><p class="mp-small text-secondary">Pinkfong · Requested by Mina · flagged 9 minutes ago</p></div>
+      <button class="mp-iconbtn" aria-label="Approve Baby Shark"><i class="ti ti-check"></i></button><button class="mp-iconbtn is-danger" aria-label="Reject Baby Shark"><i class="ti ti-x"></i></button></div>
+  </div>
+</section>
+    <section class="mp-card" aria-labelledby="up-h"><div class="mp-card-head"><h2 id="up-h">Upcoming Songs</h2><a href="#" class="small">All 5</a></div>
+      <div class="mp-card-body"><p class="mb-0 text-secondary">Sandstorm is next · 5 Requests, about 19 minutes. <a href="02-phone-dashboard.html">See the phone queue.</a></p></div></section>
+    
+<details class="mp-disclosure">
+  <summary>Diagnostics <small>Polling, Player and Spotify details</small></summary>
+  <div class="mp-disclosure-body">
+    <dl class="mp-facts">
+      <div><dt>Last update from the Player</dt><dd>45 days ago<small>Received by Playback Webhook</small></dd></div>
+      <div><dt>Player</dt><dd>Encore (Coyote DJ rack)</dd></div>
+      <div><dt>Polling</dt><dd>Off<small>Music Party isn’t asking Spotify</small></dd></div>
+      <div><dt>Spotify device</dt><dd>None open</dd></div>
+      <div><dt>Spotify account</dt><dd>Jess’s Premium account<small>Link expires in 29 days</small></dd></div>
+      <div><dt>Context Playlist</dt><dd>Emptied 6 minutes ago<small>Music Party empties it every 15 minutes</small></dd></div>
+    </dl>
+  </div>
+</details>
+  </div>
+</div></main></div></template>
+</figure>
+    <ul class="mock-notes"><li>Art tile is dropped under 576px to give the headline and detail the full width.</li><li>Needs attention comes before the queue on phone so Flagged Requests are not buried.</li></ul>
+  </div>
+</section>
+<script src="assets/mockup.js"></script>
+</body>
+</html>

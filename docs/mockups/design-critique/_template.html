@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Mockup template</title>
+    <link rel="stylesheet" href="assets/app.css">
+    <link rel="stylesheet" href="assets/mockup.css">
+</head>
+<body class="mock-sheet">
+<header>
+    <p><a href="index.html">Design critique mockups</a></p>
+    <h1>Mockup template</h1>
+    <p>Copy this file to start a mockup page. Each screen lives in a <code>&lt;figure data-frame&gt;</code> with an id;
+        its markup goes in a <code>&lt;template&gt;</code>, which <code>assets/mockup.js</code> renders in an iframe at the
+        device's real width. Desktop shows at 75%, TV at 50%; <code>screenshot.mjs</code> captures each frame at 1:1.</p>
+</header>
+
+<section class="mock-section">
+    <h2>Queue, guest view</h2>
+    <p>The page shell (sidebar, header with breadcrumbs, stage band, centred content) and the party primitives in one
+        screen.</p>
+
+    <div class="mock-row">
+        <figure class="mock-frame" data-frame="desktop" id="queue-desktop">
+            <figcaption><b>Desktop</b> 1440px</figcaption>
+            <template>
+                <a class="mp-skip" href="#main">Skip to content</a>
+                <div class="page">
+                    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+                        <div class="container-fluid">
+                            <button class="navbar-toggler" type="button" aria-label="Toggle navigation">
+                                <span class="navbar-toggler-icon"></span>
+                            </button>
+                            <a class="navbar-brand navbar-brand-autodark mt-1 px-2" href="#">
+                                <img src="assets/mark-small-reversed.svg" alt="" width="32" height="32" class="me-2">
+                                <span class="site-brand-name">Music Party</span>
+                            </a>
+                            <nav class="navbar-collapse collapse" aria-label="Main">
+                                <ul class="navbar-nav pt-lg-3">
+                                    <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+                                    <li class="nav-item dropdown active">
+                                        <a class="nav-link dropdown-toggle show" href="#" aria-expanded="true"><span class="nav-link-icon"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a>
+                                        <div class="dropdown-menu show" data-bs-popper="static">
+                                            <a class="dropdown-item active" href="#" aria-current="page">Queue</a>
+                                            <a class="dropdown-item" href="#">Search</a>
+                                        </div>
+                                    </li>
+                                    <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+                                    <li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+                                </ul>
+                            </nav>
+                        </div>
+                    </aside>
+                    <div class="page-wrapper">
+                        <header class="navbar d-print-none">
+                            <div class="container-xl">
+                                <nav class="mp-crumbs" aria-label="Breadcrumb">
+                                    <ol>
+                                        <li><a href="#">Home</a></li>
+                                        <li><a href="#">Coyote LAN 26</a></li>
+                                        <li aria-current="page">Queue</li>
+                                    </ol>
+                                </nav>
+                                <a href="#" class="nav-link d-flex align-items-center gap-2 p-0">
+                                    <span class="avatar avatar-sm">JS</span><span class="d-none d-sm-block">Jess</span>
+                                </a>
+                            </div>
+                        </header>
+
+                        <section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing">
+                            <div class="container-xl mp-stage-inner">
+                                <div class="mp-narrow d-flex align-items-center gap-4">
+                                    <div class="mp-art mp-art-lg" style="--hue: 25"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                    <div class="flex-fill" style="min-width: 0">
+                                        <span class="mp-pill is-live mb-2">Playing</span>
+                                        <h2 class="mp-display mb-1">Mr. Brightside</h2>
+                                        <p class="mb-3" style="color: var(--mp-on-muted)">The Killers · Hot Fuss</p>
+                                        <div class="d-flex align-items-center gap-3">
+                                            <span class="mp-small flex-fill" style="color: var(--mp-on-muted)">Requested by <b style="color:#fff">Ravi</b></span>
+                                            <div class="mp-vote">
+                                                <button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Mr. Brightside"><i class="ti ti-arrow-big-up-filled"></i></button>
+                                                <span class="mp-vote-score">12</span>
+                                                <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Mr. Brightside"><i class="ti ti-arrow-big-down"></i></button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </section>
+
+                        <main id="main" class="page-body">
+                            <div class="container-xl">
+                                <div class="mp-narrow">
+                                    <div class="mp-page-head">
+                                        <div>
+                                            <h1>Queue</h1>
+                                            <p>6 Requests · about 22 minutes</p>
+                                        </div>
+                                        <a href="#" class="btn btn-primary"><i class="ti ti-search me-1"></i>Request a track</a>
+                                    </div>
+
+                                    <div class="mp-card mp-card-flush">
+                                        <ol class="mp-tracks">
+                                            <li class="mp-track is-mine">
+                                                <span class="mp-track-pos">1</span>
+                                                <div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                                <div class="mp-track-text">
+                                                    <p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p>
+                                                    <p class="mp-track-artist">Darude</p>
+                                                </div>
+                                                <div class="mp-track-meta"><span>3:45</span></div>
+                                                <div class="mp-track-actions">
+                                                    <div class="mp-vote">
+                                                        <button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+                                                        <span class="mp-vote-score">8</span>
+                                                        <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="mp-track">
+                                                <span class="mp-track-pos">2</span>
+                                                <div class="mp-art" style="--hue: 320"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                                <div class="mp-track-text">
+                                                    <p class="mp-track-title"><span>Dancing Queen</span></p>
+                                                    <p class="mp-track-by">ABBA · Requested by <b>Mina</b></p>
+                                                </div>
+                                                <div class="mp-track-meta"><span>3:51</span></div>
+                                                <div class="mp-track-actions">
+                                                    <div class="mp-vote">
+                                                        <button class="mp-vote-btn is-up" aria-pressed="true" aria-label="Upvote Dancing Queen"><i class="ti ti-arrow-big-up-filled"></i></button>
+                                                        <span class="mp-vote-score">5</span>
+                                                        <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Dancing Queen"><i class="ti ti-arrow-big-down"></i></button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                            <li class="mp-track">
+                                                <span class="mp-track-pos">3</span>
+                                                <div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                                <div class="mp-track-text">
+                                                    <p class="mp-track-title"><span>Levels</span></p>
+                                                    <p class="mp-track-by">Avicii · <span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>From the party's Fallback Playlist</span></p>
+                                                </div>
+                                                <div class="mp-track-meta"><span>3:19</span></div>
+                                                <div class="mp-track-actions">
+                                                    <div class="mp-vote">
+                                                        <button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+                                                        <span class="mp-vote-score">0</span>
+                                                        <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button>
+                                                    </div>
+                                                </div>
+                                            </li>
+                                        </ol>
+                                    </div>
+                                </div>
+                            </div>
+                        </main>
+                    </div>
+                </div>
+                <div class="mp-toasts" role="status">
+                    <div class="mp-toast">
+                        <i class="ti ti-circle-check" aria-hidden="true"></i>
+                        <span class="mp-toast-text">Upvoted <b>Dancing Queen</b></span>
+                        <button class="mp-iconbtn" aria-label="Dismiss"><i class="ti ti-x"></i></button>
+                    </div>
+                </div>
+            </template>
+        </figure>
+
+        <figure class="mock-frame" data-frame="phone" id="queue-phone">
+            <figcaption><b>Phone</b> 390px</figcaption>
+            <template>
+                <a class="mp-skip" href="#main">Skip to content</a>
+                <div class="page">
+                    <header class="navbar navbar-expand-lg" data-bs-theme="dark" style="background: var(--mp-default-nav-background)">
+                        <div class="container-fluid">
+                            <button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+                            <a class="navbar-brand" href="#"><img src="assets/mark-small-reversed.svg" alt="Music Party" width="32" height="32"></a>
+                            <span class="avatar avatar-sm">JS</span>
+                        </div>
+                    </header>
+                    <section class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25)" aria-label="Now playing">
+                        <div class="mp-stage-inner d-flex gap-3 align-items-center" style="padding: 16px">
+                            <div class="mp-art mp-art-md" style="--hue: 25; --size: 84px"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                            <div style="min-width: 0">
+                                <span class="mp-pill is-live mb-1">Playing</span>
+                                <h2 class="h3 mb-0">Mr. Brightside</h2>
+                                <p class="mb-0 mp-small" style="color: var(--mp-on-muted)">The Killers</p>
+                            </div>
+                        </div>
+                    </section>
+                    <main id="main" class="page-body">
+                        <div class="container-xl">
+                            <nav class="mp-crumbs mb-2" aria-label="Breadcrumb"><ol><li><a href="#">Coyote LAN 26</a></li><li aria-current="page">Queue</li></ol></nav>
+                            <div class="mp-page-head"><div><h1>Queue</h1><p>6 Requests · about 22 minutes</p></div></div>
+                            <div class="mp-card mp-card-flush">
+                                <ol class="mp-tracks">
+                                    <li class="mp-track is-mine">
+                                        <div class="mp-art" style="--hue: 200"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                        <div class="mp-track-text">
+                                            <p class="mp-track-title"><span>Sandstorm</span><span class="mp-you">You</span></p>
+                                            <p class="mp-track-artist">Darude</p>
+                                        </div>
+                                        <div class="mp-track-meta"><span>3:45</span></div>
+                                        <div class="mp-track-actions">
+                                            <div class="mp-vote">
+                                                <button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Sandstorm"><i class="ti ti-arrow-big-up"></i></button>
+                                                <span class="mp-vote-score">8</span>
+                                                <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Sandstorm"><i class="ti ti-arrow-big-down"></i></button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                    <li class="mp-track">
+                                        <div class="mp-art" style="--hue: 140"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                                        <div class="mp-track-text">
+                                            <p class="mp-track-title"><span>Levels</span></p>
+                                            <p class="mp-track-artist">Avicii</p>
+                                        </div>
+                                        <div class="mp-track-meta"><span class="mp-credit"><i class="ti ti-confetti" aria-hidden="true"></i>Fallback Playlist</span></div>
+                                        <div class="mp-track-actions">
+                                            <div class="mp-vote">
+                                                <button class="mp-vote-btn is-up" aria-pressed="false" aria-label="Upvote Levels"><i class="ti ti-arrow-big-up"></i></button>
+                                                <span class="mp-vote-score">0</span>
+                                                <button class="mp-vote-btn is-down" aria-pressed="false" aria-label="Downvote Levels"><i class="ti ti-arrow-big-down"></i></button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </div>
+                        </div>
+                    </main>
+                </div>
+            </template>
+        </figure>
+
+        <ul class="mock-notes">
+            <li>Annotate design decisions here, one per line.</li>
+            <li>Keep real vocabulary: Request, Queue, Fallback Playlist, Web Player, Dashboard.</li>
+        </ul>
+    </div>
+</section>
+
+<section class="mock-section">
+    <h2>TV page</h2>
+    <p>The TV frame renders at 1920×1080 and shows at 50%. It reuses the real TV page CSS for reference; party primitives
+        sit alongside.</p>
+    <figure class="mock-frame" data-frame="tv" id="queue-tv">
+        <figcaption><b>TV</b> 1920×1080, shown at 50%</figcaption>
+        <template>
+            <main class="mp-stage" style="--mp-stage-tint: oklch(58% 0.17 25); min-height: 100vh; padding: 64px 96px; display: flex; flex-direction: column">
+                <header class="d-flex justify-content-between align-items-start">
+                    <h1 style="font-size: 40px; margin: 0">Coyote LAN 26</h1>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="text-end">
+                            <div style="font-size: 22px; color: var(--mp-on-muted)">Join at music.coyote.lan with code</div>
+                            <div class="mp-code" style="font-size: 52px">KXQB</div>
+                        </div>
+                        <div style="width: 152px; height: 152px; background: #fff; border-radius: 12px; display: grid; place-items: center; color: #111">
+                            <i class="ti ti-qrcode" style="font-size: 120px" aria-label="QR code to join"></i>
+                        </div>
+                    </div>
+                </header>
+                <section class="d-flex align-items-end gap-5 mt-auto" aria-label="Now playing">
+                    <div class="mp-art" style="--hue: 25; --size: 460px; box-shadow: 0 28px 80px rgb(0 0 0 / 50%)"><i class="ti ti-vinyl" aria-hidden="true"></i></div>
+                    <div style="min-width: 0">
+                        <span class="mp-pill is-live" style="font-size: 22px">Playing</span>
+                        <h2 style="font-size: 88px; font-weight: 700; letter-spacing: -0.025em; line-height: 1.05; margin: 16px 0 12px">Mr. Brightside</h2>
+                        <p style="font-size: 40px; margin: 0; color: rgb(255 255 255 / 90%)">The Killers</p>
+                        <p style="font-size: 28px; margin: 24px 0 0; color: var(--mp-on-muted)">Requested by <b style="color: #fff">Ravi</b> · 12 votes</p>
+                    </div>
+                </section>
+            </main>
+        </template>
+    </figure>
+</section>
+
+<script src="assets/mockup.js"></script>
+</body>
+</html>
