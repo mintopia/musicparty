@@ -62,6 +62,8 @@ export interface TrackAnnotation {
         score: number;
         vote: number | null;
         requested_by: string | null;
+        requested_by_you?: boolean;
+        requested_ago?: string | null;
     };
     eligibility: {allowed: boolean; outcome: 'allow' | 'flag' | 'reject'; reason: string | null};
     awaiting_approval?: boolean;

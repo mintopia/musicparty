@@ -122,7 +122,13 @@ const castVote = (value: -1 | 0 | 1): void => emit('vote', props.track, value);
                 </div>
                 <div class="text-muted">
                     <template v-if="track.queue.in_queue">
-                        <template v-if="track.queue.requested_by">Requested by {{ track.queue.requested_by }}</template>
+                        <template v-if="track.queue.requested_by_you">
+                            Requested by <b>you</b
+                            ><template v-if="track.queue.requested_ago"> · {{ track.queue.requested_ago }}</template>
+                        </template>
+                        <template v-else-if="track.queue.requested_by"
+                            >Requested by {{ track.queue.requested_by }}</template
+                        >
                         <template v-else>{{ fallbackName ?? 'Fallback Track' }}</template>
                     </template>
                     <span v-else-if="!track.eligibility.allowed && !isAwaiting" class="text-warning" data-test="reason">

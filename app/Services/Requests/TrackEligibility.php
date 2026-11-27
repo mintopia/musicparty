@@ -46,6 +46,8 @@ class TrackEligibility
                 flagged: $decision->isFlagged(),
                 awaitingApproval: $entry['awaiting'] ?? false,
                 decoration: $entry['decoration'] ?? null,
+                requestedByViewer: $entry['mine'] ?? false,
+                requestedAgo: $entry['ago'] ?? null,
             );
         }
 
@@ -54,7 +56,7 @@ class TrackEligibility
 
     /**
      * @param  list<Track>  $tracks
-     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null, awaiting: bool, decoration: array<string, string>|null}>
+     * @return array<string, array{id: int, score: int, vote: int|null, user: string|null, awaiting: bool, decoration: array<string, string>|null, mine: bool, ago: string|null}>
      */
     protected function waitingByProviderId(Party $party, PartyMember $member, array $tracks): array
     {
@@ -81,6 +83,8 @@ class TrackEligibility
                 'user' => $upcoming->user->nickname ?? null,
                 'awaiting' => $awaiting,
                 'decoration' => $this->mods->decorationFor($party, $upcoming->song, $upcoming)?->toArray(),
+                'mine' => $upcoming->user_id === $member->user_id,
+                'ago' => $upcoming->created_at === null ? null : ($upcoming->created_at->diffInSeconds() < 60 ? 'just now' : $upcoming->created_at->diffForHumans()),
             ];
         }
 

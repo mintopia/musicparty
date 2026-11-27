@@ -28,14 +28,14 @@ it('describes a track that is not in the queue and allowed', function () {
     expect($json)->toHaveKeys(['provider_id', 'id', 'name', 'duration_ms', 'explicit', 'album', 'artists', 'queue', 'eligibility'])
         ->and($json['album'])->toHaveKeys(['id', 'name', 'image_url'])
         ->and($json['artists'][0])->toHaveKeys(['id', 'name'])
-        ->and($json['queue'])->toBe(['in_queue' => false, 'upcoming_id' => null, 'score' => 0, 'vote' => null, 'requested_by' => null])
+        ->and($json['queue'])->toBe(['in_queue' => false, 'upcoming_id' => null, 'score' => 0, 'vote' => null, 'requested_by' => null, 'requested_by_you' => false, 'requested_ago' => null])
         ->and($json['eligibility'])->toBe(['allowed' => true, 'outcome' => 'allow', 'reason' => null]);
 });
 
 it('describes a track already in the queue', function () {
     $json = annotationFor(true, true);
 
-    expect($json['queue'])->toBe(['in_queue' => true, 'upcoming_id' => 7, 'score' => 3, 'vote' => 1, 'requested_by' => 'Jess']);
+    expect($json['queue'])->toBe(['in_queue' => true, 'upcoming_id' => 7, 'score' => 3, 'vote' => 1, 'requested_by' => 'Jess', 'requested_by_you' => false, 'requested_ago' => null]);
 });
 
 it('describes a blocked track with its reason', function () {

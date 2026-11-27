@@ -303,6 +303,23 @@ describe('Party search suggestions and weak matches', () => {
         expect(wrapper.get('[data-test="artist-subtitle"]').text()).toBe('5 Requests');
     });
 
+    it('words a track you queued as requested by you with its age', () => {
+        const wrapper = mountSearch(
+            overview({
+                tracks: [
+                    track('t1', {
+                        in_queue: true,
+                        requested_by: 'Mina',
+                        requested_by_you: true,
+                        requested_ago: 'just now',
+                    }),
+                ],
+            }),
+        );
+
+        expect(wrapper.get('[data-test="track-row"]').text()).toContain('Requested by you · just now');
+    });
+
     it('shows no suggestions once a search is made', () => {
         const wrapper = mountSearch(overview());
 

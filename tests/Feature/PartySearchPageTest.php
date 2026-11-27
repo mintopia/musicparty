@@ -106,6 +106,19 @@ it('marks queued tracks and reports why a banned member cannot request', functio
                 ->whereNot('results.tracks.0.eligibility.reason', null)));
 });
 
+it('tells the requester a queued track is theirs and when it was added', function () {
+    pageSearchUpcoming($this->party, FakeSpotify::track('mine'), $this->member->user);
+    pageSearchUpcoming($this->party, FakeSpotify::track('theirs'), User::factory()->create(['first_login' => false]));
+    pageSearchResults($this->fake, FakeSpotify::track('mine'), FakeSpotify::track('theirs'));
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q']))
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
+            ->where('results.top.track.queue.requested_by_you', true)
+            ->where('results.top.track.queue.requested_ago', 'just now')
+            ->where('results.tracks.0.queue.requested_by_you', false)));
+});
+
 it('paginates a single type using perPage and page and keeps the query string on page links', function () {
     pageSearchResults($this->fake, FakeSpotify::track('a'));
 
