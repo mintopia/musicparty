@@ -74,6 +74,15 @@ it('offers the party provider\'s playlists and devices on edit', function (strin
     'fake' => ['fake', 'Fake Speaker'],
 ]);
 
+it('names the party owner as the playlist host when an admin edits another user\'s party', function () {
+    $other = User::factory()->withSpotify()->create();
+    $party = Party::factory()->for($other)->create(['provider_id' => 'spotify']);
+
+    $this->actingAs($this->owner)->get(route('parties.edit', $party->code))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->where('hostName', $other->nickname));
+});
+
 it('validates the backup playlist against the chosen provider on create', function (string $providerId, string $valid, string $invalid) {
     $this->actingAs($this->owner)->post(route('parties.store'), payload($providerId, $invalid))
         ->assertSessionHasErrors('backup_playlist_id');

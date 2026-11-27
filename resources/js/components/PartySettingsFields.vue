@@ -1,14 +1,18 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
 import CopyButton from '@/components/CopyButton.vue';
+import OptionPicker from '@/components/OptionPicker.vue';
+import PlaylistPicker from '@/components/PlaylistPicker.vue';
 import SettingRow from '@/components/SettingRow.vue';
 import {countryOptionsFor} from '@/lib/countries';
-import type {NamedOption, PartyFormState} from '@/lib/partyForm';
+import {timezoneOffsetLabel} from '@/lib/timezones';
+import type {NamedOption, PartyFormState, PlaylistOption} from '@/lib/partyForm';
 
 const props = defineProps<{
     tab: 'general' | 'requests' | 'playback' | 'screens';
     form: PartyFormState;
-    playlists: NamedOption[];
+    playlists: PlaylistOption[];
+    hostName?: string;
     devices: NamedOption[];
     providerName: string;
     instanceTimezone: string;
@@ -27,7 +31,21 @@ const relayRows = computed(() => [
     ...(props.encore.secret ? [{label: 'App secret', value: props.encore.secret, copy: 'Copy app secret'}] : []),
 ]);
 
-const countryOptions = computed(() => countryOptionsFor(props.form.country));
+const countryOptions = computed(() =>
+    countryOptionsFor(props.form.country).map((option) => ({
+        value: option.code,
+        label: option.name,
+        meta: option.code,
+    })),
+);
+const timezoneOptions = computed(() => [
+    {value: '', label: `Use instance timezone (${props.instanceTimezone})`},
+    ...props.timezones.map((identifier) => ({
+        value: identifier,
+        label: identifier,
+        meta: timezoneOffsetLabel(identifier),
+    })),
+]);
 
 function err(field: string): string | undefined {
     return (props.form.errors as Record<string, string | undefined>)[field];
@@ -70,17 +88,13 @@ function err(field: string): string | undefined {
                 <span class="text-secondary">{{ providerName }}</span>
             </SettingRow>
             <SettingRow label="Country" for="country" hint="Used for search and browse results" :error="err('country')">
-                <select
+                <OptionPicker
                     id="country"
                     v-model="form.country"
-                    name="country"
-                    class="form-select"
-                    :class="{'is-invalid': err('country')}"
-                >
-                    <option v-for="option in countryOptions" :key="option.code" :value="option.code">
-                        {{ option.name }} · {{ option.code }}
-                    </option>
-                </select>
+                    label="Country"
+                    :options="countryOptions"
+                    :invalid="Boolean(err('country'))"
+                />
             </SettingRow>
             <SettingRow
                 label="Timezone"
@@ -88,18 +102,13 @@ function err(field: string): string | undefined {
                 hint="Used by time-based mods and Scheduled Requests. Blank uses the instance timezone"
                 :error="err('timezone')"
             >
-                <select
+                <OptionPicker
                     id="timezone"
                     v-model="form.timezone"
-                    name="timezone"
-                    class="form-select"
-                    :class="{'is-invalid': err('timezone')}"
-                >
-                    <option value="">Use instance timezone ({{ instanceTimezone }})</option>
-                    <option v-for="identifier in timezones" :key="identifier" :value="identifier">
-                        {{ identifier }}
-                    </option>
-                </select>
+                    label="Timezone"
+                    :options="timezoneOptions"
+                    :invalid="Boolean(err('timezone'))"
+                />
             </SettingRow>
         </section>
 
@@ -265,35 +274,24 @@ function err(field: string): string | undefined {
             <SettingRow
                 label="Fallback Playlist"
                 for="backup_playlist_id"
+                stacked
                 hint="Plays when the Queue is empty"
                 :error="err('backup_playlist_id') ?? err('custom_backup_playlist_id')"
             >
-                <select
+                <PlaylistPicker
                     id="backup_playlist_id"
                     v-model="form.backup_playlist_id"
-                    name="backup_playlist_id"
-                    class="form-select"
-                    :class="{'is-invalid': err('backup_playlist_id')}"
-                >
-                    <option v-for="playlist in playlists" :key="playlist.id" :value="playlist.id">
-                        {{ playlist.name }}
-                    </option>
-                    <option value="other">Other playlist</option>
-                </select>
-                <input
-                    v-if="form.backup_playlist_id === 'other'"
-                    id="custom_backup_playlist_id"
-                    v-model="form.custom_backup_playlist_id"
-                    type="text"
-                    name="custom_backup_playlist_id"
-                    class="form-control"
-                    :class="{'is-invalid': err('custom_backup_playlist_id')}"
-                    placeholder="Spotify playlist ID"
+                    v-model:custom="form.custom_backup_playlist_id"
+                    :playlists="playlists"
+                    :host-name="hostName"
+                    :provider-name="providerName"
+                    :invalid="Boolean(err('backup_playlist_id') ?? err('custom_backup_playlist_id'))"
                 />
             </SettingRow>
             <SettingRow
                 label="Save played tracks to"
                 for="history_playlist_id"
+                stacked
                 hint="Adds every track sent to the player to this playlist"
                 :error="err('history_playlist_id')"
             >
@@ -301,7 +299,7 @@ function err(field: string): string | undefined {
                     id="history_playlist_id"
                     v-model="form.history_playlist_id"
                     name="history_playlist_id"
-                    class="form-select"
+                    class="form-select mp-wide-select"
                     :class="{'is-invalid': err('history_playlist_id')}"
                 >
                     <option value="none">None</option>

@@ -90,5 +90,11 @@ defineProps<{
     .setting-control {
         justify-content: flex-start;
     }
+
+    .setting-label {
+        display: flex;
+        align-items: center;
+        min-block-size: 44px;
+    }
 }
 </style>
