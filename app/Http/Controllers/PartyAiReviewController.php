@@ -68,7 +68,6 @@ class PartyAiReviewController extends Controller
             'page' => ['nullable', 'integer', 'min:1'],
         ]);
         $aiReview->loadMissing('user:id,nickname');
-        $state = $this->requestState($aiReview);
 
         return Inertia::render('Parties/AiReviews/Show', [
             'party' => ['code' => $party->code, 'name' => $party->name],
@@ -82,8 +81,6 @@ class PartyAiReviewController extends Controller
                 'confidence' => $aiReview->confidence,
                 'request' => $aiReview->request,
                 'response' => $aiReview->response,
-                'partyContext' => is_string($state['party_context'] ?? null) ? $state['party_context'] : null,
-                'partyState' => is_array($state['party'] ?? null) ? $state['party'] : null,
                 'errorClass' => $aiReview->error_class,
                 'errorMessage' => $aiReview->error_message,
                 'trackId' => $aiReview->track_id,
@@ -124,17 +121,5 @@ class PartyAiReviewController extends Controller
             'totalTokens' => $review->total_tokens,
             'requested' => $review->upcoming_song_id !== null,
         ];
-    }
-
-    /**
-     * @return array<string, mixed>
-     */
-    protected function requestState(AiReview $review): array
-    {
-        $request = $review->request;
-        $payload = $request['state'] ?? ($request['messages'][1]['content'] ?? null);
-        $decoded = is_string($payload) ? json_decode($payload, true) : $payload;
-
-        return is_array($decoded) ? $decoded : [];
     }
 }

@@ -17,7 +17,7 @@ import {
     prettyJson,
     requestBlocks,
 } from '@/lib/aiReviews';
-import type {AiReviewDetail, AiReviewTrackEntry, LegacyPartyState, ModerationTabsProps} from '@/types';
+import type {AiReviewDetail, LegacyPartyState, ModerationTabsProps} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string};
@@ -38,27 +38,6 @@ const requestParts = computed(() => requestBlocks(props.review.request));
 const tokens = computed(
     () =>
         `${formatTokens(props.review.promptTokens)} in, ${formatTokens(props.review.completionTokens)} out, ${formatTokens(props.review.totalTokens)} total`,
-);
-
-const trackLists = computed(() => {
-    const state = props.review.partyState;
-    const lists: {key: string; title: string; tracks: AiReviewTrackEntry[]}[] = [
-        {key: 'recent', title: 'Recently played', tracks: state?.recent ?? []},
-        {key: 'top_rated', title: 'Highest rated', tracks: state?.top_rated ?? []},
-        {key: 'downvoted', title: 'Most downvoted', tracks: state?.downvoted ?? []},
-        {key: 'most_upvoted_requests', title: 'Most upvoted requests', tracks: state?.most_upvoted_requests ?? []},
-        {
-            key: 'most_downvoted_requests',
-            title: 'Most downvoted requests',
-            tracks: state?.most_downvoted_requests ?? [],
-        },
-    ];
-    return lists.filter((list) => list.tracks.length > 0);
-});
-const artists = computed(() => props.review.partyState?.artists ?? []);
-const stats = computed(() => props.review.partyState?.stats ?? null);
-const hasPartyState = computed(
-    () => props.review.partyState !== null && (trackLists.value.length > 0 || artists.value.length > 0 || stats.value),
 );
 </script>
 
@@ -212,61 +191,7 @@ const hasPartyState = computed(
             </div>
         </div>
 
-        <div class="card mb-4" data-test="party-state">
-            <div class="card-header">
-                <h3 class="card-title">Party context sent</h3>
-            </div>
-            <div v-if="hasPartyState" class="card-body">
-                <p v-if="stats" class="text-secondary tabular-nums" data-test="party-stats">
-                    <span v-if="stats.tracks_played !== undefined">{{ stats.tracks_played }} tracks played</span>
-                    <span v-if="stats.tracks_played !== undefined && stats.running_minutes !== undefined"> over </span>
-                    <span v-if="stats.running_minutes !== undefined">{{ stats.running_minutes }} minutes</span>
-                </p>
-                <div class="row g-4">
-                    <div v-if="artists.length > 0" class="col-md-6 col-xl-4" data-test="party-artists">
-                        <h4 class="fs-5">Most played artists</h4>
-                        <table class="table table-sm table-vcenter mb-0">
-                            <tbody>
-                                <tr v-for="artist in artists" :key="artist.name">
-                                    <td class="text-break">{{ artist.name }}</td>
-                                    <td class="text-end tabular-nums text-secondary">{{ artist.plays }} plays</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div
-                        v-for="list in trackLists"
-                        :key="list.key"
-                        class="col-md-6 col-xl-4"
-                        :data-test="`party-${list.key}`"
-                    >
-                        <h4 class="fs-5">{{ list.title }}</h4>
-                        <table class="table table-sm table-vcenter mb-0">
-                            <tbody>
-                                <tr v-for="(track, index) in list.tracks" :key="index">
-                                    <td class="text-break">
-                                        {{ track.title }}
-                                        <div v-if="track.artist" class="text-secondary small">{{ track.artist }}</div>
-                                    </td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-            <div v-else-if="review.partyContext" class="card-body">
-                <pre class="m-0 text-wrap text-break" data-test="party-context-text">{{ review.partyContext }}</pre>
-            </div>
-            <div v-else class="card-body text-secondary" data-test="no-party-context">
-                No party context was sent with this review.
-            </div>
-        </div>
-
         <div class="d-flex flex-column gap-3">
-            <details v-if="review.partyContext" class="raw" data-test="raw-party-context">
-                <summary>Party context text</summary>
-                <CodeBlock title="Party context text" :text="review.partyContext" />
-            </details>
             <details class="raw" data-test="raw-request">
                 <summary>Request payload</summary>
                 <div class="d-flex flex-column gap-3 mt-2">
