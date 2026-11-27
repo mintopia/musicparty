@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {computed} from 'vue';
+import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
 import PlayerUnit from '@/components/Dashboard/PlayerUnit.vue';
 import StartPlaybackPanel from '@/components/Dashboard/StartPlaybackPanel.vue';
 import UpNextDeck from '@/components/Dashboard/UpNextDeck.vue';
@@ -19,15 +20,12 @@ const props = defineProps<{
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
 const hidden = computed(() => props.control.start.state === 'hidden');
-const bannerStyle = computed(() => {
-    const image = props.state.now?.album?.image_url;
-    return image ? `background-image: url('${image}');` : '';
-});
+const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
 </script>
 
 <template>
-    <div class="player p-0" data-test="control-room">
-        <div class="blur-bg py-4 border-bottom border-primary text-white" :style="bannerStyle">
+    <div data-test="control-room">
+        <NowPlayingBackdrop :image="bannerImage" class="py-4 border-bottom border-primary">
             <div class="container-fluid px-4">
                 <div class="row g-4 align-items-stretch">
                     <div class="col-xl-7 col-lg-6">
@@ -54,20 +52,6 @@ const bannerStyle = computed(() => {
                     </div>
                 </div>
             </div>
-        </div>
+        </NowPlayingBackdrop>
     </div>
 </template>
-
-<style scoped>
-.player {
-    overflow: hidden;
-}
-.blur-bg {
-    backdrop-filter: blur(2px);
-    background-repeat: no-repeat;
-    background-size: 100%;
-    background-position: center center;
-    background-blend-mode: darken;
-    background-color: rgba(0, 0, 0, 0.9);
-}
-</style>

@@ -7,7 +7,7 @@ import BareLayout from '@/layouts/BareLayout.vue';
 import type {LegacyTvPartyState} from '@/types';
 
 const props = defineProps<{
-    party: {code: string; name: string; url: string};
+    party: {code: string; name: string; url: string; qrSvg: string};
     state: LegacyTvPartyState;
 }>();
 
@@ -37,8 +37,6 @@ onReconnect(() => {
 
 <template>
     <BareLayout :title="party.name">
-        <div class="vh-100 overflow-hidden m-0 p-0 bg-black">
-            <TvPlayer :code="party.code" :party-url="party.url" :state="state" />
-        </div>
+        <TvPlayer :code="party.code" :qr-svg="party.qrSvg" :state="state" />
     </BareLayout>
 </template>

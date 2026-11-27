@@ -5,6 +5,7 @@
     "license": "MIT",
     "require": {
         "php": "^8.5",
+        "bacon/bacon-qr-code": "^3.1",
         "guzzlehttp/guzzle": "^8.6",
         "inertiajs/inertia-laravel": "^3.8",
         "jwilsson/spotify-web-api-php": "^7.2",
