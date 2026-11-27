@@ -23,7 +23,9 @@ const navigation = computed(() =>
         auth: {
             ...page.props.auth,
             parties: page.props.auth.parties.map((party) =>
-                party.canManage ? {...party, flaggedCount: flaggedCountFor(party.code, party.flaggedCount)} : party,
+                party.canManage || party.canModerate
+                    ? {...party, flaggedCount: flaggedCountFor(party.code, party.flaggedCount)}
+                    : party,
             ),
         },
     }).map((item) => ({...item, active: isActive(item, page.url)})),

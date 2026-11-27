@@ -134,6 +134,21 @@ describe('buildNavigation', () => {
         ]);
     });
 
+    it('shows moderators everything but Settings', () => {
+        const items = buildNavigation(
+            makeProps({parties: [{code: 'ABC', name: 'Fun', canManage: false, canModerate: true}]}),
+        );
+
+        expect(titles(items.find((item) => item.key === 'party:ABC')?.children ?? [])).toEqual([
+            'Dashboard',
+            'Queue',
+            'Search',
+            'Requests',
+            'Moderation',
+            'Members',
+        ]);
+    });
+
     it('carries the flagged count on Moderation', () => {
         const items = buildNavigation(
             makeProps({parties: [{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 3}]}),

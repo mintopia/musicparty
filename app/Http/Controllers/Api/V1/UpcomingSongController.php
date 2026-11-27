@@ -76,7 +76,7 @@ class UpcomingSongController extends Controller
         $user = $this->resolveAuthenticatedUser($request);
         $scheduledFor = null;
         if ($request->filled('scheduled_for')) {
-            if (! $party->canBeManagedBy($user)) {
+            if (! $party->canBeModeratedBy($user)) {
                 abort(403, 'Only a party owner or moderator can schedule a request');
             }
             $scheduledFor = Carbon::parse((string) $request->input('scheduled_for'), app(PartyTimezone::class)->dateTimeZone($party))->utc();

@@ -2,7 +2,7 @@
 import {computed, onBeforeUnmount, ref} from 'vue';
 import type {DashboardProps} from '@/types';
 
-const props = defineProps<{links: DashboardProps['links']}>();
+const props = withDefaults(defineProps<{links: DashboardProps['links']; canManage?: boolean}>(), {canManage: true});
 
 const copied = ref(false);
 let timer: ReturnType<typeof setTimeout> | undefined;
@@ -12,7 +12,9 @@ const items = computed(() => [
         ? [{icon: 'ti-player-play', label: 'Web Player', href: props.links.webPlayer, external: false}]
         : []),
     {icon: 'ti-device-tv', label: 'TV view', href: props.links.tv, external: true},
-    {icon: 'ti-broadcast', label: 'Encore relay', href: props.links.encoreRelay, external: false},
+    ...(props.canManage
+        ? [{icon: 'ti-broadcast', label: 'Encore relay', href: props.links.encoreRelay, external: false}]
+        : []),
 ]);
 
 function fallbackCopy(text: string): boolean {

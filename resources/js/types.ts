@@ -15,6 +15,7 @@ export interface PartyMembership {
     code: string;
     name: string;
     canManage: boolean;
+    canModerate?: boolean;
     aiReviewEnabled?: boolean;
     flaggedCount?: number;
 }
@@ -280,7 +281,15 @@ export interface DashboardIssue {
 }
 
 export interface DashboardProps {
-    party: {code: string; name: string; active: boolean; weighted: boolean; downvotes: boolean; canManage: boolean};
+    party: {
+        code: string;
+        name: string;
+        active: boolean;
+        weighted: boolean;
+        downvotes: boolean;
+        canManage: boolean;
+        canModerate?: boolean;
+    };
     host: {name: string};
     can: {control: boolean; moderate: boolean; player: boolean};
     timezone: string;

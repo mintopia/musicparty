@@ -72,6 +72,7 @@ onBeforeUnmount(() => {
                 :queue-url="links.songs"
                 :can-control="can.control"
                 :can-moderate="can.moderate"
+                :can-start="party.canManage"
                 :my-rating="myRating"
                 :connected="connected"
                 @delete="deleting = $event"
@@ -87,6 +88,7 @@ onBeforeUnmount(() => {
                     :total="upcoming.total"
                     :queue-url="links.songs"
                     :fallback-settings-url="links.fallbackSettings"
+                    :can-manage="party.canManage"
                     :has-fallback-playlist="hasFallbackPlaylist"
                     :can-moderate="can.moderate"
                     :can-downvote="party.downvotes"
@@ -103,7 +105,7 @@ onBeforeUnmount(() => {
                     :flagged-url="links.flagged"
                     :can-moderate="can.moderate"
                 />
-                <QuickLinks :links="links" />
+                <QuickLinks :links="links" :can-manage="party.canManage" />
             </div>
         </div>
         <DeleteRequestDialog :code="party.code" :request="deleting" @close="deleting = null" />

@@ -28,7 +28,7 @@ class PartyController extends Controller
 
     public function control(PartyControlRequest $request, Party $party, PlaybackControl $control, PlaybackSync $sync): PartyResource|JsonResponse
     {
-        $this->authorize('update', $party);
+        $this->authorize('moderate', $party);
 
         try {
             $control->perform($party, (string) $request->input('action'), $request->deviceId ?? null, $request->has('positionMs') ? $request->integer('positionMs') : null);

@@ -71,12 +71,13 @@ class PartyMemberController extends Controller
             'id' => $member->id,
             'nickname' => $member->user->nickname,
             'role' => $member->role->name,
+            'roleCode' => $member->role->code,
             'createdAt' => $this->when($member->created_at),
             'url' => route('parties.users.show', [$party->code, $member->id]),
         ]);
 
         return Inertia::render('Parties/Members/Index', [
-            'party' => $this->partyProps($party, true),
+            'party' => $this->partyProps($party, $request->user()?->can('update', $party) ?? false),
             'playerState' => $party->getState(),
             'roles' => PartyMemberRole::all()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
             'filters' => $params,
@@ -128,7 +129,7 @@ class PartyMemberController extends Controller
         ]);
 
         return Inertia::render('Parties/Members/Show', [
-            'party' => $this->partyProps($party, true),
+            'party' => $this->partyProps($party, $request->user()?->can('update', $party) ?? false),
             'playerState' => $party->getState(),
             'member' => $this->memberProps($user),
             'votes' => $votes,
@@ -143,7 +144,7 @@ class PartyMemberController extends Controller
     public function edit(Request $request, Party $party, PartyMember $user): Response
     {
         return Inertia::render('Parties/Members/Edit', [
-            'party' => $this->partyProps($party, $party->canBeManagedBy($request->user())),
+            'party' => $this->partyProps($party, true),
             'playerState' => $party->getState(),
             'member' => $this->memberProps($user),
             'isSelf' => $request->user()?->id === $user->user_id,
@@ -161,11 +162,11 @@ class PartyMemberController extends Controller
     }
 
     /**
-     * @return array{code: string, name: string, canManage: bool}
+     * @return array{code: string, name: string, canManage: bool, canModerate: bool, ownerName: string}
      */
     private function partyProps(Party $party, bool $canManage): array
     {
-        return ['code' => $party->code, 'name' => $party->name, 'canManage' => $canManage];
+        return ['code' => $party->code, 'name' => $party->name, 'canManage' => $canManage, 'canModerate' => true, 'ownerName' => $party->user->nickname];
     }
 
     /**

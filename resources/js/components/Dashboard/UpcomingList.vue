@@ -13,6 +13,7 @@ const props = defineProps<{
     total: number;
     queueUrl: string;
     fallbackSettingsUrl: string;
+    canManage?: boolean;
     hasFallbackPlaylist: boolean;
     canModerate: boolean;
     canDownvote: boolean;
@@ -43,7 +44,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
         <div class="card">
             <EmptyState v-if="items.length === 0" icon="ti-playlist-off" title="Queue empty">
                 <a
-                    v-if="!hasFallbackPlaylist"
+                    v-if="!hasFallbackPlaylist && canManage !== false"
                     :href="fallbackSettingsUrl"
                     class="btn btn-outline-secondary"
                     data-test="set-fallback"

@@ -69,6 +69,46 @@ describe('party members', () => {
         });
     });
 
+    it('shows a read-only note and role badges to moderators', () => {
+        const wrapper = mount(Index, {
+            props: {
+                party: {...party, canManage: false},
+                playerState: idle,
+                roles,
+                filters: {order: 'nickname', order_direction: 'asc'},
+                members: paginator([
+                    {id: 6, nickname: 'dev', role: 'Moderator', createdAt: when, url: '/parties/ABCD/users/6'},
+                ]),
+            },
+        });
+
+        expect(wrapper.find('[data-test="members-readonly"]').text()).toContain('Read-only for Moderators');
+        expect(wrapper.find('[data-test="role-badge"]').classes()).toContain('bg-purple-lt');
+    });
+
+    it('hides the edit link from moderators and offers the moderator role', () => {
+        const props = {
+            party: {...party, canManage: false},
+            playerState: idle,
+            member: {...member, role: 'Moderator', roleCode: 'moderator'},
+            filters: {},
+            types: [],
+            votes: paginator([]),
+        };
+        expect(mount(Show, {props}).find('a[href$="/edit"]').exists()).toBe(false);
+
+        const edit = mount(Edit, {
+            props: {
+                party,
+                playerState: idle,
+                member,
+                isSelf: false,
+                roles: [...roles, {code: 'moderator', name: 'Moderator'}],
+            },
+        });
+        expect(edit.text()).toContain('Can remove, schedule, approve and reject Requests');
+    });
+
     it('renders vote direction icons and the edit link', () => {
         const vote = (id: number, value: number) => ({
             id,

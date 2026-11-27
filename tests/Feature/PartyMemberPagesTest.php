@@ -38,7 +38,7 @@ it('renders the filtered members index for a manager', function () {
             ->where('members.data.0.nickname', 'Target')
             ->where('members.data.0.url', route('parties.users.show', [$this->party->code, $this->target->id]))
             ->has('members.data', 1)
-            ->has('roles', 4)
+            ->has('roles', 5)
             ->has('playerState'));
 });
 
@@ -70,7 +70,7 @@ it('renders the edit form and flags self-editing', function () {
             ->component('Parties/Members/Edit')
             ->where('isSelf', false)
             ->where('party.canManage', true)
-            ->has('roles', 4));
+            ->has('roles', 5));
 
     $self = PartyMember::factory()->for($this->party)->for($this->owner)
         ->create(['role_id' => PartyMemberRole::whereCode('owner')->firstOrFail()->id]);
