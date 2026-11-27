@@ -173,6 +173,23 @@ describe('Mods pages', () => {
         expect(w.find('[data-test="mod-enabled"]').exists()).toBe(false);
     });
 
+    it('lays trust settings out as designed sections with stats and an advanced group', () => {
+        const trustSettings = [
+            {...setting('max_bonus', 'integer'), value: 3, has_value: true},
+            {...setting('window_days', 'integer'), value: 7, has_value: true},
+            {...setting('interval_minutes', 'integer'), value: 15, has_value: true},
+        ];
+        const {wrapper: w} = mountTab([
+            {code: 'trust', name: 'Trust', description: '', enabled: true, settings: trustSettings},
+        ]);
+        expect(w.find('[data-section="Score bonus"] [data-setting="max_bonus"]').exists()).toBe(true);
+        expect(w.find('details.mod-advanced [data-setting="window_days"]').exists()).toBe(true);
+        const stats = w.findAll('[data-test="mod-stat"]').map((n) => n.text());
+        expect(stats.join(' ')).toContain('+3 Score');
+        expect(stats.join(' ')).toContain('7 days');
+        expect(stats.join(' ')).toContain('every 15 min');
+    });
+
     it('groups mods by purpose with unknown mods under Other, and expands settings only when on', async () => {
         const {wrapper: w, drafts} = mountTab([
             {

@@ -2,9 +2,10 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import {computed, reactive} from 'vue';
+import {computed, reactive, ref} from 'vue';
 import {composeSearch, resolveSearch, setSingleToken} from '@/utils/searchFilters';
 import type {TokenSpec} from '@/utils/searchFilters';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import PageHead from '@/components/PageHead.vue';
 import Pagination from '@/components/Pagination.vue';
@@ -78,6 +79,29 @@ const activeSummary = computed(() => {
     }
     return parts.join(', ');
 });
+
+const pendingDelete = ref<ModerationRow | null>(null);
+const deleteOpen = computed({
+    get: () => pendingDelete.value !== null,
+    set: (open: boolean) => {
+        if (!open) {
+            pendingDelete.value = null;
+        }
+    },
+});
+const deleteMessage = computed(() => {
+    const rule = pendingDelete.value;
+    if (rule === null) {
+        return '';
+    }
+    return `The rule ${rule.type_name} is ${rule.value} will stop ${rule.action === 'flag' ? 'flagging' : 'rejecting'} Requests. Requests already waiting in Flagged Requests stay there.`;
+});
+
+function confirmDelete(): void {
+    if (pendingDelete.value !== null) {
+        router.delete(`${listUrl}/${pendingDelete.value.id}`);
+    }
+}
 
 function apply(): void {
     const {text, filters} = resolveSearch(form.q, spec);
@@ -215,13 +239,15 @@ function toggleChip(key: string): void {
                                     >
                                         <i class="icon ti ti-pencil" aria-hidden="true"></i>
                                     </Link>
-                                    <Link
-                                        :href="`${listUrl}/${moderation.id}/delete`"
+                                    <button
+                                        type="button"
                                         class="btn btn-icon btn-ghost-secondary"
                                         :aria-label="`Delete rule ${moderation.id}`"
+                                        data-test="delete-rule"
+                                        @click="pendingDelete = moderation"
                                     >
                                         <i class="icon ti ti-trash" aria-hidden="true"></i>
-                                    </Link>
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -272,5 +298,13 @@ function toggleChip(key: string): void {
                 </div>
             </div>
         </div>
+        <ConfirmDialog
+            v-model="deleteOpen"
+            title="Delete this rule?"
+            :message="deleteMessage"
+            confirm-label="Delete rule"
+            cancel-label="Keep rule"
+            @confirm="confirmDelete"
+        />
     </AppLayout>
 </template>

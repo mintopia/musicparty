@@ -28,6 +28,6 @@ const href = computed(() => {
 </script>
 
 <template>
-    <Link :href="href">{{ title }}</Link>
-    <i v-if="active" class="icon ti" :class="`ti-caret-${orderDirection === 'asc' ? 'down' : 'up'}-filled`"></i>
+    <Link :href="href" class="mp-sort">{{ title }}</Link>
+    <i v-if="active" class="icon ti" :class="`ti-caret-${orderDirection === 'asc' ? 'up' : 'down'}-filled`"></i>
 </template>

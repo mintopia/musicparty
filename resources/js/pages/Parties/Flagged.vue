@@ -220,9 +220,10 @@ const confidenceText = (confidence: number | null | undefined): string =>
             />
             <EmptyState
                 v-if="items.length === 0"
-                icon="ti-flag-off"
+                icon="ti-check"
+                all-clear
                 title="Nothing waiting for approval"
-                description="Turn on approval and Requests that a rule or AI review flags will wait here until someone approves or rejects them."
+                description="When a rule or AI review flags a Request, it waits here until someone approves or rejects it."
             />
             <EmptyState
                 v-else-if="visible.length === 0"
@@ -230,7 +231,7 @@ const confidenceText = (confidence: number | null | undefined): string =>
                 title="No Flagged Requests match"
                 description="Try a different search or clear the filters."
             />
-            <div v-else class="card">
+            <div v-else class="card mp-bulk-card">
                 <div v-if="selected.length > 0" class="mp-bulkbar" data-test="bulk-bar">
                     <strong data-test="bulk-count">{{ selected.length }} selected</strong>
                     <button type="button" class="btn btn-success" data-test="bulk-approve" @click="approveSelected">

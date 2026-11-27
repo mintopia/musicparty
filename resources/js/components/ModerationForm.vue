@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {computed} from 'vue';
 import SettingRow from '@/components/SettingRow.vue';
 
 export interface ModerationFormData {
@@ -11,11 +12,15 @@ export interface ModerationFormData {
     errors: Record<string, string>;
 }
 
-defineProps<{
+const props = defineProps<{
     form: ModerationFormData;
     types: Record<string, string>;
     actions: Record<string, string>;
 }>();
+
+const orderedActions = computed(() =>
+    Object.keys(props.actions).sort((a, b) => Number(b === 'flag') - Number(a === 'flag')),
+);
 
 const actionDetails: Record<string, {title: string; text: string}> = {
     flag: {
@@ -30,7 +35,7 @@ const actionDetails: Record<string, {title: string; text: string}> = {
 </script>
 
 <template>
-    <div class="card-body pt-2 pb-0">
+    <div class="card-body pt-2">
         <SettingRow label="Type" for="type" hint="What part of the track to look at." :error="form.errors.type">
             <select
                 id="type"
@@ -71,9 +76,9 @@ const actionDetails: Record<string, {title: string; text: string}> = {
             </span>
         </SettingRow>
         <SettingRow label="When a Request matches" stacked :error="form.errors.action">
-            <div role="radiogroup" aria-label="When a Request matches">
+            <div class="w-100" role="radiogroup" aria-label="When a Request matches">
                 <label
-                    v-for="(_text, value) in actions"
+                    v-for="value in orderedActions"
                     :key="value"
                     class="mp-rule-opt"
                     :class="{'is-on': form.action === value}"

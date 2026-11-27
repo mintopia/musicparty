@@ -28,6 +28,48 @@ const MOD_ICON_BY_CODE: Record<string, string> = {
     whamageddon: 'ti-snowflake',
 };
 
+export interface ModSection {
+    title: string;
+    intro: string;
+    codes: string[];
+}
+
+export interface ModLayout {
+    sections: ModSection[];
+    advanced?: ModSection;
+}
+
+const MOD_LAYOUT_BY_CODE: Record<string, ModLayout> = {
+    trust: {
+        sections: [
+            {title: 'Who to trust', intro: 'Reputation grows outward from one person.', codes: ['trusted_user_id']},
+            {
+                title: 'Score bonus',
+                intro: "What a trusted member's Requests earn.",
+                codes: ['max_bonus'],
+            },
+        ],
+        advanced: {
+            title: 'Timing',
+            intro: 'How much history counts, and how often it is refreshed.',
+            codes: ['window_days', 'interval_minutes'],
+        },
+    },
+    whamageddon: {
+        sections: [
+            {title: 'The track', intro: 'Which song the party is trying to avoid.', codes: ['track']},
+            {title: 'Score bump', intro: 'How fast it climbs the Queue.', codes: ['score_per_hour']},
+        ],
+        advanced: {
+            title: 'Appearance',
+            intro: 'How it is labelled and styled on screens.',
+            codes: ['fallback_name', 'css_classes'],
+        },
+    },
+};
+
+export const modLayout = (code: string): ModLayout | undefined => MOD_LAYOUT_BY_CODE[code];
+
 export const AI_REVIEW_MOD = 'ai-request-review';
 
 export const modIcon = (code: string): string => MOD_ICON_BY_CODE[code] ?? 'ti-puzzle';
@@ -117,5 +159,32 @@ export function aiReviewStats(settings: ModSetting[], values: Record<string, Mod
         saved
             ? {label: 'API key', value: 'Saved', tone: 'success'}
             : {label: 'API key', value: 'Not set', tone: 'warning'},
+    ];
+}
+
+function numericValue(settings: ModSetting[], values: Record<string, ModSettingValue>, code: string): number | null {
+    const raw = values[code];
+    if (raw === null || raw === undefined || raw === '' || !Number.isFinite(Number(raw))) {
+        return null;
+    }
+    return Number(raw);
+}
+
+export function trustStats(settings: ModSetting[], values: Record<string, ModSettingValue>): ModStat[] {
+    const bonus = numericValue(settings, values, 'max_bonus');
+    const days = numericValue(settings, values, 'window_days');
+    const minutes = numericValue(settings, values, 'interval_minutes');
+    return [
+        {label: 'Max bonus', value: bonus === null ? 'Not set' : `+${bonus} Score`},
+        {label: 'Window', value: days === null ? 'Not set' : `${days} ${days === 1 ? 'day' : 'days'}`},
+        {label: 'Recalculates', value: minutes === null ? 'Not set' : `every ${minutes} min`},
+    ];
+}
+
+export function whamageddonStats(settings: ModSetting[], values: Record<string, ModSettingValue>): ModStat[] {
+    const score = numericValue(settings, values, 'score_per_hour');
+    return [
+        {label: 'Bumps', value: score === null ? 'Not set' : `+${score} Score every hour`},
+        {label: 'Quiet hours', value: '2AM to 10AM'},
     ];
 }

@@ -3,8 +3,16 @@ import {computed} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import AiReviewSettings from '@/components/AiReviewSettings.vue';
 import ModCard from '@/components/ModCard.vue';
-import ModSettingField from '@/components/ModSettingField.vue';
-import {AI_REVIEW_MOD, aiReviewStats, groupMods, hasSavedApiKey, modIcon} from '@/lib/mods';
+import ModSettingSections from '@/components/ModSettingSections.vue';
+import {
+    AI_REVIEW_MOD,
+    aiReviewStats,
+    groupMods,
+    hasSavedApiKey,
+    modIcon,
+    trustStats,
+    whamageddonStats,
+} from '@/lib/mods';
 import type {ModDraft, ModStat, ModStatus} from '@/lib/mods';
 import type {PartyMod} from '@/types';
 
@@ -34,7 +42,17 @@ function settingErrors(modCode: string): Record<string, string | undefined> {
 }
 
 function statsFor(mod: PartyMod): ModStat[] | undefined {
-    return mod.code === AI_REVIEW_MOD ? aiReviewStats(mod.settings, props.drafts[mod.code]!.settings) : undefined;
+    const values = props.drafts[mod.code]!.settings;
+    switch (mod.code) {
+        case AI_REVIEW_MOD:
+            return aiReviewStats(mod.settings, values);
+        case 'trust':
+            return trustStats(mod.settings, values);
+        case 'whamageddon':
+            return whamageddonStats(mod.settings, values);
+        default:
+            return undefined;
+    }
 }
 
 function statusFor(mod: PartyMod): ModStatus | undefined {
@@ -104,18 +122,15 @@ function generalErrors(modCode: string): string[] {
                         :settings="mod.settings"
                         :errors="settingErrors(mod.code)"
                     />
-                    <div v-else class="mod-fields">
-                        <ModSettingField
-                            v-for="setting in mod.settings"
-                            :id="`mod-${mod.code}-${setting.code}`"
-                            :key="setting.code"
-                            v-model="drafts[mod.code]!.settings[setting.code]!"
-                            row
-                            :setting="setting"
-                            :error="errorFor(mod.code, setting.code)"
-                            :user-search-url="userSearchUrl"
-                        />
-                    </div>
+                    <ModSettingSections
+                        v-else
+                        v-model="drafts[mod.code]!.settings"
+                        :mod-code="mod.code"
+                        :id="`mod-${mod.code}`"
+                        :settings="mod.settings"
+                        :errors="settingErrors(mod.code)"
+                        :user-search-url="userSearchUrl"
+                    />
                 </div>
             </ModCard>
             <template v-for="mod in group.mods" :key="`off-${mod.code}`">
@@ -152,13 +167,5 @@ function generalErrors(modCode: string): string[] {
     color: var(--tblr-secondary);
     font-size: 0.75rem;
     font-weight: 600;
-}
-
-.mod-fields {
-    padding: 0 1.25rem;
-}
-
-.mod-fields > :deep([data-test='mod-setting']:last-child) {
-    border-bottom: 0;
 }
 </style>

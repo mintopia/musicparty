@@ -70,9 +70,6 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::match(['PUT', 'PATCH'], 'parties/{party}/mods/{mod}', [PartyModsController::class, 'updateMod'])->name('parties.mods.updateMod');
             Route::resource('parties.users', PartyMemberController::class)->only(['edit', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['index', 'show'])->scoped();
-            Route::get('parties/{party}/moderation/{moderation}/delete', [PartyModerationController::class, 'delete'])
-                ->scopeBindings()
-                ->name('parties.moderation.delete');
         });
         Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
         Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');

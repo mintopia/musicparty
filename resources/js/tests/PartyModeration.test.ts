@@ -1,7 +1,6 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
 import Create from '@/pages/Parties/Moderation/Create.vue';
-import Delete from '@/pages/Parties/Moderation/Delete.vue';
 import Edit from '@/pages/Parties/Moderation/Edit.vue';
 import Index from '@/pages/Parties/Moderation/Index.vue';
 
@@ -31,14 +30,14 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
 
 const party = {code: 'ABCD', name: 'Party', canManage: true};
 const playerState = {now: null, next: null, current: null, status: null};
-const types = {mtName: 'Track Name', mtId: 'Track ID'};
+const types = {mtName: 'Track name', mtId: 'Track ID'};
 const actions = {reject: 'Reject the request', flag: 'Flag for approval'};
 const noFilters = {q: '', state: '', action: '', pattern: false};
 const counts = {total: 2, on: 1, off: 1, flag: 1, reject: 1, pattern: 1};
 const moderation = {
     id: 5,
     type: 'mtName',
-    type_name: 'Track Name',
+    type_name: 'Track name',
     action: 'flag',
     value: 'bad',
     enabled: true,
@@ -77,7 +76,7 @@ describe('party moderation pages', () => {
         expect(wrapper.find('.bg-yellow-lt').text()).toBe('Flag');
         expect(wrapper.find('code').text()).toBe('/x/');
         expect(wrapper.text()).toContain('Pattern');
-        expect(wrapper.find('a[href="/parties/ABCD/moderation/5/delete"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="delete-rule"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="search-count"]').text()).toBe('2 Rules');
     });
 
@@ -207,16 +206,18 @@ describe('party moderation pages', () => {
     it('patches the edit form and links to delete', async () => {
         const wrapper = mount(Edit, {props: {party, playerState, types, actions, moderation}});
         expect(wrapper.find('h1').text()).toBe('Edit rule');
-        expect(wrapper.find('a[href="/parties/ABCD/moderation/5/delete"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="delete-rule"]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
         expect(inertia.patch).toHaveBeenCalledWith('/parties/ABCD/moderation/5');
     });
 
-    it('confirms and deletes', async () => {
-        const wrapper = mount(Delete, {props: {party, playerState, moderation}});
-        expect(wrapper.text()).toContain('Delete this rule?');
-        expect(wrapper.get('[data-test="delete-copy"]').text()).toContain('Track Name is bad');
-        await wrapper.find('form').trigger('submit');
+    it('confirms deletion in a modal over the rules list', async () => {
+        const wrapper = mount(Edit, {props: {party, playerState, types, actions, moderation}});
+        expect(wrapper.find('[role="dialog"]').exists()).toBe(false);
+        await wrapper.get('[data-test="delete-rule"]').trigger('click');
+        expect(wrapper.get('[role="dialog"]').text()).toContain('Delete this rule?');
+        expect(wrapper.get('[role="dialog"]').text()).toContain('Track name is bad');
+        await wrapper.get('[role="dialog"] .btn-danger').trigger('click');
         expect(inertia.delete).toHaveBeenCalledWith('/parties/ABCD/moderation/5');
     });
 });
