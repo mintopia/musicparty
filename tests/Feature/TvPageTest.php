@@ -38,3 +38,8 @@ it('supports a state-only partial reload for reconnect resync', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->reloadOnly('state', fn (Assert $reload) => $reload->where('state.name', 'Renamed')));
 });
+
+it('defaults new parties to showing the QR code', function () {
+    expect((new Party)->show_qrcode)->toBeTrue()
+        ->and(Party::factory()->create()->fresh()->show_qrcode)->toBeTrue();
+});

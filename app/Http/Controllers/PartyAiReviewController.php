@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Enums\AiReviewCriterion;
 use App\Enums\AiReviewOutcome;
+use App\Exceptions\PartyFeatureDisabledException;
 use App\Models\AiReview;
 use App\Models\Party;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
@@ -107,7 +108,9 @@ class PartyAiReviewController extends Controller
 
     protected function ensureEnabled(Party $party): void
     {
-        abort_unless(app(PartyMods::class)->isEnabled($party, AiRequestReviewMod::CODE), 404);
+        if (! app(PartyMods::class)->isEnabled($party, AiRequestReviewMod::CODE)) {
+            throw PartyFeatureDisabledException::aiReviews();
+        }
     }
 
     /**

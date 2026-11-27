@@ -1,5 +1,6 @@
 <?php
 
+use App\Exceptions\ErrorPageResponder;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -87,6 +88,8 @@ return Application::configure(basePath: dirname(__DIR__))
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         $exceptions->dontFlash(['current_password', 'password', 'password_confirmation']);
+
+        $exceptions->respond(new ErrorPageResponder);
 
         $exceptions->reportable(function (SpotifyWebAPIException $e): void {
             if ($e->isRateLimited() && ! $e instanceof SpotifyBackoffException) {
