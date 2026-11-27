@@ -13,7 +13,7 @@ function hideOverflow(): void {
     }
     const columns = getComputedStyle(el).gridTemplateColumns.split(' ').filter(Boolean).length;
     Array.from(el.children).forEach((child, index) => {
-        (child as HTMLElement).inert = index >= columns;
+        (child as HTMLElement).hidden = index >= columns;
     });
 }
 
@@ -46,7 +46,6 @@ onBeforeUnmount(() => observer?.disconnect());
     column-gap: 1rem;
     row-gap: 0;
     overflow: hidden;
-    padding-bottom: 0.25rem;
 }
 
 .search-tile-row-round {
