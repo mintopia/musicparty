@@ -43,8 +43,8 @@ class FlaggedRequests
             ->whereNull('queued_at')
             ->whereNotNull('flagged_at')
             ->with(['user', 'song.album', 'song.artists', 'aiReview'])
-            ->orderBy('flagged_at')
-            ->orderBy('id')
+            ->orderByDesc('flagged_at')
+            ->orderByDesc('id')
             ->get()
             ->map(fn (UpcomingSong $request): array => $this->item($request, $reviewsAvailable))
             ->all());
@@ -80,6 +80,12 @@ class FlaggedRequests
             'reason' => $request->flag_reason,
             'flagged_at' => $request->flagged_at?->toIso8601String(),
             'requester' => ['id' => $request->user_id, 'name' => $request->user->nickname ?? 'Unknown'],
+            'rule_url' => $review === null || ! $reviewsAvailable ? route('parties.moderation.index', $party->code) : null,
+            'ai_review' => $review !== null && $reviewsAvailable ? [
+                'criterion' => $review->criterion?->label(),
+                'confidence' => $review->confidence,
+                'reason' => $review->reason,
+            ] : null,
             'ai_review_url' => $review !== null && $reviewsAvailable ? route('parties.ai-reviews.show', [$party->code, $review]) : null,
             'track' => new TrackAnnotationResource($annotation)->resolve(),
         ];

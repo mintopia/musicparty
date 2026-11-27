@@ -9,7 +9,7 @@ import type {LegacyPartyState} from '@/types';
 const props = defineProps<{
     party: {code: string; name: string; canManage: boolean};
     playerState: LegacyPartyState;
-    moderation: {id: number; type_name: string | null; value: string | null};
+    moderation: {id: number; type_name: string | null; value: string | null; action: string};
 }>();
 
 const base = `/parties/${props.party.code}/moderation/${props.moderation.id}`;
@@ -23,38 +23,35 @@ function submit(): void {
 <template>
     <AppLayout :title="`Delete ${moderation.type_name} rule`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...moderationCrumbs(party), {label: 'Delete rule'}]" />
+            <Breadcrumbs
+                :items="[
+                    ...moderationCrumbs(party),
+                    {label: 'Rules', href: `/parties/${party.code}/moderation`},
+                    {label: 'Delete rule'},
+                ]"
+            />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Delete ${moderation.type_name} rule`" />
-        <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
-            <div class="page-header mt-0">
-                <h1>Delete {{ moderation.type_name }} rule</h1>
-            </div>
-
-            <div>
-                <form class="card" @submit.prevent="submit">
-                    <div class="card-status-top bg-danger"></div>
-                    <div class="card-body text-center">
-                        <i class="icon mb-4 ti ti-alert-triangle icon-lg text-danger"></i>
-                        <p class="mt-4">
-                            Are you sure you want to delete this <strong>{{ moderation.type_name }}</strong> filter for
-                            <strong class="font-monospace">{{ moderation.value }}</strong
-                            >?
-                        </p>
-                    </div>
-                    <div class="card-footer text-end">
-                        <div class="d-flex">
-                            <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Cancel</Link>
-                            <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">
-                                Delete
-                            </button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+        <div class="mp-narrow mp-touch">
+            <form class="card mx-auto" style="max-inline-size: 28rem" @submit.prevent="submit">
+                <div class="card-body">
+                    <h1 class="h3 mb-3">Delete this rule?</h1>
+                    <p class="mb-0" data-test="delete-copy">
+                        The rule <strong>{{ moderation.type_name }} is {{ moderation.value }}</strong> will stop
+                        {{ moderation.action === 'flag' ? 'flagging' : 'rejecting' }} Requests. Requests already waiting
+                        in Flagged Requests stay there.
+                    </p>
+                </div>
+                <div class="card-footer d-flex gap-2">
+                    <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link">Keep rule</Link>
+                    <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">
+                        Delete rule
+                    </button>
+                </div>
+            </form>
         </div>
     </AppLayout>
 </template>

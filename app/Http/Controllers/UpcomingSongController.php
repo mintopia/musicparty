@@ -2,12 +2,15 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\AiReviewOutcome;
 use App\Enums\Purpose;
 use App\Http\Requests\PaginationRequest;
 use App\Http\Requests\UpcomingSongSearchRequest;
 use App\Http\Requests\UpdateUpcomingSongScheduleRequest;
+use App\Models\AiReview;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\PlayedSong;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
@@ -15,8 +18,8 @@ use App\Services\PartyTimezone;
 use App\Support\SearchTokens;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Pagination\LengthAwarePaginator;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -172,12 +175,9 @@ class UpcomingSongController extends Controller
             $params['per_page'] = $perPage;
         }
         $votes = $song->votes()->orderBy('created_at', 'asc')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
-        $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->withCount('votes')->orderBy('created_at', 'desc')->get();
-        if ($song->played) {
-            $ratings = $song->played->ratings()->orderBy('created_at', 'asc')->with(['user', 'user.partyMembers'])->paginate($perPage)->appends($params);
-        } else {
-            $ratings = new LengthAwarePaginator([], 0, $perPage);
-        }
+        $other = $party->upcoming()->whereSongId($song->song_id)->where('id', '<>', $song->id)->orderBy('created_at', 'desc')->get();
+        $review = $song->aiReview;
+        $played = $song->played;
 
         $voteRows = fn ($row): array => [
             'nickname' => $row->user->nickname,
@@ -215,17 +215,17 @@ class UpcomingSongController extends Controller
                     'url' => $this->memberUrl($party, $requester),
                 ] : null,
                 'moderateUrl' => route('parties.moderation.create', ['party' => $party->code, 'track' => $song->song->provider_track_id]),
+                'removeUrl' => route('parties.songs.destroy', [$party->code, $song->id]),
             ],
             'votes' => $votes->through($voteRows),
-            'other' => $other->map(fn (UpcomingSong $row): array => [
-                'id' => $row->id,
-                'url' => route('parties.songs.show', [$party->code, $row->id]),
-                'votes' => (int) $row->votes_count,
-                'score' => $row->score,
-                'createdAt' => $this->when($row->created_at),
-                'queuedAt' => $this->when($row->queued_at),
-            ])->values()->all(),
-            'ratings' => $ratings->through($voteRows),
+            'aiReview' => $review ? [
+                'outcome' => $review->outcome->value,
+                'outcomeLabel' => $review->outcome->label(),
+                'reason' => $review->reason,
+                'criterion' => $review->criterion?->label(),
+                'url' => route('parties.ai-reviews.show', [$party->code, $review->id]),
+            ] : null,
+            'history' => $this->history($song, $review, $played, $other),
             'playerState' => $party->getState(),
         ]);
     }
@@ -246,6 +246,44 @@ class UpcomingSongController extends Controller
         $party->pushUpdate();
 
         return response()->redirectToRoute('parties.songs.index', $party->code)->with('successMessage', 'The Request has been removed');
+    }
+
+    /**
+     * @param  Collection<int, UpcomingSong>  $other
+     * @return list<array{icon: string, text: string, at: array{iso: string, human: string}|null, url: string|null}>
+     */
+    private function history(UpcomingSong $song, ?AiReview $review, ?PlayedSong $played, Collection $other): array
+    {
+        $party = $song->party;
+        $events = [['icon' => 'ti-music-plus', 'text' => ($song->user ? $song->user->nickname.' requested it' : 'Added as a fallback track'), 'moment' => $song->created_at, 'url' => null]];
+        if ($review) {
+            $events[] = ['icon' => 'ti-robot', 'text' => match ($review->outcome) {
+                AiReviewOutcome::Allow => 'AI review allowed it',
+                AiReviewOutcome::Flag => 'AI review flagged it for a moderator',
+                AiReviewOutcome::Reject => 'AI review rejected it',
+                AiReviewOutcome::Error => 'AI review could not run',
+            }, 'moment' => $review->created_at, 'url' => route('parties.ai-reviews.show', [$party->code, $review->id])];
+        }
+        if ($song->scheduled_for) {
+            $events[] = ['icon' => 'ti-clock', 'text' => 'Scheduled to be sent to the Player', 'moment' => $song->scheduled_for, 'url' => null];
+        }
+        if ($song->queued_at) {
+            $events[] = ['icon' => 'ti-list-numbers', 'text' => 'Sent to the Player', 'moment' => $song->queued_at, 'url' => null];
+        }
+        if ($played) {
+            $events[] = ['icon' => 'ti-player-play', 'text' => 'Played at this party', 'moment' => $played->played_at, 'url' => null];
+        }
+        foreach ($other as $row) {
+            $events[] = ['icon' => 'ti-history', 'text' => 'Requested again', 'moment' => $row->created_at, 'url' => route('parties.songs.show', [$party->code, $row->id])];
+        }
+        usort($events, fn (array $a, array $b): int => $a['moment'] <=> $b['moment']);
+
+        return array_map(fn (array $event): array => [
+            'icon' => $event['icon'],
+            'text' => $event['text'],
+            'at' => $this->when($event['moment']),
+            'url' => $event['url'],
+        ], $events);
     }
 
     /**

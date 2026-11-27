@@ -6,6 +6,7 @@ import {computed, reactive} from 'vue';
 import {composeSearch, resolveSearch, setSingleToken} from '@/utils/searchFilters';
 import type {TokenSpec} from '@/utils/searchFilters';
 import EmptyState from '@/components/EmptyState.vue';
+import PageHead from '@/components/PageHead.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
@@ -126,7 +127,10 @@ const showUrl = (review: AiReviewRow): string =>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`AI reviews - ${party.name}`" />
-        <h1 class="visually-hidden">AI reviews</h1>
+        <PageHead
+            title="Moderation"
+            summary="Review what the rules and AI reviews held back, and keep the rules that decide it."
+        />
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
 
         <div v-if="!holdsFlagged" class="alert alert-warning py-2" role="status" data-test="not-held-notice">
@@ -164,12 +168,17 @@ const showUrl = (review: AiReviewRow): string =>
                     v-else-if="reviews.data.length === 0"
                     icon="ti-robot"
                     title="No AI reviews yet"
-                    description="Each requested track is reviewed and recorded here."
+                    description="Each Request is reviewed when it is made, and the result is recorded here. Request a track from the Queue to see the first one."
                 />
                 <div v-else class="card">
                     <ul class="list-group list-group-flush d-md-none" data-test="reviews-list">
                         <li v-for="review in reviews.data" :key="review.id" class="list-group-item p-0">
-                            <Link :href="showUrl(review)" class="d-block p-3 text-reset" data-test="review-item">
+                            <Link
+                                :href="showUrl(review)"
+                                class="d-flex align-items-center gap-2 p-3 text-reset review-item"
+                                data-test="review-item"
+                            >
+                                <div class="flex-fill min-w-0">
                                 <div class="fw-medium text-break">{{ review.track.title }}</div>
                                 <div class="text-secondary small text-break">{{ review.track.artists }}</div>
                                 <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
@@ -190,6 +199,8 @@ const showUrl = (review: AiReviewRow): string =>
                                     {{ review.user ?? 'Unknown' }}
                                     <template v-if="review.createdAt"> &middot; {{ review.createdAt.human }}</template>
                                 </div>
+                                </div>
+                                <i class="icon ti ti-chevron-right text-secondary" aria-hidden="true"></i>
                             </Link>
                         </li>
                     </ul>
@@ -273,7 +284,7 @@ const showUrl = (review: AiReviewRow): string =>
                     </div>
                     <div class="card-footer d-flex align-items-center">
                         <p class="m-0 text-secondary tabular-nums">
-                            {{ reviews.from ?? 0 }}-{{ reviews.to ?? 0 }} of {{ reviews.total }}
+                            Showing {{ reviews.from ?? 0 }} to {{ reviews.to ?? 0 }} of {{ reviews.total }} reviews
                         </p>
                         <div class="m-0 ms-auto"><Pagination :paginator="reviews" /></div>
                     </div>
@@ -284,6 +295,14 @@ const showUrl = (review: AiReviewRow): string =>
 </template>
 
 <style scoped>
+.review-item {
+    min-height: 44px;
+}
+
+.min-w-0 {
+    min-width: 0;
+}
+
 .track-col {
     min-width: 12rem;
     max-width: 16rem;

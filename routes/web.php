@@ -78,6 +78,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->name('parties.artists.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
+        Route::post('parties/{party}/flagged/approve', [FlaggedRequestController::class, 'bulkApprove'])->name('parties.flagged.bulk-approve');
+        Route::post('parties/{party}/flagged/reject', [FlaggedRequestController::class, 'bulkReject'])->name('parties.flagged.bulk-reject');
         Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
         Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->name('parties.flagged.reject');
         Route::delete('parties/{party}/requests/{upcomingSong}/flag', [FlaggedRequestController::class, 'withdraw'])->scopeBindings()->name('parties.requests.withdraw');

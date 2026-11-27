@@ -9,6 +9,7 @@ use App\Events\UpcomingSong\UpdatedEvent;
 use App\Models\AiReview;
 use App\Models\Party;
 use App\Models\PartyMember;
+use App\Models\PartyMemberRole;
 use App\Models\PartyModeration;
 use App\Models\Song;
 use App\Models\UpcomingSong;
@@ -202,6 +203,9 @@ describe('approval queue', function () {
                 ->where('moderationTabs.aiReviewEnabled', false)
                 ->where('flagged.0.id', $request->id)
                 ->where('flagged.0.reason', 'Needs a look')
+                ->where('party.flagRequests', true)
+                ->where('party.canManage', true)
+                ->where('flagged.0.rule_url', route('parties.moderation.index', $this->party->code))
                 ->where('flagged.0.requester.id', $this->member->user_id)
                 ->where('flagged.0.track.id', $request->song->provider_track_id)
                 ->where('flagged.0.track.eligibility.outcome', 'flag')
@@ -278,6 +282,65 @@ describe('manager channel', function () {
         $channel = fn (User $user) => Gate::forUser($user)->allows('update', $this->party);
 
         expect($channel($this->manager))->toBeTrue()->and($channel($this->member->user))->toBeFalse();
+    });
+});
+
+describe('bulk resolution', function () {
+    it('approves every selected request', function () {
+        Event::fake([FlaggedRequestResolved::class]);
+        $a = flaggedRequest($this->party);
+        $b = flaggedRequest($this->party);
+        $untouched = flaggedRequest($this->party);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$a->id, $b->id]])->assertRedirect();
+
+        expect($a->fresh()->flagged_at)->toBeNull()->and($b->fresh()->flagged_at)->toBeNull()->and($untouched->fresh()->flagged_at)->not->toBeNull();
+        Event::assertDispatchedTimes(FlaggedRequestResolved::class, 2);
+    });
+
+    it('rejects every selected request and tells each requester', function () {
+        Event::fake([FlaggedRequestResolved::class, FlaggedRequestRejected::class]);
+        $a = flaggedRequest($this->party, $this->member->user);
+        $b = flaggedRequest($this->party);
+        $untouched = flaggedRequest($this->party);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-reject', $this->party), ['ids' => [$a->id, $b->id], 'message' => 'Not tonight'])->assertRedirect();
+
+        expect(UpcomingSong::pluck('id')->all())->toBe([$untouched->id]);
+        Event::assertDispatchedTimes(FlaggedRequestRejected::class, 2);
+        Event::assertDispatched(FlaggedRequestRejected::class, fn ($event) => $event->userId === $this->member->user_id && $event->broadcastWith()['message'] === 'Not tonight');
+    });
+
+    it('refuses non-managers and changes nothing', function () {
+        $request = flaggedRequest($this->party);
+
+        $this->actingAs($this->member->user, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$request->id]])->assertForbidden();
+        $this->actingAs($this->member->user, 'sanctum')->post(route('parties.flagged.bulk-reject', $this->party), ['ids' => [$request->id]])->assertForbidden();
+
+        expect($request->fresh()->flagged_at)->not->toBeNull();
+    });
+
+    it('lets a moderator resolve in bulk', function () {
+        $moderator = PartyMember::factory()->for($this->party)->for(User::factory())->create(['role_id' => PartyMemberRole::query()->firstOrCreate(['code' => 'moderator'], ['name' => 'Moderator'])->id]);
+        $moderator->user->forceFill(['first_login' => false])->save();
+        $request = flaggedRequest($this->party);
+
+        $this->actingAs($moderator->user, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$request->id]])->assertRedirect();
+
+        expect($request->fresh()->flagged_at)->toBeNull();
+    });
+
+    it('is all-or-nothing when an id is not a flagged request of this party', function () {
+        $mine = flaggedRequest($this->party);
+        $other = flaggedRequest(Party::factory()->create(['provider_id' => 'fake', 'flag_requests' => true]));
+        $queued = flaggedRequest($this->party, null, ['flagged_at' => null]);
+
+        foreach ([$other, $queued] as $bad) {
+            $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$mine->id, $bad->id]])->assertNotFound();
+        }
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-reject', $this->party), ['ids' => []])->assertSessionHasErrors('ids');
+
+        expect($mine->fresh()->flagged_at)->not->toBeNull();
     });
 });
 

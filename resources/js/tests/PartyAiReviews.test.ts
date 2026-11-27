@@ -69,6 +69,10 @@ function detail(id: number, extra: Partial<AiReviewDetail> = {}): AiReviewDetail
         errorMessage: null,
         trackId: 't1',
         trackProvider: 'fake',
+        threshold: 0.5,
+        rejectBelow: 0.75,
+        flagBelow: 2.5,
+        fate: {state: 'queued', requestUrl: '/parties/ABCD/songs/9', approveUrl: null, rejectUrl: null, flaggedAt: null, playedAt: null},
         ...extra,
     };
 }
@@ -136,7 +140,7 @@ describe('AI reviews list', () => {
 
         expect(rows[1]?.find('[data-test="review-user"]').text()).toContain('Unknown');
         expect(rows[1]?.find('[data-test="review-reason"]').text()).toBe('None');
-        expect(wrapper.text()).toContain('1-2 of 2');
+        expect(wrapper.text()).toContain('Showing 1 to 2 of 2 reviews');
     });
 
     it('hides the not-held notice when flagged requests are held', () => {
@@ -322,7 +326,7 @@ describe('AI review page', () => {
         expect(wrapper.get('[data-test="review-user"]').text()).toContain('Dana');
         expect(wrapper.get('[data-test="detail-endpoint"]').text()).toBe('api.typesafe.ai');
         expect(wrapper.get('[data-test="detail-latency"]').text()).toBe('812 ms');
-        expect(wrapper.get('[data-test="detail-tokens"]').text()).toContain('128 total');
+        expect(wrapper.get('[data-test="detail-tokens"]').text()).toContain('120 in, 8 out');
         expect(wrapper.get('[data-test="back-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews?outcome=flag');
 
         const answers = wrapper.findAll('[data-test="answer-row"]').map((answerRow) => answerRow.text());
@@ -370,6 +374,36 @@ describe('AI review page', () => {
         expect(wrapper.get('[data-test="detail-error"]').text()).toContain('Decision model responded with HTTP 500');
         expect(wrapper.find('[data-test="raw-response"]').exists()).toBe(false);
         expect(wrapper.get('[data-test="detail-no-answers"]').text()).toContain('No response was received');
+    });
+
+    it('explains the score against the party threshold and shows the Request fate', () => {
+        const flagged = mountShow(
+            detail(1, {
+                outcome: 'flag',
+                outcomeLabel: 'Flagged',
+                score: 1.9,
+                confidence: 0.82,
+                fate: {
+                    state: 'held',
+                    requestUrl: '/parties/ABCD/songs/9',
+                    approveUrl: '/parties/ABCD/flagged/9/approve',
+                    rejectUrl: '/parties/ABCD/flagged/9/reject',
+                    flaggedAt: {iso: '2026-11-26T10:00:00+00:00', human: '9 minutes ago'},
+                    playedAt: null,
+                },
+            }),
+        );
+        expect(flagged.get('[data-test="score-explanation"]').text()).toBe(
+            "The score 1.9 is in the Flag band (0.75 to 2.5), and the model is 82% confident, above the party's 50% threshold, so the Request is flagged.",
+        );
+        expect(flagged.get('[data-test="fate-title"]').text()).toBe('Held in Flagged Requests');
+        expect(flagged.find('[data-test="approve"]').exists()).toBe(true);
+        expect(flagged.get('[data-test="open-request"]').attributes('href')).toBe('/parties/ABCD/songs/9');
+
+        const low = mountShow(detail(2, {score: 1.2, confidence: 0.34}));
+        expect(low.get('[data-test="score-explanation"]').text()).toContain('below the party\'s 50% threshold');
+        expect(low.find('[data-test="approve"]').exists()).toBe(false);
+        expect(low.find('[data-test="open-request-button"]').exists()).toBe(true);
     });
 
     it('reads answers from objects, arrays and scalars generically', () => {
