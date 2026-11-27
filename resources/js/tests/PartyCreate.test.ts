@@ -142,12 +142,16 @@ describe('create party wizard and edit form', () => {
 
     it('submits a pasted playlist link through the other path', async () => {
         inertia.submitted.length = 0;
-        const wrapper = mount(Create, {props: {...common, hostName: 'Jess', party: {...party, name: 'Disco'}, providerIds: ['spotify']}});
+        const wrapper = mount(Create, {
+            props: {...common, hostName: 'Jess', party: {...party, name: 'Disco'}, providerIds: ['spotify']},
+        });
 
         await wrapper.find('form').trigger('submit');
         await wrapper.find('#backup_playlist_id').trigger('click');
         await wrapper.find('[data-test="playlist-link-option"]').trigger('click');
-        await wrapper.find('[data-test="playlist-link-input"]').setValue('https://open.spotify.com/playlist/abc123?si=x');
+        await wrapper
+            .find('[data-test="playlist-link-input"]')
+            .setValue('https://open.spotify.com/playlist/abc123?si=x');
         await wrapper.find('[data-test="create-defaults"]').trigger('click');
 
         expect(inertia.submitted[0]!.data).toMatchObject({
@@ -221,7 +225,8 @@ describe('create party wizard and edit form', () => {
 
         await wrapper.find('[data-test="tab-playback"]').trigger('click');
         expect(wrapper.find('#custom_backup_playlist_id').exists()).toBe(true);
-        await wrapper.find('#backup_playlist_id').setValue('pl1');
+        await wrapper.find('#backup_playlist_id').trigger('click');
+        await wrapper.find('[data-test="playlist-option"]').trigger('click');
         expect(wrapper.find('#custom_backup_playlist_id').exists()).toBe(false);
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(false);
         await wrapper.find('[data-test="tab-screens"]').trigger('click');

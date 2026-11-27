@@ -49,7 +49,9 @@ const bands = computed(() => ({
 }));
 const scorePosition = computed(() => `${Math.min(100, Math.max(0, ((props.review.score ?? 0) / maxScore) * 100))}%`);
 const confidencePercent = computed(() => Math.round((props.review.confidence ?? 0) * 100));
-const lowConfidence = computed(() => props.review.confidence === null || props.review.confidence < props.review.threshold);
+const lowConfidence = computed(
+    () => props.review.confidence === null || props.review.confidence < props.review.threshold,
+);
 const scoredBand = computed<'reject' | 'flag' | 'allow'>(() => {
     const score = props.review.score ?? maxScore;
     return score < props.review.rejectBelow ? 'reject' : score < props.review.flagBelow ? 'flag' : 'allow';
@@ -119,16 +121,18 @@ function decide(url: string | null): void {
     if (url === null || busy.value) {
         return;
     }
-    router.post(url, {}, {preserveScroll: true, onStart: () => (busy.value = true), onFinish: () => (busy.value = false)});
+    router.post(
+        url,
+        {},
+        {preserveScroll: true, onStart: () => (busy.value = true), onFinish: () => (busy.value = false)},
+    );
 }
 </script>
 
 <template>
     <AppLayout :title="`${review.track.title} - AI review - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs
-                :items="[...partyCrumbs(party), {label: 'AI Reviews', href: listUrl}, {label: 'Review'}]"
-            />
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI Reviews', href: listUrl}, {label: 'Review'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -188,8 +192,7 @@ function decide(url: string | null): void {
                 <div class="card" data-test="verdict">
                     <div class="card-body">
                         <span class="badge fs-4 py-2 px-3 mb-3" :class="badge.class" data-test="review-outcome">
-                            <i class="icon ti me-2" :class="badge.icon" aria-hidden="true"></i
-                            >{{ review.outcomeLabel }}
+                            <i class="icon ti me-2" :class="badge.icon" aria-hidden="true"></i>{{ review.outcomeLabel }}
                         </span>
                         <p class="m-0 fs-2 text-break" data-test="detail-reason">
                             {{ review.reason ?? 'No reason given' }}
@@ -207,7 +210,9 @@ function decide(url: string | null): void {
                     <div class="card-body">
                         <div class="d-flex justify-content-between fw-medium mb-2">
                             <span>Score</span>
-                            <span class="tabular-nums" data-test="detail-score">{{ scoreNumber }} of {{ maxScore }}</span>
+                            <span class="tabular-nums" data-test="detail-score"
+                                >{{ scoreNumber }} of {{ maxScore }}</span
+                            >
                         </div>
                         <div class="band-track" role="img" :aria-label="`Score ${scoreNumber} of ${maxScore}`">
                             <span class="band is-reject" :style="{width: `${bands.reject}%`}"></span>
@@ -228,13 +233,19 @@ function decide(url: string | null): void {
                                 {{ review.confidence === null ? '-' : formatPercent(review.confidence) }}
                             </span>
                         </div>
-                        <div class="confidence-track" role="img" :aria-label="`Confidence ${confidencePercent}%, threshold ${thresholdPercent}%`">
+                        <div
+                            class="confidence-track"
+                            role="img"
+                            :aria-label="`Confidence ${confidencePercent}%, threshold ${thresholdPercent}%`"
+                        >
                             <span class="fill" :style="{width: `${confidencePercent}%`}"></span>
                             <span class="marker is-threshold" :style="{left: `${thresholdPercent}%`}"></span>
                         </div>
                         <div class="scale small text-secondary">
                             <span>0%</span>
-                            <span class="mid" :style="{left: `${thresholdPercent}%`}">Threshold {{ thresholdPercent }}%</span>
+                            <span class="mid" :style="{left: `${thresholdPercent}%`}"
+                                >Threshold {{ thresholdPercent }}%</span
+                            >
                             <span class="end">100%</span>
                         </div>
                         <p class="mt-3 mb-0 text-break" data-test="score-explanation">{{ scoreExplanation }}</p>
@@ -370,7 +381,9 @@ function decide(url: string | null): void {
                         </details>
                         <details v-if="review.response" class="raw" data-test="raw-response">
                             <summary>Raw response</summary>
-                            <div class="mt-2"><CodeBlock title="Raw response" :text="prettyJson(review.response)" /></div>
+                            <div class="mt-2">
+                                <CodeBlock title="Raw response" :text="prettyJson(review.response)" />
+                            </div>
                         </details>
                     </div>
                 </div>

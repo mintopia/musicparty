@@ -29,12 +29,10 @@ const providerName = computed(() =>
         : (props.results.tracks[0]?.provider_name ?? null),
 );
 
-const topResult = computed(() => (props.results.weak && props.results.top?.kind === 'track' ? null : props.results.top));
-const trackRows = computed(() =>
-    props.results.weak && props.results.top?.kind === 'track'
-        ? [props.results.top.track, ...props.results.tracks]
-        : props.results.tracks,
+const topResult = computed(() =>
+    props.results.weak && props.results.top?.kind === 'track' ? null : props.results.top,
 );
+const trackRows = computed(() => props.results.tracks);
 
 const href = (target: LinkTarget): string => (typeof target === 'string' ? target : target.url);
 </script>

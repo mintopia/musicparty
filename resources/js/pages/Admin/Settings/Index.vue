@@ -66,7 +66,10 @@ const copy: Record<string, {label: string; hint: string}> = {
         label: 'Timezone',
         hint: 'Used by time-based Mods and Scheduled Requests. Parties can override it.',
     },
-    'logo-light': {label: 'Logo for dark backgrounds', hint: 'A light version, used in the sidebar and on the login page.'},
+    'logo-light': {
+        label: 'Logo for dark backgrounds',
+        hint: 'A light version, used in the sidebar and on the login page.',
+    },
     'logo-dark': {label: 'Logo for light backgrounds', hint: 'A dark version, used in emails and on light pages.'},
     'cover-image': {label: 'Login cover image', hint: 'The large photo beside the Discord button.'},
     favicon: {label: 'Favicon', hint: 'Shown in the browser tab. Square, at least 64 pixels.'},
@@ -97,9 +100,7 @@ const form = useForm<Record<string, string | boolean>>(
     Object.fromEntries(props.settings.map((setting) => [setting.code, setting.value])),
 );
 
-const changedCount = computed(
-    () => props.settings.filter((setting) => form[setting.code] !== setting.value).length,
-);
+const changedCount = computed(() => props.settings.filter((setting) => form[setting.code] !== setting.value).length);
 
 const timezones = computed(() => {
     const names: string[] = typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : [];
@@ -178,7 +179,11 @@ const providerIcons: Record<string, string> = {
     twitch: 'ti-brand-twitch',
 };
 
-function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'idle'; label: string; note: string | null} {
+function providerStatus(provider: SocialProviderRow): {
+    state: 'ok' | 'live' | 'idle';
+    label: string;
+    note: string | null;
+} {
     if (!provider.enabled) {
         return {state: 'idle', label: 'Off', note: provider.supports_auth ? null : 'Search only, cannot log in'};
     }
@@ -325,7 +330,11 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                     class="form-control"
                                     :class="{'is-invalid': form.errors[setting.code]}"
                                 />
-                                <figure v-if="form[setting.code]" class="brand-preview m-0" :data-test="`preview-${setting.code}`">
+                                <figure
+                                    v-if="form[setting.code]"
+                                    class="brand-preview m-0"
+                                    :data-test="`preview-${setting.code}`"
+                                >
                                     <span
                                         class="brand-tile"
                                         :class="setting.code === 'logo-light' ? 'is-sidebar' : 'is-surface'"
@@ -333,7 +342,11 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                         <img :src="String(form[setting.code])" alt="" />
                                     </span>
                                     <figcaption>
-                                        {{ setting.code === 'logo-light' ? 'Preview on the sidebar colour' : 'Preview on white' }}
+                                        {{
+                                            setting.code === 'logo-light'
+                                                ? 'Preview on the sidebar colour'
+                                                : 'Preview on white'
+                                        }}
                                     </figcaption>
                                 </figure>
                             </SettingRow>
@@ -357,7 +370,11 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                     class="form-control"
                                     :class="{'is-invalid': form.errors[setting.code]}"
                                 />
-                                <figure v-if="form[setting.code]" class="brand-preview m-0" :data-test="`preview-${setting.code}`">
+                                <figure
+                                    v-if="form[setting.code]"
+                                    class="brand-preview m-0"
+                                    :data-test="`preview-${setting.code}`"
+                                >
                                     <img
                                         v-if="setting.code === 'cover-image'"
                                         class="brand-cover"
@@ -368,7 +385,11 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                         <img :src="String(form[setting.code])" alt="" />
                                     </span>
                                     <figcaption>
-                                        {{ setting.code === 'cover-image' ? 'Preview, cropped as on a laptop' : '32 pixels, as in a tab' }}
+                                        {{
+                                            setting.code === 'cover-image'
+                                                ? 'Preview, cropped as on a laptop'
+                                                : '32 pixels, as in a tab'
+                                        }}
                                     </figcaption>
                                 </figure>
                             </SettingRow>
@@ -376,7 +397,13 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                     </div>
                 </div>
 
-                <div v-if="changedCount > 0" class="mp-savebar" role="region" aria-label="Unsaved changes" data-test="save-bar">
+                <div
+                    v-if="changedCount > 0"
+                    class="mp-savebar"
+                    role="region"
+                    aria-label="Unsaved changes"
+                    data-test="save-bar"
+                >
                     <span class="mp-grow" aria-live="polite">
                         {{ changedCount }} unsaved {{ changedCount === 1 ? 'change' : 'changes' }}
                     </span>

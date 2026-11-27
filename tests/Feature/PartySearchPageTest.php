@@ -75,7 +75,8 @@ it('renders the Inertia search page for a member with results', function () {
                 ->where('results.top.track.id', 'fresh')
                 ->where('results.top.track.eligibility.allowed', true)
                 ->where('results.top.track.queue.in_queue', false)
-                ->where('results.tracks', [])));
+                ->has('results.tracks', 1)
+                ->where('results.tracks.0.id', 'fresh')));
 });
 
 it('renders the page without results when there is no query', function () {
@@ -116,7 +117,8 @@ it('tells the requester a queued track is theirs and when it was added', functio
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded
             ->where('results.top.track.queue.requested_by_you', true)
             ->where('results.top.track.queue.requested_ago', 'just now')
-            ->where('results.tracks.0.queue.requested_by_you', false)));
+            ->where('results.tracks.0.queue.requested_by_you', true)
+            ->where('results.tracks.1.queue.requested_by_you', false)));
 });
 
 it('paginates a single type using perPage and page and keeps the query string on page links', function () {

@@ -198,7 +198,8 @@ describe('Upcoming queue', () => {
         expect(wrapper.get('[role="alert"]').text()).toContain('No voting for your own track');
     });
 
-    it('removes a row and calls the delete route for managers', async () => {
+    it('removes a row at once and calls the delete route after the undo window for managers', async () => {
+        vi.useFakeTimers();
         const requests: string[] = [];
         axios.defaults.adapter = (config) => {
             requests.push(`${config.method} ${config.url}`);
@@ -208,8 +209,12 @@ describe('Upcoming queue', () => {
 
         await wrapper.get('[data-test="remove"]').trigger('click');
 
+        expect(requests).toEqual([]);
+        expect(wrapper.findAll('[data-test="track-row"]').map((row) => row.text())).not.toContain('Song 1');
+
+        await vi.advanceTimersByTimeAsync(8000);
+
         expect(requests).toEqual(['delete /api/v1/parties/ABCD/upcomingsongs/1']);
-        expect(wrapper.text()).not.toContain('Song 1');
     });
 
     it('applies pushed updates and removals', async () => {

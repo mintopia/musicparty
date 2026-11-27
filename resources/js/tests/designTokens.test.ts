@@ -102,6 +102,8 @@ describe('dashboard deck component styles', () => {
     it('stills the playback equaliser bars under reduced motion', async () => {
         const css = await builtCss(appCssEntry);
 
-        expect(css).toMatch(/@media \(prefers-reduced-motion:\s*reduce\)\s*\{[^@]*\.mp-eq\s*>\s*i\s*\{\s*animation:\s*none/);
+        expect(css).toMatch(
+            /@media \(prefers-reduced-motion:\s*reduce\)\s*\{[^@]*\.mp-eq\s*>\s*i\s*\{\s*animation:\s*none/,
+        );
     });
 });

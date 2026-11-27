@@ -213,7 +213,7 @@ it('creates a party from the name alone using model defaults and flashes the cre
         ->and($party->downvotes)->toBeTrue()
         ->and($party->explicit)->toBeTrue()
         ->and($party->active)->toBeTrue()
-        ->and($party->show_qrcode)->toBeFalse();
+        ->and($party->show_qrcode)->toBeTrue();
 
     $created = session('createdParty');
     expect($created['code'])->toBe($party->code)

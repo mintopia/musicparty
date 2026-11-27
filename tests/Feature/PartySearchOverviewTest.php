@@ -37,7 +37,7 @@ it('asks Spotify once for tracks, albums and artists at the per type limit', fun
         ->and($this->fake->callsTo('search')[0][2])->toMatchArray(['limit' => 10, 'offset' => 0]);
 });
 
-it('makes Spotify\'s first track the top result and leaves it out of the tracks list', function () {
+it('makes Spotify\'s first track the top result and repeats it in the tracks list', function () {
     $this->fake->respond('search', FakeSpotify::searchResponse(
         [FakeSpotify::track('first', 'Closing Time'), FakeSpotify::track('second'), FakeSpotify::track('third')],
         [FakeSpotify::album('a1', 'Closing Time')],
@@ -47,9 +47,10 @@ it('makes Spotify\'s first track the top result and leaves it out of the tracks 
     ($this->visit)(['query' => 'Closing Time'], fn (Assert $loaded) => $loaded
         ->where('results.top.kind', 'track')
         ->where('results.top.track.id', 'first')
-        ->where('results.tracks.0.id', 'second')
-        ->where('results.tracks.1.id', 'third')
-        ->has('results.tracks', 2)
+        ->where('results.tracks.0.id', 'first')
+        ->where('results.tracks.1.id', 'second')
+        ->where('results.tracks.2.id', 'third')
+        ->has('results.tracks', 3)
         ->where('results.albums.0.id', 'a1')
         ->where('results.artists.0.id', 'x1'));
 });

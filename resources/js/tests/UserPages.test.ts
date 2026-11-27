@@ -87,9 +87,19 @@ describe('user pages', () => {
     });
 
     it('shows guests online on the invite card with singular and plural', () => {
-        const party = {code: 'KXQB', name: 'Coyote LAN 26', host: 'Jess', online: 1, playback: 'idle' as const, detail: null, cover: null};
+        const party = {
+            code: 'KXQB',
+            name: 'Coyote LAN 26',
+            host: 'Jess',
+            online: 1,
+            playback: 'idle' as const,
+            detail: null,
+            cover: null,
+        };
         expect(mount(PartyInviteCard, {props: {party}}).text()).toContain('Hosted by Jess, 1 guest online');
-        expect(mount(PartyInviteCard, {props: {party: {...party, online: 5}}}).text()).toContain('Hosted by Jess, 5 guests online');
+        expect(mount(PartyInviteCard, {props: {party: {...party, online: 5}}}).text()).toContain(
+            'Hosted by Jess, 5 guests online',
+        );
     });
 
     it('renders a login button per provider', () => {

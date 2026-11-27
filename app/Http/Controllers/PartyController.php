@@ -253,19 +253,18 @@ class PartyController extends Controller
         $topTrack = null;
         if ($topArtist === null && $tracks !== []) {
             $topTrack = $tracks[0];
-            $tracks = array_slice($tracks, 1);
         }
         $tracks = array_slice($tracks, 0, self::SEARCH_OVERVIEW_TRACKS);
 
         $annotated = array_map(
             fn ($annotation): array => new TrackAnnotationResource($annotation)->resolve(),
-            $eligibility->annotate($party, $member, $topTrack === null ? $tracks : [$topTrack, ...$tracks]),
+            $eligibility->annotate($party, $member, $tracks),
         );
         $top = null;
         if ($topArtist !== null) {
             $top = ['kind' => 'artist', 'artist' => $this->artistResult($topArtist)];
         } elseif ($topTrack !== null) {
-            $top = ['kind' => 'track', 'track' => array_shift($annotated)];
+            $top = ['kind' => 'track', 'track' => $annotated[0]];
         }
 
         $albums = array_map($this->albumResult(...), $found->albums->items);
@@ -525,7 +524,7 @@ class PartyController extends Controller
         return Inertia::render('Parties/Edit', $this->formProps($options, $party, $this->resolveAuthenticatedUser($request)) + [
             'party' => $this->formValues($party) + ['code' => $party->code],
             'providerName' => ucfirst((string) $party->provider_id),
-            'hostName' => $party->user?->nickname,
+            'hostName' => $party->user->nickname,
             'playerState' => $party->getState(),
             'tab' => in_array($request->query('tab'), self::SETTINGS_TABS, true) ? $request->query('tab') : 'general',
             'mods' => fn () => $mods->presentFor($party),

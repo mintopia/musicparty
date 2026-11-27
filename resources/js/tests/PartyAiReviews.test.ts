@@ -72,7 +72,14 @@ function detail(id: number, extra: Partial<AiReviewDetail> = {}): AiReviewDetail
         threshold: 0.5,
         rejectBelow: 0.75,
         flagBelow: 2.5,
-        fate: {state: 'queued', requestUrl: '/parties/ABCD/songs/9', approveUrl: null, rejectUrl: null, flaggedAt: null, playedAt: null},
+        fate: {
+            state: 'queued',
+            requestUrl: '/parties/ABCD/songs/9',
+            approveUrl: null,
+            rejectUrl: null,
+            flaggedAt: null,
+            playedAt: null,
+        },
         ...extra,
     };
 }
@@ -401,7 +408,7 @@ describe('AI review page', () => {
         expect(flagged.get('[data-test="open-request"]').attributes('href')).toBe('/parties/ABCD/songs/9');
 
         const low = mountShow(detail(2, {score: 1.2, confidence: 0.34}));
-        expect(low.get('[data-test="score-explanation"]').text()).toContain('below the party\'s 50% threshold');
+        expect(low.get('[data-test="score-explanation"]').text()).toContain("below the party's 50% threshold");
         expect(low.find('[data-test="approve"]').exists()).toBe(false);
         expect(low.find('[data-test="open-request-button"]').exists()).toBe(true);
     });

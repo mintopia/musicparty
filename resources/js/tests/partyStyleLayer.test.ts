@@ -19,16 +19,31 @@ describe('party style layer', () => {
     });
 
     it('shows equaliser bars only while playing', () => {
-        expect(mount(StatePill, {props: {state: 'playing'}}).find('.mp-eq').exists()).toBe(true);
-        expect(mount(StatePill, {props: {state: 'paused'}}).find('.mp-eq').exists()).toBe(false);
+        expect(
+            mount(StatePill, {props: {state: 'playing'}})
+                .find('.mp-eq')
+                .exists(),
+        ).toBe(true);
+        expect(
+            mount(StatePill, {props: {state: 'paused'}})
+                .find('.mp-eq')
+                .exists(),
+        ).toBe(false);
     });
 
     it('renders a section head with a count and actions', () => {
-        const head = mount(SectionHead, {props: {title: 'Flagged', count: 3, attention: true}, slots: {default: '<button>Clear</button>'}});
+        const head = mount(SectionHead, {
+            props: {title: 'Flagged', count: 3, attention: true},
+            slots: {default: '<button>Clear</button>'},
+        });
         expect(head.find('h2').text()).toBe('Flagged');
         expect(head.find('.mp-count').classes()).toContain('is-attention');
         expect(head.find('.mp-section-actions button').exists()).toBe(true);
-        expect(mount(SectionHead, {props: {title: 'Queue'}}).find('.mp-count').exists()).toBe(false);
+        expect(
+            mount(SectionHead, {props: {title: 'Queue'}})
+                .find('.mp-count')
+                .exists(),
+        ).toBe(false);
     });
 
     it('marks an empty state as all clear', () => {

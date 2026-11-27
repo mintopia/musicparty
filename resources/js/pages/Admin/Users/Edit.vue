@@ -61,7 +61,11 @@ function submit(): void {
                         />
                     </SettingRow>
                     <SettingRow label="Roles" hint="Admins can open everything under Admin.">
-                        <label v-for="role in roles" :key="role.code" class="form-check mb-0 d-flex align-items-center gap-2">
+                        <label
+                            v-for="role in roles"
+                            :key="role.code"
+                            class="form-check mb-0 d-flex align-items-center gap-2"
+                        >
                             <input
                                 v-model="form.roles"
                                 class="form-check-input m-0"

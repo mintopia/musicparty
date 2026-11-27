@@ -147,13 +147,13 @@ describe('Party search page', () => {
                 party,
                 params: {query: 'q', perPage: 10},
                 results: {
-                    error: {code: 'timeout', message: 'Spotify didn\'t answer in time.', retryable: true},
+                    error: {code: 'timeout', message: "Spotify didn't answer in time.", retryable: true},
                 },
                 playerState: idle,
             },
         });
 
-        expect(wrapper.get('[data-test="results-error"]').text()).toContain('didn\'t answer in time');
+        expect(wrapper.get('[data-test="results-error"]').text()).toContain("didn't answer in time");
 
         await wrapper.get('[data-test="retry"]').trigger('click');
 

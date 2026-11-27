@@ -232,7 +232,13 @@ describe('Party songs show', () => {
                 trackUrl: 'https://open.spotify.com/track/t',
                 song: {...song, requestedBy: {nickname: 'Sam', url: '/parties/ABCD/users/1'}},
                 votes: paginator([{nickname: 'Kim', userUrl: '/u/2', value: 1, createdAt: when}]),
-                aiReview: {outcome: 'allow', outcomeLabel: 'Allowed', reason: 'Fits.', criterion: null, url: '/parties/ABCD/ai-reviews/9'},
+                aiReview: {
+                    outcome: 'allow',
+                    outcomeLabel: 'Allowed',
+                    reason: 'Fits.',
+                    criterion: null,
+                    url: '/parties/ABCD/ai-reviews/9',
+                },
                 history: [
                     {icon: 'ti-music-plus', text: 'Sam requested it', at: when, url: null},
                     {icon: 'ti-history', text: 'Requested again', at: when, url: '/parties/ABCD/songs/5'},

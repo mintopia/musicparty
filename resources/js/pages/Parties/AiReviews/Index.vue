@@ -179,26 +179,28 @@ const showUrl = (review: AiReviewRow): string =>
                                 data-test="review-item"
                             >
                                 <div class="flex-fill min-w-0">
-                                <div class="fw-medium text-break">{{ review.track.title }}</div>
-                                <div class="text-secondary small text-break">{{ review.track.artists }}</div>
-                                <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
-                                    <span class="badge" :class="outcomeBadge[review.outcome].class">
-                                        <i
-                                            class="icon ti me-1"
-                                            :class="outcomeBadge[review.outcome].icon"
-                                            aria-hidden="true"
-                                        ></i>
-                                        {{ review.outcomeLabel }}
-                                    </span>
-                                    <span v-if="review.criterionLabel" class="text-secondary small">{{
-                                        review.criterionLabel
-                                    }}</span>
-                                </div>
-                                <div v-if="review.reason" class="reason-text mt-2">{{ review.reason }}</div>
-                                <div class="text-secondary small mt-2">
-                                    {{ review.user ?? 'Unknown' }}
-                                    <template v-if="review.createdAt"> &middot; {{ review.createdAt.human }}</template>
-                                </div>
+                                    <div class="fw-medium text-break">{{ review.track.title }}</div>
+                                    <div class="text-secondary small text-break">{{ review.track.artists }}</div>
+                                    <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
+                                        <span class="badge" :class="outcomeBadge[review.outcome].class">
+                                            <i
+                                                class="icon ti me-1"
+                                                :class="outcomeBadge[review.outcome].icon"
+                                                aria-hidden="true"
+                                            ></i>
+                                            {{ review.outcomeLabel }}
+                                        </span>
+                                        <span v-if="review.criterionLabel" class="text-secondary small">{{
+                                            review.criterionLabel
+                                        }}</span>
+                                    </div>
+                                    <div v-if="review.reason" class="reason-text mt-2">{{ review.reason }}</div>
+                                    <div class="text-secondary small mt-2">
+                                        {{ review.user ?? 'Unknown' }}
+                                        <template v-if="review.createdAt">
+                                            &middot; {{ review.createdAt.human }}</template
+                                        >
+                                    </div>
                                 </div>
                                 <i class="icon ti ti-chevron-right text-secondary" aria-hidden="true"></i>
                             </Link>

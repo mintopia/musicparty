@@ -17,7 +17,10 @@ const row = {
 
 describe('PartyList', () => {
     it('opens the dashboard for moderators', () => {
-        const wrapper = mount(PartyList, {props: {parties: [row]}, global: {stubs: {Link: {template: '<a><slot /></a>'}}}});
+        const wrapper = mount(PartyList, {
+            props: {parties: [row]},
+            global: {stubs: {Link: {template: '<a><slot /></a>'}}},
+        });
 
         expect(wrapper.text()).toContain('Open Dashboard');
     });

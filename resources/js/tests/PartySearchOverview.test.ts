@@ -90,7 +90,7 @@ function overview(overrides: Partial<SearchOverviewResults> = {}): SearchOvervie
     return {
         view: 'overview',
         top: {kind: 'track', track: track('top')},
-        tracks: [track('t1'), track('t2'), track('t3'), track('t4')],
+        tracks: [track('top'), track('t1'), track('t2'), track('t3')],
         albums: [album('al1'), album('al2')],
         artists: [artist('ar1'), artist('ar2')],
         empty: false,
@@ -340,7 +340,7 @@ describe('Party search suggestions and weak matches', () => {
 
         expect(weak.find('[data-test="top-result"]').exists()).toBe(false);
         expect(weak.get('[data-test="tracks-section"]').classes()).toContain('col-12');
-        expect(weak.findAll('[data-test="tracks-section"] [data-test="request"]')).toHaveLength(5);
+        expect(weak.findAll('[data-test="tracks-section"] [data-test="request"]')).toHaveLength(4);
     });
 });
 
@@ -382,7 +382,7 @@ describe('Party search states', () => {
 
     it('shows the error card with Retry that reloads only the results and keeps the query', async () => {
         const wrapper = mountSearch({
-            error: {code: 'timeout', message: 'Spotify didn\'t answer in time.', retryable: true},
+            error: {code: 'timeout', message: "Spotify didn't answer in time.", retryable: true},
         });
 
         const error = wrapper.get('[data-test="results-error"]');
