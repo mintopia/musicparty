@@ -12,6 +12,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
+use App\Support\SearchTokens;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
@@ -24,6 +25,7 @@ class UpcomingSongController extends Controller
     public function index(UpcomingSongSearchRequest $request, Party $party, MusicProviderFactory $providers): Response
     {
         $providerName = $providers->forParty($party, Purpose::Control)->displayName();
+        $viewer = $request->user();
         $query = $party->upcoming()->withCount('votes')->with(['user', 'song', 'song.album', 'song.artists']);
         $params = [
             'order' => 'created_at',
@@ -34,33 +36,38 @@ class UpcomingSongController extends Controller
             $params['per_page'] = $perPage;
         }
 
-        if ($request->input('name')) {
-            $params['name'] = $request->input('name');
-            $query = $query->whereHas('song', function ($query) use ($params) {
-                $query->where('name', 'LIKE', "%{$params['name']}%");
+        $search = $this->searchFor($request);
+        $params['q'] = SearchTokens::serialize($search);
+        $tokens = $search['tokens'];
+
+        foreach (SearchTokens::words($search['text']) as $word) {
+            $term = "%{$word}%";
+            $query = $query->where(function ($query) use ($term) {
+                $query->whereHas('song', fn ($song) => $song->where('name', 'LIKE', $term))
+                    ->orWhereHas('song.album', fn ($album) => $album->where('name', 'LIKE', $term))
+                    ->orWhereHas('song.artists', fn ($artist) => $artist->where('name', 'LIKE', $term))
+                    ->orWhereHas('user', fn ($user) => $user->where('nickname', 'LIKE', $term));
             });
         }
 
-        if ($request->input('album')) {
-            $params['album'] = $request->input('album');
-            $query = $query->whereHas('song.album', function ($query) use ($params) {
-                $query->where('name', 'LIKE', "%{$params['album']}%");
-            });
+        foreach ($tokens['name'] ?? [] as $value) {
+            $query = $query->whereHas('song', fn ($song) => $song->where('name', 'LIKE', "%{$value}%"));
         }
-
-        if ($request->input('artist')) {
-            $params['artist'] = $request->input('artist');
-            $query = $query->whereHas('song.artists', function ($query) use ($params) {
-                $query->where('name', 'LIKE', "%{$params['artist']}%");
-            });
+        foreach ($tokens['album'] ?? [] as $value) {
+            $query = $query->whereHas('song.album', fn ($album) => $album->where('name', 'LIKE', "%{$value}%"));
         }
-
-        if ($request->input('type')) {
-            $params['type'] = $request->input('type');
-            if ($request->input('type') === 'queued') {
-                $query = $query->whereNull('queued_at');
-            } else {
-                $query = $query->whereNotNull('queued_at');
+        foreach ($tokens['artist'] ?? [] as $value) {
+            $query = $query->whereHas('song.artists', fn ($artist) => $artist->where('name', 'LIKE', "%{$value}%"));
+        }
+        foreach ($tokens['by'] ?? [] as $value) {
+            $query = strtolower($value) === 'me'
+                ? $query->where('user_id', $viewer?->id)
+                : $query->whereHas('user', fn ($user) => $user->where('nickname', 'LIKE', "%{$value}%"));
+        }
+        foreach (['sent' => 'queued_at', 'scheduled' => 'scheduled_for', 'flagged' => 'flagged_at'] as $key => $column) {
+            $state = $this->truthy($tokens[$key][0] ?? null);
+            if ($state !== null) {
+                $query = $state ? $query->whereNotNull($column) : $query->whereNull($column);
             }
         }
 
@@ -86,6 +93,7 @@ class UpcomingSongController extends Controller
 
         $songs = $query->paginate($perPage)->appends($params);
 
+        $zone = app(PartyTimezone::class)->dateTimeZone($party);
         $songs->through(fn (UpcomingSong $song): array => [
             'id' => $song->id,
             'name' => $song->song->name,
@@ -96,20 +104,63 @@ class UpcomingSongController extends Controller
             'score' => $song->score,
             'createdAt' => $this->when($song->created_at),
             'queuedAt' => $this->when($song->queued_at),
+            'scheduledLabel' => $song->scheduled_for?->copy()->setTimezone($zone)->format('H:i'),
+            'flagged' => $song->flagged_at !== null,
+            'requestedBy' => $song->user ? [
+                'nickname' => $song->user->nickname,
+                'isYou' => $song->user_id === $viewer?->id,
+            ] : null,
             'url' => route('parties.songs.show', [$party->code, $song->id]),
+            'removeUrl' => route('parties.songs.destroy', [$party->code, $song->id]),
         ]);
+
+        $counts = $party->upcoming()->selectRaw(
+            'count(*) as total, count(queued_at) as sent, count(scheduled_for) as scheduled, count(flagged_at) as flagged, coalesce(sum(user_id = ?), 0) as mine',
+            [$viewer?->id],
+        )->toBase()->first();
 
         return Inertia::render('Parties/Songs/Index', [
             'party' => $this->partyProps($party),
             'providerName' => $providerName,
-            'types' => [
-                ['code' => 'queued', 'name' => 'Queued'],
-                ['code' => 'spotify', 'name' => "Sent to {$providerName}"],
-            ],
             'filters' => $params,
+            'counts' => [
+                'total' => (int) ($counts->total ?? 0),
+                'sent' => (int) ($counts->sent ?? 0),
+                'waiting' => (int) ($counts->total ?? 0) - (int) ($counts->sent ?? 0),
+                'scheduled' => (int) ($counts->scheduled ?? 0),
+                'flagged' => (int) ($counts->flagged ?? 0),
+                'mine' => (int) ($counts->mine ?? 0),
+            ],
             'songs' => $songs,
             'playerState' => $party->getState(),
         ]);
+    }
+
+    /**
+     * @return array{text: string, tokens: array<string, list<string>>}
+     */
+    private function searchFor(UpcomingSongSearchRequest $request): array
+    {
+        $search = SearchTokens::parse((string) $request->input('q', ''), ['name', 'artist', 'album', 'by', 'sent', 'scheduled', 'flagged']);
+        foreach (['name', 'artist', 'album'] as $key) {
+            if ($request->filled($key)) {
+                $search['tokens'][$key][] = (string) $request->input($key);
+            }
+        }
+        if ($request->filled('type')) {
+            $search['tokens']['sent'][] = $request->input('type') === 'queued' ? 'no' : 'yes';
+        }
+
+        return $search;
+    }
+
+    private function truthy(?string $value): ?bool
+    {
+        return match (strtolower((string) $value)) {
+            'yes', 'true', '1' => true,
+            'no', 'false', '0' => false,
+            default => null,
+        };
     }
 
     public function show(PaginationRequest $request, Party $party, UpcomingSong $song, MusicProviderFactory $providers): Response
@@ -187,6 +238,14 @@ class UpcomingSongController extends Controller
         $song->forceFill(['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor])->save();
 
         return response()->redirectToRoute('parties.songs.show', [$party->code, $song->id])->with('successMessage', 'The song schedule has been updated');
+    }
+
+    public function destroy(Party $party, UpcomingSong $song): RedirectResponse
+    {
+        $song->delete();
+        $party->pushUpdate();
+
+        return response()->redirectToRoute('parties.songs.index', $party->code)->with('successMessage', 'The Request has been removed');
     }
 
     /**

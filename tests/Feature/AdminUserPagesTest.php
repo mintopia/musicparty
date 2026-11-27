@@ -2,6 +2,7 @@
 
 use App\Models\LinkedAccount;
 use App\Models\Role;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -33,16 +34,44 @@ it('keeps non-admins and guests out of every admin user route', function (string
 
 it('lists, filters and sorts users', function () {
     $this->actingAs($this->admin)
-        ->get(route('admin.users.index', ['nickname' => 'Targ', 'order' => 'nickname', 'order_direction' => 'desc']))
+        ->get(route('admin.users.index', ['q' => 'nickname:Targ', 'order' => 'nickname', 'order_direction' => 'desc']))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Users/Index')
-            ->where('filters.nickname', 'Targ')
+            ->where('filters.q', 'nickname:Targ')
             ->where('order', 'nickname')
             ->where('order_direction', 'desc')
             ->has('users.data', 1)
             ->where('users.data.0.nickname', 'Target')
-            ->where('users.data.0.last_login', null));
+            ->where('users.data.0.last_login', null)
+            ->has('users.data.0.avatar_url')
+            ->has('users.data.0.accounts')
+            ->where('users.data.0.parties_count', 0));
+});
+
+it('searches by id, free text and the chips, and still honours the legacy id and nickname parameters', function () {
+    $this->target->forceFill(['suspended' => true])->save();
+    $account = LinkedAccount::factory()->create(['user_id' => $this->target->id]);
+    $code = $account->provider->code;
+    $ids = fn (array $query) => collect($this->actingAs($this->admin)->get(route('admin.users.index', $query))->assertOk()->viewData('page')['props']['users']['data'])->pluck('id')->all();
+
+    expect($ids(['q' => (string) $this->target->id]))->toBe([$this->target->id])
+        ->and($ids(['q' => 'id:'.$this->admin->id]))->toBe([$this->admin->id])
+        ->and($ids(['q' => 'Targ']))->toBe([$this->target->id])
+        ->and($ids(['id' => $this->target->id]))->toBe([$this->target->id])
+        ->and($ids(['nickname' => 'Targ']))->toBe([$this->target->id])
+        ->and($ids(['role' => 'admin']))->toBe([$this->admin->id])
+        ->and($ids(['suspended' => 1]))->toBe([$this->target->id])
+        ->and($ids(['provider' => $code]))->toBe([$this->target->id])
+        ->and($ids(['first_login' => 1]))->toBe([])
+        ->and($ids(['spotify_relink' => 1]))->toBe([]);
+
+    $spotify = SocialProvider::factory()->create(['code' => 'spotify']);
+    LinkedAccount::factory()->create(['user_id' => $this->target->id, 'social_provider_id' => $spotify->id, 'needs_relink_at' => now()]);
+    expect($ids(['spotify_relink' => 1]))->toBe([$this->target->id]);
+
+    $this->actingAs($this->admin)->get(route('admin.users.index', ['role' => 'admin']))
+        ->assertInertia(fn (Assert $page) => $page->where('total', 2)->where('users.data.0.is_admin', true)->has('providers'));
 });
 
 it('shows a user with linked accounts', function () {

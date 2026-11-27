@@ -70,8 +70,63 @@ it('lists songs for a manager with sorting and name filter', function () {
             ->where('songs.total', 1)
             ->where('songs.data.0.id', $this->upcoming->id)
             ->where('songs.data.0.score', 4)
-            ->where('types.0.code', 'queued')
             ->has('playerState'));
+});
+
+it('filters songs by free-text query and sent status', function () {
+    $name = $this->upcoming->song->name;
+    $artist = $this->upcoming->song->artists->first()?->name;
+
+    foreach (array_filter([$name, $artist, $this->upcoming->song->album->name]) as $term) {
+        $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => $term]))
+            ->assertInertia(fn (Assert $page) => $page->where('filters.q', $term)->where('songs.total', 1));
+    }
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => 'no-such-thing-xyz']))
+        ->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'sent']))
+        ->assertInertia(fn (Assert $page) => $page->where('filters.q', 'sent:yes')->where('songs.total', 0));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'queued']))
+        ->assertInertia(fn (Assert $page) => $page->where('songs.total', 1));
+
+    $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'type' => 'bogus']))
+        ->assertSessionHasErrors('type');
+});
+
+it('filters songs by typed tokens, requester and the chip counts', function () {
+    $nickname = $this->member->user->nickname;
+    $artist = $this->upcoming->song->artists->first()->name;
+    $get = fn (string $q) => $this->actingAs($this->owner)->get(route('parties.songs.index', [$this->party->code, 'q' => $q]));
+
+    $get("sent:no by:{$nickname} artist:\"{$artist}\"")->assertInertia(fn (Assert $page) => $page
+        ->where('filters.q', "sent:no by:{$nickname} artist:\"{$artist}\"")
+        ->where('songs.total', 1)
+        ->where('songs.data.0.requestedBy.nickname', $nickname)
+        ->where('songs.data.0.requestedBy.isYou', false)
+        ->where('counts', ['total' => 1, 'sent' => 0, 'waiting' => 1, 'scheduled' => 0, 'flagged' => 0, 'mine' => 0]));
+    $get('sent:yes')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get('by:me')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get('flagged:yes scheduled:yes')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+    $get($nickname)->assertInertia(fn (Assert $page) => $page->where('songs.total', 1));
+    $get('artist:no-such-artist')->assertInertia(fn (Assert $page) => $page->where('songs.total', 0));
+
+    $this->upcoming->forceFill(['flagged_at' => now(), 'scheduled_for' => now()->addHour(), 'queued_at' => now()])->save();
+    $get('flagged:yes scheduled:yes sent:yes')->assertInertia(fn (Assert $page) => $page
+        ->where('songs.total', 1)
+        ->where('songs.data.0.flagged', true)
+        ->has('songs.data.0.scheduledLabel')
+        ->where('counts.flagged', 1)
+        ->where('counts.scheduled', 1)
+        ->where('counts.sent', 1));
+});
+
+it('lets a moderator remove a request from the list', function () {
+    $this->actingAs($this->owner)->delete(route('parties.songs.destroy', [$this->party->code, $this->upcoming->id]))
+        ->assertRedirect(route('parties.songs.index', $this->party->code));
+
+    expect(UpcomingSong::find($this->upcoming->id))->toBeNull();
 });
 
 it('shows a song detail page for a manager', function () {

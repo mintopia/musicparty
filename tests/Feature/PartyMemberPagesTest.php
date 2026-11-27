@@ -27,19 +27,41 @@ beforeEach(function () {
 
 it('renders the filtered members index for a manager', function () {
     $this->actingAs($this->owner)
-        ->get(route('parties.users.index', [$this->party->code, 'nickname' => 'Targ', 'role' => 'user', 'per_page' => 5]))
+        ->get(route('parties.users.index', [$this->party->code, 'q' => 'Targ role:user', 'per_page' => 5]))
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Parties/Members/Index')
             ->where('party.canManage', true)
-            ->where('filters.nickname', 'Targ')
-            ->where('filters.role', 'user')
+            ->where('filters.q', 'Targ role:user')
             ->where('filters.per_page', '5')
             ->where('members.data.0.nickname', 'Target')
             ->where('members.data.0.url', route('parties.users.show', [$this->party->code, $this->target->id]))
             ->has('members.data', 1)
             ->has('roles', 5)
+            ->where('roles.0.code', 'owner')
+            ->where('roles.1.code', 'moderator')
+            ->where('roles.3.count', 2)
+            ->where('memberTotal', 2)
             ->has('playerState'));
+});
+
+it('filters members by typed role, legacy params and plain words, with per-member counts', function () {
+    $song = UpcomingSong::factory()->for($this->party)->create(['user_id' => $this->target->user_id, 'flagged_at' => now()]);
+    UpcomingSong::factory()->for($this->party)->create(['user_id' => $this->target->user_id]);
+    Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $this->target->user_id]);
+    $get = fn (array $query) => $this->actingAs($this->owner)->get(route('parties.users.index', [$this->party->code, ...$query]));
+
+    $get(['q' => 'role:user'])->assertInertia(fn (Assert $page) => $page->has('members.data', 2));
+    $get(['q' => 'role:VIP'])->assertInertia(fn (Assert $page) => $page->has('members.data', 0));
+    $get(['q' => 'targ'])->assertInertia(fn (Assert $page) => $page
+        ->has('members.data', 1)
+        ->where('members.data.0.requests', 2)
+        ->where('members.data.0.votes', 1)
+        ->where('members.data.0.flagged', 1)
+        ->where('members.data.0.isYou', false));
+    $get(['nickname' => 'Targ', 'role' => 'user'])->assertInertia(fn (Assert $page) => $page
+        ->where('filters.q', 'Targ role:user')
+        ->has('members.data', 1));
 });
 
 it('renders member votes filtered by type', function () {

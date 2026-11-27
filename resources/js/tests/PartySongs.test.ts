@@ -1,10 +1,11 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
+import SearchBar from '@/components/SearchBar.vue';
 import Index from '@/pages/Parties/Songs/Index.vue';
 import ShowSong from '@/pages/Parties/Songs/Show.vue';
 import type {LegacyPartyState} from '@/types';
 
-const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn(), put: vi.fn()}));
+const inertia = vi.hoisted(() => ({get: vi.fn(), reload: vi.fn(), put: vi.fn(), delete: vi.fn()}));
 
 vi.mock('@inertiajs/vue3', async () => {
     const {reactive} = await import('vue');
@@ -56,8 +57,8 @@ describe('Party songs index', () => {
         party,
         playerState: idle,
         providerName: 'Spotify',
-        filters: {order: 'created_at', order_direction: 'desc' as const, artist: 'abba'},
-        types: [{code: 'queued', name: 'Queued'}],
+        filters: {order: 'created_at', order_direction: 'desc' as const, q: 'artist:abba'},
+        counts: {total: 42, sent: 31, waiting: 11, scheduled: 2, flagged: 3, mine: 5},
         songs: paginator([row(1), row(2, when)]),
     };
 
@@ -69,25 +70,115 @@ describe('Party songs index', () => {
 
         expect(rows).toHaveLength(2);
         expect(rows[0].text()).toContain('A, B');
-        expect(rows[0].text()).toContain('Not Sent to Spotify');
+        expect(rows[0].text()).toContain('Not yet');
+        expect(rows[0].text()).not.toContain('Not Sent');
         expect(rows[1].text()).toContain('3 hours ago');
         expect(rows[0].get('a').attributes('href')).toBe('/parties/ABCD/songs/1');
-        expect(wrapper.text()).toContain('Showing 1 to 2 of 2 entries');
-        expect(wrapper.text()).toContain('Sent to Spotify');
+        expect(wrapper.text()).toContain('Showing 1 to 2 of 2 Requests');
+        expect(wrapper.text()).toContain('Requested by');
+        expect(wrapper.text()).toContain('Sent to Player');
     });
 
-    it('submits only the filled filters, keeping the sort order', async () => {
+    it('shows the requester, badges and a row menu', async () => {
+        const wrapper = mount(Index, {
+            props: {
+                ...props,
+                songs: paginator([
+                    {
+                        ...row(1),
+                        scheduledLabel: '22:30',
+                        flagged: true,
+                        requestedBy: {nickname: 'Jess', isYou: true},
+                        removeUrl: '/parties/ABCD/songs/1',
+                    },
+                ]),
+            },
+        });
+        const first = wrapper.get('[data-test="song-row"]');
+
+        expect(first.get('[data-test="requested-by"]').text()).toContain('Jess');
+        expect(first.get('[data-test="requested-by"]').text()).toContain('You');
+        expect(first.get('[data-test="scheduled-badge"]').text()).toContain('Scheduled 22:30');
+        expect(first.find('[data-test="flagged-badge"]').exists()).toBe(true);
+        expect(first.find('[data-test="row-menu-items"]').exists()).toBe(false);
+
+        await first.get('[data-test="row-menu-toggle"]').trigger('click');
+        expect(first.get('[data-test="row-menu-items"]').text()).toContain('Open Request');
+        expect(first.get('[data-test="row-menu-items"]').text()).toContain('Schedule Request');
+
+        await first.get('[data-test="remove-request"]').trigger('click');
+        expect(inertia.delete).toHaveBeenCalledWith('/parties/ABCD/songs/1');
+    });
+
+    it('uses the mockup placeholder, hint and chip counts', () => {
         const wrapper = mount(Index, {props});
 
-        await wrapper.get('#name').setValue('hit');
-        await wrapper.get('form').trigger('submit');
+        expect(wrapper.get('[data-test="search-input"]').attributes('placeholder')).toBe(
+            'Search tracks, artists, people… or try sent:no',
+        );
+        expect(wrapper.get('[data-test="search-hint"]').text()).toBe(
+            'Words match every column. Add filters like sent:no, artist:abba or by:ravi; the chips set the same filters.',
+        );
+        expect(wrapper.get('[data-test="search-count"]').text()).toBe('2 of 42 Requests');
+        expect(wrapper.findAll('[data-test="search-chip"]').map((chip) => chip.text())).toEqual([
+            'Sent to Player 31',
+            'Waiting 11',
+            'Scheduled 2',
+            'Flagged 3',
+            'Mine 5',
+            'Artist: abba',
+        ]);
+    });
+
+    it('sends the typed query as q', () => {
+        const wrapper = mount(Index, {props});
+
+        wrapper.getComponent(SearchBar).vm.$emit('update:modelValue', 'sent:no artist:abba hit');
 
         expect(inertia.get).toHaveBeenCalledWith('/parties/ABCD/songs', {
-            name: 'hit',
-            artist: 'abba',
+            q: 'sent:no artist:abba hit',
             order: 'created_at',
             order_direction: 'desc',
         });
+    });
+
+    it('toggles chips into the same tokens, replacing the opposite sent state', async () => {
+        const wrapper = mount(Index, {props: {...props, filters: {...props.filters, q: 'sent:yes artist:abba'}}});
+        const chips = wrapper.findAll('[data-test="search-chip"]');
+
+        expect(chips[0].attributes('aria-pressed')).toBe('true');
+        expect(chips[1].attributes('aria-pressed')).toBe('false');
+
+        await chips[1].trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/songs', {
+            q: 'artist:abba sent:no',
+            order: 'created_at',
+            order_direction: 'desc',
+        });
+
+        await chips[4].trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/songs', {
+            q: 'artist:abba sent:no by:me',
+            order: 'created_at',
+            order_direction: 'desc',
+        });
+
+        await chips[5].trigger('click');
+        expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/songs', {
+            q: 'sent:no by:me',
+            order: 'created_at',
+            order_direction: 'desc',
+        });
+    });
+
+    it('repeats the query in the empty state with a clear button', () => {
+        const wrapper = mount(Index, {
+            props: {...props, filters: {...props.filters, q: 'zzz'}, songs: {...paginator([]), from: null, to: null}},
+        });
+
+        expect(wrapper.get('[data-test="empty-state"] .empty-title code').text()).toBe('zzz');
+        expect(wrapper.get('.empty-title').text()).toBe('No Requests match zzz');
+        expect(wrapper.findAll('a').filter((link) => link.text() === 'Clear filters')).toHaveLength(1);
     });
 });
 

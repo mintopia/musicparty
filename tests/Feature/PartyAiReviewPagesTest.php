@@ -102,6 +102,17 @@ it('filters by criterion and exposes it on each row', function () {
             ->where('filters.criterion', 'vibe'));
 });
 
+it('reports unfiltered outcome and criterion counts for the chips', function () {
+    AiReview::factory()->for($this->party)->create(['outcome' => AiReviewOutcome::Flag, 'criterion' => AiReviewCriterion::Troll]);
+    AiReview::factory()->for($this->party)->create(['outcome' => AiReviewOutcome::Allow, 'criterion' => null]);
+
+    $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'outcome' => 'flag']))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('counts.total', 2)
+            ->where('counts.outcome', ['allow' => 1, 'flag' => 1])
+            ->where('counts.criterion', ['troll' => 1]));
+});
+
 it('rejects an unknown criterion filter', function () {
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.index', [$this->party->code, 'criterion' => 'bogus']))->assertSessionHasErrors('criterion');
 });
