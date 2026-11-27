@@ -111,7 +111,9 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             </div>
                             <div class="text-secondary by d-md-none">
                                 {{ request.artists.map((a) => a.name).join(' · ') }} ·
-                                <template v-if="request.user">Requested by <b>{{ request.user }}</b></template>
+                                <template v-if="request.user"
+                                    >Requested by <b>{{ request.user }}</b></template
+                                >
                                 <span v-else class="credit" title="From the party's Fallback Playlist"
                                     ><i class="ti ti-playlist"></i>Fallback Playlist</span
                                 >
@@ -185,7 +187,8 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                         <div class="qbreak d-md-none"></div>
                         <div class="col-auto text-secondary qtime">
                             <span v-if="request.scheduled_for" class="plays-at d-md-none" data-test="plays-at"
-                                ><i class="ti ti-calendar-time"></i>Plays at {{ formatScheduled(request.scheduled_for) }}</span
+                                ><i class="ti ti-calendar-time"></i>Plays at
+                                {{ formatScheduled(request.scheduled_for) }}</span
                             >
                             <span>{{ formatMs(request.length) }}</span>
                         </div>
