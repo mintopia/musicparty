@@ -54,13 +54,17 @@ function makeActive(theme: {
     dark_mode: boolean;
     tokens: Record<string, string>;
 }): void {
-    router.patch(`/admin/settings/themes/${theme.id}`, {
-        name: theme.name,
-        css: theme.css,
-        dark_mode: theme.dark_mode,
-        tokens: theme.tokens,
-        active: true,
-    });
+    router.patch(
+        `/admin/settings/themes/${theme.id}`,
+        {
+            name: theme.name,
+            css: theme.css,
+            dark_mode: theme.dark_mode,
+            tokens: theme.tokens,
+            active: true,
+        },
+        {preserveState: true, preserveScroll: true},
+    );
 }
 
 function modeLabel(theme: {dark_mode: boolean}): string {

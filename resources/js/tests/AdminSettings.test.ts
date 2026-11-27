@@ -102,10 +102,11 @@ describe('admin settings pages', () => {
         expect(inertia.routerPatch).toHaveBeenCalledWith(
             '/admin/settings/themes/2',
             expect.objectContaining({active: true, name: 'Mine', css: 'a{}'}),
+            {preserveState: true, preserveScroll: true},
         );
         expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
-        expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
         await wrapper.get('[data-test=tab-providers]').trigger('click');
+        expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
         expect(wrapper.text()).toContain('http://x/login/discord/return');
     });
 
