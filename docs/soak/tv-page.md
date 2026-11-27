@@ -20,6 +20,7 @@ Repeatable check that `/parties/{code}/tv` (Inertia page `Parties/Tv`) does not 
 - Used JS heap after GC grows by no more than 10% between hour 1 and the end of the run, with no monotonic upward trend.
 - `jsEventListeners` and DOM node counts are flat (within noise) across samples.
 - Active intervals stay at 1 while a track is playing and 0 while paused; never accumulates across track changes or pause/resume.
+- The Screen Wake Lock is held while the page is open (`navigator.wakeLock` sentinel present, re-acquired after the tab is hidden then shown) and released on close; the disconnected-status timer only exists while Reconnecting is showing.
 - Progress bar and clock advance after every pause/resume.
 - After each Reverb outage the displayed state matches the server state without a manual refresh.
 - No uncaught errors in the console, including when no track has ever been played (`current` is null).

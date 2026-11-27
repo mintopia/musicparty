@@ -20,7 +20,8 @@ watch(
     },
 );
 
-const {publicChannel, onReconnect} = useEcho();
+const {publicChannel, onReconnect, trackConnection} = useEcho();
+const connected = trackConnection();
 
 (
     publicChannel(`party.${props.party.code}`) as {
@@ -37,6 +38,6 @@ onReconnect(() => {
 
 <template>
     <BareLayout :title="party.name">
-        <TvPlayer :code="party.code" :qr-svg="party.qrSvg" :state="state" />
+        <TvPlayer :code="party.code" :qr-svg="party.qrSvg" :state="state" :connected="connected" />
     </BareLayout>
 </template>

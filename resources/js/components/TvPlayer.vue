@@ -1,409 +1,533 @@
+<script setup lang="ts">
+import {computed, onBeforeUnmount, ref, watch} from 'vue';
+import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
+import PlaybackProgress from '@/components/PlaybackProgress.vue';
+import PlayerStatusPill from '@/components/PlayerStatusPill.vue';
+import {formatClock, useStatusProgress} from '@/composables/useProgress';
+import {useWakeLock} from '@/composables/useWakeLock';
+import {legacyFallbackName} from '@/lib/decoration';
+import type {LegacyArtist, LegacyTvPartyState} from '@/types';
+
+const STALE_AFTER_MS = 60000;
+
+const props = withDefaults(
+    defineProps<{
+        code: string;
+        qrSvg?: string;
+        state: LegacyTvPartyState;
+        connected?: boolean;
+    }>(),
+    {qrSvg: undefined, connected: true},
+);
+
+useWakeLock();
+
+const {hasLength, paused, progressPercent, elapsedLabel, totalLabel} = useStatusProgress(() => props.state.status);
+
+const stale = ref(false);
+let staleTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearStaleTimer(): void {
+    if (staleTimer !== null) {
+        clearTimeout(staleTimer);
+        staleTimer = null;
+    }
+}
+
+watch(
+    () => props.connected,
+    (connected) => {
+        clearStaleTimer();
+        stale.value = false;
+        if (!connected) {
+            staleTimer = setTimeout(() => {
+                staleTimer = null;
+                stale.value = true;
+            }, STALE_AFTER_MS);
+        }
+    },
+    {immediate: true},
+);
+
+onBeforeUnmount(clearStaleTimer);
+
+const backgroundImage = computed(() => props.state.now?.album?.image_url ?? null);
+const artUrl = computed(() => props.state.now?.album?.image_url ?? null);
+const failedArt = ref<string | null>(null);
+const showArt = computed(() => artUrl.value !== null && artUrl.value !== '' && failedArt.value !== artUrl.value);
+const nextArt = computed(() => props.state.next?.album?.image_url ?? null);
+const isCurrentTrack = computed(
+    () =>
+        props.state.current !== null &&
+        props.state.now !== null &&
+        props.state.current.provider_track_id === props.state.now.provider_track_id,
+);
+const showQr = computed(() => props.state.show_qrcode && Boolean(props.qrSvg));
+const qrCodeSrc = computed(() =>
+    props.qrSvg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(props.qrSvg)}` : null,
+);
+const nowPlaying = computed(() => props.state.now !== null);
+const nextTrack = computed(() => props.state.next);
+const nextAccent = computed(() =>
+    nextTrack.value?.decoration?.accent ? {borderTopColor: nextTrack.value.decoration.accent} : undefined,
+);
+
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
+}
+</script>
+
 <template>
     <NowPlayingBackdrop :image="backgroundImage" class="tv" data-test="tv-player">
         <header class="tv-header">
-            <h1 class="tv-party-name">{{ state.name }}</h1>
-            <section class="tv-join" aria-label="Join this party">
-                <span class="tv-join-label">Join with code</span>
-                <span class="tv-join-code" data-test="join-code">{{ code }}</span>
+            <div class="tv-title-col">
+                <h1 class="tv-party-name" :title="state.name">{{ state.name }}</h1>
+                <div class="tv-status" role="status" aria-live="polite">
+                    <PlayerStatusPill v-if="!connected" warn data-test="reconnecting">
+                        {{ stale ? 'Reconnecting… showing the last known track' : 'Reconnecting…' }}
+                    </PlayerStatusPill>
+                    <PlayerStatusPill v-else-if="paused && nowPlaying" data-test="paused">Paused</PlayerStatusPill>
+                </div>
+            </div>
+            <section v-if="nowPlaying" class="tv-join" aria-label="Join this party">
+                <span class="tv-join-text">
+                    <span class="tv-join-label">{{ showQr ? 'Scan or join with code' : 'Join with code' }}</span>
+                    <b class="tv-join-code" data-test="join-code">{{ code }}</b>
+                </span>
+                <img
+                    v-if="showQr"
+                    class="tv-qr tv-qr-small"
+                    :src="qrCodeSrc ?? undefined"
+                    :alt="`Scan to join ${state.name}`"
+                    width="152"
+                    height="152"
+                    decoding="async"
+                    data-test="tv-qr"
+                />
             </section>
         </header>
 
         <div class="tv-stage">
-            <section class="tv-now" aria-label="Now playing">
-                <template v-if="state.now !== null">
-                    <img
-                        class="tv-art"
-                        :src="state.now.album.image_url"
-                        alt=""
-                        width="352"
-                        height="352"
-                        decoding="async"
-                    />
-                    <div class="tv-now-body">
-                        <div class="tv-track-name">
-                            <strong>{{ state.now.name }}</strong>
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-users"></i>
-                            {{ combineArtists(state.now.artists) }}
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-vinyl"></i>
-                            {{ state.now.album.name }}
-                        </div>
-                        <div
-                            v-if="state.current && state.current.provider_track_id === state.now.provider_track_id"
-                            class="tv-line"
-                        >
-                            <i class="ti ti-music-question"></i>
-                            <template v-if="state.current?.user != null"
-                                >Requested by {{ state.current?.user }}</template
-                            >
+            <section v-if="state.now !== null" class="tv-now" aria-label="Now playing">
+                <img
+                    v-if="showArt"
+                    class="tv-art"
+                    :src="artUrl ?? undefined"
+                    alt=""
+                    width="460"
+                    height="460"
+                    decoding="async"
+                    @error="failedArt = artUrl"
+                />
+                <div v-else class="tv-art tv-art-blank" data-test="art-blank">
+                    <i class="ti ti-vinyl" aria-hidden="true"></i>
+                </div>
+                <div class="tv-now-body">
+                    <h2 class="tv-track-name" :title="state.now.name" data-test="now-name">{{ state.now.name }}</h2>
+                    <p class="tv-artists">{{ combineArtists(state.now.artists) }}</p>
+                    <p v-if="state.now.album?.name" class="tv-album">{{ state.now.album.name }}</p>
+                    <div class="tv-spacer"></div>
+                    <div class="tv-by-row">
+                        <span v-if="isCurrentTrack" class="tv-by" data-test="requested-by">
+                            <template v-if="state.current?.user != null">
+                                Requested by <b>{{ state.current.user }}</b>
+                            </template>
                             <template v-else>Fallback Track</template>
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-heart"></i>
-                            {{ state.current?.rating }}
-                        </div>
+                        </span>
+                        <span v-else class="tv-by"></span>
+                        <span v-if="state.current" class="tv-score" data-test="tv-score">
+                            <i class="ti ti-thumb-up" aria-hidden="true"></i>{{ state.current.rating ?? 0 }}
+                        </span>
+                    </div>
+                    <div v-if="hasLength" class="tv-progress-row" data-test="progress-row">
+                        <span class="tv-time">{{ elapsedLabel }}</span>
                         <PlaybackProgress class="tv-progress" :percent="progressPercent" />
-                        <div class="d-flex justify-content-between tv-times">
-                            <span>{{ currentTime }}</span>
-                            <span>{{ endTime }}</span>
-                        </div>
-                    </div>
-                </template>
-                <EmptyState v-else class="tv-empty" title="There is nothing playing" icon="ti-music-off" />
-            </section>
-
-            <section v-if="state.now !== null && state.next !== null" class="tv-next" aria-label="Next up">
-                <h2 class="tv-next-heading">Next</h2>
-                <div :class="legacyRowClasses(state.next)" :style="legacyAccentStyle(state.next)">
-                    <div class="col-auto">
-                        <img
-                            class="tv-art-small"
-                            :src="state.next.album.image_url"
-                            alt=""
-                            width="128"
-                            height="128"
-                            decoding="async"
-                        />
-                    </div>
-                    <div class="col tv-next-body">
-                        <div class="tv-next-name">
-                            <strong>{{ state.next.name }}</strong>
-                            <span
-                                v-if="state.next.decoration?.label"
-                                class="badge bg-azure-lt ms-2"
-                                data-test="decoration-label"
-                                >{{ state.next.decoration.label }}</span
-                            >
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-users"></i>
-                            {{ combineArtists(state.next.artists) }}
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-vinyl"></i>
-                            {{ state.next.album.name }}
-                        </div>
-                        <div class="tv-line">
-                            <i class="ti ti-music-question"></i>
-                            <template v-if="state.next.user !== null">Requested by {{ state.next.user }}</template>
-                            <template v-else>{{ legacyFallbackName(state.next) }}</template>
-                        </div>
+                        <span class="tv-time end">{{ totalLabel }}</span>
                     </div>
                 </div>
             </section>
-        </div>
 
-        <img
-            v-if="state.show_qrcode && qrCodeSrc"
-            class="tv-qr"
-            :src="qrCodeSrc"
-            :alt="`Scan to join ${code}`"
-            width="256"
-            height="256"
-            decoding="async"
-            data-test="tv-qr"
-        />
+            <section v-else class="tv-empty" aria-label="Nothing playing" data-test="nothing-playing">
+                <div class="tv-empty-copy">
+                    <h2 class="tv-empty-title">Nothing playing</h2>
+                    <p>
+                        {{
+                            showQr
+                                ? 'Scan to add the first track, or join with code'
+                                : 'Join with code to add the first track'
+                        }}
+                    </p>
+                    <b class="tv-empty-code" data-test="join-code">{{ code }}</b>
+                </div>
+                <img
+                    v-if="showQr"
+                    class="tv-qr tv-qr-large"
+                    :src="qrCodeSrc ?? undefined"
+                    :alt="`Scan to join ${state.name}`"
+                    width="240"
+                    height="240"
+                    decoding="async"
+                    data-test="tv-qr"
+                />
+            </section>
+
+            <section
+                v-if="state.now !== null && nextTrack !== null"
+                class="tv-next"
+                :class="{decorated: nextAccent !== undefined}"
+                :style="nextAccent"
+                aria-label="Up next"
+                data-test="up-next"
+            >
+                <span class="tv-next-label">Up next</span>
+                <img
+                    v-if="nextArt"
+                    class="tv-next-art"
+                    :src="nextArt"
+                    alt=""
+                    width="112"
+                    height="112"
+                    decoding="async"
+                />
+                <span v-else class="tv-next-art tv-next-blank" aria-hidden="true"></span>
+                <span class="tv-next-meta">
+                    <b>{{ nextTrack.name }}</b>
+                    <span
+                        v-if="nextTrack.decoration?.label"
+                        class="tv-next-tag"
+                        :style="
+                            nextTrack.decoration.accent ? {backgroundColor: nextTrack.decoration.accent} : undefined
+                        "
+                        data-test="decoration-label"
+                        >{{ nextTrack.decoration.label }}</span
+                    >
+                    · {{ combineArtists(nextTrack.artists) }}
+                    <template v-if="nextTrack.user === null && nextTrack.decoration?.displayName">
+                        · {{ legacyFallbackName(nextTrack) }}
+                    </template>
+                </span>
+                <span class="tv-time end">{{ formatClock(nextTrack.length) }}</span>
+            </section>
+        </div>
     </NowPlayingBackdrop>
 </template>
 
 <style scoped>
 .tv {
-    --tblr-heading-color: #fff;
-    --playback-progress-height: 0.5em;
-    --playback-progress-track: rgba(255, 255, 255, 0.25);
+    --u: max(0.5px, min(calc(100vw / 960), calc(100vh / 540)));
+    --pad-x: max(calc(64 * var(--u)), 5vw);
+    --pad-y: max(calc(40 * var(--u)), 5vh);
+    --playback-progress-height: calc(6 * var(--u));
+    --playback-progress-track: rgba(255, 255, 255, 0.2);
     --playback-progress-fill-color: #fff;
-    --gap: 1.5em;
-    font-size: clamp(14px, min(1.1vw, 1.9vh), 44px);
-    min-height: 100vh;
-    min-height: 100dvh;
-    padding: 1.5em 2em;
+    min-block-size: 100vh;
+    min-block-size: 100dvh;
+    padding: var(--pad-y) var(--pad-x);
     display: flex;
     flex-direction: column;
-    gap: var(--gap);
-    position: relative;
+    font-family: var(--mp-font-family, inherit);
+    font-size: calc(16 * var(--u));
 }
 
 .tv h1,
 .tv h2 {
     color: #fff;
+    margin: 0;
 }
 
 .tv-header {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;
     justify-content: space-between;
-    gap: var(--gap);
+    gap: calc(24 * var(--u));
+}
+
+.tv-title-col {
+    flex: 1;
+    min-inline-size: 0;
 }
 
 .tv-party-name {
-    margin: 0;
-    font-size: 1.6em;
-    line-height: 1.2;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+    font-size: calc(20 * var(--u));
+    font-weight: 600;
+    line-height: 1.3;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tv-status {
+    margin-block-start: calc(8 * var(--u));
+    font-size: calc(14 * var(--u));
+}
+
+.tv-status:empty {
+    display: none;
 }
 
 .tv-join {
     display: flex;
-    align-items: baseline;
-    gap: 0.6em;
+    align-items: center;
+    gap: calc(14 * var(--u));
     flex: none;
 }
 
-.tv-join-label {
-    font-size: 1em;
-    color: #fff;
+.tv-join-text {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    font-size: calc(13 * var(--u));
+    color: rgba(255, 255, 255, 0.75);
 }
 
 .tv-join-code {
-    font-size: 1.8em;
+    font-size: calc(26 * var(--u));
     font-weight: 700;
-    letter-spacing: 0.08em;
-    line-height: 1;
+    letter-spacing: 0.06em;
+    line-height: 1.2;
     color: #fff;
     font-variant-numeric: tabular-nums;
+}
+
+.tv-qr {
+    display: block;
+    flex: none;
+    box-sizing: border-box;
+    padding: calc(6 * var(--u));
+    border-radius: calc(8 * var(--u));
+    background: #fff;
+    aspect-ratio: 1;
+    object-fit: contain;
+}
+
+.tv-qr-small {
+    inline-size: max(120px, calc(76 * var(--u)));
+    block-size: max(120px, calc(76 * var(--u)));
+}
+
+.tv-qr-large {
+    inline-size: clamp(220px, 22vh, 480px);
+    block-size: clamp(220px, 22vh, 480px);
+    padding: calc(12 * var(--u));
 }
 
 .tv-stage {
     flex: 1;
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    gap: calc(var(--gap) * 2);
-    width: min(100%, 68%);
-    margin-inline: auto;
-    min-width: 0;
-}
-
-.tv-qr {
-    position: absolute;
-    right: 2em;
-    bottom: 1.5em;
-    width: clamp(160px, 10vw, 400px);
-    height: auto;
-    aspect-ratio: 1;
-    border-radius: 0.5em;
-    background: #fff;
+    min-block-size: 0;
 }
 
 .tv-now {
     display: flex;
-    flex-wrap: wrap;
-    align-items: flex-start;
-    gap: var(--gap);
-    min-width: 0;
+    align-items: stretch;
+    gap: calc(32 * var(--u));
+    margin-block-start: calc(22 * var(--u));
+    padding-inline: calc(32 * var(--u));
 }
 
 .tv-art {
-    width: clamp(10em, 24vw, 24em);
-    height: auto;
-    aspect-ratio: 1;
+    flex: none;
+    display: block;
+    inline-size: calc(230 * var(--u));
+    block-size: calc(230 * var(--u));
+    border-radius: calc(8 * var(--u));
+    box-shadow: 0 calc(14 * var(--u)) calc(40 * var(--u)) rgba(0, 0, 0, 0.5);
     object-fit: cover;
-    border-radius: 0.5em;
+}
+
+.tv-art-blank {
+    display: grid;
+    place-items: center;
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: calc(80 * var(--u));
 }
 
 .tv-now-body {
-    flex: 1 1 18em;
-    min-width: 0;
-    font-size: 1.5em;
+    flex: 1;
+    min-inline-size: 0;
+    display: flex;
+    flex-direction: column;
 }
 
 .tv-track-name {
-    font-size: 1.6em;
-    line-height: 1.2;
-    margin-bottom: 0.4em;
+    font-size: calc(36 * var(--u));
+    font-weight: 700;
+    letter-spacing: -0.015em;
+    line-height: 1.15;
     overflow-wrap: anywhere;
     display: -webkit-box;
     -webkit-line-clamp: 2;
+    line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-.tv-line {
-    padding-bottom: 0.3em;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+.tv-artists,
+.tv-album {
+    margin: 0;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.tv-line i {
-    margin-right: 0.35em;
+.tv-artists {
+    margin-block-start: calc(10 * var(--u));
+    font-size: calc(21 * var(--u));
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tv-album {
+    margin-block-start: calc(4 * var(--u));
+    font-size: calc(16 * var(--u));
+    color: rgba(255, 255, 255, 0.62);
+}
+
+.tv-spacer {
+    flex: 1;
+}
+
+.tv-by-row {
+    display: flex;
+    align-items: center;
+    gap: calc(14 * var(--u));
+}
+
+.tv-by {
+    flex: 1;
+    min-inline-size: 0;
+    font-size: calc(16 * var(--u));
+    color: rgba(255, 255, 255, 0.78);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.tv-by b {
+    color: #fff;
+    font-weight: 600;
+}
+
+.tv-score {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    gap: calc(8 * var(--u));
+    font-size: calc(18 * var(--u));
+    font-weight: 600;
+    font-variant-numeric: tabular-nums;
+}
+
+.tv-score .ti {
+    font-size: calc(22 * var(--u));
+}
+
+.tv-progress-row {
+    display: flex;
+    align-items: center;
+    gap: calc(14 * var(--u));
+    margin-block-start: calc(14 * var(--u));
 }
 
 .tv-progress {
-    margin-top: 0.6em;
+    flex: 1;
 }
 
-.tv-times {
-    font-size: 0.8em;
+.tv-time {
+    min-inline-size: 3em;
+    font-size: calc(14 * var(--u));
     font-variant-numeric: tabular-nums;
-    color: rgba(255, 255, 255, 0.85);
+    color: rgba(255, 255, 255, 0.75);
+}
+
+.tv-time.end {
+    text-align: end;
 }
 
 .tv-empty {
-    color: rgba(255, 255, 255, 0.85);
-    font-size: 2em;
-    margin: auto;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: calc(56 * var(--u));
+}
+
+.tv-empty-title {
+    font-size: calc(40 * var(--u));
+    font-weight: 700;
+}
+
+.tv-empty p {
+    margin: calc(10 * var(--u)) 0 0;
+    font-size: calc(19 * var(--u));
+    color: rgba(255, 255, 255, 0.78);
+}
+
+.tv-empty-code {
+    display: block;
+    margin-block-start: calc(6 * var(--u));
+    font-size: calc(40 * var(--u));
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    font-variant-numeric: tabular-nums;
 }
 
 .tv-next {
-    min-width: 0;
-    color: rgba(255, 255, 255, 0.85);
+    margin-block-start: auto;
+    margin-inline: calc(32 * var(--u));
+    display: flex;
+    align-items: center;
+    gap: calc(16 * var(--u));
+    padding-block-start: calc(18 * var(--u));
+    border-block-start: 1px solid rgba(255, 255, 255, 0.15);
+    font-size: calc(17 * var(--u));
+    color: rgba(255, 255, 255, 0.78);
 }
 
-.tv-next-heading {
-    font-size: 1.2em;
-    margin: 0 0 0.5em;
+.tv-next.decorated {
+    border-block-start-width: 2px;
 }
 
-.tv-art-small {
-    width: clamp(5em, 9vw, 9em);
-    height: auto;
-    aspect-ratio: 1;
+.tv-next-label {
+    flex: none;
+    font-size: calc(14 * var(--u));
+    color: rgba(255, 255, 255, 0.6);
+    white-space: nowrap;
+}
+
+.tv-next-art {
+    flex: none;
+    inline-size: calc(56 * var(--u));
+    block-size: calc(56 * var(--u));
+    border-radius: calc(6 * var(--u));
     object-fit: cover;
-    border-radius: 0.4em;
 }
 
-.tv-next-body {
-    min-width: 0;
-    padding-left: 1em;
-    font-size: 1.15em;
+.tv-next-blank {
+    background: rgba(255, 255, 255, 0.08);
 }
 
-.tv-next-name {
-    font-size: 1.4em;
-    line-height: 1.2;
-    margin-bottom: 0.3em;
-    overflow-wrap: anywhere;
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
+.tv-next-meta {
+    flex: 1;
+    min-inline-size: 0;
+    white-space: nowrap;
     overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-@media (max-width: 899px) {
-    .tv-stage {
-        width: 100%;
-    }
-
-    .tv-track-name {
-        -webkit-line-clamp: 3;
-    }
-
-    .tv-art {
-        width: 100%;
-    }
-
-    .tv-qr {
-        position: static;
-        align-self: center;
-    }
+.tv-next-meta b {
+    color: #fff;
+    font-weight: 600;
 }
 
-@media (max-width: 575px) {
-    .tv {
-        --gap: 1em;
-        padding: 1.25em 1.25em;
-    }
-
-    .tv-header {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5em;
-    }
-
-    .tv-stage {
-        justify-content: flex-start;
-        gap: var(--gap);
-    }
-
-    .tv-now {
-        flex-wrap: nowrap;
-        align-items: flex-start;
-    }
-
-    .tv-art {
-        width: 9em;
-        flex: none;
-    }
-
-    .tv-now-body {
-        font-size: 1.1em;
-    }
-
-    .tv-track-name {
-        font-size: 1.3em;
-        margin-bottom: 0.3em;
-    }
-
-    .tv-line {
-        padding-bottom: 0.15em;
-    }
-
-    .tv-next-heading {
-        margin-bottom: 0.35em;
-    }
+.tv-next-tag {
+    margin-inline: calc(8 * var(--u));
+    padding: calc(2 * var(--u)) calc(8 * var(--u));
+    border-radius: calc(4 * var(--u));
+    background: rgba(255, 255, 255, 0.18);
+    color: #fff;
+    font-size: calc(13 * var(--u));
+    font-weight: 600;
 }
 </style>
-
-<script setup lang="ts">
-import {computed} from 'vue';
-import EmptyState from '@/components/EmptyState.vue';
-import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
-import PlaybackProgress from '@/components/PlaybackProgress.vue';
-import {formatClock, useProgress} from '@/composables/useProgress';
-import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
-import type {LegacyArtist, LegacyTvPartyState, PlaybackState} from '@/types';
-
-const props = defineProps<{
-    code: string;
-    qrSvg?: string;
-    state: LegacyTvPartyState;
-}>();
-
-const isPlaying = computed(() => props.state.status?.isPlaying === true);
-
-const playback = computed<PlaybackState | null>(() => {
-    const status = props.state.status;
-    if (!status || !status.isPlaying) {
-        return null;
-    }
-
-    return {
-        isPlaying: true,
-        trackId: null,
-        linkedFromId: null,
-        durationMs: status.length,
-        progressMs: status.progressMs,
-        sampledAt: status.sampledAt,
-        shuffle: false,
-        repeat: 'off',
-        deviceId: null,
-        deviceName: null,
-        source: 'tv',
-    };
-});
-
-const {progressMs, progressPercent} = useProgress(playback);
-
-const currentTime = computed(() => (isPlaying.value ? formatClock(progressMs.value) : ''));
-const endTime = computed(() => (isPlaying.value ? formatClock(props.state.status!.length) : ''));
-
-const backgroundImage = computed(() => props.state.now?.album.image_url ?? null);
-
-const qrCodeSrc = computed(() =>
-    props.qrSvg ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(props.qrSvg)}` : null,
-);
-
-function combineArtists(artists: LegacyArtist[]): string {
-    return artists.map((artist) => artist.name).join(', ');
-}
-</script>
