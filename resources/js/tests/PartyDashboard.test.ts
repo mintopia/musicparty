@@ -871,6 +871,8 @@ describe('upcoming list', () => {
     });
 
     it('opens a schedule sheet from the menu, saves via Inertia and closes three ways', async () => {
+        vi.useFakeTimers({toFake: ['Date']});
+        vi.setSystemTime(new Date('2026-11-27T12:00:00Z'));
         const wrapper = mountPage({state: 'hidden'});
         const row = wrapper.find('[data-test="upcoming-row"]');
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
@@ -914,29 +916,5 @@ describe('upcoming list', () => {
             await wrapper.vm.$nextTick();
             expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
         }
-    });
-
-    it('estimates each phone row start from the playing track and preceding lengths', () => {
-        vi.useFakeTimers({toFake: ['Date']});
-        vi.setSystemTime(new Date('2026-11-27T21:30:00Z'));
-        const base = makeProps();
-        const first = {...request(4, 'A'), length: 200000};
-        const second = {...request(5, 'B'), length: 180000};
-        const pinned = {...request(6, 'C'), scheduled_for: '2026-11-27T22:30:00Z'};
-        const wrapper = mount(Dashboard, {
-            props: {
-                ...base,
-                playerState: {
-                    ...base.playerState,
-                    status: {isPlaying: true, sampledAt: '2026-11-27T21:30:00Z', progressMs: 100000, length: 160000},
-                },
-                upcoming: {items: [first, second, pinned], total: 3},
-            },
-        });
-        vi.useRealTimers();
-
-        const est = wrapper.findAll('[data-test="est-start"]').map((node) => node.text());
-        expect(est).toEqual(['About 21:31', 'About 21:34']);
-        expect(wrapper.findAll('[data-test="plays-at"]')).toHaveLength(1);
     });
 });

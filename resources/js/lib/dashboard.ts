@@ -32,35 +32,6 @@ export function formatMs(ms: number): string {
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
 }
 
-export interface StartEstimate {
-    startsAt: number;
-    precedingEnd: number;
-    precedingName: string | null;
-}
-
-export function estimateStarts(
-    items: DashboardRequest[],
-    status: LegacyPlaybackStatus | null | undefined,
-    nowTrackName: string | null,
-    nowMs: number,
-): (StartEstimate | null)[] {
-    if (!status) {
-        return items.map(() => null);
-    }
-    const elapsed = status.isPlaying ? Math.max(0, nowMs - Date.parse(status.sampledAt)) : 0;
-    let cursor = nowMs + Math.max(0, status.length - status.progressMs - elapsed);
-    let previous = nowTrackName;
-
-    return items.map((item) => {
-        const scheduled = item.scheduled_for ? Date.parse(item.scheduled_for) : Number.NaN;
-        const startsAt = Number.isNaN(scheduled) ? cursor : Math.max(cursor, scheduled);
-        const estimate = {startsAt, precedingEnd: cursor, precedingName: previous};
-        cursor = startsAt + item.length;
-        previous = item.name;
-        return estimate;
-    });
-}
-
 export function errorCode(error: unknown): ApiError {
     if (axios.isAxiosError(error)) {
         const data = (error.response?.data ?? {}) as {message?: string; code?: string; retryAfter?: number};
