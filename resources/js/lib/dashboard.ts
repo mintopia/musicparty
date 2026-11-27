@@ -5,7 +5,13 @@ import {activate, control, devices} from '@/routes/api/v1/parties';
 import {start} from '@/routes/api/v1/parties/playback';
 import {destroy, play} from '@/routes/api/v1/parties/upcomingsongs';
 import {flaggedApproveUrl, flaggedRejectUrl} from '@/lib/flagged';
-import type {DashboardDevice, DashboardStartState, DashboardStartTarget} from '@/types';
+import type {
+    DashboardDevice,
+    DashboardRequest,
+    DashboardStartState,
+    DashboardStartTarget,
+    LegacyPlaybackStatus,
+} from '@/types';
 
 export type PanelState = DashboardStartState | 'starting' | 'rate_limited' | 'stale';
 export type ControlAction = 'play' | 'pause' | 'next' | 'previous' | 'seek';
@@ -24,6 +30,35 @@ export const RELOAD_ALL = ['control', 'upNext', 'upcoming', 'attention'];
 export function formatMs(ms: number): string {
     const total = Math.max(0, Math.floor(ms / 1000));
     return `${Math.floor(total / 60)}:${String(total % 60).padStart(2, '0')}`;
+}
+
+export interface StartEstimate {
+    startsAt: number;
+    precedingEnd: number;
+    precedingName: string | null;
+}
+
+export function estimateStarts(
+    items: DashboardRequest[],
+    status: LegacyPlaybackStatus | null | undefined,
+    nowTrackName: string | null,
+    nowMs: number,
+): (StartEstimate | null)[] {
+    if (!status) {
+        return items.map(() => null);
+    }
+    const elapsed = status.isPlaying ? Math.max(0, nowMs - Date.parse(status.sampledAt)) : 0;
+    let cursor = nowMs + Math.max(0, status.length - status.progressMs - elapsed);
+    let previous = nowTrackName;
+
+    return items.map((item) => {
+        const scheduled = item.scheduled_for ? Date.parse(item.scheduled_for) : Number.NaN;
+        const startsAt = Number.isNaN(scheduled) ? cursor : Math.max(cursor, scheduled);
+        const estimate = {startsAt, precedingEnd: cursor, precedingName: previous};
+        cursor = startsAt + item.length;
+        previous = item.name;
+        return estimate;
+    });
 }
 
 export function errorCode(error: unknown): ApiError {

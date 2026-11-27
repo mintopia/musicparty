@@ -44,7 +44,9 @@ const props = defineProps<{
     ratings: Paginator<Reaction> & {total?: number};
 }>();
 
-const form = useForm({scheduled_for: props.song.scheduledForInput});
+const prefilled =
+    typeof window === 'undefined' ? null : new URLSearchParams(window.location.search).get('scheduled_for');
+const form = useForm({scheduled_for: prefilled ?? props.song.scheduledForInput});
 
 function saveSchedule(): void {
     form.put(update({party: props.party.code, song: props.song.id}).url, {preserveScroll: true});
