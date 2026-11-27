@@ -86,3 +86,17 @@ describe('Upcoming guest rows', () => {
         expect(wrapper.text()).not.toContain('Fallback Track');
     });
 });
+
+describe('Upcoming layout', () => {
+    it('numbers rows, keeps artist and requester on one line, and offers search when empty', async () => {
+        const wrapper = mount(Upcoming, {props: {party: 'ABC', initialState: [song(1), song(2)]}});
+
+        await wrapper.vm.$nextTick();
+        expect(wrapper.findAll('.q-pos').map((n) => n.text())).toEqual(['1', '2']);
+        expect(wrapper.get('.q-by').text()).toContain('A · Requested by u');
+
+        const empty = mount(Upcoming, {props: {party: 'ABC', initialState: []}});
+        await empty.vm.$nextTick();
+        expect(empty.find('[data-test="queue-card"]').exists()).toBe(false);
+    });
+});
