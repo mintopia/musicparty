@@ -3,6 +3,8 @@
 use App\Enums\ScheduleFrequency;
 use App\Models\AiReview;
 use App\Mods\ModScheduler;
+use App\Services\Dashboard\SystemHealth;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
@@ -17,3 +19,5 @@ Schedule::call(fn () => app(ModScheduler::class)->run(ScheduleFrequency::Hour))
     ->name('mods:hour')->hourly()->onOneServer();
 Schedule::call(fn () => app(ModScheduler::class)->run(ScheduleFrequency::Day))
     ->name('mods:day')->daily()->onOneServer();
+Schedule::call(fn () => Cache::put(SystemHealth::SCHEDULER_HEARTBEAT_KEY, now()->timestamp, 3600))
+    ->name('admin:scheduler-heartbeat')->everyMinute()->onOneServer();

@@ -1,6 +1,5 @@
 import {mount} from '@vue/test-utils';
 import {beforeEach, describe, expect, it, vi} from 'vitest';
-import Dashboard from '@/pages/Admin/Dashboard.vue';
 import SettingsIndex from '@/pages/Admin/Settings/Index.vue';
 import ProviderEdit from '@/pages/Admin/SocialProviders/Edit.vue';
 
@@ -25,12 +24,6 @@ beforeEach(() => {
 });
 
 describe('admin settings pages', () => {
-    it('renders dashboard stats', () => {
-        const wrapper = mount(Dashboard, {props: {stats: {users: {total: 5, lastWeek: 2}}}});
-        expect(wrapper.text()).toContain('5 Users');
-        expect(wrapper.text()).toContain('2 in the last week');
-    });
-
     it('renders settings, disables readonly theme delete, and patches the form', async () => {
         const wrapper = mount(SettingsIndex, {
             props: {

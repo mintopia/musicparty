@@ -4,7 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
-use Carbon\Carbon;
+use App\Services\Dashboard\AdminDashboard;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,16 +12,9 @@ use Inertia\Response;
 
 class HomeController extends Controller
 {
-    public function dashboard(): Response
+    public function dashboard(AdminDashboard $dashboard): Response
     {
-        return Inertia::render('Admin/Dashboard', [
-            'stats' => [
-                'users' => [
-                    'total' => User::count(),
-                    'lastWeek' => User::where('created_at', '>', Carbon::now()->subWeek())->count(),
-                ],
-            ],
-        ]);
+        return Inertia::render('Admin/Dashboard', $dashboard->props());
     }
 
     public function unimpersonate(Request $request): RedirectResponse
