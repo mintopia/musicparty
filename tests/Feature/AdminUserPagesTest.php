@@ -1,6 +1,8 @@
 <?php
 
 use App\Models\LinkedAccount;
+use App\Models\Party;
+use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\SocialProvider;
 use App\Models\User;
@@ -49,6 +51,29 @@ it('lists, filters and sorts users', function () {
             ->where('users.data.0.parties_count', 0));
 });
 
+it('sorts by last login newest first with never-logged-in users last', function () {
+    $recent = User::factory()->create(['nickname' => 'Recent', 'last_login' => now()->subMinute()]);
+    $older = User::factory()->create(['nickname' => 'Older', 'last_login' => now()->subDays(3)]);
+
+    $this->actingAs($this->admin)->get(route('admin.users.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('order', 'last_login')
+            ->where('order_direction', 'desc')
+            ->where('users.data.0.id', $recent->id)
+            ->where('users.data.1.id', $older->id)
+            ->where('users.data.2.last_login', null)
+            ->where('users.data.3.last_login', null));
+});
+
+it('only offers login providers as filter chips', function () {
+    SocialProvider::factory()->create(['code' => 'discord', 'name' => 'Discord', 'supports_auth' => true]);
+    SocialProvider::factory()->create(['code' => 'passport', 'name' => 'Laravel Passport', 'supports_auth' => false]);
+
+    $this->actingAs($this->admin)->get(route('admin.users.index'))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('providers', fn ($providers) => collect($providers)->pluck('code')->all() === ['discord']));
+});
+
 it('searches by id, free text and the chips, and still honours the legacy id and nickname parameters', function () {
     $this->target->forceFill(['suspended' => true])->save();
     $account = LinkedAccount::factory()->create(['user_id' => $this->target->id]);
@@ -85,7 +110,33 @@ it('shows a user with linked accounts', function () {
             ->where('user.suspended', false)
             ->has('accounts', 1)
             ->where('accounts.0.id', $account->id)
-            ->where('accounts.0.can_delete', false));
+            ->where('accounts.0.can_delete', false)
+            ->where('accounts.0.needs_relink', false)
+            ->where('accounts.0.token_expires_human', null)
+            ->has('accounts.0.linked_human')
+            ->has('user.avatar_url')
+            ->where('parties', []));
+});
+
+it('shows link state, token expiry and party memberships on the user page', function () {
+    $spotify = SocialProvider::factory()->create(['code' => 'spotify']);
+    LinkedAccount::factory()->create([
+        'user_id' => $this->target->id,
+        'social_provider_id' => $spotify->id,
+        'needs_relink_at' => now(),
+        'access_token_expires_at' => now()->subDays(12),
+    ]);
+    $party = Party::factory()->create(['name' => 'Retro Room']);
+    PartyMember::factory()->create(['user_id' => $this->target->id, 'party_id' => $party->id]);
+
+    $this->actingAs($this->admin)->get(route('admin.users.show', $this->target))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('accounts.0.needs_relink', true)
+            ->where('accounts.0.token_expired', true)
+            ->where('accounts.0.token_expires_human', fn ($human) => str_contains($human, 'ago'))
+            ->where('parties.0.name', 'Retro Room')
+            ->where('parties.0.code', $party->code)
+            ->has('parties.0.role'));
 });
 
 it('renders the edit form and updates the user', function () {
@@ -108,6 +159,20 @@ it('renders the edit form and updates the user', function () {
         ->and($fresh->roles->pluck('code')->all())->toBe(['admin']);
 });
 
+it('offers only the admin role and leaves other roles alone on update', function () {
+    $other = Role::query()->forceCreate(['code' => 'create-party', 'name' => 'Create Party']);
+    $this->target->roles()->attach($other);
+
+    $this->actingAs($this->admin)->get(route('admin.users.edit', $this->target))
+        ->assertInertia(fn (Assert $page) => $page->has('roles', 1)->where('roles.0.code', 'admin'));
+
+    $this->actingAs($this->admin)
+        ->patch(route('admin.users.update', $this->target), ['nickname' => 'Target', 'roles' => ['admin', 'create-party']])
+        ->assertRedirect();
+
+    expect($this->target->fresh()->roles->pluck('code')->sort()->values()->all())->toBe(['admin', 'create-party']);
+});
+
 it('validates the update', function () {
     $this->actingAs($this->admin)
         ->patch(route('admin.users.update', $this->target), ['nickname' => ''])
@@ -117,7 +182,12 @@ it('validates the update', function () {
 it('confirms before deleting and requires the confirm word', function () {
     $this->actingAs($this->admin)->get(route('admin.users.delete', $this->target))
         ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page->component('Admin/Users/Delete')->where('user.id', $this->target->id));
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Admin/Users/Delete')
+            ->where('user.id', $this->target->id)
+            ->where('impact.accounts_count', 0)
+            ->where('impact.memberships_count', 0)
+            ->where('impact.owned_parties', []));
 
     $this->actingAs($this->admin)->delete(route('admin.users.destroy', $this->target), ['confirm' => 'nope'])
         ->assertSessionHasErrors('confirm');
@@ -127,6 +197,19 @@ it('confirms before deleting and requires the confirm word', function () {
         ->assertRedirect(route('admin.users.index'))
         ->assertSessionHas('successMessage');
     expect(User::find($this->target->id))->toBeNull();
+});
+
+it('summarises what deleting a user removes', function () {
+    LinkedAccount::factory()->count(2)->create(['user_id' => $this->target->id]);
+    $owned = Party::factory()->create(['user_id' => $this->target->id, 'name' => 'Retro Room']);
+    PartyMember::factory()->create(['user_id' => $this->target->id, 'party_id' => $owned->id]);
+
+    $this->actingAs($this->admin)->get(route('admin.users.delete', $this->target))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('impact.accounts_count', 2)
+            ->has('impact.accounts', 2)
+            ->where('impact.memberships_count', 1)
+            ->where('impact.owned_parties', ['Retro Room']));
 });
 
 it('confirms and deletes a linked account when another remains', function () {

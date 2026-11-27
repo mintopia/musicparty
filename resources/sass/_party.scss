@@ -1171,6 +1171,31 @@
     }
 }
 
+.mp-grid-5-7 {
+    display: grid;
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    gap: var(--mp-space-5);
+    align-items: start;
+}
+
+@media (max-width: 991.98px) {
+    .mp-grid-5-7 {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}
+
+.mp-provs {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--mp-space-2);
+    color: var(--tblr-secondary-color);
+    font-size: 1.25rem;
+
+    .is-warn {
+        color: var(--tblr-warning);
+    }
+}
+
 .mp-sub {
     display: block;
     color: var(--tblr-secondary-color);

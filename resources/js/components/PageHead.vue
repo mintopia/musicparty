@@ -4,7 +4,14 @@ defineProps<{title: string; summary?: string}>();
 
 <template>
     <div class="mp-page-head page-header mt-0">
-        <div>
+        <div v-if="$slots.lead" class="mp-cell">
+            <slot name="lead" />
+            <div>
+                <h1>{{ title }}</h1>
+                <p v-if="summary">{{ summary }}</p>
+            </div>
+        </div>
+        <div v-else>
             <h1>{{ title }}</h1>
             <p v-if="summary">{{ summary }}</p>
         </div>

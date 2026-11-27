@@ -6,16 +6,20 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
 use App\Models\LinkedAccount;
+use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class UserController extends Controller
 {
+    private const MANAGED_ROLES = ['admin'];
+
     public function index(Request $request): Response
     {
         $request->validate([
@@ -75,26 +79,26 @@ class UserController extends Controller
         $params = (array) $filters;
 
         switch ($request->input('order')) {
+            case 'id':
             case 'nickname':
             case 'created_at':
                 $params['order'] = $request->input('order');
                 break;
-            case 'id':
+            case 'last_login':
             default:
-                $params['order'] = 'id';
+                $params['order'] = 'last_login';
                 break;
         }
 
-        switch ($request->input('order_direction', 'asc')) {
-            case 'desc':
-                $params['order_direction'] = 'desc';
-                break;
-            case 'asc':
-            default:
-                $params['order_direction'] = 'asc';
-        }
+        $defaultDirection = $params['order'] === 'last_login' || $params['order'] === 'created_at' ? 'desc' : 'asc';
+        $params['order_direction'] = $request->input('order_direction', $defaultDirection) === 'asc' ? 'asc' : 'desc';
 
-        $query = $query->orderBy($params['order'], $params['order_direction']);
+        if ($params['order'] === 'last_login') {
+            $query->orderByRaw('last_login IS NULL')->orderBy('last_login', $params['order_direction']);
+        } else {
+            $query->orderBy($params['order'], $params['order_direction']);
+        }
+        $query->orderBy('id');
 
         $params['page'] = $request->input('page', 1);
         $params['perPage'] = $request->input('perPage', 20);
@@ -132,7 +136,7 @@ class UserController extends Controller
                 'provider' => $filters->provider ?? '',
                 'spotify_relink' => isset($filters->spotify_relink),
             ],
-            'providers' => SocialProvider::query()->orderBy('name')->get(['code', 'name'])
+            'providers' => SocialProvider::query()->where('supports_auth', true)->orderBy('name')->get(['code', 'name'])
                 ->map(fn (SocialProvider $row): array => ['code' => $row->code, 'name' => $row->name])->all(),
             'total' => $total,
             'order' => $params['order'],
@@ -173,11 +177,14 @@ class UserController extends Controller
 
     public function show(User $user): Response
     {
+        $user->load(['accounts.provider', 'roles', 'partyMembers.party', 'partyMembers.role']);
+
         return Inertia::render('Admin/Users/Show', [
             'user' => [
                 'id' => $user->id,
                 'nickname' => $user->nickname,
                 'email' => $user->getEmail(),
+                'avatar_url' => $user->avatarUrl(),
                 'suspended' => (bool) $user->suspended,
                 'first_login' => (bool) $user->first_login,
                 'terms_agreed' => (bool) $user->terms_agreed_at,
@@ -193,9 +200,24 @@ class UserController extends Controller
                 'name' => $account->name,
                 'email' => $account->email,
                 'avatar_url' => $account->avatar_url,
-                'external_id' => $account->external_id,
+                'provider_code' => $account->provider?->code,
+                'linked_human' => $account->created_at?->diffForHumans(),
+                'linked_at' => $account->created_at?->format('Y-m-d H:i:s'),
+                'needs_relink' => $account->needs_relink_at !== null,
+                'token_expires_human' => $account->access_token_expires_at
+                    ? Carbon::parse($account->access_token_expires_at)->diffForHumans()
+                    : null,
+                'token_expired' => $account->access_token_expires_at
+                    ? Carbon::parse($account->access_token_expires_at)->isPast()
+                    : false,
                 'can_delete' => $account->canDelete(),
             ])->values(),
+            'parties' => $user->partyMembers
+                ->map(fn (PartyMember $member): array => [
+                    'code' => $member->party->code,
+                    'name' => $member->party->name,
+                    'role' => $member->role->name,
+                ])->values(),
         ]);
     }
 
@@ -209,7 +231,7 @@ class UserController extends Controller
                 'first_login_completed' => ! $user->first_login,
                 'suspended' => (bool) $user->suspended,
             ],
-            'roles' => Role::all()->map(fn (Role $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
+            'roles' => Role::query()->where('code', 'admin')->get()->map(fn (Role $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
             'currentRoles' => $user->roles()->pluck('code')->toArray(),
         ]);
     }
@@ -234,9 +256,12 @@ class UserController extends Controller
         $user->first_login = ! $request->input('first_login', false);
         $user->suspended = (bool) $request->input('suspended', false);
 
-        $wantedRoles = $request->input('roles', []);
+        $wantedRoles = array_values(array_intersect($request->input('roles', []), self::MANAGED_ROLES));
         $hasRoles = [];
         foreach ($user->roles as $role) {
+            if (! in_array($role->code, self::MANAGED_ROLES)) {
+                continue;
+            }
             if (! in_array($role->code, $wantedRoles)) {
                 $user->roles()->detach($role);
 
@@ -263,8 +288,16 @@ class UserController extends Controller
 
     public function delete(User $user): Response
     {
+        $user->load(['accounts.provider']);
+
         return Inertia::render('Admin/Users/Delete', [
             'user' => ['id' => $user->id, 'nickname' => $user->nickname],
+            'impact' => [
+                'accounts' => $user->accounts->map(fn (LinkedAccount $account): ?string => $account->provider?->name)->filter()->values()->all(),
+                'accounts_count' => $user->accounts->count(),
+                'memberships_count' => $user->partyMembers()->count(),
+                'owned_parties' => $user->parties()->orderBy('name')->pluck('name')->all(),
+            ],
         ]);
     }
 

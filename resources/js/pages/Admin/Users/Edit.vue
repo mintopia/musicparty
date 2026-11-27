@@ -42,7 +42,7 @@ function submit(): void {
                 :title="`Edit ${user.nickname}`"
                 :summary="`User ${user.id}. Changes apply the next time they load a page.`"
             />
-            <form class="card" @submit.prevent="submit">
+            <form class="card mx-auto" style="max-inline-size: 660px" @submit.prevent="submit">
                 <div class="card-body pt-2 pb-0">
                     <SettingRow
                         label="Nickname"
@@ -75,7 +75,11 @@ function submit(): void {
                             <span class="form-check-label">{{ role.name }}</span>
                         </label>
                     </SettingRow>
-                    <SettingRow label="Accepted Terms and Conditions" for="terms">
+                    <SettingRow
+                        label="Accepted Terms and Conditions"
+                        for="terms"
+                        hint="Records whether they have agreed to the terms and conditions."
+                    >
                         <span class="form-check form-switch mb-0 ps-0 min-height-0">
                             <input
                                 id="terms"

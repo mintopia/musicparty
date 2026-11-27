@@ -4,7 +4,12 @@ import {adminUserCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link} from '@inertiajs/vue3';
 import StatePill from '@/components/StatePill.vue';
 import PageHead from '@/components/PageHead.vue';
+import {show as showParty} from '@/routes/parties';
 import AppLayout from '@/layouts/AppLayout.vue';
+
+function roleBadgeClass(role: string): string {
+    return role === 'Owner' ? 'badge bg-blue-lt' : 'badge bg-secondary-lt';
+}
 
 interface ShowUser {
     id: number;
@@ -13,6 +18,7 @@ interface ShowUser {
     suspended: boolean;
     first_login: boolean;
     terms_agreed: boolean;
+    avatar_url: string;
     roles: {name: string}[];
     last_login: string | null;
     last_login_human: string | null;
@@ -26,11 +32,31 @@ interface LinkedAccountRow {
     name: string;
     email: string | null;
     avatar_url: string | null;
-    external_id: string;
+    provider_code: string | null;
+    linked_human: string | null;
+    linked_at: string | null;
+    needs_relink: boolean;
+    token_expires_human: string | null;
+    token_expired: boolean;
     can_delete: boolean;
 }
 
-const props = defineProps<{user: ShowUser; accounts: LinkedAccountRow[]}>();
+interface PartyRow {
+    code: string;
+    name: string;
+    role: string | null;
+}
+
+const props = defineProps<{user: ShowUser; accounts: LinkedAccountRow[]; parties: PartyRow[]}>();
+
+function tokenNote(account: LinkedAccountRow): string | null {
+    if (account.token_expires_human === null) {
+        return null;
+    }
+    return account.token_expired
+        ? `Token expired ${account.token_expires_human}`
+        : `Token expires ${account.token_expires_human}`;
+}
 
 const summary = [
     `User ${props.user.id}`,
@@ -47,22 +73,29 @@ const summary = [
         <Head :title="user.nickname" />
         <div class="mp-touch">
             <PageHead :title="user.nickname" :summary="summary">
-                <a :href="`/admin/users/${user.id}/impersonate`" class="btn btn-outline-secondary">
-                    <i class="icon ti ti-spy" aria-hidden="true"></i>
-                    Impersonate {{ user.nickname }}
-                </a>
-                <Link :href="`/admin/users/${user.id}/edit`" class="btn btn-primary">
+                <template #lead>
+                    <span
+                        class="avatar avatar-lg"
+                        :style="{backgroundImage: `url('${user.avatar_url}')`}"
+                        data-test="user-avatar"
+                    ></span>
+                </template>
+                <Link :href="`/admin/users/${user.id}/edit`" class="btn btn-primary order-1 order-sm-2">
                     <i class="icon ti ti-edit" aria-hidden="true"></i>
                     Edit
                 </Link>
+                <a :href="`/admin/users/${user.id}/impersonate`" class="btn btn-outline-secondary order-2 order-sm-1">
+                    <i class="icon ti ti-spy" aria-hidden="true"></i>
+                    Impersonate<span class="d-none d-sm-inline">&nbsp;{{ user.nickname }}</span>
+                </a>
             </PageHead>
 
             <div v-if="user.suspended" class="alert alert-warning alert-important" role="alert">
                 This user is suspended. They will not be able to login.
             </div>
 
-            <div class="row g-4">
-                <div class="col-12 col-lg-5">
+            <div class="mp-grid-5-7">
+                <div class="order-2 order-lg-1">
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Account</h2>
@@ -123,12 +156,6 @@ const summary = [
                                         <span v-else class="text-secondary">Never</span>
                                     </div>
                                 </div>
-                                <div>
-                                    <div class="datagrid-title">Created</div>
-                                    <div>
-                                        <span :title="user.created_at">{{ user.created_at_human }}</span>
-                                    </div>
-                                </div>
                             </div>
                         </div>
                         <div class="card-footer d-flex justify-content-end">
@@ -140,64 +167,149 @@ const summary = [
                     </div>
                 </div>
 
-                <div class="col-12 col-lg-7">
+                <div class="mp-stack order-1 order-lg-2">
                     <div class="card">
                         <div class="card-header">
                             <h2 class="card-title">Linked accounts</h2>
                         </div>
-                        <div class="table-responsive">
-                            <table class="table table-vcenter card-table">
+                        <div v-if="accounts.length === 0" class="card-body text-center">
+                            <p class="mb-0">There are no linked accounts</p>
+                        </div>
+                        <template v-else>
+                            <div class="d-none d-md-block">
+                                <table class="table table-vcenter card-table" data-test="accounts-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Provider</th>
+                                            <th>Account</th>
+                                            <th>Linked</th>
+                                            <th>State</th>
+                                            <th class="w-1"></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr v-for="account in accounts" :key="account.id">
+                                            <td class="text-nowrap">
+                                                <i
+                                                    class="ti me-2"
+                                                    :class="`ti-brand-${account.provider_code}`"
+                                                    aria-hidden="true"
+                                                ></i
+                                                >{{ account.provider }}
+                                            </td>
+                                            <td>
+                                                <div class="fw-medium">{{ account.name }}</div>
+                                                <span v-if="account.email" class="mp-sub">{{ account.email }}</span>
+                                            </td>
+                                            <td class="text-nowrap" :title="account.linked_at ?? undefined">
+                                                {{ account.linked_human }}
+                                            </td>
+                                            <td>
+                                                <StatePill :state="account.needs_relink ? 'warn' : 'ok'">{{
+                                                    account.needs_relink ? 'Needs re-link' : 'Working'
+                                                }}</StatePill>
+                                                <span v-if="tokenNote(account)" class="mp-sub" data-test="token-note">{{
+                                                    tokenNote(account)
+                                                }}</span>
+                                            </td>
+                                            <td class="text-end">
+                                                <Link
+                                                    v-if="account.can_delete"
+                                                    class="btn btn-sm"
+                                                    :href="`/admin/users/${user.id}/accounts/${account.id}`"
+                                                >
+                                                    Unlink
+                                                </Link>
+                                                <span v-else class="btn btn-sm disabled">Unlink</span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                            <ul class="list-group list-group-flush d-md-none" data-test="accounts-list">
+                                <li v-for="account in accounts" :key="account.id" class="list-group-item p-3">
+                                    <div class="d-flex justify-content-between align-items-center gap-2">
+                                        <span
+                                            ><i
+                                                class="ti me-2"
+                                                :class="`ti-brand-${account.provider_code}`"
+                                                aria-hidden="true"
+                                            ></i
+                                            >{{ account.provider }}</span
+                                        >
+                                        <StatePill :state="account.needs_relink ? 'warn' : 'ok'">{{
+                                            account.needs_relink ? 'Needs re-link' : 'Working'
+                                        }}</StatePill>
+                                    </div>
+                                    <span class="mp-sub text-wrap"
+                                        >{{ account.name }} &middot; linked {{ account.linked_human
+                                        }}<template v-if="tokenNote(account)">
+                                            &middot; {{ tokenNote(account) }}</template
+                                        ></span
+                                    >
+                                    <div class="mt-2">
+                                        <Link
+                                            v-if="account.can_delete"
+                                            class="btn btn-sm"
+                                            :href="`/admin/users/${user.id}/accounts/${account.id}`"
+                                        >
+                                            Unlink
+                                        </Link>
+                                        <span v-else class="btn btn-sm disabled">Unlink</span>
+                                    </div>
+                                </li>
+                            </ul>
+                        </template>
+                    </div>
+
+                    <div class="card">
+                        <div class="card-header">
+                            <h2 class="card-title">Parties</h2>
+                        </div>
+                        <div v-if="parties.length === 0" class="card-body text-center">
+                            <p class="mb-0 text-secondary">Not a member of any party</p>
+                        </div>
+                        <template v-else>
+                            <table class="table table-vcenter card-table d-none d-md-table" data-test="parties-table">
                                 <thead>
                                     <tr>
-                                        <th>Provider</th>
-                                        <th>Account</th>
-                                        <th>External ID</th>
-                                        <th class="w-1"></th>
+                                        <th>Party</th>
+                                        <th>Role</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    <tr v-for="account in accounts" :key="account.id">
-                                        <td>{{ account.provider }}</td>
+                                    <tr v-for="party in parties" :key="party.code">
                                         <td>
-                                            <div class="d-flex py-1 align-items-center">
-                                                <span
-                                                    class="avatar avatar-sm me-2"
-                                                    :style="
-                                                        account.avatar_url
-                                                            ? {backgroundImage: `url('${account.avatar_url}')`}
-                                                            : undefined
-                                                    "
-                                                ></span>
-                                                <div class="flex-fill">
-                                                    <div class="fw-medium">{{ account.name }}</div>
-                                                    <div class="text-secondary small">{{ account.email ?? '' }}</div>
-                                                </div>
-                                            </div>
+                                            <Link :href="showParty(party.code).url">{{ party.name }}</Link>
+                                            <span class="mp-sub">{{ party.code }}</span>
                                         </td>
-                                        <td class="text-secondary">{{ account.external_id }}</td>
                                         <td>
-                                            <Link
-                                                v-if="account.can_delete"
-                                                class="btn btn-sm btn-outline-danger"
-                                                :href="`/admin/users/${user.id}/accounts/${account.id}`"
-                                            >
-                                                <i class="icon ti ti-unlink" aria-hidden="true"></i>
-                                                Unlink
-                                            </Link>
-                                            <span v-else class="btn btn-sm btn-outline-danger disabled">
-                                                <i class="icon ti ti-unlink" aria-hidden="true"></i>
-                                                Unlink
-                                            </span>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="accounts.length === 0">
-                                        <td colspan="4" class="text-center p-4">
-                                            <p class="mb-0">There are no linked accounts</p>
+                                            <span v-if="party.role" :class="roleBadgeClass(party.role)">{{
+                                                party.role
+                                            }}</span>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
-                        </div>
+                            <ul class="list-group list-group-flush d-md-none" data-test="parties-list">
+                                <li
+                                    v-for="party in parties"
+                                    :key="party.code"
+                                    class="list-group-item p-3 d-flex justify-content-between gap-2"
+                                >
+                                    <span class="min-w-0">
+                                        <Link :href="showParty(party.code).url">{{ party.name }}</Link>
+                                        <span class="mp-sub">{{ party.code }}</span>
+                                    </span>
+                                    <span
+                                        v-if="party.role"
+                                        :class="roleBadgeClass(party.role)"
+                                        class="align-self-start"
+                                        >{{ party.role }}</span
+                                    >
+                                </li>
+                            </ul>
+                        </template>
                     </div>
                 </div>
             </div>
