@@ -58,7 +58,7 @@ onBeforeUnmount(() => clearTimeout(timer));
 
 <template>
     <div class="card" data-test="quick-links">
-        <div class="card-header"><h3 class="card-title">Quick links</h3></div>
+        <div class="card-header"><h2 class="card-title">Quick links</h2></div>
         <div class="card-body">
             <div class="row g-2 ql-grid">
                 <div v-for="item in items" :key="item.label" class="col-6">

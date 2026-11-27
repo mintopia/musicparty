@@ -12,6 +12,9 @@ defineProps<{user: {nickname: string; email: string; avatar: string}}>();
             <Breadcrumbs :items="[{label: 'Home'}]" />
         </template>
         <Head title="Home" />
+        <div class="page-header mt-0">
+            <h1>Home</h1>
+        </div>
         <div class="row">
             <div class="col-xl-9 col-sm-8 mb-4"></div>
             <div class="col-xl-3 col-sm-4 mt-sm-2">

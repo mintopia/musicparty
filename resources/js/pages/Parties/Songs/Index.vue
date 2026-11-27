@@ -70,11 +70,15 @@ function submit(): void {
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`Requests - ${party.name}`" />
+        <div class="page-header mt-0">
+            <h1>Requests</h1>
+        </div>
+
         <div class="row">
             <div class="col-md-12 col-lg-3 mb-4">
                 <form :action="songsUrl" method="get" class="card" @submit.prevent="submit">
                     <div class="card-header">
-                        <h3 class="card-title">Search</h3>
+                        <h2 class="card-title">Search</h2>
                     </div>
                     <div class="card-body">
                         <SearchTextField v-model="form.name" name="Name" property="name" />

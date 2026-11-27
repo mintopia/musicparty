@@ -48,7 +48,7 @@ function submit(): void {
             <form class="card" @submit.prevent="submit">
                 <div class="card-body">
                     <div class="mb-3">
-                        <h3 class="card-title">Role</h3>
+                        <h2 class="card-title">Role</h2>
                         <p class="card-subtitle">A user's role determines what permissions they have for the party.</p>
                         <div v-if="isSelf" class="alert alert-warning" data-test="self-warning">
                             <div class="d-flex">

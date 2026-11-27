@@ -37,7 +37,7 @@ async function act(action: () => Promise<unknown>): Promise<void> {
 <template>
     <div class="card mb-3 na-card" data-test="needs-attention">
         <div class="card-header">
-            <h3 class="card-title">Needs attention</h3>
+            <h2 class="card-title">Needs attention</h2>
             <div v-if="count === 0" class="card-actions text-success fw-medium" data-test="all-clear">
                 <i class="ti ti-circle-check me-1"></i>All clear
             </div>

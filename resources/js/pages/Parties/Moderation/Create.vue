@@ -74,7 +74,7 @@ function submit(): void {
                 </div>
 
                 <div v-if="track" class="col-12 col-lg-6" data-test="track-data">
-                    <h3>Track Data</h3>
+                    <h2>Track Data</h2>
 
                     <div class="datagrid">
                         <div>

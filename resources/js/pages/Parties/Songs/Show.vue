@@ -161,7 +161,7 @@ function clearSchedule(): void {
             <div class="col-12">
                 <form class="card" data-test="schedule-card" @submit.prevent="saveSchedule">
                     <div class="card-header">
-                        <h3 class="card-title">Schedule</h3>
+                        <h2 class="card-title">Schedule</h2>
                     </div>
                     <div class="card-body">
                         <p class="mb-3" data-test="schedule-current">

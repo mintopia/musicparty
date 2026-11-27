@@ -41,7 +41,7 @@ function generalErrors(modCode: string): string[] {
     />
     <div v-else>
         <section v-for="group in groups" :key="group.name" class="mod-group" :data-group="group.name">
-            <h3 class="settings-heading">{{ group.name }}</h3>
+            <h2 class="settings-heading">{{ group.name }}</h2>
             <div v-for="mod in group.mods" :id="`mod-${mod.code}`" :key="mod.code" class="mod-item" data-test="mod">
                 <div class="mod-row">
                     <div class="mod-text">

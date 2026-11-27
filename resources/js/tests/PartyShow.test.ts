@@ -84,7 +84,7 @@ describe('Party show page', () => {
 
         expect(wrapper.get('[data-test="up-next"]').text()).toContain('Coming Up');
         expect(wrapper.text()).not.toContain('Up Next');
-        expect(wrapper.get('h3.mt-2').text()).toBe('Queue');
+        expect(wrapper.get('h1.mt-2').text()).toBe('Queue');
         expect(wrapper.findAll('[data-test="track-row"]')).toHaveLength(2);
         expect(wrapper.text()).not.toContain('more likely to be played');
     });
@@ -106,7 +106,7 @@ describe('Party show page', () => {
     it('labels weighted parties as upcoming songs', () => {
         const wrapper = mount(Show, {props: {...props, party: {...party, weighted: true}}});
 
-        expect(wrapper.get('h3.mt-2').text()).toBe('Upcoming Songs');
+        expect(wrapper.get('h1.mt-2').text()).toBe('Upcoming Songs');
         expect(wrapper.text()).toContain('Tracks with more upvotes are more likely to be played.');
     });
 

@@ -29,7 +29,7 @@ async function playNow(request: DashboardRequest): Promise<void> {
 <template>
     <div class="deck-panel d-flex flex-column und-wrap" data-bs-theme="dark" data-test="up-next-deck">
         <div class="d-flex align-items-center mb-2">
-            <h3 class="mb-0 flex-grow-1 text-white">Up Next</h3>
+            <h2 class="mb-0 flex-grow-1 text-white">Up Next</h2>
             <a :href="queueUrl" class="small text-white-50 text-nowrap" data-test="queue-link"
                 >Queue of {{ total }} <i class="ti ti-chevron-right"></i
             ></a>
