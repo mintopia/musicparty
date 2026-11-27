@@ -39,6 +39,8 @@ class AiReviewRecorder
                 'reason' => $decision->reason,
                 'score' => $trace->score,
                 'confidence' => $trace->confidence,
+                'criterion' => $trace->criterion,
+                'criterion_confidence' => $trace->criterionConfidence,
                 'latency_ms' => (int) round($latencyMs),
                 'prompt_tokens' => $trace->promptTokens,
                 'completion_tokens' => $trace->completionTokens,

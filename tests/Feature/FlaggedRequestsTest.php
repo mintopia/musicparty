@@ -295,7 +295,7 @@ describe('AI review link', function () {
 
         $items = collect(app(FlaggedRequests::class)->listFor($this->party))->keyBy('id');
 
-        expect($items[$request->id]['ai_review_url'])->toBe(route('parties.ai-reviews.index', [$this->party->code, 'review' => $latest->id]))
+        expect($items[$request->id]['ai_review_url'])->toBe(route('parties.ai-reviews.show', [$this->party->code, $latest]))
             ->and($items[$plain->id]['ai_review_url'])->toBeNull();
     });
 

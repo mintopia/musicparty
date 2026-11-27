@@ -1,8 +1,8 @@
-import {flushPromises, mount} from '@vue/test-utils';
-import axios from 'axios';
+import {mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import {formatLatency, requestBlocks} from '@/lib/aiReviews';
+import {aiReviewUrl, answerRows, formatLatency, requestBlocks} from '@/lib/aiReviews';
 import Index from '@/pages/Parties/AiReviews/Index.vue';
+import Show from '@/pages/Parties/AiReviews/Show.vue';
 import type {AiReviewDetail, AiReviewRow} from '@/types';
 
 const inertia = vi.hoisted(() => ({get: vi.fn()}));
@@ -39,6 +39,9 @@ function row(id: number, extra: Partial<AiReviewRow> = {}): AiReviewRow {
         outcome: 'allow',
         outcomeLabel: 'Allowed',
         reason: null,
+        criterion: null,
+        criterionLabel: null,
+        criterionConfidence: null,
         driver: 'decision-model',
         model: 'jev-latest',
         latencyMs: 812,
@@ -63,6 +66,7 @@ function detail(id: number, extra: Partial<AiReviewDetail> = {}): AiReviewDetail
         },
         response: {answers: {suitability: {score: 4}}},
         partyContext: 'Tracks played: 3',
+        partyState: null,
         errorClass: null,
         errorMessage: null,
         trackId: 't1',
@@ -88,7 +92,7 @@ function paginator(data: AiReviewRow[], extra: Record<string, unknown> = {}) {
 
 function mountIndex(
     data: AiReviewRow[],
-    filters: {outcome: string; q: string; review: number | null} = {outcome: '', q: '', review: null},
+    filters: {outcome: string; criterion: string; q: string} = {outcome: '', criterion: '', q: ''},
     extra: Record<string, unknown> = {},
     props: Record<string, unknown> = {},
 ) {
@@ -99,6 +103,7 @@ function mountIndex(
             moderationTabs: {flaggedCount: 0, aiReviewEnabled: false},
             filters,
             outcomes,
+            criteria: [{code: 'troll', name: 'Troll'}],
             holdsFlagged: true,
             settingsUrl: '/parties/ABCD/edit#flag_requests',
             reviews: paginator(data, extra),
@@ -130,9 +135,7 @@ describe('AI reviews list', () => {
         expect(rows[0]?.find('[data-test="review-outcome"]').text()).toBe('Rejected');
         expect(rows[0]?.find('[data-test="review-reason"]').text()).toBe('Not for this party');
 
-        expect(rows[0]?.text()).toContain('812 ms');
-        expect(rows[0]?.text()).toContain('128');
-        expect(rows[1]?.find('[data-test="review-user"]').text()).toBe('Unknown');
+        expect(rows[1]?.find('[data-test="review-user"]').text()).toContain('Unknown');
         expect(rows[1]?.find('[data-test="review-reason"]').text()).toBe('None');
         expect(wrapper.text()).toContain('1-2 of 2');
     });
@@ -170,7 +173,7 @@ describe('AI reviews list', () => {
     });
 
     it('shows a no-match empty state with a way back when filters are active', () => {
-        const wrapper = mountIndex([], {outcome: 'flag', q: 'zzz', review: null});
+        const wrapper = mountIndex([], {outcome: 'flag', criterion: '', q: 'zzz'});
 
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No matching reviews');
         expect(wrapper.find('[data-test="clear-filters"]').attributes('href')).toBe('/parties/ABCD/ai-reviews');
@@ -191,7 +194,7 @@ describe('AI reviews list', () => {
     });
 
     it('starts the form from the active filters', () => {
-        const wrapper = mountIndex([row(1)], {outcome: 'reject', q: 'brightside', review: null});
+        const wrapper = mountIndex([row(1)], {outcome: 'reject', criterion: '', q: 'brightside'});
 
         expect((wrapper.get('input[name="q"]').element as HTMLInputElement).value).toBe('brightside');
         expect((wrapper.get('select[name="outcome"]').element as HTMLSelectElement).value).toBe('reject');
@@ -212,84 +215,186 @@ describe('AI reviews list', () => {
     });
 });
 
-describe('AI review detail', () => {
-    it('loads the detail on demand, shows the request, party context, response and tokens, and collapses', async () => {
-        const get = vi.spyOn(axios, 'get').mockResolvedValue({data: {data: detail(1)}});
-        const wrapper = mountIndex([row(1)]);
+function mountShow(review: AiReviewDetail, extra: Record<string, unknown> = {}) {
+    return mount(Show, {
+        props: {
+            party,
+            playerState,
+            moderationTabs: {flaggedCount: 0, aiReviewEnabled: true},
+            backUrl: '/parties/ABCD/ai-reviews?outcome=flag',
+            criterionLabels: {troll: 'Troll', none: 'None'},
+            review,
+            ...extra,
+        },
+    });
+}
 
-        expect(wrapper.find('[data-test="detail-row"]').exists()).toBe(false);
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
-        await flushPromises();
+describe('AI review list links', () => {
+    it('links each row to its own page keeping the filters and page', () => {
+        const wrapper = mountIndex([row(7)], {outcome: 'flag', criterion: '', q: 'wham'}, {current_page: 2});
 
-        expect(get).toHaveBeenCalledWith('/parties/ABCD/ai-reviews/1');
-        const panel = wrapper.get('[data-test="ai-review-detail"]');
-        const blocks = panel.findAll('[data-test="code-block"]').map((block) => block.text());
-        expect(blocks.some((text) => text.includes('Party context sent') && text.includes('Tracks played: 3'))).toBe(
-            true,
+        expect(wrapper.get('[data-test="review-link"]').attributes('href')).toBe(
+            '/parties/ABCD/ai-reviews/7?q=wham&outcome=flag&page=2',
         );
-        expect(blocks.some((text) => text.includes('Request body') && text.includes('"party_context"'))).toBe(true);
-        expect(blocks.some((text) => text.includes('Raw response') && text.includes('"suitability"'))).toBe(true);
-        expect(panel.findAll('[data-test="copy-button"]').length).toBe(blocks.length);
-        expect(panel.text()).toContain('api.typesafe.ai');
-        expect(panel.text()).toContain('812 ms');
-        expect(panel.text()).toContain('128');
-
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
         expect(wrapper.find('[data-test="detail-row"]').exists()).toBe(false);
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
-        await flushPromises();
-        expect(get).toHaveBeenCalledTimes(1);
+        expect(wrapper.get('[data-test="open-review"]').attributes('href')).toContain('/ai-reviews/7');
     });
 
-    it('shows a loading state while the detail is fetched', async () => {
-        vi.spyOn(axios, 'get').mockReturnValue(new Promise(() => undefined));
-        const wrapper = mountIndex([row(1)]);
+    it('shows the criterion column and a dash when there is none', () => {
+        const wrapper = mountIndex([row(1, {criterion: 'troll', criterionLabel: 'Troll'}), row(2)]);
+        const cells = wrapper.findAll('[data-test="review-criterion"]').map((cell) => cell.text());
 
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
-
-        expect(wrapper.find('[data-test="detail-loading"]').exists()).toBe(true);
+        expect(cells).toEqual(['Troll', '-']);
     });
 
-    it('shows an error with a retry when the detail cannot be loaded', async () => {
-        const get = vi
-            .spyOn(axios, 'get')
-            .mockRejectedValueOnce(new Error('boom'))
-            .mockResolvedValueOnce({data: {data: detail(1)}});
-        const wrapper = mountIndex([row(1)]);
+    it('builds a plain show url without empty filters', () => {
+        expect(aiReviewUrl('ABCD', 3, {q: '', outcome: '', page: 1})).toBe('/parties/ABCD/ai-reviews/3');
+    });
+});
 
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
-        await flushPromises();
-        expect(wrapper.find('[data-test="detail-failed"]').exists()).toBe(true);
+describe('AI review page', () => {
+    it('shows the verdict, track, metadata, answers and collapsible raw payloads', () => {
+        const wrapper = mountShow(
+            detail(1, {
+                outcome: 'reject',
+                outcomeLabel: 'Rejected',
+                reason: 'Not for this party',
+                response: {answers: {suitability: {score: 4, confidence: 0.8}, energy: {value: 'low'}}},
+            }),
+        );
 
-        await wrapper.get('[data-test="detail-failed"] button').trigger('click');
-        await flushPromises();
-        expect(get).toHaveBeenCalledTimes(2);
-        expect(wrapper.find('[data-test="ai-review-detail"]').exists()).toBe(true);
+        expect(wrapper.get('[data-test="review-outcome"]').text()).toBe('Rejected');
+        expect(wrapper.get('[data-test="detail-reason"]').text()).toBe('Not for this party');
+        expect(wrapper.get('[data-test="review-title"]').text()).toContain('A very long track title');
+        expect(wrapper.get('[data-test="review-user"]').text()).toContain('Dana');
+        expect(wrapper.get('[data-test="detail-endpoint"]').text()).toBe('api.typesafe.ai');
+        expect(wrapper.get('[data-test="detail-latency"]').text()).toBe('812 ms');
+        expect(wrapper.get('[data-test="detail-tokens"]').text()).toContain('128 total');
+        expect(wrapper.get('[data-test="back-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews?outcome=flag');
+
+        const answers = wrapper.findAll('[data-test="answer-row"]').map((answerRow) => answerRow.text());
+        expect(answers).toHaveLength(2);
+        expect(answers[0]).toContain('suitability');
+        expect(answers[0]).toContain('4');
+        expect(answers[1]).toContain('low');
+
+        expect(wrapper.get('[data-test="raw-request"]').text()).toContain('"party_context"');
+        expect(wrapper.get('[data-test="raw-response"]').text()).toContain('"suitability"');
+        expect(wrapper.find('details[data-test="raw-request"]').exists()).toBe(true);
     });
 
-    it('shows the error class and message and notes a missing response', async () => {
-        vi.spyOn(axios, 'get').mockResolvedValue({
-            data: {
-                data: detail(1, {
-                    outcome: 'error',
-                    outcomeLabel: 'Error, allowed',
-                    response: null,
-                    score: null,
-                    errorClass: 'App\\Mods\\AiRequestReview\\DecisionModelException',
-                    errorMessage: 'Decision model responded with HTTP 500',
-                }),
-            },
-        });
-        const wrapper = mountIndex([row(1, {outcome: 'error', outcomeLabel: 'Error, allowed'})]);
+    it('shows the failing criterion and its probability breakdown', () => {
+        const wrapper = mountShow(
+            detail(1, {
+                criterion: 'troll',
+                criterionLabel: 'Troll',
+                criterionConfidence: 0.91,
+                response: {
+                    answers: {criterion: {type: 'choice', choice: 'troll', probabilities: {none: 0.09, troll: 0.91}}},
+                },
+            }),
+        );
 
-        await wrapper.get('[data-test="toggle-detail"]').trigger('click');
-        await flushPromises();
+        expect(wrapper.get('[data-test="failing-criterion"]').text()).toContain('Troll');
+        expect(wrapper.get('[data-test="failing-criterion"]').text()).toContain('91%');
+        const bars = wrapper.findAll('[data-test="criterion-probability"]').map((bar) => bar.text());
+        expect(bars).toEqual(['Troll91%', 'None9%']);
+        expect(mountShow(detail(1)).find('[data-test="failing-criterion"]').exists()).toBe(false);
+    });
+
+    it('renders the structured party state as readable lists', () => {
+        const wrapper = mountShow(
+            detail(1, {
+                partyState: {
+                    stats: {tracks_played: 12, running_minutes: 90},
+                    artists: [{name: 'Wham!', plays: 3}],
+                    recent: [{title: 'Last Christmas', artist: 'Wham!'}],
+                    downvoted: [],
+                },
+            }),
+        );
+
+        expect(wrapper.get('[data-test="party-stats"]').text()).toContain('12 tracks played');
+        expect(wrapper.get('[data-test="party-artists"]').text()).toContain('Wham!');
+        expect(wrapper.get('[data-test="party-artists"]').text()).toContain('3 plays');
+        expect(wrapper.get('[data-test="party-recent"]').text()).toContain('Last Christmas');
+        expect(wrapper.find('[data-test="party-downvoted"]').exists()).toBe(false);
+    });
+
+    it('falls back to the party context text, then to a note', () => {
+        expect(mountShow(detail(1)).get('[data-test="party-context-text"]').text()).toBe('Tracks played: 3');
+        expect(
+            mountShow(detail(1, {partyContext: null}))
+                .find('[data-test="no-party-context"]')
+                .exists(),
+        ).toBe(true);
+    });
+
+    it('shows the error class and message and notes a missing response', () => {
+        const wrapper = mountShow(
+            detail(1, {
+                outcome: 'error',
+                outcomeLabel: 'Error, allowed',
+                response: null,
+                score: null,
+                errorClass: 'App\\Mods\\AiRequestReview\\DecisionModelException',
+                errorMessage: 'Decision model responded with HTTP 500',
+            }),
+        );
 
         expect(wrapper.get('[data-test="detail-error"]').text()).toContain('Decision model responded with HTTP 500');
-        expect(wrapper.text()).not.toContain('Raw response');
-        expect(wrapper.find('[data-test="detail-no-response"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="raw-response"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="detail-no-answers"]').text()).toContain('No response was received');
     });
 
+    it('reads answers from objects, arrays and scalars generically', () => {
+        expect(answerRows(null)).toEqual([]);
+        expect(answerRows({answers: {a: {score: 3, confidence: 0.5}, b: 'yes', c: {foo: 1}}})).toEqual([
+            {id: 'a', value: '3', confidence: '50%', probabilities: []},
+            {id: 'b', value: 'yes', confidence: null, probabilities: []},
+            {id: 'c', value: '{\n  "foo": 1\n}', confidence: null, probabilities: []},
+        ]);
+        expect(
+            answerRows(
+                {
+                    answers: {
+                        criterion: {
+                            type: 'choice',
+                            choice: 'troll',
+                            probabilities: {none: 0.1, troll: 0.9},
+                            confidence: 0.9,
+                        },
+                        suitability: {type: 'score', score: 1.2, probabilities: {'1': 0.7, '2': 0.2}},
+                        other: {type: 'refusal'},
+                    },
+                },
+                {troll: 'Troll', none: 'None'},
+            ),
+        ).toEqual([
+            {
+                id: 'criterion',
+                value: 'Troll',
+                confidence: '90%',
+                probabilities: [
+                    {key: 'troll', label: 'Troll', percent: 90},
+                    {key: 'none', label: 'None', percent: 10},
+                ],
+            },
+            {
+                id: 'suitability',
+                value: '1.2',
+                confidence: null,
+                probabilities: [
+                    {key: '1', label: 'Level 1', percent: 70},
+                    {key: '2', label: 'Level 2', percent: 20},
+                ],
+            },
+            {id: 'other', value: 'Refused', confidence: null, probabilities: []},
+        ]);
+    });
+});
+
+describe('AI review helpers', () => {
     it('splits a chat request into system and user message blocks', () => {
         const blocks = requestBlocks({
             model: 'review-1',

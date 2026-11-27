@@ -40,7 +40,7 @@ it('summarises recent, best rated and downvoted tracks, artists and stats', func
         ->toContain('Most recently played (newest first): Human - The Killers; Last Christmas - Wham!; Mr. Brightside - The Killers')
         ->toContain('Highest rated by guests: Mr. Brightside - The Killers')
         ->toContain('Most downvoted by guests: Last Christmas - Wham!')
-        ->toContain('Most played artists: The Killers (2); Wham! (1)');
+        ->toContain('Most played artists: The Killers (2 plays); Wham! (1 plays)');
 });
 
 it('contains no user data', function () {
@@ -61,7 +61,17 @@ it('only counts the party it is built for', function () {
     expect(app(PartyVibeSummary::class)->text($party))->not->toContain('Other')->toContain('Tracks played: 0');
 });
 
-it('caps list lengths, title lengths and the total size', function () {
+it('structures tracks and artists as objects', function () {
+    $party = Party::factory()->create();
+    vibePlayed($party, 'Human', 'The Killers', 1);
+
+    $data = app(PartyVibeSummary::class)->build($party);
+
+    expect($data['recent'])->toBe([['title' => 'Human', 'artist' => 'The Killers']])
+        ->and($data['artists'])->toBe([['name' => 'The Killers', 'plays' => 1]]);
+});
+
+it('caps list lengths and the total size without truncating titles', function () {
     $party = Party::factory()->create();
     foreach (range(1, 40) as $i) {
         vibePlayed($party, str_repeat("Long title {$i} ", 20), str_repeat('Artist ', 20).$i, $i, now()->subMinutes(100 - $i));
@@ -72,7 +82,8 @@ it('caps list lengths, title lengths and the total size', function () {
     expect($data['recent'])->toHaveCount(PartyVibeSummary::RECENT)
         ->and($data['top_rated'])->toHaveCount(PartyVibeSummary::TOP_RATED)
         ->and($data['artists'])->toHaveCount(PartyVibeSummary::ARTISTS)
-        ->and(mb_strlen($data['recent'][0]))->toBeLessThanOrEqual(PartyVibeSummary::MAX_TITLE)
+        ->and($data['recent'][0]['title'])->toBe(str_repeat('Long title 40 ', 20))
+        ->and($data['artists'][0]['name'])->toStartWith('Artist Artist')->not->toEndWith('...')
         ->and(mb_strlen($data['text']))->toBeLessThanOrEqual(PartyVibeSummary::MAX_CHARS);
 });
 
@@ -155,8 +166,8 @@ it('lists the most upvoted and downvoted requests by net votes', function () {
 
     $data = app(PartyVibeSummary::class)->build($party);
 
-    expect($data['most_upvoted_requests'])->toBe(['Loved - Fans', 'Liked - Some'])
-        ->and($data['most_downvoted_requests'])->toBe(['Hated - Foes'])
+    expect($data['most_upvoted_requests'])->toBe([['title' => 'Loved', 'artist' => 'Fans'], ['title' => 'Liked', 'artist' => 'Some']])
+        ->and($data['most_downvoted_requests'])->toBe([['title' => 'Hated', 'artist' => 'Foes']])
         ->and($data['text'])->toContain('Most upvoted requests: Loved - Fans; Liked - Some')
         ->toContain('Most downvoted requests: Hated - Foes')
         ->not->toContain('Flagged Fave')->not->toContain('Elsewhere');
@@ -171,8 +182,8 @@ it('caps the voted request lists', function () {
 
     $data = app(PartyVibeSummary::class)->build($party);
 
-    expect($data['most_upvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_upvoted_requests'][0])->toBe('Up 8 - A')
-        ->and($data['most_downvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_downvoted_requests'][0])->toBe('Down 8 - B');
+    expect($data['most_upvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_upvoted_requests'][0])->toBe(['title' => 'Up 8', 'artist' => 'A'])
+        ->and($data['most_downvoted_requests'])->toHaveCount(PartyVibeSummary::VOTED_REQUESTS)->and($data['most_downvoted_requests'][0])->toBe(['title' => 'Down 8', 'artist' => 'B']);
 });
 
 it('schedules a debounced refresh when votes are cast', function () {

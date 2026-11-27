@@ -2,9 +2,7 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
-import axios from 'axios';
-import {computed, onMounted, reactive, ref} from 'vue';
-import AiReviewDetailPanel from '@/components/AiReviewDetail.vue';
+import {computed, reactive, ref} from 'vue';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
@@ -12,31 +10,28 @@ import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchSelectField from '@/components/SearchSelectField.vue';
 import SearchTextField from '@/components/SearchTextField.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
-import {aiReviewsUrl, aiReviewUrl, formatLatency, formatTokens, outcomeBadge} from '@/lib/aiReviews';
-import type {AiReviewDetail, AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
+import {aiReviewsUrl, aiReviewUrl, outcomeBadge} from '@/lib/aiReviews';
+import type {AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string};
     playerState: LegacyPartyState;
-    filters: {outcome: string; q: string; review: number | null};
+    filters: {outcome: string; criterion: string; q: string};
     outcomes: {code: string; name: string}[];
+    criteria: {code: string; name: string}[];
     holdsFlagged: boolean;
     moderationTabs: ModerationTabsProps;
     settingsUrl: string;
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
 
-const form = reactive({q: props.filters.q, outcome: props.filters.outcome});
+const form = reactive({q: props.filters.q, outcome: props.filters.outcome, criterion: props.filters.criterion});
 const listUrl = aiReviewsUrl(props.party.code);
 const filtered = computed(
-    () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.review !== null,
+    () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.criterion !== '',
 );
-const columns = 8;
 
-const expanded = ref<number | null>(null);
-const details = reactive<Record<number, AiReviewDetail>>({});
-const loading = ref<number | null>(null);
-const failed = ref<number | null>(null);
+const filtersOpen = ref(filtered.value);
 
 function submit(): void {
     const query: Record<string, string> = {};
@@ -46,39 +41,19 @@ function submit(): void {
     if (form.outcome !== '') {
         query.outcome = form.outcome;
     }
+    if (form.criterion !== '') {
+        query.criterion = form.criterion;
+    }
     router.get(listUrl, query);
 }
 
-async function load(review: AiReviewRow): Promise<void> {
-    failed.value = null;
-    loading.value = review.id;
-    try {
-        const {data} = await axios.get<{data: AiReviewDetail}>(aiReviewUrl(props.party.code, review.id));
-        details[review.id] = data.data;
-    } catch {
-        failed.value = review.id;
-    } finally {
-        loading.value = null;
-    }
-}
-
-onMounted(() => {
-    const focused = props.reviews.data.find((review) => review.id === props.filters.review);
-    if (focused) {
-        void toggle(focused);
-    }
-});
-
-async function toggle(review: AiReviewRow): Promise<void> {
-    if (expanded.value === review.id) {
-        expanded.value = null;
-        return;
-    }
-    expanded.value = review.id;
-    if (!details[review.id]) {
-        await load(review);
-    }
-}
+const showUrl = (review: AiReviewRow): string =>
+    aiReviewUrl(props.party.code, review.id, {
+        q: props.filters.q,
+        outcome: props.filters.outcome,
+        criterion: props.filters.criterion,
+        page: props.reviews.current_page,
+    });
 </script>
 
 <template>
@@ -103,8 +78,23 @@ async function toggle(review: AiReviewRow): Promise<void> {
                 <form :action="listUrl" method="get" class="card" data-test="filters" @submit.prevent="submit">
                     <div class="card-header">
                         <h3 class="card-title">Search</h3>
+                        <button
+                            type="button"
+                            class="btn btn-sm btn-ghost-secondary ms-auto d-lg-none"
+                            :aria-expanded="filtersOpen"
+                            aria-controls="ai-review-filter-fields"
+                            data-test="toggle-filters"
+                            @click="filtersOpen = !filtersOpen"
+                        >
+                            {{ filtersOpen ? 'Hide' : 'Show' }}
+                            <i
+                                class="icon ti ms-1"
+                                :class="filtersOpen ? 'ti-chevron-up' : 'ti-chevron-down'"
+                                aria-hidden="true"
+                            ></i>
+                        </button>
                     </div>
-                    <div class="card-body">
+                    <div id="ai-review-filter-fields" class="card-body d-lg-block" :class="{'d-none': !filtersOpen}">
                         <SearchTextField v-model="form.q" name="Track, artist or user" property="q" />
                         <SearchSelectField
                             v-model="form.outcome"
@@ -114,8 +104,16 @@ async function toggle(review: AiReviewRow): Promise<void> {
                             value-key="code"
                             label-key="name"
                         />
+                        <SearchSelectField
+                            v-model="form.criterion"
+                            name="Criterion"
+                            property="criterion"
+                            :options="criteria"
+                            value-key="code"
+                            label-key="name"
+                        />
                     </div>
-                    <div class="card-footer d-flex">
+                    <div class="card-footer d-lg-flex" :class="filtersOpen ? 'd-flex' : 'd-none'">
                         <Link v-if="filtered" :href="listUrl" class="btn btn-link ms-auto" data-test="clear-filters"
                             >Clear</Link
                         >
@@ -139,18 +137,42 @@ async function toggle(review: AiReviewRow): Promise<void> {
                     description="Each requested track is reviewed and recorded here."
                 />
                 <div v-else class="card">
-                    <div class="table-responsive">
+                    <ul class="list-group list-group-flush d-md-none" data-test="reviews-list">
+                        <li v-for="review in reviews.data" :key="review.id" class="list-group-item p-0">
+                            <Link :href="showUrl(review)" class="d-block p-3 text-reset" data-test="review-item">
+                                <div class="fw-medium text-break">{{ review.track.title }}</div>
+                                <div class="text-secondary small text-break">{{ review.track.artists }}</div>
+                                <div class="mt-2 d-flex flex-wrap align-items-center gap-2">
+                                    <span class="badge" :class="outcomeBadge[review.outcome].class">
+                                        <i
+                                            class="icon ti me-1"
+                                            :class="outcomeBadge[review.outcome].icon"
+                                            aria-hidden="true"
+                                        ></i>
+                                        {{ review.outcomeLabel }}
+                                    </span>
+                                    <span v-if="review.criterionLabel" class="text-secondary small">{{
+                                        review.criterionLabel
+                                    }}</span>
+                                </div>
+                                <div v-if="review.reason" class="reason-text mt-2">{{ review.reason }}</div>
+                                <div class="text-secondary small mt-2">
+                                    {{ review.user ?? 'Unknown' }}
+                                    <template v-if="review.createdAt"> &middot; {{ review.createdAt.human }}</template>
+                                </div>
+                            </Link>
+                        </li>
+                    </ul>
+                    <div class="table-responsive d-none d-md-block">
                         <table class="table table-hover table-vcenter card-table" data-test="reviews-table">
                             <thead>
                                 <tr>
                                     <th>Outcome</th>
+                                    <th>Criterion</th>
                                     <th>Track</th>
                                     <th>Requested by</th>
-                                    <th class="reason-col">Reason</th>
-                                    <th class="text-end">Latency</th>
-                                    <th class="text-end">Tokens</th>
-                                    <th class="text-end">When</th>
-                                    <th class="w-1"><span class="visually-hidden">Details</span></th>
+                                    <th>Reason</th>
+                                    <th class="w-1"><span class="visually-hidden">Open</span></th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -172,90 +194,47 @@ async function toggle(review: AiReviewRow): Promise<void> {
                                                 >not held</span
                                             >
                                         </td>
-                                        <td>
+                                        <td class="text-nowrap" data-test="review-criterion">
+                                            <span v-if="review.criterionLabel">{{ review.criterionLabel }}</span>
+                                            <span v-else class="text-secondary">-</span>
+                                        </td>
+                                        <td class="track-col">
                                             <div class="fw-medium" data-test="review-title">
-                                                {{ review.track.title }}
+                                                <Link
+                                                    :href="showUrl(review)"
+                                                    class="text-reset"
+                                                    data-test="review-link"
+                                                    >{{ review.track.title }}</Link
+                                                >
                                             </div>
                                             <div class="text-secondary small">{{ review.track.artists }}</div>
                                         </td>
                                         <td class="text-nowrap" data-test="review-user">
                                             {{ review.user ?? 'Unknown' }}
-                                        </td>
-                                        <td class="reason-col" data-test="review-reason">
-                                            <span
-                                                v-if="review.reason"
-                                                class="d-block text-truncate"
-                                                :title="review.reason"
-                                                >{{ review.reason }}</span
+                                            <div
+                                                v-if="review.createdAt"
+                                                class="text-secondary small"
+                                                :title="review.createdAt.iso"
+                                                data-test="review-when"
                                             >
+                                                {{ review.createdAt.human }}
+                                            </div>
+                                        </td>
+                                        <td class="reason-cell" data-test="review-reason">
+                                            <span v-if="review.reason" class="reason-text" :title="review.reason">{{
+                                                review.reason
+                                            }}</span>
                                             <span v-else class="text-secondary">None</span>
                                         </td>
-                                        <td class="text-end text-nowrap tabular-nums">
-                                            {{ formatLatency(review.latencyMs) }}
-                                        </td>
-                                        <td class="text-end text-nowrap tabular-nums">
-                                            {{ formatTokens(review.totalTokens) }}
-                                        </td>
-                                        <td class="text-end text-nowrap text-secondary">
-                                            <span v-if="review.createdAt" :title="review.createdAt.iso">{{
-                                                review.createdAt.human
-                                            }}</span>
-                                        </td>
                                         <td class="text-end">
-                                            <button
-                                                type="button"
+                                            <Link
+                                                :href="showUrl(review)"
                                                 class="btn btn-icon btn-sm btn-ghost-secondary"
-                                                :aria-expanded="expanded === review.id"
-                                                :aria-controls="`ai-review-detail-${review.id}`"
-                                                :aria-label="expanded === review.id ? 'Hide details' : 'Show details'"
-                                                data-test="toggle-detail"
-                                                @click="toggle(review)"
+                                                aria-label="Open review"
+                                                data-test="open-review"
                                             >
-                                                <i
-                                                    class="icon ti"
-                                                    :class="
-                                                        expanded === review.id ? 'ti-chevron-up' : 'ti-chevron-down'
-                                                    "
-                                                ></i>
-                                            </button>
-                                        </td>
-                                    </tr>
-                                    <tr v-if="expanded === review.id" data-test="detail-row">
-                                        <td
-                                            :id="`ai-review-detail-${review.id}`"
-                                            :colspan="columns"
-                                            class="bg-body-tertiary"
-                                        >
-                                            <div
-                                                v-if="loading === review.id"
-                                                class="text-secondary py-3"
-                                                data-test="detail-loading"
-                                            >
-                                                <span
-                                                    class="spinner-border spinner-border-sm me-2"
-                                                    aria-hidden="true"
-                                                ></span>
-                                                Loading details
-                                            </div>
-                                            <div
-                                                v-else-if="failed === review.id"
-                                                class="alert alert-danger mb-0"
-                                                role="alert"
-                                                data-test="detail-failed"
-                                            >
-                                                The details could not be loaded.
-                                                <button
-                                                    type="button"
-                                                    class="btn btn-sm btn-outline-danger ms-2"
-                                                    @click="load(review)"
-                                                >
-                                                    Try again
-                                                </button>
-                                            </div>
-                                            <AiReviewDetailPanel
-                                                v-else-if="details[review.id]"
-                                                :review="details[review.id]!"
-                                            />
+                                                <i class="icon ti ti-chevron-right" aria-hidden="true"></i>
+                                            </Link>
                                         </td>
                                     </tr>
                                 </template>
@@ -275,8 +254,17 @@ async function toggle(review: AiReviewRow): Promise<void> {
 </template>
 
 <style scoped>
-.reason-col {
-    width: 30%;
-    max-width: 0;
+.track-col {
+    min-width: 12rem;
+    max-width: 16rem;
+}
+
+.reason-text {
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+    overflow: hidden;
+    overflow-wrap: anywhere;
 }
 </style>
