@@ -1,5 +1,5 @@
 import {flushPromises, mount} from '@vue/test-utils';
-import axios, {AxiosError, CanceledError} from 'axios';
+import axios, {AxiosError} from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {ref} from 'vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
@@ -56,7 +56,7 @@ const width = (wrapper: ReturnType<typeof mount>): string =>
     wrapper.get('[role="progressbar"] > div').attributes('style') ?? '';
 
 const originalAdapter = axios.defaults.adapter;
-let requests: {data: string; signal?: AbortSignal; settle: (outcome: 'ok' | number) => void}[] = [];
+let requests: {data: string; settle: (outcome: 'ok' | number) => void}[] = [];
 
 function installAdapter(): void {
     requests = [];
@@ -64,7 +64,6 @@ function installAdapter(): void {
         new Promise((resolve, reject) => {
             const entry = {
                 data: String(config.data),
-                signal: config.signal as AbortSignal | undefined,
                 settle: (outcome: 'ok' | number) => {
                     if (outcome === 'ok') {
                         resolve({data: {}, status: 200, statusText: 'OK', headers: {}, config} as never);
@@ -81,9 +80,6 @@ function installAdapter(): void {
                     );
                 },
             };
-            (config.signal as AbortSignal | undefined)?.addEventListener('abort', () =>
-                reject(new CanceledError(undefined, config)),
-            );
             requests.push(entry);
         });
 }
@@ -325,27 +321,77 @@ describe('PartyPlayer', () => {
             expect(down(wrapper).attributes('aria-pressed')).toBe('true');
             expect(requests[0]?.data).toBe('{"rating":-1}');
 
+            requests[0]?.settle('ok');
+            await flushPromises();
+
             await down(wrapper).trigger('click');
             expect(count(wrapper)).toBe('2');
             expect(down(wrapper).attributes('aria-pressed')).toBe('false');
             expect(requests[1]?.data).toBe('{"rating":0}');
         });
 
-        it('lets the latest click win by aborting the previous in-flight request', async () => {
+        it('serialises requests: a click while one is in flight is sent once, after it settles', async () => {
             const wrapper = mountRated(null);
 
             await up(wrapper).trigger('click');
             await down(wrapper).trigger('click');
             await flushPromises();
 
-            expect(requests[0]?.signal?.aborted).toBe(true);
-            expect(requests[1]?.signal?.aborted).toBe(false);
+            expect(requests).toHaveLength(1);
             expect(count(wrapper)).toBe('2');
-            expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(false);
+            expect(down(wrapper).attributes('aria-pressed')).toBe('true');
 
+            requests[0]?.settle('ok');
+            await flushPromises();
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1]?.data).toBe('{"rating":-1}');
             requests[1]?.settle('ok');
             await flushPromises();
+
+            expect(requests).toHaveLength(2);
             expect(down(wrapper).attributes('aria-pressed')).toBe('true');
+            expect(count(wrapper)).toBe('2');
+            expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(false);
+        });
+
+        it('sends only the latest of several clicks made while one is in flight', async () => {
+            const wrapper = mountRated(null);
+
+            await up(wrapper).trigger('click');
+            await down(wrapper).trigger('click');
+            await up(wrapper).trigger('click');
+            requests[0]?.settle('ok');
+            await flushPromises();
+
+            expect(requests).toHaveLength(1);
+            expect(up(wrapper).attributes('aria-pressed')).toBe('true');
+        });
+
+        it('drops a pending click when the track changes', async () => {
+            const wrapper = mountRated(null);
+
+            await up(wrapper).trigger('click');
+            await down(wrapper).trigger('click');
+            echo.update?.({...rated(2), current: {id: 8, provider_track_id: 't1', user: null, rating: 2}});
+            await wrapper.vm.$nextTick();
+            requests[0]?.settle('ok');
+            await flushPromises();
+
+            expect(requests).toHaveLength(1);
+            expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(false);
+        });
+
+        it('stops sending once unmounted', async () => {
+            const wrapper = mountRated(null);
+
+            await up(wrapper).trigger('click');
+            await down(wrapper).trigger('click');
+            wrapper.unmount();
+            requests[0]?.settle('ok');
+            await flushPromises();
+
+            expect(requests).toHaveLength(1);
         });
 
         it.each([
@@ -370,17 +416,34 @@ describe('PartyPlayer', () => {
             expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(false);
         });
 
-        it('rolls a chain of clicks back to the last confirmed state when the latest fails', async () => {
+        it('rolls a failed follow-up back to the last server-confirmed vote', async () => {
             const wrapper = mountRated(null);
 
             await up(wrapper).trigger('click');
             await down(wrapper).trigger('click');
+            requests[0]?.settle('ok');
+            await flushPromises();
             requests[1]?.settle(500);
             await flushPromises();
 
-            expect(count(wrapper)).toBe('3');
-            expect(up(wrapper).attributes('aria-pressed')).toBe('false');
+            expect(count(wrapper)).toBe('4');
+            expect(up(wrapper).attributes('aria-pressed')).toBe('true');
             expect(down(wrapper).attributes('aria-pressed')).toBe('false');
+            expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(true);
+        });
+
+        it('does not roll back or toast when the failed request is superseded by a newer click', async () => {
+            const wrapper = mountRated(null);
+
+            await up(wrapper).trigger('click');
+            await down(wrapper).trigger('click');
+            requests[0]?.settle(500);
+            await flushPromises();
+
+            expect(requests).toHaveLength(2);
+            expect(requests[1]?.data).toBe('{"rating":-1}');
+            expect(wrapper.find('[data-test="rating-notice"]').exists()).toBe(false);
+            expect(down(wrapper).attributes('aria-pressed')).toBe('true');
         });
 
         it('lets the next broadcast replace the optimistic count and drops the vote when the track changes', async () => {

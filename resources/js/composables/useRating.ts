@@ -27,7 +27,9 @@ export function useRating(options: {
     const songId = computed(() => current.value?.id ?? null);
     const own = ref<{songId: number; value: RatingValue} | null>(null);
     const adjustment = ref(0);
-    let inflight: AbortController | null = null;
+    let inflight = false;
+    let pending: {songId: number; value: RatingValue} | null = null;
+    let unmounted = false;
     let snapshot: {own: typeof own.value; adjustment: number} | null = null;
     let epoch = 0;
 
@@ -41,11 +43,6 @@ export function useRating(options: {
     );
     const score = computed(() => (current.value?.rating ?? 0) + adjustment.value);
 
-    function settle(): void {
-        inflight = null;
-        snapshot = null;
-    }
-
     watch(
         () => current.value?.rating,
         () => {
@@ -54,8 +51,8 @@ export function useRating(options: {
         },
     );
     watch(songId, () => {
-        inflight?.abort();
-        settle();
+        pending = null;
+        snapshot = null;
         epoch++;
         adjustment.value = 0;
     });
@@ -66,43 +63,68 @@ export function useRating(options: {
         },
     );
 
-    async function rate(value: RatingValue): Promise<void> {
+    async function send(id: number, value: RatingValue): Promise<void> {
+        inflight = true;
+        const sentEpoch = epoch;
+        const sentAdjustment = adjustment.value;
+        const route = storeRating({party: options.code, playedsong: id});
+        let failure: unknown = null;
+        let failed = false;
+        try {
+            await axios.request({url: route.url, method: route.method, data: {rating: value}});
+        } catch (error) {
+            failed = true;
+            failure = error;
+        }
+        inflight = false;
+
+        const next = pending;
+        pending = null;
+        const sameSong = songId.value === id;
+        if (!failed && sameSong) {
+            snapshot = {own: {songId: id, value}, adjustment: epoch === sentEpoch ? sentAdjustment : 0};
+        }
+        if (unmounted || !sameSong) {
+            return;
+        }
+        if (next !== null && next.songId === id && (failed || next.value !== value)) {
+            void send(id, next.value);
+
+            return;
+        }
+        if (failed) {
+            own.value = snapshot?.own ?? null;
+            adjustment.value = epoch === sentEpoch ? (snapshot?.adjustment ?? 0) : 0;
+            snapshot = null;
+            options.onError(ratingErrorMessage(failure));
+
+            return;
+        }
+        snapshot = null;
+    }
+
+    function rate(value: RatingValue): void {
         const id = songId.value;
         if (id === null) {
             return;
         }
         const before = pressed.value;
         snapshot ??= {own: own.value, adjustment: adjustment.value};
-        const rollbackEpoch = epoch;
-        inflight?.abort();
-        const controller = new AbortController();
-        inflight = controller;
         own.value = {songId: id, value};
         adjustment.value += value - before;
 
-        const route = storeRating({party: options.code, playedsong: id});
-        try {
-            await axios.request({
-                url: route.url,
-                method: route.method,
-                data: {rating: value},
-                signal: controller.signal,
-            });
-            if (inflight === controller) {
-                settle();
-            }
-        } catch (error) {
-            if (inflight !== controller) {
-                return;
-            }
-            own.value = snapshot?.own ?? null;
-            adjustment.value = epoch === rollbackEpoch ? (snapshot?.adjustment ?? 0) : 0;
-            settle();
-            options.onError(ratingErrorMessage(error));
+        if (inflight) {
+            pending = {songId: id, value};
+
+            return;
         }
+        void send(id, value);
     }
 
-    onBeforeUnmount(() => inflight?.abort());
+    onBeforeUnmount(() => {
+        unmounted = true;
+        pending = null;
+    });
 
     return {pressed, score, rate};
 }
