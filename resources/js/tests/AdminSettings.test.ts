@@ -32,28 +32,6 @@ describe('admin settings pages', () => {
                     {code: 'site', name: 'Site', description: 'd', type: 'string', required: true, value: 'x'},
                     {code: 'flag', name: 'Flag', description: null, type: 'boolean', required: false, value: true},
                 ],
-                themes: [
-                    {
-                        id: 1,
-                        name: 'Core',
-                        active: true,
-                        readonly: true,
-                        dark_mode: false,
-                        tokens: {},
-                        css: '',
-                        updated_at: null,
-                    },
-                    {
-                        id: 2,
-                        name: 'Mine',
-                        active: false,
-                        readonly: false,
-                        dark_mode: true,
-                        tokens: {primary: '#8a2be2'},
-                        css: 'a{}',
-                        updated_at: '3 days ago',
-                    },
-                ],
                 socialProviders: [
                     {
                         id: 3,
@@ -62,6 +40,7 @@ describe('admin settings pages', () => {
                         supports_auth: true,
                         enabled: true,
                         auth_enabled: false,
+                        needs_secret: false,
                         login_return_url: 'http://x/login/discord/return',
                         linked_account_url: 'http://x/linked/discord',
                     },
@@ -69,8 +48,6 @@ describe('admin settings pages', () => {
             },
         });
 
-        expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
-        expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
         const copyButtons = wrapper.findAllComponents({name: 'CopyButton'});
         expect(copyButtons.map((button) => button.props('value'))).toEqual([
@@ -87,24 +64,46 @@ describe('admin settings pages', () => {
             'General',
             'Branding',
             'Sign-in providers',
-            'Themes',
         ]);
-        expect(wrapper.findAll('.mp-thumb')).toHaveLength(2);
-        expect(wrapper.text()).toContain('Purple, dark');
-        expect(wrapper.text()).toContain('Always dark');
-        expect(wrapper.text()).toContain('Follows each user');
-        expect(wrapper.text()).toContain('Built in');
-        const coreActions = wrapper.findAll('#panel-themes tbody tr')[0].findAll('.btn-list .btn');
-        expect(coreActions.map((action) => action.text())).toEqual(['View']);
-        expect(wrapper.get('a[href="/admin/settings/themes/2/edit"].fw-medium').text()).toBe('Mine');
-        expect(wrapper.text()).toContain('3 days ago');
-        expect(wrapper.findAll('[data-test=make-active]')).toHaveLength(1);
-        await wrapper.get('[data-test=make-active]').trigger('click');
-        expect(inertia.routerPatch).toHaveBeenCalledWith(
-            '/admin/settings/themes/2',
-            expect.objectContaining({active: true, name: 'Mine', css: 'a{}'}),
-            {preserveState: true, preserveScroll: true},
-        );
+        expect(wrapper.get('[data-test=themes-link]').attributes('href')).toBe('/admin/themes');
+        expect(wrapper.find('#panel-themes').exists()).toBe(false);
+    });
+
+    it('flags an enabled provider with no secret and warns on the edit form', async () => {
+        const row = {
+            id: 4,
+            code: 'steam',
+            name: 'Steam',
+            supports_auth: true,
+            enabled: true,
+            auth_enabled: true,
+            needs_secret: true,
+            login_return_url: 'http://x/login/steam/return',
+            linked_account_url: 'http://x/linked/steam',
+        };
+        const index = mount(SettingsIndex, {props: {settings: [], socialProviders: [row]}});
+        expect(index.text()).toContain('Needs a secret');
+        expect(index.text()).toContain('On, but the client secret is empty');
+
+        const edit = mount(ProviderEdit, {
+            props: {
+                provider: {
+                    id: 4,
+                    name: 'Steam',
+                    can_be_renamed: false,
+                    supports_auth: true,
+                    enabled: true,
+                    auth_enabled: true,
+                },
+                settings: [{code: 'client_secret', name: 'API Key', description: null, required: true, value: ''}],
+            },
+        });
+        expect(edit.text()).toContain('Client secret');
+        expect(edit.get('[data-test=secret-warning]').text()).toContain('Steam sign-in is turned on but has no secret');
+        await edit.get('input[name="client_secret"]').setValue('abc');
+        expect(edit.find('[data-test=secret-warning]').exists()).toBe(false);
+        await edit.get('form').trigger('submit');
+        expect(inertia.patch).toHaveBeenCalledWith('/admin/settings/socialproviders/4');
     });
 
     it('shows rename and auth fields only when supported and patches the provider', async () => {

@@ -1,6 +1,7 @@
 import {home} from '@/routes';
 import {dashboard} from '@/routes/admin';
 import {index as adminSettings} from '@/routes/admin/settings';
+import {index as adminThemes} from '@/routes/admin/themes';
 import {index as adminUsers, show as adminUser} from '@/routes/admin/users';
 import {show} from '@/routes/parties';
 import {index as moderationIndex} from '@/routes/parties/moderation';
@@ -35,4 +36,12 @@ export function adminUserCrumbs(user?: {id: number; nickname: string}): Breadcru
     return user
         ? [...adminCrumbs(), users, {label: user.nickname, href: adminUser(user.id).url}]
         : [...adminCrumbs(), users];
+}
+
+export function adminThemesCrumbs(): BreadcrumbItem[] {
+    return [
+        ...adminCrumbs(),
+        {label: 'Settings', href: adminSettings().url},
+        {label: 'Themes', href: adminThemes().url},
+    ];
 }

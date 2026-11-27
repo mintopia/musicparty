@@ -3,7 +3,14 @@ import {useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import ModCard from '@/components/ModCard.vue';
 import ModSettingField from '@/components/ModSettingField.vue';
-import {AI_REVIEW_MOD, aiReviewStats, buildSettings, initialSettingValue, modIcon} from '@/lib/mods';
+import {
+    AI_REVIEW_MOD,
+    aiReviewActivityStats,
+    aiReviewStats,
+    buildSettings,
+    initialSettingValue,
+    modIcon,
+} from '@/lib/mods';
 import type {ModSettingValue} from '@/lib/mods';
 import type {AdminMod} from '@/types';
 
@@ -15,7 +22,12 @@ const props = defineProps<{
 
 const open = ref(false);
 const stats = computed(() =>
-    props.mod.code === AI_REVIEW_MOD ? aiReviewStats(props.mod.settings, form.settings) : undefined,
+    props.mod.code === AI_REVIEW_MOD
+        ? [
+              ...(props.mod.settings.length ? aiReviewStats(props.mod.settings, form.settings) : []),
+              ...aiReviewActivityStats(props.mod.review_stats),
+          ]
+        : undefined,
 );
 
 const form = useForm({
@@ -55,7 +67,10 @@ function submit(): void {
         :stats="stats"
         :data-mod="mod.code"
     >
-        <form class="mod-panel-form" data-test="mod-form" @submit.prevent="submit">
+        <p v-if="mod.settings.length === 0" class="mod-panel-form text-secondary mb-0" data-test="mod-no-settings">
+            This mod is configured per party, in each party's Mods settings.
+        </p>
+        <form v-else class="mod-panel-form" data-test="mod-form" @submit.prevent="submit">
             <ModSettingField
                 v-for="setting in mod.settings"
                 :id="`mod-${mod.code}-${setting.code}`"

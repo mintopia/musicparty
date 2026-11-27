@@ -60,7 +60,7 @@ describe('admin themes', () => {
         expect((wrapper.find('input[type=color]').element as HTMLInputElement).value).toBe('#abcdef');
         expect(wrapper.find('.mp-swatch').classes()).not.toContain('is-unset');
         await wrapper.find('form').trigger('submit');
-        expect(inertia.post).toHaveBeenCalledWith('/admin/settings/themes');
+        expect(inertia.post).toHaveBeenCalledWith('/admin/themes');
     });
 
     it('patches the edit form and disables fields for readonly themes', async () => {
@@ -70,7 +70,7 @@ describe('admin themes', () => {
         expect(wrapper.find('input[name="name"]').attributes('disabled')).toBeDefined();
         expect(wrapper.find('input[name="active"]').attributes('disabled')).toBeUndefined();
         await wrapper.find('form').trigger('submit');
-        expect(inertia.patch).toHaveBeenCalledWith('/admin/settings/themes/4');
+        expect(inertia.patch).toHaveBeenCalledWith('/admin/themes/4');
     });
 
     it('says when an active theme went live', () => {
@@ -115,6 +115,6 @@ describe('admin themes', () => {
         expect(wrapper.get('.mp-thumb').attributes('style')).toContain('--t-bg: #101820');
         expect(wrapper.find('[data-test=delete-active-note]').exists()).toBe(true);
         await wrapper.find('form').trigger('submit');
-        expect(inertia.delete).toHaveBeenCalledWith('/admin/settings/themes/4');
+        expect(inertia.delete).toHaveBeenCalledWith('/admin/themes/4');
     });
 });

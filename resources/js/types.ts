@@ -225,6 +225,7 @@ export interface AdminMod {
     name: string;
     description: string;
     settings: ModSetting[];
+    review_stats?: {last_review_at: string | null; reviews_today: number} | null;
 }
 
 export interface When {

@@ -5,9 +5,9 @@ namespace App\Http\Controllers\Admin;
 use App\Enums\SettingType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\SettingUpdateRequest;
+use App\Models\ProviderSetting;
 use App\Models\Setting;
 use App\Models\SocialProvider;
-use App\Models\Theme;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -27,23 +27,14 @@ class SettingController extends Controller
                     'required' => str_contains($setting->validation ?? '', 'required'),
                     'value' => $setting->type === SettingType::stBoolean ? (bool) $setting->value : (string) ($setting->value ?? ''),
                 ])->values(),
-            'themes' => Theme::get()->map(fn (Theme $theme): array => [
-                'id' => $theme->id,
-                'name' => $theme->name,
-                'active' => (bool) $theme->active,
-                'readonly' => (bool) $theme->readonly,
-                'dark_mode' => (bool) $theme->dark_mode,
-                'tokens' => $theme->validTokens(),
-                'css' => (string) $theme->css,
-                'updated_at' => $theme->updated_at?->diffForHumans(),
-            ])->values(),
-            'socialProviders' => SocialProvider::get()->map(fn (SocialProvider $provider): array => [
+            'socialProviders' => SocialProvider::with('settings')->get()->map(fn (SocialProvider $provider): array => [
                 'id' => $provider->id,
                 'code' => $provider->code,
                 'name' => $provider->name,
                 'supports_auth' => (bool) $provider->supports_auth,
                 'enabled' => (bool) $provider->enabled,
                 'auth_enabled' => (bool) $provider->auth_enabled,
+                'needs_secret' => $provider->settings->contains(fn (ProviderSetting $setting): bool => $setting->encrypted && $setting->isRequired() && ($setting->value === null || $setting->value === '')),
                 'login_return_url' => route('login.return', $provider->code),
                 'linked_account_url' => route('linkedaccounts.store', $provider->code),
             ])->values(),

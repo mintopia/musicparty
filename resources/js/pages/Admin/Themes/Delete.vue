@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import {adminSettingsCrumbs} from '@/lib/breadcrumbs';
+import {adminThemesCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
 import {computed} from 'vue';
 import {themeThumbStyle} from '@/lib/themeThumb';
@@ -15,14 +15,14 @@ const form = useForm({});
 const thumbStyle = computed(() => themeThumbStyle(props.theme));
 
 function submit(): void {
-    form.delete(`/admin/settings/themes/${props.theme.id}`);
+    form.delete(`/admin/themes/${props.theme.id}`);
 }
 </script>
 
 <template>
     <AppLayout :title="`Delete ${theme.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: `Delete ${theme.name}`}]" />
+            <Breadcrumbs :items="[...adminThemesCrumbs(), {label: `Delete ${theme.name}`}]" />
         </template>
         <Head :title="`Delete ${theme.name}`" />
         <div class="mp-page-head">
@@ -48,7 +48,7 @@ function submit(): void {
                 </p>
             </div>
             <div class="card-footer d-flex">
-                <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
+                <Link href="/admin/themes" class="btn btn-link">Cancel</Link>
                 <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">
                     Delete {{ theme.name }}
                 </button>

@@ -111,10 +111,8 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::get('settings/socialproviders/{provider}/edit', [SocialProviderController::class, 'edit'])->name('settings.socialproviders.edit');
             Route::match(['PUT', 'PATCH'], 'settings/socialproviders/{provider}', [SocialProviderController::class, 'update'])->name('settings.socialproviders.update');
 
-            Route::prefix('settings')->name('settings.')->group(function () {
-                Route::resource('themes', ThemeController::class)->except(['index', 'show']);
-                Route::get('themes/{theme}/delete', [ThemeController::class, 'delete'])->name('themes.delete');
-            });
+            Route::resource('themes', ThemeController::class)->except(['show']);
+            Route::get('themes/{theme}/delete', [ThemeController::class, 'delete'])->name('themes.delete');
         });
     });
 });

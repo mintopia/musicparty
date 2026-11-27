@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed} from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
-import {homeCrumbs} from '@/lib/breadcrumbs';
+import {adminCrumbs} from '@/lib/breadcrumbs';
 import {Head} from '@inertiajs/vue3';
 import EmptyState from '@/components/EmptyState.vue';
 import ModPanel from '@/components/ModPanel.vue';
@@ -17,7 +17,7 @@ const groups = computed(() => groupMods(props.mods));
 <template>
     <AppLayout title="Mod settings">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...homeCrumbs(), {label: 'Mods'}]" />
+            <Breadcrumbs :items="[...adminCrumbs(), {label: 'Mods'}]" />
         </template>
         <Head title="Mod settings" />
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
@@ -29,12 +29,13 @@ const groups = computed(() => groupMods(props.mods));
                     </p>
                 </div>
             </div>
-            <EmptyState
-                v-if="mods.length === 0"
-                icon="ti-puzzle-off"
-                title="No mods available"
-                description="No mods are installed on this instance."
-            />
+            <div v-if="mods.length === 0" class="card">
+                <EmptyState
+                    icon="ti-puzzle-off"
+                    title="No mods installed"
+                    description="Mods add features such as AI Request Review. Nothing is installed on this instance, so parties see no Mods tab."
+                />
+            </div>
             <div v-else>
                 <section v-for="group in groups" :key="group.name" class="mod-group" :data-group="group.name">
                     <h2 class="mod-group-heading">

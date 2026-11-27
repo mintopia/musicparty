@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import {Head, Link, useForm} from '@inertiajs/vue3';
+import {computed} from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CopyButton from '@/components/CopyButton.vue';
 import PageHead from '@/components/PageHead.vue';
@@ -15,6 +16,7 @@ const props = defineProps<{
         supports_auth: boolean;
         enabled: boolean;
         auth_enabled: boolean;
+        needs_secret?: boolean;
         login_return_url?: string;
         linked_account_url?: string;
     };
@@ -26,6 +28,22 @@ const form = useForm<Record<string, string | boolean>>({
     ...Object.fromEntries(props.settings.map((setting) => [setting.code, setting.value])),
     enabled: props.provider.enabled,
     ...(props.provider.supports_auth ? {auth_enabled: props.provider.auth_enabled} : {}),
+});
+
+const secretCode = 'client_secret';
+
+const secretWarning = computed(() => {
+    const secret = props.settings.find((setting) => setting.code === secretCode);
+    if (!secret || !secret.required || !form.enabled) {
+        return null;
+    }
+    const empty = String(form[secretCode] ?? '').trim() === '';
+    if (!empty) {
+        return null;
+    }
+    return form.auth_enabled
+        ? `${props.provider.name} sign-in is turned on but has no secret, so guests who pick ${props.provider.name} see an error.`
+        : `${props.provider.name} is turned on but has no secret, so nobody can link it.`;
 });
 
 const returnUrls = [
@@ -84,12 +102,41 @@ function submit(): void {
                     <SettingRow
                         v-for="setting in settings"
                         :key="setting.code"
-                        :label="setting.name"
+                        :label="setting.code === secretCode ? 'Client secret' : setting.name"
                         :for="setting.code"
-                        :hint="setting.description ?? undefined"
+                        :hint="
+                            setting.code === secretCode
+                                ? 'Stored encrypted. Paste a new one to replace it.'
+                                : (setting.description ?? undefined)
+                        "
                         :error="form.errors[setting.code]"
                     >
+                        <template v-if="setting.code === secretCode">
+                            <div class="input-group">
+                                <input
+                                    :id="setting.code"
+                                    v-model="form[setting.code]"
+                                    type="text"
+                                    :name="setting.code"
+                                    class="form-control"
+                                    :class="{'is-invalid': form.errors[setting.code] || secretWarning}"
+                                    autocomplete="off"
+                                    placeholder="Paste the secret"
+                                />
+                                <button type="submit" class="btn" data-test="secret-save" :disabled="form.processing">
+                                    Save
+                                </button>
+                            </div>
+                            <p
+                                v-if="secretWarning"
+                                class="invalid-feedback d-block mb-0 mt-1"
+                                data-test="secret-warning"
+                            >
+                                {{ secretWarning }}
+                            </p>
+                        </template>
                         <input
+                            v-else
                             :id="setting.code"
                             v-model="form[setting.code]"
                             type="text"
