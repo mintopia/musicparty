@@ -790,4 +790,21 @@ describe('upcoming list', () => {
 
         expect(wrapper.find('[data-test="schedule"]').attributes('href')).toBe('/songs/4');
     });
+
+    it('offers labelled Schedule and Remove in the phone overflow menu', async () => {
+        const wrapper = mountPage({state: 'hidden'});
+        const row = wrapper.find('[data-test="upcoming-row"]');
+
+        await row.find('[data-test="row-menu-toggle"]').trigger('click');
+
+        expect(row.find('[data-test="row-menu"]').classes()).toContain('show');
+        expect(row.find('[data-test="menu-schedule"]').text()).toContain('Schedule');
+        expect(row.find('[data-test="menu-schedule"]').attributes('href')).toBe('/songs/4');
+        expect(row.find('[data-test="menu-remove"]').text()).toContain('Remove request');
+
+        await row.find('[data-test="menu-remove"]').trigger('click');
+
+        expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(true);
+        expect(row.find('[data-test="row-menu"]').classes()).not.toContain('show');
+    });
 });
