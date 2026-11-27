@@ -14,8 +14,9 @@ const props = defineProps<{
         active: boolean;
         dark_mode: boolean;
         readonly: boolean;
+        updated_at: string | null;
     };
-    colourTokens: {token: string; label: string; required: boolean}[];
+    colourTokens: {token: string; label: string; default: string}[];
 }>();
 
 const form = useForm({
@@ -34,26 +35,24 @@ function submit(): void {
 <template>
     <AppLayout :title="`Edit ${theme.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: 'Edit Theme'}]" />
+            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: `Edit ${theme.name}`}]" />
         </template>
         <Head :title="`Edit ${theme.name}`" />
-        <div class="page-header mt-0">
-            <h1>Edit {{ theme.name }}</h1>
-        </div>
-
-        <div class="col-md-8 offset-md-2">
-            <form class="card" @submit.prevent="submit">
-                <div v-if="theme.readonly" class="alert alert-info alert-important m-4">
-                    It is not possible to edit this theme, you can only set it to be active and change dark mode.
+        <form @submit.prevent="submit">
+            <div class="mp-page-head">
+                <div>
+                    <h1>Edit {{ theme.name }}</h1>
+                    <p>{{ theme.active ? `Active since ${theme.updated_at}.` : 'Not in use.' }}</p>
                 </div>
-                <ThemeForm :form="form" :readonly="theme.readonly" :colour-tokens="colourTokens" />
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
-                    </div>
+                <div class="btn-list">
+                    <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
+                    <button type="submit" class="btn btn-primary" :disabled="form.processing">Save changes</button>
                 </div>
-            </form>
-        </div>
+            </div>
+            <div v-if="theme.readonly" class="alert alert-info alert-important mb-4">
+                It is not possible to edit this theme, you can only set it to be active and change dark mode.
+            </div>
+            <ThemeForm :form="form" :readonly="theme.readonly" :colour-tokens="colourTokens" />
+        </form>
     </AppLayout>
 </template>

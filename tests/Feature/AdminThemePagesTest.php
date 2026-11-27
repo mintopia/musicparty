@@ -36,15 +36,34 @@ it('renders the create form with colour token definitions', function () {
             ->where('theme.active', false)
             ->where('theme.readonly', false)
             ->has('colourTokens', count(Theme::COLOUR_TOKENS))
-            ->where('colourTokens.0', ['token' => 'primary', 'label' => 'Primary', 'required' => true])
-            ->where('colourTokens.2.required', false));
+            ->where('colourTokens.0', ['token' => 'primary', 'label' => 'Primary', 'default' => '#0054a6'])
+            ->where('colourTokens.2.default', '#ffffff'));
 });
 
-it('creates a theme and validates required colours', function () {
+it('rejects an invalid colour with a message saying what to type', function () {
     $this->actingAs($this->admin)
         ->post(route('admin.settings.themes.store'), ['name' => 'Fresh', 'tokens' => ['primary' => 'nope']])
-        ->assertSessionHasErrors(['tokens.primary', 'tokens.nav-background']);
+        ->assertSessionHasErrors(['tokens.primary' => 'That is not a colour. Use #RGB or #RRGGBB, for example #d63939.'])
+        ->assertSessionDoesntHaveErrors(['tokens.nav-background']);
+});
 
+it('saves unset colours as unset rather than black', function () {
+    $this->actingAs($this->admin)
+        ->post(route('admin.settings.themes.store'), ['name' => 'Bare', 'tokens' => ['primary' => '', 'surface' => null]])
+        ->assertRedirect(route('admin.settings.index'));
+
+    $bare = Theme::whereCode('bare')->firstOrFail();
+    expect($bare->tokens)->toBe([])
+        ->and($bare->renderCss())->not->toContain('--mp-primary:')
+        ->and($bare->renderCss())->not->toContain('#000');
+
+    $this->actingAs($this->admin)
+        ->patch(route('admin.settings.themes.update', $this->theme), ['name' => 'Custom Look', 'tokens' => ['primary' => '#112233', 'nav-background' => '']])
+        ->assertSessionHasNoErrors();
+    expect($this->theme->fresh()->tokens)->toBe(['primary' => '#112233']);
+});
+
+it('creates a theme with only the colours that were set', function () {
     $this->actingAs($this->admin)
         ->post(route('admin.settings.themes.store'), [
             'name' => 'Fresh',
@@ -105,7 +124,13 @@ it('confirms and deletes a theme', function () {
         ->assertOk()
         ->assertInertia(fn (Assert $page) => $page
             ->component('Admin/Themes/Delete')
-            ->where('theme', ['id' => $this->theme->id, 'name' => 'Custom Look']));
+            ->where('theme', [
+                'id' => $this->theme->id,
+                'name' => 'Custom Look',
+                'active' => false,
+                'dark_mode' => false,
+                'tokens' => ['primary' => '#0054a6', 'nav-background' => '#182433'],
+            ]));
 
     $this->actingAs($this->admin)->delete(route('admin.settings.themes.destroy', $this->theme))
         ->assertRedirect(route('admin.settings.index'))

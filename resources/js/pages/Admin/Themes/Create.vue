@@ -7,7 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     theme: {name: string; css: string; tokens: Record<string, string>; active: boolean; dark_mode: boolean};
-    colourTokens: {token: string; label: string; required: boolean}[];
+    colourTokens: {token: string; label: string; default: string}[];
 }>();
 
 const form = useForm({
@@ -24,25 +24,23 @@ function submit(): void {
 </script>
 
 <template>
-    <AppLayout title="Create Theme">
+    <AppLayout title="Add theme">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: 'Create Theme'}]" />
+            <Breadcrumbs :items="[...adminSettingsCrumbs(), {label: 'Add theme'}]" />
         </template>
-        <Head title="Create Theme" />
-        <div class="page-header mt-0">
-            <h1>Create Theme</h1>
-        </div>
-
-        <div class="col-md-8 offset-md-2">
-            <form class="card" @submit.prevent="submit">
-                <ThemeForm :form="form" :readonly="false" :colour-tokens="colourTokens" />
-                <div class="card-footer text-end">
-                    <div class="d-flex">
-                        <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">Save</button>
-                    </div>
+        <Head title="Add theme" />
+        <form @submit.prevent="submit">
+            <div class="mp-page-head">
+                <div>
+                    <h1>Add theme</h1>
+                    <p>Start from the defaults and change only what you need.</p>
                 </div>
-            </form>
-        </div>
+                <div class="btn-list">
+                    <Link href="/admin/settings" class="btn btn-link">Cancel</Link>
+                    <button type="submit" class="btn btn-primary" :disabled="form.processing">Create theme</button>
+                </div>
+            </div>
+            <ThemeForm :form="form" :readonly="false" :colour-tokens="colourTokens" />
+        </form>
     </AppLayout>
 </template>

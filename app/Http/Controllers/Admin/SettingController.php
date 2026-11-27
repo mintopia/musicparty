@@ -32,6 +32,10 @@ class SettingController extends Controller
                 'name' => $theme->name,
                 'active' => (bool) $theme->active,
                 'readonly' => (bool) $theme->readonly,
+                'dark_mode' => (bool) $theme->dark_mode,
+                'tokens' => $theme->validTokens(),
+                'css' => (string) $theme->css,
+                'updated_at' => $theme->updated_at?->diffForHumans(),
             ])->values(),
             'socialProviders' => SocialProvider::get()->map(fn (SocialProvider $provider): array => [
                 'id' => $provider->id,

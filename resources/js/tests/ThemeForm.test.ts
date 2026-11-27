@@ -9,7 +9,7 @@ function mountForm(css: string, readonly = false) {
         css,
         active: false,
         dark_mode: false,
-        tokens: {},
+        tokens: {} as Record<string, string>,
         errors: {} as Record<string, string>,
     });
     const wrapper = mount(ThemeForm, {props: {form, readonly, colourTokens: []}, attachTo: document.body});

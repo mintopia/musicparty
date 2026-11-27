@@ -60,7 +60,13 @@ class ThemeController extends Controller
         }
 
         return Inertia::render('Admin/Themes/Delete', [
-            'theme' => ['id' => $theme->id, 'name' => $theme->name],
+            'theme' => [
+                'id' => $theme->id,
+                'name' => $theme->name,
+                'active' => (bool) $theme->active,
+                'dark_mode' => (bool) $theme->dark_mode,
+                'tokens' => $theme->validTokens(),
+            ],
         ]);
     }
 
@@ -87,11 +93,12 @@ class ThemeController extends Controller
             'active' => (bool) $theme->active,
             'dark_mode' => (bool) $theme->dark_mode,
             'readonly' => (bool) $theme->readonly,
+            'updated_at' => $theme->updated_at?->diffForHumans(),
         ];
     }
 
     /**
-     * @return list<array{token: string, label: string, required: bool}>
+     * @return list<array{token: string, label: string, default: string}>
      */
     protected function colourTokenProps(): array
     {
@@ -100,7 +107,7 @@ class ThemeController extends Controller
             $tokens[] = [
                 'token' => $token,
                 'label' => $label,
-                'required' => in_array($token, ['primary', 'nav-background'], true),
+                'default' => Theme::COLOUR_DEFAULTS[$token],
             ];
         }
 

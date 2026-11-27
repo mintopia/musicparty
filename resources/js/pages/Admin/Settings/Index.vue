@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Head, Link, useForm} from '@inertiajs/vue3';
+import {Head, Link, router, useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import CopyButton from '@/components/CopyButton.vue';
@@ -8,6 +8,7 @@ import SettingRow from '@/components/SettingRow.vue';
 import StatePill from '@/components/StatePill.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {adminCrumbs} from '@/lib/breadcrumbs';
+import {colourName, themeThumbStyle} from '@/lib/themeThumb';
 
 interface SettingField {
     code: string;
@@ -31,7 +32,16 @@ interface SocialProviderRow {
 
 const props = defineProps<{
     settings: SettingField[];
-    themes: {id: number; name: string; active: boolean; readonly: boolean}[];
+    themes: {
+        id: number;
+        name: string;
+        active: boolean;
+        readonly: boolean;
+        dark_mode: boolean;
+        tokens: Record<string, string>;
+        css: string;
+        updated_at: string | null;
+    }[];
     socialProviders: SocialProviderRow[];
 }>();
 
@@ -127,6 +137,37 @@ function onTabKeydown(event: KeyboardEvent): void {
     const next = TABS[(index + step + TABS.length) % TABS.length];
     tab.value = next.id;
     document.getElementById(`tab-${next.id}`)?.focus();
+}
+
+function makeActive(theme: {
+    id: number;
+    name: string;
+    css: string;
+    dark_mode: boolean;
+    tokens: Record<string, string>;
+}): void {
+    router.patch(
+        `/admin/settings/themes/${theme.id}`,
+        {
+            name: theme.name,
+            css: theme.css,
+            dark_mode: theme.dark_mode,
+            tokens: theme.tokens,
+            active: true,
+        },
+        {preserveState: true, preserveScroll: true},
+    );
+}
+
+function modeLabel(theme: {dark_mode: boolean}): string {
+    return theme.dark_mode ? 'Always dark' : 'Follows each user';
+}
+
+function subtitle(theme: {readonly: boolean; dark_mode: boolean; tokens: Record<string, string>}): string {
+    if (theme.readonly) {
+        return 'Built in';
+    }
+    return `${colourName(theme.tokens.primary)}, ${theme.dark_mode ? 'dark' : 'light'}`;
 }
 
 const providerIcons: Record<string, string> = {
@@ -437,18 +478,49 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                 <tr>
                                     <th>Theme</th>
                                     <th>Status</th>
+                                    <th>Mode</th>
+                                    <th>Updated</th>
                                     <th class="w-1"></th>
                                 </tr>
                             </thead>
                             <tbody>
                                 <tr v-for="theme in themes" :key="theme.id">
-                                    <td class="fw-medium">{{ theme.name }}</td>
+                                    <td>
+                                        <div class="mp-cell">
+                                            <span
+                                                class="mp-thumb"
+                                                :style="themeThumbStyle(theme)"
+                                                role="img"
+                                                :aria-label="`Preview of ${theme.name}`"
+                                                ><i></i><b></b
+                                            ></span>
+                                            <div>
+                                                <Link
+                                                    :href="`/admin/settings/themes/${theme.id}/edit`"
+                                                    class="fw-medium"
+                                                    >{{ theme.name }}</Link
+                                                >
+                                                <span class="mp-sub">{{ subtitle(theme) }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
                                     <td>
                                         <StatePill v-if="theme.active" state="ok">Active</StatePill>
                                         <span v-else class="text-secondary">Not in use</span>
                                     </td>
+                                    <td>{{ modeLabel(theme) }}</td>
+                                    <td class="text-secondary">{{ theme.updated_at ?? 'Built in' }}</td>
                                     <td>
                                         <div class="btn-list flex-nowrap justify-content-end">
+                                            <button
+                                                v-if="!theme.active"
+                                                type="button"
+                                                class="btn btn-sm"
+                                                data-test="make-active"
+                                                @click="makeActive(theme)"
+                                            >
+                                                Make active
+                                            </button>
                                             <Link
                                                 :href="`/admin/settings/themes/${theme.id}/edit`"
                                                 class="btn btn-sm btn-outline-secondary"
@@ -468,7 +540,7 @@ function providerStatus(provider: SocialProviderRow): {state: 'ok' | 'live' | 'i
                                     </td>
                                 </tr>
                                 <tr v-if="themes.length === 0">
-                                    <td colspan="3" class="text-center p-4">
+                                    <td colspan="5" class="text-center p-4">
                                         <p class="mb-0">There are no themes</p>
                                     </td>
                                 </tr>
