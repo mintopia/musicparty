@@ -23,13 +23,12 @@ Route::prefix('v1')->name('api.v1.')->group(function () {
     Route::get('ping', [PingController::class, 'index'])->name('ping');
     Route::apiResource('parties', PartyController::class)->only(['show']);
     Route::middleware('auth:sanctum')->group(function () {
-        Route::apiResource('parties', PartyController::class)->only(['update']);
         Route::post('parties/{party}/control', [PartyController::class, 'control'])->name('parties.control');
         Route::post('parties/{party}/playback/start', [PlaybackController::class, 'start'])->middleware('throttle:playback')->name('parties.playback.start');
         Route::get('parties/{party}/devices', [PlaybackController::class, 'devices'])->middleware('throttle:playback')->name('parties.devices');
         Route::post('parties/{party}/activate', [PlaybackController::class, 'activate'])->name('parties.activate');
         Route::post('parties/{party}/upcomingsongs/{upcomingsong}/play', [PlaybackController::class, 'playNow'])->middleware('throttle:playback')->scopeBindings()->name('parties.upcomingsongs.play');
-        Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->scoped();
+        Route::apiResource('parties.upcomingsongs', UpcomingSongController::class)->only(['index', 'show', 'store', 'destroy'])->scoped();
         Route::apiResource('parties.upcomingsongs.vote', VoteController::class)->only(['store'])->scoped();
         Route::apiResource('parties.playedsongs.rate', SongRatingController::class)->only(['store'])->scoped();
     });
