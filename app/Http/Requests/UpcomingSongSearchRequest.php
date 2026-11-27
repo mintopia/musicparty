@@ -23,7 +23,7 @@ class UpcomingSongSearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'q' => 'string|sometimes|nullable|max:100',
+            'q' => 'string|sometimes|nullable|max:200',
             'name' => 'string|sometimes|nullable|max:100',
             'artist' => 'string|sometimes|nullable|max:100',
             'album' => 'string|sometimes|nullable|max:100',

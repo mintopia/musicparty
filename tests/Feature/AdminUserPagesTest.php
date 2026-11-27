@@ -2,6 +2,7 @@
 
 use App\Models\LinkedAccount;
 use App\Models\Role;
+use App\Models\SocialProvider;
 use App\Models\User;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -42,7 +43,10 @@ it('lists, filters and sorts users', function () {
             ->where('order_direction', 'desc')
             ->has('users.data', 1)
             ->where('users.data.0.nickname', 'Target')
-            ->where('users.data.0.last_login', null));
+            ->where('users.data.0.last_login', null)
+            ->has('users.data.0.avatar_url')
+            ->has('users.data.0.accounts')
+            ->where('users.data.0.parties_count', 0));
 });
 
 it('searches by id, free text and the chips, and still honours the legacy id and nickname parameters', function () {
@@ -59,7 +63,12 @@ it('searches by id, free text and the chips, and still honours the legacy id and
         ->and($ids(['role' => 'admin']))->toBe([$this->admin->id])
         ->and($ids(['suspended' => 1]))->toBe([$this->target->id])
         ->and($ids(['provider' => $code]))->toBe([$this->target->id])
-        ->and($ids(['first_login' => 1]))->toBe([]);
+        ->and($ids(['first_login' => 1]))->toBe([])
+        ->and($ids(['spotify_relink' => 1]))->toBe([]);
+
+    $spotify = SocialProvider::factory()->create(['code' => 'spotify']);
+    LinkedAccount::factory()->create(['user_id' => $this->target->id, 'social_provider_id' => $spotify->id, 'needs_relink_at' => now()]);
+    expect($ids(['spotify_relink' => 1]))->toBe([$this->target->id]);
 
     $this->actingAs($this->admin)->get(route('admin.users.index', ['role' => 'admin']))
         ->assertInertia(fn (Assert $page) => $page->where('total', 2)->where('users.data.0.is_admin', true)->has('providers'));

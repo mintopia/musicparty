@@ -3,6 +3,8 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, reactive} from 'vue';
+import {composeSearch, resolveSearch, setSingleToken} from '@/utils/searchFilters';
+import type {TokenSpec} from '@/utils/searchFilters';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
 import SearchBar from '@/components/SearchBar.vue';
@@ -31,18 +33,36 @@ const props = defineProps<{
     counts: {total: number; on: number; off: number; flag: number; reject: number; pattern: number};
 }>();
 
-const form = reactive({...props.filters});
+const spec: TokenSpec = {state: ['on', 'off'], action: ['flag', 'reject'], match: ['pattern']};
+const form = reactive({
+    q: composeSearch(props.filters.q, {
+        state: props.filters.state,
+        action: props.filters.action,
+        match: props.filters.pattern ? 'pattern' : '',
+    }),
+});
 const listUrl = `/parties/${props.party.code}/moderation`;
 const filtered = computed(
     () => props.filters.q !== '' || props.filters.state !== '' || props.filters.action !== '' || props.filters.pattern,
 );
+const resolved = computed(() => resolveSearch(form.q, spec));
 
 const chips = computed<SearchChip[]>(() => [
-    {key: 'state:on', label: 'On', count: props.counts.on, pressed: form.state === 'on'},
-    {key: 'state:off', label: 'Off', count: props.counts.off, pressed: form.state === 'off'},
-    {key: 'action:flag', label: 'Flag', count: props.counts.flag, pressed: form.action === 'flag'},
-    {key: 'action:reject', label: 'Reject', count: props.counts.reject, pressed: form.action === 'reject'},
-    {key: 'pattern', label: 'Pattern', count: props.counts.pattern, pressed: form.pattern},
+    {key: 'state:on', label: 'On', count: props.counts.on, pressed: resolved.value.filters.state === 'on'},
+    {key: 'state:off', label: 'Off', count: props.counts.off, pressed: resolved.value.filters.state === 'off'},
+    {key: 'action:flag', label: 'Flag', count: props.counts.flag, pressed: resolved.value.filters.action === 'flag'},
+    {
+        key: 'action:reject',
+        label: 'Reject',
+        count: props.counts.reject,
+        pressed: resolved.value.filters.action === 'reject',
+    },
+    {
+        key: 'match:pattern',
+        label: 'Pattern',
+        count: props.counts.pattern,
+        pressed: resolved.value.filters.match === 'pattern',
+    },
 ]);
 
 const activeSummary = computed(() => {
@@ -59,17 +79,18 @@ const activeSummary = computed(() => {
 });
 
 function apply(): void {
+    const {text, filters} = resolveSearch(form.q, spec);
     const query: Record<string, string> = {};
-    if (form.q.trim() !== '') {
-        query.q = form.q.trim();
+    if (text.trim() !== '') {
+        query.q = text.trim();
     }
-    if (form.state !== '') {
-        query.state = form.state;
+    if (filters.state) {
+        query.state = filters.state;
     }
-    if (form.action !== '') {
-        query.action = form.action;
+    if (filters.action) {
+        query.action = filters.action;
     }
-    if (form.pattern) {
+    if (filters.match === 'pattern') {
         query.pattern = '1';
     }
     router.get(listUrl, query, {preserveState: true, replace: true});
@@ -81,12 +102,8 @@ function setQuery(value: string): void {
 }
 
 function toggleChip(key: string): void {
-    if (key === 'pattern') {
-        form.pattern = !form.pattern;
-    } else {
-        const [field, value] = key.split(':') as ['state' | 'action', string];
-        form[field] = form[field] === value ? '' : value;
-    }
+    const [field, value] = key.split(':') as [string, string];
+    form.q = setSingleToken(form.q, spec, field, value);
     apply();
 }
 </script>
@@ -106,24 +123,29 @@ function toggleChip(key: string): void {
             <i class="ti ti-lock me-1" aria-hidden="true"></i>Rules are read-only for moderators. Only
             {{ party.ownerName ?? 'the owner' }} can add, edit or delete them.
         </div>
-        <SearchBar
-            v-if="counts.total > 0 || filtered"
-            :model-value="form.q"
-            placeholder="Search rules by value or notes"
-            label="Search Rules"
-            :result-count="moderations.total"
-            :total="counts.total"
-            noun="Rules"
-            :chips="chips"
-            @update:model-value="setQuery"
-            @submit="setQuery"
-            @toggle-chip="toggleChip"
-        >
-            <Link v-if="party.canManage" :href="`${listUrl}/create`" class="btn btn-primary d-print-none">
-                <i class="icon ti ti-plus"></i>
-                Add rule
-            </Link>
-        </SearchBar>
+        <div v-if="counts.total > 0 || filtered" class="mb-3">
+            <div class="d-flex flex-wrap gap-3 align-items-start">
+                <div class="flex-fill" style="min-inline-size: min(100%, 24rem)">
+                    <SearchBar
+                        class="mb-0"
+                        :model-value="form.q"
+                        placeholder="Search rules… or try action:flag"
+                        label="Search Rules"
+                        :result-count="moderations.total"
+                        :total="counts.total"
+                        noun="Rules"
+                        :chips="chips"
+                        @update:model-value="setQuery"
+                        @submit="setQuery"
+                        @toggle-chip="toggleChip"
+                    />
+                </div>
+                <Link v-if="party.canManage" :href="`${listUrl}/create`" class="btn btn-primary d-print-none">
+                    <i class="icon ti ti-plus"></i>
+                    Add rule
+                </Link>
+            </div>
+        </div>
 
         <EmptyState
             v-if="moderations.data.length === 0 && filtered"
@@ -131,6 +153,9 @@ function toggleChip(key: string): void {
             title="No matching rules"
             :description="`Nothing matches ${activeSummary}.`"
         >
+            <template #title
+                >No rules match <code>{{ form.q.trim() }}</code></template
+            >
             <Link :href="listUrl" class="btn btn-primary" data-test="clear-filters">Clear filters</Link>
         </EmptyState>
         <EmptyState

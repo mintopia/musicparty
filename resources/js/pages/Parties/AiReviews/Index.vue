@@ -3,12 +3,14 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {partyCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, router} from '@inertiajs/vue3';
 import {computed, reactive} from 'vue';
+import {composeSearch, resolveSearch, setSingleToken} from '@/utils/searchFilters';
+import type {TokenSpec} from '@/utils/searchFilters';
 import EmptyState from '@/components/EmptyState.vue';
 import Pagination from '@/components/Pagination.vue';
 import ModerationTabs from '@/components/ModerationTabs.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchBar from '@/components/SearchBar.vue';
-import type {SearchChip} from '@/components/SearchBar.vue';
+import type {SearchChipGroup} from '@/components/SearchBar.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {aiReviewsUrl, aiReviewUrl, outcomeBadge} from '@/lib/aiReviews';
 import type {AiReviewRow, LegacyPartyState, ModerationTabsProps, Paginator} from '@/types';
@@ -26,25 +28,43 @@ const props = defineProps<{
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
 
-const form = reactive({q: props.filters.q, outcome: props.filters.outcome, criterion: props.filters.criterion});
+const spec = computed<TokenSpec>(() => ({
+    outcome: props.outcomes.map((outcome) => outcome.code),
+    criterion: props.criteria.map((criterion) => criterion.code),
+}));
+const aliases = {allowed: 'allow', flagged: 'flag', rejected: 'reject', errors: 'error'};
+const form = reactive({
+    q: composeSearch(props.filters.q, {outcome: props.filters.outcome, criterion: props.filters.criterion}),
+});
 const listUrl = aiReviewsUrl(props.party.code);
 const filtered = computed(
     () => props.filters.q !== '' || props.filters.outcome !== '' || props.filters.criterion !== '',
 );
+const resolved = computed(() => resolveSearch(form.q, spec.value, aliases));
 
-const chips = computed<SearchChip[]>(() => [
-    ...props.outcomes.map((outcome) => ({
-        key: `outcome:${outcome.code}`,
-        label: outcome.name,
-        count: props.counts.outcome[outcome.code] ?? 0,
-        pressed: form.outcome === outcome.code,
-    })),
-    ...props.criteria.map((criterion) => ({
-        key: `criterion:${criterion.code}`,
-        label: criterion.name,
-        count: props.counts.criterion[criterion.code] ?? 0,
-        pressed: form.criterion === criterion.code,
-    })),
+const groups = computed<SearchChipGroup[]>(() => [
+    {
+        key: 'outcome',
+        label: 'Outcome',
+        chips: props.outcomes.map((outcome) => ({
+            key: outcome.code,
+            label: outcome.name,
+            count: props.counts.outcome[outcome.code] ?? 0,
+            pressed: resolved.value.filters.outcome === outcome.code,
+        })),
+    },
+    {
+        key: 'criterion',
+        label: 'Criterion',
+        chips: props.criteria
+            .filter((criterion) => criterion.code !== 'none')
+            .map((criterion) => ({
+                key: criterion.code,
+                label: criterion.name,
+                count: props.counts.criterion[criterion.code] ?? 0,
+                pressed: resolved.value.filters.criterion === criterion.code,
+            })),
+    },
 ]);
 
 const activeSummary = computed(() => {
@@ -64,15 +84,16 @@ const activeSummary = computed(() => {
 });
 
 function apply(): void {
+    const {text, filters} = resolveSearch(form.q, spec.value, aliases);
     const query: Record<string, string> = {};
-    if (form.q.trim() !== '') {
-        query.q = form.q.trim();
+    if (text.trim() !== '') {
+        query.q = text.trim();
     }
-    if (form.outcome !== '') {
-        query.outcome = form.outcome;
+    if (filters.outcome) {
+        query.outcome = filters.outcome;
     }
-    if (form.criterion !== '') {
-        query.criterion = form.criterion;
+    if (filters.criterion) {
+        query.criterion = filters.criterion;
     }
     router.get(listUrl, query, {preserveState: true, replace: true});
 }
@@ -82,9 +103,8 @@ function setQuery(value: string): void {
     apply();
 }
 
-function toggleChip(key: string): void {
-    const [field, code] = key.split(':') as ['outcome' | 'criterion', string];
-    form[field] = form[field] === code ? '' : code;
+function toggleChip(key: string, groupKey?: string): void {
+    form.q = setSingleToken(form.q, spec.value, groupKey ?? '', key, aliases);
     apply();
 }
 
@@ -117,12 +137,12 @@ const showUrl = (review: AiReviewRow): string =>
 
         <SearchBar
             :model-value="form.q"
-            placeholder="Search tracks, artists, people"
+            placeholder="Search tracks, artists, people, reasons… or try outcome:rejected"
             label="Search AI reviews"
             :result-count="reviews.total"
             :total="counts.total"
             noun="reviews"
-            :chips="chips"
+            :groups="groups"
             @update:model-value="setQuery"
             @submit="setQuery"
             @toggle-chip="toggleChip"
@@ -135,6 +155,9 @@ const showUrl = (review: AiReviewRow): string =>
                     title="No matching reviews"
                     :description="`Nothing matches ${activeSummary}.`"
                 >
+                    <template #title
+                        >No reviews match <code>{{ form.q.trim() }}</code></template
+                    >
                     <Link :href="listUrl" class="btn btn-primary" data-test="clear-filters">Clear filters</Link>
                 </EmptyState>
                 <EmptyState

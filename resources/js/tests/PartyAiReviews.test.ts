@@ -27,7 +27,7 @@ const outcomes = [
     {code: 'allow', name: 'Allowed'},
     {code: 'flag', name: 'Flagged'},
     {code: 'reject', name: 'Rejected'},
-    {code: 'error', name: 'Error, allowed'},
+    {code: 'error', name: 'Error'},
 ];
 
 function row(id: number, extra: Partial<AiReviewRow> = {}): AiReviewRow {
@@ -174,7 +174,7 @@ describe('AI reviews list', () => {
     it('shows a no-match empty state with a way back when filters are active', () => {
         const wrapper = mountIndex([], {outcome: 'flag', criterion: '', q: 'zzz'});
 
-        expect(wrapper.find('[data-test="empty-state"]').text()).toContain('No matching reviews');
+        expect(wrapper.find('[data-test="empty-state"] .empty-title').text()).toBe('No reviews match zzz outcome:flag');
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201czzz\u201d, outcome Flagged');
         expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
         expect(wrapper.find('[data-test="clear-filters"]').attributes('href')).toBe('/parties/ABCD/ai-reviews');
@@ -193,25 +193,55 @@ describe('AI reviews list', () => {
             expect.anything(),
         );
 
-        await wrapper.get('[data-test="search-input"]').setValue('  wham ');
+        const input = (): HTMLInputElement => wrapper.get('[data-test="search-input"]').element as HTMLInputElement;
+        expect(input().value).toBe('outcome:flag criterion:troll');
+
+        await wrapper.get('[data-test="search-input"]').setValue('  wham outcome:reject criterion:troll ');
         await wrapper.get('form').trigger('submit');
         expect(inertia.get).toHaveBeenLastCalledWith(
             '/parties/ABCD/ai-reviews',
-            {q: 'wham', outcome: 'flag', criterion: 'troll'},
+            {q: 'wham', outcome: 'reject', criterion: 'troll'},
+            expect.anything(),
+        );
+        expect(wrapper.findAll('[data-test="search-chip"]').map((chip) => chip.attributes('aria-pressed'))).toEqual([
+            'false',
+            'false',
+            'true',
+            'false',
+            'true',
+        ]);
+
+        await wrapper.get('[data-test="search-input"]').setValue('outcome:bogus');
+        await wrapper.get('form').trigger('submit');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/parties/ABCD/ai-reviews',
+            {q: 'outcome:bogus'},
             expect.anything(),
         );
 
-        await chips[1]!.trigger('click');
-        await chips[4]!.trigger('click');
         await wrapper.get('[data-test="search-input"]').setValue('');
         await wrapper.get('form').trigger('submit');
         expect(inertia.get).toHaveBeenLastCalledWith('/parties/ABCD/ai-reviews', {}, expect.anything());
     });
 
+    it('labels the outcome and criterion chip groups', () => {
+        const wrapper = mountIndex([row(1)]);
+
+        expect(wrapper.findAll('.mp-chips .mp-chip-label').map((label) => label.text())).toEqual([
+            'Outcome',
+            'Criterion',
+        ]);
+        expect(wrapper.get('[data-test="search-input"]').attributes('placeholder')).toBe(
+            'Search tracks, artists, people, reasons\u2026 or try outcome:rejected',
+        );
+    });
+
     it('starts from the active filters and shows chip counts', () => {
         const wrapper = mountIndex([row(1)], {outcome: 'reject', criterion: '', q: 'brightside'});
 
-        expect((wrapper.get('[data-test="search-input"]').element as HTMLInputElement).value).toBe('brightside');
+        expect((wrapper.get('[data-test="search-input"]').element as HTMLInputElement).value).toBe(
+            'brightside outcome:reject',
+        );
         const chips = wrapper.findAll('[data-test="search-chip"]');
         expect(chips.map((chip) => chip.attributes('aria-pressed'))).toEqual([
             'false',
@@ -329,7 +359,7 @@ describe('AI review page', () => {
         const wrapper = mountShow(
             detail(1, {
                 outcome: 'error',
-                outcomeLabel: 'Error, allowed',
+                outcomeLabel: 'Error',
                 response: null,
                 score: null,
                 errorClass: 'App\\Mods\\AiRequestReview\\DecisionModelException',

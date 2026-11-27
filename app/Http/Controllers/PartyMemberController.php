@@ -7,7 +7,9 @@ use App\Http\Requests\PartyMemberUpdateRequest;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
+use App\Models\UpcomingSong;
 use App\Models\Vote;
+use App\Support\SearchTokens;
 use Carbon\CarbonInterface;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -18,7 +20,20 @@ class PartyMemberController extends Controller
 {
     public function index(PartyMemberSearchRequest $request, Party $party): Response
     {
-        $query = $party->members()->with(['user', 'role']);
+        $viewer = $request->user();
+        $partyUpcoming = fn () => UpcomingSong::query()
+            ->whereColumn('upcoming_songs.user_id', 'party_members.user_id')
+            ->where('upcoming_songs.party_id', $party->id);
+        $query = $party->members()->with(['user', 'role'])
+            ->select('party_members.*')
+            ->selectSub($partyUpcoming()->selectRaw('count(*)'), 'requests_count')
+            ->selectSub($partyUpcoming()->whereNotNull('flagged_at')->selectRaw('count(*)'), 'flagged_count')
+            ->selectSub(
+                Vote::query()->selectRaw('count(*)')
+                    ->whereColumn('votes.user_id', 'party_members.user_id')
+                    ->whereIn('votes.upcoming_song_id', UpcomingSong::query()->select('id')->where('party_id', $party->id)),
+                'votes_count',
+            );
         $params = [
             'order' => 'id',
             'order_direction' => 'asc',
@@ -28,18 +43,24 @@ class PartyMemberController extends Controller
             $params['per_page'] = $perPage;
         }
 
-        if ($request->input('nickname')) {
-            $params['nickname'] = $request->input('nickname');
-            $query = $query->whereHas('user', function ($query) use ($params) {
-                $query->where('nickname', 'LIKE', "%{$params['nickname']}%");
+        $search = SearchTokens::parse((string) $request->input('q', ''), ['role']);
+        if ($request->filled('nickname')) {
+            $search['text'] = trim($search['text'].' '.$request->input('nickname'));
+        }
+        if ($request->filled('role')) {
+            $search['tokens']['role'][] = (string) $request->input('role');
+        }
+        $params['q'] = SearchTokens::serialize($search);
+
+        foreach (SearchTokens::words($search['text']) as $word) {
+            $term = "%{$word}%";
+            $query = $query->where(function ($query) use ($term) {
+                $query->whereHas('user', fn ($user) => $user->where('nickname', 'LIKE', $term))
+                    ->orWhereHas('role', fn ($role) => $role->where('name', 'LIKE', $term)->orWhere('code', 'LIKE', $term));
             });
         }
-
-        if ($request->input('role')) {
-            $params['role'] = $request->input('role');
-            $query = $query->whereHas('role', function ($query) use ($params) {
-                $query->whereCode($params['role']);
-            });
+        foreach ($search['tokens']['role'] ?? [] as $value) {
+            $query = $query->whereHas('role', fn ($role) => $role->where('code', $value)->orWhere('name', $value));
         }
 
         // Sorting
@@ -60,7 +81,6 @@ class PartyMemberController extends Controller
                 break;
             case 'nickname':
                 $query = $query->join('users', 'users.id', '=', 'party_members.user_id')
-                    ->select('party_members.*')
                     ->orderBy('users.nickname', $params['order_direction']);
                 break;
         }
@@ -73,14 +93,25 @@ class PartyMemberController extends Controller
             'role' => $member->role->name,
             'roleCode' => $member->role->code,
             'createdAt' => $this->when($member->created_at),
+            'requests' => (int) $member->getAttribute('requests_count'),
+            'votes' => (int) $member->getAttribute('votes_count'),
+            'flagged' => (int) $member->getAttribute('flagged_count'),
+            'isYou' => $member->user_id === $viewer?->id,
             'url' => route('parties.users.show', [$party->code, $member->id]),
+            'editUrl' => route('parties.users.edit', [$party->code, $member->id]),
         ]);
+
+        $roleCounts = $party->members()->selectRaw('role_id, count(*) as total')->groupBy('role_id')->pluck('total', 'role_id');
 
         return Inertia::render('Parties/Members/Index', [
             'party' => $this->partyProps($party, $request->user()?->can('update', $party) ?? false),
             'playerState' => $party->getState(),
-            'roles' => PartyMemberRole::all()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
+            'roles' => PartyMemberRole::all()
+                ->sortBy(fn (PartyMemberRole $role): int|false => array_search($role->code, ['owner', 'moderator', 'vip', 'user', 'banned'], true))
+                ->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name, 'count' => (int) ($roleCounts[$role->id] ?? 0)])
+                ->values(),
             'filters' => $params,
+            'memberTotal' => (int) $roleCounts->sum(),
             'members' => $members,
         ]);
     }

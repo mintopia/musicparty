@@ -245,14 +245,32 @@
     background: var(--mp-state, var(--tblr-secondary));
 }
 
-.mp-state.is-playing { --mp-state: var(--tblr-success); --mp-state-text: var(--mp-text-success); }
+.mp-state.is-playing {
+    --mp-state: var(--tblr-success);
+    --mp-state-text: var(--mp-text-success);
+}
 .mp-state.is-paused,
-.mp-state.is-warn { --mp-state: var(--tblr-warning); --mp-state-text: var(--mp-text-warning); }
-.mp-state.is-ok { --mp-state: var(--tblr-success); --mp-state-text: var(--mp-text-success); }
+.mp-state.is-warn {
+    --mp-state: var(--tblr-warning);
+    --mp-state-text: var(--mp-text-warning);
+}
+.mp-state.is-ok {
+    --mp-state: var(--tblr-success);
+    --mp-state-text: var(--mp-text-success);
+}
 .mp-state.is-stale,
-.mp-state.is-error { --mp-state: var(--tblr-danger); --mp-state-text: var(--mp-text-danger); }
-.mp-state.is-idle { --mp-state: var(--tblr-secondary); --mp-state-text: var(--tblr-secondary-color); }
-.mp-state.is-live { --mp-state: var(--tblr-primary); --mp-state-text: var(--mp-text-primary); }
+.mp-state.is-error {
+    --mp-state: var(--tblr-danger);
+    --mp-state-text: var(--mp-text-danger);
+}
+.mp-state.is-idle {
+    --mp-state: var(--tblr-secondary);
+    --mp-state-text: var(--tblr-secondary-color);
+}
+.mp-state.is-live {
+    --mp-state: var(--tblr-primary);
+    --mp-state-text: var(--mp-text-primary);
+}
 
 .mp-state.is-playing::before {
     display: none;
@@ -274,18 +292,32 @@
     animation: mp-eq 1.1s var(--mp-ease) infinite alternate;
 }
 
-.mp-eq > i:nth-child(2) { animation-delay: -0.4s; }
-.mp-eq > i:nth-child(3) { animation-delay: -0.75s; }
+.mp-eq > i:nth-child(2) {
+    animation-delay: -0.4s;
+}
+.mp-eq > i:nth-child(3) {
+    animation-delay: -0.75s;
+}
 
 @keyframes mp-eq {
-    0% { transform: scaleY(0.3); }
-    100% { transform: scaleY(1); }
+    0% {
+        transform: scaleY(0.3);
+    }
+    100% {
+        transform: scaleY(1);
+    }
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .mp-eq > i { animation: none; }
-    .mp-eq > i:nth-child(1) { transform: scaleY(0.6); }
-    .mp-eq > i:nth-child(3) { transform: scaleY(0.4); }
+    .mp-eq > i {
+        animation: none;
+    }
+    .mp-eq > i:nth-child(1) {
+        transform: scaleY(0.6);
+    }
+    .mp-eq > i:nth-child(3) {
+        transform: scaleY(0.4);
+    }
 }
 
 .mp-success-mark {
@@ -365,6 +397,26 @@
     gap: var(--mp-space-2);
 }
 
+.mp-chips-row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mp-space-2) var(--mp-space-5);
+}
+
+.mp-chip-label {
+    margin-inline-end: 2px;
+    color: var(--tblr-secondary-color);
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.mp-searchbar .mp-hint code {
+    font-size: inherit;
+}
+
 .mp-chip {
     display: inline-flex;
     align-items: center;
@@ -395,8 +447,88 @@
     color: var(--tblr-secondary-color);
 }
 
+.mp-chip .ti-x {
+    margin-inline-end: -4px;
+}
+
 @media (pointer: coarse) {
     .mp-chip {
         min-block-size: 44px;
+    }
+}
+
+.mp-page-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: var(--mp-space-3) var(--mp-space-5);
+    margin-block-end: var(--mp-space-5);
+
+    p {
+        max-inline-size: 64ch;
+        margin: var(--mp-space-2) 0 0;
+        color: var(--tblr-secondary-color);
+        font-size: 1rem;
+    }
+}
+
+.mp-menu-anchor {
+    position: relative;
+    display: inline-block;
+
+    > .dropdown-menu {
+        position: absolute;
+        inset: calc(100% + 4px) 0 auto auto;
+        min-inline-size: 15rem;
+        z-index: 5;
+    }
+}
+
+.mp-who {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.75rem;
+    white-space: nowrap;
+}
+
+.mp-tbl th,
+.mp-members th,
+.mp-members td {
+    white-space: nowrap;
+}
+
+.mp-tbl img.mp-art {
+    inline-size: 40px;
+    block-size: 40px;
+    border-radius: 6px;
+    object-fit: cover;
+    flex: none;
+}
+
+.mp-rowlist {
+    .mp-row {
+        display: flex;
+        align-items: flex-start;
+        gap: var(--mp-space-3);
+    }
+
+    img.mp-art {
+        inline-size: 56px;
+        block-size: 56px;
+        border-radius: 6px;
+        object-fit: cover;
+        flex: none;
+    }
+
+    .mp-main {
+        flex: 1;
+        min-inline-size: 0;
+    }
+
+    .mp-line {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 }

@@ -101,9 +101,11 @@ describe('party moderation pages', () => {
                 moderations: empty,
             },
         });
+        expect(wrapper.find('[data-test="empty-state"] .empty-title code').text()).toBe('zzz action:flag');
         expect(wrapper.find('[data-test="empty-state"]').text()).toContain('\u201czzz\u201d, Flag');
         expect(wrapper.findAll('[data-test="clear-filters"]')).toHaveLength(1);
-        expect(wrapper.find('[data-test="searchbar"] a[href="/parties/ABCD/moderation/create"]').exists()).toBe(true);
+        expect(wrapper.find('a[href="/parties/ABCD/moderation/create"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="searchbar"] a[href="/parties/ABCD/moderation/create"]').exists()).toBe(false);
 
         const chips = wrapper.findAll('[data-test="search-chip"]');
         expect(chips.map((chip) => chip.attributes('aria-pressed'))).toEqual([
@@ -126,6 +128,24 @@ describe('party moderation pages', () => {
             {q: 'zzz', state: 'on', pattern: '1'},
             {preserveState: true, replace: true},
         );
+
+        const input = wrapper.get('[data-test="search-input"]');
+        expect((input.element as HTMLInputElement).value).toBe('zzz state:on match:pattern');
+        await input.setValue('zzz action:reject state:off');
+        await wrapper.get('form').trigger('submit');
+        expect(inertia.get).toHaveBeenLastCalledWith(
+            '/parties/ABCD/moderation',
+            {q: 'zzz', state: 'off', action: 'reject'},
+            {preserveState: true, replace: true},
+        );
+        expect(wrapper.findAll('[data-test="search-chip"]').map((chip) => chip.attributes('aria-pressed'))).toEqual([
+            'false',
+            'true',
+            'false',
+            'true',
+            'false',
+        ]);
+        expect(input.attributes('placeholder')).toBe('Search rules\u2026 or try action:flag');
     });
 
     it('shows an empty state with an add rule action when there are no rules', () => {
@@ -138,6 +158,7 @@ describe('party moderation pages', () => {
                 counts,
                 moderations: {
                     data: [],
+                    total: 0,
                     current_page: 1,
                     last_page: 1,
                     prev_page_url: null,

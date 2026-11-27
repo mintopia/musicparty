@@ -24,6 +24,7 @@ class UserController extends Controller
             'suspended' => ['nullable', 'boolean'],
             'first_login' => ['nullable', 'boolean'],
             'provider' => ['nullable', 'string', 'max:50'],
+            'spotify_relink' => ['nullable', 'boolean'],
         ]);
         $filters = (object) [];
         $query = User::query();
@@ -64,6 +65,13 @@ class UserController extends Controller
             $query->whereHas('accounts.provider', fn ($providers) => $providers->where('code', $provider));
         }
 
+        if ($request->boolean('spotify_relink')) {
+            $filters->spotify_relink = 1;
+            $query->whereHas('accounts', fn ($accounts) => $accounts
+                ->whereNotNull('needs_relink_at')
+                ->whereHas('provider', fn ($providers) => $providers->where('code', 'spotify')));
+        }
+
         $params = (array) $filters;
 
         switch ($request->input('order')) {
@@ -92,6 +100,8 @@ class UserController extends Controller
         $params['perPage'] = $request->input('perPage', 20);
 
         $users = $query->withExists(['roles as is_admin' => fn ($roles) => $roles->where('code', 'admin')])
+            ->withCount('partyMembers')
+            ->with('accounts.provider')
             ->paginate($params['perPage'])->appends($params);
 
         $users->through(fn (User $row): array => [
@@ -99,6 +109,13 @@ class UserController extends Controller
             'nickname' => $row->nickname,
             'is_admin' => (bool) $row->getAttribute('is_admin'),
             'suspended' => (bool) $row->suspended,
+            'avatar_url' => $row->avatarUrl(),
+            'accounts' => $row->accounts->map(fn (LinkedAccount $account): array => [
+                'provider' => $account->provider?->code,
+                'name' => $account->provider?->name,
+                'needs_relink' => $account->needs_relink_at !== null,
+            ])->values()->all(),
+            'parties_count' => (int) $row->getAttribute('party_members_count'),
             'last_login' => $row->last_login?->format('Y-m-d H:i:s'),
             'last_login_human' => $row->last_login?->diffForHumans(),
             'created_at' => $row->created_at?->format('Y-m-d H:i:s'),
@@ -113,6 +130,7 @@ class UserController extends Controller
                 'suspended' => isset($filters->suspended),
                 'first_login' => isset($filters->first_login),
                 'provider' => $filters->provider ?? '',
+                'spotify_relink' => isset($filters->spotify_relink),
             ],
             'providers' => SocialProvider::query()->orderBy('name')->get(['code', 'name'])
                 ->map(fn (SocialProvider $row): array => ['code' => $row->code, 'name' => $row->name])->all(),
