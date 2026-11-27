@@ -30,18 +30,16 @@ afterEach(fn () => Setting::query()->get()->each->clearCache());
 it('sends guests to login from the authenticated account pages', function (string $route) {
     $this->get(route($route, $route === 'linkedaccounts.delete' ? 1 : []))
         ->assertRedirect();
-})->with(['home', 'user.profile', 'user.profile.edit', 'user.spotify', 'login.signup', 'linkedaccounts.delete']);
+})->with(['user.profile', 'user.profile.edit', 'user.spotify', 'login.signup', 'linkedaccounts.delete']);
 
-it('renders the Home page with the user card', function () {
+it('renders the Home page with the member parties', function () {
     setDefaultParty(null);
     $user = accountPagesUser();
 
     $this->actingAs($user)->get(route('home'))
         ->assertInertia(fn (Assert $page) => $page
             ->component('Home', false)
-            ->where('user.nickname', $user->nickname)
-            ->where('user.email', $user->getEmail())
-            ->where('user.avatar', $user->avatarUrl()));
+            ->has('parties', 0));
 });
 
 it('redirects Home to the default party when one is set', function () {
