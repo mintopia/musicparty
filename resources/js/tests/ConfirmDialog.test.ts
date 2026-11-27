@@ -13,6 +13,13 @@ describe('ConfirmDialog', () => {
         ).toBe(false);
     });
 
+    it('labels the dialog with its title', () => {
+        const wrapper = mount(ConfirmDialog, {props});
+        const labelledby = wrapper.get('[role="dialog"]').attributes('aria-labelledby');
+
+        expect(wrapper.get(`#${labelledby}`).text()).toBe('Remove?');
+    });
+
     it('emits confirm and closes', async () => {
         const wrapper = mount(ConfirmDialog, {props});
         expect(wrapper.text()).toContain('Remove?');

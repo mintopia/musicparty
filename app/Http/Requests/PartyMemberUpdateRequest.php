@@ -23,6 +23,10 @@ class PartyMemberUpdateRequest extends FormRequest
         $member = $this->route('user');
         $user = $this->resolveAuthenticatedUser($this);
 
+        if ($this->input('role') === 'banned' && ($member->role->code === 'owner' || $member->user_id === $party->user_id)) {
+            return false;
+        }
+
         $touchesOwnerRole = $this->input('role') === 'owner' || $member->role->code === 'owner';
         if (! $touchesOwnerRole) {
             return true;

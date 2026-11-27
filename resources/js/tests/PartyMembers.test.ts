@@ -131,12 +131,18 @@ describe('party members', () => {
         ]);
         const base = {playerState: idle, roles, filters: {order: 'id', order_direction: 'asc' as const}, members};
 
-        const owner = mount(Index, {props: {...base, party}});
+        const owner = mount(Index, {props: {...base, party}, attachTo: document.body});
         await owner.get('[data-test="row-menu-toggle"]').trigger('click');
         const menu = owner.get('[data-test="row-menu-items"]').text();
         expect(menu).toContain('Change role');
         expect(menu).toContain('View activity');
         expect(menu).toContain('Ban alice');
+
+        await owner.get('[data-test="ban-member"]').trigger('click');
+        expect(inertia.patch).not.toHaveBeenCalled();
+        (document.body.querySelector('.modal .btn-danger') as HTMLButtonElement).click();
+        expect(inertia.patch).toHaveBeenCalledWith('/parties/ABCD/users/5', {role: 'banned'});
+        owner.unmount();
 
         const moderator = mount(Index, {props: {...base, party: {...party, canManage: false}}});
         expect(moderator.find('[data-test="row-menu-toggle"]').exists()).toBe(false);
@@ -159,17 +165,16 @@ describe('party members', () => {
         expect(wrapper.find('[data-test="role-badge"]').classes()).toContain('bg-purple-lt');
     });
 
-    it('hides the edit link from moderators and offers the moderator role', () => {
-        const props = {
-            party: {...party, canManage: false},
-            playerState: idle,
-            member: {...member, role: 'Moderator', roleCode: 'moderator'},
-            filters: {},
-            types: [],
-            votes: paginator([]),
-        };
-        expect(mount(Show, {props}).find('a[href$="/edit"]').exists()).toBe(false);
+    it('hides change role and ban from moderators on the detail page', () => {
+        const props = {party: {...party, canManage: false}, playerState: idle, member: {...member, canBan: true}};
+        const wrapper = mount(Show, {props});
 
+        expect(wrapper.find('a[href$="/edit"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="ban-member"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="member-actions"]').exists()).toBe(false);
+    });
+
+    it('describes each role in the picker and tags moderator as new', () => {
         const edit = mount(Edit, {
             props: {
                 party,
@@ -179,35 +184,96 @@ describe('party members', () => {
                 roles: [...roles, {code: 'moderator', name: 'Moderator'}],
             },
         });
-        expect(edit.text()).toContain('Can remove, schedule, approve and reject Requests');
+
+        expect(edit.get('h1').text()).toBe('Change role for alice');
+        expect(edit.text()).toContain('The role takes effect straight away.');
+        expect(edit.text()).toContain('Removes, approves and rejects Requests, schedules them and reads AI reviews.');
+        expect(edit.get('.badge').text()).toBe('New');
+        expect(edit.get('button[type="submit"]').text()).toBe('Save role');
+        expect(edit.get('form a.btn-link').text()).toBe('Cancel');
     });
 
-    it('renders vote direction icons and the edit link', () => {
-        const vote = (id: number, value: number) => ({
+    it('shows the header, stats, requests, votes and flags on the detail page', () => {
+        const track = (id: number) => ({
             id,
             songName: `Song ${id}`,
             albumName: 'Album',
             imageUrl: '/a.png',
             artists: ['A', 'B'],
             url: `/parties/ABCD/songs/${id}`,
-            value,
-            createdAt: when,
         });
         const wrapper = mount(Show, {
             props: {
                 party,
                 playerState: idle,
-                member,
-                filters: {},
-                types: [{code: 'upvote', name: 'Upvote'}],
-                votes: paginator([vote(1, 1), vote(2, -1)]),
+                member: {
+                    ...member,
+                    lastRequestAt: {iso: '2030-01-01 12:00:00', human: '20 minutes ago'},
+                    requestCount: 3,
+                    voteCount: 2,
+                    flaggedCount: 1,
+                    canBan: true,
+                },
+                requests: [
+                    {...track(1), status: 'played' as const, score: 3, createdAt: when},
+                    {...track(2), status: 'waiting' as const, score: 0, createdAt: when},
+                    {...track(3), status: 'flagged' as const, score: 0, createdAt: when},
+                ],
+                votes: [
+                    {...track(4), value: 1, createdAt: when},
+                    {...track(5), value: -1, createdAt: when},
+                ],
+                flags: [
+                    {
+                        ...track(3),
+                        reason: 'AI review: vibe, 82% confident.',
+                        reviewUrl: '/parties/ABCD/ai-reviews/9',
+                        outcome: 'Waiting for approval',
+                    },
+                ],
             },
         });
 
+        expect(wrapper.get('h1').text()).toContain('alice');
+        expect(wrapper.get('[data-test="role-badge"]').text()).toBe('User');
+        expect(wrapper.text()).toContain('Joined 3 hours ago. Last request 20 minutes ago.');
+        expect(wrapper.findAll('h2').map((heading) => heading.text())).toEqual(['Requests', 'Votes', 'Flags']);
+        expect(wrapper.findAll('[data-test="request-status"]').map((badge) => badge.text())).toEqual([
+            'Played',
+            'Waiting',
+            'Flagged',
+        ]);
+        expect(wrapper.get('[data-test="request-row"] .mp-num').text()).toBe('+3');
         expect(wrapper.find('[data-test="vote-up"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="vote-down"]').exists()).toBe(true);
-        expect(wrapper.text()).toContain('A, B');
-        expect(wrapper.find('a[href="/parties/ABCD/users/5/edit"]').exists()).toBe(true);
+        expect(wrapper.text()).toContain('Downvote');
+        expect(wrapper.get('[data-test="review-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews/9');
+        expect(wrapper.get('[data-test="change-role"]').attributes('href')).toBe('/parties/ABCD/users/5/edit');
+        expect(wrapper.find('[data-test="vote-card"]').exists()).toBe(true);
+    });
+
+    it('confirms before banning from the detail page and patches the banned role', async () => {
+        const wrapper = mount(Show, {
+            props: {party, playerState: idle, member: {...member, canBan: true}},
+            attachTo: document.body,
+        });
+
+        await wrapper.get('[data-test="ban-member"]').trigger('click');
+        const dialog = document.body.querySelector('[role="dialog"]');
+        expect(dialog?.getAttribute('aria-labelledby')).toBeTruthy();
+        expect(document.getElementById(dialog?.getAttribute('aria-labelledby') ?? '')?.textContent).toBe('Ban alice?');
+        expect(inertia.patch).not.toHaveBeenCalled();
+
+        (document.body.querySelector('.modal .btn-danger') as HTMLButtonElement).click();
+        expect(inertia.patch).toHaveBeenCalledWith('/parties/ABCD/users/5', {role: 'banned'});
+        wrapper.unmount();
+    });
+
+    it('does not offer a ban for owners', () => {
+        const wrapper = mount(Show, {props: {party, playerState: idle, member: {...member, canBan: false}}});
+
+        expect(wrapper.find('[data-test="ban-member"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="change-role"]').exists()).toBe(true);
     });
 
     it('preselects the role, warns when editing self and patches', async () => {

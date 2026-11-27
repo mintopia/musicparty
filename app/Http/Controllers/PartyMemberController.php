@@ -11,6 +11,7 @@ use App\Models\UpcomingSong;
 use App\Models\Vote;
 use App\Support\SearchTokens;
 use Carbon\CarbonInterface;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -106,8 +107,7 @@ class PartyMemberController extends Controller
         return Inertia::render('Parties/Members/Index', [
             'party' => $this->partyProps($party, $request->user()?->can('update', $party) ?? false),
             'playerState' => $party->getState(),
-            'roles' => PartyMemberRole::all()
-                ->sortBy(fn (PartyMemberRole $role): int|false => array_search($role->code, ['owner', 'moderator', 'vip', 'user', 'banned'], true))
+            'roles' => $this->orderedRoles()
                 ->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name, 'count' => (int) ($roleCounts[$role->id] ?? 0)])
                 ->values(),
             'filters' => $params,
@@ -118,57 +118,58 @@ class PartyMemberController extends Controller
 
     public function show(Request $request, Party $party, PartyMember $user): Response
     {
-        $query = $user->user->votes()->whereHas('upcomingSong', function ($query) use ($party) {
-            $query->wherePartyId($party->id);
-        })->with(['upcomingSong', 'upcomingSong.song', 'upcomingSong.song.album', 'upcomingSong.song.artists']);
+        $canManage = $request->user()?->can('update', $party) ?? false;
+        $relations = ['song.album', 'song.artists', 'played', 'aiReview'];
+        $requestedSongs = UpcomingSong::query()
+            ->where('party_id', $party->id)
+            ->where('user_id', $user->user_id)
+            ->with($relations)
+            ->latest()
+            ->get();
 
-        $params = [
-            'order' => 'created_at',
-            'order_direction' => 'desc',
-        ];
-        $perPage = $request->input('per_page', 20);
-        if ($perPage !== 20) {
-            $params['per_page'] = $perPage;
-        }
+        $requests = $requestedSongs->map(fn (UpcomingSong $song): array => [
+            'id' => $song->id,
+            ...$this->trackProps($party, $song),
+            'status' => $song->played !== null ? 'played' : ($song->flagged_at !== null ? 'flagged' : 'waiting'),
+            'score' => $song->score,
+            'createdAt' => $this->when($song->created_at),
+        ])->values();
 
-        if ($request->input('name')) {
-            $params['name'] = $request->input('name');
-            $query = $query->whereHas('upcomingSong.song', function ($query) use ($params) {
-                $query->where('name', 'LIKE', "%{$params['name']}%");
-            });
-        }
-        if ($request->input('type')) {
-            $params['type'] = $request->input('type');
-            if ($request->input('type') === 'upvote') {
-                $query = $query->where('value', '>', 0);
-            } else {
-                $query = $query->where('value', '<', 0);
-            }
-        }
+        $flags = $requestedSongs->filter(fn (UpcomingSong $song): bool => $song->flagged_at !== null)
+            ->map(fn (UpcomingSong $song): array => [
+                'id' => $song->id,
+                ...$this->trackProps($party, $song),
+                'reason' => $this->flagReason($song),
+                'reviewUrl' => $song->aiReview ? route('parties.ai-reviews.show', [$party->code, $song->aiReview->id]) : null,
+                'outcome' => 'Waiting for approval',
+            ])->values();
 
-        $votes = $query->orderBy($params['order'], $params['order_direction'])->paginate($perPage)->appends($params);
-
-        $votes->through(fn (Vote $vote): array => [
-            'id' => $vote->id,
-            'songName' => $vote->upcomingSong->song->name,
-            'albumName' => $vote->upcomingSong->song->album->name,
-            'imageUrl' => $vote->upcomingSong->song->album->image_url,
-            'artists' => $vote->upcomingSong->song->artists->pluck('name')->values()->all(),
-            'url' => route('parties.songs.show', [$party->code, $vote->upcomingSong->id]),
-            'value' => $vote->value,
-            'createdAt' => $this->when($vote->created_at),
-        ]);
+        $votes = $user->user->votes()
+            ->whereHas('upcomingSong', fn ($query) => $query->where('party_id', $party->id))
+            ->with(['upcomingSong.song.album', 'upcomingSong.song.artists'])
+            ->latest()
+            ->get()
+            ->map(fn (Vote $vote): array => [
+                'id' => $vote->id,
+                ...$this->trackProps($party, $vote->upcomingSong),
+                'value' => $vote->value,
+                'createdAt' => $this->when($vote->created_at),
+            ])->values();
 
         return Inertia::render('Parties/Members/Show', [
-            'party' => $this->partyProps($party, $request->user()?->can('update', $party) ?? false),
+            'party' => $this->partyProps($party, $canManage),
             'playerState' => $party->getState(),
-            'member' => $this->memberProps($user),
-            'votes' => $votes,
-            'filters' => $params,
-            'types' => [
-                ['code' => 'downvote', 'name' => 'Downvote'],
-                ['code' => 'upvote', 'name' => 'Upvote'],
+            'member' => [
+                ...$this->memberProps($user),
+                'lastRequestAt' => $this->when($requestedSongs->first()?->created_at),
+                'requestCount' => $requests->count(),
+                'voteCount' => $votes->count(),
+                'flaggedCount' => $flags->count(),
+                'canBan' => $canManage && $user->role->code !== 'owner',
             ],
+            'requests' => $requests,
+            'votes' => $votes,
+            'flags' => $flags,
         ]);
     }
 
@@ -179,7 +180,7 @@ class PartyMemberController extends Controller
             'playerState' => $party->getState(),
             'member' => $this->memberProps($user),
             'isSelf' => $request->user()?->id === $user->user_id,
-            'roles' => PartyMemberRole::all()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
+            'roles' => $this->orderedRoles()->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name])->values(),
         ]);
     }
 
@@ -190,6 +191,40 @@ class PartyMemberController extends Controller
         $user->save();
 
         return response()->redirectToRoute('parties.users.show', [$party->code, $user->id])->with('successMessage', 'The user has been updated');
+    }
+
+    /**
+     * @return Collection<int, PartyMemberRole>
+     */
+    private function orderedRoles(): Collection
+    {
+        return PartyMemberRole::all()
+            ->sortBy(fn (PartyMemberRole $role): int|false => array_search($role->code, ['owner', 'moderator', 'vip', 'user', 'banned'], true))
+            ->values();
+    }
+
+    /**
+     * @return array{songName: string, albumName: string, imageUrl: string, artists: list<string>, url: string}
+     */
+    private function trackProps(Party $party, UpcomingSong $song): array
+    {
+        return [
+            'songName' => $song->song->name,
+            'albumName' => $song->song->album->name,
+            'imageUrl' => $song->song->album->image_url,
+            'artists' => array_values($song->song->artists->pluck('name')->all()),
+            'url' => route('parties.songs.show', [$party->code, $song->id]),
+        ];
+    }
+
+    private function flagReason(UpcomingSong $song): string
+    {
+        $review = $song->aiReview;
+        if ($review !== null && $review->criterion !== null && $review->criterion_confidence !== null) {
+            return sprintf('AI review: %s, %d%% confident.', strtolower($review->criterion->label()), round($review->criterion_confidence * 100));
+        }
+
+        return $song->flag_reason ?? 'Flagged for review.';
     }
 
     /**
