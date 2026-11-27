@@ -1,5 +1,5 @@
 import {computed, onBeforeUnmount, ref, toValue, watch, type MaybeRefOrGetter} from 'vue';
-import type {PlaybackState} from '@/types';
+import type {LegacyPlaybackStatus, PlaybackState} from '@/types';
 
 export function useTicker(active: MaybeRefOrGetter<boolean>, restartOn: MaybeRefOrGetter<unknown>) {
     const now = ref(Date.now());
@@ -62,6 +62,40 @@ export function useProgress(state: MaybeRefOrGetter<PlaybackState | null>) {
     const elapsedLabel = computed(() => formatClock(progressMs.value));
 
     return {progressMs, progressPercent, elapsedLabel};
+}
+
+export function useStatusProgress(status: MaybeRefOrGetter<LegacyPlaybackStatus | null | undefined>) {
+    const playback = computed<PlaybackState | null>(() => {
+        const current = toValue(status);
+        if (!current) {
+            return null;
+        }
+
+        return {
+            isPlaying: current.isPlaying === true,
+            trackId: null,
+            linkedFromId: null,
+            durationMs: current.length ? current.length : null,
+            progressMs: current.progressMs ?? 0,
+            sampledAt: current.sampledAt,
+            shuffle: false,
+            repeat: 'off',
+            deviceId: null,
+            deviceName: null,
+            source: 'legacy',
+        };
+    });
+
+    const {progressMs, progressPercent} = useProgress(playback);
+    const hasLength = computed(() => (playback.value?.durationMs ?? 0) > 0);
+
+    return {
+        hasLength,
+        paused: computed(() => playback.value !== null && !playback.value.isPlaying),
+        progressPercent,
+        elapsedLabel: computed(() => (hasLength.value ? formatClock(progressMs.value) : '')),
+        totalLabel: computed(() => (hasLength.value ? formatClock(playback.value!.durationMs!) : '')),
+    };
 }
 
 export function useCountdown(endsAt: MaybeRefOrGetter<number | null>) {

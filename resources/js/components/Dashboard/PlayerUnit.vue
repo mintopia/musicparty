@@ -1,20 +1,25 @@
 <script setup lang="ts">
-import axios from 'axios';
 import {computed, inject, ref} from 'vue';
 import HealthGrid from '@/components/Dashboard/HealthGrid.vue';
 import SeekBar from '@/components/Dashboard/SeekBar.vue';
+import PlayerStatusPill from '@/components/PlayerStatusPill.vue';
 import RateControl from '@/components/RateControl.vue';
 import {useTicker} from '@/composables/useProgress';
+import {useRating} from '@/composables/useRating';
 import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
-import {store as storeRating} from '@/routes/api/v1/parties/playedsongs/rate';
-import type {DashboardControl, LegacyPartyState} from '@/types';
+import type {DashboardControl, LegacyPartyState, MyRating} from '@/types';
 
-const props = defineProps<{
-    code: string;
-    state: LegacyPartyState;
-    control: DashboardControl;
-    canControl: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        code: string;
+        state: LegacyPartyState;
+        control: DashboardControl;
+        canControl: boolean;
+        myRating?: MyRating | null;
+        connected?: boolean;
+    }>(),
+    {myRating: null, connected: true},
+);
 
 const run = useRun();
 const notify = inject(notifyKey, () => undefined);
@@ -48,22 +53,19 @@ async function seek(ms: number): Promise<void> {
     await run(() => sendControl(props.code, 'seek', {positionMs: ms}));
 }
 
-async function rate(value: number): Promise<void> {
-    const current = props.state.current;
-    if (current === null) {
-        return;
-    }
-    const route = storeRating({party: props.code, playedsong: current.id});
-    try {
-        await axios.request({url: route.url, method: route.method, data: {rating: value}});
-    } catch {
-        notify('That rating could not be saved.');
-    }
-}
+const {pressed, score, rate} = useRating({
+    code: props.code,
+    state: () => props.state,
+    myRating: () => props.myRating,
+    onError: notify,
+});
 </script>
 
 <template>
     <div class="pu" data-test="player-unit">
+        <div class="pu-status" role="status" aria-live="polite">
+            <PlayerStatusPill v-if="!connected" warn data-test="reconnecting">Reconnecting…</PlayerStatusPill>
+        </div>
         <div v-if="state.now !== null">
             <div class="d-flex gap-4">
                 <div class="pu-art">
@@ -75,17 +77,17 @@ async function rate(value: number): Promise<void> {
                         {{ state.now.name }}
                     </div>
                     <div class="np-meta mt-1 text-truncate" :title="artist" data-test="now-artists">
-                        <i class="icon ti ti-users"></i> {{ artist }}
+                        {{ artist }}
                     </div>
                     <div class="np-meta text-truncate" :title="state.now.album?.name" data-test="now-album">
-                        <i class="icon ti ti-vinyl"></i> {{ state.now.album?.name }}
+                        {{ state.now.album?.name }}
                     </div>
                     <div class="mt-2" data-test="now-origin">
                         <span v-if="control.nowPlaying.isRequest" class="np-meta small">
-                            <i class="icon ti ti-music-question"></i> Requested by {{ control.nowPlaying.requestedBy }}
+                            Requested by {{ control.nowPlaying.requestedBy }}
                         </span>
                         <span v-else-if="control.nowPlaying.isFallback" class="np-meta small" data-test="now-fallback">
-                            <i class="icon ti ti-playlist"></i> Fallback Track
+                            Fallback Track
                         </span>
                         <span v-else class="badge bg-white-lt text-white">Not a party request</span>
                     </div>
@@ -102,7 +104,7 @@ async function rate(value: number): Promise<void> {
         </div>
         <div v-else class="empty text-muted pu-empty" data-test="nothing-playing">
             <i class="icon icon-lg ti ti-music-off"></i>
-            There is nothing playing
+            Nothing playing
         </div>
 
         <div v-if="state.now !== null" class="pu-row">
@@ -140,12 +142,7 @@ async function rate(value: number): Promise<void> {
                 </button>
             </div>
             <div class="pu-rate">
-                <RateControl
-                    v-if="state.current"
-                    :rating="state.current.rating"
-                    button-class="btn-ondark"
-                    @rate="rate"
-                />
+                <RateControl v-if="state.current" :rating="score" :pressed="pressed" @rate="rate" />
             </div>
         </div>
 
@@ -169,6 +166,13 @@ async function rate(value: number): Promise<void> {
     --tblr-secondary: var(--mp-deck-muted);
     --tblr-muted: var(--mp-deck-muted);
     height: 100%;
+    position: relative;
+}
+.pu-status {
+    position: absolute;
+    inset-block-start: 12px;
+    inset-inline-end: 14px;
+    z-index: 1;
 }
 .pu-art {
     flex: 0 0 auto;
@@ -195,9 +199,6 @@ async function rate(value: number): Promise<void> {
 }
 .np-meta {
     color: var(--mp-deck-muted);
-}
-.np-meta .ti {
-    opacity: 0.8;
 }
 .pu-empty {
     height: auto;
@@ -245,17 +246,11 @@ async function rate(value: number): Promise<void> {
     justify-self: end;
     display: flex;
     align-items: center;
-    gap: 4px;
-    color: var(--mp-deck-muted);
-}
-.pu-rate :deep(.btn) {
-    width: 40px;
-    height: 40px;
-    padding: 0;
-    border-radius: 50%;
-}
-.pu-rate :deep(.ti) {
-    font-size: 1.3rem;
+    --rate-bg: var(--mp-deck-raised);
+    --rate-fg: var(--mp-deck-text);
+    --rate-divider: var(--mp-deck-border-strong);
+    --rate-pressed-bg: var(--mp-deck-text);
+    --rate-pressed-fg: var(--mp-deck-surface);
 }
 .pu-hint {
     margin-top: 12px;

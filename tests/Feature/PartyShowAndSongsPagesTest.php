@@ -1,7 +1,9 @@
 <?php
 
 use App\Enums\Purpose;
+use App\Models\PlayedSong;
 use App\Models\Song;
+use App\Models\SongRating;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
@@ -92,4 +94,24 @@ it('forbids non-managers from the songs pages', function () {
 it('does not serve the show page or songs pages to guests', function () {
     $this->get(route('parties.show', $this->party->code))->assertRedirect();
     $this->get(route('parties.songs.index', $this->party->code))->assertRedirect();
+});
+
+it('passes a null myRating when nothing is playing', function () {
+    $this->actingAs($this->member->user)->get(route('parties.show', $this->party->code))
+        ->assertInertia(fn (Assert $page) => $page->where('myRating', null));
+});
+
+it('passes the viewer own rating on the current played song as myRating', function () {
+    $played = PlayedSong::factory()->for($this->party)->create(['played_at' => now()]);
+    $other = pageSearchMember($this->party);
+
+    $this->actingAs($this->member->user)->get(route('parties.show', $this->party->code))
+        ->assertInertia(fn (Assert $page) => $page->where('myRating', ['playedSongId' => $played->id, 'value' => 0]));
+
+    $played->setRating($this->member->user, -1);
+    $played->setRating($other->user, 1);
+
+    $this->actingAs($this->member->user)->get(route('parties.show', $this->party->code))
+        ->assertInertia(fn (Assert $page) => $page->where('myRating', ['playedSongId' => $played->id, 'value' => -1]));
+    expect(SongRating::count())->toBe(2);
 });

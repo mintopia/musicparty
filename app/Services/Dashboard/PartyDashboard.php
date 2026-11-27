@@ -82,6 +82,7 @@ class PartyDashboard
             ],
             'timezone' => fn (): string => $this->timezones->for($party),
             'playerState' => $party->getState(...),
+            'myRating' => fn (): ?array => $party->ratingBy($viewer),
             'control' => fn (): array => $this->control($party),
             'upNext' => fn (): array => $this->upNext($party, $viewer),
             'upcoming' => fn (): array => $this->upcoming($party, $viewer),

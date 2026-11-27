@@ -1,7 +1,7 @@
 import Echo from 'laravel-echo';
 import Pusher from 'pusher-js';
 import {usePage} from '@inertiajs/vue3';
-import {onBeforeUnmount} from 'vue';
+import {onBeforeUnmount, ref, type Ref} from 'vue';
 import {echoOptions} from '@/lib/realtime';
 import type {RealtimeConfig, SharedProps} from '@/types';
 
@@ -17,6 +17,8 @@ type PusherConnection = {
     bind(event: string, cb: (states: {previous: string; current: string}) => void): void;
     unbind(event: string, cb: (states: {previous: string; current: string}) => void): void;
 };
+
+const LOST_STATES = ['unavailable', 'failed', 'disconnected'];
 
 export type EchoFactory = (config: RealtimeConfig) => EchoLike;
 
@@ -48,6 +50,25 @@ export function useEcho() {
     }
     const reconnectHandlers: Array<(states: {previous: string; current: string}) => void> = [];
     const connection = echo.connector.pusher.connection;
+
+    function trackConnection(): Ref<boolean> {
+        const connected = ref(!LOST_STATES.includes(connection.state ?? ''));
+        let seen = connection.state === 'connected';
+        const handler = ({current}: {previous: string; current: string}) => {
+            if (current === 'connected') {
+                seen = true;
+                connected.value = true;
+            } else if (current === 'connecting' || current === 'initialized') {
+                connected.value = !seen;
+            } else {
+                connected.value = false;
+            }
+        };
+        reconnectHandlers.push(handler);
+        connection.bind('state_change', handler);
+
+        return connected;
+    }
 
     function privateChannel(name: string) {
         join(name);
@@ -88,5 +109,5 @@ export function useEcho() {
         reconnectHandlers.length = 0;
     });
 
-    return {privateChannel, publicChannel, onReconnect};
+    return {privateChannel, publicChannel, onReconnect, trackConnection};
 }

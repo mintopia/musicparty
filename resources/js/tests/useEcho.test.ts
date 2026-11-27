@@ -82,4 +82,57 @@ describe('useEcho', () => {
         handlers[0]({previous: 'unavailable', current: 'connected'});
         expect(callback).toHaveBeenCalledTimes(1);
     });
+
+    describe('trackConnection', () => {
+        const host = (target: {connected?: {value: boolean}}) =>
+            mount(
+                defineComponent({
+                    setup() {
+                        target.connected = useEcho().trackConnection();
+                        return () => null;
+                    },
+                }),
+            );
+
+        it('does not flag the initial connection attempt, then flags a drop and recovery', () => {
+            const {echo, handlers} = fakeEcho();
+            setEchoFactory(() => echo);
+            const target: {connected?: {value: boolean}} = {};
+            host(target);
+            expect(target.connected?.value).toBe(true);
+
+            handlers[0]({previous: 'initialized', current: 'connecting'});
+            expect(target.connected?.value).toBe(true);
+
+            handlers[0]({previous: 'connecting', current: 'connected'});
+            handlers[0]({previous: 'connected', current: 'connecting'});
+            expect(target.connected?.value).toBe(false);
+
+            handlers[0]({previous: 'connecting', current: 'connected'});
+            expect(target.connected?.value).toBe(true);
+        });
+
+        it.each(['unavailable', 'failed', 'disconnected'])('is lost while %s', (state) => {
+            const {echo, handlers} = fakeEcho();
+            setEchoFactory(() => echo);
+            const target: {connected?: {value: boolean}} = {};
+            host(target);
+
+            handlers[0]({previous: 'connecting', current: state});
+
+            expect(target.connected?.value).toBe(false);
+        });
+
+        it('starts lost when the shared connection is already down, and unbinds on unmount', () => {
+            const {echo, handlers} = fakeEcho();
+            (echo.connector.pusher.connection as {state?: string}).state = 'unavailable';
+            setEchoFactory(() => echo);
+            const target: {connected?: {value: boolean}} = {};
+            const wrapper = host(target);
+            expect(target.connected?.value).toBe(false);
+
+            wrapper.unmount();
+            expect(handlers).toHaveLength(0);
+        });
+    });
 });

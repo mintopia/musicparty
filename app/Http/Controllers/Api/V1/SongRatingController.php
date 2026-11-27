@@ -16,12 +16,7 @@ class SongRatingController extends Controller
         if ($current === null || ! $current->is($playedsong)) {
             abort(400);
         }
-        $rating = null;
-        if ($request->input('rating') < 0) {
-            $rating = $playedsong->dislike($this->resolveAuthenticatedUser($request));
-        } elseif ($request->input('rating') > 0) {
-            $rating = $playedsong->like($this->resolveAuthenticatedUser($request));
-        }
+        $rating = $playedsong->setRating($this->resolveAuthenticatedUser($request), $request->integer('rating'));
         $resource = new PlayedSongResource($playedsong);
         $resource->augment((object) [
             'rating' => $rating,

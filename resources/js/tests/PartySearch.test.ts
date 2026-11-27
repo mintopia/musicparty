@@ -35,6 +35,7 @@ const listeners = vi.hoisted(() => ({handlers: {} as Record<string, (payload: un
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
+        trackConnection: () => ({value: true}),
         privateChannel: () => ({listen: () => undefined}),
         publicChannel: () => ({
             listen: (event: string, cb: (payload: unknown) => void) => {

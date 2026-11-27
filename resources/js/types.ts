@@ -126,6 +126,11 @@ export interface LegacyPlaybackStatus {
     length: number;
 }
 
+export interface MyRating {
+    playedSongId: number;
+    value: -1 | 0 | 1;
+}
+
 export interface LegacyPartyState {
     now: LegacyTrack | null;
     next: LegacyTrack | null;
@@ -299,6 +304,7 @@ export interface DashboardProps {
         fallbackSettings: string;
     };
     hasFallbackPlaylist: boolean;
+    myRating?: MyRating | null;
 }
 
 export interface SearchError {

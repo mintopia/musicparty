@@ -1,12 +1,12 @@
 import {mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
-import Next from '../components/Next.vue';
+import PartyPlayer from '../components/PartyPlayer.vue';
 import TvPlayer from '../components/TvPlayer.vue';
 import Upcoming from '../components/Upcoming.vue';
 import {legacyAccentStyle} from '../lib/decoration';
 
 vi.mock('@ts-pro/vue-eternal-loading', () => ({VueEternalLoading: {template: '<div />'}}));
-vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}})}));
+vi.mock('@inertiajs/vue3', () => ({usePage: () => ({props: {flash: {}}}), router: {reload: vi.fn()}}));
 
 const echo = vi.hoisted(() => ({
     publicNames: [] as string[],
@@ -17,6 +17,7 @@ const echo = vi.hoisted(() => ({
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
+        trackConnection: () => ({value: true}),
         publicChannel: (name: string) => {
             echo.publicNames.push(name);
             return {listen: (event: string, cb: (payload: unknown) => void) => void (echo.handlers[event] = cb)};
@@ -76,14 +77,17 @@ describe('legacy decoration rendering', () => {
     });
 
     it('renders label and accent in the up next view', async () => {
-        const wrapper = mount(Next, {
-            props: {code: 'ABC', initialState: {next: track({decoration})} as never},
+        const wrapper = mount(PartyPlayer, {
+            props: {
+                code: 'ABC',
+                initialState: {now: track(), next: track({decoration}), current: null, status: null} as never,
+            },
         });
 
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.find('[data-test="track-row"]').attributes('style')).toContain('border-left');
+        expect(wrapper.find('[data-test="decoration-label"]').attributes('style')).toContain('rgb(255, 0, 0)');
     });
 
     it('renders label, accent and display name for the next track on the TV view', async () => {
@@ -105,7 +109,7 @@ describe('legacy decoration rendering', () => {
         await wrapper.vm.$nextTick();
 
         expect(wrapper.find('[data-test="decoration-label"]').text()).toBe('Boosted');
-        expect(wrapper.html()).toContain('border-left');
+        expect(wrapper.get('[data-test="up-next"]').attributes('style')).toContain('border-top-color: rgb(255, 0, 0)');
         expect(wrapper.text()).toContain('Mod Track');
     });
 });
@@ -159,10 +163,17 @@ describe('legacy player channel subscriptions', () => {
     });
 
     it('subscribes up next to party.{code} and updates on Party\\UpdatedEvent', async () => {
-        const wrapper = mount(Next, {props: {code: 'ABC', initialState: {next: track()} as never}});
+        const wrapper = mount(PartyPlayer, {
+            props: {code: 'ABC', initialState: {now: track(), next: track(), current: null, status: null} as never},
+        });
         expect(echo.publicNames).toContain('party.ABC');
 
-        echo.handlers['Party\\UpdatedEvent']({next: track({name: 'Pushed Song'})});
+        echo.handlers['Party\\UpdatedEvent']({
+            now: track(),
+            next: track({name: 'Pushed Song'}),
+            current: null,
+            status: null,
+        });
         await wrapper.vm.$nextTick();
 
         expect(wrapper.text()).toContain('Pushed Song');

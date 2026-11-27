@@ -2,6 +2,7 @@
 
 use App\Events\Party\UpdatedEvent;
 use App\Models\Party;
+use App\Models\PlayedSong;
 use App\Models\Song;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
@@ -267,4 +268,14 @@ it('reports a newer receivedAt after an unchanged Encore frame, which broadcasts
 
     expect($second)->toBeGreaterThan($first);
     Event::assertDispatchedTimes(UpdatedEvent::class, 1);
+});
+
+it('passes myRating for the viewer on the current played song, null when nothing is playing', function () {
+    expect(dashboardControl($this, 'myRating'))->toBeNull();
+
+    $played = PlayedSong::factory()->for($this->party)->create(['played_at' => now()]);
+    expect(dashboardControl($this, 'myRating'))->toBe(['playedSongId' => $played->id, 'value' => 0]);
+
+    $played->setRating($this->party->user, 1);
+    expect(dashboardControl($this, 'myRating'))->toBe(['playedSongId' => $played->id, 'value' => 1]);
 });

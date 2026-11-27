@@ -23,7 +23,7 @@ class SongRatingRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'rating' => 'required|integer',
+            'rating' => 'required|integer|in:-1,0,1',
         ];
     }
 }

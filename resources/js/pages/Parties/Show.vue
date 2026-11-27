@@ -3,16 +3,16 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {homeCrumbs} from '@/lib/breadcrumbs';
 import {Head, router} from '@inertiajs/vue3';
 import {onBeforeUnmount, onMounted, ref} from 'vue';
-import Next from '@/components/Next.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
 import Upcoming from '@/components/Upcoming.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {ping} from '@/routes/api/v1';
-import type {LegacyPartyState, LegacyUpcomingSong} from '@/types';
+import type {LegacyPartyState, LegacyUpcomingSong, MyRating} from '@/types';
 
 const props = defineProps<{
     party: {code: string; name: string; downvotes: boolean; canManage: boolean; weighted: boolean};
     playerState: LegacyPartyState;
+    myRating?: MyRating | null;
     upcoming: LegacyUpcomingSong[];
     timezone: string;
     spotifyNeedsRelink: boolean;
@@ -46,7 +46,7 @@ onBeforeUnmount(() => {
             <Breadcrumbs :items="[...homeCrumbs(), {label: party.name}]" />
         </template>
         <template #header>
-            <PartyPlayer :code="party.code" :initial-state="playerState" />
+            <PartyPlayer :code="party.code" :initial-state="playerState" :my-rating="myRating" />
         </template>
         <Head :title="party.name" />
         <div v-if="spotifyNeedsRelink" class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1">
@@ -57,7 +57,6 @@ onBeforeUnmount(() => {
             </div>
         </div>
         <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" data-test="queue-width">
-            <Next :code="party.code" :initial-state="playerState" />
             <div class="d-flex flex-column flex-sm-row flex-fill align-text-bottom gap-2 gap-sm-0 mb-3 mb-sm-1">
                 <div class="flex-grow-1">
                     <h3 class="mt-2 mb-0 mb-sm-2">{{ party.weighted ? 'Upcoming Songs' : 'Queue' }}</h3>

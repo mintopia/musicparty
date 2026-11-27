@@ -14,12 +14,28 @@ const imageVar = computed(() => (props.image ? `url("${props.image.replace(/["\\
 
 <style scoped>
 .now-playing-backdrop {
+    position: relative;
+    isolation: isolate;
     overflow: hidden;
-    background-color: #000;
-    background-image: linear-gradient(rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.9)), var(--np-image);
-    background-repeat: no-repeat;
-    background-size: cover;
-    background-position: center;
+    background-color: #16181d;
     color: #fff;
+}
+
+.now-playing-backdrop::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    z-index: -2;
+    background: var(--np-image) center / cover no-repeat;
+    filter: blur(36px) saturate(1.2);
+    opacity: 0.55;
+}
+
+.now-playing-backdrop::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: linear-gradient(rgba(10, 10, 14, 0.55), rgba(10, 10, 14, 0.8));
 }
 </style>

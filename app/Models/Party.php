@@ -237,6 +237,22 @@ class Party extends Model
         return $this->history()->orderBy('played_at', 'desc')->first();
     }
 
+    /**
+     * @return array{playedSongId: int, value: int}|null
+     */
+    public function ratingBy(User $user): ?array
+    {
+        $current = $this->current();
+        if ($current === null) {
+            return null;
+        }
+
+        return [
+            'playedSongId' => $current->id,
+            'value' => (int) ($current->ratings()->whereUserId($user->id)->value('value') ?? 0),
+        ];
+    }
+
     public function next(): ?UpcomingSong
     {
         return $this->upcoming()

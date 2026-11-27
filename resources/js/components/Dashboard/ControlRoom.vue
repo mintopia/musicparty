@@ -4,19 +4,24 @@ import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
 import PlayerUnit from '@/components/Dashboard/PlayerUnit.vue';
 import StartPlaybackPanel from '@/components/Dashboard/StartPlaybackPanel.vue';
 import UpNextDeck from '@/components/Dashboard/UpNextDeck.vue';
-import type {DashboardControl, DashboardRequest, LegacyPartyState} from '@/types';
+import type {DashboardControl, DashboardRequest, LegacyPartyState, MyRating} from '@/types';
 
-const props = defineProps<{
-    code: string;
-    host: string;
-    state: LegacyPartyState;
-    control: DashboardControl;
-    upNext: DashboardRequest[];
-    total: number;
-    queueUrl: string;
-    canControl: boolean;
-    canModerate: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        code: string;
+        host: string;
+        state: LegacyPartyState;
+        control: DashboardControl;
+        upNext: DashboardRequest[];
+        total: number;
+        queueUrl: string;
+        canControl: boolean;
+        canModerate: boolean;
+        myRating?: MyRating | null;
+        connected?: boolean;
+    }>(),
+    {myRating: null, connected: true},
+);
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
 const hidden = computed(() => props.control.start.state === 'hidden');
@@ -29,7 +34,14 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
             <div class="container-fluid px-4">
                 <div class="row g-4 align-items-stretch">
                     <div class="col-xl-7 col-lg-6">
-                        <PlayerUnit :code="code" :state="state" :control="control" :can-control="canControl" />
+                        <PlayerUnit
+                            :code="code"
+                            :state="state"
+                            :control="control"
+                            :can-control="canControl"
+                            :my-rating="myRating"
+                            :connected="connected"
+                        />
                     </div>
                     <div class="col-xl-5 col-lg-6">
                         <UpNextDeck

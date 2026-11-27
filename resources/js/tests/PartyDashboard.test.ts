@@ -25,7 +25,10 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
 }));
 vi.mock('@/routes', () => ({home: () => ({url: '/'})}));
 
-const echo = vi.hoisted(() => ({handlers: {} as Record<string, (payload?: never) => void>}));
+const echo = vi.hoisted(() => ({
+    handlers: {} as Record<string, (payload?: never) => void>,
+    states: [] as Array<(states: {previous: string; current: string}) => void>,
+}));
 
 const originalAdapter = axios.defaults.adapter;
 let calls: {method?: string; url?: string; data?: string}[] = [];
@@ -54,6 +57,7 @@ beforeEach(() => {
     responder = () => Promise.resolve({});
     inertia.reload.mockReset();
     echo.handlers = {};
+    echo.states = [];
     const channel = {
         listen(event: string, cb: (payload?: never) => void) {
             echo.handlers[event] = cb;
@@ -65,7 +69,15 @@ beforeEach(() => {
         private: () => channel,
         channel: () => channel,
         leave: () => undefined,
-        connector: {pusher: {connection: {bind: () => undefined, unbind: () => undefined}}},
+        connector: {
+            pusher: {
+                connection: {
+                    bind: (_event: string, cb: (states: {previous: string; current: string}) => void) =>
+                        echo.states.push(cb),
+                    unbind: () => undefined,
+                },
+            },
+        },
     }));
     axios.defaults.adapter = async (config) => {
         calls.push({method: config.method, url: config.url, data: config.data});
@@ -158,6 +170,8 @@ interface Options {
     receivedAt?: string;
     nowPlaying?: DashboardProps['control']['nowPlaying'];
     nothingPlaying?: boolean;
+    paused?: boolean;
+    myRating?: DashboardProps['myRating'];
 }
 
 function makeProps(options: Options = {}): DashboardProps {
@@ -172,7 +186,12 @@ function makeProps(options: Options = {}): DashboardProps {
             now: options.nothingPlaying ? null : {...track('Sandstorm'), artists: [{name: 'Darude'}]},
             next: null,
             current: {id: 9, user: 'Tamsin', rating: 0},
-            status: {isPlaying: true, sampledAt: new Date().toISOString(), progressMs: 112000, length: 225000},
+            status: {
+                isPlaying: !options.paused,
+                sampledAt: new Date().toISOString(),
+                progressMs: 112000,
+                length: 225000,
+            },
         },
         control: {
             playingFrom: options.playingFrom ?? {kind: state === 'hidden' ? 'party' : 'nothing', label: null},
@@ -214,6 +233,7 @@ function makeProps(options: Options = {}): DashboardProps {
             fallbackSettings: '/settings#fallback',
         },
         hasFallbackPlaylist: true,
+        myRating: options.myRating,
     };
 }
 
@@ -228,7 +248,7 @@ describe('control room strip', () => {
     it('shows only the empty state when nothing is playing, leaving Start Playback as the action', () => {
         const wrapper = mountPage({state: 'idle', nothingPlaying: true});
 
-        expect(wrapper.find('[data-test="nothing-playing"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="nothing-playing"]').text()).toBe('Nothing playing');
         expect(wrapper.find('[data-test="play-pause"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="rating"]').exists()).toBe(false);
         expect(wrapper.find('[data-test="start-panel"]').exists()).toBe(true);
@@ -340,6 +360,84 @@ describe('control room strip', () => {
 
         expect(mountPage({state: 'hidden'}).find('[data-test="skip-hint"]').exists()).toBe(false);
         expect(mountPage({state: 'idle'}).find('[data-test="skip-hint"]').exists()).toBe(false);
+    });
+});
+
+describe('player unit', () => {
+    const up = (wrapper: ReturnType<typeof mountPage>) => wrapper.get('[data-test="rate-up"]');
+    const down = (wrapper: ReturnType<typeof mountPage>) => wrapper.get('[data-test="rate-down"]');
+    const count = (wrapper: ReturnType<typeof mountPage>) => wrapper.get('[data-test="rating"]').text();
+
+    it('orders the rating control up, count, down and presses the thumb for the own vote', () => {
+        const wrapper = mountPage({myRating: {playedSongId: 9, value: -1}});
+        const parts = [...wrapper.get('[data-test="rate-control"]').element.children].map(
+            (el) => el.getAttribute('aria-label') ?? el.getAttribute('data-test'),
+        );
+
+        expect(parts).toEqual(['Rate up', 'rating', 'Rate down']);
+        expect(down(wrapper).attributes('aria-pressed')).toBe('true');
+        expect(up(wrapper).attributes('aria-pressed')).toBe('false');
+        expect(
+            mountPage({myRating: {playedSongId: 8, value: 1}})
+                .get('[data-test="rate-up"]')
+                .attributes('aria-pressed'),
+        ).toBe('false');
+        expect(mountPage().get('[data-test="rate-up"]').attributes('aria-pressed')).toBe('false');
+    });
+
+    it('rates optimistically with set semantics and keeps the buttons enabled', async () => {
+        const wrapper = mountPage();
+
+        await up(wrapper).trigger('click');
+        expect(count(wrapper)).toBe('1');
+        expect(up(wrapper).attributes('aria-pressed')).toBe('true');
+        expect(up(wrapper).attributes('disabled')).toBeUndefined();
+        await flushPromises();
+        expect(JSON.parse(post('/api/v1/parties/ABCD/playedsongs/9/rate')[0]?.data ?? '{}')).toEqual({rating: 1});
+
+        await up(wrapper).trigger('click');
+        await flushPromises();
+        expect(JSON.parse(post('/api/v1/parties/ABCD/playedsongs/9/rate')[1]?.data ?? '{}')).toEqual({rating: 0});
+        expect(count(wrapper)).toBe('0');
+    });
+
+    it('rolls back and tells the host when the rating cannot be saved', async () => {
+        respondWith('/api/v1/parties/ABCD/playedsongs/9/rate', failure(429, {}) as never);
+        const wrapper = mountPage();
+
+        await up(wrapper).trigger('click');
+        await flushPromises();
+
+        expect(count(wrapper)).toBe('0');
+        expect(up(wrapper).attributes('aria-pressed')).toBe('false');
+        expect(wrapper.get('[data-test="notice"]').text()).toContain('Slow down, try again in a moment');
+    });
+
+    it('freezes the seek bar at the last position while paused', async () => {
+        vi.useFakeTimers({toFake: ['setInterval', 'clearInterval', 'Date']});
+        const wrapper = mountPage({paused: true});
+        const before = wrapper.get('[data-test="seek"]').attributes('aria-valuetext');
+
+        await vi.advanceTimersByTimeAsync(20000);
+
+        expect(before).toBe('1:52');
+        expect(wrapper.get('[data-test="seek"]').attributes('aria-valuetext')).toBe('1:52');
+    });
+
+    it('shows a Reconnecting pill while the websocket is down and drops the icons from the metadata rows', async () => {
+        const wrapper = mountPage();
+        expect(wrapper.find('[data-test="reconnecting"]').exists()).toBe(false);
+
+        echo.states.forEach((cb) => cb({previous: 'connected', current: 'connected'}));
+        echo.states.forEach((cb) => cb({previous: 'connected', current: 'unavailable'}));
+        await wrapper.vm.$nextTick();
+
+        expect(wrapper.get('[data-test="reconnecting"]').text()).toBe('Reconnecting…');
+        expect(
+            wrapper
+                .find('[data-test="now-artists"] .ti, [data-test="now-album"] .ti, [data-test="now-origin"] .ti')
+                .exists(),
+        ).toBe(false);
     });
 });
 
