@@ -71,6 +71,7 @@ class PartyController extends Controller
             ->get()
             ->map(function (Party $party) use ($user, $isAdmin) {
                 $canManage = $isAdmin || $party->canBeManagedBy($user);
+                $canModerate = $isAdmin || $party->canBeModeratedBy($user);
                 $state = app(PlaybackStatus::class)->recall($party);
                 $sampledAt = $state?->sampledAt;
                 $lastUpdate = $sampledAt?->diffForHumans();
@@ -99,7 +100,8 @@ class PartyController extends Controller
                     },
                     'cover' => $song?->album->image_url ?: null,
                     'canManage' => $canManage,
-                    'url' => route($canManage ? 'parties.dashboard' : 'parties.show', $party->code),
+                    'canModerate' => $canModerate,
+                    'url' => route($canModerate ? 'parties.dashboard' : 'parties.show', $party->code),
                 ];
             })
             ->values();
@@ -161,6 +163,7 @@ class PartyController extends Controller
         });
 
         $canManage = $party->canBeManagedBy($request->user());
+        $canModerate = $request->user()?->can('moderate', $party) ?? false;
 
         return Inertia::render('Parties/Show', [
             'party' => [
@@ -168,6 +171,7 @@ class PartyController extends Controller
                 'name' => $party->name,
                 'downvotes' => (bool) $party->downvotes,
                 'canManage' => $canManage,
+                'canModerate' => $canModerate,
                 'weighted' => (bool) $party->weighted,
             ],
             'member' => ['id' => $member->id],
@@ -228,6 +232,7 @@ class PartyController extends Controller
                 'name' => $party->name,
                 'downvotes' => (bool) $party->downvotes,
                 'canManage' => $party->canBeManagedBy($request->user()),
+                'canModerate' => $request->user()?->can('moderate', $party) ?? false,
             ],
             'params' => ['query' => $query, 'perPage' => $perPage, 'type' => $type?->value],
             'results' => $results,
@@ -401,6 +406,7 @@ class PartyController extends Controller
                 'name' => $party->name,
                 'downvotes' => (bool) $party->downvotes,
                 'canManage' => $party->canBeManagedBy($request->user()),
+                'canModerate' => $request->user()?->can('moderate', $party) ?? false,
             ],
             'query' => is_string($query) ? $query : null,
             'album' => null,
@@ -455,6 +461,7 @@ class PartyController extends Controller
                 'name' => $party->name,
                 'downvotes' => (bool) $party->downvotes,
                 'canManage' => $party->canBeManagedBy($request->user()),
+                'canModerate' => $request->user()?->can('moderate', $party) ?? false,
             ],
             'query' => is_string($query) ? $query : null,
             'artist' => null,

@@ -16,12 +16,13 @@ interface MemberRow {
     id: number;
     nickname: string;
     role: string;
+    roleCode?: string;
     createdAt: When | null;
     url: string;
 }
 
 const props = defineProps<{
-    party: {code: string; name: string; canManage: boolean};
+    party: {code: string; name: string; canManage: boolean; ownerName?: string | null};
     playerState: LegacyPartyState;
     roles: {code: string; name: string}[];
     filters: {
@@ -33,6 +34,18 @@ const props = defineProps<{
     };
     members: Paginator<MemberRow>;
 }>();
+
+const roleBadges: Record<string, string> = {
+    owner: 'bg-azure-lt',
+    moderator: 'bg-purple-lt',
+    vip: 'bg-yellow-lt',
+    user: 'bg-secondary-lt',
+    banned: 'bg-red-lt',
+};
+
+function roleBadge(role: string): string {
+    return roleBadges[role.toLowerCase()] ?? 'bg-secondary-lt';
+}
 
 const form = reactive({nickname: props.filters.nickname ?? '', role: props.filters.role ?? ''});
 const usersUrl = `/parties/${props.party.code}/users`;
@@ -68,6 +81,19 @@ function submit(): void {
         <Head :title="`Members - ${party.name}`" />
         <div class="page-header mt-0">
             <h1>Members</h1>
+        </div>
+
+        <div
+            v-if="!party.canManage"
+            class="alert alert-info d-flex gap-3 align-items-center"
+            role="status"
+            data-test="members-readonly"
+        >
+            <i class="icon ti ti-eye" aria-hidden="true"></i>
+            <div>
+                <b>Read-only for Moderators.</b> You can see everyone and their activity. Only
+                {{ party.ownerName ?? 'the owner' }} can change roles or ban members.
+            </div>
         </div>
 
         <div class="row">
@@ -131,7 +157,14 @@ function submit(): void {
                                     <td>
                                         <Link :href="member.url">{{ member.nickname }}</Link>
                                     </td>
-                                    <td>{{ member.role }}</td>
+                                    <td>
+                                        <span
+                                            class="badge"
+                                            :class="roleBadge(member.roleCode ?? member.role)"
+                                            data-test="role-badge"
+                                            >{{ member.role }}</span
+                                        >
+                                    </td>
                                     <td>
                                         <span v-if="member.createdAt" :title="member.createdAt.iso">{{
                                             member.createdAt.human

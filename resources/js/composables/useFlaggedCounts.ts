@@ -28,7 +28,7 @@ export function useFlaggedCountSync(): void {
     const events = ['FlaggedRequestAdded', 'FlaggedRequestResolved'];
     const subscriptions: Array<{channel: ManagersChannel; handler: (payload: CountPayload) => void}> = [];
 
-    const managed = () => (page.props.auth?.parties ?? []).filter((party) => party.canManage);
+    const managed = () => (page.props.auth?.parties ?? []).filter((party) => party.canManage || party.canModerate);
 
     watch(
         () => page.props.auth?.parties,

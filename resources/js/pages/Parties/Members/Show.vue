@@ -30,6 +30,14 @@ const props = defineProps<{
     votes: Paginator<VoteRow>;
 }>();
 
+const roleBadges: Record<string, string> = {
+    owner: 'bg-azure-lt',
+    moderator: 'bg-purple-lt',
+    vip: 'bg-yellow-lt',
+    user: 'bg-secondary-lt',
+    banned: 'bg-red-lt',
+};
+
 const form = reactive({name: props.filters.name ?? '', type: props.filters.type ?? ''});
 const usersUrl = `/parties/${props.party.code}/users`;
 const memberUrl = `${usersUrl}/${props.member.id}`;
@@ -75,7 +83,14 @@ function submit(): void {
                             </div>
                             <div>
                                 <div class="datagrid-title">Role</div>
-                                <div>{{ member.role }}</div>
+                                <div>
+                                    <span
+                                        class="badge"
+                                        :class="roleBadges[member.roleCode] ?? 'bg-secondary-lt'"
+                                        data-test="role-badge"
+                                        >{{ member.role }}</span
+                                    >
+                                </div>
                             </div>
                             <div>
                                 <div class="datagrid-title">Joined Party</div>
@@ -87,7 +102,7 @@ function submit(): void {
                             </div>
                         </div>
                     </div>
-                    <div class="card-footer align-content-end d-flex btn-list">
+                    <div v-if="party.canManage" class="card-footer align-content-end d-flex btn-list">
                         <Link :href="`${memberUrl}/edit`" class="ms-auto btn btn-primary">
                             <i class="icon ti ti-edit"></i>
                             Edit

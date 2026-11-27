@@ -16,6 +16,8 @@ const props = defineProps<{
 
 const hints: Record<string, string> = {
     owner: 'The user will have full control of the party',
+    moderator:
+        "Can remove, schedule, approve and reject Requests and read AI reviews. No Settings, no role changes, and no starting playback on the owner's Spotify.",
     vip: 'A VIP user. They can bypass some of the request restrictions.',
     user: 'An ordinary user of the party, they can request songs',
     banned: 'This user will not be able to make requests',

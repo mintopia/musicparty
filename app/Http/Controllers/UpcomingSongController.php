@@ -190,7 +190,7 @@ class UpcomingSongController extends Controller
     }
 
     /**
-     * @return array{code: string, name: string, downvotes: bool, canManage: bool, weighted: bool}
+     * @return array{code: string, name: string, downvotes: bool, canManage: bool, canModerate: bool, weighted: bool}
      */
     private function partyProps(Party $party): array
     {
@@ -198,7 +198,8 @@ class UpcomingSongController extends Controller
             'code' => $party->code,
             'name' => $party->name,
             'downvotes' => (bool) $party->downvotes,
-            'canManage' => true,
+            'canManage' => request()->user()?->can('update', $party) ?? false,
+            'canModerate' => true,
             'weighted' => (bool) $party->weighted,
         ];
     }

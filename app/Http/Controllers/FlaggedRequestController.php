@@ -17,10 +17,10 @@ class FlaggedRequestController extends Controller
 {
     public function index(Party $party, FlaggedRequests $flagged, ModerationTabs $tabs): Response
     {
-        $this->authorize('update', $party);
+        $this->authorize('moderate', $party);
 
         return Inertia::render('Parties/Flagged', [
-            'party' => ['code' => $party->code, 'name' => $party->name],
+            'party' => ['code' => $party->code, 'name' => $party->name, 'canModerate' => true],
             'flagged' => $flagged->listFor($party),
             'moderationTabs' => $tabs->for($party),
             'playerState' => $party->getState(),

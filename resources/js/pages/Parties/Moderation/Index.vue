@@ -19,7 +19,7 @@ interface ModerationRow {
 }
 
 defineProps<{
-    party: {code: string; name: string; canManage: boolean};
+    party: {code: string; name: string; canManage: boolean; ownerName?: string | null};
     playerState: LegacyPartyState;
     moderations: Paginator<ModerationRow>;
     moderationTabs: ModerationTabsProps;
@@ -37,7 +37,11 @@ defineProps<{
         <Head :title="`Moderation - ${party.name}`" />
         <h1 class="visually-hidden">Moderation rules</h1>
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="rules" />
-        <div v-if="moderations.data.length > 0" class="d-flex justify-content-end mb-3 d-print-none">
+        <div v-if="!party.canManage" class="text-secondary mb-3" data-test="rules-readonly">
+            <i class="ti ti-lock me-1" aria-hidden="true"></i>Rules are read-only for moderators. Only
+            {{ party.ownerName ?? 'the owner' }} can add, edit or delete them.
+        </div>
+        <div v-if="party.canManage && moderations.data.length > 0" class="d-flex justify-content-end mb-3 d-print-none">
             <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">
                 <i class="icon ti ti-plus"></i>
                 Add rule
@@ -50,7 +54,7 @@ defineProps<{
             title="No moderation rules"
             description="Rules block or flag tracks by artist, album, title or pattern before they reach the queue."
         >
-            <Link :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">
+            <Link v-if="party.canManage" :href="`/parties/${party.code}/moderation/create`" class="btn btn-primary">
                 <i class="icon ti ti-plus"></i>
                 Add rule
             </Link>
@@ -71,9 +75,12 @@ defineProps<{
                     <tbody>
                         <tr v-for="moderation in moderations.data" :key="moderation.id">
                             <td>
-                                <Link :href="`/parties/${party.code}/moderation/${moderation.id}/edit`">{{
-                                    moderation.id
-                                }}</Link>
+                                <Link
+                                    v-if="party.canManage"
+                                    :href="`/parties/${party.code}/moderation/${moderation.id}/edit`"
+                                    >{{ moderation.id }}</Link
+                                >
+                                <template v-else>{{ moderation.id }}</template>
                             </td>
                             <td>
                                 <span v-if="moderation.enabled" class="status status-green">Yes</span>

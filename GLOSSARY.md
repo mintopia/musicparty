@@ -42,6 +42,28 @@ _Avoid_: Timed request, booking
 A history entry recording that a track played in a Party.
 _Avoid_: Played song, history item
 
+### Party roles
+
+**Owner**:
+A Party member with full control: Settings, role changes, Rules, Start Playback and everything a Moderator can do. The Party's creator is always an Owner.
+_Avoid_: Host, manager, admin
+
+**Moderator**:
+A Party member who helps run the Party live without owning it. Can remove and schedule Requests, approve or reject Flagged Requests, view AI reviews and Played Tracks, and use the Dashboard's playback controls. Sees Rules and Members read-only. Cannot open Settings, change roles, edit Rules or start playback on the owner's Spotify. Only an Owner assigns the role.
+_Avoid_: Mod (a Mod is a request-checking plug-in), admin
+
+**VIP**:
+A Party member exempt from the Party's request limit.
+_Avoid_: Trusted user
+
+**User**:
+The default role: can search, request and vote.
+_Avoid_: Guest, member (a member holds any role)
+
+**Banned**:
+A Party member who can no longer request or vote.
+_Avoid_: Blocked, kicked
+
 ### Music and playback
 
 **Music Provider**:
@@ -77,5 +99,5 @@ The empty playlist on the host's Spotify account that Music Party plays tracks i
 _Avoid_: party playlist, sentinel playlist
 
 **Dashboard**:
-The moderator page for running a Party live: playback controls, Start Playback, Up Next, Upcoming Songs and what needs attention. Open to whoever can update the Party (a moderator or a site admin).
+The moderator page for running a Party live: playback controls, Start Playback, Up Next, Upcoming Songs and what needs attention. Open to the Party's Owners and Moderators, and to site admins.
 _Avoid_: Control room, admin page

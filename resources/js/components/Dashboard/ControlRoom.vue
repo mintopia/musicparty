@@ -17,10 +17,11 @@ const props = withDefaults(
         queueUrl: string;
         canControl: boolean;
         canModerate: boolean;
+        canStart?: boolean;
         myRating?: MyRating | null;
         connected?: boolean;
     }>(),
-    {myRating: null, connected: true},
+    {myRating: null, connected: true, canStart: true},
 );
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
@@ -60,6 +61,7 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
                             :start="control.start"
                             :playing-from-label="control.playingFrom.label"
                             :can-control="canControl"
+                            :can-start="canStart"
                         />
                     </div>
                 </div>

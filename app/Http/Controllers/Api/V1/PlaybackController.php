@@ -66,7 +66,7 @@ class PlaybackController extends Controller
 
     public function playNow(Party $party, UpcomingSong $upcomingsong, StartPlayback $playback): Response|JsonResponse
     {
-        $this->authorize('update', $party);
+        $this->authorize('moderate', $party);
         $this->authorize('update', $upcomingsong);
 
         try {

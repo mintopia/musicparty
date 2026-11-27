@@ -121,11 +121,13 @@ class PartyModerationController extends Controller
     }
 
     /**
-     * @return array{code: string, name: string, canManage: bool}
+     * @return array{code: string, name: string, canManage: bool, canModerate: bool, ownerName: string}
      */
     protected function partyProps(Party $party): array
     {
-        return ['code' => $party->code, 'name' => $party->name, 'canManage' => true];
+        $canManage = request()->user()?->can('update', $party) ?? false;
+
+        return ['code' => $party->code, 'name' => $party->name, 'canManage' => $canManage, 'canModerate' => true, 'ownerName' => $party->user->nickname];
     }
 
     /**

@@ -14,13 +14,17 @@ import {
 } from '@/lib/dashboard';
 import type {DashboardControl} from '@/types';
 
-const props = defineProps<{
-    code: string;
-    host: string;
-    start: DashboardControl['start'];
-    playingFromLabel: string | null;
-    canControl: boolean;
-}>();
+const props = withDefaults(
+    defineProps<{
+        code: string;
+        host: string;
+        start: DashboardControl['start'];
+        playingFromLabel: string | null;
+        canControl: boolean;
+        canStart?: boolean;
+    }>(),
+    {canStart: true},
+);
 
 const notify = inject(notifyKey, () => undefined);
 
@@ -55,9 +59,9 @@ const state = computed<PanelState>(() => {
 const badge = computed(() => badgeFor(state.value));
 const target = computed(() => props.start.target);
 const selectedDevice = computed(() => devices.value.find((device) => device.id === selected.value) ?? null);
-const showDevices = computed(() => !['premium_required', 'relink_required'].includes(state.value));
+const showDevices = computed(() => props.canStart && !['premium_required', 'relink_required'].includes(state.value));
 const showWill = computed(() => ['outside', 'idle'].includes(state.value) && target.value !== null);
-const showButton = computed(() => state.value !== 'relink_required');
+const showButton = computed(() => props.canStart && state.value !== 'relink_required');
 const disabled = computed(
     () =>
         !props.canControl ||
@@ -182,6 +186,16 @@ onBeforeUnmount(stopCountdown);
             <template v-else>Nothing is playing on {{ host }}'s Spotify.</template>
         </div>
 
+        <div v-if="!canStart" class="deck-lock mt-3" data-test="start-owner-only">
+            <i class="ti ti-lock" aria-hidden="true"></i>
+            <div>
+                <div class="fw-medium text-white">Only {{ host }} can start playback on their Spotify.</div>
+                <div class="small">
+                    You can pause, skip, rate and manage the Queue from here. Ask {{ host }} to start the party.
+                </div>
+            </div>
+        </div>
+
         <template v-if="showDevices">
             <div class="form-label text-white-50 mt-3 mb-2">Play on</div>
             <DevicePicker
@@ -254,6 +268,19 @@ onBeforeUnmount(stopCountdown);
     height: 40px;
     border-radius: 4px;
     object-fit: cover;
+}
+.deck-lock {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    padding: 12px 14px;
+    border: 1px solid var(--mp-deck-border);
+    border-radius: 8px;
+    color: var(--mp-deck-muted);
+}
+.deck-lock .ti {
+    font-size: 1.25rem;
+    color: var(--mp-deck-text);
 }
 .deck-error {
     color: var(--mp-deck-accent-danger);
