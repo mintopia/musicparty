@@ -51,7 +51,7 @@ vi.mock('@/routes/linkedaccounts', () => ({
     destroy: (id: number) => ({url: `/profile/accounts/${id}`}),
 }));
 vi.mock('@/routes/parties', () => ({create: () => ({url: '/parties/create'}), join: () => ({url: '/parties/join'})}));
-vi.mock('@/routes/user', () => ({profile: () => ({url: '/profile'})}));
+vi.mock('@/routes/user', () => ({profile: () => ({url: '/profile'}), spotify: () => ({url: '/profile/spotify'})}));
 vi.mock('@/routes/user/profile', () => ({
     edit: () => ({url: '/profile/edit'}),
     update: () => ({url: '/profile'}),
@@ -160,8 +160,9 @@ describe('user pages', () => {
         const removes = wrapper.findAll('a.btn-outline-danger');
         expect(removes).toHaveLength(1);
         expect(removes[0].attributes('href')).toBe('/profile/accounts/1/delete');
-        expect(wrapper.find('img').attributes('src')).toBe('/s.png');
-        expect(wrapper.find('a.btn-github').attributes('href')).toBe('/profile/accounts/github/link');
+        expect(wrapper.find('[aria-label="Spotify Avatar"]').attributes('style')).toContain('/s.png');
+        expect(wrapper.find('a[href="/profile/accounts/github/link"]').text()).toContain('GitHub');
+        expect(wrapper.find('a[href="/profile/spotify"]').exists()).toBe(true);
         expect(wrapper.find('a.btn-primary').attributes('href')).toBe('/profile/edit');
     });
 
@@ -172,7 +173,7 @@ describe('user pages', () => {
 
         const full = mount(Spotify, {props: {spotify: {name: 'Ada'}, search: {name: 'Ada S'}}});
         expect(full.find('a.btn-primary').attributes('href')).toBe('/parties/create');
-        expect(partial.text()).toContain('Link both to host a party. Search still needs linking.');
+        expect(partial.text()).toContain('Search still needs linking.');
         expect(partial.text()).toContain('Link Spotify for search');
         expect(full.text()).toContain('Ada S');
     });
@@ -188,7 +189,7 @@ describe('user pages', () => {
     it('confirms linked account removal with DELETE', async () => {
         inertia.submitted.length = 0;
         const wrapper = mount(LinkedAccountDelete, {props: {account: {id: 7, providerName: 'Discord'}}});
-        expect(wrapper.find('h1').text()).toBe('Remove Linked Discord Account');
+        expect(wrapper.find('h1').text()).toBe('Unlink Discord');
         await wrapper.find('form').trigger('submit');
         expect(inertia.submitted[0]).toMatchObject({method: 'delete', url: '/profile/accounts/7'});
     });
