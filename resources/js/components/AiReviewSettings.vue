@@ -73,7 +73,7 @@ function addExample(text: string): void {
     <div class="ai-settings" data-test="ai-review-settings">
         <section class="ai-section" data-section="engine">
             <div class="ai-section-intro">
-                <h4>Engine &amp; key</h4>
+                <h3 class="h4">Engine &amp; key</h3>
                 <p>Which model reads each Request, and the key it is billed to.</p>
             </div>
             <div class="ai-section-body">
@@ -187,7 +187,7 @@ function addExample(text: string): void {
         <fieldset class="ai-gated" :disabled="locked" :class="{'ai-gated-off': locked}" data-test="ai-gated">
             <section class="ai-section" data-section="decision">
                 <div class="ai-section-intro">
-                    <h4>Decision</h4>
+                    <h3 class="h4">Decision</h3>
                     <p>
                         How sure the model must be before a Request is flagged or rejected. Below that, the Request is
                         allowed.<template v-if="locked"> Available once a key is saved.</template>
@@ -270,7 +270,7 @@ function addExample(text: string): void {
 
             <section class="ai-section" data-section="guidelines">
                 <div class="ai-section-intro">
-                    <h4>Guidelines</h4>
+                    <h3 class="h4">Guidelines</h3>
                     <p>
                         What this party does and does not want to hear, passed to the model with every Request.<template
                             v-if="locked"

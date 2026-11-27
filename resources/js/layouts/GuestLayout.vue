@@ -29,12 +29,12 @@ useColorMode();
                 class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center"
             >
                 <div class="container container-tight mt-auto px-lg-5">
-                    <h1 class="mb-4 text-center">
+                    <div class="mb-4 text-center">
                         <a id="site-brand" :href="home().url" class="navbar-brand navbar-brand-autodark">
                             <img v-if="logo" :src="logo" :alt="name" />
                             <span v-else class="site-brand-name">{{ name }}</span>
                         </a>
-                    </h1>
+                    </div>
                     <FlashMessages centered />
                     <slot />
                 </div>

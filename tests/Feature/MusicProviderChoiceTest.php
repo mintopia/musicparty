@@ -7,6 +7,7 @@ use App\Models\Role;
 use App\Models\Setting;
 use App\Models\SocialProvider;
 use App\Models\User;
+use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Eloquent\Model;
@@ -138,4 +139,26 @@ it('round-trips a provider toggle through the settings page and the party form',
     $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
         ->assertSessionHasNoErrors();
     expect(Party::count())->toBe(1);
+});
+
+it('keeps the chosen provider when redirecting after creating a party', function () {
+    $user = adminUser();
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
+        ->assertRedirect(route('parties.create', ['provider_id' => 'spotify']));
+});
+
+it('rejects creating a party when the chosen provider account is not linked', function () {
+    $user = adminUser(User::factory()->create());
+    app(MusicProviderFactory::class)->register('spotify', fn () => new class extends FakeMusicProvider
+    {
+        public function isLinked(): bool
+        {
+            return false;
+        }
+    });
+
+    $this->actingAs($user)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
+        ->assertSessionHasErrors('provider_id');
+    expect(Party::count())->toBe(0);
 });

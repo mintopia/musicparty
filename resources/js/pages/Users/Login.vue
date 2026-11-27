@@ -17,6 +17,7 @@ defineProps<{providers: {code: string; name: string}[]; party?: PartyInvite | nu
             <JoinSteps :current="1" />
         </template>
         <div class="text-center">
+            <h1 v-if="!party" class="visually-hidden">Login</h1>
             <p :class="{'mb-2': party}">{{ party ? 'Login to add Requests and vote.' : 'Login to join the party!' }}</p>
             <p v-for="provider in providers" :key="provider.code">
                 <a :href="redirect(provider.code).url" :class="`d-block ms-auto btn btn-${provider.code}`">

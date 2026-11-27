@@ -218,7 +218,7 @@ describe('Party songs show', () => {
     it('shows fallback requester, empty states and no external link', () => {
         const wrapper = mount(ShowSong, {props: base});
 
-        expect(wrapper.text()).toContain('Fallback Track');
+        expect(wrapper.text()).toContain('From Fallback Playlist');
         expect(wrapper.text()).toContain('Not yet');
         expect(wrapper.text()).toContain('No votes yet');
         expect(wrapper.text()).toContain('This Request was not reviewed by AI.');

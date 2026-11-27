@@ -87,7 +87,7 @@ describe('Upcoming guest rows', () => {
         expect(wrapper.findAll('[data-test="your-request"]')).toHaveLength(1);
         expect(wrapper.text()).toContain('Requested by you');
         expect(wrapper.text()).toContain('From the party’s Fallback Playlist');
-        expect(wrapper.text()).not.toContain('Fallback Track');
+        expect(wrapper.text()).not.toContain('From Fallback Playlist');
     });
 });
 

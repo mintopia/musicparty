@@ -62,6 +62,34 @@ it('does not treat other missing models as a missing party', function () {
         ->assertInertia(fn (Assert $page) => $page->component('Error')->where('partyNotFound', false));
 });
 
+it('renders the party-not-found page with shared props for a logged-in user on an auth-gated party route', function () {
+    $this->actingAs(User::factory()->create(['first_login' => false]))
+        ->get('/parties/ZZZZ')
+        ->assertNotFound()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Error')
+            ->where('partyNotFound', true)
+            ->where('typedCode', 'ZZZZ')
+            ->has('theme.tokens')
+            ->has('auth.user'));
+});
+
+it('shows the party-not-found page instead of the login redirect for a guest and an unknown code', function () {
+    $this->get('/parties/ZZZZ')
+        ->assertNotFound()
+        ->assertInertia(fn (Assert $page) => $page
+            ->component('Error')
+            ->where('partyNotFound', true)
+            ->where('typedCode', 'ZZZZ')
+            ->has('theme.tokens'));
+});
+
+it('still redirects a guest to login for a party that exists', function () {
+    $party = Party::factory()->create();
+
+    $this->get('/parties/'.$party->code)->assertRedirect(route('login'));
+});
+
 it('keeps the default JSON response for JSON requests', function () {
     $this->getJson('/no/such/page')->assertNotFound()->assertJsonMissing(['component' => 'Error']);
 });
@@ -100,7 +128,7 @@ it('names the party, role and owner on a 403 for a plain member', function () {
             ->component('Error')
             ->where('status', 403)
             ->where('icon', 'ti-lock')
-            ->where('title', "You can't open Dashboard")
+            ->where('title', "You can't open the Dashboard")
             ->where('message', "Only the owner and moderators of {$party->name} can. You're in this party as a user. Ask {$owner}, the owner, if you need access.")
             ->where('actions.0.label', 'Back to the Queue')
             ->where('actions.0.href', route('parties.show', $party))

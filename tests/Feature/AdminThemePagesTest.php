@@ -138,10 +138,15 @@ it('confirms and deletes a theme', function () {
     expect(Theme::find($this->theme->id))->toBeNull();
 });
 
-it('refuses to delete a readonly theme', function () {
-    $readonly = Theme::factory()->create(['readonly' => true]);
+it('redirects with a message instead of erroring when deleting a built-in theme', function () {
+    $builtIn = Theme::factory()->create(['name' => 'Built In', 'readonly' => true]);
 
-    $this->actingAs($this->admin)->get(route('admin.settings.themes.delete', $readonly))->assertStatus(400);
-    $this->actingAs($this->admin)->delete(route('admin.settings.themes.destroy', $readonly))->assertStatus(400);
-    expect($readonly->fresh())->not->toBeNull();
+    $this->actingAs($this->admin)->get(route('admin.settings.themes.delete', $builtIn))
+        ->assertRedirect(route('admin.settings.index'))
+        ->assertSessionHas('errorMessage');
+
+    $this->actingAs($this->admin)->delete(route('admin.settings.themes.destroy', $builtIn))
+        ->assertRedirect(route('admin.settings.index'))
+        ->assertSessionHas('errorMessage');
+    expect(Theme::query()->whereKey($builtIn->id)->exists())->toBeTrue();
 });

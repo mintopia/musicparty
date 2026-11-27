@@ -11,7 +11,7 @@ const error = computed(() => localError.value || form.errors.code || '');
 const hintId = computed(() => `${props.inputId}-hint`);
 
 function normalise(): void {
-    form.code = form.code.toUpperCase();
+    form.code = form.code.replace(/\s+/g, '').toUpperCase();
     localError.value = '';
     form.clearErrors('code');
 }

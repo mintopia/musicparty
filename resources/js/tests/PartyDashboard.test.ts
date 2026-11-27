@@ -663,10 +663,10 @@ describe('stale player issue', () => {
 describe('one playback status', () => {
     const longAgo = () => new Date(Date.now() - 600000).toISOString();
 
-    it('makes the status headline the first h2 and names it in the badge and attention item', () => {
+    it('makes the status headline the headline and names it in the badge and attention item', () => {
         const wrapper = mountPage({state: 'idle', connected: null, receivedAt: longAgo()});
 
-        expect(wrapper.find('h2').attributes('data-test')).toBe('status-headline');
+        expect(wrapper.get('[data-test="status-headline"]').element.tagName).toBe('DIV');
         expect(wrapper.get('[data-test="status-headline"]').text()).toBe('Player stale');
         expect(wrapper.get('[data-test="start-badge"]').text()).toBe('Player stale');
         expect(wrapper.get('[data-test="issue-row"]').text()).toContain('Player stale');

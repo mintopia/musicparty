@@ -88,7 +88,7 @@
     transform: translateY(calc(-100% - 16px));
     transition: transform 160ms cubic-bezier(0.16, 1, 0.3, 1);
 
-    &:focus {
+    &:focus-visible {
         color: #fff;
         transform: none;
     }

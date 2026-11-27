@@ -204,7 +204,7 @@ it('rejects an invalid Party country', function () {
 it('creates a party from the name alone using model defaults and flashes the created party', function () {
     $this->actingAs($this->owner)->post(route('parties.store'), ['name' => 'Quick'])
         ->assertSessionHasNoErrors()
-        ->assertRedirect(route('parties.create'))
+        ->assertRedirect(route('parties.create', ['provider_id' => 'spotify']))
         ->assertSessionMissing('successMessage');
 
     $party = Party::query()->where('name', 'Quick')->firstOrFail();
@@ -243,7 +243,7 @@ it('creates a party with every wizard field filled', function () {
         'min_song_length' => 30,
         'max_song_length' => 600,
         'no_repeat_interval' => 60,
-    ])->assertSessionHasNoErrors()->assertRedirect(route('parties.create'));
+    ])->assertSessionHasNoErrors()->assertRedirect(route('parties.create', ['provider_id' => 'spotify']));
 
     $party = Party::query()->where('name', 'Full')->firstOrFail();
     expect($party->backup_playlist_id)->toBe('sp-list')

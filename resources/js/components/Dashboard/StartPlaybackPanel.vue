@@ -189,7 +189,7 @@ onBeforeUnmount(stopCountdown);
 <template>
     <div class="deck-panel" data-bs-theme="dark" data-test="start-panel">
         <div class="d-flex align-items-center mb-2">
-            <h2 class="mb-0 flex-grow-1 text-white">Start Playback</h2>
+            <h3 class="h2 mb-0 flex-grow-1 text-white">Start Playback</h3>
             <StatePill :state="badge.tone" data-test="start-badge">{{ badge.text }}</StatePill>
         </div>
 

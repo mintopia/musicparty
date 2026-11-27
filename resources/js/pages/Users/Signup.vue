@@ -30,7 +30,7 @@ function submit(): void {
                 You're joining <b>{{ party.name }}</b> ({{ party.code }}).
             </p>
         </template>
-        <h2 v-else class="h3 text-center mb-3">Create Account</h2>
+        <h1 v-else class="h3 text-center mb-3">Create Account</h1>
 
         <div class="mb-3 text-center">
             <span class="avatar avatar-xl rounded" :style="{backgroundImage: `url('${user.avatar}')`}"></span>

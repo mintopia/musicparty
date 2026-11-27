@@ -87,11 +87,11 @@ const {pressed, score, rate} = useRating({
         <div class="pu-head" :class="`is-${status.tone}`" data-test="playback-status" aria-live="polite">
             <span v-if="!showTrack" class="pu-tile"><i class="ti ti-music-off" aria-hidden="true"></i></span>
             <div class="min-w-0">
-                <h2 class="pu-headline" data-test="status-headline">
+                <div class="pu-headline" data-test="status-headline">
                     <span v-if="status.kind === 'playing'" class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>
                     <span v-else class="pu-dot" aria-hidden="true"></span>
                     {{ status.headline }}
-                </h2>
+                </div>
                 <p class="pu-detail" data-test="status-detail">{{ status.detail }}</p>
             </div>
         </div>

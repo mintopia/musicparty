@@ -40,7 +40,7 @@ const track = (extra: Record<string, unknown> = {}) => ({
     score: 1,
     user: null,
     css_classes: '',
-    fallback_name: 'Fallback Track',
+    fallback_name: 'From Fallback Playlist',
     ...extra,
 });
 

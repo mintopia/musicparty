@@ -100,7 +100,7 @@ function signed(score: number): string {
         <PageHead
             :title="song.name"
             :summary="`${song.artists.map((artist) => artist.name).join(', ')} · ${
-                song.requestedBy ? `Request from ${song.requestedBy.nickname}` : 'Fallback track'
+                song.requestedBy ? `Request from ${song.requestedBy.nickname}` : 'From Fallback Playlist'
             }, ${song.createdAt.human}`"
         >
             <a v-if="trackUrl" :href="trackUrl" class="btn btn-outline-secondary" target="_blank" rel="noopener">
@@ -167,7 +167,7 @@ function signed(score: number): string {
                                                 }}</Link>
                                                 <template v-else>{{ song.requestedBy.nickname }}</template>
                                             </span>
-                                            <span v-else class="text-secondary">Fallback Track</span>
+                                            <span v-else class="text-secondary">From Fallback Playlist</span>
                                         </dd>
                                         <dt>Requested</dt>
                                         <dd>

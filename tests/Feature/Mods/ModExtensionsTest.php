@@ -120,7 +120,7 @@ it('includes a decoration from an enabled mod in toApi and not for a party witho
     $plain = extRequest($this->partyB, 'TWO')->load('song');
 
     expect($decorated->toApi())->toMatchArray(['fallback_name' => 'Bar ONE', 'css_classes' => '', 'decoration' => ['displayName' => 'Bar ONE', 'label' => 'bar']])
-        ->and($plain->toApi())->toMatchArray(['fallback_name' => 'Fallback Track', 'css_classes' => '', 'decoration' => null]);
+        ->and($plain->toApi())->toMatchArray(['fallback_name' => 'From Fallback Playlist', 'css_classes' => '', 'decoration' => null]);
 });
 
 it('skips a throwing decorator and still merges the others first-non-null per field', function () {

@@ -102,7 +102,7 @@ class PartyController extends Controller
 
         $joinUrl = route('parties.show', $party->code);
 
-        return response()->redirectToRoute('parties.create')->with('createdParty', [
+        return response()->redirectToRoute('parties.create', ['provider_id' => $party->provider_id])->with('createdParty', [
             'code' => $party->code,
             'name' => $party->name,
             'joinUrl' => $joinUrl,

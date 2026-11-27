@@ -67,7 +67,7 @@ const votes = computed(() => track.value?.queue.score ?? 0);
                             Requested by {{ track.queue.requested_by }} · {{ votes }}
                             {{ votes === 1 ? 'vote' : 'votes' }}
                         </template>
-                        <template v-else>Fallback Track</template>
+                        <template v-else>From Fallback Playlist</template>
                     </div>
                     <div
                         v-else-if="!track.eligibility.allowed && !isAwaiting"

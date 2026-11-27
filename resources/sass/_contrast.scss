@@ -80,3 +80,44 @@
 .alert-info.alert-important {
     --tblr-alert-variant-color: color-mix(in oklab, var(--tblr-info) 70%, black);
 }
+
+.btn-success {
+    --tblr-btn-color: #fff;
+    --tblr-btn-bg: color-mix(in oklab, var(--tblr-success) 68%, black);
+    --tblr-btn-border-color: var(--tblr-btn-bg);
+    --tblr-btn-hover-color: #fff;
+    --tblr-btn-hover-bg: color-mix(in oklab, var(--tblr-success) 58%, black);
+    --tblr-btn-hover-border-color: var(--tblr-btn-hover-bg);
+    --tblr-btn-active-color: #fff;
+    --tblr-btn-active-bg: color-mix(in oklab, var(--tblr-success) 52%, black);
+    --tblr-btn-active-border-color: var(--tblr-btn-active-bg);
+    --tblr-btn-disabled-bg: var(--tblr-btn-bg);
+}
+
+// Tinted (-lt) badge text: Tabler uses the saturated hue, which sits at 2-4.4:1 on its own tint.
+.badge {
+    &.bg-yellow-lt { color: color-mix(in oklab, var(--tblr-yellow) 45%, black) !important; }
+    &.bg-orange-lt { color: color-mix(in oklab, var(--tblr-orange) 55%, black) !important; }
+    &.bg-red-lt { color: color-mix(in oklab, var(--tblr-red) 70%, black) !important; }
+    &.bg-blue-lt { color: color-mix(in oklab, var(--tblr-blue) 70%, black) !important; }
+    &.bg-azure-lt { color: color-mix(in oklab, var(--tblr-azure) 55%, black) !important; }
+    &.bg-purple-lt { color: color-mix(in oklab, var(--tblr-purple) 70%, black) !important; }
+    &.bg-secondary-lt { color: color-mix(in oklab, var(--tblr-secondary) 60%, black) !important; }
+    &.bg-primary-lt { color: var(--mp-text-primary) !important; }
+}
+
+[data-bs-theme=dark] .badge {
+    &.bg-yellow-lt { color: color-mix(in oklab, var(--tblr-yellow) 60%, white) !important; }
+    &.bg-orange-lt { color: color-mix(in oklab, var(--tblr-orange) 60%, white) !important; }
+    &.bg-red-lt { color: color-mix(in oklab, var(--tblr-red) 60%, white) !important; }
+    &.bg-blue-lt { color: color-mix(in oklab, var(--tblr-blue) 55%, white) !important; }
+    &.bg-azure-lt { color: color-mix(in oklab, var(--tblr-azure) 60%, white) !important; }
+    &.bg-purple-lt { color: color-mix(in oklab, var(--tblr-purple) 55%, white) !important; }
+    &.bg-secondary-lt { color: color-mix(in oklab, var(--tblr-secondary) 40%, white) !important; }
+}
+
+.text-bg-primary,
+.badge.bg-primary {
+    background-color: color-mix(in oklab, var(--tblr-primary) 85%, black) !important;
+    color: #fff !important;
+}
