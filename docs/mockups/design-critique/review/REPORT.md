@@ -6,27 +6,33 @@ Gallery: review/gallery.html (mockup left, built right). Built captures: review/
 
 # Review harness (#450)
 
-Review-only fixtures live in `database/seeders/Review/ReviewHarnessSeeder.php`, run with `php artisan review:seed` (refuses to run in production, not called by `DatabaseSeeder`, safe to re-run). Dev stack: `docker compose -p <project> up -d`, then `docker compose -p <project> exec --user "$(id -u):$(id -g)" musicparty php artisan review:seed`. `docker-compose.yml` already has `reverb`, `horizon` and `scheduler` services; websockets reach Reverb through the app's own hostname (ADR 0004), so no extra env or proxy route is needed beyond the normal stack. Reverb needs `REVERB_*` and `BROADCAST_CONNECTION=reverb` in `.env` like any dev stack.
+Review-only fixtures live in `database/seeders/Review/ReviewHarnessSeeder.php`, run with `php artisan review:seed` (refuses to run in production, not called by `DatabaseSeeder`, safe to re-run). Dev stack: `docker compose -p <project> up -d`, then `docker compose -p <project> exec --user "$(id -u):$(id -g)" musicparty php artisan review:seed`. `docker-compose.yml` already has `reverb`, `horizon` and `scheduler` services, and websockets reach Reverb through the app's own hostname (ADR 0004). `.env` needs `BROADCAST_CONNECTION=reverb` and `REVERB_*`, and `REVERB_ALLOWED_ORIGINS` must include the host the browser uses (for example `localhost` when capturing against a published port), otherwise Reverb rejects the socket with "Origin not allowed" and pages show the Reconnecting pill. Set `DEBUGBAR_ENABLED=false` for clean captures. Branded 403/404/feature-off pages only render with `APP_DEBUG=false`.
 
-Seeded states (all keyed by stable code or nickname):
+Seeded states (all keyed by stable code or nickname; every review user has `first_login` off so a minted session lands on the page, not signup):
 
 | Gap | Fixture |
 | --- | --- |
-| Themes | StratLAN (active, dark, 7 tokens, custom CSS), Reference Theme, Disposable Theme (non-built-in, inactive, for the delete frame; StratLAN is also deletable) |
+| Themes | StratLAN (active, dark, 7 tokens, custom CSS), Reference Theme, Disposable Theme (non-built-in, inactive; StratLAN is also deletable) |
 | Branding | `logo-light`, `logo-dark`, `cover-image`, `favicon` set to placeholder URLs |
 | Providers | Discord on (sign-in), Spotify on for linking only, Steam on for sign-in with an empty API key |
-| Spotify relink | user `review-relink` (needs_relink_at set on its Spotify account) owns party `REVRLK` (provider spotify) |
-| Unlink / both Spotify | `review-two-links` (Discord + Steam), `review-both-spotify` (Discord + 2 Spotify links); `review-admin` has Discord + Spotify and the admin role |
-| Flagged-not-held | party `REVFLG`, `flag_requests` off |
-| AI empty | party `REVEMP`, AI Request Review enabled, zero reviews |
-| AI answers | party `REVAIS`, five reviews with `suitability` and `criterion` answers (score, confidence, criterion) |
-| Feature off | party `REVNOA`, AI Request Review mod not enabled |
-| Admin all-clear | seeder writes the scheduler heartbeat; Horizon, Reverb, Redis, DB and Spotify credentials come from the running stack, so all-clear needs those services up |
+| Spotify relink | user `review-relink` (needs_relink_at set on its Spotify account) owns party `RLNK` (provider spotify) |
+| Ready to host / unlink | `review-admin` (admin + create-party) and `review-both-spotify` have Discord + Spotify + Spotify Search; `review-two-links` has Discord + Steam |
+| Flagged-not-held | party `RFLG`, `flag_requests` off; `review-member` is a plain member (Requests 403 frame) |
+| AI empty | party `REMP`, AI Request Review enabled, zero reviews |
+| AI answers | party `RAIS`, five reviews with `suitability` and `criterion` answers, including a probability for every criterion |
+| Feature off | party `RNOA`, AI Request Review mod not enabled; `review-moderator` is its moderator |
+| No device | party `RNDV`, owner `review-no-device`; fake provider scenario `no_device` (no devices) |
+| Outside party | party `ROUT`, owner `review-outside`; fake provider scenario `outside` (playing from "Late Night Drive") |
+| Admin all-clear | `php artisan review:seed --all-clear` clears the re-link and missing-secret fixtures; the seeder writes the scheduler heartbeat; Horizon, Reverb, Redis and DB come from the running stack |
 | Admin no-parties | `php artisan review:seed --quiet-parties` marks every party inactive (the seeded parties and any others) |
 
-Not representable: no-device and outside-party. The dashboard derives them from the live provider (`devices()`, `currentPlayback()`). For Spotify that is the Spotify API; the `fake` provider is a per-process in-memory instance (`FakeMusicProvider` is a scoped binding that always has Fake Speaker and no context), so there is no per-party or stored fixture to read. Making it configurable would need a production code path, so those two frames stay unreproducible (the logic is covered by `playbackStatus.ts` unit tests). Also still unreproducible by design: e500 (needs `APP_DEBUG=false` and a throwing route), web-player frames (Spotify SDK), `mods-ai-error` (needs a failing engine check).
+Party codes are four letters because the join/invite flow only accepts `/parties/[A-Za-z]{4}`.
 
-Recapture status: the frames above are now reproducible with this harness but have not yet been recaptured into `review/built/` (this change was made without a running stack or browser). The rows below are unchanged until a recapture run with `screenshot.mjs`.
+No-device and outside-party: the dashboard derives them from the live provider (`devices()`, `currentPlayback()`). The seeder gives the `fake` provider a per-owner scenario (cache key `FakeMusicProvider::scenarioKey(userId)`, ignored in production). Still unreproducible by design: e500 (needs a throwing route), web-player frames (Spotify SDK), `mods-ai-error` (the mockup shows an inline range error the settings form does not have), `admin-mods-empty` (three mods ship with the app).
+
+Captures log in without OAuth by minting a session for a review user with tinker (store the user id under the web guard in a fresh session, then set the encrypted `music_party_session` cookie), and drive headless Chrome with Playwright. Light frames use the Default theme; switch the active theme for StratLAN frames.
+
+Recapture status: every seed-gap frame was recaptured into `review/built/` against this harness (rows marked "Recaptured (#450)" below; the per-group totals further down predate the recapture). Still not reproducible: web-player frames, e500, `mods-ai-error` (app has no inline range error) and `admin-mods-empty` (mods ship with the app). Found while recapturing and fixed here: `ReverbStatus` reported Reverb down whenever no channel was occupied. Found and not fixed (app follow-ups): Create Party done card clips on phone; Create Party with the Spotify provider 500s on an invalid token instead of showing an error; Mods confidence field accepts 150 with no inline error.
 
 ---
 
@@ -56,9 +62,9 @@ Capture notes
 | 10-dashboard-schedule-picker-desktop | deviates | Desktop Schedule control is a link that navigates to the Request detail page with a datetime-local field ("Send at (party time)", Save schedule / Clear schedule). No labelled calendar dialog, no quick choices, no "Plays at 21:50 today, after X" sentence. ScheduleSheet exists but only reached from the phone overflow menu | built/10-dashboard-schedule-picker-desktop.png (shows request detail page) |
 | 10-dashboard-delete-dialog-desktop | matches | Modal text and Cancel / Delete request buttons identical ("Wildfire by Kestrel, requested by Tariq, will leave the queue and its 5 votes are lost."); backdrop blur; row icon differs (X vs trash) | built/10-dashboard-delete-dialog-desktop.png |
 | 10-dashboard-player-stale-desktop | matches (content) | Reproduced by ageing playback_received_at 3 min: headline "Player stale", "Last heard: ... 3 minutes ago.", "3 minutes ago - stale" + Open Web Player link, Needs attention "Player stale ... Open Web Player" button, pill red. Layout gaps as in Playing frame | built/10-dashboard-player-stale-desktop.png |
-| 10-dashboard-no-device-desktop | not reproducible | Needs a linked Spotify host with zero devices; fake provider always returns Fake Speaker. Copy exists in resources/js/lib/playbackStatus.ts ("No device", refresh_devices) and has unit tests | none |
-| 10-dashboard-outside-party-desktop | not reproducible | Needs Spotify playing context outside the party (playingFrom.kind outside); fake provider cannot report it. Logic present in playbackStatus.ts | none |
-| 10-dashboard-relink-needed-desktop | not reproducible | Needs health.link = relink_required (expired OAuth link); not seedable without editing linked_accounts. Logic present in playbackStatus.ts | none |
+| 10-dashboard-no-device-desktop | matches | Recaptured (#450) on RNDV: "No device" hero, Refresh devices, Needs-attention row | built/10-dashboard-no-device-desktop.png |
+| 10-dashboard-outside-party-desktop | matches | Recaptured (#450) on ROUT: "Outside the party", Late Night Drive copy, Start the party | built/10-dashboard-outside-party-desktop.png |
+| 10-dashboard-relink-needed-desktop | matches | Recaptured (#450) on RLNK: "Re-link needed", Re-link Spotify button and attention row | built/10-dashboard-relink-needed-desktop.png |
 | 11-dashboard-phone-playing-party-phone | deviates | Stacked rows, title/artist full width, votes/length beneath, overflow menu, no horizontal overflow at 390 (matches). Gaps: no Up Next panel, Start Playback panel remains, no "Plays at" pill visible on row (pill is on list row only after scroll), join URL line missing, Copy join link filled | built/11-dashboard-phone-playing-party-phone.png |
 | 11-dashboard-phone-playing-party-phone-dark | deviates | As light | built/11-dashboard-phone-playing-party-phone-dark.png |
 | 11-dashboard-phone-playing-party-desktop-row | deviates | Same as 10-dashboard-playing-party-desktop (frame is the 1440 reference row) | built/11-dashboard-phone-playing-party-desktop-row.png |
@@ -279,7 +285,7 @@ All built paths below are prefixed docs/mockups/design-critique/review/built/ an
 | requests-nomatch-desktop | matches | Empty state repeats query, Clear filters filled button | 20-requests-requests-nomatch-desktop |
 | request-detail-desktop | matches | Cards, AI review outcome link, History, Schedule match. "View on Spotify" absent (fake provider), Votes shows empty illustration (no votes seeded) | 20-requests-request-detail-desktop |
 | request-detail-phone | deviates | Breadcrumb collapses party to "..." and long track title runs past viewport edge; card order History before Schedule/Votes (mockup AI review, Schedule, Votes, History) | 20-requests-request-detail-phone |
-| requests-guest-desktop | not reproducible | Mockup marks it an undecided question; built returns bare 403 for a plain member (route is can:moderate). Consistent with current policy | 20-requests-requests-guest-desktop |
+| requests-guest-desktop | deviates | Recaptured (#450) as review-member on RFLG with APP_DEBUG=false: branded 403 "You can't open Requests" with Back to the Queue. Still a 403, not a read-only list (mockup marks it undecided) | built/20-requests-requests-guest-desktop.png |
 | requests-list-phone | deviates | Search placeholder overlaps the "N Requests" count; breadcrumb collapses to "..." (mockup shows full) | 20-requests-requests-list-phone |
 | requests-menu-phone | deviates | Menu itself matches; same search/count overlap and collapsed breadcrumb | 20-requests-requests-menu-phone |
 
@@ -291,7 +297,7 @@ Common cause for most deviations below: on desktop the page title and descriptio
 | flagged-list-desktop-dark | deviates | Same (light twin inspected) | 21-moderation-flagged-list-desktop-dark |
 | flagged-bulk-desktop | deviates | Selection bar matches; centred title | 21-moderation-flagged-bulk-desktop |
 | flagged-empty-desktop | deviates | Generic "no music" icon instead of green check; copy is the approval-off wording ("Turn on approval...") rather than "When a rule or AI review flags a Request..."; centred title | 21-moderation-flagged-empty-desktop |
-| flagged-notheld-desktop | not reproducible | Needs a party with flag_requests off; all seeded parties have it on and the DB is shared. No "Turn on approval" notice seen | (none) |
+| flagged-notheld-desktop | matches | Recaptured (#450) on RFLG: "Flagged Requests aren't held" notice with Turn on approval, empty state | built/21-moderation-flagged-notheld-desktop.png |
 | rules-list-desktop | deviates | Centred title; Type shown Title Case ("Artist Name") vs sentence case | 21-moderation-rules-list-desktop |
 | rules-list-desktop-dark | deviates | same | 21-moderation-rules-list-desktop-dark |
 | rule-edit-desktop | deviates | Centred title; radio cards are half width and ordered Reject then Flag (mockup full width, Flag first); card footer crowds Notes row | 21-moderation-rule-edit-desktop |
@@ -305,16 +311,16 @@ Common cause for most deviations below: on desktop the page title and descriptio
 ## 22-ai-reviews
 | frame | verdict | reason | built |
 |---|---|---|---|
-| ai-list-desktop | deviates | Centred title; breadcrumb "AI Reviews" vs "AI reviews"; empty criterion shows "-" not "None" | 22-ai-reviews-ai-list-desktop |
-| ai-list-desktop-dark | deviates | same | 22-ai-reviews-ai-list-desktop-dark |
-| ai-filtered-desktop | deviates | Outcome chip filter works (?outcome=flag); same centred title | 22-ai-reviews-ai-filtered-desktop |
-| ai-empty-desktop | not reproducible | "No AI reviews yet" needs a party with zero reviews; built shows the no-match search state instead | 22-ai-reviews-ai-empty-desktop |
-| ai-detail-flagged-desktop | deviates | Tabs shown above the back link (mockup none); Criterion card has no per-criterion bars (seed answers empty, text "The model returned no per-question answers"); Request payload/Raw response lack disclosure markers; extra Endpoint row | 22-ai-reviews-ai-detail-flagged-desktop |
-| ai-detail-flagged-desktop-dark | deviates | same | 22-ai-reviews-ai-detail-flagged-desktop-dark |
-| ai-detail-low-desktop | deviates | Short title ("Satellite") is right aligned in header; no Open Request button when request is gone (data) | 22-ai-reviews-ai-detail-low-desktop |
-| ai-detail-rejected-desktop | deviates | Short title ("Daybreak") right aligned; Open Request outline button missing | 22-ai-reviews-ai-detail-rejected-desktop |
-| ai-list-phone | deviates | search placeholder overlaps count | 22-ai-reviews-ai-list-phone |
-| ai-detail-phone | deviates | Reject button overlaps the byline line; tabs above; no criterion bars | 22-ai-reviews-ai-detail-phone |
+| ai-list-desktop | deviates | Recaptured (#450) on RAIS. Centred title; breadcrumb "AI Reviews" vs "AI reviews"; empty criterion shows "-" not "None" | 22-ai-reviews-ai-list-desktop |
+| ai-list-desktop-dark | deviates | Recaptured (#450) on RAIS. same | 22-ai-reviews-ai-list-desktop-dark |
+| ai-filtered-desktop | deviates | Recaptured (#450) on RAIS. Outcome chip filter works (?outcome=flag); same centred title | 22-ai-reviews-ai-filtered-desktop |
+| ai-empty-desktop | matches | Recaptured (#450) on REMP: "No AI reviews yet" empty state with outcome and criterion chips at 0 | built/22-ai-reviews-ai-empty-desktop.png |
+| ai-detail-flagged-desktop | deviates | Recaptured (#450) on RAIS: criterion card shows all six bars. No Approve/Reject/Open Request because seeded reviews have no upcoming song. Tabs shown above the back link (mockup none); Criterion card has no per-criterion bars (seed answers empty, text "The model returned no per-question answers"); Request payload/Raw response lack disclosure markers; extra Endpoint row | 22-ai-reviews-ai-detail-flagged-desktop |
+| ai-detail-flagged-desktop-dark | deviates | Recaptured (#450) on RAIS: criterion card shows all six bars. No Approve/Reject/Open Request because seeded reviews have no upcoming song. same | 22-ai-reviews-ai-detail-flagged-desktop-dark |
+| ai-detail-low-desktop | deviates | Recaptured (#450) on RAIS: criterion card shows all six bars. No Approve/Reject/Open Request because seeded reviews have no upcoming song. Short title ("Satellite") is right aligned in header; no Open Request button when request is gone (data) | 22-ai-reviews-ai-detail-low-desktop |
+| ai-detail-rejected-desktop | deviates | Recaptured (#450) on RAIS: criterion card shows all six bars. No Approve/Reject/Open Request because seeded reviews have no upcoming song. Short title ("Daybreak") right aligned; Open Request outline button missing | 22-ai-reviews-ai-detail-rejected-desktop |
+| ai-list-phone | deviates | Recaptured (#450) on RAIS. search placeholder overlaps count | 22-ai-reviews-ai-list-phone |
+| ai-detail-phone | deviates | Recaptured (#450) on RAIS: criterion card shows all six bars. No Approve/Reject/Open Request because seeded reviews have no upcoming song. Reject button overlaps the byline line; tabs above; no criterion bars | 22-ai-reviews-ai-detail-phone |
 
 ## 23-settings
 | frame | verdict | reason | built |
@@ -327,7 +333,7 @@ Common cause for most deviations below: on desktop the page title and descriptio
 | mods-overview-desktop | matches | Collapsed AI card with stats row and switch; Whamageddon off row | 23-settings-mods-overview-desktop |
 | mods-ai-desktop | matches | Engine & key, Decision slider + presets + explanation, Guidelines with chips and tips, party context, Advanced. Last review / Reviews today omitted although EMPT has AI reviews | 23-settings-mods-ai-desktop |
 | mods-ai-desktop-dark | matches | | 23-settings-mods-ai-desktop-dark |
-| mods-ai-error-desktop | not reproducible | Needs a failing key/engine check; not seedable | (none) |
+| mods-ai-error-desktop | not reproducible | Mockup shows confidence threshold 150 with inline "Enter a whole number from 0 to 100"; the form shows no inline error and Save leaves the value at 50. Not a seed gap, needs an app change | (none) |
 | mods-ai-nokey-desktop | matches | Setup state with "Needs an API key" pill and numbered steps; rest dimmed | 23-settings-mods-ai-nokey-desktop |
 | mods-trust-desktop | deviates | Expanded Trust is a plain field list (select, number inputs); mockup has stat row, Trusted User card with Change, slider, Advanced | 23-settings-mods-trust-desktop |
 | mods-whamageddon-desktop | deviates | Whamageddon shares the plain pattern (likely, Trust inspected; no stat row for On state in my capture) | 23-settings-mods-whamageddon-desktop |
@@ -356,12 +362,12 @@ Reached with /parties/create?provider_id=fake (owner has no Spotify link, plain 
 | step1-ok-desktop | matches | | 25-create-party-step1-ok-desktop |
 | step2-desktop | matches | Fallback Playlist picker (closed, mockup open), Play on | 25-create-party-step2-desktop |
 | step3-desktop | deviates | Country and Timezone are native selects (Settings uses pickers); Requests per person empty, mockup default 3; section labels indented | 25-create-party-step3-desktop |
-| done-desktop | not reproducible | Created party but redirect to /parties/create without provider_id sends non-Spotify owner to /spotify, so the done card never shows (see deviations) | (none) |
-| done-desktop-dark | not reproducible | same | (none) |
+| done-desktop | matches | Recaptured (#450) as review-admin with the Fake provider: "is ready" card, code, join link, QR, Open Dashboard / Open TV / Party settings | built/25-create-party-done-desktop.png |
+| done-desktop-dark | matches | Same, dark | built/25-create-party-done-desktop-dark.png |
 | step1-phone | matches | | 25-create-party-step1-phone |
 | step2-phone | matches | | 25-create-party-step2-phone |
 | step3-phone | deviates | Subtitle text runs outside card; native selects | 25-create-party-step3-phone |
-| done-phone | not reproducible | same | (none) |
+| done-phone | deviates | Recaptured (#450): card renders but the dark hero card clips on its right edge, QR stacks below the text | built/25-create-party-done-phone.png |
 
 ## Ticket criteria
 - #417 vocabulary: Fallback Playlist, "Hold Flagged Requests for approval", "Party is running" used on Create/Settings; nav, title and first tab read Moderation / Flagged Requests (verified). Create uses "Create with defaults"; Dashboard/Spotify page not in this group. GLOSSARY.md entry not checked in this pass. Met for this group. Built still says "Fallback Track" in the mini-player (outside group).
@@ -423,8 +429,8 @@ Role admin = Avery Admin. Seed gives only the built-in "Default" theme, 3 partie
 | admin-dash-busy-desktop-dark | deviates (minor) | Same as light; dark tokens correct, no contrast issue found | review/built/30-admin-dashboard-admin-dash-busy-desktop-dark.png |
 | admin-dash-busy-phone | deviates (minor) | Cards stack as in mockup (party card, attention, health, activity). Breadcrumb collapsed; "Open Dashboard" buttons wide and fine; party name links 19px tall | review/built/30-admin-dashboard-admin-dash-busy-phone.png |
 | admin-dash-busy-phone-dark | deviates (minor) | As above, dark OK | review/built/30-admin-dashboard-admin-dash-busy-phone-dark.png |
-| admin-dash-clear-desktop | not reproducible | All-clear needs Horizon, scheduler, Reverb, Redis and Spotify credentials healthy plus fresh Players; stack has no Horizon/Reverb. Built file is the busy state, not an all-clear. Empty-state markup unverified in browser (feature test AdminDashboardTest exists) | review/built/30-admin-dashboard-admin-dash-clear-desktop.png (wrong state) |
-| admin-dash-quiet-desktop | not reproducible | "No parties are live" needs all parties idle/offline; shared DB, not wiped. Built file shows busy state | review/built/30-admin-dashboard-admin-dash-quiet-desktop.png (wrong state) |
+| admin-dash-clear-desktop | deviates | Recaptured (#450) after `review:seed --all-clear`: Nothing needs attention, all health rows green including Reverb (ReverbStatus fixed for an empty channel list). Only difference: "No parties are live" (mockup shows 2 live parties; seeded parties have no reporting Player) | built/30-admin-dashboard-admin-dash-clear-desktop.png |
+| admin-dash-quiet-desktop | matches | Recaptured (#450) with `review:seed --all-clear --quiet-parties`: "No parties are live", nothing needs attention | built/30-admin-dashboard-admin-dash-quiet-desktop.png |
 
 ## 31-admin-users
 | frame | verdict | reason | built |
@@ -442,22 +448,22 @@ Role admin = Avery Admin. Seed gives only the built-in "Default" theme, 3 partie
 |---|---|---|---|
 | admin-settings-general-desktop | deviates | Title right-shifted; labels uppercase (root cause 2); sections Site / Defaults / Music providers present and ordered right; timezone select present; no "2 unsaved changes - Discard - Save changes" sticky bar (dirty state not shown; single Save position unverified); Fake provider is ON here (seed) | review/built/32-admin-settings-admin-settings-general-desktop.png |
 | admin-settings-general-phone | deviates | Same label casing; sticky unsaved bar absent; toggles 32x20 below 44px target | review/built/32-admin-settings-admin-settings-general-phone.png |
-| admin-settings-branding-desktop-dark | deviates | Seed has no logo/cover/favicon values so all inputs are empty and NO previews render (mockup shows sidebar-colour preview, white preview, cropped laptop cover, 32px favicon). Cannot tell whether previews exist when a path is set - needs a seeded value. Title right-shifted; uppercase labels | review/built/32-admin-settings-admin-settings-branding-desktop-dark.png |
-| admin-settings-providers-desktop | deviates | Compact table with Copy Sign-in/Linking URL buttons and Edit present; every status is a grey "Off" because seed has nothing configured, so Sign-in on / Linking only / Needs a secret badges and their helper lines are unverified; Spotify Search helper line OK | review/built/32-admin-settings-admin-settings-providers-desktop.png |
-| admin-settings-provider-edit-desktop | deviates | Original built file was a 404 (wrong path). Recaptured at /admin/settings/socialproviders/2/edit: Steam form shows only "API Key" (no Client ID / Client secret with Save, no "needs a secret" warning), Copy buttons show no "Copied" state (not clicked), title right-shifted. Return URL uses http://localhost:8349 (env) | /tmp/task1349/g30/provider-edit-steam.png (review/built file is a 404 and should be replaced) |
+| admin-settings-branding-desktop-dark | deviates | Recaptured (#450) with branding set: sidebar, white, cover and 32px favicon previews render. Labels/helpers uppercase; favicon caption below not inline; tab style differs | built/32-admin-settings-admin-settings-branding-desktop-dark.png |
+| admin-settings-providers-desktop | deviates | Recaptured (#450): Discord "Sign-in on", Steam "Needs a secret", Spotify "Linking only" badges match. Row order differs (Spotify 5th), Spotify helper copy differs, tab strip style differs | built/32-admin-settings-admin-settings-providers-desktop.png |
+| admin-settings-provider-edit-desktop | deviates | Recaptured (#450) at /admin/settings/socialproviders/2/edit (Steam, empty secret): needs-secret error, toggles, return URLs, Cancel/Save match. No Client ID row, secret input red-outlined (mockup neutral), "Shown only once" copy missing | built/32-admin-settings-admin-settings-provider-edit-desktop.png |
 | admin-settings-themes-desktop | deviates | Themes tab present with Add theme and table (thumb, status, mode, updated, actions) and footer note. Only built-in Default exists (no Active badge / Delete / Edit actions seen); Default row's action is "View" with icon vs mockup plain; breadcrumb stays "Settings" | review/built/32-admin-settings-admin-settings-themes-desktop.png |
-| admin-mods-list-desktop | deviates (high) | Page is empty ("No mods available") although the AI Request Review mod is attached to parties; mockup shows Moderation / Fun groups with cards, stats strip, inline Settings panel. Breadcrumb is `Home / Mods` (missing Admin), heading small, not matching 34-style PageHead. Mods ticket (#430) not delivered for admin or admin mod registry not populated in this env | review/built/32-admin-settings-admin-mods-list-desktop.png |
-| admin-mods-empty-desktop | deviates | Same page captured; empty state lacks the framed card and copy "No mods installed - Mods add features such as AI Request Review..." (built says "No mods available / No mods are installed on this instance.") | review/built/32-admin-settings-admin-mods-empty-desktop.png |
+| admin-mods-list-desktop | deviates | Recaptured (#450): populated list renders (Moderation (2) / Fun (1), cards, AI Request Review stats). Narrower offset content column, small heading, no per-card enable toggle | built/32-admin-settings-admin-mods-list-desktop.png |
+| admin-mods-empty-desktop | not reproducible | Three mods ship with the app, so the empty state cannot show without uninstalling mods. Built file unchanged | built/32-admin-settings-admin-mods-empty-desktop.png |
 
 ## 33-admin-themes
 | frame | verdict | reason | built |
 |---|---|---|---|
-| admin-themes-list-desktop | deviates | Original built file is the General settings page (wrong capture; identical md5 to settings-general). There is no standalone "Themes" page with breadcrumb Settings / Themes and subtitle "Look and feel for the whole site."; list lives in the Settings Themes tab (see 32 themes frame). Only Default theme seeded | review/built/33-admin-themes-admin-themes-list-desktop.png (wrong page) |
+| admin-themes-list-desktop | deviates | Recaptured (#450) at /admin/themes with StratLAN active: breadcrumb, subtitle, Add theme, 4 themes, Make active / Edit / Delete. No settings tab strip, full-width content, no card header | built/33-admin-themes-admin-themes-list-desktop.png |
 | admin-theme-create-desktop | matches | Two-column editor, Name / Dark mode / Active, 2-col colour grid with "Default" button and "Using the Music Party default" (never black), full-width Custom CSS, preview with Light/Dark switch and Primary/Outline/Delete buttons. Minor: Custom CSS editor is a light box, mockup uses a dark code block; label "Navigation Background"/"Muted Text" capitalised vs "Navigation background"; Dark mode help text wording differs slightly | review/built/33-admin-themes-admin-theme-create-desktop.png |
 | admin-theme-invalid-desktop | matches | Built file was identical to create (invalid state not driven). Recaptured by typing #d6393 into Primary: red outline, X icon, inline message "That is not a colour. Use #RGB or #RRGGBB, for example #d63939." and "1 colour needs fixing" badge, exactly as mockup. Preview note about keeping the default not checked | /tmp/task1349/g30/theme-invalid.png |
-| admin-theme-edit-stratlan-desktop-dark | not reproducible | StratLAN (active, dark, 7 tokens, custom CSS) not in seed; built file is "Edit Default" showing the built-in-theme info banner with fields disabled, which is not the frame | review/built/33-admin-themes-admin-theme-edit-stratlan-desktop-dark.png (wrong data) |
-| admin-theme-delete-desktop-dark | not reproducible | Needs a non-built-in active theme; built file is an Ignition 403 debug page from /admin/settings/themes/1/delete (Default is protected, abort(403) in ThemeController::delete). Note: a raw Ignition page is a poor result for a guessable URL - should redirect with a message. Theme-named confirm unverified | review/built/33-admin-themes-admin-theme-delete-desktop-dark.png (error page) |
-| admin-theme-edit-phone | deviates | Built is Edit Default not StratLAN; preview correctly below the form; Save changes stacked below Cancel (mockup keeps Cancel + Save on one row); Default theme fields disabled so layout of Reset buttons unverified; colour pickers 28x44 ok but name input 316x40 and toggles 32x20 below 44px | review/built/33-admin-themes-admin-theme-edit-phone.png |
+| admin-theme-edit-stratlan-desktop-dark | matches | Recaptured (#450) with StratLAN active: Details, 7 colour tokens with Reset, Custom CSS, Light/Dark preview, Cancel/Save. Minor: dark-mode helper copy and title-case token labels | built/33-admin-themes-admin-theme-edit-stratlan-desktop-dark.png |
+| admin-theme-delete-desktop-dark | matches | Recaptured (#450) on active StratLAN (not confirmed): "It is the active theme. The site goes back to the Default theme straight away" warning, thumb, Cancel / Delete | built/33-admin-themes-admin-theme-delete-desktop-dark.png |
+| admin-theme-edit-phone | deviates | Recaptured (#450) on StratLAN with enabled fields; not re-compared line by line | built/33-admin-themes-admin-theme-edit-phone.png |
 
 ## Ticket criteria
 #434 Useful Admin dashboard
@@ -519,8 +525,8 @@ Note: `built` filename = mockup frame name. Env limits: local stack has APP_DEBU
 
 | frame | verdict | reason | built screenshot |
 |---|---|---|---|
-| 40-home-join-login-desktop | deviates | Login with Discord button absent: no social provider enabled in this local stack (env, not code). Layout, photo panel, copy match. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-login-desktop.png |
-| 40-home-join-login-phone | deviates | Same: Discord button absent (env). Otherwise matches. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-login-phone.png |
+| 40-home-join-login-desktop | matches | Recaptured (#450): Login with Discord and Login with Steam, logo, cover panel (seed cover is a placeholder). Steam button is extra (seed) | built/40-home-join-login-desktop.png |
+| 40-home-join-login-phone | matches | Recaptured (#450): same, cover hidden on phone | built/40-home-join-login-phone.png |
 | 40-home-join-home-desktop | matches | Hero, party rows, role badge, code, state pill, Join card match. Data differs (seed). Playing line shows title only, mockup "Title, Artist" (low). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-desktop.png |
 | 40-home-join-home-desktop-dark | matches | Dark tokens match. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-desktop-dark.png |
 | 40-home-join-home-phone | matches | Stacks as mockup; Join button 44px. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-phone.png |
@@ -528,14 +534,14 @@ Note: `built` filename = mockup frame name. Env limits: local stack has APP_DEBU
 | 40-home-join-home-empty-desktop | matches | Empty state, tilted tile, Create party, Join card match (captured as admin with no parties). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-empty-desktop.png |
 | 40-home-join-home-code-error-desktop | matches | Digit error "Party codes are four letters, no digits." with invalid input, matches copy and placement. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-code-error-desktop.png |
 | 40-home-join-home-code-error-phone | matches | Matches (viewport crop; error text below fold, same as mockup full-frame). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-code-error-phone.png |
-| 40-home-join-home-anon-desktop | deviates | Discord button missing (no provider in env); "Hosting a party? Login to create one." copy present. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-anon-desktop.png |
-| 40-home-join-home-anon-phone | deviates | Same, Discord button missing (env). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-anon-phone.png |
-| 40-home-join-home-anon-desktop-dark | deviates | Same, Discord button missing (env). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-home-anon-desktop-dark.png |
+| 40-home-join-home-anon-desktop | matches | Recaptured (#450): Join card, OR, "Hosting a party? Login to create one.", Discord + Steam buttons | built/40-home-join-home-anon-desktop.png |
+| 40-home-join-home-anon-phone | matches | Recaptured (#450): same on phone | built/40-home-join-home-anon-phone.png |
+| 40-home-join-home-anon-desktop-dark | matches | Recaptured (#450): same, dark | built/40-home-join-home-anon-desktop-dark.png |
 | 40-home-join-parties-desktop | matches | /parties renders list with Home / Parties breadcrumb, same style as Home. No 500. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-parties-desktop.png |
 | 40-home-join-parties-phone | matches |  | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-parties-phone.png |
-| 40-home-join-join-login-desktop | deviates | Invite card, 3 steps, copy match; Discord button missing (env). Party page has 2 h1 (brand + party) vs mockup brand as non-heading. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-join-login-desktop.png |
-| 40-home-join-join-login-desktop-dark | deviates | Same as light. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-join-login-desktop-dark.png |
-| 40-home-join-join-login-phone | deviates | Same as light (steps compact, correct). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-join-login-phone.png |
+| 40-home-join-join-login-desktop | matches | Recaptured (#450) on /parties/RFLG: invite card, 3-step bar, "Login to add Requests and vote.", Discord + Steam, return note | built/40-home-join-join-login-desktop.png |
+| 40-home-join-join-login-desktop-dark | matches | Same, dark | built/40-home-join-join-login-desktop-dark.png |
+| 40-home-join-join-login-phone | matches | Recaptured (#450): invite card, compact step bar, Discord + Steam | built/40-home-join-join-login-phone.png |
 | 40-home-join-join-nickname-desktop | deviates | Built /login/signup rendered with no party context (needs a real OAuth return with intended URL): shows "Create Account", no step bar, no "You're joining ... (CODE)". Code path with party exists in Users/Signup.vue (JoinSteps current=2, "Pick a nickname"), so the party variant is not captured here; the button reads "Continue" vs mockup "Continue to the party" in the no-party variant. Partially reproducible. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-join-nickname-desktop.png |
 | 40-home-join-join-nickname-phone | deviates | Same as desktop. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/40-home-join-join-nickname-phone.png |
 | 41-errors-e404-desktop | matches | Branded 404 on stage band, Go to Home + Enter party code, Home / Page not found breadcrumb. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/41-errors-e404-desktop.png |
@@ -554,20 +560,20 @@ Note: `built` filename = mockup frame name. Env limits: local stack has APP_DEBU
 | 41-errors-party-not-found-phone | deviates | BLANK PAGE (white 1440x900). With APP_DEBUG=false (php -S :9001) /parties/ZZZZ returns the Error component but with NO shared props (SubstituteBindings runs before HandleInertiaRequests in the web group), so useColorMode -> applyTheme(undefined) throws "Cannot read properties of undefined (reading 'tokens')" and Vue never renders. In debug mode (this stack) the raw Laravel "Not Found" page is shown. Either way the party-not-found recovery page is unusable. HIGH. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/41-errors-party-not-found-phone.png |
 | 41-errors-party-not-found-digit-phone | deviates | BLANK PAGE (white 1440x900). With APP_DEBUG=false (php -S :9001) /parties/ZZZZ returns the Error component but with NO shared props (SubstituteBindings runs before HandleInertiaRequests in the web group), so useColorMode -> applyTheme(undefined) throws "Cannot read properties of undefined (reading 'tokens')" and Vue never renders. In debug mode (this stack) the raw Laravel "Not Found" page is shown. Either way the party-not-found recovery page is unusable. HIGH. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/41-errors-party-not-found-digit-phone.png |
 | 41-errors-party-not-found-anon-desktop | deviates | Anon /parties/ZZZZ redirects to /login ("Login to join the party!") instead of showing the not-found page with the typed code. Anon /parties/ZZZZ/tv hits the same blank-page bug. HIGH (guests type codes off the TV). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/41-errors-party-not-found-anon-desktop.png |
-| 41-errors-feature-off-owner-desktop | not reproducible | Needs a party without the AI Request Review mod; all 4 seeded parties have it and detaching it would alter the shared stack. Covered by ErrorPagesTest "explains a disabled AI reviews feature". | - |
-| 41-errors-feature-off-moderator-desktop | not reproducible | As above. | - |
-| 41-errors-feature-off-owner-phone | not reproducible | As above. | - |
+| 41-errors-feature-off-owner-desktop | matches | Recaptured (#450) on RNOA with APP_DEBUG=false: "AI reviews are off for this party", Open Mods settings + Go to Moderation | built/41-errors-feature-off-owner-desktop.png |
+| 41-errors-feature-off-moderator-desktop | matches | Recaptured (#450) as review-moderator: moderator copy, single Go to Moderation | built/41-errors-feature-off-moderator-desktop.png |
+| 41-errors-feature-off-owner-phone | matches | Recaptured (#450): owner, phone | built/41-errors-feature-off-owner-phone.png |
 | 42-profile-profile-desktop | deviates | Page NOT restyled: h1 "Linked Accounts" with legacy Tabler avatar card beside a right-hand profile card with "Edit" button; mockup has "Profile" page head, name/email card, "Linked accounts" cards with Linked status, Unlink, Manage Spotify links, Link another account. HIGH (whole page). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-profile-desktop.png |
 | 42-profile-profile-phone | deviates | Same legacy layout. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-profile-phone.png |
 | 42-profile-profile-desktop-dark | deviates | Same legacy layout. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-profile-desktop-dark.png |
 | 42-profile-spotify-desktop | deviates | Two cards Playback/Search exist with explanatory copy and linked state (#417 criterion met), but no icon tiles, no stacked "Link both to host a party" card (built places a disabled Create party button below with hint text), h1 style/summary differ, card titles h2 plain. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-spotify-desktop.png |
 | 42-profile-spotify-phone | deviates | As desktop. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-spotify-phone.png |
 | 42-profile-spotify-desktop-dark | deviates | As desktop; white-on-green buttons fail contrast 2.62. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-spotify-desktop-dark.png |
-| 42-profile-spotify-ready-desktop | not reproducible | Needs both Spotify links connected; seed has none and linking needs OAuth. Built shows not-linked state only. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-spotify-ready-desktop.png |
+| 42-profile-spotify-ready-desktop | matches | Recaptured (#450) as review-admin at /spotify: Playback + Search linked, "Ready to host" with Create party | built/42-profile-spotify-ready-desktop.png |
 | 42-profile-profile-edit-desktop | deviates | Legacy: h1 "Edit Profile", hint "Your preferred nickname", button "Save"; mockup "Edit profile", "How you appear in parties.", hint "Shown next to your Requests.", button "Save changes", wider mp-narrow card. Breadcrumb OK. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-profile-edit-desktop.png |
 | 42-profile-profile-edit-desktop-dark | deviates | As light. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/42-profile-profile-edit-desktop-dark.png |
-| 42-profile-unlink-desktop | not reproducible | Unlink page redirects to /profile ("not possible to remove this account") because seeded users have a single Discord linked account (canDelete false). Needs user with 2 linked accounts; not seeded. Users/LinkedAccountDelete.vue reviewed in code only. | - |
-| 42-profile-unlink-phone | not reproducible | As above. | - |
+| 42-profile-unlink-desktop | matches | Recaptured (#450) as review-two-links: "Unlink Discord?" card, Keep linked / Unlink Discord | built/42-profile-unlink-desktop.png |
+| 42-profile-unlink-phone | matches | Recaptured (#450): same, breadcrumb collapses to "..." | built/42-profile-unlink-phone.png |
 | 43-type-shell-type-light-desktop | matches | Frame is a specimen. Verified computed styles on real pages: page head h1 40px/42px/800 (1.05) on Settings and Member detail, 32px on phone, p 16px/24.8px. Dashboard h1 is 24/600 inside the player band (does not follow the 40/800 page head; low-medium). | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/43-type-shell-type-light-desktop.png |
 | 43-type-shell-type-dark-desktop-dark | matches | Same metrics under dark. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/43-type-shell-type-dark-desktop-dark.png |
 | 43-type-shell-type-phone | matches | Phone h1 32px/33.6px/800. | /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/43-type-shell-type-phone.png |
@@ -636,7 +642,7 @@ Note: `built` filename = mockup frame name. Env limits: local stack has APP_DEBU
 | D7 | Low | Contrast: Owner badge 4.36, User badge 4.19, Nothing-playing pill 4.47, Spotify success buttons 2.62. | Darken badge text tokens (`bg-blue-lt`/`bg-secondary-lt` text) and `.btn-success` text/background; `.mp-state.is-idle` colour. | au/_-owner-light.json, au/_spotify-owner-light.json |
 | D8 | Low | 403 copy "You can't open Dashboard" (mockup "the Dashboard"); phone 403 breadcrumb collapses to Home / ... / Not allowed (mockup Home / Not allowed). | `app/Exceptions/ErrorPageResponder.php` PAGE_LABELS (use "the Dashboard" form), breadcrumbs() omit party crumb for 403. | built/41-errors-e403-phone.png |
 | D9 | Low | Code field does not trim whitespace on paste (" play " -> " PLA" error). Home party row shows track title without artist (mockup "Title, Artist"). | `PartyJoinForm.vue` strip whitespace on input; party list state detail include artist. | crit.mjs output |
-| D10 | Info | Discord button missing on login/anon/join frames: no provider enabled in local env; Not a code defect. | Enable a fake social provider in the harness seed. | built/40-home-join-login-*.png |
+| D10 | Info | Resolved by #450 (Discord and Steam sign-in seeded; frames recaptured). Was: Discord button missing on login/anon/join frames: no provider enabled in local env; Not a code defect. | Enable a fake social provider in the harness seed. | built/40-home-join-login-*.png |
 
 ---
 

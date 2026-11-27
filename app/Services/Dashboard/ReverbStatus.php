@@ -16,7 +16,7 @@ class ReverbStatus
         }
 
         try {
-            $broadcaster->getPusher()->getChannels();
+            $broadcaster->getPusher()->get('/channels');
 
             return true;
         } catch (Throwable) {

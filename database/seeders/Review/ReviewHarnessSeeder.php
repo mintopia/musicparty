@@ -8,6 +8,8 @@ use App\Enums\SettingType;
 use App\Models\AiReview;
 use App\Models\LinkedAccount;
 use App\Models\Party;
+use App\Models\PartyMember;
+use App\Models\PartyMemberRole;
 use App\Models\ProviderSetting;
 use App\Models\Role;
 use App\Models\Setting;
@@ -17,6 +19,7 @@ use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
 use App\Services\Dashboard\SystemHealth;
+use App\Services\Music\Fake\FakeMusicProvider;
 use Database\Seeders\PartyMemberRoleSeeder;
 use Database\Seeders\RolesSeeder;
 use Database\Seeders\SettingsSeeder;
@@ -27,21 +30,25 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Cache;
 
-/**
- * Review-only fixtures for reproducing the design-critique mockup frames. Not part of DatabaseSeeder.
- * Safe to run repeatedly; every record is keyed by a stable code, nickname or external id.
- */
 class ReviewHarnessSeeder extends Seeder
 {
-    public const string PARTY_FLAG_OFF = 'REVFLG';
+    public const string PARTY_FLAG_OFF = 'RFLG';
 
-    public const string PARTY_NO_REVIEWS = 'REVEMP';
+    public const string PARTY_NO_REVIEWS = 'REMP';
 
-    public const string PARTY_WITH_ANSWERS = 'REVAIS';
+    public const string PARTY_WITH_ANSWERS = 'RAIS';
 
-    public const string PARTY_NO_AI_MOD = 'REVNOA';
+    public const string PARTY_NO_AI_MOD = 'RNOA';
 
-    public const string PARTY_RELINK = 'REVRLK';
+    public const string PARTY_RELINK = 'RLNK';
+
+    public const string PARTY_NO_DEVICE = 'RNDV';
+
+    public const string PARTY_OUTSIDE = 'ROUT';
+
+    public const string NO_DEVICE_NICKNAME = 'review-no-device';
+
+    public const string OUTSIDE_NICKNAME = 'review-outside';
 
     public const string ADMIN_NICKNAME = 'review-admin';
 
@@ -50,6 +57,10 @@ class ReviewHarnessSeeder extends Seeder
     public const string TWO_LINKS_NICKNAME = 'review-two-links';
 
     public const string BOTH_SPOTIFY_NICKNAME = 'review-both-spotify';
+
+    public const string MEMBER_NICKNAME = 'review-member';
+
+    public const string MODERATOR_NICKNAME = 'review-moderator';
 
     public function run(): void
     {
@@ -137,6 +148,8 @@ class ReviewHarnessSeeder extends Seeder
             $providers[$code] = $provider;
         }
 
+        $providers['spotifysearch'] = SocialProvider::query()->where('code', 'spotifysearch')->firstOrFail();
+
         return $providers;
     }
 
@@ -148,6 +161,7 @@ class ReviewHarnessSeeder extends Seeder
         $admin = $this->user(self::ADMIN_NICKNAME);
         $this->link($admin, $providers['discord'], 'review-admin-discord');
         $this->link($admin, $providers['spotify'], 'review-admin-spotify', true);
+        $this->link($admin, $providers['spotifysearch'], 'review-admin-spotify-search', true);
         $admin->roles()->syncWithoutDetaching(Role::query()->whereIn('code', ['admin', 'create-party'])->pluck('id'));
 
         $relink = $this->user(self::RELINK_NICKNAME);
@@ -162,12 +176,27 @@ class ReviewHarnessSeeder extends Seeder
         $both = $this->user(self::BOTH_SPOTIFY_NICKNAME);
         $this->link($both, $providers['discord'], 'review-both-spotify-discord');
         $this->link($both, $providers['spotify'], 'review-both-spotify-account', true);
-        $this->link($both, $providers['spotify'], 'review-both-spotify-search', true);
+        $this->link($both, $providers['spotifysearch'], 'review-both-spotify-search', true);
+        $both->roles()->syncWithoutDetaching(Role::query()->where('code', 'create-party')->pluck('id'));
+
+        foreach ([self::MEMBER_NICKNAME, self::MODERATOR_NICKNAME] as $nickname) {
+            $this->link($this->user($nickname), $providers['discord'], "{$nickname}-discord");
+        }
+
+        foreach ([self::NO_DEVICE_NICKNAME, self::OUTSIDE_NICKNAME] as $nickname) {
+            $scenarioUser = $this->user($nickname);
+            $this->link($scenarioUser, $providers['discord'], "{$nickname}-discord");
+            $scenarioUser->roles()->syncWithoutDetaching(Role::query()->where('code', 'create-party')->pluck('id'));
+        }
     }
 
     protected function user(string $nickname): User
     {
-        return User::query()->firstOrCreate(['nickname' => $nickname]);
+        $user = User::query()->firstOrNew(['nickname' => $nickname]);
+        $user->first_login = false;
+        $user->save();
+
+        return $user;
     }
 
     protected function link(User $user, SocialProvider $provider, string $externalId, bool $tokens = false, bool $needsRelink = false): void
@@ -196,13 +225,30 @@ class ReviewHarnessSeeder extends Seeder
         $noMod = $this->party(self::PARTY_NO_AI_MOD, 'Review: No AI Mod', $owner, ['flag_requests' => true]);
         $relink = $this->party(self::PARTY_RELINK, 'Review: Spotify Re-link', $relinkOwner, ['flag_requests' => true], provider: 'spotify');
 
+        $noDeviceOwner = User::query()->where('nickname', self::NO_DEVICE_NICKNAME)->firstOrFail();
+        $outsideOwner = User::query()->where('nickname', self::OUTSIDE_NICKNAME)->firstOrFail();
+        $this->party(self::PARTY_NO_DEVICE, 'Review: No Device', $noDeviceOwner, []);
+        $this->party(self::PARTY_OUTSIDE, 'Review: Outside Party', $outsideOwner, []);
+        Cache::forever(FakeMusicProvider::scenarioKey($noDeviceOwner->id), FakeMusicProvider::SCENARIO_NO_DEVICE);
+        Cache::forever(FakeMusicProvider::scenarioKey($outsideOwner->id), FakeMusicProvider::SCENARIO_OUTSIDE);
+
         $mods = app(PartyMods::class);
         foreach ([$flagOff, $empty, $answers, $relink] as $party) {
             $mods->enable($party, AiRequestReviewMod::CODE);
         }
         $mods->disable($noMod, AiRequestReviewMod::CODE);
 
+        $this->member($flagOff, self::MEMBER_NICKNAME, 'user');
+        $this->member($noMod, self::MODERATOR_NICKNAME, 'moderator');
+
         $this->reviews($answers, $owner);
+    }
+
+    protected function member(Party $party, string $nickname, string $role): void
+    {
+        $member = PartyMember::query()->firstOrNew(['party_id' => $party->id, 'user_id' => User::query()->where('nickname', $nickname)->firstOrFail()->id]);
+        $member->role_id = PartyMemberRole::query()->where('code', $role)->firstOrFail()->id;
+        $member->save();
     }
 
     /**
@@ -239,7 +285,7 @@ class ReviewHarnessSeeder extends Seeder
                 'request' => ['model' => 'jev-latest', 'state' => '{}', 'questions' => []],
                 'response' => ['answers' => [
                     'suitability' => ['score' => $score, 'confidence' => $confidence],
-                    'criterion' => ['type' => 'choice', 'choice' => $criterion->value, 'probabilities' => [$criterion->value => $confidence]],
+                    'criterion' => ['type' => 'choice', 'choice' => $criterion->value, 'probabilities' => $this->probabilities($criterion, $confidence)],
                 ]],
                 'outcome' => $outcome,
                 'reason' => $outcome === AiReviewOutcome::Allow ? null : $criterion->description(),
@@ -255,5 +301,20 @@ class ReviewHarnessSeeder extends Seeder
             ]);
             $review->save();
         }
+    }
+
+    /**
+     * @return array<string, float>
+     */
+    protected function probabilities(AiReviewCriterion $winner, float $confidence): array
+    {
+        $others = array_values(array_filter(AiReviewCriterion::cases(), fn (AiReviewCriterion $case): bool => $case !== $winner));
+        $weights = [0.4, 0.25, 0.15, 0.12, 0.08];
+        $probabilities = [$winner->value => $confidence];
+        foreach ($others as $index => $case) {
+            $probabilities[$case->value] = round((1 - $confidence) * ($weights[$index] ?? 0.0), 2);
+        }
+
+        return $probabilities;
     }
 }
