@@ -1,19 +1,10 @@
 {
     "mcpServers": {
         "laravel-boost": {
-            "command": "docker",
+            "command": "sh",
             "args": [
-                "compose",
-                "-p",
-                "musicparty",
-                "exec",
-                "-T",
-                "-e",
-                "XDEBUG_MODE=off",
-                "musicparty",
-                "php",
-                "artisan",
-                "boost:mcp"
+                "-c",
+                "exec docker compose -p musicparty exec -T --user \"$(id -u):$(id -g)\" -e XDEBUG_MODE=off musicparty php artisan boost:mcp"
             ]
         }
     }
