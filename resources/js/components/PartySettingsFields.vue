@@ -26,6 +26,25 @@ const relayRows = computed(() => [
     ...(props.encore.secret ? [{label: 'App secret', value: props.encore.secret, copy: 'Copy app secret'}] : []),
 ]);
 
+const countryOptions = computed(() => {
+    const names = new Intl.DisplayNames(['en'], {type: 'region'});
+    const letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    const options: {code: string; name: string}[] = [];
+    for (const a of letters) {
+        for (const b of letters) {
+            const code = a + b;
+            const name = names.of(code);
+            if (name && name !== code) {
+                options.push({code, name});
+            }
+        }
+    }
+    if (props.form.country && !options.some((o) => o.code === props.form.country)) {
+        options.push({code: props.form.country, name: props.form.country});
+    }
+    return options.sort((x, y) => x.name.localeCompare(y.name));
+});
+
 function err(field: string): string | undefined {
     return (props.form.errors as Record<string, string | undefined>)[field];
 }
@@ -66,42 +85,37 @@ function err(field: string): string | undefined {
             <SettingRow label="Music provider" hint="Set when the party was created">
                 <span class="text-secondary">{{ providerName }}</span>
             </SettingRow>
-            <SettingRow
-                label="Country"
-                for="country"
-                hint="Two-letter code used for search and browse results"
-                :error="err('country')"
-            >
-                <input
+            <SettingRow label="Country" for="country" hint="Used for search and browse results" :error="err('country')">
+                <select
                     id="country"
                     v-model="form.country"
-                    type="text"
                     name="country"
-                    maxlength="2"
-                    class="form-control"
+                    class="form-select"
                     :class="{'is-invalid': err('country')}"
-                    placeholder="GB"
-                />
+                >
+                    <option v-for="option in countryOptions" :key="option.code" :value="option.code">
+                        {{ option.name }} · {{ option.code }}
+                    </option>
+                </select>
             </SettingRow>
             <SettingRow
                 label="Timezone"
                 for="timezone"
-                hint="Used by time-based mods and scheduled requests. Blank uses the instance timezone"
+                hint="Used by time-based mods and Scheduled Requests. Blank uses the instance timezone"
                 :error="err('timezone')"
             >
-                <input
+                <select
                     id="timezone"
                     v-model="form.timezone"
-                    type="text"
                     name="timezone"
-                    list="timezone-options"
-                    class="form-control"
+                    class="form-select"
                     :class="{'is-invalid': err('timezone')}"
-                    :placeholder="instanceTimezone"
-                />
-                <datalist id="timezone-options">
-                    <option v-for="identifier in timezones" :key="identifier" :value="identifier"></option>
-                </datalist>
+                >
+                    <option value="">Use instance timezone ({{ instanceTimezone }})</option>
+                    <option v-for="identifier in timezones" :key="identifier" :value="identifier">
+                        {{ identifier }}
+                    </option>
+                </select>
             </SettingRow>
         </section>
 
