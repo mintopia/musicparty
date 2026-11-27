@@ -58,7 +58,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::middleware('can:moderate,party')->group(function () {
             Route::get('parties/{party}/dashboard', [PartyDashboardController::class, 'show'])->name('parties.dashboard');
             Route::resource('parties.users', PartyMemberController::class)->only(['index', 'show'])->scoped();
-            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'update'])->scoped();
+            Route::resource('parties.songs', UpcomingSongController::class)->only(['index', 'show', 'update', 'destroy'])->scoped();
             Route::get('parties/{party}/ai-reviews', [PartyAiReviewController::class, 'index'])->name('parties.ai-reviews.index');
             Route::get('parties/{party}/ai-reviews/{aiReview}', [PartyAiReviewController::class, 'show'])->scopeBindings()->name('parties.ai-reviews.show');
             Route::resource('parties.moderation', PartyModerationController::class)->only(['index'])->scoped();
