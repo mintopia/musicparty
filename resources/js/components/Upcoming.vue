@@ -3,7 +3,7 @@ import {usePage} from '@inertiajs/vue3';
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import axios from 'axios';
-import {onBeforeUnmount, ref} from 'vue';
+import {computed, onBeforeUnmount, ref} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
 import Toast from '@/components/Toast.vue';
@@ -39,18 +39,33 @@ const focusSearch = (): void => document.getElementById('query')?.focus();
 
 const page = ref(1);
 const upcoming = ref<LegacyUpcomingSong[]>([]);
-const message = ref('');
+const UNDO_WINDOW_MS = 8000;
+
+type Notice = {kind: 'error' | 'undo' | 'failed'; text: string; name?: string; id?: number};
+
+const notice = ref<Notice | null>(null);
+const failedIds = ref(new Set<number>());
+const openMenuId = ref<number | null>(null);
+const message = computed(() => notice.value?.text ?? '');
 let messageTimer: ReturnType<typeof setTimeout> | null = null;
+let pending: {song: LegacyUpcomingSong; timer: ReturnType<typeof setTimeout> | null} | null = null;
 
 function showMessage(text: string): void {
-    message.value = text;
+    notice.value = {kind: 'error', text};
     if (messageTimer !== null) {
         clearTimeout(messageTimer);
     }
     messageTimer = setTimeout(() => {
-        message.value = '';
+        notice.value = null;
         messageTimer = null;
     }, 5000);
+}
+
+function clearNoticeTimer(): void {
+    if (messageTimer !== null) {
+        clearTimeout(messageTimer);
+        messageTimer = null;
+    }
 }
 
 function combineArtists(artists: LegacyArtist[] | undefined): string {
@@ -105,10 +120,101 @@ async function vote(songId: number, value: number): Promise<void> {
     }
 }
 
-function deleteSong(songId: number): void {
-    removeItem(songId);
-    const route = destroy({party: props.party, upcomingsong: songId});
-    void axios.request({url: route.url, method: route.method});
+function startRemoval(song: LegacyUpcomingSong): void {
+    void commitPending();
+    openMenuId.value = null;
+    failedIds.value.delete(song.id);
+    removeItem(song.id);
+    clearNoticeTimer();
+    notice.value = {kind: 'undo', text: `Removed ${song.name} from the Queue.`, name: song.name, id: song.id};
+    pending = {song, timer: null};
+    armUndoTimer();
+}
+
+function armUndoTimer(): void {
+    if (pending === null) {
+        return;
+    }
+    if (pending.timer !== null) {
+        clearTimeout(pending.timer);
+    }
+    pending.timer = setTimeout(() => void commitPending(), UNDO_WINDOW_MS);
+}
+
+function pauseUndoTimer(): void {
+    if (pending?.timer != null) {
+        clearTimeout(pending.timer);
+        pending.timer = null;
+    }
+}
+
+function undoRemoval(): void {
+    if (pending === null) {
+        return;
+    }
+    const {song, timer} = pending;
+    if (timer !== null) {
+        clearTimeout(timer);
+    }
+    pending = null;
+    notice.value = null;
+    addOrUpdateItem(song);
+    sortUpcoming();
+}
+
+async function commitPending(): Promise<void> {
+    if (pending === null) {
+        return;
+    }
+    const {song, timer} = pending;
+    if (timer !== null) {
+        clearTimeout(timer);
+    }
+    pending = null;
+    if (notice.value?.kind === 'undo') {
+        notice.value = null;
+    }
+    const route = destroy({party: props.party, upcomingsong: song.id});
+    try {
+        await axios.request({url: route.url, method: route.method});
+    } catch (error) {
+        if (axios.isAxiosError(error) && error.response?.status === 404) {
+            return;
+        }
+        failedIds.value.add(song.id);
+        addOrUpdateItem(song);
+        sortUpcoming();
+        clearNoticeTimer();
+        notice.value = {
+            kind: 'failed',
+            text: `Couldn't remove ${song.name}. It is back in the Queue.`,
+            name: song.name,
+            id: song.id,
+        };
+    }
+}
+
+function retryRemoval(): void {
+    const song = upcoming.value.find((candidate) => candidate.id === notice.value?.id);
+    if (song !== undefined) {
+        startRemoval(song);
+        void commitPending();
+    }
+}
+
+function onNoticeAction(): void {
+    if (notice.value?.kind === 'undo') {
+        undoRemoval();
+    } else if (notice.value?.kind === 'failed') {
+        retryRemoval();
+    }
+}
+
+function dismissNotice(): void {
+    if (notice.value?.kind === 'undo') {
+        void commitPending();
+    }
+    notice.value = null;
 }
 
 async function fetchPage(number: number): Promise<LegacyUpcomingSong[]> {
@@ -148,6 +254,13 @@ async function resync(): Promise<void> {
 
 (props.initialState ?? []).forEach((item) => addOrUpdateItem(item));
 
+function closeMenu(): void {
+    openMenuId.value = null;
+}
+
+document.addEventListener('click', closeMenu);
+onBeforeUnmount(() => document.removeEventListener('click', closeMenu));
+
 const echo = useEcho();
 const channel = echo.privateChannel(`party.${props.party}`) as {
     listen<T>(event: string, cb: (payload: T) => void): unknown;
@@ -162,9 +275,8 @@ channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
 echo.onReconnect(() => void resync());
 
 onBeforeUnmount(() => {
-    if (messageTimer !== null) {
-        clearTimeout(messageTimer);
-    }
+    clearNoticeTimer();
+    void commitPending();
 });
 </script>
 <template>
@@ -175,7 +287,12 @@ onBeforeUnmount(() => {
                     v-for="(song, index) in upcoming"
                     :key="song.id"
                     class="list-group-item mp-qrow"
-                    :class="[{'is-mine': isMine(song)}, ...legacyRowClasses(song).split(' ').filter((c) => !['row', 'g-2', 'align-items-center'].includes(c))]"
+                    :class="[
+                        {'is-mine': isMine(song), 'mp-failed': failedIds.has(song.id)},
+                        ...legacyRowClasses(song)
+                            .split(' ')
+                            .filter((c) => !['row', 'g-2', 'align-items-center'].includes(c)),
+                    ]"
                     :style="legacyAccentStyle(song)"
                     data-test="track-row"
                 >
@@ -196,14 +313,19 @@ onBeforeUnmount(() => {
                         <div class="q-title">
                             <span>{{ song.name }}</span>
                             <span v-if="isMine(song)" class="badge bg-blue-lt" data-test="your-request">You</span>
-                            <span v-if="song.decoration?.label" class="badge bg-azure-lt" data-test="decoration-label">{{
-                                song.decoration.label
-                            }}</span>
+                            <span
+                                v-if="song.decoration?.label"
+                                class="badge bg-azure-lt"
+                                data-test="decoration-label"
+                                >{{ song.decoration.label }}</span
+                            >
                         </div>
                         <div class="q-by">
                             {{ combineArtists(song.artists) }} &middot;
                             <template v-if="isMine(song)">Requested by <b>you</b></template>
-                            <template v-else-if="song.user">Requested by <b>{{ song.user }}</b></template>
+                            <template v-else-if="song.user"
+                                >Requested by <b>{{ song.user }}</b></template
+                            >
                             <template v-else-if="customFallbackName(song)">{{ customFallbackName(song) }}</template>
                             <span v-else class="mp-credit" data-test="fallback-credit">
                                 <i class="icon ti ti-playlist"></i>From the party&rsquo;s Fallback Playlist
@@ -228,13 +350,41 @@ onBeforeUnmount(() => {
                     <div v-if="canManage" class="q-manage">
                         <button
                             type="button"
-                            class="btn btn-ghost-danger btn-icon"
+                            class="btn btn-icon btn-ghost-secondary rm"
                             :aria-label="`Remove ${song.name}`"
+                            title="Remove from Queue"
                             data-test="remove"
-                            @click="deleteSong(song.id)"
+                            @click="startRemoval(song)"
                         >
-                            <i class="icon ti ti-x"></i>
+                            <i class="icon ti ti-trash"></i>
                         </button>
+                    </div>
+                    <div v-if="canManage" class="q-menu" @click.stop>
+                        <button
+                            type="button"
+                            class="btn btn-icon btn-ghost-secondary"
+                            :aria-label="`Actions for ${song.name}`"
+                            aria-haspopup="true"
+                            :aria-expanded="openMenuId === song.id"
+                            data-test="actions"
+                            @click="openMenuId = openMenuId === song.id ? null : song.id"
+                        >
+                            <i class="icon ti ti-dots-vertical"></i>
+                        </button>
+                        <div v-if="openMenuId === song.id" class="dropdown-menu show" data-test="actions-menu">
+                            <button
+                                type="button"
+                                class="dropdown-item text-danger"
+                                data-test="remove-menu"
+                                @click="startRemoval(song)"
+                            >
+                                <i class="icon ti ti-trash me-2"></i>
+                                <span class="q-menu-text">
+                                    <span>Remove from Queue</span>
+                                    <small class="text-secondary">Guests can request it again</small>
+                                </span>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </TransitionGroup>
@@ -264,11 +414,37 @@ onBeforeUnmount(() => {
 
             <template #no-more><span /></template>
 
-            <template #error>
-                <div class="text-center text-secondary p-2">Error fetching upcoming songs</div>
+            <template #error="{retry}">
+                <div class="card" role="alert" data-test="queue-error">
+                    <div class="card-body text-center py-5">
+                        <i class="icon ti ti-cloud-off text-secondary fs-1"></i>
+                        <h2 class="h3 mt-3 mb-1">The Queue didn&rsquo;t load</h2>
+                        <div class="text-secondary mb-3">
+                            Check your connection, then try again. Your votes are saved.
+                        </div>
+                        <button type="button" class="btn btn-primary" data-test="retry" @click="retry">
+                            <i class="icon ti ti-refresh me-1"></i>Retry
+                        </button>
+                    </div>
+                </div>
             </template>
         </VueEternalLoading>
-        <Toast :message="message" @dismiss="message = ''" />
+        <Toast
+            :message="message"
+            :variant="notice?.kind === 'undo' ? 'dark' : 'danger'"
+            :action-label="notice?.kind === 'undo' ? 'Undo' : notice?.kind === 'failed' ? 'Retry' : undefined"
+            data-test="queue-toast"
+            @action="onNoticeAction"
+            @dismiss="dismissNotice"
+            @focusin="pauseUndoTimer"
+            @focusout="armUndoTimer"
+        >
+            <template v-if="notice?.name">
+                {{ notice.kind === 'undo' ? 'Removed' : "Couldn't remove" }} <b>{{ notice.name }}</b
+                >{{ notice.kind === 'undo' ? ' from the Queue.' : '. It is back in the Queue.' }}
+            </template>
+            <template v-else>{{ message }}</template>
+        </Toast>
     </div>
 </template>
 
@@ -367,11 +543,55 @@ onBeforeUnmount(() => {
 
 .q-manage {
     grid-area: manage;
+    align-self: stretch;
+    display: flex;
+    align-items: center;
+    margin-inline-start: 4px;
+    padding-inline-start: 16px;
+    border-inline-start: 1px solid var(--tblr-border-color);
 }
 
-.q-manage .btn {
+.q-manage .btn,
+.q-menu .btn {
     min-width: 44px;
     min-height: 44px;
+}
+
+.q-manage .btn .icon {
+    font-size: 1.25rem;
+}
+
+.q-manage .btn.rm:hover {
+    color: var(--tblr-danger);
+    background: color-mix(in oklab, var(--tblr-danger) 10%, transparent);
+}
+
+.q-menu {
+    grid-area: menu;
+    display: none;
+    position: relative;
+    align-self: start;
+}
+
+.q-menu .dropdown-menu {
+    inset: 100% 0 auto auto;
+    min-width: 15rem;
+    z-index: 5;
+}
+
+.q-menu .dropdown-item {
+    display: flex;
+    align-items: flex-start;
+    min-height: 44px;
+}
+
+.q-menu-text {
+    display: flex;
+    flex-direction: column;
+}
+
+.mp-qrow.mp-failed {
+    box-shadow: inset 4px 0 0 var(--tblr-danger);
 }
 
 .queue-card {
@@ -405,15 +625,20 @@ onBeforeUnmount(() => {
     .mp-qrow {
         grid-template-columns: 48px minmax(0, 1fr) auto;
         grid-template-areas:
-            'art main manage'
+            'art main menu'
             'art votes votes';
         gap: 4px 12px;
         padding: 12px 10px;
     }
 
     .q-pos,
-    .q-len {
+    .q-len,
+    .q-manage {
         display: none;
+    }
+
+    .q-menu {
+        display: block;
     }
 
     .q-length-inline {

@@ -7,11 +7,12 @@ const props = withDefaults(
     defineProps<{
         autoDismissMs?: number;
         message?: string | null;
-        variant?: 'success' | 'danger' | 'info' | 'warning';
+        variant?: 'success' | 'danger' | 'info' | 'warning' | 'dark';
+        actionLabel?: string;
     }>(),
-    {autoDismissMs: 0, message: undefined, variant: 'danger'},
+    {autoDismissMs: 0, message: undefined, variant: 'danger', actionLabel: undefined},
 );
-const emit = defineEmits<{dismiss: []}>();
+const emit = defineEmits<{dismiss: []; action: []}>();
 
 const page = usePage<SharedProps>();
 const dismissed = ref(new Set<string>());
@@ -71,10 +72,23 @@ onBeforeUnmount(() => timers.forEach(clearTimeout));
             role="alert"
         >
             <div class="d-flex">
-                <div class="toast-body">{{ toast.text }}</div>
+                <div class="toast-body">
+                    <slot v-if="toast.key === 'message'">{{ toast.text }}</slot>
+                    <template v-else>{{ toast.text }}</template>
+                </div>
+                <button
+                    v-if="toast.key === 'message' && actionLabel"
+                    type="button"
+                    class="mp-toast-action"
+                    data-test="toast-action"
+                    @click="emit('action')"
+                >
+                    {{ actionLabel }}
+                </button>
                 <button
                     type="button"
                     class="btn-close me-2 m-auto"
+                    :class="{'btn-close-white': toast.cls !== 'text-bg-warning' && toast.cls !== 'text-bg-info'}"
                     aria-label="close"
                     @click="dismiss(toast.key)"
                 ></button>
@@ -82,3 +96,21 @@ onBeforeUnmount(() => timers.forEach(clearTimeout));
         </div>
     </div>
 </template>
+
+<style scoped>
+.mp-toast-action {
+    align-self: center;
+    background: none;
+    border: 0;
+    color: inherit;
+    font-weight: 600;
+    text-decoration: underline;
+    padding: 0.5rem 0.75rem;
+    min-block-size: 44px;
+}
+
+.mp-toast-action:focus-visible {
+    outline: 2px solid currentcolor;
+    outline-offset: -2px;
+}
+</style>
