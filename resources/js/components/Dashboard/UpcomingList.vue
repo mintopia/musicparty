@@ -32,7 +32,6 @@ const scheduling = ref<DashboardRequest | null>(null);
 const estimates = computed(() =>
     estimateStarts(props.items, props.status, props.nowTrackName ?? null, props.now ?? Date.now()),
 );
-const schedulingIndex = computed(() => props.items.findIndex((item) => item.id === scheduling.value?.id));
 
 function toggleMenu(request: DashboardRequest): void {
     openMenuId.value = openMenuId.value === request.id ? null : request.id;
@@ -226,14 +225,16 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             />
                         </div>
                         <div v-if="!request.sent" class="col-auto qa d-none d-md-block">
-                            <a
-                                :href="`${queueUrl}/${request.id}`"
+                            <button
+                                type="button"
                                 class="btn btn-ghost-secondary btn-icon"
                                 aria-label="Schedule"
                                 title="Schedule"
                                 data-test="schedule"
-                                ><i class="ti ti-calendar-clock"></i
-                            ></a>
+                                @click="scheduling = request"
+                            >
+                                <i class="ti ti-calendar-clock"></i>
+                            </button>
                             <button
                                 type="button"
                                 class="btn btn-ghost-danger btn-icon"
@@ -258,7 +259,6 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             :song="scheduling.id"
             :timezone="timezone"
             :scheduled-for="scheduling.scheduled_for"
-            :after-track="schedulingIndex >= 0 ? estimates[schedulingIndex] : null"
             @close="scheduling = null"
         />
     </div>

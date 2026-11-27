@@ -830,10 +830,17 @@ describe('live updates', () => {
 });
 
 describe('upcoming list', () => {
-    it('links each row to its song page for scheduling', () => {
+    it('opens the schedule dialog from the desktop Schedule action instead of navigating', async () => {
         const wrapper = mountPage({state: 'hidden'});
+        const button = wrapper.find('[data-test="schedule"]');
 
-        expect(wrapper.find('[data-test="schedule"]').attributes('href')).toBe('/songs/4');
+        expect(button.element.tagName).toBe('BUTTON');
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
+
+        await button.trigger('click');
+
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="schedule-sheet"]').classes()).not.toContain('d-md-none');
     });
 
     it('offers labelled Schedule and Remove in the phone overflow menu', async () => {
@@ -878,13 +885,11 @@ describe('upcoming list', () => {
         expect(wrapper.findAll('[data-test="schedule-day"]').length).toBeGreaterThanOrEqual(28);
 
         const chips = wrapper.findAll('[data-test="schedule-chip"]').map((chip) => chip.text());
-        expect(chips.slice(0, 2)).toEqual(['In 15 minutes', 'After this track']);
-        expect(chips).not.toContain('In 30 minutes');
+        expect(chips[0]).toBe('In 15 minutes');
+        expect(chips).not.toContain('After this track');
 
         await wrapper.findAll('[data-test="schedule-chip"]')[1].trigger('click');
-        expect(wrapper.find('[data-test="schedule-summary"]').text()).toMatch(
-            /^Plays at \d\d:\d\d today, after Sandstorm\.$/,
-        );
+        expect(wrapper.find('[data-test="schedule-summary"]').text()).toMatch(/^Plays at \d\d:\d\d today\.$/);
 
         inertia.put.mockImplementation((_url: string, _data: unknown, options: {onSuccess?: () => void}) =>
             options.onSuccess?.(),

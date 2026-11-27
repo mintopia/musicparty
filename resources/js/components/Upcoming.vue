@@ -4,6 +4,7 @@ import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import axios from 'axios';
 import {computed, onBeforeUnmount, ref} from 'vue';
+import ScheduleSheet from '@/components/Dashboard/ScheduleSheet.vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
 import Toast from '@/components/Toast.vue';
@@ -12,6 +13,7 @@ import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
 import {formatMs} from '@/lib/dashboard';
 import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
 import {destroy, index} from '@/routes/api/v1/parties/upcomingsongs';
+import {show as showRequest} from '@/routes/parties/songs';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
 import type {LegacyArtist, LegacyUpcomingSong, SharedProps} from '@/types';
 
@@ -46,6 +48,7 @@ type Notice = {kind: 'error' | 'undo' | 'failed'; text: string; name?: string; i
 const notice = ref<Notice | null>(null);
 const failedIds = ref(new Set<number>());
 const openMenuId = ref<number | null>(null);
+const scheduling = ref<LegacyUpcomingSong | null>(null);
 const message = computed(() => notice.value?.text ?? '');
 let messageTimer: ReturnType<typeof setTimeout> | null = null;
 let pending: {song: LegacyUpcomingSong; timer: ReturnType<typeof setTimeout> | null} | null = null;
@@ -72,12 +75,20 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
     return (artists ?? []).map((artist) => artist.name).join(', ');
 }
 
-function formatScheduled(iso: string): string {
-    return new Intl.DateTimeFormat(undefined, {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: props.timezone,
-    }).format(new Date(iso));
+function formatPlaysAt(iso: string): string {
+    const day = (value: Date): string => new Intl.DateTimeFormat('en-CA', {timeZone: props.timezone}).format(value);
+    const date = new Date(iso);
+    const time = new Intl.DateTimeFormat(undefined, {timeStyle: 'short', timeZone: props.timezone}).format(date);
+    if (day(date) === day(new Date())) {
+        return time;
+    }
+
+    return `${new Intl.DateTimeFormat(undefined, {month: 'short', day: 'numeric', timeZone: props.timezone}).format(date)}, ${time}`;
+}
+
+function openSchedule(song: LegacyUpcomingSong): void {
+    openMenuId.value = null;
+    scheduling.value = song;
 }
 
 function sortUpcoming(): void {
@@ -319,6 +330,14 @@ onBeforeUnmount(() => {
                                 data-test="decoration-label"
                                 >{{ song.decoration.label }}</span
                             >
+                            <span
+                                v-if="song.scheduled_for"
+                                class="plays-at"
+                                data-test="scheduled-time"
+                                :title="`Plays at ${formatPlaysAt(song.scheduled_for)}`"
+                                ><i class="icon ti ti-calendar-time"></i>Plays at
+                                {{ formatPlaysAt(song.scheduled_for) }}</span
+                            >
                         </div>
                         <div class="q-by">
                             {{ combineArtists(song.artists) }} &middot;
@@ -332,10 +351,6 @@ onBeforeUnmount(() => {
                             </span>
                             <span class="q-length-inline"> &middot; {{ formatMs(song.length) }}</span>
                         </div>
-                        <div v-if="song.scheduled_for" class="text-info small" data-test="scheduled-time">
-                            <i class="icon ti ti-clock"></i>
-                            Scheduled for {{ formatScheduled(song.scheduled_for) }}
-                        </div>
                     </div>
                     <div class="q-len text-secondary">{{ formatMs(song.length) }}</div>
                     <div class="q-votes">
@@ -348,6 +363,17 @@ onBeforeUnmount(() => {
                         />
                     </div>
                     <div v-if="canManage" class="q-manage">
+                        <button
+                            type="button"
+                            class="btn btn-icon btn-ghost-secondary sched"
+                            :class="{'is-set': song.scheduled_for}"
+                            :aria-label="`${song.scheduled_for ? 'Change schedule for' : 'Schedule'} ${song.name}`"
+                            :title="song.scheduled_for ? 'Change schedule' : 'Schedule'"
+                            data-test="schedule"
+                            @click="openSchedule(song)"
+                        >
+                            <i class="icon ti ti-calendar-clock"></i>
+                        </button>
                         <button
                             type="button"
                             class="btn btn-icon btn-ghost-secondary rm"
@@ -372,6 +398,29 @@ onBeforeUnmount(() => {
                             <i class="icon ti ti-dots-vertical"></i>
                         </button>
                         <div v-if="openMenuId === song.id" class="dropdown-menu show" data-test="actions-menu">
+                            <button
+                                type="button"
+                                class="dropdown-item"
+                                data-test="schedule-menu"
+                                @click="openSchedule(song)"
+                            >
+                                <i class="icon ti ti-calendar-clock me-2"></i>
+                                <span class="q-menu-text">
+                                    <span>{{ song.scheduled_for ? 'Change schedule' : 'Schedule' }}</span>
+                                    <small class="text-secondary">Pick a day and time for it to play</small>
+                                </span>
+                            </button>
+                            <a
+                                :href="showRequest({party, song: song.id}).url"
+                                class="dropdown-item"
+                                data-test="view-request"
+                            >
+                                <i class="icon ti ti-external-link me-2"></i>
+                                <span class="q-menu-text">
+                                    <span>View Request</span>
+                                    <small class="text-secondary">Open its detail page</small>
+                                </span>
+                            </a>
                             <button
                                 type="button"
                                 class="dropdown-item text-danger"
@@ -429,6 +478,17 @@ onBeforeUnmount(() => {
                 </div>
             </template>
         </VueEternalLoading>
+        <ScheduleSheet
+            v-if="scheduling"
+            :key="scheduling.id"
+            :title="`Schedule ${scheduling.name}`"
+            :party="party"
+            :song="scheduling.id"
+            :timezone="timezone"
+            :scheduled-for="scheduling.scheduled_for"
+            @saved="resync"
+            @close="scheduling = null"
+        />
         <Toast
             :message="message"
             :variant="notice?.kind === 'undo' ? 'dark' : 'danger'"
@@ -549,6 +609,22 @@ onBeforeUnmount(() => {
     margin-inline-start: 4px;
     padding-inline-start: 16px;
     border-inline-start: 1px solid var(--tblr-border-color);
+}
+
+.plays-at {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border-radius: 99px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    background: color-mix(in oklab, var(--tblr-yellow) 22%, var(--tblr-bg-surface));
+    color: color-mix(in oklab, var(--tblr-yellow) 45%, var(--tblr-body-color));
+}
+
+.q-manage .btn.sched.is-set {
+    color: var(--tblr-yellow);
 }
 
 .q-manage .btn,
