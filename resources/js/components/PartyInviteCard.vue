@@ -37,7 +37,7 @@ const labels: Partial<Record<PlaybackState, string>> = {playing: 'Playing', paus
             <p class="small">
                 <span class="status-dot" :class="dots[party.playback] ?? 'status-secondary'"></span
                 >{{ labels[party.playback] ?? 'Nothing playing'
-                }}<template v-if="party.detail"> {{ party.detail }}</template>
+                }}<template v-if="party.detail">{{ ` ${party.detail}` }}</template>
             </p>
         </div>
     </div>
