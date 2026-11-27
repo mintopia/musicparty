@@ -11,6 +11,7 @@ use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackStatus;
 use Carbon\CarbonImmutable;
+use Illuminate\Support\Facades\Log;
 
 class EncoreStateMapper implements PushedStateMapper
 {
@@ -40,8 +41,31 @@ class EncoreStateMapper implements PushedStateMapper
                 ? $this->with($previous, connectionStatus: $data['logged_in'] ? PlaybackConnectionStatus::Connected : PlaybackConnectionStatus::LoggedOut)
                 : null,
             'error' => $this->with($previous, connectionStatus: PlaybackConnectionStatus::Error),
+            'command_result' => $this->commandResult($party, $data),
             default => null,
         };
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     */
+    private function commandResult(Party $party, array $data): null
+    {
+        $command = is_string($data['command'] ?? null) ? $data['command'] : 'unknown';
+        $failed = ($data['success'] ?? null) === false
+            || ($data['ok'] ?? null) === false
+            || in_array($data['status'] ?? null, ['error', 'failed'], true)
+            || ($data['error'] ?? null) !== null;
+
+        if ($failed) {
+            $error = $data['error'] ?? $data['message'] ?? null;
+            $error = is_string($error) ? $error : json_encode($data);
+            Log::warning("{$party}: Encore command {$command}() failed: {$error}");
+        } else {
+            Log::debug("{$party}: Encore command {$command}() succeeded");
+        }
+
+        return null;
     }
 
     /**
@@ -169,10 +193,11 @@ class EncoreStateMapper implements PushedStateMapper
         }
 
         $timestamp = $position['timestamp_ms'] ?? null;
+        $now = CarbonImmutable::now();
 
         return [
             'progressMs' => $position['position_ms'],
-            'sampledAt' => is_int($timestamp) ? CarbonImmutable::createFromTimestampMsUTC($timestamp) : CarbonImmutable::now(),
+            'sampledAt' => is_int($timestamp) ? CarbonImmutable::createFromTimestampMsUTC($timestamp)->min($now) : $now,
         ];
     }
 

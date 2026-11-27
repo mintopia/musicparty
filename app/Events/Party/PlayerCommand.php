@@ -31,7 +31,7 @@ class PlayerCommand implements ShouldBroadcastNow
     }
 
     /**
-     * Encore relays the payload verbatim to Soloist, which only accepts commands shaped {"type":"command","command":"<name>"}.
+     * Encore relays the payload verbatim to Soloist, which only accepts commands shaped {"type":"command","command":"<name>"} and names Next `skip_next`.
      *
      * @return array<string, mixed>
      */
@@ -42,6 +42,7 @@ class PlayerCommand implements ShouldBroadcastNow
         }
 
         ['type' => $name] = $this->command;
+        $name = $name === 'next' ? 'skip_next' : $name;
 
         return ['type' => 'command', 'command' => $name, ...array_diff_key($this->command, ['type' => true])];
     }

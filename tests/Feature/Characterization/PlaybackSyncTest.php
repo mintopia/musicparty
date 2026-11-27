@@ -15,6 +15,7 @@ use App\Services\PlaybackSync;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Sleep;
 use Tests\Support\FakeSpotify;
 
 function syncParty(array $attributes = []): array
@@ -344,11 +345,12 @@ it('does not record a second Played Track when the same pushed state is applied 
     expect(PlayedSong::query()->count())->toBe(1);
 });
 
-it('does not apply a pushed state while another sync holds the lock', function () {
+it('does not apply a pushed state while another sync holds the lock past the wait', function () {
     [$party, $fake] = syncParty();
     nowPlaying($fake, 'PUSHED');
     $lock = Cache::lock("party-sync:{$party->id}", 30);
     $lock->get();
+    Sleep::fake(syncWithCarbon: true);
 
     expect(app(PlaybackSync::class)->apply($party, playbackOf('PUSHED')))->toBeFalse()
         ->and(PlayedSong::query()->count())->toBe(0);
