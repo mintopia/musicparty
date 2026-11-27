@@ -2,17 +2,16 @@
 import {VueEternalLoading} from '@ts-pro/vue-eternal-loading';
 import type {LoadAction} from '@ts-pro/vue-eternal-loading';
 import axios from 'axios';
-import {onBeforeUnmount, ref, watch} from 'vue';
+import {onBeforeUnmount, ref} from 'vue';
 import {useEcho} from '@/composables/useEcho';
 import EmptyState from '@/components/EmptyState.vue';
 import Toast from '@/components/Toast.vue';
-import TrackRow from '@/components/TrackRow.vue';
 import TrackRowPlaceholder from '@/components/TrackRowPlaceholder.vue';
-import {useIsPhone} from '@/composables/useIsPhone';
-import {legacyFallbackLabel, legacyToAnnotation} from '@/lib/legacyTrack';
+import {formatMs} from '@/lib/dashboard';
+import {legacyAccentStyle, legacyFallbackName, legacyRowClasses} from '@/lib/decoration';
 import {destroy, index} from '@/routes/api/v1/parties/upcomingsongs';
 import {store as storeVote} from '@/routes/api/v1/parties/upcomingsongs/vote';
-import type {LegacyUpcomingSong} from '@/types';
+import type {LegacyArtist, LegacyUpcomingSong} from '@/types';
 
 const props = withDefaults(
     defineProps<{
@@ -25,9 +24,6 @@ const props = withDefaults(
     {canManage: false, canDownvote: false, timezone: 'UTC'},
 );
 
-const emit = defineEmits<{count: [total: number]}>();
-
-const isPhone = useIsPhone();
 const page = ref(1);
 const upcoming = ref<LegacyUpcomingSong[]>([]);
 const message = ref('');
@@ -42,6 +38,10 @@ function showMessage(text: string): void {
         message.value = '';
         messageTimer = null;
     }, 5000);
+}
+
+function combineArtists(artists: LegacyArtist[] | undefined): string {
+    return (artists ?? []).map((artist) => artist.name).join(', ');
 }
 
 function formatScheduled(iso: string): string {
@@ -148,12 +148,6 @@ channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
 });
 echo.onReconnect(() => void resync());
 
-watch(
-    () => upcoming.value.length,
-    (total) => emit('count', total),
-    {immediate: true},
-);
-
 onBeforeUnmount(() => {
     if (messageTimer !== null) {
         clearTimeout(messageTimer);
@@ -164,25 +158,122 @@ onBeforeUnmount(() => {
     <div>
         <div v-if="upcoming.length > 0" class="card" data-test="queue-card">
             <TransitionGroup name="queue" tag="div" class="list-group list-group-flush">
-                <TrackRow
-                    v-for="song in upcoming"
-                    :key="song.id"
-                    :track="legacyToAnnotation(song)"
-                    :can-downvote="canDownvote"
-                    :compact="isPhone"
-                    :removable="canManage"
-                    :scheduled-label="song.scheduled_for ? formatScheduled(song.scheduled_for) : undefined"
-                    :fallback-name="legacyFallbackLabel(song)"
-                    @vote="(_track, value) => vote(song.id, value)"
-                    @remove="deleteSong(song.id)"
-                />
+                <div v-for="song in upcoming" :key="song.id" class="list-group-item">
+                    <div :class="legacyRowClasses(song)" :style="legacyAccentStyle(song)" data-test="track-row">
+                        <div class="col-auto">
+                            <img
+                                :src="song.album.image_url"
+                                :title="song.album.name"
+                                :alt="song.album.name"
+                                class="rounded"
+                                width="60"
+                                height="60"
+                                loading="lazy"
+                                decoding="async"
+                            />
+                        </div>
+                        <div class="col">
+                            {{ song.name }}
+                            <span
+                                v-if="song.decoration?.label"
+                                class="badge bg-azure-lt ms-1"
+                                data-test="decoration-label"
+                                >{{ song.decoration.label }}</span
+                            >
+                            <div class="text-secondary">{{ combineArtists(song.artists) }}</div>
+                            <div v-if="song.scheduled_for" class="text-info" data-test="scheduled-time">
+                                <i class="icon ti ti-clock"></i>
+                                Scheduled for {{ formatScheduled(song.scheduled_for) }}
+                            </div>
+                            <div class="text-muted">
+                                <template v-if="song.user">Requested by {{ song.user }}</template>
+                                <template v-else>{{ legacyFallbackName(song) }}</template>
+                            </div>
+                        </div>
+                        <div class="col-auto text-secondary song-length">{{ formatMs(song.length) }}</div>
+                        <div class="col-auto text-center">
+                            <div class="row">
+                                <template v-if="canDownvote">
+                                    <div class="col-3">
+                                        <button
+                                            type="button"
+                                            class="vote-icon"
+                                            :aria-label="`Upvote ${song.name}`"
+                                            :aria-pressed="song.vote === 1"
+                                            data-test="upvote"
+                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
+                                        >
+                                            <i
+                                                class="icon ti"
+                                                :class="
+                                                    song.vote === 1
+                                                        ? 'ti-arrow-big-up-filled text-success'
+                                                        : 'ti-arrow-big-up'
+                                                "
+                                            ></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-6" data-test="score">{{ song.score }}</div>
+                                    <div class="col-3">
+                                        <button
+                                            type="button"
+                                            class="vote-icon"
+                                            :aria-label="`Downvote ${song.name}`"
+                                            :aria-pressed="song.vote === -1"
+                                            data-test="downvote"
+                                            @click="vote(song.id, song.vote === -1 ? 0 : -1)"
+                                        >
+                                            <i
+                                                class="icon ti"
+                                                :class="
+                                                    song.vote === -1
+                                                        ? 'ti-arrow-big-down-filled text-danger'
+                                                        : 'ti-arrow-big-down'
+                                                "
+                                            ></i>
+                                        </button>
+                                    </div>
+                                </template>
+                                <template v-else>
+                                    <div class="col-4">
+                                        <button
+                                            type="button"
+                                            class="vote-icon"
+                                            :aria-label="`Like ${song.name}`"
+                                            :aria-pressed="song.vote === 1"
+                                            data-test="heart"
+                                            @click="vote(song.id, song.vote === 1 ? 0 : 1)"
+                                        >
+                                            <i
+                                                class="icon ti"
+                                                :class="song.vote === 1 ? 'ti-heart-filled text-success' : 'ti-heart'"
+                                            ></i>
+                                        </button>
+                                    </div>
+                                    <div class="col-8" data-test="score">{{ song.score }}</div>
+                                </template>
+                            </div>
+                        </div>
+                        <div v-if="canManage" class="col-auto lh-1">
+                            <button
+                                type="button"
+                                class="vote-icon"
+                                :aria-label="`Remove ${song.name}`"
+                                data-test="remove"
+                                @click="deleteSong(song.id)"
+                            >
+                                <i class="icon ti ti-x"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
             </TransitionGroup>
         </div>
         <VueEternalLoading :load="getPage">
             <template #loading>
                 <div class="card" aria-hidden="true">
                     <div class="list-group list-group-flush">
-                        <TrackRowPlaceholder v-for="n in 3" :key="n" :compact="isPhone" />
+                        <TrackRowPlaceholder v-for="n in 3" :key="n" />
                     </div>
                 </div>
             </template>
@@ -208,6 +299,24 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
+.song-length {
+    padding-right: 1rem;
+}
+
+.vote-icon {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    line-height: 1;
+    cursor: pointer;
+}
+
+.vote-icon:focus-visible {
+    outline: 2px solid currentColor;
+    outline-offset: 2px;
+}
+
 .queue-move,
 .queue-enter-active,
 .queue-leave-active {
