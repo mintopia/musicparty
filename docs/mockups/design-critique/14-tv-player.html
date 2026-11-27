@@ -940,21 +940,36 @@ body{background:var(--tblr-bg-surface-secondary,var(--tblr-body-bg))}
 .wp-body{padding:16px}
 }
 @media (min-width:1600px){
-.wp-wrap{max-width:1500px}
-.wp-hero{padding:72px 96px 80px}
+.wp{position:relative;height:100vh;overflow:hidden}
+.wp-hero{height:100%;padding:64px 120px 0}
+.wp-wrap{max-width:none}
+.wp-hero .wp-wrap{display:grid;grid-template-columns:440px minmax(0,1fr);grid-template-areas:"top top" "art meta" "art progress" "art transport" "art hints";column-gap:80px;align-content:start}
+.wp-top{grid-area:top;margin-bottom:48px}
 .wp-top h1{font-size:1.75rem}
-.wp-main{grid-template-columns:480px minmax(0,1fr);gap:72px}
-.wp-art{width:480px;height:480px}
-.wp-title{font-size:4rem}
-.wp-artists{font-size:2rem;margin-top:16px}
-.wp-album{font-size:1.5rem}
-.wp-copy{font-size:1.75rem}
-.wp-progress{font-size:1.5rem;margin-top:56px;gap:24px}
-.wp-bar{height:10px}
-.wp-btn{width:96px;height:96px;font-size:2.5rem}.wp-btn.is-play{width:128px;height:128px;font-size:3.5rem}
-.wp-transport{gap:40px;margin-top:40px}
-.wp-hints{font-size:1.5rem}
 .wp-top .status-pill{font-size:1.5rem}
+.wp-main{display:contents}
+.wp-art{grid-area:art;width:440px;height:440px;border-radius:14px}
+.wp-main>div{grid-area:meta;align-self:start}
+.wp-title{font-size:4.5rem;line-height:1.05}
+.wp-artists{font-size:2.25rem;margin-top:14px}
+.wp-album{font-size:1.5rem;margin-top:6px}
+.wp-progress{grid-area:progress;font-size:1.5rem;margin-top:40px;gap:24px}
+.wp-bar{height:10px}
+.wp-transport{grid-area:transport;justify-content:flex-start;gap:36px;margin-top:32px}
+.wp-btn{width:96px;height:96px;font-size:2.5rem}.wp-btn.is-play{width:120px;height:120px;font-size:3.25rem}
+.wp-hints{grid-area:hints;justify-content:flex-start;font-size:1.375rem;margin-top:24px}
+.wp-body{position:absolute;inset:auto 0 0;padding:0 120px 56px}
+.wp-body .wp-wrap{display:grid;grid-template-columns:minmax(0,3fr) minmax(0,1fr);gap:24px;align-items:stretch}
+.wp-body .card{margin:0;background:#00000066;border-color:#ffffff26;color:#fff;--tblr-secondary-color:#ffffffb8;--tblr-border-color:#ffffff1f;backdrop-filter:blur(10px)}
+.wp-body .card-header{display:none}
+.wp-body .mp-checks{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));height:100%}
+.wp-body .mp-checks>li{border:0;padding:24px 28px;align-items:start}
+.wp-body .mp-checks>li+li{border-inline-start:1px solid #ffffff1f}
+.wp-body .mp-check-label{font-size:1.375rem}
+.wp-body .mp-check-detail{font-size:1.125rem;margin-top:4px}
+.wp-body .status-dot{margin-top:9px;width:12px;height:12px}
+.wp-leave{padding:24px 28px;font-size:1.125rem}
+.wp-leave .ti{color:#ffffffb8!important}
 }
 </style><div class="wp">
 <div data-v-7fc06ba4="" class="now-playing-backdrop wp-hero" style="--np-image: url(&quot;art/cover-1.svg&quot;);"><div class="wp-wrap">
@@ -977,7 +992,7 @@ body{background:var(--tblr-bg-surface-secondary,var(--tblr-body-bg))}
 <li><b>Not connected</b>: Premium needed and Log in again each name the cause and put the fix first ("Open Spotify account", "Log in with Spotify"). The status card shows the same cause in red.</li>
 <li><b>Taken over</b>: today a yellow alert with no way back. Now it names the other player and offers "Use this tab instead" (new action; the claim protocol already supports a newer claim winning).</li>
 <li><b>Leaving</b>: the "closing this tab stops playback" warning is visible on the page, not only in the browser confirm.</li>
-<li><b>Across the room</b>: at 1920x1080 art, title and the status pill scale up like the TV page, so the speaker laptop can be read from the sofa. Dark mode changes only the card below the hero; the hero is always dark like the band.</li>
+<li><b>Across the room</b>: at 1920x1080 everything fits on one screen with no scrolling: art on the left; title, progress, transport and shortcuts on the right; Player status and the keep-this-tab-open note as a glass strip along the bottom. Sizes scale up like the TV page so the speaker laptop can be read from the sofa. Dark mode changes only the card below the hero; the hero is always dark like the band.</li>
 </ul>
 </section>
 <script src="assets/mockup.js"></script>
