@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 
 /**
@@ -124,21 +125,27 @@ class PlayedSong extends Model
 
     public function setRating(User $user, int $value): ?SongRating
     {
-        $rating = $this->ratings()->whereUserId($user->id)->first();
         if ($value === 0) {
-            $rating?->delete();
+            $this->ratings()->whereUserId($user->id)->get()->each->delete();
 
             return null;
         }
-        if (! $rating) {
-            $rating = new SongRating;
-            $rating->song()->associate($this);
-            $rating->user()->associate($user);
+
+        try {
+            return $this->storeRating($user, $value);
+        } catch (UniqueConstraintViolationException) {
+            return $this->storeRating($user, $value);
         }
-        if ($rating->value !== $value) {
-            $rating->value = $value;
-            $rating->save();
-        }
+    }
+
+    private function storeRating(User $user, int $value): SongRating
+    {
+        $rating = $this->ratings()->whereUserId($user->id)->first() ?? (new SongRating)->forceFill([
+            'played_song_id' => $this->id,
+            'user_id' => $user->id,
+        ]);
+        $rating->value = $value;
+        $rating->save();
 
         return $rating;
     }

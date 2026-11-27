@@ -365,6 +365,21 @@ describe('played track ratings', function () {
             ->and($played->fresh()->rating)->toBe(1);
     });
 
+    it('keeps exactly one row across rapid successive ratings and the unique index blocks duplicates', function () {
+        [$party, $played] = ratedParty();
+        $user = voteMember($party);
+
+        foreach ([1, -1, 1, -1] as $value) {
+            $played->setRating($user, $value);
+        }
+
+        expect(SongRating::count())->toBe(1)
+            ->and($played->fresh()->rating)->toBe(-1);
+
+        expect(fn () => SongRating::factory()->create(['played_song_id' => $played->id, 'user_id' => $user->id]))
+            ->toThrow(UniqueConstraintViolationException::class);
+    });
+
     it('applies no ban check to ratings', function () {
         [$party, $played] = ratedParty();
 
