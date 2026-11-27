@@ -92,7 +92,11 @@ onBeforeUnmount(clearNotice);
                         </PlayerStatusPill>
                     </div>
 
-                    <div v-if="state.now !== null" class="player-main" :class="{'has-status': !connected || paused}">
+                    <div
+                        v-if="state.now !== null"
+                        class="player-main"
+                        :class="{'has-status': !connected || paused, 'pill-wide': !connected}"
+                    >
                         <img
                             v-if="showArt"
                             class="player-art"
@@ -106,7 +110,7 @@ onBeforeUnmount(clearNotice);
                         <div v-else class="player-art player-art-blank" data-test="art-blank">
                             <i class="ti ti-vinyl" aria-hidden="true"></i>
                         </div>
-                        <div class="player-col">
+                        <div class="player-text">
                             <h2 class="player-title" :title="state.now.name" data-test="now-name">
                                 {{ state.now.name }}
                             </h2>
@@ -114,22 +118,21 @@ onBeforeUnmount(clearNotice);
                             <p v-if="state.now.album?.name" class="player-album" :title="state.now.album.name">
                                 {{ state.now.album.name }}
                             </p>
-                            <div class="player-spacer"></div>
-                            <div v-if="hasLength" class="player-progress" data-test="progress-row">
-                                <span class="player-time">{{ elapsedLabel }}</span>
-                                <PlaybackProgress class="player-bar" :class="{paused}" :percent="progressPercent" />
-                                <span class="player-time end">{{ totalLabel }}</span>
-                            </div>
-                            <div class="player-bottom">
-                                <span v-if="isCurrentTrack" class="player-by" data-test="requested-by">
-                                    <template v-if="state.current?.user">
-                                        Requested by <b>{{ state.current.user }}</b>
-                                    </template>
-                                    <template v-else>Fallback Track</template>
-                                </span>
-                                <span v-else class="player-by"></span>
-                                <RateControl v-if="state.current" :rating="score" :pressed="pressed" @rate="rate" />
-                            </div>
+                        </div>
+                        <div v-if="hasLength" class="player-progress" data-test="progress-row">
+                            <span class="player-time">{{ elapsedLabel }}</span>
+                            <PlaybackProgress class="player-bar" :class="{paused}" :percent="progressPercent" />
+                            <span class="player-time end">{{ totalLabel }}</span>
+                        </div>
+                        <div class="player-bottom">
+                            <span v-if="isCurrentTrack" class="player-by" data-test="requested-by">
+                                <template v-if="state.current?.user">
+                                    Requested by <b>{{ state.current.user }}</b>
+                                </template>
+                                <template v-else>Fallback Track</template>
+                            </span>
+                            <span v-else class="player-by"></span>
+                            <RateControl v-if="state.current" :rating="score" :pressed="pressed" @rate="rate" />
                         </div>
                     </div>
                     <div v-else class="player-empty" data-test="nothing-playing">
@@ -151,7 +154,9 @@ onBeforeUnmount(clearNotice);
                                 loading="lazy"
                                 decoding="async"
                             />
-                            <span v-else class="player-next-art player-next-blank" aria-hidden="true"></span>
+                            <span v-else class="player-next-art player-next-blank" aria-hidden="true">
+                                <i class="ti ti-vinyl"></i>
+                            </span>
                             <span class="player-next-meta" :title="`${state.next.name} · ${nextArtists}`">
                                 <b>{{ state.next.name }}</b>
                                 <span
@@ -195,14 +200,16 @@ onBeforeUnmount(clearNotice);
 }
 
 .player-main {
-    display: flex;
-    align-items: stretch;
-    gap: 20px;
+    display: grid;
+    grid-template-columns: var(--art) minmax(0, 1fr);
+    grid-template-rows: 1fr auto auto;
+    column-gap: 20px;
     padding: 20px 20px 16px;
 }
 
 .player-art {
-    flex: none;
+    grid-column: 1;
+    grid-row: 1 / span 3;
     display: block;
     inline-size: var(--art);
     block-size: var(--art);
@@ -219,11 +226,10 @@ onBeforeUnmount(clearNotice);
     font-size: calc(var(--art) * 0.33);
 }
 
-.player-col {
-    flex: 1;
+.player-text {
+    grid-column: 2;
+    grid-row: 1;
     min-inline-size: 0;
-    display: flex;
-    flex-direction: column;
 }
 
 .player-title {
@@ -242,6 +248,10 @@ onBeforeUnmount(clearNotice);
 }
 
 .has-status .player-title {
+    padding-inline-end: 72px;
+}
+
+.pill-wide .player-title {
     padding-inline-end: 120px;
 }
 
@@ -265,14 +275,12 @@ onBeforeUnmount(clearNotice);
     color: rgba(255, 255, 255, 0.62);
 }
 
-.player-spacer {
-    flex: 1;
-}
-
 .player-progress {
     display: flex;
     align-items: center;
     gap: 10px;
+    grid-column: 2;
+    grid-row: 2;
     margin-block-start: 8px;
     --playback-progress-height: 4px;
     --playback-progress-track: rgba(255, 255, 255, 0.2);
@@ -299,6 +307,9 @@ onBeforeUnmount(clearNotice);
 }
 
 .player-bottom {
+    grid-column: 2;
+    grid-row: 3;
+    min-inline-size: 0;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -372,7 +383,11 @@ onBeforeUnmount(clearNotice);
 }
 
 .player-next-blank {
+    display: grid;
+    place-items: center;
     background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 16px;
 }
 
 .player-next-meta {
@@ -404,12 +419,26 @@ onBeforeUnmount(clearNotice);
     }
 
     .player-main {
-        gap: 12px;
+        column-gap: 12px;
         padding: 14px 14px 12px;
+    }
+
+    .player-art {
+        grid-row: 1;
+    }
+
+    .player-progress,
+    .player-bottom {
+        grid-column: 1 / -1;
+    }
+
+    .player-progress {
+        margin-block-start: 12px;
     }
 
     .player-title {
         font-size: 18px;
+        min-block-size: 2.4em;
     }
 
     .player-artists {
@@ -422,14 +451,6 @@ onBeforeUnmount(clearNotice);
 
     .player-next {
         padding-inline: 14px;
-    }
-
-    .player-main.has-status {
-        padding-block-start: 36px;
-    }
-
-    .has-status .player-title {
-        padding-inline-end: 0;
     }
 
     .player-status {

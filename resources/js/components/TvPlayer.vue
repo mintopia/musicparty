@@ -189,7 +189,9 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
                     height="112"
                     decoding="async"
                 />
-                <span v-else class="tv-next-art tv-next-blank" aria-hidden="true"></span>
+                <span v-else class="tv-next-art tv-next-blank" aria-hidden="true">
+                    <i class="ti ti-vinyl"></i>
+                </span>
                 <span class="tv-next-meta">
                     <b>{{ nextTrack.name }}</b>
                     <span
@@ -258,6 +260,9 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
 
 .tv-status {
     margin-block-start: calc(8 * var(--u));
+}
+
+.tv-status :deep(.status-pill) {
     font-size: calc(14 * var(--u));
 }
 
@@ -266,6 +271,7 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
 }
 
 .tv-join {
+    min-block-size: max(120px, calc(76 * var(--u)));
     display: flex;
     align-items: center;
     gap: calc(14 * var(--u));
@@ -306,8 +312,8 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
 }
 
 .tv-qr-large {
-    inline-size: clamp(220px, 22vh, 480px);
-    block-size: clamp(220px, 22vh, 480px);
+    inline-size: clamp(220px, 40vh, 880px);
+    block-size: clamp(220px, 40vh, 880px);
     padding: calc(12 * var(--u));
 }
 
@@ -453,20 +459,27 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
     gap: calc(56 * var(--u));
 }
 
+.tv-empty-copy {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .tv-empty-title {
     font-size: calc(40 * var(--u));
     font-weight: 700;
 }
 
-.tv-empty p {
-    margin: calc(10 * var(--u)) 0 0;
+.tv-empty-copy p {
+    margin: 0;
+    padding-block-start: calc(10 * var(--u));
     font-size: calc(19 * var(--u));
     color: rgba(255, 255, 255, 0.78);
 }
 
 .tv-empty-code {
     display: block;
-    margin-block-start: calc(6 * var(--u));
+    padding-block-start: calc(6 * var(--u));
     font-size: calc(40 * var(--u));
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -505,7 +518,11 @@ function combineArtists(artists: LegacyArtist[] | undefined): string {
 }
 
 .tv-next-blank {
+    display: grid;
+    place-items: center;
     background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.5);
+    font-size: calc(28 * var(--u));
 }
 
 .tv-next-meta {
