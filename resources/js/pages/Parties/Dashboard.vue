@@ -10,18 +10,34 @@ import NeedsAttention from '@/components/Dashboard/NeedsAttention.vue';
 import QuickLinks from '@/components/Dashboard/QuickLinks.vue';
 import UpcomingList from '@/components/Dashboard/UpcomingList.vue';
 import {useDashboardSync} from '@/composables/useDashboardSync';
+import {useTicker} from '@/composables/useProgress';
 import {notifyKey} from '@/lib/dashboard';
+import {attentionIssue, derivePlaybackStatus} from '@/lib/playbackStatus';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type {DashboardProps, DashboardRequest, LegacyPartyState} from '@/types';
 
 const props = defineProps<DashboardProps>();
+const PLAYBACK_ISSUES = ['relink_required', 'player_stale', 'no_device', 'outside'];
 
 const state = ref<LegacyPartyState>(props.playerState);
-const issues = computed(() =>
-    props.attention.issues.filter(
-        (issue) => issue.code !== 'player_stale' || props.control.health.player.connected !== true,
-    ),
+const now = useTicker(
+    () => props.control.health.receivedAt !== null,
+    () => props.control.health.receivedAt,
 );
+const status = computed(() =>
+    derivePlaybackStatus({
+        control: props.control,
+        state: state.value,
+        host: props.host.name,
+        hasWebPlayer: props.links.webPlayer !== null,
+        now: now.value,
+    }),
+);
+const issues = computed(() => {
+    const own = attentionIssue(status.value);
+    const rest = props.attention.issues.filter((issue) => !PLAYBACK_ISSUES.includes(issue.code));
+    return own ? [own, ...rest] : rest;
+});
 const deleting = ref<DashboardRequest | null>(null);
 const notice = ref<string | null>(null);
 let noticeTimer: ReturnType<typeof setTimeout> | null = null;
@@ -68,6 +84,8 @@ onBeforeUnmount(() => {
                 :host="host.name"
                 :state="state"
                 :control="control"
+                :status="status"
+                :links="links"
                 :up-next="upNext"
                 :total="upcoming.total"
                 :queue-url="links.songs"
@@ -105,6 +123,9 @@ onBeforeUnmount(() => {
                     :flagged-total="attention.flaggedTotal"
                     :flagged-url="links.flagged"
                     :can-moderate="can.moderate"
+                    :web-player-url="links.webPlayer"
+                    :relink-url="links.relink"
+                    :device-id="control.start.selectedDeviceId"
                 />
                 <QuickLinks :links="links" :can-manage="party.canManage" />
             </div>

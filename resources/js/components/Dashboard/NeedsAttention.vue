@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import {computed, ref} from 'vue';
-import {activateParty, approveFlagged, rejectFlagged, useRun} from '@/lib/dashboard';
+import {activateParty, approveFlagged, rejectFlagged, startPlayback, useRun} from '@/lib/dashboard';
 import type {DashboardIssue, DashboardIssueCode, FlaggedRequest} from '@/types';
 
 const props = defineProps<{
@@ -10,6 +10,9 @@ const props = defineProps<{
     flaggedTotal: number;
     flaggedUrl: string;
     canModerate: boolean;
+    webPlayerUrl?: string | null;
+    relinkUrl?: string | null;
+    deviceId?: string | null;
 }>();
 
 const run = useRun();
@@ -23,7 +26,31 @@ const appearance: Record<DashboardIssueCode, {icon: string; tone: string}> = {
     party_inactive: {icon: 'ti-power', tone: 'secondary'},
     player_stale: {icon: 'ti-antenna-bars-off', tone: 'warning'},
     premium_required: {icon: 'ti-brand-spotify', tone: 'danger'},
+    no_device: {icon: 'ti-device-speaker-off', tone: 'danger'},
+    outside: {icon: 'ti-player-play', tone: 'warning'},
 };
+
+function linkFor(issue: DashboardIssue): string | null {
+    switch (issue.action?.kind) {
+        case 'open_web_player':
+            return props.webPlayerUrl ?? null;
+        case 'relink':
+            return props.relinkUrl ?? null;
+        default:
+            return null;
+    }
+}
+
+function perform(issue: DashboardIssue): Promise<void> {
+    switch (issue.action?.kind) {
+        case 'start':
+            return act(() => startPlayback(props.code, props.deviceId ?? null));
+        case 'refresh_devices':
+            return act(() => Promise.resolve());
+        default:
+            return act(() => activateParty(props.code));
+    }
+}
 
 const artists = (item: FlaggedRequest): string => item.track.artists.map((a) => a.name).join(', ');
 
@@ -58,12 +85,20 @@ async function act(action: () => Promise<unknown>): Promise<void> {
                         <div class="na-detail">{{ issue.detail }}</div>
                     </div>
                     <div v-if="issue.action" class="na-acts">
+                        <a
+                            v-if="linkFor(issue)"
+                            :href="linkFor(issue) ?? undefined"
+                            class="btn btn-outline-primary"
+                            data-test="issue-action"
+                            >{{ issue.action.label }}</a
+                        >
                         <button
+                            v-else
                             type="button"
                             class="btn btn-outline-primary"
                             :disabled="busy"
                             data-test="issue-action"
-                            @click="act(() => activateParty(code))"
+                            @click="perform(issue)"
                         >
                             {{ issue.action.label }}
                         </button>

@@ -8,6 +8,7 @@ import {useTicker} from '@/composables/useProgress';
 import {useRating} from '@/composables/useRating';
 import {useTransportShortcuts} from '@/composables/useTransportShortcuts';
 import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
+import type {PlaybackStatus} from '@/lib/playbackStatus';
 import type {DashboardControl, LegacyPartyState, MyRating} from '@/types';
 
 const props = withDefaults(
@@ -15,6 +16,9 @@ const props = withDefaults(
         code: string;
         state: LegacyPartyState;
         control: DashboardControl;
+        status: PlaybackStatus;
+        webPlayerUrl: string | null;
+        relinkUrl: string;
         canControl: boolean;
         myRating?: MyRating | null;
         connected?: boolean;
@@ -26,12 +30,12 @@ const run = useRun();
 const notify = inject(notifyKey, () => undefined);
 const busy = ref(false);
 
-const status = computed(() => props.state.status);
-const playing = computed(() => status.value?.isPlaying ?? false);
-const now = useTicker(playing, status);
-const durationMs = computed(() => status.value?.length ?? 0);
+const playback = computed(() => props.state.status);
+const playing = computed(() => playback.value?.isPlaying ?? false);
+const now = useTicker(playing, playback);
+const durationMs = computed(() => playback.value?.length ?? 0);
 const positionMs = computed(() => {
-    const current = status.value;
+    const current = playback.value;
     if (!current) {
         return 0;
     }
@@ -42,6 +46,10 @@ const positionMs = computed(() => {
 });
 const artist = computed(() => (props.state.now?.artists ?? []).map((a) => a.name).join(', '));
 const art = computed(() => props.state.now?.album?.image_url ?? '');
+const showTrack = computed(
+    () => props.state.now !== null && ['playing', 'paused', 'outside'].includes(props.status.kind),
+);
+const outside = computed(() => props.status.kind === 'outside');
 const outsideLabel = computed(() => props.control.playingFrom.label ?? 'Spotify');
 
 async function transport(action: 'play' | 'pause' | 'next' | 'previous'): Promise<void> {
@@ -76,7 +84,18 @@ const {pressed, score, rate} = useRating({
         <div class="pu-status" role="status" aria-live="polite">
             <PlayerStatusPill v-if="!connected" warn data-test="reconnecting">Reconnecting…</PlayerStatusPill>
         </div>
-        <div v-if="state.now !== null">
+        <div class="pu-head" :class="`is-${status.tone}`" data-test="playback-status" aria-live="polite">
+            <span v-if="!showTrack" class="pu-tile"><i class="ti ti-music-off" aria-hidden="true"></i></span>
+            <div class="min-w-0">
+                <h2 class="pu-headline" data-test="status-headline">
+                    <span v-if="status.kind === 'playing'" class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>
+                    <span v-else class="pu-dot" aria-hidden="true"></span>
+                    {{ status.headline }}
+                </h2>
+                <p class="pu-detail" data-test="status-detail">{{ status.detail }}</p>
+            </div>
+        </div>
+        <div v-if="showTrack && state.now" class="mt-3">
             <div class="d-flex gap-4">
                 <div class="pu-art">
                     <img v-if="art" class="pu-cover" :src="art" :title="state.now.album?.name" alt="" />
@@ -97,7 +116,7 @@ const {pressed, score, rate} = useRating({
                             Requested by {{ control.nowPlaying.requestedBy }}
                         </span>
                         <span v-else-if="control.nowPlaying.isFallback" class="np-meta small" data-test="now-fallback">
-                            Fallback Track
+                            From the party’s Fallback Playlist
                         </span>
                         <span v-else class="badge bg-white-lt text-white">Not a party request</span>
                     </div>
@@ -112,12 +131,8 @@ const {pressed, score, rate} = useRating({
                 </div>
             </div>
         </div>
-        <div v-else class="empty text-muted pu-empty" data-test="nothing-playing">
-            <i class="icon icon-lg ti ti-music-off"></i>
-            Nothing playing
-        </div>
 
-        <div v-if="state.now !== null" class="pu-row">
+        <div v-if="showTrack" class="pu-row">
             <div></div>
             <div class="tp">
                 <button
@@ -132,7 +147,8 @@ const {pressed, score, rate} = useRating({
                 </button>
                 <button
                     type="button"
-                    class="btn btn-primary btn-play"
+                    class="btn btn-play"
+                    :class="outside ? 'btn-ondark' : 'btn-primary'"
                     :aria-label="playing ? 'Pause' : 'Play'"
                     :disabled="busy || !canControl"
                     data-test="play-pause"
@@ -156,12 +172,12 @@ const {pressed, score, rate} = useRating({
             </div>
         </div>
 
-        <div v-if="control.playingFrom.kind === 'outside'" class="pu-hint" data-test="skip-hint">
+        <div v-if="outside" class="pu-hint" data-test="skip-hint">
             <i class="ti ti-info-circle"></i>
             <span>Skip moves through {{ outsideLabel }}. Use Start Playback to put the party back on.</span>
         </div>
 
-        <HealthGrid :health="control.health" />
+        <HealthGrid :health="control.health" :status="status" :web-player-url="webPlayerUrl" :relink-url="relinkUrl" />
     </div>
 </template>
 
@@ -210,9 +226,62 @@ const {pressed, score, rate} = useRating({
 .np-meta {
     color: var(--mp-deck-muted);
 }
-.pu-empty {
-    height: auto;
-    padding: 2rem 0;
+.pu-head {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    --mp-state: var(--tblr-secondary);
+}
+.pu-head.is-playing {
+    --mp-state: var(--tblr-success);
+}
+.pu-head.is-paused,
+.pu-head.is-warn {
+    --mp-state: var(--tblr-warning);
+}
+.pu-head.is-stale,
+.pu-head.is-error {
+    --mp-state: var(--tblr-danger);
+}
+.pu-tile {
+    display: grid;
+    place-items: center;
+    flex: 0 0 auto;
+    width: 88px;
+    height: 88px;
+    border-radius: 14px;
+    background: var(--mp-deck-raised);
+    color: var(--mp-deck-accent-warn);
+    font-size: 2.4rem;
+}
+.pu-headline {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0;
+    font-size: 2.6rem;
+    font-weight: 700;
+    line-height: 1.1;
+    letter-spacing: -0.02em;
+    color: var(--mp-deck-text);
+}
+.pu-headline .mp-eq {
+    block-size: 36px;
+    gap: 3px;
+}
+.pu-headline .mp-eq > i {
+    inline-size: 6px;
+}
+.pu-dot {
+    flex: 0 0 auto;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--mp-state);
+}
+.pu-detail {
+    margin: 4px 0 0;
+    color: var(--mp-deck-muted);
 }
 .pu-row {
     display: grid;
@@ -277,6 +346,9 @@ const {pressed, score, rate} = useRating({
     }
     .pu-title {
         font-size: 1.5rem;
+    }
+    .pu-headline {
+        font-size: 2rem;
     }
     .tp {
         gap: 12px;

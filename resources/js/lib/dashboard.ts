@@ -7,7 +7,7 @@ import {destroy, play} from '@/routes/api/v1/parties/upcomingsongs';
 import {flaggedApproveUrl, flaggedRejectUrl} from '@/lib/flagged';
 import type {DashboardDevice, DashboardStartState, DashboardStartTarget} from '@/types';
 
-export type PanelState = DashboardStartState | 'starting' | 'rate_limited';
+export type PanelState = DashboardStartState | 'starting' | 'rate_limited' | 'stale';
 export type ControlAction = 'play' | 'pause' | 'next' | 'previous' | 'seek';
 
 export interface ApiError {
@@ -37,25 +37,6 @@ export function errorCode(error: unknown): ApiError {
         };
     }
     return {status: null, code: null, message: 'Something went wrong. Try again.', retryAfter: null};
-}
-
-export function badgeFor(state: PanelState): {text: string; cls: string} {
-    switch (state) {
-        case 'outside':
-            return {text: 'Outside the party', cls: 'bg-warning text-warning-fg'};
-        case 'starting':
-            return {text: 'Starting', cls: 'bg-primary text-primary-fg'};
-        case 'no_device':
-            return {text: 'No device', cls: 'bg-danger text-danger-fg'};
-        case 'premium_required':
-            return {text: 'Premium required', cls: 'bg-danger text-danger-fg'};
-        case 'relink_required':
-            return {text: 'Re-link needed', cls: 'bg-warning text-warning-fg'};
-        case 'rate_limited':
-            return {text: 'Spotify busy', cls: 'bg-warning text-warning-fg'};
-        default:
-            return {text: 'Not playing', cls: 'bg-secondary text-secondary-fg'};
-    }
 }
 
 export function startLabel(state: PanelState, host: string): string {

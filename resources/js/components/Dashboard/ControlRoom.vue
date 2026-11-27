@@ -4,7 +4,8 @@ import NowPlayingBackdrop from '@/components/NowPlayingBackdrop.vue';
 import PlayerUnit from '@/components/Dashboard/PlayerUnit.vue';
 import StartPlaybackPanel from '@/components/Dashboard/StartPlaybackPanel.vue';
 import UpNextDeck from '@/components/Dashboard/UpNextDeck.vue';
-import type {DashboardControl, DashboardRequest, LegacyPartyState, MyRating} from '@/types';
+import type {PlaybackStatus} from '@/lib/playbackStatus';
+import type {DashboardControl, DashboardProps, DashboardRequest, LegacyPartyState, MyRating} from '@/types';
 
 const props = withDefaults(
     defineProps<{
@@ -12,6 +13,8 @@ const props = withDefaults(
         host: string;
         state: LegacyPartyState;
         control: DashboardControl;
+        status: PlaybackStatus;
+        links: DashboardProps['links'];
         upNext: DashboardRequest[];
         total: number;
         queueUrl: string;
@@ -25,7 +28,9 @@ const props = withDefaults(
 );
 const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
-const hidden = computed(() => props.control.start.state === 'hidden');
+const hidden = computed(
+    () => props.control.start.state === 'hidden' && ['playing', 'paused'].includes(props.status.kind),
+);
 const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
 </script>
 
@@ -39,6 +44,9 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
                             :code="code"
                             :state="state"
                             :control="control"
+                            :status="status"
+                            :web-player-url="links.webPlayer"
+                            :relink-url="links.relink"
                             :can-control="canControl"
                             :my-rating="myRating"
                             :connected="connected"
@@ -59,6 +67,9 @@ const bannerImage = computed(() => props.state.now?.album?.image_url ?? null);
                             :code="code"
                             :host="host"
                             :start="control.start"
+                            :status="status"
+                            :web-player-url="links.webPlayer"
+                            :relink-url="links.relink"
                             :playing-from-label="control.playingFrom.label"
                             :can-control="canControl"
                             :can-start="canStart"

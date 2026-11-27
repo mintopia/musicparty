@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {computed} from 'vue';
 
-export type PlaybackState = 'playing' | 'paused' | 'stale' | 'idle';
+export type PlaybackState = 'playing' | 'paused' | 'stale' | 'idle' | 'warn' | 'error' | 'live';
 
 const props = defineProps<{state: PlaybackState}>();
 
@@ -10,6 +10,9 @@ const labels: Record<PlaybackState, string> = {
     paused: 'Paused',
     stale: 'Player stale',
     idle: 'Nothing playing',
+    warn: 'Needs attention',
+    error: 'Problem',
+    live: 'Live',
 };
 
 const modifier = computed(() => `is-${props.state}`);
