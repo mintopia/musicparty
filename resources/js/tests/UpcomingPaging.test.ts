@@ -60,7 +60,10 @@ describe('Upcoming paging', () => {
         expect(wrapper.find('[data-test="loader"]').exists()).toBe(true);
 
         const loaded = vi.fn();
-        await (wrapper.getComponent('[data-test="loader"]').props('load') as (action: unknown) => Promise<void>)({
+        const load = (
+            wrapper.getComponent('[data-test="loader"]').vm.$props as {load: (action: unknown) => Promise<void>}
+        ).load;
+        await load({
             loaded,
             error: vi.fn(),
         });

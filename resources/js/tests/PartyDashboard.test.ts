@@ -871,6 +871,8 @@ describe('upcoming list', () => {
     });
 
     it('opens a schedule sheet from the menu, saves via Inertia and closes three ways', async () => {
+        vi.useFakeTimers({toFake: ['Date']});
+        vi.setSystemTime(new Date('2026-11-27T12:00:00Z'));
         const wrapper = mountPage({state: 'hidden'});
         const row = wrapper.find('[data-test="upcoming-row"]');
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
