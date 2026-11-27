@@ -4,6 +4,32 @@ Gallery: review/gallery.html (mockup left, built right). Built captures: review/
 
 ---
 
+# Review harness (#450)
+
+Review-only fixtures live in `database/seeders/Review/ReviewHarnessSeeder.php`, run with `php artisan review:seed` (refuses to run in production, not called by `DatabaseSeeder`, safe to re-run). Dev stack: `docker compose -p <project> up -d`, then `docker compose -p <project> exec --user "$(id -u):$(id -g)" musicparty php artisan review:seed`. `docker-compose.yml` already has `reverb`, `horizon` and `scheduler` services; websockets reach Reverb through the app's own hostname (ADR 0004), so no extra env or proxy route is needed beyond the normal stack. Reverb needs `REVERB_*` and `BROADCAST_CONNECTION=reverb` in `.env` like any dev stack.
+
+Seeded states (all keyed by stable code or nickname):
+
+| Gap | Fixture |
+| --- | --- |
+| Themes | StratLAN (active, dark, 7 tokens, custom CSS), Reference Theme, Disposable Theme (non-built-in, inactive, for the delete frame; StratLAN is also deletable) |
+| Branding | `logo-light`, `logo-dark`, `cover-image`, `favicon` set to placeholder URLs |
+| Providers | Discord on (sign-in), Spotify on for linking only, Steam on for sign-in with an empty API key |
+| Spotify relink | user `review-relink` (needs_relink_at set on its Spotify account) owns party `REVRLK` (provider spotify) |
+| Unlink / both Spotify | `review-two-links` (Discord + Steam), `review-both-spotify` (Discord + 2 Spotify links); `review-admin` has Discord + Spotify and the admin role |
+| Flagged-not-held | party `REVFLG`, `flag_requests` off |
+| AI empty | party `REVEMP`, AI Request Review enabled, zero reviews |
+| AI answers | party `REVAIS`, five reviews with `suitability` and `criterion` answers (score, confidence, criterion) |
+| Feature off | party `REVNOA`, AI Request Review mod not enabled |
+| Admin all-clear | seeder writes the scheduler heartbeat; Horizon, Reverb, Redis, DB and Spotify credentials come from the running stack, so all-clear needs those services up |
+| Admin no-parties | `php artisan review:seed --quiet-parties` marks every party inactive (the seeded parties and any others) |
+
+Not representable: no-device and outside-party. The dashboard derives them from the live provider (`devices()`, `currentPlayback()`). For Spotify that is the Spotify API; the `fake` provider is a per-process in-memory instance (`FakeMusicProvider` is a scoped binding that always has Fake Speaker and no context), so there is no per-party or stored fixture to read. Making it configurable would need a production code path, so those two frames stay unreproducible (the logic is covered by `playbackStatus.ts` unit tests). Also still unreproducible by design: e500 (needs `APP_DEBUG=false` and a throwing route), web-player frames (Spotify SDK), `mods-ai-error` (needs a failing engine check).
+
+Recapture status: the frames above are now reproducible with this harness but have not yet been recaptured into `review/built/` (this change was made without a running stack or browser). The rows below are unchanged until a recapture run with `screenshot.mjs`.
+
+---
+
 # Group 10-dashboard / 11-dashboard-phone / 12-queue
 
 Built screenshots: /opt/harmonic/worktrees/task-1349/docs/mockups/design-critique/review/built/<frame>.png
