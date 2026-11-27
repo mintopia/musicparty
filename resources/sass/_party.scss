@@ -602,6 +602,9 @@
 .mp-opt .mp-opt-name { display: block; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mp-opt small { display: block; color: var(--tblr-secondary-color); }
 .mp-pick-foot { border-block-start: 1px solid var(--tblr-border-color); }
+.setting-control > .mp-wide-select { max-inline-size: 28rem; }
+.mp-opt.mp-opt-compact { min-block-size: 44px; }
+.mp-opt .mp-opt-meta { display: block; flex: none; }
 .mp-opt[aria-selected='true'] { background: color-mix(in oklab, var(--tblr-primary) 10%, transparent); }
 .mp-opt[aria-selected='true'] .mp-opt-name { font-weight: 650; }
 .mp-opt .ti-check { color: var(--tblr-primary); }

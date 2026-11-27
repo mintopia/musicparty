@@ -542,6 +542,7 @@ class PartyController extends Controller
         return Inertia::render('Parties/Edit', $this->formProps($options, $party, $this->resolveAuthenticatedUser($request)) + [
             'party' => $this->formValues($party) + ['code' => $party->code],
             'providerName' => ucfirst((string) $party->provider_id),
+            'hostName' => $request->user()?->nickname,
             'playerState' => $party->getState(),
             'tab' => in_array($request->query('tab'), self::SETTINGS_TABS, true) ? $request->query('tab') : 'general',
             'mods' => fn () => $mods->presentFor($party),
