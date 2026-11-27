@@ -95,7 +95,7 @@ const albumSubtitle = (album: AlbumResult): string =>
 </script>
 
 <template>
-    <div data-test="search-type-view">
+    <div class="col-xl-8 offset-xl-2 col-lg-10 offset-lg-1" data-test="search-type-view">
         <div class="mt-4">
             <a :href="overviewUrl" class="d-inline-flex align-items-center mb-2" data-test="back-to-overview">
                 <i class="icon ti ti-chevron-left me-1"></i>

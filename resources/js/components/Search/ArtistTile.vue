@@ -2,14 +2,14 @@
 import SearchCover from '@/components/Search/SearchCover.vue';
 import type {ArtistResult} from '@/types';
 
-defineProps<{artist: ArtistResult; href: string}>();
+withDefaults(defineProps<{artist: ArtistResult; href: string; subtitle?: string}>(), {subtitle: 'Artist'});
 </script>
 
 <template>
     <a :href="href" class="search-tile text-reset text-decoration-none text-center" data-test="artist-tile">
         <SearchCover :src="artist.image_url" :alt="artist.name" round icon="ti-user" />
         <div class="fw-medium lh-sm mt-2 clamp-2" :title="artist.name" data-test="artist-name">{{ artist.name }}</div>
-        <div class="text-secondary small">Artist</div>
+        <div class="text-secondary small" data-test="artist-subtitle">{{ subtitle }}</div>
     </a>
 </template>
 

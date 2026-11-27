@@ -100,6 +100,7 @@ const nothingFound = computed(() => {
         <SearchOverviewResults
             v-else-if="found && found.view === 'overview'"
             :results="found"
+            :query="query"
             :can-downvote="canDownvote"
             :album-route="albumRoute"
             :artist-route="artistRoute"

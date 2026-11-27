@@ -94,6 +94,7 @@ function overview(overrides: Partial<SearchOverviewResults> = {}): SearchOvervie
         albums: [album('al1'), album('al2')],
         artists: [artist('ar1'), artist('ar2')],
         empty: false,
+        weak: false,
         ...overrides,
     };
 }
@@ -268,6 +269,53 @@ describe('Party search overview', () => {
         expect(wrapper.get('[data-test="results-empty"]').text()).toContain('No results for "Clozing Tyme"');
         expect(wrapper.text()).toContain("Check the spelling or try the artist's name.");
         expect(wrapper.find('[data-test="section-head"]').exists()).toBe(false);
+    });
+});
+
+describe('Party search suggestions and weak matches', () => {
+    beforeEach(() => {
+        deferred.mode = 'loaded';
+    });
+
+    const suggestions = {
+        nowPlaying: {name: 'Midnight City', artist: 'M83', image_url: null, query: 'M83'},
+        recent: ['Levels', 'daft punk'],
+        artists: [{id: 'ar1', name: 'Daft Punk', image_url: null, requests: 5}],
+    };
+
+    it('offers the playing track, recent searches and top artists on the empty page', () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: null, perPage: 10, type: null},
+                results: null,
+                suggestions,
+                playerState: idle,
+            } as never,
+        });
+
+        expect(wrapper.get('[data-test="more-like"]').attributes('href')).toContain('?query=M83');
+        expect(wrapper.get('[data-test="more-like"]').text()).toContain('More like Midnight City');
+        expect(wrapper.findAll('[data-test="recent-search"]').map((a) => a.attributes('href'))).toEqual([
+            expect.stringContaining('query=Levels'),
+            expect.stringContaining('query=daft%20punk'),
+        ]);
+        expect(wrapper.get('[data-test="artist-subtitle"]').text()).toBe('5 Requests');
+    });
+
+    it('shows no suggestions once a search is made', () => {
+        const wrapper = mountSearch(overview());
+
+        expect(wrapper.find('[data-test="search-suggestions"]').exists()).toBe(false);
+    });
+
+    it('says there are no close matches above weak results only', () => {
+        const weak = mountSearch(overview({weak: true}), {query: 'lucky dafft punk'});
+        const strong = mountSearch(overview());
+
+        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('No close matches for “lucky dafft punk”');
+        expect(weak.get('[data-test="no-close-matches"]').text()).toContain('nearest results Spotify returned');
+        expect(strong.find('[data-test="no-close-matches"]').exists()).toBe(false);
     });
 });
 

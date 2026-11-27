@@ -64,7 +64,7 @@ function track(id: string, queue: Partial<TrackAnnotation['queue']> = {}, allowe
 }
 
 function results(tracks: TrackAnnotation[]): SearchOverviewResults {
-    return {view: 'overview', top: null, tracks, albums: [], artists: [], empty: false};
+    return {view: 'overview', top: null, tracks, albums: [], artists: [], empty: false, weak: false};
 }
 
 const idle: LegacyPartyState = {now: null, next: null, current: null, status: null};

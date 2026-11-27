@@ -353,6 +353,13 @@ export interface SearchOverviewResults {
     albums: AlbumResult[];
     artists: ArtistResult[];
     empty: boolean;
+    weak: boolean;
+}
+
+export interface SearchSuggestions {
+    nowPlaying: {name: string; artist: string; image_url: string | null; query: string} | null;
+    recent: string[];
+    artists: (ArtistResult & {requests: number})[];
 }
 
 export interface SearchPage<T> extends Paginator<T> {

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import {computed} from 'vue';
 import AlbumTile from '@/components/Search/AlbumTile.vue';
 import ArtistTile from '@/components/Search/ArtistTile.vue';
 import SearchSectionHead from '@/components/Search/SearchSectionHead.vue';
@@ -7,8 +8,9 @@ import SearchTopResult from '@/components/Search/SearchTopResult.vue';
 import TrackRow from '@/components/TrackRow.vue';
 import type {LinkTarget, SearchOverviewResults, SearchType, TrackAnnotation} from '@/types';
 
-defineProps<{
+const props = defineProps<{
     results: SearchOverviewResults;
+    query?: string;
     canDownvote?: boolean;
     albumRoute: (id: string) => LinkTarget;
     artistRoute: (id: string) => LinkTarget;
@@ -21,11 +23,32 @@ const emit = defineEmits<{
     withdraw: [track: TrackAnnotation];
 }>();
 
+const providerName = computed(() =>
+    props.results.top?.kind === 'track'
+        ? props.results.top.track.provider_name
+        : (props.results.tracks[0]?.provider_name ?? null),
+);
+
 const href = (target: LinkTarget): string => (typeof target === 'string' ? target : target.url);
 </script>
 
 <template>
     <div data-test="search-overview">
+        <div
+            class="alert alert-warning mt-4 mb-0 notice"
+            role="status"
+            data-test="no-close-matches"
+            v-if="results.weak"
+        >
+            <i class="icon ti ti-alert-circle fs-2"></i>
+            <div>
+                <h2 class="h4 mb-1">No close matches for “{{ query }}”</h2>
+                <div>
+                    These are the nearest results {{ providerName ?? 'the music provider' }} returned. Check the
+                    spelling or try the artist's name.
+                </div>
+            </div>
+        </div>
         <div v-if="results.top || results.tracks.length" class="row g-4 mt-0">
             <div v-if="results.top" class="col-md-5 col-xxl-4">
                 <SearchSectionHead title="Top result" />
@@ -86,3 +109,12 @@ const href = (target: LinkTarget): string => (typeof target === 'string' ? targe
         </section>
     </div>
 </template>
+
+<style scoped>
+.notice {
+    display: flex;
+    gap: 0.75rem;
+    align-items: flex-start;
+    color: var(--tblr-body-color);
+}
+</style>

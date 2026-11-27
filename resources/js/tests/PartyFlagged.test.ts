@@ -286,7 +286,7 @@ describe('Search withdraw', () => {
             props: {
                 party: {...party, downvotes: false, canManage: false},
                 params: {query: 'q', perPage: 10},
-                results: {view: 'overview', top: null, tracks: [awaiting], albums: [], artists: [], empty: false},
+                results: {view: 'overview', top: null, tracks: [awaiting], albums: [], artists: [], empty: false, weak: false},
                 playerState: idle,
                 moderationTabs,
             },

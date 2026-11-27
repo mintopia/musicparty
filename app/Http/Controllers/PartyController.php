@@ -20,7 +20,9 @@ use App\Services\ModSettingsStore;
 use App\Services\Music\Data\AlbumSummary;
 use App\Services\Music\Data\Artist;
 use App\Services\Music\Data\ArtistRef;
+use App\Services\Music\Data\SearchOverview;
 use App\Services\Music\Data\SearchType;
+use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use App\Services\PartyListing;
@@ -29,9 +31,11 @@ use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
 use App\Services\Requests\TrackEligibility;
+use App\Services\Search\PartySearchSuggestions;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\LeakyBucket;
 use App\Support\QrCode;
+use App\Support\SearchRelevance;
 use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -48,6 +52,10 @@ class PartyController extends Controller
     private const int SEARCH_OVERVIEW_LIMIT = 10;
 
     private const int SEARCH_OVERVIEW_TRACKS = 4;
+
+    private const int SUGGESTED_SEARCHES = 5;
+
+    private const int SUGGESTED_ARTISTS = 6;
 
     public function __construct()
     {
@@ -159,7 +167,7 @@ class PartyController extends Controller
         ]);
     }
 
-    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility): Response
+    public function search(SearchRequest $request, Party $party, MusicProviderFactory $factory, TrackEligibility $eligibility, PartySearchSuggestions $suggestions): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
 
@@ -179,6 +187,9 @@ class PartyController extends Controller
         $results = null;
         if ($query) {
             $text = (string) $query;
+            if ($type === null && $page === 1 && ! $request->hasHeader('X-Inertia-Partial-Data')) {
+                $suggestions->record($party, $member->user, $text);
+            }
             $results = Inertia::defer(
                 fn (): array => $this->searchResults($party, $member, $factory, fn (MusicProvider $provider): array => $type === null
                     ? $this->searchOverview($party, $member, $eligibility, $provider, $text)
@@ -197,6 +208,11 @@ class PartyController extends Controller
             ],
             'params' => ['query' => $query, 'perPage' => $perPage, 'type' => $type?->value],
             'results' => $results,
+            'suggestions' => $query ? null : [
+                'nowPlaying' => $suggestions->nowPlaying($party),
+                'recent' => $suggestions->recent($party, self::SUGGESTED_SEARCHES),
+                'artists' => $suggestions->topArtists($party, self::SUGGESTED_ARTISTS),
+            ],
             'playerState' => $party->getState(),
         ]);
     }
@@ -262,6 +278,21 @@ class PartyController extends Controller
             'albums' => $albums,
             'artists' => $artists,
             'empty' => $top === null && $annotated === [] && $albums === [] && $artists === [],
+            'weak' => SearchRelevance::isWeak($query, $this->overviewCandidates($found)),
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    protected function overviewCandidates(SearchOverview $found): array
+    {
+        $names = fn (array $artists): string => implode(' ', array_map(fn (ArtistRef $artist): string => $artist->name, $artists));
+
+        return [
+            ...array_map(fn (Track $track): string => "{$track->name} {$names($track->artists)} {$track->album->name}", $found->tracks->items),
+            ...array_map(fn (AlbumSummary $album): string => "{$album->ref->name} {$names($album->artists)}", $found->albums->items),
+            ...array_map(fn (Artist $artist): string => $artist->ref->name, $found->artists->items),
         ];
     }
 

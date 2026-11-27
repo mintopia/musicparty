@@ -1,6 +1,9 @@
 <?php
 
 use App\Enums\Purpose;
+use App\Models\PartySearch;
+use App\Models\Song;
+use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
@@ -185,4 +188,46 @@ it('returns the friendly error shape for a single type search', function () {
     ($this->visit)(['query' => 'q', 'type' => 'album'], fn (Assert $loaded) => $loaded
         ->where('results.error.code', 'busy')
         ->where('results.error.retryable', true));
+});
+
+it('flags weak matches when no result holds every word of the query', function (string $query, bool $weak) {
+    $this->fake->respond('search', FakeSpotify::searchResponse([FakeSpotify::track('t1', 'Get Lucky')], [FakeSpotify::album('a1', 'Random Access Memories')]));
+
+    ($this->visit)(['query' => $query], fn (Assert $loaded) => $loaded->where('results.weak', $weak));
+})->with([
+    'strong' => ['get lucky', false],
+    'typo' => ['lucky dafft punk', true],
+]);
+
+it('does not flag an empty result as weak', function () {
+    $this->fake->respond('search', FakeSpotify::searchResponse());
+
+    ($this->visit)(['query' => 'zzz'], fn (Assert $loaded) => $loaded->where('results.empty', true)->where('results.weak', false));
+});
+
+it('logs an overview search for the party but not paging through a single type', function () {
+    $this->fake->respond('search', FakeSpotify::searchResponse([FakeSpotify::track('t1')], trackTotal: 1));
+
+    ($this->visit)(['query' => 'daft punk'], fn (Assert $loaded) => $loaded);
+    ($this->visit)(['query' => 'daft punk', 'type' => 'track'], fn (Assert $loaded) => $loaded);
+
+    expect(PartySearch::query()->where('party_id', $this->party->id)->pluck('query')->all())->toBe(['daft punk']);
+});
+
+it('offers suggestions from party data on the empty page and none once searching', function () {
+    PartySearch::factory()->create(['party_id' => $this->party->id, 'query' => 'Levels', 'term' => 'levels']);
+    $song = Song::factory()->create(['name' => 'Midnight City']);
+    $this->party->forceFill(['song_id' => $song->id])->save();
+    UpcomingSong::factory()->create(['party_id' => $this->party->id, 'song_id' => $song->id]);
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code]))
+        ->assertInertia(fn (Assert $page) => $page
+            ->where('suggestions.recent', ['Levels'])
+            ->where('suggestions.nowPlaying.name', 'Midnight City')
+            ->where('suggestions.artists.0.requests', 1));
+
+    $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'x']))
+        ->assertInertia(fn (Assert $page) => $page->where('suggestions', null));
 });
