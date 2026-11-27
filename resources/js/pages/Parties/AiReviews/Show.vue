@@ -132,22 +132,22 @@ function decide(url: string | null): void {
 <template>
     <AppLayout :title="`${review.track.title} - AI review - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI Reviews', href: listUrl}, {label: 'Review'}]" />
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI reviews', href: listUrl}, {label: 'Review'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
         <Head :title="`${review.track.title} - AI review - ${party.name}`" />
-        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
-
-        <div class="mb-3">
+        <div class="mb-2">
             <Link :href="listUrl" class="text-secondary back-link" data-test="back-link">
                 <i class="icon ti ti-arrow-left me-1" aria-hidden="true"></i>All AI reviews
             </Link>
         </div>
 
+        <ModerationTabs :code="party.code" :tabs="moderationTabs" active="ai-reviews" />
+
         <PageHead :title="review.track.title">
-            <template #default>
+            <template v-if="review.fate.approveUrl || review.fate.requestUrl" #default>
                 <template v-if="review.fate.approveUrl">
                     <button
                         type="button"
@@ -252,16 +252,16 @@ function decide(url: string | null): void {
                     </div>
                 </div>
 
-                <div v-if="review.criterionLabel" class="card" data-test="criterion">
+                <div v-if="criterionBreakdown.length > 0" class="card" data-test="criterion">
                     <div class="card-header"><h2 class="card-title">Criterion</h2></div>
                     <div class="card-body" data-test="failing-criterion">
                         <div class="mb-3">
-                            <strong>{{ review.criterionLabel }}</strong>
+                            <strong>{{ review.criterionLabel ?? 'None' }}</strong>
                             <span v-if="review.criterionConfidence !== null" class="text-secondary tabular-nums ms-1"
                                 >{{ Math.round(review.criterionConfidence * 100) }}% confident</span
                             >
                         </div>
-                        <div v-if="criterionBreakdown.length > 0" data-test="criterion-breakdown">
+                        <div data-test="criterion-breakdown">
                             <div
                                 v-for="p in criterionBreakdown"
                                 :key="p.key"
@@ -312,10 +312,6 @@ function decide(url: string | null): void {
                             <dt class="col-4 text-secondary fw-normal">Model</dt>
                             <dd class="col-8 text-break" data-test="detail-model">
                                 {{ review.model ?? '-' }} ({{ review.driver }})
-                            </dd>
-                            <dt class="col-4 text-secondary fw-normal">Endpoint</dt>
-                            <dd class="col-8 text-break" data-test="detail-endpoint">
-                                {{ review.endpointHost ?? '-' }}
                             </dd>
                             <dt class="col-4 text-secondary fw-normal">Latency</dt>
                             <dd class="col-8 tabular-nums" data-test="detail-latency">
@@ -398,6 +394,16 @@ function decide(url: string | null): void {
     margin-bottom: 1.5rem;
 }
 
+:deep(.mp-page-head) > div:first-child {
+    margin-inline-end: auto;
+}
+
+@media (max-width: 767.98px) {
+    .meta-line {
+        margin-top: 0;
+    }
+}
+
 .back-link,
 .touch-link {
     min-height: 44px;
@@ -417,6 +423,22 @@ function decide(url: string | null): void {
     min-height: 44px;
     display: flex;
     align-items: center;
+    list-style: none;
+}
+
+.raw > summary::before {
+    content: '';
+    width: 0.45rem;
+    height: 0.45rem;
+    margin-inline-end: 0.75rem;
+    border: solid currentcolor;
+    border-width: 0 2px 2px 0;
+    transform: rotate(-45deg);
+    transition: transform 0.15s;
+}
+
+.raw[open] > summary::before {
+    transform: rotate(45deg);
 }
 
 .percent-col {

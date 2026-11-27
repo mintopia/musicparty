@@ -112,15 +112,6 @@ class PartyModerationController extends Controller
         ]);
     }
 
-    public function delete(Party $party, PartyModeration $moderation): Response
-    {
-        return Inertia::render('Parties/Moderation/Delete', [
-            'party' => $this->partyProps($party),
-            'playerState' => $party->getState(),
-            'moderation' => $this->present($moderation),
-        ]);
-    }
-
     public function update(PartyModerationRequest $request, Party $party, PartyModeration $moderation): RedirectResponse
     {
         $this->updateObject($moderation, $request);

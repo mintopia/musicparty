@@ -48,7 +48,7 @@
     }
 
     q {
-        quotes: "\201C" "\201D";
+        quotes: '\201C' '\201D';
     }
 }
 
@@ -145,5 +145,24 @@
 
     .mp-bulkbar .btn {
         flex: 1 1 auto;
+    }
+
+    .mp-bulk-card {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .mp-bulk-card > .mp-bulkbar {
+        order: 1;
+        position: sticky;
+        inset-block-end: 0;
+        z-index: 3;
+        border-block-start: 1px solid var(--tblr-border-color);
+        border-block-end: 0;
+        background-color: var(--tblr-bg-surface);
+        background-image: linear-gradient(
+            color-mix(in oklab, var(--tblr-primary) 10%, transparent),
+            color-mix(in oklab, var(--tblr-primary) 10%, transparent)
+        );
     }
 }

@@ -200,7 +200,7 @@ it('reports a rejected review whose Request never existed', function () {
     $review = AiReview::factory()->for($this->party)->outcome(AiReviewOutcome::Reject)->create(['upcoming_song_id' => null]);
 
     $this->actingAs($this->owner)->get(route('parties.ai-reviews.show', [$this->party->code, $review]))
-        ->assertInertia(fn (Assert $page) => $page->where('review.fate.state', 'rejected')->where('review.fate.requestUrl', null));
+        ->assertInertia(fn (Assert $page) => $page->where('review.fate.state', 'rejected')->where('review.fate.requestUrl', route('parties.songs.index', $this->party->code)));
 });
 
 it('links back to the list with the filters it was opened from', function () {

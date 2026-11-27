@@ -31,7 +31,6 @@ it('forbids non-managers on every moderation page', function (string $method, st
     ['post', 'parties.moderation.store'],
     ['get', 'parties.moderation.edit'],
     ['patch', 'parties.moderation.update'],
-    ['get', 'parties.moderation.delete'],
     ['delete', 'parties.moderation.destroy'],
 ]);
 
@@ -45,7 +44,7 @@ it('renders the index with party props and rows', function () {
             ->has('playerState')
             ->where('moderationTabs.aiReviewEnabled', false)
             ->has('moderations.data', 1)
-            ->where('moderations.data.0.type_name', 'Track Name')
+            ->where('moderations.data.0.type_name', 'Track name')
             ->where('moderations.data.0.value', 'bad song'));
 });
 
@@ -84,7 +83,7 @@ it('renders create with defaults and option lists', function () {
             ->has('playerState')
             ->where('moderation.action', 'reject')
             ->where('track', null)
-            ->where('types.mtName', 'Track Name')
+            ->where('types.mtName', 'Track name')
             ->where('actions.flag', 'Flag for approval'));
 });
 
@@ -98,13 +97,6 @@ it('renders edit and delete with the filter', function () {
             ->has('playerState')
             ->where('moderation.type', 'mtName')
             ->where('moderation.notes', 'note'));
-
-    $this->actingAs($this->owner)->get(route('parties.moderation.delete', $params))
-        ->assertOk()
-        ->assertInertia(fn (Assert $page) => $page
-            ->component('Parties/Moderation/Delete')
-            ->has('playerState')
-            ->where('moderation.value', 'bad song'));
 });
 
 it('creates, updates and deletes a filter with flash messages', function () {

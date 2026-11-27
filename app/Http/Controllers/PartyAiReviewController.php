@@ -127,7 +127,7 @@ class PartyAiReviewController extends Controller
     {
         $upcoming = $review->upcomingSong;
         if ($upcoming === null) {
-            return ['state' => $review->outcome === AiReviewOutcome::Reject ? 'rejected' : 'gone', 'requestUrl' => null, 'approveUrl' => null, 'rejectUrl' => null, 'flaggedAt' => null, 'playedAt' => null];
+            return ['state' => $review->outcome === AiReviewOutcome::Reject ? 'rejected' : 'gone', 'requestUrl' => $review->outcome === AiReviewOutcome::Reject ? route('parties.songs.index', $party->code) : null, 'approveUrl' => null, 'rejectUrl' => null, 'flaggedAt' => null, 'playedAt' => null];
         }
 
         $held = $upcoming->flagged_at !== null;

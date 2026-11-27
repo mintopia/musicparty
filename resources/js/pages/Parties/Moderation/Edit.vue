@@ -2,6 +2,8 @@
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import {moderationCrumbs} from '@/lib/breadcrumbs';
 import {Head, Link, useForm} from '@inertiajs/vue3';
+import {ref} from 'vue';
+import ConfirmDialog from '@/components/ConfirmDialog.vue';
 import ModerationForm from '@/components/ModerationForm.vue';
 import PageHead from '@/components/PageHead.vue';
 import PartyPlayer from '@/components/PartyPlayer.vue';
@@ -36,6 +38,14 @@ const form = useForm({
     notes: props.moderation.notes ?? '',
 });
 
+const deleteForm = useForm({});
+const confirmingDelete = ref(false);
+const deleteMessage = `The rule ${props.moderation.type_name} is ${props.moderation.value} will stop ${props.moderation.action === 'flag' ? 'flagging' : 'rejecting'} Requests. Requests already waiting in Flagged Requests stay there.`;
+
+function destroy(): void {
+    deleteForm.delete(base);
+}
+
 function submit(): void {
     form.patch(base);
 }
@@ -61,13 +71,26 @@ function submit(): void {
             <form class="card" @submit.prevent="submit">
                 <ModerationForm :form="form" :types="types" :actions="actions" />
                 <div class="card-footer d-flex gap-2">
-                    <Link :href="`${base}/delete`" class="btn btn-outline-danger">
+                    <button
+                        type="button"
+                        class="btn btn-outline-danger"
+                        data-test="delete-rule"
+                        @click="confirmingDelete = true"
+                    >
                         <i class="icon ti ti-trash" aria-hidden="true"></i>Delete rule
-                    </Link>
+                    </button>
                     <Link :href="`/parties/${party.code}/moderation`" class="btn btn-link ms-auto">Cancel</Link>
                     <button type="submit" class="btn btn-primary" :disabled="form.processing">Save rule</button>
                 </div>
             </form>
         </div>
+        <ConfirmDialog
+            v-model="confirmingDelete"
+            title="Delete this rule?"
+            :message="deleteMessage"
+            confirm-label="Delete rule"
+            cancel-label="Keep rule"
+            @confirm="destroy"
+        />
     </AppLayout>
 </template>

@@ -121,7 +121,7 @@ const showUrl = (review: AiReviewRow): string =>
 <template>
     <AppLayout :title="`AI reviews - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI Reviews'}]" />
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'AI reviews'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
@@ -239,7 +239,7 @@ const showUrl = (review: AiReviewRow): string =>
                                         </td>
                                         <td class="text-nowrap" data-test="review-criterion">
                                             <span v-if="review.criterionLabel">{{ review.criterionLabel }}</span>
-                                            <span v-else class="text-secondary">-</span>
+                                            <span v-else class="text-secondary">None</span>
                                         </td>
                                         <td class="track-col">
                                             <div class="fw-medium" data-test="review-title">

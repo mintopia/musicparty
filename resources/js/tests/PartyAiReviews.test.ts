@@ -304,11 +304,11 @@ describe('AI review list links', () => {
         expect(wrapper.get('[data-test="open-review"]').attributes('href')).toContain('/ai-reviews/7');
     });
 
-    it('shows the criterion column and a dash when there is none', () => {
+    it('shows the criterion column and None when there is none', () => {
         const wrapper = mountIndex([row(1, {criterion: 'troll', criterionLabel: 'Troll'}), row(2)]);
         const cells = wrapper.findAll('[data-test="review-criterion"]').map((cell) => cell.text());
 
-        expect(cells).toEqual(['Troll', '-']);
+        expect(cells).toEqual(['Troll', 'None']);
     });
 
     it('builds a plain show url without empty filters', () => {
@@ -323,6 +323,14 @@ describe('AI review page', () => {
                 outcome: 'reject',
                 outcomeLabel: 'Rejected',
                 reason: 'Not for this party',
+                fate: {
+                    state: 'rejected',
+                    requestUrl: '/parties/ABCD/songs',
+                    approveUrl: null,
+                    rejectUrl: null,
+                    flaggedAt: null,
+                    playedAt: null,
+                },
                 response: {answers: {suitability: {score: 4, confidence: 0.8}, energy: {value: 'low'}}},
             }),
         );
@@ -331,7 +339,8 @@ describe('AI review page', () => {
         expect(wrapper.get('[data-test="detail-reason"]').text()).toBe('Not for this party');
         expect(wrapper.get('[data-test="review-title"]').text()).toContain('A very long track title');
         expect(wrapper.get('[data-test="review-user"]').text()).toContain('Dana');
-        expect(wrapper.get('[data-test="detail-endpoint"]').text()).toBe('api.typesafe.ai');
+        expect(wrapper.find('[data-test="detail-endpoint"]').exists()).toBe(false);
+        expect(wrapper.get('[data-test="open-request-button"]').exists()).toBe(true);
         expect(wrapper.get('[data-test="detail-latency"]').text()).toBe('812 ms');
         expect(wrapper.get('[data-test="detail-tokens"]').text()).toContain('120 in, 8 out');
         expect(wrapper.get('[data-test="back-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews?outcome=flag');
@@ -363,7 +372,11 @@ describe('AI review page', () => {
         expect(wrapper.get('[data-test="failing-criterion"]').text()).toContain('91%');
         const bars = wrapper.findAll('[data-test="criterion-probability"]').map((bar) => bar.text());
         expect(bars).toEqual(['Troll91%', 'None9%']);
-        expect(mountShow(detail(1)).find('[data-test="failing-criterion"]').exists()).toBe(false);
+        expect(
+            mountShow(detail(1, {criterion: 'troll', criterionLabel: 'Troll'}))
+                .find('[data-test="criterion"]')
+                .exists(),
+        ).toBe(false);
     });
 
     it('shows the error class and message and notes a missing response', () => {

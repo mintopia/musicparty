@@ -124,7 +124,7 @@ function signed(score: number): string {
             </RowMenu>
         </PageHead>
 
-        <div class="row g-4">
+        <div class="row g-4 mp-request-grid">
             <div class="col-lg-8">
                 <div class="mp-stack">
                     <div class="card" data-test="track-card">
