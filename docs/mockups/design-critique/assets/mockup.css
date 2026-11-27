@@ -23,6 +23,18 @@
     --mp-fs-h3: 1.1875rem;
     --mp-fs-h2: 1.5rem;
     --mp-fs-h1: 2rem;
+    --mp-fs-display: 2.5rem;
+
+    /* Stage: the player band's surface (PartyPlayer .now-playing-backdrop), reused for moments that deserve
+       it: errors, success, the Home head. Dark in both themes, like the deck panels. */
+    --mp-stage-bg: #16181d;
+    --mp-stage-text: #fff;
+    --mp-stage-muted: rgb(255 255 255 / 74%);
+    --mp-stage-veil: linear-gradient(rgb(10 10 14 / 50%), rgb(10 10 14 / 78%));
+
+    /* Album-art wash: the colours of the cover now playing (Midnight City, art/cover-1.svg). The app would
+       derive it from the cover like the band's backdrop does; mocks fix it to the current track. */
+    --mp-art-wash: linear-gradient(135deg, oklch(55% 0.2 250), oklch(62% 0.16 137) 55%, oklch(80% 0.15 25));
 
     --mp-ease: cubic-bezier(0.16, 1, 0.3, 1);
     --mp-tint-hover: color-mix(in oklab, var(--tblr-body-color) 7%, transparent);
@@ -114,13 +126,29 @@
     margin-block-end: var(--mp-space-5);
 }
 
-.mp-page-head h1 {
+/* Round 3: the page head is the loudest type on the page. 40/800 against 24/650 section heads and 15px body
+   gives the head a clear step instead of the flat 32/24 pair. */
+.mp-page-head h1,
+.mp-display {
     margin: 0;
+    font-size: var(--mp-fs-display);
+    font-weight: 800;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
 }
 
 .mp-page-head p {
-    margin: var(--mp-space-1) 0 0;
+    max-inline-size: 64ch;
+    margin: var(--mp-space-2) 0 0;
     color: var(--tblr-secondary-color);
+    font-size: 1rem;
+}
+
+@media (max-width: 575.98px) {
+    .mp-page-head h1,
+    .mp-display {
+        font-size: 2rem;
+    }
 }
 
 /* Width rule: centred when sparse, full width when dense. Tabbed groups share one width. */
@@ -510,6 +538,495 @@
     gap: var(--mp-space-3);
 }
 
+/* =================================================================
+   Round 3: party character at the edges. Tables and forms stay plain; heads, empty states, status and
+   success moments borrow the player band's stage and the album-art colours.
+   ================================================================= */
+
+/* ---------- Stage ----------
+   <section class="mp-stage" style="--np-image: url(art/cover-1.svg)">. The band's recipe: blurred cover at
+   55% over near-black, darkened by a veil. Text is white on it in both themes. */
+.mp-stage {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    padding: var(--mp-space-6) var(--mp-space-6);
+    border-radius: 16px;
+    background-color: var(--mp-stage-bg);
+    color: var(--mp-stage-text);
+    --tblr-secondary-color: var(--mp-stage-muted);
+}
+
+.mp-stage::before {
+    content: '';
+    position: absolute;
+    inset: -40px;
+    z-index: -2;
+    background: var(--np-image, var(--mp-art-wash)) center / cover no-repeat;
+    filter: blur(36px) saturate(1.2);
+    opacity: 0.55;
+}
+
+.mp-stage::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    background: var(--mp-stage-veil);
+}
+
+.mp-stage :where(h1, h2, h3, p, .h1, .h2) {
+    color: inherit;
+}
+
+.mp-stage :where(p, .mp-stage-sub) {
+    color: var(--mp-stage-muted);
+}
+
+.mp-stage .btn-outline-secondary,
+.mp-stage .btn-outline-primary,
+.mp-stage .btn-ghost {
+    --tblr-btn-color: #fff;
+    --tblr-btn-border-color: rgb(255 255 255 / 40%);
+    --tblr-btn-hover-bg: rgb(255 255 255 / 12%);
+    --tblr-btn-hover-border-color: rgb(255 255 255 / 60%);
+    --tblr-btn-hover-color: #fff;
+}
+
+.mp-stage .form-label,
+.mp-stage .form-hint {
+    color: var(--mp-stage-muted);
+}
+
+.mp-stage :focus-visible {
+    outline: 2px solid #fff;
+    outline-offset: 2px;
+}
+
+/* Page head on a stage (Home): same h1 and summary, on the band's surface. */
+.mp-page-head.mp-stage {
+    align-items: center;
+    padding: var(--mp-space-6);
+}
+
+/* Huge numeral or code on a stage: 404, 500, the party code. */
+.mp-stage-mark {
+    display: block;
+    margin-block-end: var(--mp-space-3);
+    font-size: clamp(4rem, 10vw, 6rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-stage-mark.is-code {
+    letter-spacing: 0.12em;
+    margin-inline-end: -0.12em;
+}
+
+/* A cover tile sitting on the stage, same edge as the band's art. */
+.mp-stage-art {
+    flex: none;
+    inline-size: 88px;
+    block-size: 88px;
+    border-radius: 10px;
+    background: var(--np-image, var(--mp-art-wash)) center / cover;
+    box-shadow: 0 8px 24px rgb(0 0 0 / 45%);
+}
+
+@media (max-width: 575.98px) {
+    .mp-stage {
+        padding: var(--mp-space-5) var(--mp-space-4);
+        border-radius: 12px;
+    }
+
+    .mp-page-head.mp-stage {
+        padding: var(--mp-space-5) var(--mp-space-4);
+    }
+
+    .mp-stage-art {
+        inline-size: 64px;
+        block-size: 64px;
+    }
+}
+
+/* Card titles carry the section: Tabler's medium weight read as body text next to a 40px page head. */
+.page-body .card > .card-header .card-title {
+    font-weight: 650;
+    letter-spacing: -0.015em;
+}
+
+/* ---------- Section head ----------
+   h2 + count + actions. Heavier than a card title, lighter than the page head. */
+.mp-section-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--mp-space-2) var(--mp-space-3);
+    margin-block: var(--mp-space-6) var(--mp-space-3);
+}
+
+.mp-section-head:first-child {
+    margin-block-start: 0;
+}
+
+.mp-section-head :where(h2, h3) {
+    margin: 0;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+}
+
+.mp-section-head > .mp-section-actions {
+    margin-inline-start: auto;
+    display: flex;
+    gap: var(--mp-space-2);
+}
+
+.mp-count {
+    display: inline-grid;
+    place-items: center;
+    min-inline-size: 28px;
+    block-size: 24px;
+    padding-inline: var(--mp-space-2);
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--tblr-body-color) 9%, transparent);
+    color: var(--tblr-body-color);
+    font-size: var(--mp-fs-small);
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+}
+
+.mp-count.is-attention {
+    background: var(--tblr-danger);
+    color: #fff;
+}
+
+/* ---------- Empty states ----------
+   Tabler .empty inside page content: the icon becomes a pair of record sleeves in the album-art colours,
+   the title steps up. Copy stays the app's (what is empty, what to do). */
+.page-body .empty:not(.pu-empty) {
+    padding-block: var(--mp-space-7);
+}
+
+.page-body .empty:not(.pu-empty) .empty-icon {
+    position: relative;
+    isolation: isolate;
+    display: inline-grid;
+    place-items: center;
+    inline-size: 72px;
+    block-size: 72px;
+    margin-block-end: var(--mp-space-5);
+    border-radius: 14px;
+    background: none;
+    color: #fff;
+    font-size: 2rem;
+    transform: rotate(-6deg);
+}
+
+.page-body .empty:not(.pu-empty) .empty-icon::before,
+.page-body .empty:not(.pu-empty) .empty-icon::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: var(--mp-sleeve, var(--mp-art-wash));
+}
+
+.page-body .empty:not(.pu-empty) .empty-icon::before {
+    z-index: -1;
+    box-shadow: 0 8px 20px rgb(0 0 0 / 18%);
+}
+
+.page-body .empty:not(.pu-empty) .empty-icon::after {
+    z-index: -2;
+    opacity: 0.4;
+    transform: rotate(14deg) translate(12px, -2px);
+}
+
+.page-body .empty:not(.pu-empty) .empty-icon .icon {
+    inline-size: 2rem;
+    block-size: 2rem;
+    font-size: 2rem;
+    filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+}
+
+.page-body .empty:not(.pu-empty) .empty-title {
+    font-size: 1.375rem;
+    font-weight: 750;
+    letter-spacing: -0.02em;
+    line-height: 1.25;
+}
+
+.page-body .empty:not(.pu-empty) .empty-subtitle {
+    max-inline-size: 48ch;
+    margin-inline: auto;
+}
+
+/* All clear: a success empty state (nothing flagged, no checks failing). Green sleeve, no art. */
+.page-body .empty.mp-all-clear {
+    --mp-sleeve: var(--tblr-success);
+}
+
+/* ---------- State pill ----------
+   One colour per playback state, everywhere a party's state is listed (Home, Admin, Dashboard lists).
+   Playing carries three moving bars: the only looping motion outside the TV, and it means "live". */
+.mp-state {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45em;
+    padding: 2px 10px 2px 8px;
+    border-radius: 999px;
+    background: color-mix(in oklab, var(--mp-state, var(--tblr-secondary)) 14%, transparent);
+    color: var(--mp-state-text, var(--tblr-secondary-color));
+    font-size: var(--mp-fs-small);
+    font-weight: 650;
+    white-space: nowrap;
+}
+
+.mp-state::before {
+    content: '';
+    inline-size: 8px;
+    block-size: 8px;
+    border-radius: 50%;
+    background: var(--mp-state, var(--tblr-secondary));
+}
+
+.mp-state.is-playing { --mp-state: var(--tblr-success); --mp-state-text: var(--mp-text-success); }
+.mp-state.is-paused,
+.mp-state.is-warn { --mp-state: var(--tblr-warning); --mp-state-text: var(--mp-text-warning); }
+.mp-state.is-ok { --mp-state: var(--tblr-success); --mp-state-text: var(--mp-text-success); }
+.mp-state.is-stale,
+.mp-state.is-error { --mp-state: var(--tblr-danger); --mp-state-text: var(--mp-text-danger); }
+.mp-state.is-live { --mp-state: var(--tblr-primary); --mp-state-text: var(--mp-text-primary); }
+
+.mp-state.is-playing::before {
+    display: none;
+}
+
+.mp-eq {
+    display: inline-flex;
+    align-items: flex-end;
+    gap: 2px;
+    block-size: 10px;
+}
+
+.mp-eq > i {
+    inline-size: 3px;
+    block-size: 100%;
+    border-radius: 1px;
+    background: var(--mp-state, currentColor);
+    transform-origin: bottom;
+    animation: mp-eq 1.1s var(--mp-ease) infinite alternate;
+}
+
+.mp-eq > i:nth-child(2) { animation-delay: -0.4s; }
+.mp-eq > i:nth-child(3) { animation-delay: -0.75s; }
+
+@keyframes mp-eq {
+    0% { transform: scaleY(0.3); }
+    100% { transform: scaleY(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .mp-eq > i { animation: none; }
+    .mp-eq > i:nth-child(1) { transform: scaleY(0.6); }
+    .mp-eq > i:nth-child(3) { transform: scaleY(0.4); }
+}
+
+/* ---------- Success mark ----------
+   A ring with a check that draws once (400ms, ease-out) when something worked: party created, theme saved. */
+.mp-success-mark {
+    display: inline-grid;
+    place-items: center;
+    inline-size: 64px;
+    block-size: 64px;
+    margin-block-end: var(--mp-space-4);
+    border-radius: 50%;
+    background: var(--tblr-success);
+    color: #fff;
+    font-size: 2rem;
+    box-shadow: 0 0 0 8px color-mix(in oklab, var(--tblr-success) 22%, transparent);
+}
+
+/* =================================================================
+   Mod card (party Settings > Mods and Admin > Mods share it)
+   article.mc(.is-on|.is-off) > header.mc-head (icon, .mc-title > h3.mc-name + .mp-state + p.mc-desc,
+   Settings toggle, switch) + dl.mc-meta strip + .mc-sec sections (party) or .mc-body setting rows (admin).
+   Off mods collapse to one row. State uses the shared .mp-state pill.
+   ================================================================= */
+.mc-list{display:grid;gap:.75rem;margin-block-start:.75rem}
+.mc{border:1px solid var(--tblr-border-color);border-radius:var(--mp-radius-card,12px);background:var(--tblr-bg-surface);overflow:hidden}
+.mc.is-on{box-shadow:0 1px 2px rgb(0 0 0 / .04)}
+.mc-head{display:flex;align-items:flex-start;gap:1rem;padding:1.125rem 1.25rem}
+.mc.is-off .mc-head{align-items:center;padding-block:.875rem}
+.mc-icon{flex:none;display:grid;place-items:center;inline-size:44px;block-size:44px;border-radius:10px;background:color-mix(in oklab,var(--tblr-primary) 12%,transparent);color:var(--tblr-primary);font-size:1.375rem}
+.mc.is-off .mc-icon{background:var(--tblr-bg-surface-secondary);color:var(--tblr-secondary-color)}
+.mc-title{flex:1;min-inline-size:0}
+.mc-name{display:flex;align-items:center;flex-wrap:wrap;gap:.5rem;margin:0;font-size:1.1875rem;font-weight:650;letter-spacing:-.01em}
+.mc.is-off .mc-name{font-size:1rem;font-weight:600}
+.mc-desc{margin:.25rem 0 0;color:var(--tblr-secondary-color);max-inline-size:62ch}
+.mc.is-off .mc-desc{margin:.125rem 0 0;font-size:.875rem;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.mc-tog{flex:none;align-self:center;min-block-size:36px}
+.mc-switch{flex:none;margin:0;padding:0;min-block-size:0;display:flex;align-items:center;gap:.5rem;align-self:center}
+.mc-switch .form-check-input{margin:0;inline-size:2.5rem;block-size:1.375rem}
+.mc-meta{display:flex;flex-wrap:wrap;margin:0;border-block-start:1px solid var(--tblr-border-color);background:var(--tblr-bg-surface-secondary)}
+.mc-meta>div{flex:1 1 9rem;padding:.625rem 1.25rem;min-inline-size:0}
+.mc-meta>div+div{border-inline-start:1px solid var(--tblr-border-color)}
+.mc-meta dt{font-size:.75rem;font-weight:500;color:var(--tblr-secondary-color);text-transform:uppercase;letter-spacing:.05em}
+.mc-meta dd{margin:.125rem 0 0;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-meta dd .ti{margin-inline-end:.25rem;vertical-align:-1px}
+.mc-meta dd.is-ok{color:var(--mp-text-success)}
+.mc-meta dd.is-warn{color:var(--mp-text-warning)}
+.mc-sec{display:grid;grid-template-columns:minmax(0,14.5rem) minmax(0,1fr);gap:.75rem 2.5rem;padding:1.375rem 1.25rem;border-block-start:1px solid var(--tblr-border-color)}
+.mc-sec-intro h4{margin:0;font-size:1rem;font-weight:650}
+.mc-sec-intro p{margin:.25rem 0 0;font-size:.8125rem;line-height:1.5;color:var(--tblr-secondary-color)}
+.mc-sec-intro ul{margin:.625rem 0 0;padding-inline-start:1.125rem;font-size:.8125rem;line-height:1.5;color:var(--tblr-secondary-color)}
+.mc-sec-intro li+li{margin-block-start:.25rem}
+.mc-sec-body{display:grid;gap:1.125rem;min-inline-size:0;align-content:start}
+.mc-field{min-inline-size:0}
+.mc-field>label,.mc-field>.mc-label{display:block;font-weight:600;margin-block-end:.375rem}
+.mc-hint{margin:.375rem 0 0;font-size:.8125rem;color:var(--tblr-secondary-color)}
+.mc-hint.is-error{color:var(--mp-text-danger);font-weight:500}
+.mc-hint.is-error .ti{margin-inline-end:.25rem;vertical-align:-1px}
+.mc-choices{display:grid;grid-template-columns:1fr 1fr;gap:.625rem}
+.mc-choice{position:relative;display:block;padding:.75rem .875rem .75rem 2.5rem;border:1px solid var(--tblr-border-color);border-radius:10px;cursor:pointer;min-block-size:44px}
+.mc-choice input{position:absolute;inset-inline-start:.875rem;inset-block-start:.9rem;margin:0}
+.mc-choice b{display:block;font-weight:600}
+.mc-choice small{display:block;margin-block-start:.125rem;color:var(--tblr-secondary-color);line-height:1.4}
+.mc-choice:has(input:checked){border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 7%,transparent);box-shadow:inset 0 0 0 1px var(--tblr-primary)}
+.mc-keyrow{display:flex;flex-wrap:wrap;gap:.5rem;align-items:center}
+.mc-keyrow .form-control{flex:1 1 14rem;min-inline-size:0;max-inline-size:22rem}
+.mc-keyrow .badge{font-weight:600}
+.mc-slider{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem 1rem;align-items:center}
+.mc-slider input[type=range]{inline-size:100%;block-size:2rem;accent-color:var(--tblr-primary)}
+.mc-slider .input-group{inline-size:6.5rem;max-inline-size:none}
+.mc-ends{grid-column:1/2;display:flex;justify-content:space-between;gap:1rem;margin-block-start:-.5rem;font-size:.75rem;color:var(--tblr-secondary-color)}
+.mc-presets{display:flex;flex-wrap:wrap;gap:.5rem}
+.mc-presets .btn{min-block-size:36px;font-size:.8125rem}
+.mc-presets .btn.is-active{border-color:var(--tblr-primary);background:color-mix(in oklab,var(--tblr-primary) 10%,transparent);color:var(--mp-text-primary);font-weight:600}
+.mc-explain{padding:.875rem 1rem;border-radius:10px;background:var(--tblr-bg-surface-secondary);border:1px solid var(--tblr-border-color);display:grid;gap:.5rem}
+.mc-explain p{margin:0}
+.mc-explain .mc-case{display:flex;gap:.625rem;align-items:baseline;font-size:.875rem}
+.mc-explain .mc-case .ti{flex:none;vertical-align:-2px}
+.mc-explain .is-act{color:var(--mp-text-danger)}
+.mc-explain .is-pass{color:var(--mp-text-success)}
+.mc-explain.is-invalid{border-color:color-mix(in oklab,var(--tblr-danger) 40%,var(--tblr-border-color));background:color-mix(in oklab,var(--tblr-danger) 6%,transparent)}
+.mc-editor{border:1px solid var(--tblr-border-color);border-radius:10px;background:var(--tblr-bg-forms,var(--tblr-bg-surface));overflow:hidden}
+.mc-editor:focus-within{border-color:var(--tblr-primary);box-shadow:0 0 0 .2rem color-mix(in oklab,var(--tblr-primary) 20%,transparent)}
+.mc-editor-bar{display:flex;flex-wrap:wrap;gap:.375rem;align-items:center;padding:.5rem .625rem;border-block-end:1px solid var(--tblr-border-color);background:var(--tblr-bg-surface-secondary)}
+.mc-editor-bar>span{font-size:.8125rem;color:var(--tblr-secondary-color);margin-inline-end:.25rem}
+.mc-chip{display:inline-flex;align-items:center;gap:.25rem;min-block-size:32px;padding:0 .625rem;border:1px solid var(--tblr-border-color);border-radius:99px;background:var(--tblr-bg-surface);color:var(--tblr-body-color);font-size:.8125rem;cursor:pointer}
+.mc-chip:hover{border-color:var(--tblr-primary);color:var(--mp-text-primary)}
+.mc-editor textarea{display:block;inline-size:100%;min-block-size:13.5rem;padding:.875rem 1rem;border:0;background:transparent;color:var(--tblr-body-color);font:inherit;line-height:1.6;resize:vertical;outline:0}
+.mc-editor textarea::placeholder{color:var(--tblr-secondary-color)}
+.mc-editor-foot{display:flex;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.4rem .875rem;border-block-start:1px solid var(--tblr-border-color);font-size:.8125rem;color:var(--tblr-secondary-color);font-variant-numeric:tabular-nums}
+.mc-toggle{display:flex;gap:1rem;align-items:flex-start;justify-content:space-between;padding:.875rem 1rem;border:1px solid var(--tblr-border-color);border-radius:10px}
+.mc-toggle b{display:block;font-weight:600}
+.mc-toggle p{margin:.125rem 0 0;font-size:.8125rem;color:var(--tblr-secondary-color)}
+.mc-toggle .form-check{margin:0;padding:0;min-block-size:0;flex:none}
+.mc-toggle .form-check-input{margin:0;inline-size:2.5rem;block-size:1.375rem}
+details.mc-adv{border-block-start:1px solid var(--tblr-border-color)}
+details.mc-adv>summary{display:flex;align-items:center;gap:.75rem;padding:.875rem 1.25rem;min-block-size:48px;cursor:pointer;list-style:none;font-weight:600}
+details.mc-adv>summary::-webkit-details-marker{display:none}
+details.mc-adv>summary .ti{transition:transform .2s var(--mp-ease,ease);color:var(--tblr-secondary-color)}
+details.mc-adv[open]>summary .ti{transform:rotate(180deg)}
+details.mc-adv>summary small{font-weight:400;color:var(--tblr-secondary-color);flex:1;min-inline-size:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+details.mc-adv>.mc-sec{border-block-start:0;padding-block-start:.25rem}
+.mc-fields2{display:grid;grid-template-columns:1fr 1fr;gap:1.125rem}
+.mc-setup{display:flex;gap:1rem;align-items:flex-start;padding:1rem 1.25rem;border-block-start:1px solid var(--tblr-border-color);background:color-mix(in oklab,var(--tblr-warning) 10%,transparent)}
+.mc-setup>.ti{flex:none;font-size:1.5rem;color:var(--mp-text-warning);margin-block-start:.125rem}
+.mc-setup p{margin:0}
+.mc-setup .mc-setup-title{font-weight:650}
+.mc-setup .mc-setup-keyrow{display:flex;flex-wrap:wrap;gap:.5rem;margin-block-start:.75rem}
+.mc-setup .mc-setup-keyrow .form-control{flex:1 1 16rem;max-inline-size:24rem}
+.mc-setup-steps{margin:.5rem 0 0;padding-inline-start:1.125rem;font-size:.875rem;color:var(--tblr-secondary-color)}
+.mc-pending{opacity:.55}
+.mc-pending .mc-sec-intro p::after{content:" Available once a key is saved."}
+.mc-notice{display:flex;gap:.75rem;align-items:flex-start;padding:.75rem 1.25rem;border-block-start:1px solid var(--tblr-border-color);font-size:.875rem;background:color-mix(in oklab,var(--tblr-info) 8%,transparent)}
+.mc-notice>.ti{flex:none;color:var(--tblr-info);font-size:1.25rem}
+.mc-notice p{margin:0;flex:1}
+.mc-user{display:flex;gap:.75rem;align-items:center;padding:.5rem .75rem;border:1px solid var(--tblr-border-color);border-radius:10px;max-inline-size:26rem}
+.mc-user .avatar{flex:none}
+.mc-user div{flex:1;min-inline-size:0}
+.mc-user b{display:block}
+.mc-user small{color:var(--tblr-secondary-color)}
+.mc-track{display:flex;gap:.75rem;align-items:center;padding:.5rem .75rem;border:1px solid var(--tblr-border-color);border-radius:10px;max-inline-size:28rem}
+.mc-track img{inline-size:48px;block-size:48px;border-radius:6px;object-fit:cover;flex:none}
+.mc-track div{flex:1;min-inline-size:0}
+.mc-track b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mc-track small{color:var(--tblr-secondary-color)}
+.mc-stepper{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:.5rem 1rem;align-items:center}
+.mc-stepper input[type=range]{inline-size:100%;block-size:2rem;accent-color:var(--tblr-primary)}
+.mc-stepper .input-group{inline-size:6.5rem;max-inline-size:none}
+.mod-group .mp-section-head{margin-block:2rem .25rem}
+.mod-group:first-child .mp-section-head{margin-block-start:1.5rem}
+.mc-group-h{margin:2rem 0 0;font-size:.75rem;font-weight:650;letter-spacing:.08em;text-transform:uppercase;color:var(--tblr-secondary-color)}
+.mod-group:first-child .mc-group-h{margin-block-start:1.5rem}
+.mc .input-group{max-inline-size:none;flex-wrap:nowrap}
+.mc-slider .input-group,.mc-stepper .input-group{inline-size:9rem}
+.mc .input-group .form-control{min-inline-size:0}
+.mc .form-control,.mc .form-select{min-block-size:40px}
+.mc-save{display:flex;gap:.75rem;align-items:center;justify-content:flex-end;flex-wrap:wrap;margin-block-start:1rem;padding-block:.75rem;border-block-start:1px solid var(--tblr-border-color)}
+.mc-save .save-summary{margin-inline-end:auto;color:var(--tblr-secondary-color)}
+@media (max-width:767.98px){
+.mc-sec{grid-template-columns:minmax(0,1fr);gap:.875rem;padding:1.125rem 1rem}
+.mc-head{display:grid;grid-template-columns:auto minmax(0,1fr) auto auto;align-items:center;padding:1rem;gap:.5rem .75rem}
+.mc-title{display:contents}
+.mc-name{grid-column:2}
+.mc-desc{grid-column:1/-1;margin-block-start:.25rem}
+.mc-icon{grid-row:1}
+.mc-tog{grid-column:3;grid-row:1}
+.mc-switch{grid-column:4;grid-row:1}
+.mc.is-off .mc-switch{grid-column:4}
+.mc-icon{inline-size:40px;block-size:40px;font-size:1.25rem}
+.mc-meta>div{flex:1 1 45%;padding:.5rem 1rem}
+.mc-meta>div+div{border-inline-start:0}
+.mc-meta>div:nth-child(even){border-inline-start:1px solid var(--tblr-border-color)}
+.mc-meta>div:nth-child(n+3){border-block-start:1px solid var(--tblr-border-color)}
+.mc-choices,.mc-fields2{grid-template-columns:minmax(0,1fr)}
+.mc-slider,.mc-stepper{grid-template-columns:minmax(0,1fr)}
+.mc-slider .input-group,.mc-stepper .input-group{inline-size:9rem}
+.mc-ends{grid-column:1}
+details.mc-adv>summary{padding-inline:1rem}
+.mc-setup,.mc-notice{padding-inline:1rem}
+.mc-editor textarea{min-block-size:12rem}
+.mc-desc{max-inline-size:none}
+.mc.is-off .mc-desc{display:none}
+}
+
+/* Round 3: a mod that is on gets a solid tile; off stays quiet. */
+.mc.is-on .mc-icon {
+    background: var(--tblr-primary);
+    color: #fff;
+    box-shadow: 0 4px 12px color-mix(in oklab, var(--tblr-primary) 30%, transparent);
+}
+
+/* One plain sentence under the description: who uses it, or why it is off. */
+.mc-note {
+    margin: 0.375rem 0 0;
+    color: var(--tblr-secondary-color);
+    font-size: var(--mp-fs-small);
+}
+
+/* Admin: instance defaults as the app's setting rows, then one Save. */
+.mc-body {
+    padding: 0.25rem 1.25rem 1rem;
+    border-block-start: 1px solid var(--tblr-border-color);
+}
+
+.mc-body .mc-actions {
+    display: flex;
+    justify-content: flex-end;
+    padding-block-start: 0.75rem;
+}
+
+@media (max-width: 767.98px) {
+    .mc-body {
+        padding-inline: 1rem;
+    }
+}
+
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after {
         transition-duration: 0.01ms !important;
@@ -644,6 +1161,10 @@
 }
 
 .mock-notes li + li { margin-block-start: 6px; }
+
+/* A note that describes motion: what moves, how long, and what it means. */
+.mock-notes li.mock-motion { list-style: none; margin-inline-start: -1.2em; padding-inline-start: 1.2em; position: relative; }
+.mock-notes li.mock-motion::before { content: 'Motion'; position: static; margin-inline-end: 6px; padding: 0 6px; border-radius: 4px; background: #e6dcf7; color: #43207a; font-size: 0.6875rem; font-weight: 700; }
 
 .mock-toc {
     display: grid;

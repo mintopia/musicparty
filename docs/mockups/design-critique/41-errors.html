@@ -29,6 +29,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -44,7 +54,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Page not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-code" aria-hidden="true">404</span>
 <h1>We can't find that page</h1><p>The link may be old, or the page moved. Check the address, or go back to your parties.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-home"></i>Go to Home</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-door-enter"></i>Enter party code</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -61,6 +71,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -76,7 +96,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Page not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-code" aria-hidden="true">404</span>
 <h1>We can't find that page</h1><p>The link may be old, or the page moved. Check the address, or go back to your parties.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-home"></i>Go to Home</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-door-enter"></i>Enter party code</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -93,6 +113,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -108,7 +138,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Page not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-code" aria-hidden="true">404</span>
 <h1>We can't find that page</h1><p>The link may be old, or the page moved. Check the address, or go back to your parties.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-home"></i>Go to Home</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-door-enter"></i>Enter party code</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -125,6 +155,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
 <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
@@ -136,7 +176,7 @@
 </div>
 <div class="col-12 col-lg-6 col-xl-8 d-none d-lg-block"><div class="bg-cover h-100 min-vh-100" style="background-image:url('assets/cover.jpg')"></div></div>
 </div></div></template></figure></div>
-<ul class="mock-notes"><li>Branded 404 inside the app shell when logged in; GuestLayout when not. #422.</li><li>Actions name where they go ("Go to Home", "Enter party code"). One filled button.</li></ul>
+<ul class="mock-notes"><li><b>Round 3 (all pages):</b> page head 40/800 and card titles 650 for a clear type step; empty states use the record-sleeve icon in the colours of the cover now playing.</li><li><b>Round 3:</b> in-app errors sit on the player band&rsquo;s stage with the code at 6rem; 500 uses a red veil. The guest-layout 404 keeps the login page&rsquo;s photo panel.</li><li>Branded 404 inside the app shell when logged in; GuestLayout when not. #422.</li><li>Actions name where they go ("Go to Home", "Enter party code"). One filled button.</li></ul>
 </section>
 <section class="mock-section">
 <h2>500 <span class="mock-tag is-changed">Changed</span></h2>
@@ -153,6 +193,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -168,7 +218,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Error</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error is-danger">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage is-danger">
 <span class="mp-error-code" aria-hidden="true">500</span>
 <h1>Something went wrong on our side</h1><p>Your Requests and votes are safe. Try again in a minute. If it keeps happening, tell the host or the site admin.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-rotate-clockwise"></i>Try again</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-home"></i>Go to Home</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -185,6 +235,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -200,7 +260,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Error</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error is-danger">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage is-danger">
 <span class="mp-error-code" aria-hidden="true">500</span>
 <h1>Something went wrong on our side</h1><p>Your Requests and votes are safe. Try again in a minute. If it keeps happening, tell the host or the site admin.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-rotate-clockwise"></i>Try again</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-home"></i>Go to Home</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -217,6 +277,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -232,7 +302,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Error</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error is-danger">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage is-danger">
 <span class="mp-error-code" aria-hidden="true">500</span>
 <h1>Something went wrong on our side</h1><p>Your Requests and votes are safe. Try again in a minute. If it keeps happening, tell the host or the site admin.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-rotate-clockwise"></i>Try again</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-home"></i>Go to Home</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -254,6 +324,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -268,7 +348,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Not allowed</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-icon"><i class="icon ti ti-lock"></i></span>
 <h1>You can't open the Dashboard</h1><p>Only the owner and moderators of Coyote LAN 26 can. You're in this party as a user. Ask Jess, the owner, if you need access.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-playlist"></i>Back to the Queue</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -285,6 +365,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -299,7 +389,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Not allowed</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-icon"><i class="icon ti ti-ban"></i></span>
 <h1>You can't join Coyote LAN 26</h1><p>The host has removed you from this party. Ask Jess, the owner, if you think that's a mistake.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-home"></i>Go to Home</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -316,6 +406,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -330,7 +430,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Not allowed</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error ">
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)">
 <span class="mp-error-icon"><i class="icon ti ti-lock"></i></span>
 <h1>You can't open the Dashboard</h1><p>Only the owner and moderators of Coyote LAN 26 can. You're in this party as a user. Ask Jess, the owner, if you need access.</p><div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-playlist"></i>Back to the Queue</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -352,6 +452,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -367,7 +477,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Party not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
 <h1>No party with that code</h1><p>Check the code on the TV, or ask the host for the link. Codes are four letters.</p><form><label class="form-label" for="pc">Party code</label>
 <div class="mp-join-form"><input id="pc" class="mp-code-input" value="KXQC" maxlength="4" autocapitalize="characters" autocomplete="off" aria-describedby="pc-msg"><button class="btn btn-primary">Join</button></div>
 <div class="form-hint mt-2" id="pc-msg">Four letters, no digits.</div></form></div></div></main>
@@ -385,6 +495,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -400,7 +520,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Party not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
 <h1>No party with that code</h1><p>Check the code on the TV, or ask the host for the link. Codes are four letters.</p><form><label class="form-label" for="pc">Party code</label>
 <div class="mp-join-form"><input id="pc" class="mp-code-input is-invalid" value="KX9B" maxlength="4" autocapitalize="characters" autocomplete="off" aria-describedby="pc-msg"><button class="btn btn-primary">Join</button></div>
 <div class="invalid-feedback d-block mt-2" id="pc-msg">Party codes are four letters, no digits.</div></form></div></div></main>
@@ -418,6 +538,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -433,7 +563,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Party not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
 <h1>No party with that code</h1><p>Check the code on the TV, or ask the host for the link. Codes are four letters.</p><form><label class="form-label" for="pc">Party code</label>
 <div class="mp-join-form"><input id="pc" class="mp-code-input is-invalid" value="KXQ" maxlength="4" autocapitalize="characters" autocomplete="off" aria-describedby="pc-msg"><button class="btn btn-primary">Join</button></div>
 <div class="invalid-feedback d-block mt-2" id="pc-msg">Party codes are four letters. You typed three.</div></form></div></div></main>
@@ -451,6 +581,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -466,7 +606,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Party not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
 <h1>No party with that code</h1><p>Check the code on the TV, or ask the host for the link. Codes are four letters.</p><form><label class="form-label" for="pc">Party code</label>
 <div class="mp-join-form"><input id="pc" class="mp-code-input" value="KXQC" maxlength="4" autocapitalize="characters" autocomplete="off" aria-describedby="pc-msg"><button class="btn btn-primary">Join</button></div>
 <div class="form-hint mt-2" id="pc-msg">Four letters, no digits.</div></form></div></div></main>
@@ -484,6 +624,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -499,7 +649,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Party not found</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-search"></i></span>
 <h1>No party with that code</h1><p>Check the code on the TV, or ask the host for the link. Codes are four letters.</p><form><label class="form-label" for="pc">Party code</label>
 <div class="mp-join-form"><input id="pc" class="mp-code-input is-invalid" value="KX9B" maxlength="4" autocapitalize="characters" autocomplete="off" aria-describedby="pc-msg"><button class="btn btn-primary">Join</button></div>
 <div class="invalid-feedback d-block mt-2" id="pc-msg">Party codes are four letters, no digits.</div></form></div></div></main>
@@ -517,6 +667,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="d-flex flex-column min-vh-100"><div class="row g-0 flex-fill">
 <div class="col-12 col-lg-6 col-xl-4 border-top-wide border-primary d-flex flex-column justify-content-center">
@@ -548,6 +708,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -563,7 +733,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Moderation</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
 <h1>AI reviews are off for this party</h1><p>Turn on the AI Request Review mod to have new Requests checked against your guidelines.</p>
 <div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-settings"></i>Open Mods settings</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-shield-check"></i>Go to Moderation</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -580,6 +750,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -594,7 +774,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li><li class="breadcrumb-item active" aria-current="page">Moderation</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
 <h1>AI reviews are off for this party</h1><p>The host hasn't turned this on. Moderators still approve or reject Flagged Requests by hand.</p>
 <div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-shield-check"></i>Go to Moderation</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
@@ -611,6 +791,16 @@
 .mp-error .btn-list{justify-content:center}
 .mp-error form{max-inline-size:320px;margin:0 auto 24px;text-align:start}
 .mp-error .mp-join-form{justify-content:center}
+.mp-error.mp-stage{max-inline-size:760px;margin-block-start:24px;padding:64px 40px 56px}
+.mp-error.mp-stage h1{font-size:2.25rem;font-weight:800;letter-spacing:-.03em;line-height:1.1;margin-block-end:12px}
+.mp-error.mp-stage p{color:var(--mp-stage-muted);font-size:1rem;max-inline-size:46ch;margin-inline:auto}
+.mp-error.mp-stage .mp-error-code{font-size:6rem;line-height:.95;color:#fff;margin-block-end:16px}
+.mp-error.mp-stage .mp-error-icon{inline-size:88px;block-size:88px;font-size:2.5rem;background:rgb(255 255 255 / 12%);color:#fff;box-shadow:0 0 0 10px rgb(255 255 255 / 6%)}
+.mp-error.mp-stage .mp-error-icon .icon{inline-size:2.5rem;block-size:2.5rem;font-size:2.5rem;stroke-width:1.5}
+.mp-error.mp-stage.is-danger::after{background:linear-gradient(rgb(70 12 16 / 55%),rgb(22 6 8 / 85%))}
+.mp-error.mp-stage.is-danger .mp-error-code{color:oklch(78% .14 25)}
+.mp-error.mp-stage.is-danger .mp-error-icon{background:rgb(255 120 120 / 16%);color:oklch(85% .1 25)}
+@media (max-width:575.98px){.mp-error.mp-stage{padding:40px 20px 32px;margin-block-start:8px}.mp-error.mp-stage h1{font-size:1.75rem}.mp-error.mp-stage .mp-error-code{font-size:4.5rem}}
 </style><a class="mp-skip" href="#main">Skip to content</a>
 <div class="page d-flex flex-column" style="min-height: 100vh">
 <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
@@ -626,7 +816,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item active" aria-current="page">Moderation</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-error"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-error mp-stage" style="--np-image: url(art/cover-1.svg)"><span class="mp-error-icon"><i class="icon ti ti-robot-off"></i></span>
 <h1>AI reviews are off for this party</h1><p>Turn on the AI Request Review mod to have new Requests checked against your guidelines.</p>
 <div class="btn-list"><a href="#" class="btn btn-primary"><i class="icon ti ti-settings"></i>Open Mods settings</a><a href="#" class="btn btn-outline-secondary"><i class="icon ti ti-shield-check"></i>Go to Moderation</a></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>

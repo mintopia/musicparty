@@ -280,6 +280,109 @@
     </div>
 </section>
 
+<section class="mock-section">
+    <h2>Round 3 pieces <span class="mock-tag is-new">New</span></h2>
+    <p>Page head, stage, section head with counts, state pills, empty and all-clear states. See DIRECTION.md, "Round 3".</p>
+    <div class="mock-row">
+        <figure class="mock-frame" data-frame="desktop" id="round3-desktop">
+            <figcaption><b>Round 3 pieces</b> 1440px</figcaption>
+            <template>
+                <a class="mp-skip" href="#main">Skip to content</a>
+                <div class="page d-flex flex-column" style="min-height: 100vh">
+                    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">2</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+                    <div class="page-wrapper">
+                        <header class="navbar d-print-none">
+                            <div class="container-xl">
+                                <div class="navbar-nav flex-row">
+                                    <div class="d-flex py-2 px-0">
+                                        <nav aria-label="Breadcrumb"><ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                                            <li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Queue</li>
+                                        </ol></nav>
+                                    </div>
+                                </div>
+                                <div class="nav-item">
+                                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a>
+                                </div>
+                            </div>
+                        </header>
+                        <!-- Party pages: the PartyPlayer band (grabbed from the live app) goes here, unchanged. -->
+                        <main id="main" class="page-body">
+                            <div class="container-xl"><div class="mp-narrow mp-stack">
+                                <div class="mp-page-head"><div><h1>Page head</h1><p>40/800 head, 16px summary. Party pages put this under the player band.</p></div><a href="#" class="btn btn-primary"><i class="icon ti ti-plus"></i>Primary action</a></div>
+                                <div class="mp-stage" style="--np-image: url(art/cover-1.svg)"><div class="d-flex align-items-center gap-4"><span class="mp-stage-art"></span><div><span class="mp-success-mark" aria-hidden="true"><i class="icon ti ti-check"></i></span><h2 class="m-0">Stage for big moments</h2><p class="m-0">Home head, errors, success. Not under the band.</p></div></div></div>
+                                <div><div class="mp-section-head"><h2>Section head</h2><span class="mp-count">12</span><span class="mp-count is-attention">3</span><div class="mp-section-actions"><a href="#" class="btn">Action</a></div></div>
+                                <div class="d-flex flex-wrap gap-2"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span><span class="mp-state is-paused">Paused</span><span class="mp-state is-stale">Player stale</span><span class="mp-state is-idle">Nothing playing</span><span class="mp-state is-ok">Working</span><span class="mp-state is-live">Linking only</span></div></div>
+                                <div class="row g-4"><div class="col-md-6"><div class="card"><div class="empty"><div class="empty-icon"><i class="icon ti ti-playlist-off"></i></div><p class="empty-title">Empty state</p><p class="empty-subtitle text-secondary">Say what is empty and what to do next.</p></div></div></div>
+                                <div class="col-md-6"><div class="card"><div class="empty mp-all-clear"><div class="empty-icon"><i class="icon ti ti-check"></i></div><p class="empty-title">All clear</p><p class="empty-subtitle text-secondary">Nothing waiting; this is good news.</p></div></div></div></div>
+                            </div></div>
+                        </main>
+                        <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
+                    </div>
+                </div>
+            </template>
+        </figure>
+        <figure class="mock-frame" data-frame="desktop" id="round3-desktop-dark" data-theme="dark">
+            <figcaption><b>Round 3 pieces</b> 1440px</figcaption>
+            <template>
+                <a class="mp-skip" href="#main">Skip to content</a>
+                <div class="page d-flex flex-column" style="min-height: 100vh">
+                    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark"><div class="container-fluid">
+<button class="navbar-toggler" type="button" aria-label="Toggle navigation"><span class="navbar-toggler-icon"></span></button>
+<p id="site-brand" class="navbar-brand navbar-brand-autodark mt-1 px-2 mb-0"><a href="#"><span class="site-brand-name">Music Party</span></a></p>
+<div id="sidebar-menu" class="navbar-collapse collapse"><ul class="navbar-nav pt-lg-3">
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-home"></i></span><span class="nav-link-title">Home</span></a></li>
+<li class="nav-item dropdown active"><a class="nav-link dropdown-toggle show" href="#" role="button" aria-expanded="true"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist"></i></span><span class="nav-link-title">Coyote LAN 26</span></a><div class="dropdown-menu show" data-bs-popper="static"><a class="dropdown-item d-flex align-items-center" href="#">Dashboard</a><a class="dropdown-item d-flex align-items-center active" href="#" aria-current="page">Queue</a><a class="dropdown-item d-flex align-items-center" href="#">Search</a><a class="dropdown-item d-flex align-items-center" href="#">Requests</a><a class="dropdown-item d-flex align-items-center" href="#">Moderation <span class="badge bg-red text-red-fg ms-auto">2</span></a><a class="dropdown-item d-flex align-items-center" href="#">Members</a><a class="dropdown-item d-flex align-items-center" href="#">Settings</a></div></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-playlist-add"></i></span><span class="nav-link-title">Create Party</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-user"></i></span><span class="nav-link-title">Profile</span></a></li>
+<li class="nav-item"><a class="nav-link" href="#"><span class="nav-link-icon d-md-none d-lg-inline-block"><i class="icon ti ti-logout"></i></span><span class="nav-link-title">Logout</span></a></li>
+</ul></div></div></aside>
+                    <div class="page-wrapper">
+                        <header class="navbar d-print-none">
+                            <div class="container-xl">
+                                <div class="navbar-nav flex-row">
+                                    <div class="d-flex py-2 px-0">
+                                        <nav aria-label="Breadcrumb"><ol class="breadcrumb">
+                                            <li class="breadcrumb-item"><a href="#">Home</a></li>
+                                            <li class="breadcrumb-item"><a href="#">Coyote LAN 26</a></li>
+                                            <li class="breadcrumb-item active" aria-current="page">Queue</li>
+                                        </ol></nav>
+                                    </div>
+                                </div>
+                                <div class="nav-item">
+                                    <a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a>
+                                </div>
+                            </div>
+                        </header>
+                        <!-- Party pages: the PartyPlayer band (grabbed from the live app) goes here, unchanged. -->
+                        <main id="main" class="page-body">
+                            <div class="container-xl"><div class="mp-narrow mp-stack">
+                                <div class="mp-page-head"><div><h1>Page head</h1><p>40/800 head, 16px summary. Party pages put this under the player band.</p></div><a href="#" class="btn btn-primary"><i class="icon ti ti-plus"></i>Primary action</a></div>
+                                <div class="mp-stage" style="--np-image: url(art/cover-1.svg)"><div class="d-flex align-items-center gap-4"><span class="mp-stage-art"></span><div><span class="mp-success-mark" aria-hidden="true"><i class="icon ti ti-check"></i></span><h2 class="m-0">Stage for big moments</h2><p class="m-0">Home head, errors, success. Not under the band.</p></div></div></div>
+                                <div><div class="mp-section-head"><h2>Section head</h2><span class="mp-count">12</span><span class="mp-count is-attention">3</span><div class="mp-section-actions"><a href="#" class="btn">Action</a></div></div>
+                                <div class="d-flex flex-wrap gap-2"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span><span class="mp-state is-paused">Paused</span><span class="mp-state is-stale">Player stale</span><span class="mp-state is-idle">Nothing playing</span><span class="mp-state is-ok">Working</span><span class="mp-state is-live">Linking only</span></div></div>
+                                <div class="row g-4"><div class="col-md-6"><div class="card"><div class="empty"><div class="empty-icon"><i class="icon ti ti-playlist-off"></i></div><p class="empty-title">Empty state</p><p class="empty-subtitle text-secondary">Say what is empty and what to do next.</p></div></div></div>
+                                <div class="col-md-6"><div class="card"><div class="empty mp-all-clear"><div class="empty-icon"><i class="icon ti ti-check"></i></div><p class="empty-title">All clear</p><p class="empty-subtitle text-secondary">Nothing waiting; this is good news.</p></div></div></div></div>
+                            </div></div>
+                        </main>
+                        <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
+                    </div>
+                </div>
+            </template>
+        </figure>
+    </div>
+</section>
+
 <script src="assets/mockup.js"></script>
 </body>
 </html>

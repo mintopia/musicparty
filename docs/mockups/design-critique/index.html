@@ -17,7 +17,7 @@
 <body class="mock-sheet">
 <header>
 <h1>Design critique mockups</h1>
-<p>Round 2 for epic #414: 19 files, 224 frames (38 dark, 68 phone). Every screen starts from the app as built (real AppLayout, Tabler, the app's components) and changes only what its section notes list. The TV page and guest player band are final and shown unchanged. Direction and rules are in <code>DIRECTION.md</code>; each implementation ticket follows its approved mockup. Every file has at least one dark frame, using the app's existing dark mode.</p>
+<p>Round 3 for epic #414: round 2&rsquo;s sheet made bolder at the edges (page heads, empty states, status colour, success moments; see Review decisions). 19 files, 224 frames (38 dark, 68 phone). Every screen starts from the app as built (real AppLayout, Tabler, the app's components) and changes only what its section notes list. The TV page and guest player band are final and shown unchanged. Direction and rules are in <code>DIRECTION.md</code>; each implementation ticket follows its approved mockup. Every file has at least one dark frame, using the app's existing dark mode.</p>
 </header>
 
 <section class="mock-section">
@@ -31,7 +31,7 @@
 <h3>Guest party pages</h3>
 <ol class="mock-toc">
 <li><a href="12-queue.html"><b>Queue</b> <span class="mock-tag is-changed">Changed</span><span class="mock-tag is-new">New</span><span>#420, #421 · Shared vote control at 44px, "You" marker, Fallback Playlist credit, safe remove with undo, load failure. <em>15 frames, 2 dark, 7 phone.</em></span></a></li>
-<li><a href="13-search.html"><b>Search</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span>#423 · Approved results layout, album and artist pages unchanged; empty page with things to tap, no close matches, Add button states. <em>17 frames, 2 dark, 5 phone.</em></span></a></li>
+<li><a href="13-search.html"><b>Search</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span>#423 · Approved results layout, album and artist pages unchanged; See all tracks centred like them; empty page with things to tap, no close matches, Add button states. <em>17 frames, 2 dark, 5 phone.</em></span></a></li>
 <li><a href="14-tv-player.html"><b>TV, player band, Web Player</b> <span class="mock-tag is-unchanged">Unchanged</span><span class="mock-tag is-changed">Changed</span><span>#423 · TV and guest player band exactly as built; Web Player rebuilt from their language with its own status and fixes. <em>25 frames, 1 dark, 7 phone, 7 TV.</em></span></a></li>
 </ol>
 <h3>Requests and Moderation</h3>
@@ -76,6 +76,19 @@
 <li>Table pages use one search field with typed filters and matching chips; no filter sidebars.</li>
 <li>Dark mode per user is out of scope for #414; dark frames show the app&rsquo;s existing dark mode only.</li>
 <li>Sidebar is identical per role on every page: guest (Queue, Search), moderator (no Settings), owner (plus Create Party), site admin (plus Admin).</li>
+<li>Round 2 approved: the structure, grounding in the real app and the content are liked. Feedback was &ldquo;a bit safe and plain&rdquo;; round 3 keeps all of it and adds confidence at the edges (see Round 3 below).</li>
+<li>Mods tab in Party Settings and the AI review prompt field need more work; reworked in round 3 (<a href="23-settings.html">23</a>).</li>
+<li>Search &ldquo;See all tracks&rdquo; is narrow and centred like the album and artist pages, not full width (<a href="13-search.html#see-all-tracks-desktop">13</a>).</li>
+<li>Dashboard and Queue blend round 1 and round 2: round 1&rsquo;s calendar-style scheduling and cleaner look, on round 2&rsquo;s structure (device picker and health grid stay) (<a href="10-dashboard.html">10</a>, <a href="12-queue.html">12</a>).</li>
+</ul>
+<h3>Round 3: bolder at the edges</h3>
+<p>Restraint where people work (tables, forms, settings), personality where the page speaks (heads, empty states, status, success moments). Light and dark both work; TV and the guest player band are unchanged.</p>
+<ul class="mock-notes" style="max-inline-size:80ch">
+<li><b>Page heads</b> step up to 40/800 (32 on phones) against 24px section titles; card titles go from medium to 650.</li>
+<li><b>Stage</b>: the player band&rsquo;s blurred-album-art surface is reused for big moments that have no band: the Home head, error pages, and the Create Party done screen with the code at display size.</li>
+<li><b>Empty states</b> get a pair of record sleeves in the colours of the cover now playing and a stronger title; &ldquo;all clear&rdquo; empties (nothing flagged, nothing needs attention) are green.</li>
+<li><b>Playback state</b> has one colour each everywhere: Playing green with moving bars, Paused amber, Player stale red, Nothing playing grey (Home, Admin).</li>
+<li><b>Motion</b>: Playing bars loop (the only loop outside the TV); the success check draws once; all motion stops under reduced motion. Each page note marks motion with a Motion tag.</li>
 </ul>
 </section>
 

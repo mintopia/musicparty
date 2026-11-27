@@ -1,10 +1,31 @@
-# Design direction, round 2: party mockups (#415, epic #414)
+# Design direction, rounds 2 and 3: party mockups (#415, epic #414)
 
 Round 1 invented a new look and was rejected. Round 2 starts from the app as it is built today and the designs
 the user already approved (Dashboard control room v5, guest player band, TV, search results), and refines them.
 Mode is Operate: scanability and consistency first; the party feel lives in the player band, the TV page, album
 art and precise details, not in a restyle. Use GLOSSARY.md words: Request, Queue, Fallback Playlist, Player,
 Web Player, Dashboard, Flagged Request, Scheduled Request, Played Track.
+
+## Round 3: bolder at the edges
+
+Round 2 was approved ("a bit safe and plain, but I like it a lot"). Round 3 keeps everything in it (real app,
+structure, content; TV and guest player band unchanged; device picker and health grid on the Dashboard) and adds
+confidence where the page speaks, not where people work.
+
+- **Restraint in the work surface.** Tables, forms, settings rows and filters stay Tabler-plain. No new colours
+  in them beyond state.
+- **Personality at the edges.** Page heads, empty states, playback state, success moments and errors carry the
+  party feel, in the app's own vocabulary: the player band's stage (blurred cover, dark veil, white type) and the
+  colours of the cover now playing.
+- **Type contrast.** The page head is the loudest type on the page: 40/800, tracking -0.03em (32 on phones),
+  summary 16px at most 64ch. Section and card titles are 650. Body is unchanged.
+- **State colour, one meaning each.** Playing green (with moving bars), Paused amber, Player stale or error red,
+  Nothing playing grey, live/info blue. Text uses `--mp-text-*` so it passes 4.5:1 in both themes.
+- **Stage only where there is no band.** Party pages already open with the player band; do not stack a second
+  stage under it. Stage is for Home's head, error pages and success screens.
+- **Motion with a job.** Playing bars loop (1.1s, alternate) because they mean "live"; the success check draws
+  once (400ms, ease-out); the stage art should crossfade (600ms) when the track changes (proposed; the band swaps today). Nothing else
+  loops. All of it stops under `prefers-reduced-motion`. Describe motion in notes as `<li class="mock-motion">`.
 
 ## Rules
 
@@ -38,7 +59,8 @@ reached (new page, missing state), build from the component template in `resourc
 
 ## Type (#425)
 Applied inside `.page-body` only, through `:where()`, so component sizes (TV, player band, deck panels, search
-tiles) never change. h1 32/1.15/700, h2 24/1.25/650, h3 19/1.35/600 (`.card-title` too), h4 16/1.4/600, body 15/1.55,
+tiles) never change. Page head h1 (`.mp-page-head h1`, `.mp-display`) 40/1.05/800, 32 on phones (round 3);
+other h1 32/1.15/700, h2 24/1.25/650, h3 19/1.35/600 (`.card-title` too), h4 16/1.4/600, body 15/1.55,
 small 13. One h1 per page; never skip a level (page h1 → card titles h2/h3 in order). Sentence case.
 
 ## Shell
@@ -66,6 +88,17 @@ primary action right.
   Diagnostics-style lists. Use Tabler `.status-dot.status-green|yellow|red|secondary`.
 - `.mp-swatch(.is-unset)` with `--swatch` for theme colour fields: unset shows the inherited default, dashed,
   labelled "Default", never black.
+- Round 3 (party character at the edges):
+  - `.mp-stage` with `style="--np-image: url(art/cover-N.svg)"` (path relative to `assets/`): the player band's
+    surface, dark with white type in both themes. `.mp-stage-mark` (`.is-code`) for a huge numeral or party
+    code, `.mp-stage-art` for an 88px cover tile. `.mp-page-head.mp-stage` for a head on a stage (Home only).
+  - Tabler `.empty` inside `.page-body` is restyled automatically (record-sleeve icon in `--mp-art-wash`, 22px
+    title). Add `.mp-all-clear` for a green "nothing to do" state. Dashboard deck `.pu-empty` is excluded.
+  - `.mp-section-head > h2 + .mp-count(.is-attention) + .mp-section-actions`; `.mp-count` also works inside a
+    `.card-title`.
+  - `span.mp-state.is-playing|is-paused|is-stale|is-error|is-warn|is-ok|is-live|is-idle`; Playing gets
+    `<span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>` before its label.
+  - `.mp-success-mark` (green disc with `ti-check`) for a success moment.
 - Use Tabler for everything else: `.card`, `.table`, `.badge`, `.btn`, `.form-*`, `.nav-tabs`, `.empty`,
   `.status-dot`, `.avatar`, `.list-group`.
 

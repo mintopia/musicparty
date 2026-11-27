@@ -23,7 +23,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -48,7 +48,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -78,7 +78,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -101,22 +101,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -132,7 +132,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -155,22 +155,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -186,7 +186,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -209,22 +209,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -240,7 +240,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -263,22 +263,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -288,7 +288,7 @@
 </div></div></div></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
 </div></div></template></figure></div>
-<ul class="mock-notes"><li>Your parties: name, live state (Playing, Paused, Nothing playing, Player stale), role badge and code per row. Reason: Home showed nothing but a profile card; the profile has its own page (#417).</li><li>Playback wording matches the Dashboard (#418). Managers open the Dashboard, guests open the Queue.</li><li>Enter party code: four letters, uppercased as typed. One filled button per screen (Join); Create party is outlined. U6.</li><li>Profile card dropped from Home; Profile is in the sidebar.</li></ul>
+<ul class="mock-notes"><li><b>Round 3 (all pages):</b> page head 40/800 and card titles 650 for a clear type step; empty states use the record-sleeve icon in the colours of the cover now playing.</li><li><b>Round 3:</b> Home&rsquo;s head sits on the player band&rsquo;s stage, tinted by the cover playing at your live party; each party shows its state as a coloured pill (Playing with moving bars, Paused amber, Player stale red, Nothing playing grey).</li><li class="mock-motion">Only the Playing bars move; the stage art would crossfade (600ms) if the live party changes track.</li><li>Your parties: name, live state (Playing, Paused, Nothing playing, Player stale), role badge and code per row. Reason: Home showed nothing but a profile card; the profile has its own page (#417).</li><li>Playback wording matches the Dashboard (#418). Managers open the Dashboard, guests open the Queue.</li><li>Enter party code: four letters, uppercased as typed. One filled button per screen (Join); Create party is outlined. U6.</li><li>Profile card dropped from Home; Profile is in the sidebar.</li></ul>
 </section>
 <section class="mock-section">
 <h2>Home states <span class="mock-tag is-new">New</span></h2>
@@ -299,7 +299,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -322,7 +322,7 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><div class="empty text-center py-5">
 <div class="empty-icon"><i class="icon ti ti-door-enter"></i></div>
 <h2 class="empty-title h3">You're not in any parties yet</h2>
@@ -341,7 +341,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -364,22 +364,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -395,7 +395,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -418,22 +418,22 @@
 <div class="page-wrapper">
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item active" aria-current="page">Home</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
-<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
+<main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head mp-stage" style="--np-image: url(art/cover-1.svg)"><div><h1>Your parties</h1><p>Parties you host or have joined.</p></div>
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div><div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -454,7 +454,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -482,7 +482,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -510,7 +510,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -543,7 +543,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -570,19 +570,19 @@
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div>
 <div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -598,7 +598,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -625,19 +625,19 @@
 <a href="#" class="btn btn-outline-primary"><i class="icon ti ti-playlist-add"></i>Create party</a></div>
 <div class="row g-4"><div class="col-lg-8"><div class="card"><h2 class="visually-hidden">Parties</h2><div class="list-group list-group-flush mp-party-list"><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-1.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="status-dot status-green"></span>Playing · Midnight City, M83</span></div>
+<div class="mp-party-info"><b>Coyote LAN 26</b><span class="mp-party-state"><span class="mp-state is-playing"><span class="mp-eq" aria-hidden="true"><i></i><i></i><i></i></span>Playing</span> Midnight City, M83</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code KXQB">KXQB</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-4.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="status-dot status-yellow"></span>Paused · Levels, Avicii</span></div>
+<div class="mp-party-info"><b>Hallway Hangout</b><span class="mp-party-state"><span class="mp-state is-paused">Paused</span> Levels, Avicii</span></div>
 <div class="mp-party-meta"><span class="badge bg-purple-lt">Moderator</span><span class="mp-code small text-secondary" aria-label="Party code HLWY">HLWY</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-2.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="status-dot status-secondary"></span>Nothing playing · Fallback Playlist is next</span></div>
+<div class="mp-party-info"><b>Office Friday</b><span class="mp-party-state"><span class="mp-state is-idle">Nothing playing</span> Fallback Playlist is next</span></div>
 <div class="mp-party-meta"><span class="badge bg-secondary-lt">User</span><span class="mp-code small text-secondary" aria-label="Party code OFFC">OFFC</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Queue</a></div><div class="list-group-item d-flex align-items-center">
 <span class="avatar avatar-md rounded" style="background-image:url(assets/art/cover-8.svg)" role="img" aria-label="Cover art"></span>
-<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="status-dot status-red"></span>Player stale · last update 45 days ago</span></div>
+<div class="mp-party-info"><b>Lounge Mix</b><span class="mp-party-state"><span class="mp-state is-stale">Player stale</span> last update 45 days ago</span></div>
 <div class="mp-party-meta"><span class="badge bg-blue-lt">Owner</span><span class="mp-code small text-secondary" aria-label="Party code LNGE">LNGE</span></div>
 <a href="#" class="btn btn-sm btn-outline-secondary">Open Dashboard</a></div></div></div></div><div class="col-lg-4"><div class="card"><div class="card-body">
 <h2 class="card-title mb-3">Join a party</h2>
@@ -658,7 +658,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -685,7 +685,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -712,7 +712,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -739,7 +739,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}
@@ -767,7 +767,7 @@
 .mp-party-list .list-group-item{flex-wrap:wrap;gap:12px 16px}
 .mp-party-info{flex:1 1 200px;min-width:0}
 .mp-party-info b{display:block;font-size:1rem}
-.mp-party-state{display:block;color:var(--tblr-secondary-color);font-size:.8125rem}
+.mp-party-state{display:flex;flex-wrap:wrap;align-items:center;gap:4px 8px;margin-block-start:4px;color:var(--tblr-secondary-color);font-size:.8125rem}
 .mp-party-state .status-dot{margin-inline-end:6px}
 .mp-party-meta{display:flex;align-items:center;gap:10px}
 .mp-code{font-family:var(--tblr-font-monospace);letter-spacing:.2em;font-weight:700}

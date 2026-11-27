@@ -25,7 +25,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -118,7 +118,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -197,7 +197,7 @@
 <div class="card-footer d-flex align-items-center"><p class="m-0 text-secondary">Showing <b>1</b> to <b>2</b> of <b>2</b> users</p><ul class="pagination m-0 ms-auto"><li class="page-item disabled"><a class="page-link" href="#" tabindex="-1">Previous</a></li><li class="page-item active"><a class="page-link" href="#">1</a></li><li class="page-item"><a class="page-link" href="#">2</a></li><li class="page-item"><a class="page-link" href="#">Next</a></li></ul></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
 </div></div></template></figure></div>
-<ul class="mock-notes"><li><b>Combined search</b> (#426, U7): one field, chips below carrying the same filters, result count inside the field. The sidebar card is gone, so the table gets the full 1440 width.</li><li><b>Columns</b>: avatar and nickname (with Admin, Suspended and Signup-not-finished badges), linked-account icons (a yellow icon means that link needs re-linking), parties, last login and created in words ("45 days ago"), never timestamps. Sort stays on ID, Last login, Created.</li><li><b>Row actions</b> in a labelled overflow: View, Edit, Impersonate, Delete (danger, separated). They were reachable only through the user page before. Impersonate names the user so it cannot be hit by habit.</li><li><b>New data</b>: parties count per user, linked provider per user, Spotify re-link state, and the <code>provider:</code>, <code>role:</code>, <code>suspended</code> filters.</li><li><b>Open question:</b> only one role (Admin) exists on the instance today; the Role filter chip is shown for it.</li></ul>
+<ul class="mock-notes"><li><b>Round 3 (all pages):</b> page head 40/800 and card titles 650 for a clear type step; empty states use the record-sleeve icon in the colours of the cover now playing.</li><li><b>Round 3:</b> Spotify link status uses the shared state pill colours.</li><li><b>Combined search</b> (#426, U7): one field, chips below carrying the same filters, result count inside the field. The sidebar card is gone, so the table gets the full 1440 width.</li><li><b>Columns</b>: avatar and nickname (with Admin, Suspended and Signup-not-finished badges), linked-account icons (a yellow icon means that link needs re-linking), parties, last login and created in words ("45 days ago"), never timestamps. Sort stays on ID, Last login, Created.</li><li><b>Row actions</b> in a labelled overflow: View, Edit, Impersonate, Delete (danger, separated). They were reachable only through the user page before. Impersonate names the user so it cannot be hit by habit.</li><li><b>New data</b>: parties count per user, linked provider per user, Spotify re-link state, and the <code>provider:</code>, <code>role:</code>, <code>suspended</code> filters.</li><li><b>Open question:</b> only one role (Admin) exists on the instance today; the Role filter chip is shown for it.</li></ul>
 </section>
 
 <section class="mock-section">
@@ -211,7 +211,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -292,8 +292,8 @@
 <div><div class="datagrid-title">Last login</div><div>3 hours ago</div></div></div></div>
 <div class="card-footer d-flex"><a href="#" class="btn btn-outline-danger ms-auto"><i class="icon ti ti-trash"></i>Delete Mina</a></div></div>
 <div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Linked accounts</h2></div><table class="table table-vcenter card-table"><thead><tr><th>Provider</th><th>Account</th><th>Linked</th><th>State</th><th></th></tr></thead><tbody>
-<tr><td><i class="ti ti-brand-discord me-2"></i>Discord</td><td>mina#2041</td><td>3 months ago</td><td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Working</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr>
-<tr><td><i class="ti ti-brand-spotify me-2"></i>Spotify</td><td>mina.plays</td><td>3 months ago</td><td><span class="badge bg-yellow-lt mp-state"><span class="status-dot status-yellow"></span>Needs re-link</span><span class="mp-sub">Token expired 12 days ago</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr></tbody></table></div>
+<tr><td><i class="ti ti-brand-discord me-2"></i>Discord</td><td>mina#2041</td><td>3 months ago</td><td><span class="mp-state is-ok">Working</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr>
+<tr><td><i class="ti ti-brand-spotify me-2"></i>Spotify</td><td>mina.plays</td><td>3 months ago</td><td><span class="mp-state is-warn">Needs re-link</span><span class="mp-sub">Token expired 12 days ago</span></td><td class="text-end"><a href="#" class="btn btn-sm">Unlink</a></td></tr></tbody></table></div>
 <div class="card"><div class="card-header"><h2 class="card-title">Parties</h2></div><table class="table table-vcenter card-table"><thead><tr><th>Party</th><th>Role</th><th>Last active</th></tr></thead><tbody>
 <tr><td><a href="#">Retro Room</a><span class="mp-sub">HZMN</span></td><td><span class="badge bg-blue-lt">Owner</span></td><td>3 hours ago</td></tr>
 <tr><td><a href="#">Coyote LAN 26</a><span class="mp-sub">KXQB</span></td><td><span class="badge bg-secondary-lt">User</span></td><td>1 day ago</td></tr></tbody></table></div></div></div></div></main>
@@ -313,7 +313,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -402,7 +402,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -494,7 +494,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -578,7 +578,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -650,7 +650,7 @@
 <header class="navbar d-print-none"><div class="container-xl"><div class="navbar-nav flex-row"><div class="d-flex py-2 px-0"><nav aria-label="Breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="#">Home</a></li><li class="breadcrumb-item"><a href="#">Admin</a></li><li class="breadcrumb-item"><a href="#">Users</a></li><li class="breadcrumb-item active" aria-current="page">Mina</li></ol></nav></div></div>
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
 <main id="main" class="page-body"><div class="container-xl"><div class="mp-page-head"><div class="mp-cell"><span class="avatar avatar-sm bg-pink-lt">MI</span><div><h1>Mina</h1><p>User 4 · last login 3 hours ago</p></div></div><div class="btn-list w-100"><a href="#" class="btn btn-primary"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn"><i class="icon ti ti-spy"></i>Impersonate</a></div></div>
-<div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Linked accounts</h2></div><ul class="list-group list-group-flush"><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-discord me-2"></i>Discord</span><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Working</span></div><span class="mp-sub">mina#2041 · linked 3 months ago</span></li><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-spotify me-2"></i>Spotify</span><span class="badge bg-yellow-lt mp-state"><span class="status-dot status-yellow"></span>Needs re-link</span></div><span class="mp-sub">mina.plays · token expired 12 days ago</span></li></ul></div>
+<div class="mp-stack"><div class="card"><div class="card-header"><h2 class="card-title">Linked accounts</h2></div><ul class="list-group list-group-flush"><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-discord me-2"></i>Discord</span><span class="mp-state is-ok">Working</span></div><span class="mp-sub">mina#2041 · linked 3 months ago</span></li><li class="list-group-item p-3"><div class="d-flex justify-content-between"><span><i class="ti ti-brand-spotify me-2"></i>Spotify</span><span class="mp-state is-warn">Needs re-link</span></div><span class="mp-sub">mina.plays · token expired 12 days ago</span></li></ul></div>
 <div class="card"><div class="card-header"><h2 class="card-title">Parties</h2></div><ul class="list-group list-group-flush"><li class="list-group-item p-3 d-flex justify-content-between"><span><a href="#">Retro Room</a><span class="mp-sub">Owner · 3 hours ago</span></span><span class="badge bg-blue-lt align-self-start">Owner</span></li><li class="list-group-item p-3 d-flex justify-content-between"><span><a href="#">Coyote LAN 26</a><span class="mp-sub">User · 1 day ago</span></span><span class="badge bg-secondary-lt align-self-start">User</span></li></ul></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
 </div></div></template></figure></div>

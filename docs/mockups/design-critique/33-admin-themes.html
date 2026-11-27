@@ -25,7 +25,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -98,12 +98,12 @@
 <div class="nav-item"><a href="#" class="nav-link d-flex lh-1 text-reset p-0"><span class="avatar avatar-sm">JS</span><div class="d-none d-sm-block ps-2"><div>Jess</div></div></a></div></div></header>
 <main id="main" class="page-body"><div class="container-xl"><div class="mp-narrow"><div class="mp-page-head"><div><h1>Themes</h1><p>Look and feel for the whole site.</p></div></div><ul class="nav nav-tabs mb-4"><li class="nav-item"><a class="nav-link" href="#">General</a></li><li class="nav-item"><a class="nav-link" href="#">Branding</a></li><li class="nav-item"><a class="nav-link" href="#">Sign-in providers</a></li><li class="nav-item"><a class="nav-link active" href="#" aria-selected="true">Themes</a></li></ul><div class="card"><div class="card-header"><h2 class="card-title">Themes</h2><a href="#" class="btn btn-primary ms-auto"><i class="icon ti ti-plus"></i>Add theme</a></div><table class="table table-vcenter card-table"><thead><tr><th>Theme</th><th>Status</th><th>Mode</th><th>Updated</th><th><span class="visually-hidden">Actions</span></th></tr></thead><tbody>
 <tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#182433;--t-bg:#f6f8fb;--t-surf:#ffffff;--t-pri:#0054a6;--t-text:#182433" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><span class="fw-medium">Default</span><span class="mp-sub">Built in</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td class="text-secondary">Built in</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm">View</a></div></td></tr>
-<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#080b12;--t-bg:#080b12;--t-surf:#15151f;--t-pri:#8a2be2;--t-text:#e6e6f2" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">StratLAN</a><span class="mp-sub">Purple on near-black</span></div></div></td><td><span class="badge bg-green-lt mp-state"><span class="status-dot status-green"></span>Active</span></td><td>Always dark</td><td>3 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
+<tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#080b12;--t-bg:#080b12;--t-surf:#15151f;--t-pri:#8a2be2;--t-text:#e6e6f2" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">StratLAN</a><span class="mp-sub">Purple on near-black</span></div></div></td><td><span class="mp-state is-ok">Active</span></td><td>Always dark</td><td>3 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
 <tr><td><div class="mp-cell"><span class="mp-thumb" style="--t-nav:#1d2b2a;--t-bg:#f4f7f6;--t-surf:#ffffff;--t-pri:#0f766e;--t-text:#14201f" role="img" aria-label="Preview of the theme"><i></i><b></b></span><div><a href="#" class="fw-medium">Reference Theme</a><span class="mp-sub">Teal, light</span></div></div></td><td><span class="text-secondary">Not in use</span></td><td>Follows each user</td><td>45 days ago</td><td class="text-end"><div class="btn-list justify-content-end flex-nowrap"><a href="#" class="btn btn-sm">Make active</a><a href="#" class="btn btn-sm"><i class="icon ti ti-edit"></i>Edit</a><a href="#" class="btn btn-sm btn-outline-danger"><i class="icon ti ti-trash"></i>Delete</a></div></td></tr>
 </tbody></table></div></div></div></main>
 <footer class="footer footer-transparent ae-footer d-print-none mt-auto"><div class="container-xl"><div class="ae-footer__row"><a class="ae-footer__credit" href="#"><img class="ae-footer__mark ae-footer__mark--light" src="assets/mark-small.svg" alt="" width="20" height="24"><img class="ae-footer__mark ae-footer__mark--dark" src="assets/mark-small-reversed.svg" alt="" width="20" height="24">An Applied Entropy project</a><ul class="ae-footer__links"><li><a href="#">Source</a></li></ul><span class="ae-footer__legal">&copy; 2026 &middot; MIT licence</span></div></div></footer>
 </div></div></template></figure></div>
-<ul class="mock-notes"><li>Active is a badge with the same green dot as other states; "Make active" is a row action instead of a form toggle you have to open the editor for.</li><li><b>Open question:</b> the built-in Default is shown as a row you can activate (switching back to it). Today it is Edit and a disabled Delete.</li></ul>
+<ul class="mock-notes"><li><b>Round 3:</b> page head 40/800 and card titles 650 for a clear type step; empty states use the record-sleeve icon in the colours of the cover now playing.</li><li>Active is a badge with the same green dot as other states; "Make active" is a row action instead of a form toggle you have to open the editor for.</li><li><b>Open question:</b> the built-in Default is shown as a row you can activate (switching back to it). Today it is Edit and a disabled Delete.</li></ul>
 </section>
 
 <section class="mock-section">
@@ -117,7 +117,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -254,7 +254,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -391,7 +391,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -522,7 +522,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
@@ -613,7 +613,7 @@
 .mp-grid-7-5{display:grid;grid-template-columns:minmax(0,7fr) minmax(0,5fr);gap:var(--mp-space-5);align-items:start}
 .mp-grid-5-7{display:grid;grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:var(--mp-space-5);align-items:start}
 @media (max-width:991.98px){.mp-grid-7-5,.mp-grid-5-7{grid-template-columns:minmax(0,1fr)}}
-.mp-state{display:inline-flex;align-items:center;gap:.45em;white-space:nowrap}
+
 .mp-sub{display:block;color:var(--tblr-secondary-color);font-size:var(--mp-fs-small)}
 .mp-cell{display:flex;align-items:center;gap:var(--mp-space-3);min-inline-size:0}
 .mp-cell>div{min-inline-size:0}
