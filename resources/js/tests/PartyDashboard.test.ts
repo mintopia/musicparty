@@ -558,7 +558,7 @@ describe('needs attention', () => {
 
         expect(card.find('[data-test="attention-count"]').text()).toBe('3');
         expect(card.find('.na-body').element.firstElementChild?.getAttribute('data-test')).toBe('issue-row');
-        expect(card.find('[data-test="flagged-toggle"]').text()).toContain('2 flagged requests');
+        expect(card.find('[data-test="flagged-toggle"]').text()).toContain('2 Flagged Requests');
         expect(card.findAll('[data-test="flagged-row"]')).toHaveLength(2);
 
         await card.find('[data-test="flagged-toggle"]').trigger('click');

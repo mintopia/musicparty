@@ -21,7 +21,7 @@ watch(
 const items = computed(() => [
     {
         key: 'flagged',
-        label: 'Flagged',
+        label: 'Flagged Requests',
         href: flaggedUrl(props.code),
         count: flaggedCountFor(props.code, props.tabs.flaggedCount),
     },

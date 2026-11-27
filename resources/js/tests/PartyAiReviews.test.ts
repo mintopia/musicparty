@@ -153,7 +153,7 @@ describe('AI reviews list', () => {
             {holdsFlagged: false},
         );
 
-        expect(wrapper.get('[data-test="not-held-notice"]').text()).toContain("Flagged requests aren't held");
+        expect(wrapper.get('[data-test="not-held-notice"]').text()).toContain("Flagged Requests aren't held");
         expect(wrapper.get('[data-test="turn-on-approval"]').attributes('href')).toBe(
             '/parties/ABCD/edit#flag_requests',
         );

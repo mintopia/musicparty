@@ -135,6 +135,8 @@ describe('user pages', () => {
 
         const full = mount(Spotify, {props: {spotify: {name: 'Ada'}, search: {name: 'Ada S'}}});
         expect(full.find('a.btn-primary').attributes('href')).toBe('/parties/create');
+        expect(partial.text()).toContain('Link both to host a party. Search still needs linking.');
+        expect(partial.text()).toContain('Link Spotify for search');
         expect(full.text()).toContain('Ada S');
     });
 

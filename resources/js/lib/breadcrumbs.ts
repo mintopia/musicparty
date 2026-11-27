@@ -19,7 +19,7 @@ export function partyCrumbs(party: {code: string; name: string}): BreadcrumbItem
 }
 
 export function moderationCrumbs(party: {code: string; name: string}): BreadcrumbItem[] {
-    return [...partyCrumbs(party), {label: 'Rules', href: moderationIndex(party.code).url}];
+    return [...partyCrumbs(party), {label: 'Moderation', href: moderationIndex(party.code).url}];
 }
 
 export function adminCrumbs(): BreadcrumbItem[] {

@@ -122,7 +122,7 @@ describe('Flagged requests page', () => {
     it('shows an empty state', () => {
         const wrapper = mount(Flagged, {props: {party, playerState, moderationTabs, flagged: []}});
 
-        expect(wrapper.get('[data-test="empty-state"]').text()).toContain('No flagged requests');
+        expect(wrapper.get('[data-test="empty-state"]').text()).toContain('No Flagged Requests');
     });
 
     it('approves a request and removes it', async () => {

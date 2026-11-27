@@ -18,12 +18,10 @@ defineProps<{
 defineEmits<{submit: []}>();
 
 const switches: {name: SwitchField; label: string}[] = [
-    {name: 'active', label: 'Process the queue and requests'},
-    {name: 'allow_requests', label: 'Allow new songs to be added to the queue'},
-    {name: 'downvotes', label: 'Allow songs to be downvoted'},
-    {name: 'weighted', label: 'Treat the queue as a raffle'},
-    {name: 'show_qrcode', label: 'Show QR Code on TV view'},
-    {name: 'flag_requests', label: 'Hold flagged requests for manager approval'},
+    {name: 'allow_requests', label: 'Accept requests'},
+    {name: 'downvotes', label: 'Allow downvotes'},
+    {name: 'show_qrcode', label: 'Show join QR code'},
+    {name: 'flag_requests', label: 'Hold Flagged Requests for approval'},
 ];
 
 const limits: {name: LimitField; label: string; hint: string; unit?: string}[] = [
@@ -137,7 +135,7 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                 </div>
             </div>
             <div class="mb-3">
-                <label class="form-label required">Backup Playlist</label>
+                <label class="form-label required">Fallback Playlist</label>
                 <div>
                     <select
                         id="backup_playlist_id"
@@ -149,7 +147,7 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                         <option v-for="playlist in playlists" :key="playlist.id" :value="playlist.id">
                             {{ playlist.name }}
                         </option>
-                        <option value="other">Other Playlist</option>
+                        <option value="other">Other playlist</option>
                     </select>
                     <input
                         id="custom_backup_playlist_id"
@@ -163,9 +161,7 @@ const ucfirst = (value: string): string => value.charAt(0).toUpperCase() + value
                         }"
                         placeholder="Spotify Playlist ID"
                     />
-                    <small class="form-hint"
-                        >The backup playlist is used to fill the queue if there are no requests</small
-                    >
+                    <small class="form-hint">Plays when the Queue is empty</small>
                     <p v-if="form.errors.backup_playlist_id" class="invalid-feedback">
                         {{ form.errors.backup_playlist_id }}
                     </p>

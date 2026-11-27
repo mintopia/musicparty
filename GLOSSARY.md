@@ -22,6 +22,18 @@ _Avoid_: Queued
 A Request held back for a Party manager to approve or reject. It exists only in Parties that have flagging enabled.
 _Avoid_: Pending, moderated request
 
+**Fallback Playlist**:
+The playlist a Party plays from when the Queue is empty. A track from it is a Fallback Track.
+_Avoid_: Backup playlist, house playlist, fallback
+
+**Party is running**:
+The Party-level switch for whether the Queue is processed and Requests are accepted into it. One label on Create Party and Settings.
+_Avoid_: Active, Process the queue and requests
+
+**Moderation**:
+The area where a manager handles Flagged Requests, Rules and AI reviews. Its tabs are Flagged Requests, Rules and AI reviews.
+_Avoid_: Rules (as the page name), Flagged (as a tab name)
+
 **Scheduled Request**:
 A Request that a Party owner or moderator has set to play as soon as possible after a given time.
 _Avoid_: Timed request, booking

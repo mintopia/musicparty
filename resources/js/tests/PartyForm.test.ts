@@ -91,15 +91,7 @@ describe('party form', () => {
         expect(wrapper.find('.invalid-feedback').text()).toContain('name field is required');
         expect(wrapper.find('select[name="provider_id"]').exists()).toBe(true);
         expect(wrapper.find('[name="context_playlist_id"]').exists()).toBe(false);
-        for (const name of [
-            'name',
-            'country',
-            'timezone',
-            'backup_playlist_id',
-            'device_id',
-            'weighted',
-            'max_requests',
-        ]) {
+        for (const name of ['name', 'country', 'timezone', 'backup_playlist_id', 'device_id', 'max_requests']) {
             expect(wrapper.find(`[name="${name}"]`).exists(), name).toBe(true);
         }
 

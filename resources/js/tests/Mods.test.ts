@@ -105,7 +105,7 @@ describe('Mods pages', () => {
         const {wrapper: off, drafts} = mountTab(mods, {holdsFlagged: false});
         const notices = off.findAll('[data-test="mod-notice"]');
         expect(notices).toHaveLength(1);
-        expect(notices[0]?.text()).toContain("Flagged requests aren't held");
+        expect(notices[0]?.text()).toContain("Flagged Requests aren't held");
 
         await notices[0]?.find('button').trigger('click');
         expect(off.emitted('hold-flagged')).toHaveLength(1);

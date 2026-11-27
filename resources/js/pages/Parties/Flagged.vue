@@ -77,14 +77,14 @@ function confirmReject(): void {
 </script>
 
 <template>
-    <AppLayout :title="`Flagged requests - ${party.name}`">
+    <AppLayout :title="`Moderation - ${party.name}`">
         <template #breadcrumbs>
-            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Flagged'}]" />
+            <Breadcrumbs :items="[...partyCrumbs(party), {label: 'Moderation'}]" />
         </template>
         <template #header>
             <PartyPlayer :code="party.code" :initial-state="playerState" />
         </template>
-        <Head :title="`Flagged requests - ${party.name}`" />
+        <Head :title="`Moderation - ${party.name}`" />
         <ModerationTabs :code="party.code" :tabs="moderationTabs" active="flagged" />
         <div class="row">
             <div class="col-12">
@@ -92,7 +92,7 @@ function confirmReject(): void {
                 <EmptyState
                     v-if="items.length === 0"
                     icon="ti-flag-off"
-                    title="No flagged requests"
+                    title="No Flagged Requests"
                     description="Requests held for approval appear here."
                 />
                 <div v-else class="card">
