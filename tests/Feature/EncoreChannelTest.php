@@ -19,6 +19,7 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Playback\EncoreConnection;
 use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
+use App\Services\PlaybackControl;
 use App\Services\PlaybackStatus;
 use App\Services\PlaybackSync;
 use Illuminate\Broadcasting\BroadcastManager;
@@ -168,13 +169,24 @@ it('wraps every Encore command in the Soloist command shape', function (array $c
 })->with([
     'play' => [['type' => 'play'], ['type' => 'command', 'command' => 'play']],
     'skip_prev' => [['type' => 'skip_prev'], ['type' => 'command', 'command' => 'skip_prev']],
+    'next as skip_next' => [['type' => 'next'], ['type' => 'command', 'command' => 'skip_next']],
     'seek' => [['type' => 'seek', 'position_ms' => 4200], ['type' => 'command', 'command' => 'seek', 'position_ms' => 4200]],
 ]);
 
-it('leaves Web Player commands unchanged', function () {
-    $event = new PlayerCommand(encoreParty(), PlaybackSource::WebPlayer, ['type' => 'pause']);
+it('leaves Web Player commands unchanged', function (string $type) {
+    $event = new PlayerCommand(encoreParty(), PlaybackSource::WebPlayer, ['type' => $type]);
 
-    expect($event->broadcastAs())->toBe('pause')->and($event->broadcastWith())->toBe(['type' => 'pause']);
+    expect($event->broadcastAs())->toBe($type)->and($event->broadcastWith())->toBe(['type' => $type]);
+})->with(['pause', 'next']);
+
+it('sends skip_next to Encore when Next is pressed with fresh Encore state', function () {
+    Event::fake([PlayerCommand::class]);
+    $party = encoreParty();
+    $party->forceFill(['playback_source' => PlaybackSource::Encore, 'playback_received_at' => now()])->save();
+
+    app(PlaybackControl::class)->perform($party, 'next');
+
+    Event::assertDispatched(PlayerCommand::class, fn (PlayerCommand $e) => $e->broadcastAs() === 'command' && $e->broadcastWith() === ['type' => 'command', 'command' => 'skip_next']);
 });
 
 it('records the Played Track, tops up the Queue and broadcasts once from an Encore state', function () {
