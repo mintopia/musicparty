@@ -490,7 +490,7 @@ describe('health grid and upcoming list', () => {
         const wrapper = mountPage({state: 'idle', upcoming: [request(4, 'Sent one', true), request(5, 'Other')]});
         const rows = wrapper.findAll('[data-test="upcoming-row"]');
 
-        expect(rows[0].find('[data-test="sent-badge"]').exists()).toBe(true);
+        expect(rows[0].find('[data-test="sent-badge"]').text()).toBe('Sent to Player');
         expect(rows[0].find('[data-test="upvote"]').exists()).toBe(false);
         expect(rows[0].find('[data-test="remove"]').exists()).toBe(false);
         expect(rows[1].find('[data-test="upvote"]').exists()).toBe(true);
@@ -799,12 +799,58 @@ describe('upcoming list', () => {
 
         expect(row.find('[data-test="row-menu"]').classes()).toContain('show');
         expect(row.find('[data-test="menu-schedule"]').text()).toContain('Schedule');
-        expect(row.find('[data-test="menu-schedule"]').attributes('href')).toBe('/songs/4');
         expect(row.find('[data-test="menu-remove"]').text()).toContain('Remove request');
 
         await row.find('[data-test="menu-remove"]').trigger('click');
 
         expect(wrapper.find('[data-test="delete-dialog"]').exists()).toBe(true);
         expect(row.find('[data-test="row-menu"]').classes()).not.toContain('show');
+    });
+
+    it('reads Change schedule for a scheduled request and shows its Plays at pill', () => {
+        const scheduled = {...request(4, 'Kernkraft 400'), scheduled_for: '2026-11-27T21:40:00Z'};
+        const wrapper = mountPage({state: 'hidden', upcoming: [scheduled, request(5, 'Other')]});
+        const rows = wrapper.findAll('[data-test="upcoming-row"]');
+
+        expect(rows[0].find('[data-test="menu-schedule"]').text()).toContain('Change schedule');
+        expect(rows[0].find('[data-test="plays-at"]').text()).toContain('Plays at');
+        expect(rows[1].find('[data-test="menu-schedule"]').text()).not.toContain('Change schedule');
+        expect(rows[1].find('[data-test="plays-at"]').exists()).toBe(false);
+    });
+
+    it('opens a schedule sheet from the menu that links to the song and closes three ways', async () => {
+        const wrapper = mountPage({state: 'hidden'});
+        const row = wrapper.find('[data-test="upcoming-row"]');
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
+
+        await row.find('[data-test="row-menu-toggle"]').trigger('click');
+        await row.find('[data-test="menu-schedule"]').trigger('click');
+
+        expect(row.find('[data-test="row-menu"]').classes()).not.toContain('show');
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="schedule-dim"]').exists()).toBe(true);
+        expect(wrapper.find('#sched-title').text()).toBe('Schedule Kernkraft 400');
+        expect(wrapper.findAll('[data-test="schedule-day"]').length).toBeGreaterThanOrEqual(28);
+        expect(wrapper.find('[data-test="schedule-confirm"]').attributes('href')).toMatch(
+            /^\/songs\/4\?scheduled_for=\d{4}-\d{2}-\d{2}T\d{2}%3A\d{2}$/,
+        );
+
+        await wrapper.find('[data-test="schedule-chip"]').trigger('click');
+        expect(wrapper.find('[data-test="schedule-summary"]').text()).toContain('Plays at');
+
+        await wrapper.find('[data-test="schedule-cancel"]').trigger('click');
+        expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
+
+        for (const close of [
+            () => wrapper.find('[data-test="schedule-handle"]').trigger('click'),
+            () => document.dispatchEvent(new KeyboardEvent('keydown', {key: 'Escape'})),
+        ]) {
+            await row.find('[data-test="row-menu-toggle"]').trigger('click');
+            await row.find('[data-test="menu-schedule"]').trigger('click');
+            expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(true);
+            await close();
+            await wrapper.vm.$nextTick();
+            expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
+        }
     });
 });

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import {onBeforeUnmount, onMounted, ref} from 'vue';
+import ScheduleSheet from '@/components/Dashboard/ScheduleSheet.vue';
 import EmptyState from '@/components/EmptyState.vue';
 import VoteControl from '@/components/VoteControl.vue';
 import {formatMs, useRun} from '@/lib/dashboard';
@@ -24,6 +25,7 @@ const emit = defineEmits<{delete: [request: DashboardRequest]}>();
 
 const run = useRun();
 const openMenuId = ref<number | null>(null);
+const scheduling = ref<DashboardRequest | null>(null);
 
 function toggleMenu(request: DashboardRequest): void {
     openMenuId.value = openMenuId.value === request.id ? null : request.id;
@@ -32,6 +34,11 @@ function toggleMenu(request: DashboardRequest): void {
 function removeFromMenu(request: DashboardRequest): void {
     openMenuId.value = null;
     emit('delete', request);
+}
+
+function scheduleFromMenu(request: DashboardRequest): void {
+    openMenuId.value = null;
+    scheduling.value = request;
 }
 
 function closeMenu(event: Event): void {
@@ -86,7 +93,7 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
             </EmptyState>
             <div v-else class="list-group card-list-group">
                 <div v-for="request in items" :key="request.id" class="list-group-item py-2" data-test="upcoming-row">
-                    <div class="row align-items-center g-3 qrow">
+                    <div class="row align-items-center g-3 qrow" :class="{'is-sent': request.sent}">
                         <div class="col-auto">
                             <img
                                 :src="request.album.image_url"
@@ -99,12 +106,21 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                         </div>
                         <div class="col">
                             <div class="title">{{ request.name }}</div>
-                            <div class="text-secondary">{{ request.artists.map((a) => a.name).join(', ') }}</div>
-                            <div v-if="request.scheduled_for" class="text-info small">
+                            <div class="text-secondary d-none d-md-block">
+                                {{ request.artists.map((a) => a.name).join(', ') }}
+                            </div>
+                            <div class="text-secondary by d-md-none">
+                                {{ request.artists.map((a) => a.name).join(' · ') }} ·
+                                <template v-if="request.user">Requested by <b>{{ request.user }}</b></template>
+                                <span v-else class="credit" title="From the party's Fallback Playlist"
+                                    ><i class="ti ti-playlist"></i>Fallback Playlist</span
+                                >
+                            </div>
+                            <div v-if="request.scheduled_for" class="text-info small d-none d-md-block">
                                 <i class="icon ti ti-clock"></i> Scheduled for
                                 {{ formatScheduled(request.scheduled_for) }}
                             </div>
-                            <div class="text-muted small">
+                            <div class="text-muted small d-none d-md-block">
                                 <template v-if="request.user">Requested by {{ request.user }}</template>
                                 <template v-else>Fallback Playlist: {{ legacyFallbackName(request) }}</template>
                             </div>
@@ -127,18 +143,25 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                                 role="menu"
                                 data-test="row-menu"
                             >
-                                <a
-                                    :href="`${queueUrl}/${request.id}`"
+                                <button
+                                    type="button"
                                     class="dropdown-item"
                                     role="menuitem"
                                     data-test="menu-schedule"
+                                    @click="scheduleFromMenu(request)"
                                 >
                                     <i class="ti ti-calendar-clock"></i>
                                     <span
-                                        ><span class="d-block">Schedule</span
-                                        ><small class="text-secondary">Pick a day and time for it to play</small></span
+                                        ><span class="d-block">{{
+                                            request.scheduled_for ? 'Change schedule' : 'Schedule'
+                                        }}</span
+                                        ><small class="text-secondary">{{
+                                            request.scheduled_for
+                                                ? 'Pick a different time for it to play'
+                                                : 'Pick a day and time for it to play'
+                                        }}</small></span
                                     >
-                                </a>
+                                </button>
                                 <button
                                     type="button"
                                     class="dropdown-item text-danger"
@@ -160,9 +183,14 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                             </div>
                         </div>
                         <div class="qbreak d-md-none"></div>
-                        <div class="col-auto text-secondary qtime">{{ formatMs(request.length) }}</div>
+                        <div class="col-auto text-secondary qtime">
+                            <span v-if="request.scheduled_for" class="plays-at d-md-none" data-test="plays-at"
+                                ><i class="ti ti-calendar-time"></i>Plays at {{ formatScheduled(request.scheduled_for) }}</span
+                            >
+                            <span>{{ formatMs(request.length) }}</span>
+                        </div>
                         <div v-if="request.sent" class="col-auto qsent" data-test="sent-badge">
-                            <span class="badge bg-green-lt" title="Already in Spotify's queue">Sent to Spotify</span>
+                            <span class="badge bg-green-lt" title="Already handed to the Player">Sent to Player</span>
                         </div>
                         <div v-if="!request.sent" class="col-auto votes">
                             <VoteControl
@@ -198,6 +226,15 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
                 </div>
             </div>
         </div>
+        <ScheduleSheet
+            v-if="scheduling"
+            :key="scheduling.id"
+            :title="`Schedule ${scheduling.name}`"
+            :href="`${queueUrl}/${scheduling.id}`"
+            :timezone="timezone"
+            :scheduled-for="scheduling.scheduled_for"
+            @close="scheduling = null"
+        />
     </div>
 </template>
 
@@ -238,6 +275,30 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     font-size: 1.25rem;
     margin-top: 2px;
 }
+.row-menu .dropdown-item {
+    width: 100%;
+    text-align: start;
+}
+.plays-at {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 2px 10px;
+    border-radius: 99px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    background: color-mix(in oklab, var(--tblr-yellow) 22%, var(--tblr-bg-surface));
+    color: color-mix(in oklab, var(--tblr-yellow) 45%, var(--tblr-body-color));
+}
+.by b {
+    font-weight: 600;
+    color: var(--tblr-body-color);
+}
+.by .credit {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
 @media (max-width: 767.98px) {
     .qrow {
         --tblr-gutter-x: 0;
@@ -248,6 +309,10 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
     .qrow > * {
         padding-inline: 0;
     }
+    .qrow > .col-auto:first-child img {
+        width: 48px;
+        height: 48px;
+    }
     .qrow > .col {
         flex: 1 1 0;
         min-width: 0;
@@ -257,14 +322,31 @@ async function vote(request: DashboardRequest, value: number): Promise<void> {
         flex-basis: 100%;
         height: 0;
     }
+    .qrow > .votes :deep(.vote-control) {
+        background: var(--tblr-bg-surface-secondary);
+        border-radius: 99px;
+        padding: 2px 4px;
+    }
     .qrow > .votes {
         order: 1;
-        margin-inline-start: 56px;
+        margin-inline-start: 60px;
         min-width: 0;
     }
-    .qrow > .qtime,
-    .qrow > .qsent {
+    .qrow > .qtime {
         order: 2;
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 2px;
+        font-size: 0.8125rem;
+        font-variant-numeric: tabular-nums;
+        white-space: nowrap;
+    }
+    .qrow.is-sent > .qtime {
+        margin-inline-start: 60px;
+    }
+    .qrow > .qsent {
+        order: 3;
     }
 }
 </style>
