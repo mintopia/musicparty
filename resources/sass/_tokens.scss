@@ -1,17 +1,36 @@
 // Design tokens. Defaults below equal Tabler's own values, so an unthemed page
 // looks stock; override --mp-* (theme partial, dev tools) to recolour Tabler.
 // Colour defaults are per scope (--mp-default-*) so a theme's :root --mp-* value wins; see ADR 0008.
+// Fills (--mp-primary, --mp-danger, ...) are shared by both modes; the readable-as-text variants
+// (--mp-default-*-text) are derived per mode from the fill so themed colours stay legible.
 
 :root,
 :host {
-    --mp-primary: oklch(54.6% 0.1724 254.2deg);
-    --mp-primary-rgb: 6, 111, 209;
-    --mp-muted: oklch(55.55% 0 0deg);
-    --mp-success: oklch(67.38% 0.1885 145.43deg);
-    --mp-danger: oklch(58.29% 0.1941 25.59deg);
-    --mp-warning: oklch(77.02% 0.1658 71.02deg);
     --mp-radius: calc(6px * var(--tblr-border-radius-scale, 1));
-    --mp-font-family: 'Inter Var', -apple-system, BlinkMacSystemFont, San Francisco, Segoe UI, Roboto, Helvetica Neue, sans-serif;
+    --mp-font-family: 'Inter Variable', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+    --mp-brand-fg: #fff;
+    --mp-brand-discord: #5865f2;
+    --mp-brand-spotify: #1ed760;
+    --mp-brand-steam: #00adee;
+    --mp-brand-steam-fg: #0a1a24;
+    --mp-brand-twitch: #9146ff;
+
+    // The control-room deck always sits on a near-black backdrop, in light and dark themes alike.
+    --mp-deck-surface: rgb(255 255 255 / 6%);
+    --mp-deck-raised: rgb(255 255 255 / 12%);
+    --mp-deck-raised-hover: rgb(255 255 255 / 20%);
+    --mp-deck-border: rgb(255 255 255 / 16%);
+    --mp-deck-border-strong: rgb(255 255 255 / 30%);
+    --mp-deck-divider: rgb(255 255 255 / 10%);
+    --mp-deck-text: #fff;
+    --mp-deck-muted: rgb(255 255 255 / 72%);
+    --mp-deck-disabled: rgb(255 255 255 / 50%);
+    --mp-deck-accent-warn: #fde68a;
+    --mp-deck-accent-danger: #fca5a5;
+    --mp-deck-focus: #fff;
+    --mp-deck-shadow: rgb(0 0 0 / 45%);
+    --mp-deck-cover-edge: rgb(0 0 0 / 8%);
 }
 
 :root,
@@ -21,6 +40,18 @@
     --mp-default-surface: var(--tblr-bg-surface-primary);
     --mp-default-text: var(--tblr-gray-700);
     --mp-default-border: var(--tblr-gray-200);
+    --mp-default-muted: #6b6b6b;
+    --mp-default-secondary-fill: #6b6b6b;
+    --mp-default-primary: oklch(54.6% 0.1724 254.2deg);
+    --mp-default-primary-rgb: 6, 111, 209;
+    --mp-default-danger: oklch(58.29% 0.1941 25.59deg);
+    --mp-default-success: oklch(67.38% 0.1885 145.43deg);
+    --mp-default-warning: oklch(77.02% 0.1658 71.02deg);
+    --mp-default-primary-text: color-mix(in oklab, var(--mp-primary, var(--mp-default-primary)) 85%, black);
+    --mp-default-danger-text: color-mix(in oklab, var(--mp-danger, var(--mp-default-danger)) 85%, black);
+    --mp-default-success-text: color-mix(in oklab, var(--mp-success, var(--mp-default-success)) 70%, black);
+    --mp-default-warning-text: color-mix(in oklab, var(--mp-warning, var(--mp-default-warning)) 65%, black);
+    --mp-default-info-text: color-mix(in oklab, var(--tblr-info) 75%, black);
 }
 
 [data-bs-theme=dark] {
@@ -28,23 +59,47 @@
     --mp-default-surface: var(--tblr-gray-800);
     --mp-default-text: var(--tblr-gray-200);
     --mp-default-border: var(--tblr-gray-700);
+    --mp-default-muted: #a3a3a3;
+    --mp-default-secondary-fill: #525252;
+    --mp-default-primary: oklch(54.6% 0.1724 254.2deg);
+    --mp-default-primary-rgb: 6, 111, 209;
+    --mp-default-danger: oklch(58.29% 0.1941 25.59deg);
+    --mp-default-success: oklch(67.38% 0.1885 145.43deg);
+    --mp-default-warning: oklch(77.02% 0.1658 71.02deg);
+    --mp-default-primary-text: color-mix(in oklab, var(--mp-primary, var(--mp-default-primary)) 50%, white);
+    --mp-default-danger-text: color-mix(in oklab, var(--mp-danger, var(--mp-default-danger)) 60%, white);
+    --mp-default-success-text: color-mix(in oklab, var(--mp-success, var(--mp-default-success)) 80%, white);
+    --mp-default-warning-text: var(--mp-warning, var(--mp-default-warning));
+    --mp-default-info-text: color-mix(in oklab, var(--tblr-info) 80%, white);
 }
 
 :root,
 :host,
 [data-bs-theme=light],
 [data-bs-theme=dark] {
-    --tblr-primary: var(--mp-primary);
-    --tblr-primary-rgb: var(--mp-primary-rgb);
+    --mp-text-primary: var(--mp-primary-text, var(--mp-default-primary-text));
+    --mp-text-danger: var(--mp-danger-text, var(--mp-default-danger-text));
+    --mp-text-success: var(--mp-success-text, var(--mp-default-success-text));
+    --mp-text-warning: var(--mp-warning-text, var(--mp-default-warning-text));
+    --mp-text-info: var(--mp-info-text, var(--mp-default-info-text));
+    --tblr-primary: var(--mp-primary, var(--mp-default-primary));
+    --tblr-primary-rgb: var(--mp-primary-rgb, var(--mp-default-primary-rgb));
     --tblr-bg-surface: var(--mp-surface, var(--mp-default-surface));
     --tblr-body-color: var(--mp-text, var(--mp-default-text));
-    --tblr-muted: var(--mp-muted);
+    --tblr-muted: var(--mp-muted, var(--mp-default-muted));
+    --tblr-tertiary: var(--mp-muted, var(--mp-default-muted));
     --tblr-border-color: var(--mp-border, var(--mp-default-border));
-    --tblr-success: var(--mp-success);
-    --tblr-danger: var(--mp-danger);
-    --tblr-warning: var(--mp-warning);
+    --tblr-success: var(--mp-success, var(--mp-default-success));
+    --tblr-danger: var(--mp-danger, var(--mp-default-danger));
+    --tblr-warning: var(--mp-warning, var(--mp-default-warning));
     --tblr-border-radius: var(--mp-radius);
     --tblr-font-sans-serif: var(--mp-font-family);
+    --tblr-link-color: var(--mp-text-primary);
+    --tblr-link-hover-color: var(--mp-text-primary);
+    // Tabler resolves these once at :root from the light body colour and inherits them into the dark
+    // scope, leaving hint text and kbd at ~1.3:1; redeclaring them per scope re-resolves them there.
+    --tblr-secondary-color: color-mix(in oklab, var(--tblr-body-color) 75%, transparent);
+    --tblr-tertiary-color: color-mix(in oklab, var(--tblr-body-color) 50%, transparent);
 }
 
 .card-footer {

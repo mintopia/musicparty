@@ -68,29 +68,30 @@ const name = `dev-${useId()}`;
 .dev .form-selectgroup-label {
     padding: 0.55rem 0.7rem;
     text-align: left;
-    background: rgba(255, 255, 255, 0.04);
-    color: #fff;
-    border-color: rgba(255, 255, 255, 0.18);
+    background: var(--mp-deck-surface);
+    color: var(--mp-deck-text);
+    border-color: var(--mp-deck-border);
 }
 .dev .ti-dev {
     font-size: 1.5rem;
     margin-right: 0.75rem;
 }
-.dev .text-secondary {
-    color: rgba(255, 255, 255, 0.68) !important;
+.dev {
+    --tblr-secondary: var(--mp-deck-muted);
+    --tblr-muted: var(--mp-deck-muted);
 }
 .dev .form-selectgroup-input:checked + .form-selectgroup-label {
-    background: rgba(var(--mp-primary-rgb, 6, 111, 209), 0.22);
-    border-color: var(--mp-primary, var(--tblr-primary));
+    background: color-mix(in srgb, var(--tblr-primary) 22%, transparent);
+    border-color: var(--tblr-primary);
 }
 .dev .form-selectgroup-input:disabled + .form-selectgroup-label {
     opacity: 0.5;
 }
 .btn-refresh {
-    --tblr-btn-color: #fff;
-    --tblr-btn-border-color: rgba(255, 255, 255, 0.3);
-    --tblr-btn-hover-color: #fff;
-    --tblr-btn-hover-bg: rgba(255, 255, 255, 0.12);
-    --tblr-btn-hover-border-color: rgba(255, 255, 255, 0.45);
+    --tblr-btn-color: var(--mp-deck-text);
+    --tblr-btn-border-color: var(--mp-deck-border-strong);
+    --tblr-btn-hover-color: var(--mp-deck-text);
+    --tblr-btn-hover-bg: var(--mp-deck-raised);
+    --tblr-btn-hover-border-color: var(--mp-deck-border-strong);
 }
 </style>

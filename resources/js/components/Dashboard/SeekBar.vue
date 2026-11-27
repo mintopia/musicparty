@@ -85,7 +85,7 @@ function key(event: KeyboardEvent): void {
     position: relative;
     height: 6px;
     border-radius: 3px;
-    background: rgba(255, 255, 255, 0.2);
+    background: var(--mp-deck-raised-hover);
     cursor: pointer;
     margin: 14px 0 8px;
     touch-action: none;
@@ -96,13 +96,13 @@ function key(event: KeyboardEvent): void {
     inset: -10px 0;
 }
 .seek:focus-visible {
-    outline: 2px solid #fff;
+    outline: 2px solid var(--mp-deck-focus);
     outline-offset: 6px;
 }
 .seek-fill {
     position: absolute;
     inset: 0 auto 0 0;
-    background: var(--mp-primary, var(--tblr-primary));
+    background: var(--tblr-primary);
     border-radius: 3px;
 }
 .seek-knob {
@@ -111,15 +111,15 @@ function key(event: KeyboardEvent): void {
     width: 18px;
     height: 18px;
     border-radius: 50%;
-    background: #fff;
+    background: var(--mp-deck-text);
     transform: translate(-50%, -50%);
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+    box-shadow: 0 1px 3px var(--mp-deck-shadow);
 }
 .pu-times {
     display: flex;
     justify-content: space-between;
     font-variant-numeric: tabular-nums;
     font-size: 0.875rem;
-    color: rgba(255, 255, 255, 0.78);
+    color: var(--mp-deck-muted);
 }
 </style>

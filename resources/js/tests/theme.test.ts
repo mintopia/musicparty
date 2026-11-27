@@ -15,7 +15,7 @@ describe('applyTheme', () => {
         expect(root.style.getPropertyValue('--mp-primary')).toBe('#ff8000');
         expect(root.style.getPropertyValue('--mp-surface')).toBe('#fff');
         expect(root.style.getPropertyValue('--mp-primary-rgb')).toBe('255, 128, 0');
-        expect(root.style.getPropertyValue('--tblr-link-color')).toBe('var(--mp-primary)');
+        expect(root.style.getPropertyValue('--tblr-link-color')).toBe('var(--mp-text-primary)');
         expect(root.style.getPropertyValue('--tblr-link-hover-color-rgb')).toBe('var(--mp-primary-rgb)');
     });
 
@@ -43,7 +43,7 @@ describe('applyTheme', () => {
 
     it('sets link overrides on the body so they outrank the dark scope', () => {
         applyTheme({tokens: {primary: '#a86ef0'}, stylesheet: null, darkMode: true});
-        expect(document.body.style.getPropertyValue('--tblr-link-color')).toBe('var(--mp-primary)');
+        expect(document.body.style.getPropertyValue('--tblr-link-color')).toBe('var(--mp-text-primary)');
 
         applyTheme({tokens: {}, stylesheet: null, darkMode: true});
         expect(document.body.style.getPropertyValue('--tblr-link-color')).toBe('');

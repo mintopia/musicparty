@@ -34,9 +34,9 @@ function applyVariables(tokens: Record<string, string>): void {
     if (tokens.primary) {
         style.setProperty('--mp-primary-rgb', rgb(tokens.primary));
         const links: Record<string, string> = {
-            '--tblr-link-color': 'var(--mp-primary)',
+            '--tblr-link-color': 'var(--mp-text-primary)',
             '--tblr-link-color-rgb': 'var(--mp-primary-rgb)',
-            '--tblr-link-hover-color': 'var(--mp-primary)',
+            '--tblr-link-hover-color': 'var(--mp-text-primary)',
             '--tblr-link-hover-color-rgb': 'var(--mp-primary-rgb)',
         };
         for (const [name, value] of Object.entries(links)) {

@@ -231,15 +231,14 @@ onBeforeUnmount(stopCountdown);
 
 <style scoped>
 .deck-panel {
-    background: rgba(255, 255, 255, 0.06);
-    border: 1px solid rgba(255, 255, 255, 0.16);
+    background: var(--mp-deck-surface);
+    border: 1px solid var(--mp-deck-border);
     border-radius: 12px;
     padding: 16px 18px;
-    color: #fff;
+    color: var(--mp-deck-text);
+    --tblr-secondary: var(--mp-deck-muted);
+    --tblr-muted: var(--mp-deck-muted);
     height: 100%;
-}
-.deck-panel .text-secondary {
-    color: rgba(255, 255, 255, 0.68) !important;
 }
 .btn-start {
     min-height: 52px;
@@ -257,6 +256,6 @@ onBeforeUnmount(stopCountdown);
     object-fit: cover;
 }
 .deck-error {
-    color: #fca5a5;
+    color: var(--mp-deck-accent-danger);
 }
 </style>
