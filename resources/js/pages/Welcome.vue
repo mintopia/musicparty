@@ -16,7 +16,7 @@ defineProps<{providers: {code: string; name: string}[]}>();
         </div>
         <div class="mb-4">
             <label class="form-label" for="party-code">Party code</label>
-            <PartyJoinForm input-id="party-code" />
+            <PartyJoinForm input-id="party-code" :hint="false" />
         </div>
         <div class="hr-text">or</div>
         <div class="text-center">

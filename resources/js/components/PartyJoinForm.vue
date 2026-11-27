@@ -3,7 +3,7 @@ import {useForm} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import {join} from '@/routes/parties';
 
-const props = defineProps<{inputId: string}>();
+const props = withDefaults(defineProps<{inputId: string; hint?: boolean}>(), {hint: true});
 
 const form = useForm({code: ''});
 const localError = ref('');
@@ -39,13 +39,13 @@ function submit(): void {
                 autocomplete="off"
                 spellcheck="false"
                 :aria-invalid="error ? 'true' : undefined"
-                :aria-describedby="hintId"
+                :aria-describedby="error || hint ? hintId : undefined"
                 @input="normalise"
             />
             <button type="submit" class="btn btn-primary" :disabled="form.processing">Join</button>
         </div>
         <div v-if="error" :id="hintId" class="invalid-feedback d-block" role="alert">{{ error }}</div>
-        <div v-else :id="hintId" class="form-hint mt-2">
+        <div v-else-if="hint" :id="hintId" class="form-hint mt-2">
             <slot name="hint">Four letters. It's on the TV, or ask the host.</slot>
         </div>
     </form>
