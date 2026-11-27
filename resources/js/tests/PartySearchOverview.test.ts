@@ -279,11 +279,10 @@ describe('Party search suggestions and weak matches', () => {
 
     const suggestions = {
         nowPlaying: {name: 'Midnight City', artist: 'M83', image_url: null, query: 'M83'},
-        recent: ['Levels', 'daft punk'],
         artists: [{id: 'ar1', name: 'Daft Punk', image_url: null, requests: 5}],
     };
 
-    it('offers the playing track, recent searches and top artists on the empty page', () => {
+    it('offers the playing track and top artists on the empty page', () => {
         const wrapper = mount(Search, {
             props: {
                 party,
@@ -296,10 +295,6 @@ describe('Party search suggestions and weak matches', () => {
 
         expect(wrapper.get('[data-test="more-like"]').attributes('href')).toContain('?query=M83');
         expect(wrapper.get('[data-test="more-like"]').text()).toContain('More like Midnight City');
-        expect(wrapper.findAll('[data-test="recent-search"]').map((a) => a.attributes('href'))).toEqual([
-            expect.stringContaining('query=Levels'),
-            expect.stringContaining('query=daft%20punk'),
-        ]);
         expect(wrapper.get('[data-test="artist-subtitle"]').text()).toBe('5 Requests');
     });
 

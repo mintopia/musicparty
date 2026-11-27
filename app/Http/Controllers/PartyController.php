@@ -53,8 +53,6 @@ class PartyController extends Controller
 
     private const int SEARCH_OVERVIEW_TRACKS = 4;
 
-    private const int SUGGESTED_SEARCHES = 5;
-
     private const int SUGGESTED_ARTISTS = 6;
 
     public function __construct()
@@ -187,9 +185,6 @@ class PartyController extends Controller
         $results = null;
         if ($query) {
             $text = (string) $query;
-            if ($type === null && $page === 1 && ! $request->hasHeader('X-Inertia-Partial-Data')) {
-                $suggestions->record($party, $member->user, $text);
-            }
             $results = Inertia::defer(
                 fn (): array => $this->searchResults($party, $member, $factory, fn (MusicProvider $provider): array => $type === null
                     ? $this->searchOverview($party, $member, $eligibility, $provider, $text)
@@ -210,7 +205,6 @@ class PartyController extends Controller
             'results' => $results,
             'suggestions' => $query ? null : [
                 'nowPlaying' => $suggestions->nowPlaying($party),
-                'recent' => $suggestions->recent($party, self::SUGGESTED_SEARCHES),
                 'artists' => $suggestions->topArtists($party, self::SUGGESTED_ARTISTS),
             ],
             'playerState' => $party->getState(),

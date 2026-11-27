@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Console\Review\ReviewSeed;
 use App\Enums\Purpose;
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
 use App\Listeners\BroadcastWebPlayerToken;
@@ -67,18 +68,21 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
-        $this->app->scoped(FakeMusicProvider::class);
-        $this->app->scoped(MusicProviderFactory::class, function (): MusicProviderFactory {
-            $fake = fn (User $user, Purpose $purpose, ?string $market = null): FakeMusicProvider => $this->app->environment('production')
-                ? $this->app->make(FakeMusicProvider::class)
-                : FakeMusicProvider::forUser($user, $this->app->make(FakeMusicProvider::class));
+        $fakeAllowed = MusicProviderFactory::fakeAllowed();
+        if ($fakeAllowed) {
+            $this->app->scoped(FakeMusicProvider::class);
+        }
+        $this->app->scoped(MusicProviderFactory::class, function () use ($fakeAllowed): MusicProviderFactory {
+            $registry = ['spotify' => SpotifyMusicProvider::make(...)];
+            if ($fakeAllowed) {
+                $fake = fn (User $user, Purpose $purpose, ?string $market = null): FakeMusicProvider => FakeMusicProvider::forUser($user, $this->app->make(FakeMusicProvider::class));
+                $registry['fake'] = $fake;
+                if ($this->app->environment('testing')) {
+                    $registry['spotify'] = $fake;
+                }
+            }
 
-            return new MusicProviderFactory([
-                'spotify' => $this->app->environment('testing')
-                    ? $fake
-                    : SpotifyMusicProvider::make(...),
-                'fake' => $fake,
-            ]);
+            return new MusicProviderFactory($registry);
         });
         if ($this->app->environment('testing')) {
             $this->app->bind(MusicProvider::class, FakeMusicProvider::class);
@@ -92,6 +96,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
+        if (! $this->app->environment('production')) {
+            $this->commands([ReviewSeed::class]);
+        }
+
         User::observe(UserObserver::class);
         Setting::observe(SettingObserver::class);
         Theme::observe(ThemeObserver::class);

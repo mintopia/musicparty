@@ -361,7 +361,6 @@ export interface SearchOverviewResults {
 
 export interface SearchSuggestions {
     nowPlaying: {name: string; artist: string; image_url: string | null; query: string} | null;
-    recent: string[];
     artists: (ArtistResult & {requests: number})[];
 }
 
