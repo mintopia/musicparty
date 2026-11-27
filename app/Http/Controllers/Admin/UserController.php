@@ -18,7 +18,7 @@ use Inertia\Response;
 
 class UserController extends Controller
 {
-    private const MANAGED_ROLES = ['admin'];
+    private const array MANAGED_ROLES = ['admin'];
 
     public function index(Request $request): Response
     {
@@ -207,9 +207,7 @@ class UserController extends Controller
                 'token_expires_human' => $account->access_token_expires_at
                     ? Carbon::parse($account->access_token_expires_at)->diffForHumans()
                     : null,
-                'token_expired' => $account->access_token_expires_at
-                    ? Carbon::parse($account->access_token_expires_at)->isPast()
-                    : false,
+                'token_expired' => $account->access_token_expires_at && Carbon::parse($account->access_token_expires_at)->isPast(),
                 'can_delete' => $account->canDelete(),
             ])->values(),
             'parties' => $user->partyMembers

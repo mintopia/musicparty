@@ -340,7 +340,7 @@ describe('AI review page', () => {
         expect(wrapper.get('[data-test="review-title"]').text()).toContain('A very long track title');
         expect(wrapper.get('[data-test="review-user"]').text()).toContain('Dana');
         expect(wrapper.find('[data-test="detail-endpoint"]').exists()).toBe(false);
-        expect(wrapper.get('[data-test="open-request-button"]').exists()).toBe(true);
+        expect(wrapper.find('[data-test="open-request-button"]').exists()).toBe(true);
         expect(wrapper.get('[data-test="detail-latency"]').text()).toBe('812 ms');
         expect(wrapper.get('[data-test="detail-tokens"]').text()).toContain('120 in, 8 out');
         expect(wrapper.get('[data-test="back-link"]').attributes('href')).toBe('/parties/ABCD/ai-reviews?outcome=flag');

@@ -20,7 +20,11 @@ function submit(): void {
     <AppLayout :title="`Unlink ${account.providerName}`">
         <template #breadcrumbs>
             <Breadcrumbs
-                :items="[...homeCrumbs(), {label: 'Profile', href: profile().url}, {label: `Unlink ${account.providerName}`}]"
+                :items="[
+                    ...homeCrumbs(),
+                    {label: 'Profile', href: profile().url},
+                    {label: `Unlink ${account.providerName}`},
+                ]"
             />
         </template>
         <Head :title="`Unlink ${account.providerName}`" />

@@ -10,7 +10,7 @@ use App\Http\Requests\Api\V1\StartPlaybackRequest;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\UpcomingSong;
-use App\Services\Dashboard\PartyDashboard;
+use App\Services\Dashboard\PartyDevices;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\StartPlayback;
 use App\Services\PlaybackControl;
@@ -38,7 +38,7 @@ class PlaybackController extends Controller
         ]);
     }
 
-    public function devices(Party $party, PlaybackControl $control, MusicProviderFactory $providers, PartyDashboard $dashboard): JsonResponse
+    public function devices(Party $party, PlaybackControl $control, MusicProviderFactory $providers, PartyDevices $devices): JsonResponse
     {
         $this->authorize('update', $party);
 
@@ -47,7 +47,7 @@ class PlaybackController extends Controller
                 throw new PartyRelinkRequiredException;
             }
 
-            return response()->json(['data' => $dashboard->refreshDevices($party)]);
+            return response()->json(['data' => $devices->refreshDevices($party)]);
         } catch (Throwable $e) {
             return $this->playbackError($e, $party);
         }

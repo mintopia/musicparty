@@ -64,7 +64,11 @@ defineProps<{
                                     :aria-label="`${account.providerName} Avatar`"
                                     :style="{backgroundImage: `url('${account.avatarUrl}')`}"
                                 ></span>
-                                <span v-else class="avatar avatar-md rounded text-white" :class="`bg-${account.providerCode}`">
+                                <span
+                                    v-else
+                                    class="avatar avatar-md rounded text-white"
+                                    :class="`bg-${account.providerCode}`"
+                                >
                                     <i :class="`icon ti ti-brand-${account.providerCode}`"></i>
                                 </span>
                                 <div>

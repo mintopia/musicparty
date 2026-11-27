@@ -112,9 +112,6 @@ onBeforeUnmount(() => {
                     :can-moderate="can.moderate"
                     :can-downvote="party.downvotes"
                     :timezone="timezone"
-                    :status="state.status"
-                    :now-track-name="state.now?.name ?? null"
-                    :now="now"
                     @delete="deleting = $event"
                 />
             </div>

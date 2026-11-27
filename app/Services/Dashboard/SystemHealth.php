@@ -129,7 +129,7 @@ class SystemHealth
     {
         $provider = SocialProvider::query()->where('code', 'spotify')->with('settings')->first();
         $link = $provider === null ? null : route('admin.settings.socialproviders.edit', $provider);
-        $values = $provider === null ? collect() : $provider->settings->pluck('value', 'code');
+        $values = $provider?->settings->pluck('value', 'code') ?? collect();
         $missing = collect(['client_id' => 'client ID', 'client_secret' => 'client secret'])
             ->filter(fn (string $name, string $code): bool => trim((string) $values->get($code)) === '')
             ->values()

@@ -1,0 +1,68 @@
+.mp-code-input {
+    inline-size: 100%;
+    max-inline-size: 9ch;
+    min-block-size: 56px;
+    padding: 0 var(--mp-space-3);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: var(--mp-radius-control);
+    background: var(--tblr-bg-forms, var(--tblr-bg-surface));
+    color: var(--tblr-body-color);
+    font: inherit;
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: 0.25em;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.mp-code-input:focus {
+    border-color: var(--tblr-primary);
+    outline: 0;
+    box-shadow: 0 0 0 0.25rem color-mix(in oklab, var(--tblr-primary) 25%, transparent);
+}
+
+.mp-code-input.is-invalid {
+    border-color: var(--tblr-danger);
+}
+
+.mp-join-form {
+    display: flex;
+    gap: var(--mp-space-2);
+    align-items: center;
+}
+
+.mp-join-form .mp-code-input {
+    flex: none;
+    inline-size: 9ch;
+}
+
+.mp-join-form .btn {
+    min-block-size: 44px;
+}
+
+.mp-invite {
+    display: flex;
+    gap: var(--mp-space-4);
+    align-items: center;
+    padding: var(--mp-space-4);
+    border: 1px solid var(--tblr-border-color);
+    border-radius: 12px;
+    background: var(--tblr-bg-surface);
+    margin-block-end: var(--mp-space-5);
+}
+
+.mp-invite .avatar {
+    flex: none;
+}
+
+.mp-invite > div {
+    min-inline-size: 0;
+}
+
+.mp-invite p {
+    margin: 0;
+}
+
+.mp-invite .status-dot {
+    margin-inline-end: 6px;
+}
