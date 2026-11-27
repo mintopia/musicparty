@@ -108,7 +108,7 @@ async function toggle(review: AiReviewRow): Promise<void> {
             <div class="col-md-12 col-lg-3 mb-4">
                 <form :action="listUrl" method="get" class="card" data-test="filters" @submit.prevent="submit">
                     <div class="card-header">
-                        <h3 class="card-title">Filter</h3>
+                        <h3 class="card-title">Search</h3>
                     </div>
                     <div class="card-body">
                         <SearchTextField v-model="form.q" name="Track, artist or user" property="q" />
@@ -125,7 +125,7 @@ async function toggle(review: AiReviewRow): Promise<void> {
                         <Link v-if="filtered" :href="listUrl" class="btn btn-link ms-auto" data-test="clear-filters"
                             >Clear</Link
                         >
-                        <button class="btn btn-primary" :class="{'ms-auto': !filtered}" type="submit">Filter</button>
+                        <button class="btn btn-primary" :class="{'ms-auto': !filtered}" type="submit">Search</button>
                     </div>
                 </form>
             </div>
