@@ -5,6 +5,7 @@ use App\Exceptions\ProviderPremiumRequiredException;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Models\Role;
+use App\Models\Song;
 use App\Models\User;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
@@ -27,16 +28,23 @@ function controlParty(array $attributes = []): Party
     return $party;
 }
 
+function controlPartyWithSong(string $trackId): Party
+{
+    $party = controlParty();
+    $party->song()->associate(Song::fromTrack(FakeFallbackPlaylist::track($trackId)));
+    $party->save();
+
+    return $party;
+}
+
 function playingState(string $trackId): PlaybackState
 {
     return new PlaybackState(true, $trackId, null, 180000, 1000, CarbonImmutable::now(), false, 'off', 'fake-device', 'Fake Speaker', PlaybackSource::Polling);
 }
 
-it('plays the current track on the given device through the provider', function () {
-    $fake = app(FakeMusicProvider::class)
-        ->withTrack(FakeFallbackPlaylist::track('cur'))
-        ->withPlayback(playingState('cur'));
-    $party = controlParty();
+it('starts the current party song in the party context when Spotify has nothing loaded', function () {
+    $fake = app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(null);
+    $party = controlPartyWithSong('cur');
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play', 'deviceId' => 'dev9'])->assertOk();
 
@@ -45,11 +53,10 @@ it('plays the current track on the given device through the provider', function 
         ->and($calls[0][0])->toBe($party->fresh()->context_playlist_id)
         ->and($calls[0][1]->id)->toBe('cur')
         ->and($calls[0][2])->toBe('dev9')
-        ->and($calls[0][3])->toBe(0)
         ->and($fake->callsTo('play'))->toBeEmpty();
 });
 
-it('resumes a paused current track from its position instead of restarting it', function () {
+it('resumes a paused track where it is instead of replaying it through the party context', function () {
     $fake = app(FakeMusicProvider::class)
         ->withTrack(FakeFallbackPlaylist::track('cur'))
         ->withPlayback(new PlaybackState(false, 'cur', null, 180000, 72000, CarbonImmutable::now(), false, 'off', 'fake-device', 'Fake Speaker', PlaybackSource::Polling));
@@ -57,7 +64,8 @@ it('resumes a paused current track from its position instead of restarting it', 
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertOk();
 
-    expect($fake->callsTo('playInContext')[0][3])->toBe(72000);
+    expect($fake->callsTo('play'))->toBe([[null]])
+        ->and($fake->callsTo('playInContext'))->toBeEmpty();
 });
 
 it('maps a Premium-only Spotify failure on control to a premium_required error and flags the party', function () {
@@ -91,8 +99,8 @@ it('transfers playback to the web player device before playing', function () {
 
     $methods = array_column($fake->calls(), 'method');
     expect($fake->callsTo('transferPlayback'))->toBe([['web-sdk']])
-        ->and(array_search('transferPlayback', $methods, true))->toBeLessThan(array_search('playInContext', $methods, true))
-        ->and($fake->callsTo('playInContext')[0][2])->toBe('web-sdk');
+        ->and(array_search('transferPlayback', $methods, true))->toBeLessThan(array_search('play', $methods, true))
+        ->and($fake->callsTo('play')[0][0])->toBe('web-sdk');
 });
 
 it('returns a client error rather than a server error when there is no active device', function () {
@@ -211,7 +219,7 @@ it('plays through the Web API first when Encore is the Player', function () {
 
     $this->postJson(route('api.v1.parties.control', $party), ['action' => 'play'])->assertOk();
 
-    expect($fake->callsTo('playInContext'))->toHaveCount(1);
+    expect($fake->callsTo('play'))->toHaveCount(1);
     Event::assertNotDispatched(PlayerCommand::class);
 });
 
@@ -278,8 +286,8 @@ it('forgets the dashboard playback cache when a playback state is applied', func
 
 it('answers 409 busy when the sync lock is held while playing', function () {
     config(['musicparty.prevent_overlapping_updates' => true]);
-    app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(playingState('cur'));
-    $party = controlParty();
+    app(FakeMusicProvider::class)->withTrack(FakeFallbackPlaylist::track('cur'))->withPlayback(null);
+    $party = controlPartyWithSong('cur');
     $lock = Cache::lock("party-sync:{$party->id}", 30);
     $lock->get();
 

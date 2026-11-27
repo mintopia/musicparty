@@ -127,8 +127,13 @@ class PlaybackControl
         }
         $deviceId ??= $party->recent_device_id;
         $state = $provider->currentPlayback();
-        $trackId = $state->trackId
-            ?? $party->song->provider_track_id
+        if ($state?->trackId !== null) {
+            $provider->play($deviceId);
+
+            return;
+        }
+
+        $trackId = $party->song->provider_track_id
             ?? $party->history()->orderBy('played_at', 'desc')->first()?->song->provider_track_id;
 
         if ($trackId === null) {
@@ -144,8 +149,7 @@ class PlaybackControl
             return;
         }
 
-        $resumeAt = $state !== null && ! $state->isPlaying && $state->trackId === $track->id ? $state->progressMs : 0;
-        $ran = $this->sync->withLock($party, fn () => $provider->playInContext($this->context->ensure($party, $provider), $track, $deviceId, $resumeAt));
+        $ran = $this->sync->withLock($party, fn () => $provider->playInContext($this->context->ensure($party, $provider), $track, $deviceId));
         if (! $ran) {
             throw new PlaybackBusyException;
         }
