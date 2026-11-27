@@ -16,6 +16,7 @@ use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\Playback\PartyDashboardCache;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
@@ -24,7 +25,11 @@ class PlaybackSync
 {
     public const LOCK_SECONDS = 30;
 
+    public const int PUSHED_WAIT_SECONDS = 15;
+
     private const int POLL_DEBOUNCE_SECONDS = 5;
+
+    private const int RECEIVED_ORDER_SECONDS = 300;
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -69,13 +74,28 @@ class PlaybackSync
 
     /**
      * Single entry point for a known playback state: updates the current track, records the Played Track, tops up the Queue and broadcasts.
-     * Encore is authoritative, so its frames always apply; other sources drop states sampled before the last applied one.
-     * Returns false when another sync holds the lock.
+     * Waits for the per-Party lock and resolves the state inside it, so a pushed frame merges onto the state applied before it.
+     * A frame received before the last applied one is skipped. Encore is authoritative, so its frames are not ordered by sampledAt; other sources drop states sampled before the last applied one.
+     * Returns false when the lock could not be acquired in time.
+     *
+     * @param  PlaybackState|callable(): ?PlaybackState  $state
      */
-    public function apply(Party $party, PlaybackState $state): bool
+    public function apply(Party $party, PlaybackState|callable $state, ?int $receivedAtMs = null): bool
     {
-        return $this->withLock($party, function () use ($party, $state): void {
+        return $this->withLock($party, function () use ($party, $state, $receivedAtMs): void {
             $party->refresh();
+            $receivedKey = "party-pushed-received:{$party->id}";
+            $lastReceivedMs = Cache::get($receivedKey);
+            if ($receivedAtMs !== null && is_int($lastReceivedMs) && $receivedAtMs < $lastReceivedMs) {
+                Log::debug("{$party}: Dropping pushed frame received before the last applied one");
+
+                return;
+            }
+
+            $state = is_callable($state) ? $state() : $state;
+            if ($state === null) {
+                return;
+            }
             if ($state->source !== PlaybackSource::Encore && $party->playback_sampled_at !== null && $state->sampledAt->lessThan($party->playback_sampled_at)) {
                 Log::debug("{$party}: Dropping stale-ordered playback state from {$state->source->value}");
 
@@ -83,15 +103,19 @@ class PlaybackSync
             }
 
             $this->applyState($party, $this->providers->forParty($party, Purpose::Control), $state);
-        });
+            if ($receivedAtMs !== null) {
+                Cache::put($receivedKey, $receivedAtMs, self::RECEIVED_ORDER_SECONDS);
+            }
+        }, self::PUSHED_WAIT_SECONDS);
     }
 
     /**
-     * Runs the callback under the per-Party sync lock, broadcasting once if the rendered state changed. Returns false when another caller holds the lock.
+     * Runs the callback under the per-Party sync lock, broadcasting once if the rendered state changed.
+     * Returns false when another caller holds the lock, after waiting up to $waitSeconds for it.
      *
      * @param  callable(): mixed  $callback
      */
-    public function withLock(Party $party, callable $callback): bool
+    public function withLock(Party $party, callable $callback, int $waitSeconds = 0): bool
     {
         if (! config('musicparty.prevent_overlapping_updates')) {
             $this->coalescingBroadcasts($party, $callback);
@@ -100,7 +124,12 @@ class PlaybackSync
         }
 
         $lock = Cache::lock("party-sync:{$party->id}", self::LOCK_SECONDS);
-        if (! $lock->get()) {
+        try {
+            $acquired = $waitSeconds > 0 ? $lock->block($waitSeconds) : $lock->get();
+        } catch (LockTimeoutException) {
+            $acquired = false;
+        }
+        if (! $acquired) {
             Log::debug("{$party}: Sync already running, skipping");
 
             return false;

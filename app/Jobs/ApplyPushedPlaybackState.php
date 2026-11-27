@@ -2,6 +2,7 @@
 
 namespace App\Jobs;
 
+use App\Services\Music\Data\PlaybackState;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\PlaybackSync;
 use Illuminate\Bus\Queueable;
@@ -16,13 +17,19 @@ class ApplyPushedPlaybackState implements ShouldQueue
     use InteractsWithQueue;
     use Queueable;
 
-    public int $tries = 1;
+    public int $tries = 4;
+
+    public int $maxExceptions = 1;
+
+    public int $receivedAtMs;
 
     public function __construct(
         public string $channel,
         public string $event,
         public mixed $data,
+        ?int $receivedAtMs = null,
     ) {
+        $this->receivedAtMs = $receivedAtMs ?? now()->getTimestampMs();
         $this->onQueue('partyupdates');
     }
 
@@ -50,15 +57,23 @@ class ApplyPushedPlaybackState implements ShouldQueue
             return;
         }
 
-        $state = $mapper->map($party, $this->event, $data);
-        if ($state === null) {
-            Log::debug("{$party}: Dropping pushed frame {$this->event} that carries no playback state");
+        $map = function () use ($mapper, $party, $data): ?PlaybackState {
+            $state = $mapper->map($party, $this->event, $data);
+            if ($state === null) {
+                Log::debug("{$party}: Dropping pushed frame {$this->event} that carries no playback state");
+            }
+
+            return $state;
+        };
+
+        if ($sync->apply($party, $map, $this->receivedAtMs)) {
+            return;
+        }
+        if ($this->attempts() < $this->tries) {
+            $this->release(1);
 
             return;
         }
-
-        if (! $sync->apply($party, $state)) {
-            Log::warning("{$party}: Lost pushed frame {$this->event} because another sync holds the lock");
-        }
+        Log::warning("{$party}: Lost pushed frame {$this->event} because another sync holds the lock");
     }
 }

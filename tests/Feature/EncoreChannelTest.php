@@ -27,6 +27,7 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Sleep;
 use Laravel\Reverb\Application;
 use Laravel\Reverb\Contracts\Connection as ConnectionContract;
 use Laravel\Reverb\Contracts\WebSocketConnection;
@@ -291,10 +292,12 @@ describe('Encore activity signal', function () {
     });
 });
 
-function encoreFrame(Party $party, array $frame): void
+function encoreFrame(Party $party, array $frame, ?ApplyPushedPlaybackState $job = null): ApplyPushedPlaybackState
 {
-    new ApplyPushedPlaybackState("private-encore.{$party->code}", "client-{$frame['type']}", $frame)
-        ->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
+    $job ??= new ApplyPushedPlaybackState("private-encore.{$party->code}", "client-{$frame['type']}", $frame);
+    $job->handle(app(PushedStateRouter::class), app(PlaybackSync::class));
+
+    return $job;
 }
 
 function encorePlaybackState(string $trackId, int $positionMs, int $timestampMs): array
@@ -370,15 +373,69 @@ describe('Encore as the source of truth', function () {
         Log::shouldNotHaveReceived('warning');
     });
 
-    it('warns when a frame is lost because another sync holds the lock', function () {
+    it('waits for the sync lock and applies the frame once it is free', function () {
         config(['musicparty.prevent_overlapping_updates' => true]);
         $party = encoreParty();
-        Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS)->get();
-        Log::spy();
+        $holder = Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS);
+        $holder->get();
+        Sleep::fake();
+        Sleep::whenFakingSleep(fn () => $holder->release());
 
         encoreFrame($party, encorePlaybackState('t1', 1000, now()->getTimestampMs()));
 
+        expect($party->fresh()->song->provider_track_id)->toBe('t1');
+    });
+
+    it('releases the frame back to the queue when the lock stays held, and warns on the last attempt', function () {
+        config(['musicparty.prevent_overlapping_updates' => true]);
+        $party = encoreParty();
+        Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS)->get();
+        Sleep::fake(syncWithCarbon: true);
+        Log::spy();
+        $frame = encorePlaybackState('t1', 1000, now()->getTimestampMs());
+        $make = fn () => new ApplyPushedPlaybackState("private-encore.{$party->code}", 'client-playback_state', $frame)->withFakeQueueInteractions();
+
+        encoreFrame($party, $frame, $make())->assertReleased();
+
+        $last = $make();
+        $last->job->attempts = $last->tries;
+        encoreFrame($party, $frame, $last)->assertNotReleased();
         Log::shouldHaveReceived('warning')->once()->with(Mockery::pattern('/playback_state.*another sync/'));
         expect($party->fresh()->song_id)->toBeNull();
+    });
+
+    it('skips a frame received before one that has already been applied', function () {
+        $party = encoreParty();
+        $channel = "private-encore.{$party->code}";
+        $newer = new ApplyPushedPlaybackState($channel, 'client-playback_state', encorePlaybackState('t2', 1000, now()->getTimestampMs()));
+        $older = new ApplyPushedPlaybackState($channel, 'client-playback_state', encorePlaybackState('t1', 900, now()->getTimestampMs()), now()->getTimestampMs() - 50);
+
+        encoreFrame($party, [], $newer);
+        encoreFrame($party, [], $older);
+
+        expect($party->fresh()->song->provider_track_id)->toBe('t2');
+    });
+
+    it('maps a frame that waited for the lock against the state applied while it waited', function () {
+        config(['musicparty.prevent_overlapping_updates' => true]);
+        $party = encoreParty();
+        $channel = "private-encore.{$party->code}";
+        encoreFrame($party, encorePlaybackState('t1', 1000, now()->getTimestampMs()));
+        $trackChanged = new ApplyPushedPlaybackState($channel, 'client-track_changed', ['type' => 'track_changed', 'item' => ['uri' => 'fake:track:t2']], now()->getTimestampMs() + 10);
+        $positionSync = new ApplyPushedPlaybackState($channel, 'client-position_sync', ['type' => 'position_sync', 'position' => ['position_ms' => 4000, 'timestamp_ms' => now()->getTimestampMs()]], now()->getTimestampMs() + 20);
+        $holder = Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS);
+        $holder->get();
+        Sleep::fake();
+        Sleep::whenFakingSleep(function () use ($holder, $party, $trackChanged): void {
+            if ($holder->release()) {
+                encoreFrame($party, [], $trackChanged);
+            }
+        });
+
+        encoreFrame($party, [], $positionSync);
+
+        $fresh = $party->fresh();
+        expect($fresh->song->provider_track_id)->toBe('t2')
+            ->and(app(PlaybackStatus::class)->recall($fresh)->progressMs)->toBe(4000);
     });
 });
