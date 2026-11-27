@@ -348,7 +348,7 @@ describe('WebPlayer', () => {
         await flushPromises();
 
         expect(spotify.disconnect).toHaveBeenCalled();
-        expect(wrapper.get('[data-test="status"]').text()).toBe('Taken over elsewhere');
+        expect(wrapper.get('[data-test="status"]').text()).toBe('Taken over');
         expect(wrapper.find('[data-test="taken-over"]').exists()).toBe(true);
 
         spotify.listeners.player_state_changed(state());
@@ -364,5 +364,70 @@ describe('WebPlayer', () => {
 
         expect(echo.whispers.map(([event]) => event)).toEqual(['claim']);
         expect(spotify.disconnect).not.toHaveBeenCalled();
+    });
+
+    it('shows a status pill with a polite live region and labelled transport buttons', async () => {
+        const wrapper = await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        spotify.listeners.player_state_changed(
+            state({
+                track_window: {
+                    current_track: {
+                        uri: 'u',
+                        name: 'Song',
+                        artists: [{name: 'A'}],
+                        album: {name: 'Album', images: [{url: 'a.jpg'}]},
+                    },
+                },
+            }),
+        );
+        await flushPromises();
+
+        const status = wrapper.get('[data-test="status"]');
+        expect(status.attributes('role')).toBe('status');
+        expect(status.attributes('aria-live')).toBe('polite');
+        expect(status.text()).toBe('Playing in this tab');
+        expect(wrapper.get('[data-test="track-album"]').text()).toBe('Album');
+        expect(wrapper.get('[data-test="start"]').attributes('aria-label')).toBe('Pause');
+        expect(wrapper.get('[data-test="previous"]').attributes('aria-label')).toBe('Previous track');
+        expect(wrapper.get('[data-test="next"]').attributes('aria-label')).toBe('Next track');
+        expect(wrapper.get('[data-test="player-checks"]').text()).toContain('Music Party (this tab)');
+
+        spotify.listeners.player_state_changed(state({paused: true}));
+        await flushPromises();
+        expect(status.text()).toBe('Paused');
+    });
+
+    it('toggles and skips from the keyboard', async () => {
+        await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        spotify.listeners.player_state_changed(state());
+        await flushPromises();
+
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: 'n', bubbles: true}));
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: 'p', bubbles: true}));
+        window.dispatchEvent(new KeyboardEvent('keydown', {key: ' ', code: 'Space', bubbles: true}));
+        await flushPromises();
+
+        expect(spotify.nextTrack).toHaveBeenCalledTimes(1);
+        expect(spotify.previousTrack).toHaveBeenCalledTimes(1);
+        expect(spotify.togglePlay).toHaveBeenCalledTimes(1);
+    });
+
+    it('reclaims the party with a fresh claim from the taken-over state', async () => {
+        const wrapper = await mountPlayer();
+        spotify.listeners.ready({device_id: 'dev1'});
+        echo.whisperHandlers.claim({instanceId: 'zzz', claimedAt: Date.now() + 1000} as never);
+        await flushPromises();
+        expect(wrapper.find('[data-test="start"]').exists()).toBe(false);
+
+        await wrapper.get('[data-test="use-this-tab"]').trigger('click');
+        await flushPromises();
+        spotify.listeners.ready({device_id: 'dev2'});
+        await flushPromises();
+
+        expect(wrapper.find('[data-test="taken-over"]').exists()).toBe(false);
+        expect(echo.whispers.filter(([event]) => event === 'claim')).toHaveLength(2);
+        expect(wrapper.get('[data-test="status"]').text()).toBe('Ready');
     });
 });

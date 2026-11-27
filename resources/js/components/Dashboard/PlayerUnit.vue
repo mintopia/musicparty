@@ -6,6 +6,7 @@ import PlayerStatusPill from '@/components/PlayerStatusPill.vue';
 import RateControl from '@/components/RateControl.vue';
 import {useTicker} from '@/composables/useProgress';
 import {useRating} from '@/composables/useRating';
+import {useTransportShortcuts} from '@/composables/useTransportShortcuts';
 import {notifyKey, sendControl, useRun} from '@/lib/dashboard';
 import type {DashboardControl, LegacyPartyState, MyRating} from '@/types';
 
@@ -48,6 +49,15 @@ async function transport(action: 'play' | 'pause' | 'next' | 'previous'): Promis
     await run(() => sendControl(props.code, action));
     busy.value = false;
 }
+
+useTransportShortcuts(
+    {
+        toggle: () => void transport(playing.value ? 'pause' : 'play'),
+        next: () => void transport('next'),
+        previous: () => void transport('previous'),
+    },
+    () => props.canControl && !busy.value && props.state.now !== null,
+);
 
 async function seek(ms: number): Promise<void> {
     await run(() => sendControl(props.code, 'seek', {positionMs: ms}));
