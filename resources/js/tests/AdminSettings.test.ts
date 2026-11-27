@@ -60,7 +60,15 @@ describe('admin settings pages', () => {
         expect(wrapper.find('a[href="/admin/settings/themes/1/delete"]').exists()).toBe(false);
         expect(wrapper.find('a[href="/admin/settings/themes/2/delete"]').exists()).toBe(true);
         expect(wrapper.find('a[href="/admin/settings/socialproviders/3/edit"]').exists()).toBe(true);
-        expect(wrapper.text()).toContain('http://x/login/discord/return');
+        const copyButtons = wrapper.findAllComponents({name: 'CopyButton'});
+        expect(copyButtons.map((button) => button.props('value'))).toEqual([
+            'http://x/login/discord/return',
+            'http://x/linked/discord',
+        ]);
+        expect(wrapper.text()).toContain('Linking only');
+        expect(wrapper.find('[data-test="save-bar"]').exists()).toBe(false);
+        await wrapper.find('input[name="site"]').setValue('changed');
+        expect(wrapper.find('[data-test="save-bar"]').text()).toContain('1 unsaved change');
         await wrapper.find('form').trigger('submit');
         expect(inertia.patch).toHaveBeenCalledWith('/admin/settings');
     });
