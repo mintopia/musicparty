@@ -53,6 +53,8 @@
 }
 
 .mp-page-head h1,
+.page-body .page-header > h1,
+.page-body h1.page-title,
 .mp-display {
     margin: 0;
     font-size: var(--mp-fs-display);
@@ -63,6 +65,8 @@
 
 @media (max-width: 575.98px) {
     .mp-page-head h1,
+    .page-body .page-header > h1,
+    .page-body h1.page-title,
     .mp-display {
         font-size: var(--mp-fs-h1);
     }
