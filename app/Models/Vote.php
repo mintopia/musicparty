@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Services\Queue\QueueListing;
 use Database\Factories\VoteFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -48,6 +49,9 @@ class Vote extends Model
                 $vote->value_changed_at = now();
             }
         });
+        $forget = fn (Vote $vote) => QueueListing::forget((int) $vote->upcomingSong()->value('party_id'));
+        static::saved($forget);
+        static::deleted($forget);
     }
 
     /** @return BelongsTo<UpcomingSong, $this> */
