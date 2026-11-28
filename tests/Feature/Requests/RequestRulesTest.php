@@ -358,6 +358,7 @@ describe('checkMany', function () {
             return count(DB::getQueryLog());
         };
 
+        $queries([rulesTrack('fake-track-1')]);
         $one = $queries([rulesTrack('fake-track-1')]);
         $many = $queries(array_map(rulesTrack(...), ['fake-track-1', 'fake-track-2', 'fake-track-3', 'fake-track-4', 'fake-track-5']));
 

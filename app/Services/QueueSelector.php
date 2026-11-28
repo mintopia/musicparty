@@ -100,24 +100,100 @@ class QueueSelector
      */
     public function pick(Party $party, int $limit): Collection
     {
-        $wasSelecting = $this->selecting;
-        $this->selecting = true;
-        try {
+        return $this->whileSelecting(function () use ($party, $limit): Collection {
             $current = $party->fresh() ?? $party;
-            $candidates = $this->candidates($party);
+            $queue = $this->rankedQueue($party);
+            $candidates = $queue['ready'];
             $due = $candidates->filter(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->take($limit)->values();
             $rest = $candidates->reject(fn (UpcomingSong $request): bool => $request->scheduled_for !== null)->values();
             $remaining = $limit - $due->count();
 
             return $due->concat($remaining < 1 ? [] : ($current->weighted
-                ? $this->selectWeighted($rest, $remaining)
+                ? $this->selectWeighted($rest, $remaining, $queue['scores'])
                 : $this->selectRanked($rest, $remaining)))->values();
+        });
+    }
+
+    /**
+     * The Party's waiting Requests in the order the selector ranks them, computed once with a single Effective Score per Request.
+     * Ready Requests are selectable; held ones (only returned when $includeHeld) are released later or rejected by a candidate filter.
+     *
+     * @return array{ready: Collection<int, UpcomingSong>, held: Collection<int, UpcomingSong>, scores: array<int, int>}
+     */
+    public function rankedQueue(Party $party, bool $includeHeld = false): array
+    {
+        return $this->whileSelecting(function () use ($party, $includeHeld): array {
+            /** @var list<CandidateFilter> $filters */
+            $filters = iterator_to_array(app()->tagged('queue.candidate-filters'), false);
+            $now = Carbon::now();
+
+            $waiting = $party->upcoming()
+                ->whereNull('queued_at')
+                ->whereNull('flagged_at')
+                ->unless($includeHeld, fn ($query) => $query->where(function ($query) use ($now): void {
+                    $query->whereNull('not_before')->orWhere('not_before', '<=', $now);
+                }))
+                ->with('song')
+                ->get()
+                ->each(fn (UpcomingSong $request): UpcomingSong => $request->setRelation('party', $party));
+            $scores = $this->scoreMap($waiting);
+
+            /** @var array{0: Collection<int, UpcomingSong>, 1: Collection<int, UpcomingSong>} $parts */
+            $parts = $waiting->partition(fn (UpcomingSong $request): bool => ($request->not_before === null || $request->not_before <= $now)
+                && collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))->all();
+
+            return [
+                'ready' => $this->sortRanked($parts[0], $scores),
+                'held' => $this->sortRanked($parts[1], $scores),
+                'scores' => $scores,
+            ];
+        });
+    }
+
+    /**
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    protected function whileSelecting(callable $callback): mixed
+    {
+        $wasSelecting = $this->selecting;
+        $this->selecting = true;
+        try {
+            return $callback();
         } finally {
             if (! $wasSelecting) {
                 $this->selecting = false;
                 $this->modifiers = [];
             }
         }
+    }
+
+    /**
+     * @param  Collection<int, UpcomingSong>  $requests
+     * @return array<int, int>
+     */
+    public function scoreMap(Collection $requests): array
+    {
+        $scores = [];
+        foreach ($requests as $request) {
+            $scores[$request->id] = $this->effectiveScore($request);
+        }
+
+        return $scores;
+    }
+
+    /**
+     * @param  Collection<int, UpcomingSong>  $requests
+     * @param  array<int, int>  $scores
+     * @return Collection<int, UpcomingSong>
+     */
+    protected function sortRanked(Collection $requests, array $scores): Collection
+    {
+        return $requests
+            ->sort(fn (UpcomingSong $a, UpcomingSong $b): int => [$a->scheduled_for === null ? 1 : 0, $a->scheduled_for, $scores[$b->id], $a->created_at, $a->id] <=> [$b->scheduled_for === null ? 1 : 0, $b->scheduled_for, $scores[$a->id], $b->created_at, $b->id])
+            ->values();
     }
 
     /**
@@ -170,34 +246,6 @@ class QueueSelector
     }
 
     /**
-     * Waiting, unflagged, released Requests that pass every tagged candidate filter, Scheduled Requests first by time, then ranked by Effective Score and age.
-     *
-     * @return Collection<int, UpcomingSong>
-     */
-    protected function candidates(Party $party): Collection
-    {
-        /** @var list<CandidateFilter> $filters */
-        $filters = iterator_to_array(app()->tagged('queue.candidate-filters'), false);
-
-        $now = Carbon::now();
-
-        return $party->upcoming()
-            ->whereNull('queued_at')
-            ->whereNull('flagged_at')
-            ->where(function ($query) use ($now): void {
-                $query->whereNull('not_before')->orWhere('not_before', '<=', $now);
-            })
-            ->with('song')
-            ->get()
-            ->each(fn (UpcomingSong $request): UpcomingSong => $request->setRelation('party', $party))
-            ->filter(fn (UpcomingSong $request): bool => collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))
-            ->map(fn (UpcomingSong $request): array => [$request, $this->effectiveScore($request)])
-            ->sort(fn (array $a, array $b): int => [$a[0]->scheduled_for === null ? 1 : 0, $a[0]->scheduled_for, $b[1], $a[0]->created_at, $a[0]->id] <=> [$b[0]->scheduled_for === null ? 1 : 0, $b[0]->scheduled_for, $a[1], $b[0]->created_at, $b[0]->id])
-            ->map(fn (array $pair): UpcomingSong => $pair[0])
-            ->values();
-    }
-
-    /**
      * @param  Collection<int, UpcomingSong>  $candidates
      * @return Collection<int, UpcomingSong>
      */
@@ -210,21 +258,22 @@ class QueueSelector
      * Draws by cumulative Effective Score, then fills any shortfall in ranked order.
      *
      * @param  Collection<int, UpcomingSong>  $candidates
+     * @param  array<int, int>  $scores
      * @return Collection<int, UpcomingSong>
      */
-    protected function selectWeighted(Collection $candidates, int $limit): Collection
+    protected function selectWeighted(Collection $candidates, int $limit, array $scores): Collection
     {
         $randomizer = app(Randomizer::class);
         $pool = collect($randomizer->shuffleArray(
-            $candidates->filter(fn (UpcomingSong $request): bool => $this->effectiveScore($request) > 0)->sortBy('id')->values()->all()
+            $candidates->filter(fn (UpcomingSong $request): bool => $scores[$request->id] > 0)->sortBy('id')->values()->all()
         ));
         $selected = new Collection;
 
         for ($i = 0; $i < $limit; $i++) {
-            $sum = $pool->sum(fn (UpcomingSong $request): int => $this->effectiveScore($request));
+            $sum = $pool->sum(fn (UpcomingSong $request): int => $scores[$request->id]);
             $random = $randomizer->getInt(0, (int) $sum);
             foreach ($pool as $index => $request) {
-                $random -= $this->effectiveScore($request);
+                $random -= $scores[$request->id];
                 if ($random <= 0) {
                     $pool->forget($index);
                     $selected->push($request);

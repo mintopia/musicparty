@@ -15,6 +15,8 @@ use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
 use App\Services\Requests\DeleteRequest;
+use App\Services\Playback\PartyDashboardCache;
+use App\Services\Queue\QueueListing;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -22,6 +24,8 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -34,24 +38,19 @@ class UpcomingSongController extends Controller
         $this->authorizeResource(UpcomingSong::class, 'upcomingsong');
     }
 
-    public function index(UpcomingSongAugmentService $augmentService, Request $request, Party $party): UpcomingSongResourceCollection
+    public function index(UpcomingSongAugmentService $augmentService, QueueListing $queue, Request $request, Party $party): UpcomingSongResourceCollection
     {
-        $params = [];
-        if ($request->has('per_page')) {
-            $params['per_page'] = $request->input('per_page');
-        }
-        $page = $party->upcoming()
-            ->with(['user', 'song'])
-            ->whereNull('queued_at')
-            ->whereNull('flagged_at')
-            ->orderBy('score', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->paginate($params['per_page'] ?? 20)->appends($params);
+        $validated = $request->validate(['per_page' => ['sometimes', 'integer', 'between:1,100']]);
+        $params = isset($validated['per_page']) ? ['per_page' => (int) $validated['per_page']] : [];
+        $perPage = $params['per_page'] ?? 20;
+        $currentPage = Paginator::resolveCurrentPage();
+        $listing = $queue->page($party, ($currentPage - 1) * $perPage, $perPage);
+        $page = (new LengthAwarePaginator($listing['items'], $listing['total'], $perPage, $currentPage, ['path' => Paginator::resolveCurrentPath()]))->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 
         $augmentedData = $augmentService->augmentCollection(collect($page->items()), $this->resolveAuthenticatedUser($request));
         $collection->augment($augmentedData->toArray());
+        $collection->queueStates($listing['states']);
 
         return $collection;
     }

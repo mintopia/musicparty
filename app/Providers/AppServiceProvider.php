@@ -16,6 +16,8 @@ use App\Models\Theme;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use App\Mods\PartyMods;
+use App\Mods\Trust\TrustScores;
 use App\Observers\PartyObserver;
 use App\Observers\PlayedSongObserver;
 use App\Observers\SettingObserver;
@@ -27,6 +29,7 @@ use App\Observers\VoteObserver;
 use App\Services\ActiveTheme;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
+use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
@@ -70,6 +73,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
+        $this->app->scoped(ModDataStore::class);
+        $this->app->scoped(PartyMods::class);
+        $this->app->scoped(TrustScores::class);
         $fakeAllowed = MusicProviderFactory::fakeAllowed();
         if ($fakeAllowed) {
             $this->app->scoped(FakeMusicProvider::class);
