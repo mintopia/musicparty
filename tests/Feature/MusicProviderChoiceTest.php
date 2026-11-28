@@ -12,6 +12,7 @@ use App\Models\User;
 use App\Providers\AppServiceProvider;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
+use Database\Seeders\PartyMemberRoleSeeder;
 use Database\Seeders\SettingsSeeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -54,6 +55,7 @@ beforeEach(function () {
     resetSettingCache();
     FakeSpotify::install();
     $this->withoutVite();
+    $this->seed(PartyMemberRoleSeeder::class);
 });
 
 it('offers enabled providers and only offers fake in local', function () {
@@ -141,7 +143,8 @@ it('round-trips a provider toggle through the settings page and the party form',
         ->assertOk()->assertInertia(fn ($page) => $page->where('providerIds.0', 'spotify'));
     $this->actingAs($admin)->post(route('parties.store'), partyPayload(['provider_id' => 'spotify']))
         ->assertSessionHasNoErrors();
-    expect(Party::count())->toBe(1);
+    expect(Party::count())->toBe(1)
+        ->and(Party::first()->members()->whereUserId($admin->id)->first()?->role->code)->toBe('owner');
 });
 
 it('keeps the chosen provider when redirecting after creating a party', function () {

@@ -303,19 +303,15 @@ class Party extends Model
         if ($member) {
             return $member;
         }
-        $member = new PartyMember;
-        $member->party()->associate($this);
-        $member->user()->associate($user);
 
-        $roleCode = 'user';
-        if ($user->id === $this->user_id) {
-            $roleCode = 'owner';
+        $roleCode = $user->id === $this->user_id ? 'owner' : 'user';
+        $roleId = PartyMemberRole::whereCode($roleCode)->value('id');
+
+        try {
+            return $this->members()->firstOrCreate(['user_id' => $user->id], ['role_id' => $roleId]);
+        } catch (UniqueConstraintViolationException) {
+            return $this->members()->whereUserId($user->id)->firstOrFail();
         }
-        $role = PartyMemberRole::whereCode($roleCode)->first();
-        $member->role()->associate($role);
-        $member->save();
-
-        return $member;
     }
 
     public function hasFreshPushedPlayback(): bool

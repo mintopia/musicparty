@@ -101,6 +101,7 @@ class PartyController extends Controller
         $party->user()->associate($this->resolveAuthenticatedUser($request));
         $party->provider_id = $request->string('provider_id')->toString();
         $this->updateObject($party, $request);
+        $party->getMember($party->user);
         PartyUpdate::dispatch($party);
 
         $joinUrl = route('parties.show', $party->code);

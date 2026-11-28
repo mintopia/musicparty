@@ -87,7 +87,7 @@ it('counts only members active in the last 15 minutes as guests online', functio
     UpcomingSong::factory()->create(['party_id' => $party->id, 'user_id' => $requester->user_id]);
     $idle = $member();
     Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $idle->user_id, 'updated_at' => now()->subMinutes(20)]);
-    $banned = PartyMember::factory()->create(['party_id' => $party->id, 'banned' => true]);
+    $banned = PartyMember::factory()->banned()->create(['party_id' => $party->id]);
     Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => $banned->user_id]);
     Vote::factory()->create(['upcoming_song_id' => $song->id]);
 

@@ -13,8 +13,6 @@ use Illuminate\Support\Carbon;
  * @property int $user_id
  * @property int $role_id
  * @property int $party_id
- * @property bool $canvote
- * @property bool $banned
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read Party $party
@@ -25,8 +23,6 @@ use Illuminate\Support\Carbon;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember query()
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereBanned($value)
- * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereCanvote($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereCreatedAt($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember whereId($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|PartyMember wherePartyId($value)
@@ -41,10 +37,7 @@ class PartyMember extends Model
     /** @use HasFactory<PartyMemberFactory> */
     use HasFactory;
 
-    protected $casts = [
-        'canvote' => 'boolean',
-        'banned' => 'boolean',
-    ];
+    protected $fillable = ['party_id', 'user_id', 'role_id'];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo

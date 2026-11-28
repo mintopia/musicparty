@@ -17,6 +17,7 @@ use App\Services\Music\Data\Playlist;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PlaybackSync;
+use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Contracts\Queue\Job;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -24,6 +25,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function () {
+    $this->seed(PartyMemberRoleSeeder::class);
     $this->withoutVite();
     $this->withoutMiddleware(VerifyCsrfToken::class);
     $this->app['env'] = 'local';
