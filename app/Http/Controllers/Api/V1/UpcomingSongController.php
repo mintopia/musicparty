@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\Purpose;
-use App\Events\FlaggedRequestResolved;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
@@ -15,7 +14,7 @@ use App\Models\UpcomingSong;
 use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
-use App\Services\Playback\PartyDashboardCache;
+use App\Services\Requests\DeleteRequest;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -171,18 +170,9 @@ class UpcomingSongController extends Controller
         return $resource;
     }
 
-    public function destroy(Party $party, UpcomingSong $upcomingsong): Response
+    public function destroy(Party $party, UpcomingSong $upcomingsong, DeleteRequest $deleteRequest): Response
     {
-        if ($upcomingsong->queued_at) {
-            abort(400, 'Unable to delete an upcoming song that has been queued');
-        }
-        $wasFlagged = $upcomingsong->flagged_at !== null;
-        $id = $upcomingsong->id;
-        $upcomingsong->delete();
-        if ($wasFlagged) {
-            FlaggedRequestResolved::dispatch($party, $id);
-        }
-        PartyDashboardCache::forget($party);
+        $deleteRequest->handle($upcomingsong);
 
         return response()->noContent();
     }
