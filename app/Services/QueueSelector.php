@@ -22,7 +22,7 @@ use Throwable;
 class QueueSelector
 {
     /** @var array<int, true> */
-    protected array $heldRequestLocks = [];
+    protected static array $heldRequestLocks = [];
 
     public const QUEUE_LENGTH = 1;
 
@@ -251,16 +251,16 @@ class QueueSelector
      */
     public function withRequestLock(Party $party, Closure $callback, ?int $waitSeconds = null): mixed
     {
-        if (isset($this->heldRequestLocks[$party->id])) {
+        if (isset(self::$heldRequestLocks[$party->id])) {
             return $callback();
         }
 
         return Cache::lock("add-request:{$party->id}", 30)->block($waitSeconds ?? (int) config('musicparty.request_lock_wait_seconds'), function () use ($party, $callback): mixed {
-            $this->heldRequestLocks[$party->id] = true;
+            self::$heldRequestLocks[$party->id] = true;
             try {
                 return $callback();
             } finally {
-                unset($this->heldRequestLocks[$party->id]);
+                unset(self::$heldRequestLocks[$party->id]);
             }
         });
     }
