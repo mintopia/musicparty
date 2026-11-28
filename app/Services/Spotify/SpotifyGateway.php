@@ -38,8 +38,9 @@ class SpotifyGateway
 
         if ($account->access_token_expires_at < now()->addMinutes(5)) {
             Log::debug("{$user}: Refreshing expiring access token");
-            $this->refreshToken($account, $session);
-            SpotifyAccessTokenUpdatedEvent::dispatch($user, $account->access_token ?? '');
+            if ($this->refreshToken($account, $session)) {
+                SpotifyAccessTokenUpdatedEvent::dispatch($user, $account->access_token ?? '');
+            }
         }
 
         return $api;
@@ -92,11 +93,13 @@ class SpotifyGateway
      * Refreshes the Spotify access token under a per-account lock, re-reading the stored
      * token inside it so concurrent callers reuse a refresh that already happened.
      *
-     * @throws SpotifyRelinkRequiredException when Spotify rejects the refresh token
+     * @return bool true when this call performed the refresh, false when it reused one already stored
+     *
+     * @throws SpotifyRelinkRequiredException when Spotify rejects the refresh token with invalid_grant
      */
-    public function refreshToken(LinkedAccount $account, Session $session): void
+    public function refreshToken(LinkedAccount $account, Session $session): bool
     {
-        Cache::lock("linked-account-refresh:{$account->id}", 30)->block(10, function () use ($account, $session): void {
+        return Cache::lock("linked-account-refresh:{$account->id}", 30)->block(10, function () use ($account, $session): bool {
             $account->refresh();
 
             if ($account->needsRelink()) {
@@ -106,7 +109,7 @@ class SpotifyGateway
             if ($account->access_token_expires_at !== null && $account->access_token_expires_at >= now()->addMinutes(5)) {
                 $session->setAccessToken($account->access_token ?? '');
 
-                return;
+                return false;
             }
 
             try {
@@ -134,12 +137,14 @@ class SpotifyGateway
                 $account->refresh_token = $rotated;
             }
             $account->save();
+
+            return true;
         });
     }
 
     private function isRevokedRefresh(SpotifyWebAPIException $e): bool
     {
-        return in_array($e->getCode(), [400, 401], true) || str_contains($e->getMessage(), 'invalid_grant');
+        return $e->getReason() === 'invalid_grant';
     }
 
     protected function account(User $user, string $providerCode): ?LinkedAccount

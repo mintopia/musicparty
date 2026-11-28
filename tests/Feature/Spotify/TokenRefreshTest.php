@@ -124,14 +124,52 @@ it('treats a refresh without an access token as a failure', function () {
     expect($account->fresh()->needsRelink())->toBeFalse();
 });
 
-it('marks the account for re-link on a revoked refresh without re-throwing the HTTP error', function (int $status) {
+function authError(string $error, int $status): SpotifyWebAPIException
+{
+    $e = new SpotifyWebAPIException('error_description', $status);
+    $e->setReason($error);
+
+    return $e;
+}
+
+it('marks the account for re-link on invalid_grant without re-throwing the HTTP error', function (int $status) {
     $account = expiringSpotifyAccount();
-    $session = scriptedSession([new SpotifyWebAPIException('invalid_grant', $status)]);
+    $session = scriptedSession([authError('invalid_grant', $status)]);
 
     expect(fn () => app(SpotifyGateway::class)->refreshToken($account, $session))->toThrow(SpotifyRelinkRequiredException::class);
 
     expect($account->fresh()->needsRelink())->toBeTrue();
 })->with([400, 401]);
+
+it('re-throws and does not flag for re-link on invalid_client', function (int $status) {
+    $account = expiringSpotifyAccount();
+    $session = scriptedSession([authError('invalid_client', $status)]);
+
+    expect(fn () => app(SpotifyGateway::class)->refreshToken($account, $session))->toThrow(SpotifyWebAPIException::class);
+
+    expect($account->fresh()->needsRelink())->toBeFalse();
+})->with([400, 401]);
+
+it('reads the OAuth error code from the response body into the exception reason', function () {
+    $request = new class extends BackoffRequest
+    {
+        public function __construct()
+        {
+            parent::__construct('spotify');
+        }
+
+        public function fail(string $body, int $status): void
+        {
+            $this->handleResponseError($body, $status);
+        }
+    };
+
+    try {
+        $request->fail('{"error":"invalid_grant","error_description":"Refresh token revoked"}', 400);
+    } catch (SpotifyWebAPIException $e) {
+        expect($e->getReason())->toBe('invalid_grant');
+    }
+});
 
 it('does not call Spotify again once the account needs re-link', function () {
     $account = expiringSpotifyAccount();
