@@ -308,28 +308,26 @@ class Party extends Model
             && $this->playback_received_at->greaterThan(now()->subSeconds(self::PUSHED_PLAYBACK_FRESH_SECONDS));
     }
 
-    public function canBeManagedBy(?User $user): bool
+    public function roleCodeFor(?User $user): ?string
     {
         if ($user === null) {
-            return false;
+            return null;
         }
         if ($user->id === $this->user_id) {
-            return true;
+            return 'owner';
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
+        return $this->members()->whereUserId($user->id)->first()?->role?->code;
+    }
+
+    public function canBeManagedBy(?User $user): bool
+    {
+        return $this->roleCodeFor($user) === 'owner';
     }
 
     public function canBeModeratedBy(?User $user): bool
     {
-        if ($user === null) {
-            return false;
-        }
-        if ($user->id === $this->user_id) {
-            return true;
-        }
-
-        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner', 'moderator']))->exists();
+        return in_array($this->roleCodeFor($user), ['owner', 'moderator'], true);
     }
 
     public function pushUpdate(): void

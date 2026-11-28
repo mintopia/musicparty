@@ -12,4 +12,4 @@ Music Party starts tracks inside a Context Playlist: one private, empty Spotify 
 
 **Contract.** `MusicProvider` gains the playlist and context methods (`ownedPlaylist`, `findOwnedPlaylistByName`, `createPrivatePlaylist`, `clearPlaylist`, `playlistContextUri`, `contextName`) and `ProviderPlayback` gains `playInContext`. These extend ADR 0001 rather than superseding it: playlists stay on `MusicProvider` and playback stays on `ProviderPlayback`.
 
-**Dashboard access.** The Dashboard and its playback endpoints are gated by `PartyPolicy::update`: the union of "can moderate" and "can control playback". Approve, reject and delete use `UpcomingSongPolicy`, which is `Party::canBeManagedBy()`, so a site admin who is not a member can open the page but not moderate from it.
+**Dashboard access.** The Dashboard and its playback endpoints are gated by `PartyPolicy::update`: the union of "can moderate" and "can control playback". Approve, reject and delete use `UpcomingSongPolicy`, which is `Party::canBeModeratedBy()` (Owner or Moderator), so a site admin who is not a member can open the page but not moderate from it.
