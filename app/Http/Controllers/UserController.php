@@ -164,6 +164,7 @@ class UserController extends Controller
 
         $spotify = null;
         $search = null;
+        $enabled = SocialProvider::whereIn('code', ['spotify', 'spotifysearch'])->pluck('enabled', 'code');
         $user = $this->resolveAuthenticatedUser($request);
         $user->load('accounts.provider');
         foreach ($user->accounts as $account) {
@@ -177,6 +178,8 @@ class UserController extends Controller
         return Inertia::render('Users/Spotify', [
             'spotify' => $spotify ? ['name' => $spotify->name] : null,
             'search' => $search ? ['name' => $search->name] : null,
+            'spotifyEnabled' => (bool) ($enabled['spotify'] ?? false),
+            'searchEnabled' => (bool) ($enabled['spotifysearch'] ?? false),
         ]);
     }
 }
