@@ -21,7 +21,7 @@ WORKDIR /app/
 ENV HOME=/tmp
 COPY --from=composer /app/ /app
 
-RUN npm install --production=false && \
+RUN npm ci --include=dev && \
     npm run build
 
 FROM ghcr.io/mintopia/php:8.5-frankenphp

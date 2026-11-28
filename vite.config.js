@@ -38,7 +38,6 @@ export default defineConfig({
         alias: {
             '@': path.resolve(import.meta.dirname, 'resources/js'),
             '~tabler': path.resolve(import.meta.dirname, 'node_modules/@tabler/core'),
-            vue: 'vue/dist/vue.esm-bundler.js',
         }
     }
 });

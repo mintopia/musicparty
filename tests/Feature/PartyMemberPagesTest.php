@@ -100,10 +100,10 @@ it('renders member requests, votes and flags scoped to the party and member', fu
             ->where('party.canManage', true)
             ->has('requests', 4)
             ->where('requests', fn ($requests) => collect($requests)->pluck('status', 'id')->all() === [
-                $played->id => 'played',
-                $flagged->id => 'flagged',
-                $reviewed->id => 'flagged',
                 $waiting->id => 'waiting',
+                $reviewed->id => 'flagged',
+                $flagged->id => 'flagged',
+                $played->id => 'played',
             ])
             ->has('votes', 1)
             ->where('votes.0.value', 1)

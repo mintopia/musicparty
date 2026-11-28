@@ -38,6 +38,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('linked_accounts', function (Blueprint $table) {
+            $table->index('social_provider_id');
             $table->dropUnique(['social_provider_id', 'external_id']);
         });
     }

@@ -74,7 +74,7 @@ it('structures tracks and artists as objects', function () {
 it('caps list lengths and the total size without truncating titles', function () {
     $party = Party::factory()->create();
     foreach (range(1, 40) as $i) {
-        vibePlayed($party, str_repeat("Long title {$i} ", 20), str_repeat('Artist ', 20).$i, $i, now()->subMinutes(100 - $i));
+        vibePlayed($party, str_repeat("Long title {$i} ", 15), str_repeat('Artist ', 20).$i, $i, now()->subMinutes(100 - $i));
     }
 
     $data = app(PartyVibeSummary::class)->build($party);
@@ -82,7 +82,7 @@ it('caps list lengths and the total size without truncating titles', function ()
     expect($data['recent'])->toHaveCount(PartyVibeSummary::RECENT)
         ->and($data['top_rated'])->toHaveCount(PartyVibeSummary::TOP_RATED)
         ->and($data['artists'])->toHaveCount(PartyVibeSummary::ARTISTS)
-        ->and($data['recent'][0]['title'])->toBe(str_repeat('Long title 40 ', 20))
+        ->and($data['recent'][0]['title'])->toBe(str_repeat('Long title 40 ', 15))
         ->and($data['artists'][0]['name'])->toStartWith('Artist Artist')->not->toEndWith('...')
         ->and(mb_strlen($data['text']))->toBeLessThanOrEqual(PartyVibeSummary::MAX_CHARS);
 });

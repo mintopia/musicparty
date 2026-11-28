@@ -1,4 +1,3 @@
-declare module 'lodash';
 declare module '~tabler/dist/js/tabler.min.js';
 declare module '@ts-pro/vue-eternal-loading' {
     import type {DefineComponent} from 'vue';

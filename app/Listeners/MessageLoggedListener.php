@@ -4,24 +4,19 @@ namespace App\Listeners;
 
 use Illuminate\Log\Events\MessageLogged;
 use Symfony\Component\Console\Output\ConsoleOutput;
+use Symfony\Component\Console\Output\OutputInterface;
 
 class MessageLoggedListener
 {
-    /**
-     * Create the event listener.
-     */
-    public function __construct()
-    {
-        //
-    }
+    public function __construct(private readonly ?OutputInterface $output = null) {}
 
     /**
      * Handle the event.
      */
     public function handle(MessageLogged $event): void
     {
-        if (app()->runningInConsole()) {
-            $output = new ConsoleOutput;
+        if (config('app.debug') && app()->runningInConsole()) {
+            $output = $this->output ?? new ConsoleOutput;
             $output->writeln("[{$event->level}] {$event->message}");
         }
     }

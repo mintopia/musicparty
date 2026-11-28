@@ -24,19 +24,28 @@ function loadDropSpotifyIdMigration(): object
     return require database_path('migrations/2026_10_13_150000_drop_spotify_id_from_catalogue.php');
 }
 
-function seedLegacyCatalogue(int $count): void
+/**
+ * @return array{song: int, album: int}
+ */
+function seedLegacyCatalogue(int $count): array
 {
+    $first = ['song' => 0, 'album' => 0];
     foreach (range(1, $count) as $i) {
-        DB::table('artists')->insert(['name' => "Artist {$i}", 'spotify_id' => "artist{$i}"]);
-        DB::table('albums')->insert(['name' => "Album {$i}", 'spotify_id' => "album{$i}", 'image_url' => '']);
-        DB::table('songs')->insert([
+        $artistId = DB::table('artists')->insertGetId(['name' => "Artist {$i}", 'spotify_id' => "artist{$i}"]);
+        $albumId = DB::table('albums')->insertGetId(['name' => "Album {$i}", 'spotify_id' => "album{$i}", 'image_url' => '']);
+        $songId = DB::table('songs')->insertGetId([
             'name' => "Song {$i}",
             'spotify_id' => "track{$i}",
             'length' => 1000,
-            'album_id' => $i,
+            'album_id' => $albumId,
         ]);
-        DB::table('artist_song')->insert(['artist_id' => $i, 'song_id' => $i, 'created_at' => now(), 'updated_at' => now()]);
+        DB::table('artist_song')->insert(['artist_id' => $artistId, 'song_id' => $songId, 'created_at' => now(), 'updated_at' => now()]);
+        if ($i === 1) {
+            $first = ['song' => $songId, 'album' => $albumId];
+        }
     }
+
+    return $first;
 }
 
 it('backfills provider identity from spotify_id across chunk boundaries and enforces the pair', function () {
@@ -46,7 +55,7 @@ it('backfills provider identity from spotify_id across chunk boundaries and enfo
     expect(Schema::hasColumn('songs', 'provider_track_id'))->toBeFalse()
         ->and(Schema::hasColumn('parties', 'provider_id'))->toBeFalse();
 
-    seedLegacyCatalogue(5);
+    $first = seedLegacyCatalogue(5);
     $party = Party::factory()->create();
 
     $migration->chunkSize = 2;
@@ -59,9 +68,9 @@ it('backfills provider identity from spotify_id across chunk boundaries and enfo
     }
     expect($party->fresh()->provider_id)->toBe('spotify');
 
-    expect(fn () => DB::table('songs')->insert(['name' => 'Dup', 'spotify_id' => 'other', 'provider_id' => 'spotify', 'provider_track_id' => 'track1', 'length' => 1, 'album_id' => 1]))
+    expect(fn () => DB::table('songs')->insert(['name' => 'Dup', 'spotify_id' => 'other', 'provider_id' => 'spotify', 'provider_track_id' => 'track1', 'length' => 1, 'album_id' => $first['album']]))
         ->toThrow(UniqueConstraintViolationException::class);
-    DB::table('songs')->insert(['name' => 'Other provider', 'spotify_id' => 'other', 'provider_id' => 'fake', 'provider_track_id' => 'track1', 'length' => 1, 'album_id' => 1]);
+    DB::table('songs')->insert(['name' => 'Other provider', 'spotify_id' => 'other', 'provider_id' => 'fake', 'provider_track_id' => 'track1', 'length' => 1, 'album_id' => $first['album']]);
 
     $migration->down();
     expect(Schema::hasColumn('albums', 'provider_album_id'))->toBeFalse()
@@ -73,20 +82,20 @@ it('keeps requests, played songs, votes and moderation rules resolving against b
     $migration = providerIdentityMigration();
     loadDropSpotifyIdMigration()->down();
     $migration->down();
-    seedLegacyCatalogue(2);
+    $first = seedLegacyCatalogue(2);
     $party = Party::factory()->create();
     $user = User::factory()->create();
     $upcomingId = DB::table('upcoming_songs')->insertGetId([
-        'party_id' => $party->id, 'song_id' => 1, 'user_id' => $user->id, 'created_at' => now(), 'updated_at' => now(),
+        'party_id' => $party->id, 'song_id' => $first['song'], 'user_id' => $user->id, 'created_at' => now(), 'updated_at' => now(),
     ]);
     $migration->up();
 
     $upcoming = UpcomingSong::findOrFail($upcomingId);
     $vote = Vote::factory()->create(['upcoming_song_id' => $upcoming->id, 'user_id' => $user->id]);
     DB::table('upcoming_songs')->where('id', $upcoming->id)->update(['queued_at' => now()]);
-    $played = PlayedSong::factory()->create(['party_id' => $party->id, 'song_id' => 1, 'upcoming_song_id' => null]);
+    $played = PlayedSong::factory()->create(['party_id' => $party->id, 'song_id' => $first['song'], 'upcoming_song_id' => null]);
 
-    $song = Song::with(['album', 'artists'])->findOrFail(1);
+    $song = Song::with(['album', 'artists'])->findOrFail($first['song']);
     $track = $song->toTrack();
     expect($track->id)->toBe('track1')
         ->and($track->album->id)->toBe('album1')
