@@ -1,3 +1,4 @@
+import {ref} from 'vue';
 import {mount} from '@vue/test-utils';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import PartyPlayer from '../components/PartyPlayer.vue';
@@ -17,7 +18,7 @@ const echo = vi.hoisted(() => ({
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
-        trackConnection: () => ({value: true}),
+        trackConnection: () => ref(true),
         publicChannel: (name: string) => {
             echo.publicNames.push(name);
             return {listen: (event: string, cb: (payload: unknown) => void) => void (echo.handlers[event] = cb)};

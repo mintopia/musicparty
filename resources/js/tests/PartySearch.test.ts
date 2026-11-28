@@ -1,5 +1,5 @@
 import {flushPromises, mount} from '@vue/test-utils';
-import {defineComponent, h} from 'vue';
+import {defineComponent, h, ref} from 'vue';
 import axios from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import Search from '@/pages/Parties/Search.vue';
@@ -35,7 +35,7 @@ const listeners = vi.hoisted(() => ({handlers: {} as Record<string, (payload: un
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
-        trackConnection: () => ({value: true}),
+        trackConnection: () => ref(true),
         privateChannel: () => ({
             listen: (event: string, cb: (payload: unknown) => void) => {
                 listeners.handlers[event] = cb;
