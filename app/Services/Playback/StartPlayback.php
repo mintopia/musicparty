@@ -48,7 +48,10 @@ class StartPlayback
     /**
      * What Start Playback would play right now, without changing anything.
      */
-    public function target(Party $party, ?PlaybackState $state): ?StartTarget
+    /**
+     * @param  UpcomingSong|false|null  $sent  The already-loaded Sent to Player Request (null for none); false to look it up.
+     */
+    public function target(Party $party, ?PlaybackState $state, UpcomingSong|false|null $sent = false): ?StartTarget
     {
         $provider = $this->providers->forParty($party, Purpose::Control);
 
@@ -60,7 +63,7 @@ class StartPlayback
             }
         }
 
-        $sent = $this->sentRequest($party);
+        $sent = $sent === false ? $this->sentRequest($party) : $sent;
         if ($sent !== null) {
             return new StartTarget(StartTargetKind::Next, $sent->song->toTrack(), 0, $sent, true);
         }

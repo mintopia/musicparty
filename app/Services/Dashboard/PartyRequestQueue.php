@@ -22,9 +22,9 @@ class PartyRequestQueue
     /**
      * @return list<array<string, mixed>>
      */
-    public function upNext(Party $party, User $viewer): array
+    public function upNext(Party $party, User $viewer, UpcomingSong|false|null $sent = false): array
     {
-        $sent = $this->sentRequest($party);
+        $sent = $sent === false ? $this->sentRequest($party) : $sent;
         $page = $this->listing->page($party, 0, self::UP_NEXT_SIZE - ($sent === null ? 0 : 1));
 
         return array_merge(
@@ -36,9 +36,9 @@ class PartyRequestQueue
     /**
      * @return array{items: list<array<string, mixed>>, total: int}
      */
-    public function upcoming(Party $party, User $viewer): array
+    public function upcoming(Party $party, User $viewer, UpcomingSong|false|null $sent = false): array
     {
-        $sent = $this->sentRequest($party);
+        $sent = $sent === false ? $this->sentRequest($party) : $sent;
         $page = $this->listing->page($party, 0, self::UPCOMING_SIZE - ($sent === null ? 0 : 1));
 
         return [
@@ -50,7 +50,7 @@ class PartyRequestQueue
         ];
     }
 
-    private function sentRequest(Party $party): ?UpcomingSong
+    public function sentRequest(Party $party): ?UpcomingSong
     {
         $sent = $party->upcoming()
             ->with(['user', 'song', 'song.album', 'song.artists'])
