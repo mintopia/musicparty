@@ -1,0 +1,73 @@
+# Runs the built production image the way an operator would: every secret and the public URL arrive at
+# runtime from the environment, none from the image. The public hostname is deliberately not localhost.
+name: mp-image-smoke
+
+x-app: &app
+  image: ${SMOKE_IMAGE:-musicparty:smoke}
+  restart: "no"
+  environment:
+    APP_KEY: ${SMOKE_APP_KEY:?set SMOKE_APP_KEY}
+    APP_URL: ${SMOKE_APP_URL:?set SMOKE_APP_URL}
+    DB_HOST: database
+    DB_DATABASE: musicparty
+    DB_USERNAME: musicparty
+    DB_PASSWORD: smoke-db-password
+    REDIS_HOST: redis
+    REVERB_APP_ID: smoke
+    REVERB_APP_KEY: smoke-key
+    REVERB_APP_SECRET: smoke-secret
+    REVERB_UPSTREAM_HOST: reverb
+    REVERB_UPSTREAM_PORT: "8080"
+    PUID: "1000"
+    PGID: "1000"
+  depends_on:
+    database:
+      condition: service_healthy
+    redis:
+      condition: service_started
+
+services:
+  app:
+    <<: *app
+    ports:
+      - "8080:8080"
+
+  reverb:
+    <<: *app
+    command: ["php", "artisan", "reverb:start", "--host=0.0.0.0", "--port=8080"]
+    healthcheck:
+      disable: true
+
+  horizon:
+    <<: *app
+    command: ["php", "artisan", "horizon"]
+    healthcheck:
+      disable: true
+
+  fakeoauth:
+    image: node:22-alpine
+    command: ["node", "/srv/server.js"]
+    volumes:
+      - ./fake-oauth/server.js:/srv/server.js:ro
+    ports:
+      - "9000:9000"
+    networks:
+      default:
+        aliases:
+          - oauth.smoke.test
+
+  database:
+    image: mariadb:11.4
+    environment:
+      MYSQL_ROOT_PASSWORD: smoke-db-password
+      MYSQL_DATABASE: musicparty
+      MYSQL_USER: musicparty
+      MYSQL_PASSWORD: smoke-db-password
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 30
+
+  redis:
+    image: redis:6.2.6

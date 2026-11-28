@@ -217,6 +217,10 @@ mods individually (`App\Mods\PartyMods`); settings values are read with `ModSett
 The first example mod. When enabled, it will add Last Christmas by Wham into the queue. Every hour between 9AM and 1AM
 an upvote will be added to the track.
 
+## Releasing
+
+Tag a release candidate or release only on a commit where the `CI gate` check is green. It requires every CI job, including the production-profile tests, the MariaDB tests and the `Production image smoke test`, which runs the built image end to end. See ADR 0018.
+
 ## Contributing
 
 It's an open source project and I'm happy to accept pull requests. I am terrible at UI and UX, which is why this is

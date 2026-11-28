@@ -1,0 +1,14 @@
+# CI tests the production code and the image that ships
+
+CI is the quality gate: a green run on a SHA means the production image built from it works. The suite therefore tests the configuration production uses, and the image itself.
+
+**Why.** The rc.13 hardening shipped with every frontend route pointing at `http://localhost`, votes and seeks not reaching other clients, Requests serialised behind slow network calls, and plain-HTTP deployments unable to log in. CI was green or its failures were hidden by an earlier failing step. The suite ran as `testing`, so every `isProduction()` branch never ran, and the production image was built but never started.
+
+**What changes.**
+- **Production profile.** `phpunit.production.xml` boots the app with `APP_ENV=production` (`TEST_PROFILE=production`). `tests/Production` plus the auth, realtime-config and URL tests it lists run under it. CI runs it twice, with an `https` and a plain `http` `APP_URL` (`TEST_APP_URL`), against Redis-backed session, cache and queue (`TEST_CACHE_STORE`, `TEST_SESSION_DRIVER`, `TEST_QUEUE_CONNECTION`). The database stays in-memory SQLite.
+- **No unexercised production branch.** `tests/Arch/ProductionBranchCoverageTest.php` fails when a file in `app`, `config`, `bootstrap` or `routes` branches on the environment without being mapped to a production-profile test that names it.
+- **Behaviour, not calls.** A ticket's tests assert what a user sees: events broadcast on the right channel with the right payload, HTTP responses, rendered output, state another client receives. A fix ships with at least one test that fails on the pre-fix code, and the PR records that failing run. Regression tests live in `tests/Feature/Regression`, `tests/Production` and `tests/Feature/Database/MigrationsOnRealDataTest.php` (MariaDB).
+- **Image smoke test.** `tests/smoke/image/smoke.sh` runs the built production image with compose (app, Reverb, Horizon, MariaDB, Redis, a fake OAuth provider). Secrets and `APP_URL` arrive only at runtime, on a hostname that is not `localhost`. Playwright loads the welcome and login pages (no `localhost` or foreign absolute URLs, no console errors), logs in through the fake provider, and checks that a vote from a second browser reaches the first over the websocket. It also checks that boot fails, naming the variable, when `APP_URL` or `APP_KEY` is missing.
+- **Jobs never mask each other.** Every CI job is independent, and the steps of the frontend job run with `!cancelled()`, so one failure does not hide another. The `CI gate` job needs every job and fails unless all succeeded. It is the single required status check.
+
+**Release rule.** An RC or release is tagged only on a SHA where `CI gate` passed, which includes `Production image smoke test`. Tickets and epics still close on local merges; CI on the pushed branch is the gate.

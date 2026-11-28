@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<phpunit xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:noNamespaceSchemaLocation="vendor/phpunit/phpunit/phpunit.xsd"
+         bootstrap="vendor/autoload.php"
+         colors="true"
+>
+    <testsuites>
+        <testsuite name="Production">
+            <directory>tests/Production</directory>
+            <file>tests/Feature/AuthHardeningTest.php</file>
+            <file>tests/Feature/SameOriginRealtimeConfigTest.php</file>
+        </testsuite>
+    </testsuites>
+    <php>
+        <env name="TEST_PROFILE" value="production" force="true"/>
+        <env name="APP_ENV" value="production" force="true"/>
+        <env name="APP_DEBUG" value="false" force="true"/>
+        <env name="APP_KEY" value="base64:dGVzdGluZy1rZXktMzItYnl0ZXMtbG9uZy1hYmNkZWY="/>
+        <env name="BCRYPT_ROUNDS" value="4"/>
+        <env name="LOG_AI_REVIEW_LEVEL" value="emergency"/>
+        <env name="DB_CONNECTION" value="sqlite" force="true"/>
+        <env name="DB_DATABASE" value=":memory:" force="true"/>
+        <env name="DB_URL" value="" force="true"/>
+        <env name="MAIL_MAILER" value="array"/>
+    </php>
+</phpunit>
