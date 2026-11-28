@@ -160,7 +160,7 @@ jobs:
         scheme: [https, http]
     services:
       redis:
-        image: redis:7
+        image: redis:7.4
         ports:
           - 6379:6379
         options: >-
