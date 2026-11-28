@@ -34,12 +34,13 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
             new SettingDefinition('endpoint', 'Endpoint', SettingType::stString, null, 'Base URL of the OpenAI-compatible API. Not used by the decision model driver.', validation: ['url']),
             new SettingDefinition('api_key', 'API Key', SettingType::stSecret, null, 'Used by every driver. Stored encrypted and never shown again.'),
             new SettingDefinition('model', 'Model', SettingType::stString),
-            new SettingDefinition('decision_endpoint', 'Decision endpoint', SettingType::stString, DecisionModelReviewer::OPENROUTER_ENDPOINT, 'Decision model driver only. An https URL; direct TypeSafe is https://api.typesafe.ai/v1/systemone.', validation: ['url:https']),
+            new SettingDefinition('decision_endpoint', 'Decision endpoint', SettingType::stString, DecisionModelReviewer::OPENROUTER_ENDPOINT, 'Decision model driver only. An http or https URL; direct TypeSafe is https://api.typesafe.ai/v1/systemone.', validation: ['url']),
             new SettingDefinition('decision_model', 'Decision model', SettingType::stString, DecisionModelReviewer::DEFAULT_MODEL, 'Decision model driver only. Use jev-latest for direct TypeSafe.'),
             new SettingDefinition('confidence_percentage', 'Confidence threshold (%)', SettingType::stInteger, DecisionModelReviewer::DEFAULT_CONFIDENCE_PERCENTAGE, 'Decision model driver only. When the model is at least this confident, its rating is acted on; below it, the request is allowed.', validation: ['min:0', 'max:100']),
             new SettingDefinition('include_party_context', 'Include party context', SettingType::stBoolean, true, 'Sends the model a short music-only summary of this Party: recent, best-rated and most downvoted tracks, the most upvoted and downvoted requests, top artists and a few stats. No names or user data.'),
-            new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, validation: ['min:1', 'max:60']),
+            new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, 'Capped at 20 seconds.', validation: ['min:1', 'max:20']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stText, null, 'What this Party does and does not want to hear, passed to the model.'),
+            new SettingDefinition('allow_internal_endpoints', 'Allow internal endpoints', SettingType::stBoolean, false, 'Site admins only. Lets endpoints on private, loopback or link-local addresses be used, for self-hosted models. Off by default.', instanceOnly: true),
         ];
     }
 

@@ -10,8 +10,10 @@ use App\Models\PartyMember;
 use App\Models\PlayedSong;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\AiRequestReview\AiReviewBreaker;
 use App\Mods\AiRequestReview\DecisionModelException;
 use App\Mods\AiRequestReview\DecisionModelReviewer;
+use App\Mods\AiRequestReview\HostResolver;
 use App\Mods\AiRequestReview\RequestReviewAgent;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
@@ -63,8 +65,22 @@ function chatCompletion(string $verdict, string $reason = 'Fine', int $promptTok
     ];
 }
 
+function fakeResolver(array $map = []): void
+{
+    app()->instance(HostResolver::class, new class($map) extends HostResolver
+    {
+        public function __construct(protected array $map) {}
+
+        public function resolve(string $host): array
+        {
+            return $this->map[$host] ?? ['93.184.216.34'];
+        }
+    });
+}
+
 beforeEach(function () {
     Http::preventStrayRequests();
+    fakeResolver();
 });
 
 it('allows when the model allows', function () {
@@ -377,20 +393,20 @@ describe('Decision model', function () {
         Http::assertNothingSent();
     });
 
-    it('refuses internal or non-https endpoints without sending the key', function (string $endpoint) {
+    it('refuses internal endpoints without sending the key', function (string $endpoint) {
         $reviewer = app(DecisionModelReviewer::class);
 
         expect(fn () => $reviewer->review($endpoint, 'sk-secret-key', 'm', null, [], 5, 0.5))
             ->toThrow(DecisionModelException::class);
         Http::assertNothingSent();
-    })->with(['http' => 'http://openrouter.ai/x', 'localhost' => 'https://localhost/x', 'loopback' => 'https://127.0.0.1/x', 'private' => 'https://10.0.0.5/x', 'metadata' => 'https://169.254.169.254/x']);
+    })->with(['ftp' => 'ftp://openrouter.ai/x', 'localhost' => 'https://localhost/x', 'loopback' => 'https://127.0.0.1/x', 'private' => 'https://10.0.0.5/x', 'metadata' => 'https://169.254.169.254/x']);
 
-    it('validates the decision endpoint as an https url', function () {
+    it('validates the decision endpoint as a url', function () {
         [$party] = decisionSetup();
         $store = app(ModSettingsStore::class);
 
-        expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'http://example.test/decisions'))->toThrow(ValidationException::class)
-            ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'not a url'))->toThrow(ValidationException::class)
+        $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'http://example.test/decisions');
+        expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'not a url'))->toThrow(ValidationException::class)
             ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 150))->toThrow(ValidationException::class)
             ->and(fn () => $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', -1))->toThrow(ValidationException::class);
         $store->set($party, AiRequestReviewMod::CODE, 'confidence_percentage', 0);
@@ -398,6 +414,86 @@ describe('Decision model', function () {
         expect($store->value($party, AiRequestReviewMod::CODE, 'confidence_percentage'))->toBe(100);
         $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://example.test/decisions');
         expect($store->value($party, AiRequestReviewMod::CODE, 'decision_endpoint'))->toBe('https://example.test/decisions');
+    });
+
+    it('refuses a hostname that resolves to the metadata address for the decision driver, sending no key', function () {
+        fakeResolver(['sneaky.example.test' => ['169.254.169.254']]);
+        [$party, $member] = decisionSetup();
+        app(ModSettingsStore::class)->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://sneaky.example.test/decisions');
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+        Http::assertNothingSent();
+        expect(AiReview::query()->latest('id')->first()->error_message)->toContain('internal address');
+    });
+
+    it('refuses a hostname that resolves to an internal address for the openai-compatible driver', function () {
+        fakeResolver(['llm.example.test' => ['10.1.2.3']]);
+        [$party, $member] = aiReviewSetup();
+        Http::fake();
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Allow);
+        Http::assertNothingSent();
+    });
+
+    it('lets a site admin allow internal endpoints but not a party owner', function () {
+        fakeResolver(['sneaky.example.test' => ['10.0.0.9']]);
+        Http::fake(['sneaky.example.test/*' => Http::response(decisionAnswer(0.2))]);
+        [$party, $member] = decisionSetup();
+        $store = app(ModSettingsStore::class);
+        $store->set($party, AiRequestReviewMod::CODE, 'decision_endpoint', 'https://sneaky.example.test/decisions');
+
+        expect(fn () => $store->set($party, AiRequestReviewMod::CODE, 'allow_internal_endpoints', true))->toThrow(InvalidArgumentException::class);
+        Http::assertNothingSent();
+
+        $store->setInstance(AiRequestReviewMod::CODE, 'allow_internal_endpoints', true);
+
+        expect(app(RequestRules::class)->check($party, $member, aiReviewTrack())->outcome)->toBe(RequestOutcome::Reject);
+        Http::assertSentCount(1);
+    });
+
+    it('caps the timeout at 20 seconds', function () {
+        Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer(4))]);
+        [$party, $member] = decisionSetup();
+        $mod = DB::table('mod_settings')->where('code', 'timeout')->first();
+        DB::table('party_mod_settings')->insert(['party_id' => $party->id, 'mod_setting_id' => $mod->id, 'value' => '120', 'created_at' => now(), 'updated_at' => now()]);
+        app(ModSettingsStore::class)->forget($party);
+        $handler = aiReviewLogHandler();
+
+        app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect(aiReviewLogged($handler, 'ai-review.request')['timeout'])->toBe(20);
+    });
+
+    it('opens the breaker after repeated failures and allows without calling the model', function () {
+        Http::fake(['openrouter.ai/*' => Http::response('boom', 500)]);
+        [$party, $member] = decisionSetup();
+
+        foreach (range(1, AiReviewBreaker::FAILURE_THRESHOLD) as $i) {
+            app(RequestRules::class)->check($party, $member, aiReviewTrack());
+        }
+        Http::assertSentCount(AiReviewBreaker::FAILURE_THRESHOLD);
+
+        Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer(0.1))]);
+        $decision = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect($decision->outcome)->toBe(RequestOutcome::Allow);
+        Http::assertNothingSent();
+        expect(app(AiReviewBreaker::class)->isOpen($party))->toBeTrue();
+
+        $this->travel(AiReviewBreaker::OPEN_SECONDS + 1)->seconds();
+        expect(app(AiReviewBreaker::class)->isOpen($party))->toBeFalse();
+    });
+
+    it('reuses the cached verdict for the same track in the same party', function () {
+        Http::fake(['openrouter.ai/*' => Http::response(decisionAnswer(0.2))]);
+        [$party, $member] = decisionSetup();
+
+        $first = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+        $second = app(RequestRules::class)->check($party, $member, aiReviewTrack());
+
+        expect($first->outcome)->toBe(RequestOutcome::Reject)
+            ->and($second->outcome)->toBe(RequestOutcome::Reject);
+        Http::assertSentCount(1);
     });
 
     it('stores the api key encrypted and never presents it', function () {
