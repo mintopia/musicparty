@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\Party;
 use App\Services\Music\Data\PlaybackState;
+use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Cache;
 
 class PlaybackStatus
@@ -20,6 +21,18 @@ class PlaybackStatus
         $state = Cache::get($this->key($party));
 
         return $state instanceof PlaybackState ? $state : null;
+    }
+
+    public function markSynced(Party $party): void
+    {
+        Cache::put($this->syncedKey($party), now()->getTimestamp(), self::TTL_SECONDS);
+    }
+
+    public function lastSyncedAt(Party $party): ?CarbonImmutable
+    {
+        $timestamp = Cache::get($this->syncedKey($party));
+
+        return is_int($timestamp) ? CarbonImmutable::createFromTimestamp($timestamp) : null;
     }
 
     public function forParty(Party $party): object
@@ -62,6 +75,11 @@ class PlaybackStatus
             'updatedAt' => $state->sampledAt->toIso8601String(),
             'sampledAt' => $state->sampledAt->toIso8601String(),
         ];
+    }
+
+    private function syncedKey(Party $party): string
+    {
+        return "party.{$party->id}.playback-synced";
     }
 
     private function key(Party $party): string
