@@ -123,9 +123,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::fallback(function (Request $request): never {
-    $writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-    $matched = collect(Route::getRoutes()->getRoutes())->contains(fn ($route): bool => ! $route->isFallback
-        && collect($writeMethods)->contains(fn (string $method): bool => $route->matches(Request::create($request->path(), $method))));
+    $legacy = $request->path() === 'logout'
+        || preg_match('#^admin/users/[^/]+/impersonate$#', $request->path()) === 1;
 
-    abort($matched ? 405 : 404);
+    abort($legacy ? 405 : 404);
 });
