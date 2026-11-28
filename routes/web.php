@@ -123,7 +123,7 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::fallback(function (Request $request): never {
-    $legacy = $request->path() === 'logout'
+    $legacy = in_array($request->path(), ['logout', 'admin/unimpersonate'], true)
         || preg_match('#^admin/users/[^/]+/impersonate$#', $request->path()) === 1;
 
     abort($legacy ? 405 : 404);
