@@ -11,14 +11,14 @@ use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia as Assert;
 
 beforeEach(function () {
-    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Shell'))->name('inertia.shell');
+    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Error'))->name('inertia.shell');
     app('router')->getRoutes()->refreshNameLookups();
 });
 
 it('renders the Shell page with guest shared props', function () {
     $this->get(route('inertia.shell'))
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Shell')
+            ->component('Error')
             ->where('auth.user', null)
             ->where('auth.parties', [])
             ->has('flash')
@@ -112,6 +112,6 @@ it('shares empty validation errors, and the errors after a failed submission', f
         ->followingRedirects()
         ->post(route('admin.themes.store'), ['name' => '!!!', 'tokens' => ['primary' => 'nope']])
         ->assertInertia(fn (Assert $page) => $page
-            ->component('Shell')
+            ->component('Error')
             ->has('errors', fn (Assert $errors) => $errors->has('name')->has('tokens.primary')->etc()));
 });

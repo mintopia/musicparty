@@ -149,7 +149,7 @@ it('restores the original user when impersonation stops', function () {
 
     $this->actingAs($target)
         ->withSession(['impersonating' => true, 'originalUserId' => $admin->id])
-        ->get(route('admin.unimpersonate'))
+        ->post(route('admin.unimpersonate'))
         ->assertRedirect(route('admin.users.show', $target->id));
 
     expect(session(auth('web')->getName()))->toBe($admin->id)->and(session('impersonating'))->toBeNull();
@@ -166,7 +166,7 @@ it('forbids impersonation by non-admins', function () {
 });
 
 it('forbids unimpersonate outside an impersonation session', function () {
-    $this->actingAs(makeFirstUserAdmin())->get(route('admin.unimpersonate'))->assertForbidden();
+    $this->actingAs(makeFirstUserAdmin())->post(route('admin.unimpersonate'))->assertForbidden();
 });
 
 it('redirects guests away from impersonation', function () {
