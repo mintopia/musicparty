@@ -34,7 +34,7 @@ function lastQueueScoreBroadcastFor(UpcomingSong $song): ?int
 {
     $scores = queueScoresBroadcastFor($song);
 
-    return $scores === [] ? null : $scores[array_key_last($scores)];
+    return $scores === [] ? null : array_last($scores);
 }
 
 beforeEach(function () {
