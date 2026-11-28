@@ -402,12 +402,10 @@ class Party extends Model
         if ($this->downvotes_per_hour === null) {
             return;
         }
-        $downvotes = Vote::whereUserId($user->id)
-            ->where('value', '<', 0)
-            ->where('value_changed_at', '>=', now()->subHour())
-            ->whereHas('upcomingSong', function ($query) {
-                $query->wherePartyId($this->id);
-            })->count();
+        $downvotes = DownvoteLog::wherePartyId($this->id)
+            ->whereUserId($user->id)
+            ->where('created_at', '>=', now()->subHour())
+            ->count();
         if ($downvotes >= $this->downvotes_per_hour) {
             throw new VoteException('You have downvoted too many songs');
         }

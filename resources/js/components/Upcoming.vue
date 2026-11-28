@@ -127,8 +127,8 @@ async function vote(songId: number, value: number): Promise<void> {
         placeAtPosition(updated);
         scheduleResync();
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 400) {
-            showMessage((error.response.data as {message: string}).message);
+        if (axios.isAxiosError(error) && [400, 403, 429].includes(error.response?.status ?? 0)) {
+            showMessage((error.response?.data as {message: string}).message);
         }
     }
 }

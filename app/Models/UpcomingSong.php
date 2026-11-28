@@ -149,15 +149,24 @@ class UpcomingSong extends Model
         }
 
         return Cache::lock("vote-user:{$user->id}", 10)->block(5, function () use ($user, $value): Vote {
+            $existing = $this->votes()->whereUserId($user->id)->first();
+            if ($value < 0 && $existing?->value === $value) {
+                return $existing;
+            }
             if ($value < 0) {
                 $this->party->checkDownvotesForUser($user);
             }
             $attributes = ['user_id' => $user->id];
             try {
-                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+                $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
             } catch (UniqueConstraintViolationException) {
-                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+                $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
             }
+            if ($value < 0) {
+                DownvoteLog::create(['party_id' => $this->party_id, 'user_id' => $user->id]);
+            }
+
+            return $vote;
         });
     }
 
