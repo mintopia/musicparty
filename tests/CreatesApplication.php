@@ -50,9 +50,6 @@ trait CreatesApplication
         }
     }
 
-    /**
-     * The production profile boots APP_ENV=production so the branches behind isProduction() run, taking cache, queue and session stores from the environment.
-     */
     public static function usesProductionProfile(): bool
     {
         return getenv('TEST_PROFILE') === 'production';

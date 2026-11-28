@@ -5,11 +5,7 @@ use Symfony\Component\Finder\Finder;
 const PRODUCTION_ROOT = __DIR__.'/../..';
 const PRODUCTION_BRANCH_PATTERN = '/isProduction\(|->environment\(|environment\(\[|APP_ENV/';
 
-/**
- * Every file that branches on the environment must name the production-profile test that runs that branch.
- *
- * @return array<string, string> source path relative to the base path => production-profile test file
- */
+/** @return array<string, string> */
 function productionBranchCoverage(): array
 {
     return [

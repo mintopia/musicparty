@@ -1,5 +1,3 @@
-# Runs the built production image the way an operator would: every secret and the public URL arrive at
-# runtime from the environment, none from the image. The public hostname is deliberately not localhost.
 name: mp-image-smoke
 
 x-app: &app

@@ -1,7 +1,4 @@
 #!/usr/bin/env bash
-# Smoke test of the built production image: runtime-only config, fake OAuth login, cross-client vote over
-# the websocket, and fail-fast on missing config. Needs the image built (IMAGE, default musicparty:smoke),
-# Docker, Node and Playwright Chromium. No /etc/hosts entry is needed: the browser maps the hostnames itself.
 set -euo pipefail
 
 cd "$(dirname "$0")"

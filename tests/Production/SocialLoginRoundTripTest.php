@@ -6,9 +6,6 @@ use App\Services\SocialProviders\DiscordProvider;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Testing\TestResponse;
 
-/**
- * Models a browser's cookie jar: a Secure cookie is never accepted over, or sent back on, plain HTTP.
- */
 class BrowserJar
 {
     /** @var array<string, string> */
