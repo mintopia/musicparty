@@ -51,6 +51,8 @@ it('never auto-merges for providers that cannot assert verification', function (
     $existing = LinkedAccount::factory()->verified()->create(['email' => 'a@example.com']);
     $provider = providerFor($class, $code);
     fakeRemoteUser('x1', 'a@example.com', ['verified' => true]);
+    session()->put(SteamProvider::NONCE_SESSION_KEY, 'n');
+    request()->query->set('nonce', 'n');
 
     expect($provider->user()->id)->not->toBe($existing->user_id)
         ->and($provider->accounts()->first()->email_verified_at)->toBeNull();

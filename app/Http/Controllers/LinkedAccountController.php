@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\SocialCallbackRejectedException;
 use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use App\Models\SocialProvider;
@@ -31,6 +32,8 @@ class LinkedAccountController extends Controller
             $socialprovider->user();
 
             return response()->redirectToRoute($url)->with('successMessage', "Your {$socialprovider->name} account has been linked");
+        } catch (SocialCallbackRejectedException $ex) {
+            return response()->redirectToRoute('user.profile')->with('errorMessage', $ex->getMessage());
         } catch (SocialProviderException $ex) {
             throw $ex;
         } catch (\Exception $ex) {
