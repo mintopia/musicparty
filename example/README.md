@@ -126,13 +126,13 @@ docker compose exec database sh -c 'mariadb-dump -u"$MARIADB_USER" -p"$MARIADB_P
 
 ## Data
 
-MariaDB and Redis use the named volumes `dbdata` and `redisdata`. Logs are in `./logs`. `docker compose down -v`
+MariaDB and Redis use the named volumes `dbdata` and `redisdata`. Application logs go to stderr, so read them with `docker compose logs`; `./logs` holds only the file-based AI review log (`ai-review.log`). `docker compose down -v`
 deletes the volumes and all data.
 
 ## Upgrade notes
 
 - The linked-accounts migration is destructive: it deletes duplicate `linked_accounts` rows (same provider and external
-  id), keeping the oldest, then adds a unique index. Back up the database before running `php artisan migrate`.
+  id), keeping the newest, then adds a unique index. Back up the database before running `php artisan migrate`.
 - `APP_URL` must be set to your public URL in production; boot fails on an empty or localhost value.
 - The session cookie's secure flag now follows the `APP_URL` scheme instead of the environment.
 - `TRUSTED_PROXIES` is configured on the container (compose `environment`), not in `.env`.

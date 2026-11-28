@@ -24,13 +24,14 @@ class TrustedRootUrlServiceProvider extends ServiceProvider
         }
 
         $rootUrl = (string) config('app.url');
-        $host = parse_url($rootUrl, PHP_URL_HOST);
+        $parts = parse_url($rootUrl);
+        $host = $parts['host'] ?? null;
 
         if (! is_string($host) || in_array(strtolower($host), self::LOCAL_HOSTS, true)) {
             throw new RuntimeException('APP_URL must be set to the public URL of this deployment (for example https://music.example.com) in production; it is empty or points at localhost. Only a single hostname is supported.');
         }
 
-        $scheme = parse_url($rootUrl, PHP_URL_SCHEME) ?: 'https';
+        $scheme = $parts['scheme'] ?? 'https';
         URL::forceRootUrl($rootUrl);
         URL::forceScheme($scheme);
 

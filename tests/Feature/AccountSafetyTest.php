@@ -111,6 +111,7 @@ it('removes mod data when a user or party is deleted', function () {
 
 it('gives only one of two simultaneous first sign-ins the admin role', function () {
     $this->adminRole->users()->detach();
+    DB::table('users')->delete();
     $users = User::withoutEvents(fn () => User::factory()->count(2)->create());
 
     $users->each(fn (User $user) => app(UserObserver::class)->created($user));
@@ -118,6 +119,15 @@ it('gives only one of two simultaneous first sign-ins the admin role', function 
     expect($this->adminRole->users()->count())->toBe(1)
         ->and($users->first()->hasRole('admin'))->toBeTrue()
         ->and($users->last()->hasRole('admin'))->toBeFalse();
+});
+
+it('does not make a later user an admin when older users exist but no admin does', function () {
+    $this->adminRole->users()->detach();
+
+    $later = User::factory()->create(['first_login' => false]);
+
+    expect($later->hasRole('admin'))->toBeFalse()
+        ->and($this->adminRole->users()->count())->toBe(0);
 });
 
 it('refuses to delete the last admin with an accurate message', function () {

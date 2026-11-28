@@ -64,7 +64,7 @@ class PartyRequestQueue
 
     /**
      * @param  Collection<int, UpcomingSong>|SupportCollection<int, UpcomingSong>  $requests
-     * @param  array<int, array{held: bool, next: bool}>  $states
+     * @param  array<int, array{held: bool, next?: bool, random_order?: bool}>  $states
      * @return list<array<string, mixed>>
      */
     private function requests(Collection|SupportCollection $requests, User $viewer, array $states, bool $sent): array

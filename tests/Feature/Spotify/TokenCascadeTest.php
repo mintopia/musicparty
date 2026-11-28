@@ -13,6 +13,10 @@ use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use SpotifyWebAPI\SpotifyWebAPIException;
 
+beforeEach(function () {
+    $this->freezeTime();
+});
+
 function cascadeAccount(): LinkedAccount
 {
     $provider = SocialProvider::where('code', 'spotify')->first() ?? SocialProvider::factory()->create(['code' => 'spotify']);

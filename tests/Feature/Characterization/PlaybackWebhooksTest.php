@@ -208,7 +208,7 @@ it('accepts a second webhook once the first job has started', function () {
     $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
     Queue::assertPushed(PartyUpdate::class, 1);
 
-    (new PartyUpdate($party, PlaybackSource::Webhook))->handle();
+    new PartyUpdate($party, PlaybackSource::Webhook)->handle();
     $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
 
     Queue::assertPushed(PartyUpdate::class, 2);

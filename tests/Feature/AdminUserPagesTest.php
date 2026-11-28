@@ -11,7 +11,7 @@ use Inertia\Testing\AssertableInertia as Assert;
 beforeEach(function () {
     $this->withoutVite();
     $role = Role::query()->forceCreate(['code' => 'admin', 'name' => 'Admin']);
-    $this->admin = User::factory()->create(['first_login' => false]);
+    $this->admin = User::factory()->create(['first_login' => false, 'nickname' => 'Boss']);
     $this->admin->roles()->attach($role);
     $this->target = User::factory()->create(['nickname' => 'Target', 'first_login' => false]);
 });
