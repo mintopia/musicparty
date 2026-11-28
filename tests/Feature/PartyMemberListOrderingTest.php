@@ -41,3 +41,28 @@ it('honours the requested direction when sorting members by nickname', function 
     'ascending' => ['asc', ['alpha', 'bravo', 'charlie']],
     'descending' => ['desc', ['charlie', 'bravo', 'alpha']],
 ]);
+
+it('pages through members without repeating or skipping rows and keeps per_page out of links', function () {
+    [$party, $owner] = orderingPartyWithNicknames(array_map(fn (int $i): string => "member{$i}", range(1, 25)));
+    $seen = [];
+
+    foreach ([1, 2] as $page) {
+        $members = $this->withoutVite()->actingAs($owner)
+            ->get(route('parties.users.index', [$party->code, 'order' => 'role', 'page' => $page]))
+            ->assertOk()
+            ->viewData('page')['props']['members'];
+
+        expect($members['next_page_url'] ?? '')->not->toContain('per_page');
+        array_push($seen, ...array_column($members['data'], 'id'));
+    }
+
+    expect($seen)->toHaveCount($party->members()->count())->and(array_unique($seen))->toHaveCount(count($seen));
+});
+
+it('rejects member sorts that are not implemented', function () {
+    [$party, $owner] = orderingPartyWithNicknames(['alpha']);
+
+    $this->withoutVite()->actingAs($owner)
+        ->get(route('parties.users.index', [$party->code, 'order' => 'votes']))
+        ->assertSessionHasErrors('order');
+});

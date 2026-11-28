@@ -141,9 +141,9 @@ class PartyRequest extends FormRequest
                 'nullable',
                 'string',
             ],
-            'min_song_length' => 'sometimes|integer|min:1|nullable',
-            'max_song_length' => 'sometimes|integer|min:1|nullable',
-            'no_repeat_interval' => 'sometimes|integer|min:1|nullable',
+            'min_song_length' => 'sometimes|integer|min:0|nullable',
+            'max_song_length' => 'sometimes|integer|min:0|nullable',
+            'no_repeat_interval' => 'sometimes|integer|min:0|nullable',
             'max_requests' => 'sometimes|integer|min:1|nullable',
             'context_playlist_id' => 'sometimes|nullable|string|max:64',
             'history_playlist_id' => [

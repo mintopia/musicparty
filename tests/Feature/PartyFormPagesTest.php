@@ -130,3 +130,25 @@ it('stores a fallback playlist chosen from the picker or given as a link', funct
     ])->assertRedirect(route('parties.edit', $party->code));
     expect($party->fresh()->backup_playlist_id)->toBe('LINKED');
 });
+
+it('clears the length and repeat limits when they are blanked or zeroed', function () {
+    $admin = partyFormAdmin();
+    $party = Party::factory()->for($admin)->create([
+        'provider_id' => 'spotify',
+        'min_song_length' => 60,
+        'max_song_length' => 600,
+        'no_repeat_interval' => 30,
+    ]);
+    $base = ['name' => $party->name, 'backup_playlist_id' => 'fake-playlist'];
+
+    $this->actingAs($admin)->patch(route('parties.update', $party->code), $base + [
+        'min_song_length' => '',
+        'max_song_length' => '0',
+        'no_repeat_interval' => '',
+    ])->assertRedirect();
+
+    expect($party->fresh())
+        ->min_song_length->toBeNull()
+        ->max_song_length->toBeNull()
+        ->no_repeat_interval->toBeNull();
+});
