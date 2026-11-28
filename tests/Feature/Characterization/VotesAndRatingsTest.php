@@ -10,6 +10,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 function voteParty(array $attributes = []): Party
@@ -46,6 +47,70 @@ function castRating(Party $party, PlayedSong $played, User $user, int|string $va
 }
 
 describe('votes', function () {
+    it('leaves the correct score when two stale models cast votes in interleaved order', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        $first = UpcomingSong::findOrFail($song->id);
+        $second = UpcomingSong::findOrFail($song->id);
+
+        $first->upvote(voteMember($party));
+        $second->upvote(voteMember($party));
+
+        expect($song->fresh()->score)->toBe(2);
+    });
+
+    it('keeps the stored score_adjustment when a stale model casts a vote', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        $stale = UpcomingSong::findOrFail($song->id);
+        UpcomingSong::findOrFail($song->id)->increment('score_adjustment', 5);
+
+        $stale->upvote(voteMember($party));
+
+        expect($song->fresh()->score)->toBe(6)
+            ->and($song->fresh()->score_adjustment)->toBe(5);
+    });
+
+    it('recomputes the score in one UPDATE with no separate sum read', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => voteMember($party)->id, 'value' => 1]);
+
+        DB::enableQueryLog();
+        $song->updateScore();
+        $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn ($sql) => stripos($sql, 'sum(') !== false);
+        DB::disableQueryLog();
+
+        expect($queries)->toHaveCount(1)
+            ->and($queries->first())->toStartWith('update "upcoming_songs"');
+    });
+
+    it('recomputes the rating in one UPDATE with no separate sum read', function () {
+        $party = voteParty();
+        $played = PlayedSong::factory()->for($party)->create();
+        SongRating::factory()->create(['played_song_id' => $played->id, 'user_id' => voteMember($party)->id, 'value' => 1]);
+
+        DB::enableQueryLog();
+        $played->updateRating();
+        $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn ($sql) => stripos($sql, 'sum(') !== false);
+        DB::disableQueryLog();
+
+        expect($queries)->toHaveCount(1)
+            ->and($queries->first())->toStartWith('update "played_songs"');
+    });
+
+    it('leaves the correct rating when two stale models rate in interleaved order', function () {
+        $party = voteParty();
+        $played = PlayedSong::factory()->for($party)->create();
+        $first = PlayedSong::findOrFail($played->id);
+        $second = PlayedSong::findOrFail($played->id);
+
+        $first->like(voteMember($party));
+        $second->like(voteMember($party));
+
+        expect($played->fresh()->rating)->toBe(2);
+    });
+
     it('records an upvote and updates the score', function () {
         $party = voteParty();
         $song = voteSong($party);

@@ -163,7 +163,7 @@ class Whamageddon
         if ($upcoming->queued_at !== null) {
             Log::info("{$this->party} Whamageddon: The song has already been played");
         }
-        $upcoming->score_adjustment += $this->settings->value($this->party, self::CODE, 'score_per_hour', 1);
+        $upcoming->increment('score_adjustment', $this->settings->value($this->party, self::CODE, 'score_per_hour', 1));
         $upcoming->updateScore();
         $sign = '';
         if ($upcoming->score_adjustment > 0) {
