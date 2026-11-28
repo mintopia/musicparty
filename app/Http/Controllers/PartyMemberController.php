@@ -121,6 +121,7 @@ class PartyMemberController extends Controller
             ->where('user_id', $user->user_id)
             ->with($relations)
             ->latest()
+            ->latest('id')
             ->get();
 
         $requests = $requestedSongs->map(fn (UpcomingSong $song): array => [
