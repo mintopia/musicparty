@@ -200,16 +200,34 @@ it('re-adds a new upcoming row two hours after the previous one was queued', fun
         ->and(app(ModSettingsStore::class)->value($party->fresh(), 'whamageddon', 'upcoming_song_id'))->toBe($new->id);
 });
 
-it('still runs delayPlayback against the old queued upcoming after re-adding', function () {
+it('holds the new request on later rounds and leaves the old row untouched', function () {
     $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
     $old = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 21:00:00']);
+    $oldUpdatedAt = $old->fresh()->updated_at;
     whamAt('2026-12-24 23:00:00');
 
     new Whamageddon($party)->hourly();
 
     $new = $party->upcoming()->whereKeyNot($old->id)->sole();
-    expect($old->fresh()->getRawOriginal('not_before'))->not->toBeNull()
-        ->and($new->not_before)->toBeNull();
+    expect($new->not_before)->not->toBeNull()
+        ->and($old->fresh()->getRawOriginal('not_before'))->toBeNull()
+        ->and($old->fresh()->updated_at->equalTo($oldUpdatedAt))->toBeTrue();
+});
+
+it('holds the new request through a second round after the first', function () {
+    $party = WhamageddonFixtures::party(['enabled' => true, 'track' => WhamageddonFixtures::TRACK_ID]);
+    $first = WhamageddonFixtures::upcoming($party, ['queued_at' => '2026-12-24 20:00:00']);
+    whamAt('2026-12-24 23:00:00');
+    new Whamageddon($party)->hourly();
+    $second = $party->upcoming()->whereKeyNot($first->id)->sole();
+    $second->forceFill(['queued_at' => '2026-12-24 23:30:00', 'not_before' => null])->save();
+
+    whamAt('2026-12-25 23:30:00');
+    new Whamageddon($party)->hourly();
+
+    $third = $party->upcoming()->whereNull('queued_at')->sole();
+    expect($third->not_before)->not->toBeNull()
+        ->and($second->fresh()->not_before)->toBeNull();
 });
 
 it('applies the quiet window in the party timezone', function (string $utc, int $expected) {

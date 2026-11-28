@@ -743,12 +743,12 @@ describe('Request store lock', function () {
         $held->release();
     });
 
-    it('rejects a different member requesting the same track while it is in flight', function () {
+    it('rejects a different member requesting while a system add holds the party request lock', function () {
         config(['musicparty.request_lock_wait_seconds' => 0]);
         $party = reqParty(['allow_requests' => true]);
         $other = reqMember($party);
         FakeSpotify::install()->respond('getTrack', reqTrack('shared'));
-        $held = Cache::lock("request-store:{$party->id}:track:shared", 30);
+        $held = Cache::lock("add-request:{$party->id}", 30);
         $held->get();
 
         reqPost($party, $other->user, 'shared')->assertStatus(429);

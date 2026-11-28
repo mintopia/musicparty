@@ -8,6 +8,7 @@ use App\Services\Music\Data\Track;
 use App\Services\Requests\RequestContext;
 use App\Services\Requests\RequestDecision;
 use App\Services\Requests\RequestRule;
+use Illuminate\Support\Facades\DB;
 
 final class SimilarTrackRule implements RequestRule
 {
@@ -28,15 +29,15 @@ final class SimilarTrackRule implements RequestRule
         $names = [];
         $artists = [];
         foreach ($context->tracks as $track) {
-            $names[] = $track->name;
+            $names[] = mb_strtolower($track->name);
             foreach ($track->artists as $artist) {
-                $artists[] = $artist->name;
+                $artists[] = mb_strtolower($artist->name);
             }
         }
 
         $waiting = $context->party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->whereHas('song', function ($query) use ($names, $artists) {
-            $query->whereIn('name', $names);
-            $query->whereHas('artists', fn ($query) => $query->whereIn('name', $artists));
+            $query->whereIn(DB::raw('lower(name)'), $names);
+            $query->whereHas('artists', fn ($query) => $query->whereIn(DB::raw('lower(name)'), $artists));
         })->with(['song', 'song.artists'])->get();
 
         $keys = [];
@@ -53,6 +54,6 @@ final class SimilarTrackRule implements RequestRule
      */
     protected function key(string $name, array $artistNames): string
     {
-        return "{$name}:".implode('', array_map(fn (string $artist): string => ":{$artist}", $artistNames));
+        return mb_strtolower("{$name}:".implode('', array_map(fn (string $artist): string => ":{$artist}", $artistNames)));
     }
 }
