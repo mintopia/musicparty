@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -145,18 +146,18 @@ class UpcomingSong extends Model
         if ($member->role->code === 'banned') {
             throw new VoteException('You are banned from voting for songs');
         }
-        // Check downvotes
-        if ($value < 0) {
-            $this->party->checkDownvotesForUser($user);
-        }
-        $attributes = ['user_id' => $user->id];
-        try {
-            $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
-        } catch (UniqueConstraintViolationException) {
-            $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
-        }
 
-        return $vote;
+        return Cache::lock("vote-user:{$user->id}", 10)->block(5, function () use ($user, $value): Vote {
+            if ($value < 0) {
+                $this->party->checkDownvotesForUser($user);
+            }
+            $attributes = ['user_id' => $user->id];
+            try {
+                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+            } catch (UniqueConstraintViolationException) {
+                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+            }
+        });
     }
 
     public function updateScore(): void

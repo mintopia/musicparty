@@ -314,6 +314,16 @@ class Party extends Model
         }
     }
 
+    public function canParticipate(User $user): bool
+    {
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+        $member = $this->members()->whereUserId($user->id)->with('role')->first();
+
+        return $member !== null && ! $member->banned && $member->role->code !== 'banned';
+    }
+
     public function hasFreshPushedPlayback(): bool
     {
         return $this->playback_source?->isPushed() === true
@@ -376,7 +386,7 @@ class Party extends Model
         }
         $downvotes = Vote::whereUserId($user->id)
             ->where('value', '<', 0)
-            ->where('created_at', '>=', now()->subHour())
+            ->where('value_changed_at', '>=', now()->subHour())
             ->whereHas('upcomingSong', function ($query) {
                 $query->wherePartyId($this->id);
             })->count();
