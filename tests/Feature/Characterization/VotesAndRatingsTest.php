@@ -9,7 +9,9 @@ use App\Models\SongRating;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
@@ -367,6 +369,37 @@ describe('downvote throttle', function () {
         }
 
         expect(Vote::query()->where('value', -1)->count())->toBe(2);
+    });
+
+    it('runs the downvote limit check and the write while holding the per-user lock', function () {
+        $party = voteParty(['downvotes' => true, 'downvotes_per_hour' => 2]);
+        $user = voteMember($party);
+        $lockHeldDuring = [];
+        DB::listen(function ($query) use ($user, &$lockHeldDuring) {
+            if (preg_match('/^(select count\(\*\) as [`"]?aggregate[`"]? from|insert into) [`"]votes[`"]/', $query->sql)) {
+                $lockHeldDuring[] = ! Cache::lock("vote-user:{$user->id}", 5)->get();
+            }
+        });
+
+        voteSong($party)->downvote($user);
+
+        expect($lockHeldDuring)->toHaveCount(2)->each->toBeTrue();
+    });
+
+    it('does not apply a downvote while another request holds the user lock', function () {
+        $party = voteParty(['downvotes' => true, 'downvotes_per_hour' => 2]);
+        $user = voteMember($party);
+        $song = voteSong($party);
+        $held = Cache::lock("vote-user:{$user->id}", 30);
+        $held->get();
+
+        try {
+            expect(fn () => $song->downvote($user))->toThrow(LockTimeoutException::class);
+        } finally {
+            $held->release();
+        }
+
+        expect(Vote::count())->toBe(0);
     });
 });
 
