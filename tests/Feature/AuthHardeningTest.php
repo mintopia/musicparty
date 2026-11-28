@@ -1,8 +1,8 @@
 <?php
 
 use App\Models\LinkedAccount;
+use App\Models\Party;
 use App\Models\SocialProvider;
-use App\Models\Theme;
 use App\Models\User;
 use App\Providers\TrustedRootUrlServiceProvider;
 use App\Services\SocialProviders\DiscordProvider;
@@ -114,12 +114,16 @@ it('returns 404 when linking a disabled provider', function () {
     $this->get(route('linkedaccounts.store', $provider))->assertNotFound();
 });
 
-it('throttles the theme stylesheet route', function () {
-    Theme::factory()->create(['code' => 'neon']);
-
-    foreach (range(1, 60) as $i) {
+it('does not rate limit the theme stylesheet route by address', function () {
+    foreach (range(1, 80) as $i) {
         expect($this->get('/theme/missing-'.$i.'.css')->status())->toBe(404);
     }
+});
 
-    $this->get('/theme/missing-final.css')->assertTooManyRequests();
+it('does not rate limit guest party routes by address', function () {
+    $party = Party::factory()->create();
+
+    foreach (range(1, 200) as $i) {
+        $this->getJson(route('api.v1.parties.show', $party))->assertOk();
+    }
 });
