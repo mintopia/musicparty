@@ -9,6 +9,8 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Playback\EncoreConnection;
+use App\Services\Playback\PartyDashboardCache;
+use App\Services\PlaybackStatus;
 use App\Services\PlaybackSync;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -279,4 +281,13 @@ it('passes myRating for the viewer on the current played song, null when nothing
 
     $played->setRating($this->party->user, 1);
     expect(dashboardControl($this, 'myRating'))->toBe(['playedSongId' => $played->id, 'value' => 1]);
+});
+
+it('makes no currentPlayback provider call for an idle Party whose nothing-playing state is remembered', function () {
+    app(PlaybackStatus::class)->remember($this->party, PlaybackState::idle(PlaybackSource::Polling));
+    Cache::forget(PartyDashboardCache::playbackKey($this->party));
+
+    dashboardControl($this);
+
+    expect($this->fake->callsTo('currentPlayback'))->toBeEmpty();
 });

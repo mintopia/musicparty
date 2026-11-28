@@ -61,6 +61,11 @@ class PartyPlayerControl
             return null;
         }
 
+        $remembered = $this->status->recall($party);
+        if ($remembered !== null && $remembered->trackId === null) {
+            return $remembered;
+        }
+
         try {
             return Cache::remember(PartyDashboardCache::playbackKey($party), PartyDashboardCache::READ_SECONDS, fn (): ?PlaybackState => $this->providers->forParty($party, Purpose::Control)->currentPlayback());
         } catch (ProviderBackoffException|ProviderRelinkRequiredException) {

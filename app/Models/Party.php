@@ -17,6 +17,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -115,6 +116,8 @@ class Party extends Model
     const MINIMUM_UPCOMING = 5;
 
     const PUSHED_PLAYBACK_FRESH_SECONDS = 30;
+
+    const int UPDATE_DEBOUNCE_SECONDS = 5;
 
     protected $attributes = [
         'allow_requests' => true,
@@ -249,6 +252,16 @@ class Party extends Model
         }
     }
 
+    public function updatedWithinDebounce(): bool
+    {
+        return Cache::has($this->debounceKey()) || $this->last_updated_at > now()->subSeconds(self::UPDATE_DEBOUNCE_SECONDS);
+    }
+
+    public function debounceKey(): string
+    {
+        return "party-sync-debounce:{$this->id}";
+    }
+
     public function current(): ?PlayedSong
     {
         return $this->history()->orderBy('played_at', 'desc')->first();
@@ -281,7 +294,7 @@ class Party extends Model
     public function getState(): object
     {
         $next = $this->next();
-        $current = $this->history()->orderBy('played_at', 'desc')->first();
+        $current = $this->current();
 
         return (object) [
             'code' => $this->code,
