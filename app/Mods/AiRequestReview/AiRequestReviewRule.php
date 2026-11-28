@@ -12,7 +12,6 @@ use App\Services\Requests\RequestDecision;
 use App\Services\Requests\RequestMode;
 use App\Services\Requests\RequestRule;
 use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Ai;
 use Throwable;
@@ -27,7 +26,7 @@ class AiRequestReviewRule implements RequestRule
 
     public const VERDICT_TTL_SECONDS = 300;
 
-    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods, protected DecisionModelReviewer $decisionModel, protected AiReviewLog $log, protected PartyVibeSummary $vibe, protected AiReviewRecorder $recorder, protected EndpointGuard $guard, protected AiReviewBreaker $breaker) {}
+    public function __construct(protected ModSettingsStore $settings, protected PartyMods $partyMods, protected DecisionModelReviewer $decisionModel, protected AiReviewLog $log, protected PartyVibeSummary $vibe, protected AiReviewRecorder $recorder, protected EndpointGuard $guard, protected AiReviewBreaker $breaker, protected PinnedClientOptions $clientOptions) {}
 
     public function decide(RequestContext $context, Track $track): RequestDecision
     {
@@ -127,11 +126,11 @@ class AiRequestReviewRule implements RequestRule
      */
     protected function withClientOptions(array $options, callable $callback): mixed
     {
-        Http::globalOptions($options);
+        $this->clientOptions->use($options);
         try {
             return $callback();
         } finally {
-            Http::globalOptions([]);
+            $this->clientOptions->clear();
         }
     }
 

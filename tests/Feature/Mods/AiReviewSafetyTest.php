@@ -7,6 +7,7 @@ use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\AiRequestReview\PinnedClientOptions;
 use App\Mods\AiRequestReview\AiReviewBreaker;
 use App\Mods\AiRequestReview\HostResolver;
 use App\Mods\PartyMods;
@@ -85,6 +86,23 @@ it('sends openai-compatible requests without redirects and pinned to the resolve
     });
     Http::get('https://other.example.test');
     expect($after)->not->toHaveKey('curl');
+});
+
+it('does not leave pinned options behind when the provider call fails', function () {
+    safetyResolver(['llm.example.test' => ['93.184.216.99']]);
+    Http::fake(['llm.example.test/*' => Http::response('boom', 500)]);
+
+    expect(($this->check)()->outcome)->toBe(RequestOutcome::Allow);
+    expect(app(PinnedClientOptions::class)->current())->toBe([]);
+
+    $after = null;
+    Http::fake(function ($request, $options) use (&$after) {
+        $after = $options;
+
+        return Http::response('{}');
+    });
+    Http::get('https://other.example.test');
+    expect($after)->not->toHaveKey('curl')->and($after['allow_redirects'] ?? true)->not->toBeFalse();
 });
 
 it('does not follow a redirect to an internal address', function () {
