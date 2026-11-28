@@ -6,10 +6,12 @@ use App\Jobs\ApplyPushedPlaybackState;
 use App\Jobs\RequestEncoreState;
 use App\Services\Playback\EncoreConnection;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Reverb\Contracts\Connection;
 use Laravel\Reverb\Events\ChannelRemoved;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
 
 class DispatchPushedPlaybackState
 {
@@ -68,7 +70,24 @@ class DispatchPushedPlaybackState
             return;
         }
 
+        if (! $this->isSubscribed($event->connection, $channel)) {
+            Log::debug('Dropped client event from a connection not subscribed to the channel', [
+                'connection' => $event->connection->id(),
+                'channel' => $channel,
+            ]);
+
+            return;
+        }
+
         ApplyPushedPlaybackState::dispatch($channel, $name, $frame['data'] ?? null);
+    }
+
+    /**
+     * Reverb raises MessageReceived even for client events it refuses, so membership is checked here.
+     */
+    private function isSubscribed(Connection $connection, string $channel): bool
+    {
+        return app(ChannelManager::class)->for($connection->app())->find($channel)?->subscribed($connection) ?? false;
     }
 
     /**
