@@ -28,7 +28,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Always available
-Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
+Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->middleware('throttle:theme-css')->name('theme.css');
 
 if (app()->environment('testing')) {
     Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
