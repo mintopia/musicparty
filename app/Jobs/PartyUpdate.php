@@ -41,7 +41,7 @@ class PartyUpdate implements ShouldQueue
     }
 
     /**
-     * Lock-contention and Spotify-backoff releases also count as attempts, so retries are bounded by time and thrown exceptions rather than a try count.
+     * Bounded by time, not a try count, so releases do not use up retries.
      */
     public function retryUntil(): \DateTimeInterface
     {

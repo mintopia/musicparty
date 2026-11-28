@@ -10,7 +10,7 @@ trait ReleasesOnProviderBackoff
     public const int MAX_BACKOFF_RELEASE_SECONDS = 60;
 
     /**
-     * Release for the provider's Retry-After, capped at 60s. Longer waits return so the scheduler requeues the work.
+     * Release for Retry-After up to 60s; longer waits return for the scheduler to requeue.
      */
     protected function releaseForBackoff(ProviderBackoffException $e): void
     {
