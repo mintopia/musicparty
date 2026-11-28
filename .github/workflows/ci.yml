@@ -422,4 +422,4 @@ jobs:
           RESULTS: ${{ toJSON(needs) }}
         run: |
           echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
-          echo "$RESULTS" | jq -e 'all(.[]; .value.result == "success")' >/dev/null
+          echo "$RESULTS" | jq -e 'all(.[]; .result == "success")' >/dev/null
