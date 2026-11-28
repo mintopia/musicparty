@@ -26,6 +26,11 @@ fi
 # host does not resolve here and each lookup would hold a FrankenPHP worker until it times out.
 ENV_ARGS=(
     -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+    -e APP_URL=http://musicparty.smoke.test
+    -e DB_PASSWORD=smoke-db-password
+    -e REVERB_APP_ID=smoke
+    -e REVERB_APP_KEY=smoke-key
+    -e REVERB_APP_SECRET=smoke-secret
     -e SESSION_DRIVER=array
     -e CACHE_STORE=array
     -e QUEUE_CONNECTION=sync
@@ -50,7 +55,7 @@ probe() {
 # Readiness uses the unmatched websocket path, which answers 404 without touching the database.
 # The home page is public and queries the database, so it is not a safe readiness probe here.
 for _ in $(seq 1 60); do
-    code="$(probe -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${APP}:8080/app/musicparty?protocol=7" || true)"
+    code="$(probe -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${APP}:8080/app/smoke-key?protocol=7" || true)"
     [ -n "$code" ] && [ "$code" != "000" ] && break
     sleep 2
 done
@@ -62,13 +67,13 @@ for _ in $(seq 1 30); do
     probe -s -D - -o /dev/null --max-time 3 \
         -H 'Connection: Upgrade' -H 'Upgrade: websocket' \
         -H 'Sec-WebSocket-Version: 13' -H 'Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==' \
-        "http://${APP}:8080/app/musicparty?protocol=7" >"$WORK/headers" 2>/dev/null || true
+        "http://${APP}:8080/app/smoke-key?protocol=7" >"$WORK/headers" 2>/dev/null || true
     upgrade_status="$(head -n1 "$WORK/headers" | tr -d '\r' | awk '{print $2}')"
     [ "$upgrade_status" = "101" ] && break
     sleep 2
 done
 
-probe -s -w '\n%{http_code}' --max-time 5 "http://${APP}:8080/app/musicparty?protocol=7" >"$WORK/plain" || true
+probe -s -w '\n%{http_code}' --max-time 5 "http://${APP}:8080/app/smoke-key?protocol=7" >"$WORK/plain" || true
 plain_status="$(tail -n1 "$WORK/plain")"
 
 fail=0
