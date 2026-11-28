@@ -64,16 +64,15 @@ it('lets a guest enter a code and sends them to login', function () {
     $this->get(route('parties.show', $party->code))->assertRedirect(route('login'));
 });
 
-it('shows the party on the login page for a guest who came from its link', function () {
-    $party = Party::factory()->create(['code' => 'KXQB', 'name' => 'Coyote LAN 26']);
+it('flags the login page for a guest who came from a party link', function () {
+    Party::factory()->create(['code' => 'KXQB']);
 
     $this->get('/parties/KXQB')->assertRedirect(route('login'));
 
     $this->get(route('login'))->assertInertia(fn (Assert $page) => $page
         ->component('Users/Login', false)
-        ->where('party.code', 'KXQB')
-        ->where('party.name', $party->name)
-        ->where('party.host', $party->user->nickname));
+        ->where('fromParty', true)
+        ->missing('party'));
 });
 
 it('counts only members active in the last 15 minutes as guests online', function () {
@@ -94,11 +93,12 @@ it('counts only members active in the last 15 minutes as guests online', functio
 
     $this->get('/parties/KXQB');
 
-    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('party.online', 2));
+    $this->actingAs(User::factory()->create(['first_login' => true]))->get(route('login.signup'))
+        ->assertInertia(fn (Assert $page) => $page->where('party.online', 2));
 });
 
-it('shows no party on the login page without a party link', function () {
-    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('party', null));
+it('does not flag the login page without a party link', function () {
+    $this->get(route('login'))->assertInertia(fn (Assert $page) => $page->where('fromParty', false));
 });
 
 it('returns the guest to the party after login', function () {

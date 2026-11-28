@@ -106,7 +106,7 @@ class UserController extends Controller
         $providers = SocialProvider::whereAuthEnabled(true)->whereEnabled(true)->get();
 
         return Inertia::render('Users/Login', [
-            'party' => $invite->fromIntended($request),
+            'fromParty' => $invite->fromIntended($request) !== null,
             'providers' => $providers->map(fn ($provider) => [
                 'code' => $provider->code,
                 'name' => $provider->name,
