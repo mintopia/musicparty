@@ -11,6 +11,7 @@ use App\Models\Role;
 use App\Models\User;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
+use App\Services\ModSettingsUpdater;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use Illuminate\Support\Facades\DB;
@@ -58,6 +59,27 @@ function putMods(Party $party, array $settings, ?bool $enabled = null): array
 
     return $entry;
 }
+
+it('makes one provider call when saving a track setting with a provider reference', function () {
+    $fake = new class extends FakeMusicProvider
+    {
+        public int $resolveCalls = 0;
+
+        public function resolveTrackReference(string $reference): ?string
+        {
+            $this->resolveCalls++;
+
+            return parent::resolveTrackReference($reference);
+        }
+    };
+    app(MusicProviderFactory::class)->register('fake', fn (User $user, Purpose $purpose, ?string $country = null) => $fake);
+    $party = Party::factory()->for($this->owner)->create(['provider_id' => 'fake']);
+
+    app(ModSettingsUpdater::class)->updateParty($party, ['foo' => ['settings' => ['song' => 'fake:track:abc-123', 'required_text' => 'x']]]);
+
+    expect($fake->resolveCalls)->toBe(1)
+        ->and((new ModSettingsStore)->value($party, 'foo', 'song'))->toBe('abc-123');
+});
 
 describe('store validation', function () {
     it('stores valid values for each type and returns defaults when unset', function () {

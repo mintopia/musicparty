@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Exceptions\SocialCallbackRejectedException;
 use App\Exceptions\SocialProviderException;
 use App\Models\LinkedAccount;
 use App\Models\SocialProvider;
@@ -14,6 +15,7 @@ class LinkedAccountController extends Controller
 {
     public function create(Request $request, SocialProvider $socialprovider): RedirectResponse
     {
+        abort_unless($socialprovider->enabled, 404);
         if ($request->header('referer') == route('user.spotify')) {
             $request->session()->flash('returnToSpotify', true);
         }
@@ -23,6 +25,7 @@ class LinkedAccountController extends Controller
 
     public function store(Request $request, SocialProvider $socialprovider): RedirectResponse
     {
+        abort_unless($socialprovider->enabled, 404);
         $url = 'user.profile';
         if ($request->session()->get('returnToSpotify')) {
             $url = 'user.spotify';
@@ -31,6 +34,8 @@ class LinkedAccountController extends Controller
             $socialprovider->user();
 
             return response()->redirectToRoute($url)->with('successMessage', "Your {$socialprovider->name} account has been linked");
+        } catch (SocialCallbackRejectedException $ex) {
+            return response()->redirectToRoute('user.profile')->with('errorMessage', $ex->getMessage());
         } catch (SocialProviderException $ex) {
             throw $ex;
         } catch (\Exception $ex) {

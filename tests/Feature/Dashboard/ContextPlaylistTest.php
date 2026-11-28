@@ -6,7 +6,9 @@ use App\Models\Song;
 use App\Models\User;
 use App\Services\Music\Data\Playlist;
 use App\Services\Playback\ContextPlaylist;
+use App\Services\PlaybackSync;
 use App\Services\Spotify\SpotifyBackoffException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Queue;
 
 require_once __DIR__.'/../../Support/DashboardFixtures.php';
@@ -42,14 +44,28 @@ it('releases the job on backoff and stays quiet when a relink is needed', functi
     $context = Mockery::mock(ContextPlaylist::class);
     $context->shouldReceive('enforceEmpty')->once()->andThrow(new SpotifyBackoffException(12));
     $job = new EmptyContextPlaylist($this->party)->withFakeQueueInteractions();
-    $job->handle($context);
+    $job->handle($context, app(PlaybackSync::class));
     $job->assertReleased(12);
 
     $relink = Mockery::mock(ContextPlaylist::class);
     $relink->shouldReceive('enforceEmpty')->once()->andThrow(new PartyRelinkRequiredException);
     $quiet = new EmptyContextPlaylist($this->party)->withFakeQueueInteractions();
-    $quiet->handle($relink);
+    $quiet->handle($relink, app(PlaybackSync::class));
     $quiet->assertNotReleased();
+});
+
+it('releases for 2s and leaves the playlist alone while a sync holds the party lock', function () {
+    $this->fake->withOwnedPlaylist(new Playlist('ctx', 'Music Party Context', 'Fake Owner', 0), 3);
+    $this->party->forceFill(['context_playlist_id' => 'ctx'])->saveQuietly();
+    $holder = Cache::lock("party-sync:{$this->party->id}", PlaybackSync::LOCK_SECONDS);
+    expect($holder->get())->toBeTrue();
+
+    $job = new EmptyContextPlaylist($this->party)->withFakeQueueInteractions();
+    $job->handle(app(ContextPlaylist::class), app(PlaybackSync::class));
+
+    $job->assertReleased(2);
+    expect($this->fake->callsTo('clearPlaylist'))->toBeEmpty();
+    $holder->release();
 });
 
 it('only dispatches the check for active parties that have a context playlist', function () {

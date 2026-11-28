@@ -16,6 +16,8 @@ use App\Models\Theme;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use App\Mods\PartyMods;
+use App\Mods\Trust\TrustScores;
 use App\Observers\PartyObserver;
 use App\Observers\PlayedSongObserver;
 use App\Observers\SettingObserver;
@@ -27,6 +29,7 @@ use App\Observers\VoteObserver;
 use App\Services\ActiveTheme;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Contracts\ProviderPlayback;
+use App\Services\ModDataStore;
 use App\Services\ModSettingsStore;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
@@ -39,10 +42,12 @@ use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
 use Illuminate\Log\Events\MessageLogged;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\ServiceProvider;
+use Laravel\Octane\Events\RequestReceived;
 use Laravel\Pulse\Facades\Pulse;
 use Laravel\Reverb\Events\ChannelRemoved;
 use Laravel\Reverb\Events\MessageReceived;
@@ -68,6 +73,9 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(UpcomingSongAugmentService::class);
         $this->app->bind(PlayedSongAugmentService::class);
         $this->app->scoped(ModSettingsStore::class);
+        $this->app->scoped(ModDataStore::class);
+        $this->app->scoped(PartyMods::class);
+        $this->app->scoped(TrustScores::class);
         $fakeAllowed = MusicProviderFactory::fakeAllowed();
         if ($fakeAllowed) {
             $this->app->scoped(FakeMusicProvider::class);
@@ -114,6 +122,7 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(SocialiteWasCalled::class, TwitchExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, LaravelPassportExtendSocialite::class.'@handle');
         Event::listen(SocialiteWasCalled::class, SpotifyExtendSocialite::class.'@handle');
+        Event::listen([RequestReceived::class, JobProcessing::class], fn () => Setting::flushRequestCache());
         Event::listen(MessageLogged::class, MessageLoggedListener::class);
         Event::listen(SpotifyAccessTokenUpdatedEvent::class, BroadcastWebPlayerToken::class);
         Event::listen(MessageReceived::class, DispatchPushedPlaybackState::class);
@@ -121,6 +130,8 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
 
+        RateLimiter::for('theme-css', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
+        RateLimiter::for('search', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('playback', fn (Request $request) => Limit::perMinute(30)->by(($request->user()?->id ?: $request->ip()).':'.($request->route('party') instanceof Party ? $request->route('party')->code : '')));
 
         Blade::directive('setting', fn (string $expression, $default = null) => "<?php echo App\Models\Setting::fetch($expression, $default); ?>");

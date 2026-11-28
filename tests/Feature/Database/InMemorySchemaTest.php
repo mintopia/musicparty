@@ -3,12 +3,13 @@
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
+use Tests\TestCase;
 
 it('uses in-memory sqlite for the default connection', function () {
     expect(config('database.default'))->toBe('sqlite')
         ->and(config('database.connections.sqlite.database'))->toBe(':memory:')
         ->and(DB::connection()->getDriverName())->toBe('sqlite');
-});
+})->skip(fn () => TestCase::usesMariaDb(), 'SQLite-only');
 
 it('runs the migrations on sqlite', function () {
     expect(Schema::hasTable('users'))->toBeTrue()

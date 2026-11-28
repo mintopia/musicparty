@@ -27,7 +27,7 @@ it('keeps non-admins and guests out of every admin user route', function (string
     ['get', 'admin.users.show'],
     ['get', 'admin.users.edit'],
     ['get', 'admin.users.delete'],
-    ['get', 'admin.users.impersonate'],
+    ['post', 'admin.users.impersonate'],
     ['patch', 'admin.users.update'],
     ['delete', 'admin.users.destroy'],
     ['get', 'admin.users.accounts.delete'],
@@ -241,7 +241,7 @@ it('refuses to delete the only linked account', function () {
 });
 
 it('impersonates a user', function () {
-    $this->actingAs($this->admin)->get(route('admin.users.impersonate', $this->target))
+    $this->actingAs($this->admin)->post(route('admin.users.impersonate', $this->target))
         ->assertRedirect(route('home'))
         ->assertSessionHas('impersonating', true)
         ->assertSessionHas('originalUserId', $this->admin->id);

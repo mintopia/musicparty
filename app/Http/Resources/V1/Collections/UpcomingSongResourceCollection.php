@@ -16,6 +16,9 @@ class UpcomingSongResourceCollection extends ResourceCollection
     /** @var array<int, object> */
     protected array $augmentedData = [];
 
+    /** @var array<int, array{held: bool, next: bool}> */
+    protected array $queueStates = [];
+
     /**
      * Transform the resource collection into an array.
      *
@@ -27,10 +30,19 @@ class UpcomingSongResourceCollection extends ResourceCollection
             'data' => $this->collection->map(function (UpcomingSong $item) {
                 $resource = new UpcomingSongResource($item);
                 $resource->augment($this->augmentedData[$item->id] ?? null);
+                $resource->queueState($this->queueStates[$item->id] ?? null);
 
                 return $resource;
             }),
         ];
+    }
+
+    /**
+     * @param  array<int, array{held: bool, next: bool}>  $states
+     */
+    public function queueStates(array $states): void
+    {
+        $this->queueStates = $states;
     }
 
     /**

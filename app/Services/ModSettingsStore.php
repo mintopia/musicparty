@@ -67,7 +67,8 @@ class ModSettingsStore
     public function validated(ModSetting $definition, mixed $value, ?Party $party): mixed
     {
         $value = $value === '' || ($definition->type === SettingType::stUser && in_array($value, [0, '0'], true)) ? null : $value;
-        $rules = $this->rulesFor($definition, $party);
+        $resolvedTrack = $definition->type === SettingType::stTrack && is_scalar($value) ? $this->resolveTrack($party, (string) $value) : null;
+        $rules = $this->rulesFor($definition, $resolvedTrack);
         Validator::make([$definition->code => $value], [$definition->code => $rules], [], [$definition->code => $definition->name])->validate();
         if ($value === null) {
             return null;
@@ -77,7 +78,7 @@ class ModSettingsStore
             SettingType::stBoolean => filter_var($value, FILTER_VALIDATE_BOOLEAN),
             SettingType::stInteger, SettingType::stUser => (int) $value,
             SettingType::stFloat => (float) $value,
-            SettingType::stTrack => $this->resolveTrack($party, (string) $value),
+            SettingType::stTrack => $resolvedTrack,
             default => $value,
         };
     }
@@ -85,7 +86,7 @@ class ModSettingsStore
     /**
      * @return list<mixed>
      */
-    protected function rulesFor(ModSetting $definition, ?Party $party): array
+    protected function rulesFor(ModSetting $definition, ?string $resolvedTrack): array
     {
         $required = $definition->isRequired();
         $rules = [$required ? 'required' : 'nullable'];
@@ -99,8 +100,8 @@ class ModSettingsStore
             SettingType::stTrack => [
                 'string',
                 'max:255',
-                function (string $attribute, mixed $value, Closure $fail) use ($party): void {
-                    if (! is_string($value) || $this->resolveTrack($party, $value) === null) {
+                function (string $attribute, mixed $value, Closure $fail) use ($resolvedTrack): void {
+                    if (! is_string($value) || $resolvedTrack === null) {
                         $fail('The :attribute must be a valid track for the Party\'s music provider.');
                     }
                 },

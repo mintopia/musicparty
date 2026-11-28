@@ -102,6 +102,20 @@ class BackoffRequest extends Request
         return parent::send($method, $url, $parameters, $headers);
     }
 
+    protected function handleResponseError(string $body, int $status): void
+    {
+        try {
+            parent::handleResponseError($body, $status);
+        } catch (SpotifyWebAPIException $e) {
+            $error = json_decode($body)->error ?? null;
+            if (is_string($error)) {
+                $e->setReason($error);
+            }
+
+            throw $e;
+        }
+    }
+
     protected function retryAfterSeconds(): int
     {
         $header = $this->getLastResponse()['headers']['retry-after'] ?? null;

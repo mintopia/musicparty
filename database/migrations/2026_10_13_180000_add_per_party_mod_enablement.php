@@ -52,6 +52,7 @@ return new class extends Migration
         Schema::dropIfExists('party_mods');
 
         Schema::table('mod_settings', function (Blueprint $table): void {
+            $table->index('mod_id');
             $table->dropUnique(['mod_id', 'code']);
         });
 

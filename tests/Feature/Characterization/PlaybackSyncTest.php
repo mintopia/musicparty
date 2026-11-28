@@ -357,3 +357,41 @@ it('does not apply a pushed state while another sync holds the lock past the wai
 
     $lock->release();
 });
+
+it('neither broadcasts nor writes for a progress-only change, but broadcasts a track or play-state change', function () {
+    [$party, $fake] = syncParty();
+    $fake->withTrack(new Track('fake', 'PUSHED', 'Pushed', 200000, false, true, new AlbumRef('album-p', 'Test Album', null), [new ArtistRef('artist1', 'Test Artist')]));
+    $sync = app(PlaybackSync::class);
+    $sync->apply($party, playbackOf('PUSHED', true, 1000));
+
+    Event::fake([PartyUpdatedEvent::class]);
+    $savedAt = $party->fresh()->updated_at;
+    $this->travel(20)->seconds();
+
+    $sync->apply($party, playbackOf('PUSHED', true, 2000));
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+    expect($party->fresh()->updated_at->equalTo($savedAt))->toBeTrue()
+        ->and($party->getState()->status->progressMs)->toBe(2000);
+
+    $sync->apply($party, playbackOf('PUSHED', false, 3000));
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+    expect($party->getState()->status->progressMs)->toBe(3000);
+});
+
+it('does not write or broadcast for a progress-only poll', function () {
+    [$party, $fake] = syncParty();
+    nowPlaying($fake, 'POLLED', true, 1000);
+    $sync = app(PlaybackSync::class);
+    $sync->sync($party);
+
+    Event::fake([PartyUpdatedEvent::class]);
+    $touchedAt = $party->fresh()->last_updated_at;
+    $this->travel(20)->seconds();
+    nowPlaying($fake, 'POLLED', true, 21000);
+
+    $sync->sync($party->fresh());
+
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+    expect($party->fresh()->last_updated_at->equalTo($touchedAt))->toBeTrue()
+        ->and($party->getState()->status->progressMs)->toBe(21000);
+});

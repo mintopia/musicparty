@@ -56,7 +56,7 @@ return new class extends Migration
             $table->foreign('trusted_user_id')->references('id')->on('users')->nullOnDelete();
         });
         Schema::table('party_members', function (Blueprint $table) {
-            $table->float('trustscore')->default(0)->after('banned');
+            $table->float('trustscore')->default(0);
         });
 
         $this->restoreFromModData('upcoming_songs', UpcomingSong::class, 'whamageddon', 'fallback_override');

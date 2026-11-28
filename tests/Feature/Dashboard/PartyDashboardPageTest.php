@@ -9,6 +9,8 @@ use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Playback\EncoreConnection;
+use App\Services\Playback\PartyDashboardCache;
+use App\Services\PlaybackStatus;
 use App\Services\PlaybackSync;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -203,7 +205,8 @@ it('lets a site admin who is not a member moderate but not manage', function () 
 });
 
 it('only links the web player to those who can use it', function () {
-    expect(dashboardControl($this, 'links.webPlayer'))->toBeNull();
+    $moderator = dashboardUser($this->party, 'moderator');
+    $this->actingAs($moderator)->get($this->url)->assertInertia(fn (Assert $page) => $page->where('links.webPlayer', null));
 
     $owner = dashboardUser($this->party, 'owner');
     $this->actingAs($owner)->get($this->url)->assertInertia(fn (Assert $page) => $page
@@ -278,4 +281,13 @@ it('passes myRating for the viewer on the current played song, null when nothing
 
     $played->setRating($this->party->user, 1);
     expect(dashboardControl($this, 'myRating'))->toBe(['playedSongId' => $played->id, 'value' => 1]);
+});
+
+it('makes no currentPlayback provider call for an idle Party whose nothing-playing state is remembered', function () {
+    app(PlaybackStatus::class)->remember($this->party, PlaybackState::idle(PlaybackSource::Polling));
+    Cache::forget(PartyDashboardCache::playbackKey($this->party));
+
+    dashboardControl($this);
+
+    expect($this->fake->callsTo('currentPlayback'))->toBeEmpty();
 });

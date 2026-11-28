@@ -26,7 +26,7 @@ class PartyMemberSearchRequest extends FormRequest
             'q' => 'sometimes|nullable|string|max:200',
             'nickname' => 'sometimes|nullable|string|max:100',
             'role' => 'sometimes|nullable|string|exists:party_member_roles,code',
-            'order' => 'sometimes|nullable|string|in:id,created_at,nickname,role,votes,score',
+            'order' => 'sometimes|nullable|string|in:id,created_at,nickname,role',
             'order_direction' => 'sometimes|nullable|string|in:asc,desc',
             'per_page' => 'sometimes|nullable|int|between:1,100',
         ];

@@ -50,10 +50,7 @@ class PartyPolicy
             return true;
         }
 
-        return $party->members()
-            ->whereUserId($user->id)
-            ->whereHas('role', fn ($query) => $query->whereCode('owner'))
-            ->exists();
+        return $party->canBeManagedBy($user);
     }
 
     /**

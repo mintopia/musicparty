@@ -11,7 +11,15 @@ use App\Services\PlaybackSync;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
+use Laravel\Reverb\Application;
+use Laravel\Reverb\Contracts\Connection;
+use Laravel\Reverb\Contracts\WebSocketConnection;
 use Laravel\Reverb\Events\MessageReceived;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelConnectionManager;
+use Laravel\Reverb\Protocols\Pusher\Contracts\ChannelManager;
+use Laravel\Reverb\Protocols\Pusher\Managers\ArrayChannelConnectionManager;
+use Laravel\Reverb\Protocols\Pusher\Managers\ArrayChannelManager;
+use Ratchet\RFC6455\Messaging\Frame;
 
 function stateMapper(?PlaybackState $result): PushedStateMapper
 {
@@ -35,12 +43,51 @@ function stateMapper(?PlaybackState $result): PushedStateMapper
     };
 }
 
-function receive(array|string $frame): void
+function ingestConnection(string $id = '123.456'): Connection
+{
+    return new class(Mockery::mock(WebSocketConnection::class), new Application('1', 'key', 's3cret', 60, 30, ['*'], 10000), null, $id) extends Connection
+    {
+        public function __construct(WebSocketConnection $connection, Application $application, ?string $origin, private string $socketId)
+        {
+            parent::__construct($connection, $application, $origin);
+        }
+
+        public function identifier(): string
+        {
+            return $this->socketId;
+        }
+
+        public function id(): string
+        {
+            return $this->socketId;
+        }
+
+        public function send(string $message): void {}
+
+        public function control(string $type = Frame::OP_PING): void {}
+
+        public function terminate(): void {}
+    };
+}
+
+function channelManager(): ChannelManager
+{
+    app()->singletonIf(ChannelManager::class, fn () => new ArrayChannelManager);
+    app()->bindIf(ChannelConnectionManager::class, fn () => new ArrayChannelConnectionManager);
+
+    return app(ChannelManager::class);
+}
+
+function subscribeConnection(Connection $connection, string $channel): void
+{
+    channelManager()->for($connection->app())->findOrCreate($channel)->subscribe($connection, 'key:'.hash_hmac('sha256', "{$connection->id()}:{$channel}", 's3cret'));
+}
+
+function receive(array|string $frame, ?Connection $connection = null): void
 {
     $message = is_array($frame) ? json_encode($frame) : $frame;
-    $event = new ReflectionClass(MessageReceived::class)->newInstanceWithoutConstructor();
-    $event->message = $message;
-    (new DispatchPushedPlaybackState)->handle($event);
+    channelManager();
+    (new DispatchPushedPlaybackState)->handle(new MessageReceived($connection ?? ingestConnection(), $message));
 }
 
 function runIngest(?PushedStateMapper $mapper, string $channel, mixed $data, string $event = 'client-playback_state'): void
@@ -52,12 +99,30 @@ function runIngest(?PushedStateMapper $mapper, string $channel, mixed $data, str
 it('dispatches a queued job for client events with only channel, event and data', function () {
     Queue::fake();
 
-    receive(['event' => 'client-playback_state', 'channel' => 'private-encore.ABC', 'data' => '{"a":1}']);
+    $connection = ingestConnection();
+    subscribeConnection($connection, 'private-encore.ABC');
+
+    receive(['event' => 'client-playback_state', 'channel' => 'private-encore.ABC', 'data' => '{"a":1}'], $connection);
 
     Queue::assertPushed(ApplyPushedPlaybackState::class, fn ($job) => $job->channel === 'private-encore.ABC'
         && $job->event === 'client-playback_state'
         && $job->data === '{"a":1}'
         && $job->queue === 'partyupdates');
+});
+
+it('drops client events from a connection that is not subscribed to the channel', function () {
+    Queue::fake();
+    Log::spy();
+    $member = ingestConnection('111.111');
+    subscribeConnection($member, 'private-encore.ABC');
+    $outsider = ingestConnection('222.222');
+
+    receive(['event' => 'client-playback_state', 'channel' => 'private-encore.ABC', 'data' => '{"secret":1}'], $outsider);
+    receive(['event' => 'client-playback_state', 'channel' => 'private-encore.NOPE', 'data' => '{"secret":1}'], $outsider);
+
+    Queue::assertNothingPushed();
+    Log::shouldHaveReceived('debug')->twice()->withArgs(fn (string $message, array $context) => $context === ['connection' => '222.222', 'channel' => 'private-encore.ABC']
+        || $context === ['connection' => '222.222', 'channel' => 'private-encore.NOPE']);
 });
 
 it('ignores pusher protocol events and unparseable frames', function () {

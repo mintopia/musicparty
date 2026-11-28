@@ -8,6 +8,7 @@ use App\Exceptions\ProviderRelinkRequiredException;
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyCodeGenerator;
 use App\Services\PartyProviderOptions;
 use App\Services\Playback\ContextPlaylist;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -29,6 +30,9 @@ class PartyRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->has('code') && is_string($this->input('code'))) {
+            $this->merge(['code' => strtoupper(trim($this->input('code')))]);
+        }
         if (! $this->route('party') instanceof Party && ! $this->has('provider_id')) {
             $this->merge(['provider_id' => MusicProviderFactory::DEFAULT_PROVIDER_ID]);
         }
@@ -100,7 +104,12 @@ class PartyRequest extends FormRequest
             ));
         }
 
-        return [
+        $codeRules = [];
+        if ($party instanceof Party && $this->user()?->can('admin')) {
+            $codeRules = ['code' => ['sometimes', 'string', 'regex:'.PartyCodeGenerator::FORMAT, Rule::unique('parties', 'code')->ignore($party->getKey())]];
+        }
+
+        return $codeRules + [
             'provider_id' => $party instanceof Party
                 ? 'prohibited'
                 : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
@@ -132,9 +141,9 @@ class PartyRequest extends FormRequest
                 'nullable',
                 'string',
             ],
-            'min_song_length' => 'sometimes|integer|min:1|nullable',
-            'max_song_length' => 'sometimes|integer|min:1|nullable',
-            'no_repeat_interval' => 'sometimes|integer|min:1|nullable',
+            'min_song_length' => 'sometimes|integer|min:0|nullable',
+            'max_song_length' => 'sometimes|integer|min:0|nullable',
+            'no_repeat_interval' => 'sometimes|integer|min:0|nullable',
             'max_requests' => 'sometimes|integer|min:1|nullable',
             'context_playlist_id' => 'sometimes|nullable|string|max:64',
             'history_playlist_id' => [

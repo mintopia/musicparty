@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\FlaggedRequestController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyAiReviewController;
@@ -19,22 +18,21 @@ use App\Http\Controllers\PartyJoinController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PartyModsController;
+use App\Http\Controllers\PartySearchController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebPlayerController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Always available
-Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
+Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->middleware('throttle:theme-css')->name('theme.css');
 
-if (app()->environment('testing')) {
-    Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
-}
 Route::get('/', [HomeController::class, 'home'])->name('home');
 Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
-Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::post('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
 // Authenticated routes
@@ -71,15 +69,15 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::resource('parties.users', PartyMemberController::class)->only(['edit', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['index', 'show'])->scoped();
         });
-        Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
-        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
-        Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->name('parties.artists.show');
+        Route::get('parties/{party}/search', [PartySearchController::class, 'search'])->middleware('throttle:search')->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartySearchController::class, 'album'])->middleware('throttle:search')->name('parties.albums.show');
+        Route::get('parties/{party}/artists/{artist}', [PartySearchController::class, 'artist'])->middleware('throttle:search')->name('parties.artists.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
         Route::post('parties/{party}/flagged/approve', [FlaggedRequestController::class, 'bulkApprove'])->name('parties.flagged.bulk-approve');
         Route::post('parties/{party}/flagged/reject', [FlaggedRequestController::class, 'bulkReject'])->name('parties.flagged.bulk-reject');
-        Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->name('parties.flagged.approve');
-        Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->name('parties.flagged.reject');
+        Route::post('parties/{party}/flagged/{upcomingSong}/approve', [FlaggedRequestController::class, 'approve'])->scopeBindings()->missing(fn () => abort(409, FlaggedRequestController::ALREADY_HANDLED))->name('parties.flagged.approve');
+        Route::post('parties/{party}/flagged/{upcomingSong}/reject', [FlaggedRequestController::class, 'reject'])->scopeBindings()->missing(fn () => abort(409, FlaggedRequestController::ALREADY_HANDLED))->name('parties.flagged.reject');
         Route::delete('parties/{party}/requests/{upcomingSong}/flag', [FlaggedRequestController::class, 'withdraw'])->scopeBindings()->name('parties.requests.withdraw');
 
         Route::get('/profile/accounts/{socialprovider:code}/link', [LinkedAccountController::class, 'create'])->name('linkedaccounts.create');
@@ -97,7 +95,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::resource('users', AdminUserController::class)->except(['create', 'store']);
             Route::get('users/{user}/delete', [AdminUserController::class, 'delete'])->name('users.delete');
-            Route::get('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
+            Route::post('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
 
@@ -124,4 +122,10 @@ Route::middleware('guest')->group(function () {
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
 });
 
-Route::fallback(fn () => abort(404));
+Route::fallback(function (Request $request): never {
+    $writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+    $matched = collect(Route::getRoutes()->getRoutes())->contains(fn ($route): bool => ! $route->isFallback
+        && collect($writeMethods)->contains(fn (string $method): bool => $route->matches(Request::create($request->path(), $method))));
+
+    abort($matched ? 405 : 404);
+});

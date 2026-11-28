@@ -39,10 +39,7 @@ class PartyMemberController extends Controller
             'order' => 'id',
             'order_direction' => 'asc',
         ];
-        $perPage = $request->input('per_page', 20);
-        if ($perPage !== 20) {
-            $params['per_page'] = $perPage;
-        }
+        $perPage = (int) $request->input('per_page', 20);
 
         $search = SearchTokens::parse((string) $request->input('q', ''), ['role']);
         if ($request->filled('nickname')) {
@@ -64,7 +61,6 @@ class PartyMemberController extends Controller
             $query = $query->whereHas('role', fn ($role) => $role->where('code', $value)->orWhere('name', $value));
         }
 
-        // Sorting
         if ($request->input('order')) {
             $params['order'] = $request->input('order');
         }
@@ -86,7 +82,7 @@ class PartyMemberController extends Controller
                 break;
         }
 
-        $members = $query->paginate($perPage)->appends($params);
+        $members = $query->orderBy('party_members.id')->paginate($perPage)->appends($params);
 
         $members->through(fn (PartyMember $member): array => [
             'id' => $member->id,
@@ -110,7 +106,7 @@ class PartyMemberController extends Controller
             'roles' => $this->orderedRoles()
                 ->map(fn (PartyMemberRole $role): array => ['code' => $role->code, 'name' => $role->name, 'count' => (int) ($roleCounts[$role->id] ?? 0)])
                 ->values(),
-            'filters' => $params,
+            'filters' => $params + ($perPage !== 20 ? ['per_page' => (string) $perPage] : []),
             'memberTotal' => (int) $roleCounts->sum(),
             'members' => $members,
         ]);
@@ -125,6 +121,7 @@ class PartyMemberController extends Controller
             ->where('user_id', $user->user_id)
             ->with($relations)
             ->latest()
+            ->latest('id')
             ->get();
 
         $requests = $requestedSongs->map(fn (UpcomingSong $song): array => [

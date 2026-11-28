@@ -8,9 +8,11 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Schedule;
 
 Schedule::command('sanctum:prune-expired --hours=24')->daily()->onOneServer();
+Schedule::command('queue:prune-failed --hours=168')->daily()->onOneServer();
+Schedule::command('horizon:snapshot')->everyFiveMinutes()->onOneServer();
 Schedule::command('model:prune', ['--model' => [AiReview::class]])->daily()->onOneServer();
-Schedule::command('party:fallback')->everyMinute()->onOneServer();
-Schedule::command('party:force')->everyMinute()->onOneServer();
+Schedule::command('party:fallback')->everyMinute()->withoutOverlapping(5)->onOneServer();
+Schedule::command('party:force')->everyMinute()->withoutOverlapping(5)->onOneServer();
 Schedule::command('party:contextplaylist')->everyFifteenMinutes()->onOneServer();
 Schedule::command('party:refreshaccesstokens')->everyMinute()->onOneServer();
 Schedule::call(fn () => app(ModScheduler::class)->run(ScheduleFrequency::Minute))

@@ -45,11 +45,6 @@ class WhamageddonMod implements DecoratesTracks, Mod
         ];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['scheduled-actions', 'queue-additions', 'decorations'];
-    }
-
     public function decorate(Party $party, Song $song, ?UpcomingSong $request): ?TrackDecoration
     {
         if ($request === null) {

@@ -4,14 +4,15 @@ namespace App\Observers;
 
 use App\Jobs\RefreshFallbackPlaylist;
 use App\Models\Party;
-use Illuminate\Support\Str;
+use App\Services\ModDataStore;
+use App\Services\PartyCodeGenerator;
 
 class PartyObserver
 {
     public function creating(Party $party): void
     {
         if (! $party->code) {
-            $party->code = Str::upper(Str::password(4, numbers: false, symbols: false));
+            $party->code = app(PartyCodeGenerator::class)->unused();
         }
     }
 
@@ -27,6 +28,13 @@ class PartyObserver
         if ($party->isDirty('backup_playlist_id')) {
             RefreshFallbackPlaylist::dispatch($party);
         }
+    }
+
+    public function deleting(Party $party): void
+    {
+        $store = app(ModDataStore::class);
+        $party->members->each(fn ($member) => $store->purge($member));
+        $store->purge($party);
     }
 
     /**

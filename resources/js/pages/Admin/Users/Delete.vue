@@ -8,19 +8,16 @@ import AppLayout from '@/layouts/AppLayout.vue';
 
 const props = defineProps<{
     user: {id: number; nickname: string};
+    blocked_reason: string | null;
     impact: {accounts: string[]; accounts_count: number; memberships_count: number; owned_parties: string[]};
 }>();
 
 const plural = (count: number, noun: string): string => `${count} ${noun}${count === 1 ? '' : 's'}`;
 
 const impactSummary = computed(() => {
-    const {accounts, accounts_count, memberships_count, owned_parties} = props.impact;
+    const {accounts, accounts_count, memberships_count} = props.impact;
     const accountList = accounts.length > 0 ? ` (${accounts.join(', ')})` : '';
-    let text = `Removes ${plural(accounts_count, 'linked account')}${accountList} and their membership of ${plural(memberships_count, 'party').replace('partys', 'parties')}.`;
-    if (owned_parties.length > 0) {
-        text += ` Also deletes ${owned_parties.length === 1 ? 'the party' : 'the parties'} they own: ${owned_parties.join(', ')}.`;
-    }
-    return text;
+    return `Removes ${plural(accounts_count, 'linked account')}${accountList} and their membership of ${plural(memberships_count, 'party').replace('partys', 'parties')}.`;
 });
 
 const form = useForm({confirm: ''});
@@ -46,6 +43,9 @@ function submit(): void {
                         Delete <strong>{{ user.nickname }}</strong
                         >? This cannot be undone.
                     </p>
+                    <p v-if="blocked_reason" class="text-danger" role="alert" data-test="delete-blocked">
+                        {{ blocked_reason }}
+                    </p>
                     <p class="text-secondary" data-test="delete-impact">{{ impactSummary }}</p>
                     <label class="d-block mb-2 text-body" for="confirm">
                         To continue, type <strong>delete</strong> below.
@@ -67,7 +67,11 @@ function submit(): void {
                 <div class="card-footer">
                     <div class="d-flex align-items-center">
                         <Link :href="`/admin/users/${user.id}`" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing">
+                        <button
+                            type="submit"
+                            class="btn btn-danger ms-auto"
+                            :disabled="form.processing || !!blocked_reason"
+                        >
                             Delete {{ user.nickname }}
                         </button>
                     </div>

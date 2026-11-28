@@ -18,3 +18,15 @@ yarn-error.log
 Dockerfile
 README.md
 docker-compose.yaml
+/storage/logs/*
+/storage/framework/cache/*
+/storage/framework/sessions/*
+/storage/framework/views/*
+/storage/framework/testing/*
+/storage/debugbar
+/tests
+/docs
+/mysql
+/dbdata
+/database/*.sqlite
+/.github

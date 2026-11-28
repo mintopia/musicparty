@@ -118,7 +118,7 @@ it('also sends requests with a zero or negative score when not weighted', functi
 
 it('excludes a future not_before and includes a past one on the non-weighted path (E5 R10)', function () {
     $party = selectionParty();
-    waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
+    waitingRequest($party, 'FUTURE', 5, ['not_before' => '2030-01-01 00:00:00']);
     waitingRequest($party, 'PAST', 1, ['not_before' => '2020-01-01 00:00:00']);
 
     runSync($party);
@@ -262,7 +262,7 @@ it('binds a datetime rather than the string NOW() when comparing not_before (E5 
 
     runSync($party);
 
-    $matching = array_filter($queries, fn (array $q) => str_contains($q['sql'], 'not_before" <= ?'));
+    $matching = array_filter($queries, fn (array $q) => preg_match('/not_before[`"] <= \?/', $q['sql']) === 1);
     expect($matching)->not->toBeEmpty()
         ->and(collect($matching)->flatMap(fn (array $q) => $q['bindings'])->contains('NOW()'))->toBeFalse();
 });
@@ -279,7 +279,7 @@ it('treats a past not_before as eligible in the weighted pass', function () {
 
 it('excludes a future not_before from the weighted pass and its fallback (E5 R10)', function () {
     $party = selectionParty(['weighted' => true]);
-    waitingRequest($party, 'FUTURE', 5, ['not_before' => '2999-01-01 00:00:00']);
+    waitingRequest($party, 'FUTURE', 5, ['not_before' => '2030-01-01 00:00:00']);
     seedRandomness(1);
 
     runSync($party);
@@ -289,7 +289,7 @@ it('excludes a future not_before from the weighted pass and its fallback (E5 R10
 
 it('casts not_before to a Carbon instance', function () {
     $party = selectionParty();
-    $request = waitingRequest($party, 'A', 0, ['not_before' => '2999-01-01 00:00:00']);
+    $request = waitingRequest($party, 'A', 0, ['not_before' => '2030-01-01 00:00:00']);
 
     expect($request->fresh()->not_before)->toBeInstanceOf(Carbon::class);
 });
@@ -355,6 +355,7 @@ it('fills a short weighted draw from the remaining requests ordered by score, cr
 it('tops up to five waiting requests from the Fallback Playlist after sending, so the first run sends nothing and the second sends the topped-up requests', function () {
     $party = selectionParty();
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(11);
 
     runSync($party);
@@ -374,6 +375,7 @@ it('tops up after sending, so a freshly sent request counts as recently queued a
     waitingRequest($party, 'F1', 0);
     waitingRequest($party, 'F2', 0);
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(3);
 
     runSync($party);
@@ -389,6 +391,7 @@ it('tops up only the shortfall from the Fallback Playlist and never duplicates a
     waitingRequest($party, 'F2', 0);
     queueWith(['X', 'Y']);
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(3);
 
     runSync($party);
@@ -418,6 +421,7 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     waitingRequest($party, 'RECENT', 0, ['queued_at' => now()->subMinutes(10)]);
     waitingRequest($party, 'OLD', 0, ['queued_at' => now()->subMinutes(45)]);
     FakeFallbackPlaylist::seed(['RECENT', 'OLD']);
+    app(FallbackPlaylist::class)->refresh($party);
     queueWith(['X', 'Y']);
     seedRandomness(2);
 
@@ -433,6 +437,7 @@ it('skips fallback entries that are not playable', function () {
         FakeFallbackPlaylist::track('NOPLAY', false),
         FakeFallbackPlaylist::track('GOOD'),
     ]);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(2);
 
     runSync($party);

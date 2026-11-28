@@ -6,7 +6,14 @@ use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\Setting;
 use App\Models\User;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia as Assert;
+
+beforeEach(function () {
+    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Shell'))->name('inertia.shell');
+    app('router')->getRoutes()->refreshNameLookups();
+});
 
 it('renders the Shell page with guest shared props', function () {
     $this->get(route('inertia.shell'))

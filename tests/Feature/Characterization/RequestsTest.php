@@ -480,23 +480,6 @@ describe('RequestRules', function () {
         });
     });
 
-    it('reports an unknown spotify id as not found when checking by id', function () {
-        $party = reqParty(['allow_requests' => true]);
-        $member = reqMember($party);
-        reqThrowingSpotify(new SpotifyWebAPIException('invalid id'));
-
-        $response = app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
-
-        expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('Song is not found in Spotify');
-    });
-
-    it('rethrows other spotify errors when checking by id', function () {
-        $party = reqParty(['allow_requests' => true]);
-        $member = reqMember($party);
-        reqThrowingSpotify(new SpotifyWebAPIException('Service unavailable', 503));
-
-        app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
-    })->throws(SpotifyWebAPIException::class, 'Service unavailable');
 });
 
 describe('UpcomingSongController::store', function () {
@@ -743,12 +726,12 @@ describe('Request store lock', function () {
         $held->release();
     });
 
-    it('rejects a different member requesting the same track while it is in flight', function () {
+    it('rejects a different member requesting while a system add holds the party request lock', function () {
         config(['musicparty.request_lock_wait_seconds' => 0]);
         $party = reqParty(['allow_requests' => true]);
         $other = reqMember($party);
         FakeSpotify::install()->respond('getTrack', reqTrack('shared'));
-        $held = Cache::lock("request-store:{$party->id}:track:shared", 30);
+        $held = Cache::lock("add-request:{$party->id}", 30);
         $held->get();
 
         reqPost($party, $other->user, 'shared')->assertStatus(429);

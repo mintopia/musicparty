@@ -9,6 +9,7 @@ use App\Models\ProviderSetting;
 use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\Contracts\SocialProviderContract;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -146,7 +147,21 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             throw new SocialProviderException('Unexpected Socialite user');
         }
 
-        DB::transaction(function () use ($localUser, $remoteUser) {
+        $attempts = 0;
+        while (true) {
+            try {
+                return $this->syncAccount($localUser, $remoteUser);
+            } catch (UniqueConstraintViolationException $exception) {
+                if (++$attempts >= 2) {
+                    throw $exception;
+                }
+            }
+        }
+    }
+
+    private function syncAccount(?User $localUser, SocialiteUser $remoteUser): User
+    {
+        DB::transaction(function () use (&$localUser, $remoteUser) {
             // Find the account
             $account = $this->requireProvider()->accounts()->whereExternalId($remoteUser->getId())->first();
             if ($account && ($localUser !== null && $localUser->id != $account->user_id)) {
@@ -182,6 +197,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
                     $localUser = new User;
                     $localUser->nickname = $remoteUser->getNickname() ?? throw new SocialProviderException('Unable to login with this account');
                     $localUser->save();
+                    $localUser->refresh();
                 }
             }
 
@@ -199,9 +215,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
             $localUser->save();
         });
 
-        $localUser ??= $this->requireProvider()->accounts()->whereExternalId($remoteUser->getId())->with('user')->firstOrFail()->user;
-
-        return $localUser;
+        return $localUser ?? $this->requireProvider()->accounts()->whereExternalId($remoteUser->getId())->with('user')->firstOrFail()->user;
     }
 
     protected function emailIsVerified(SocialiteUser $remoteUser): bool

@@ -21,7 +21,6 @@ class PartyMemberFactory extends Factory
         return [
             'user_id' => User::factory(),
             'party_id' => Party::factory(),
-            'banned' => false,
             'role_id' => fn () => self::roleId('user'),
         ];
     }
@@ -43,7 +42,7 @@ class PartyMemberFactory extends Factory
 
     public function banned(): static
     {
-        return $this->state(['role_id' => fn () => self::roleId('banned'), 'banned' => true]);
+        return $this->state(['role_id' => fn () => self::roleId('banned')]);
     }
 
     protected static function roleId(string $code): int

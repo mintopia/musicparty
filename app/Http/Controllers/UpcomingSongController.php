@@ -15,6 +15,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
+use App\Services\Requests\DeleteRequest;
 use App\Support\SearchTokens;
 use Carbon\Carbon;
 use Carbon\CarbonInterface;
@@ -240,10 +241,9 @@ class UpcomingSongController extends Controller
         return response()->redirectToRoute('parties.songs.show', [$party->code, $song->id])->with('successMessage', 'The song schedule has been updated');
     }
 
-    public function destroy(Party $party, UpcomingSong $song): RedirectResponse
+    public function destroy(Party $party, UpcomingSong $song, DeleteRequest $deleteRequest): RedirectResponse
     {
-        $song->delete();
-        $party->pushUpdate();
+        $deleteRequest->handle($song);
 
         return response()->redirectToRoute('parties.songs.index', $party->code)->with('successMessage', 'The Request has been removed');
     }

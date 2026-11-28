@@ -13,6 +13,7 @@ use Illuminate\Support\Carbon;
  * @property int $upcoming_song_id
  * @property int $user_id
  * @property int $value
+ * @property Carbon|null $value_changed_at
  * @property Carbon|null $created_at
  * @property Carbon|null $updated_at
  * @property-read UpcomingSong $upcomingSong
@@ -35,6 +36,19 @@ class Vote extends Model
 {
     /** @use HasFactory<VoteFactory> */
     use HasFactory;
+
+    protected $fillable = ['upcoming_song_id', 'user_id', 'value', 'value_changed_at'];
+
+    protected $casts = ['value_changed_at' => 'datetime'];
+
+    protected static function booted(): void
+    {
+        static::saving(function (Vote $vote): void {
+            if (! $vote->exists || $vote->isDirty('value') || $vote->value_changed_at === null) {
+                $vote->value_changed_at = now();
+            }
+        });
+    }
 
     /** @return BelongsTo<UpcomingSong, $this> */
     public function upcomingSong(): BelongsTo

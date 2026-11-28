@@ -17,7 +17,10 @@ use App\Models\SongRating;
 use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
+use Database\Seeders\PartyMemberRoleSeeder;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Schema;
 use SpotifyWebAPI\SpotifyWebAPI;
 use Tests\Support\FakeSpotify;
 
@@ -36,14 +39,37 @@ it('creates a valid record from every model factory', function (string $model) {
 it('creates party members with each role state', function (string $state, string $code) {
     $member = PartyMember::factory()->{$state}()->create();
 
-    expect($member->role->code)->toBe($code)
-        ->and($member->banned)->toBe($code === 'banned');
+    expect($member->role->code)->toBe($code);
 })->with([
     'owner' => ['owner', 'owner'],
     'vip' => ['vip', 'vip'],
     'user' => ['user', 'user'],
     'banned' => ['banned', 'banned'],
 ]);
+
+it('rejects a second member row for the same party and user', function () {
+    $member = PartyMember::factory()->create();
+
+    expect(fn () => PartyMember::factory()->create(['party_id' => $member->party_id, 'user_id' => $member->user_id]))
+        ->toThrow(UniqueConstraintViolationException::class);
+});
+
+it('creates one member row however often a user first visits a party', function () {
+    $this->seed(PartyMemberRoleSeeder::class);
+    $party = Party::factory()->create();
+    $user = User::factory()->create();
+
+    $first = $party->getMember($user);
+    $second = $party->getMember($user);
+
+    expect($second->id)->toBe($first->id)
+        ->and($party->members()->whereUserId($user->id)->count())->toBe(1);
+});
+
+it('has no banned or canvote columns on party members', function () {
+    expect(Schema::hasColumns('party_members', ['banned']))->toBeFalse()
+        ->and(Schema::hasColumns('party_members', ['canvote']))->toBeFalse();
+});
 
 it('reuses one role row across members', function () {
     PartyMember::factory()->count(2)->vip()->create();

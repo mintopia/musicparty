@@ -53,11 +53,12 @@ class Whamageddon
             $this->addToParty();
         } else {
             Log::info("{$this->party} Whamageddon: Upcoming song found");
+            $target = $upcoming;
             if ($upcoming->queued_at !== null) {
                 $cutoff = $upcoming->queued_at->addHours(2);
                 if (CarbonImmutable::now() >= $cutoff) {
                     Log::info("{$this->party} Whamageddon: Song was last played 2 hours ago - time for another round!");
-                    $this->addToParty();
+                    $target = $this->addToParty() ?? $upcoming;
                 } else {
                     Log::info("{$this->party} Whamageddon: Upcoming song has already been played, waiting until {$cutoff->toIso8601String()}");
                 }
@@ -65,7 +66,7 @@ class Whamageddon
                 Log::info("{$this->party} Whamageddon: Adding an upvote");
                 $this->addUpvote($upcoming);
             }
-            $this->delayPlayback($upcoming);
+            $this->delayPlayback($target);
         }
     }
 
@@ -113,13 +114,13 @@ class Whamageddon
         $this->settings->delete($this->party, self::CODE, 'upcoming_song_id');
     }
 
-    protected function addToParty(): void
+    protected function addToParty(): ?UpcomingSong
     {
         $trackId = $this->settings->value($this->party, self::CODE, 'track');
         if ($trackId === null) {
             Log::warning("{$this->party} Whamageddon: No track configured to add");
 
-            return;
+            return null;
         }
         $upcoming = $this->party->upcoming()
             ->whereNull('queued_at')
@@ -131,7 +132,7 @@ class Whamageddon
             if ($track === null) {
                 Log::warning("{$this->party} Whamageddon: Unable to find {$trackId} on the music provider");
 
-                return;
+                return null;
             }
             $song = Song::fromTrack($track);
         } else {
@@ -146,6 +147,8 @@ class Whamageddon
         $this->storeDecoration($upcoming, 'css_classes', $this->settings->value($this->party, self::CODE, 'css_classes'));
         Log::info("{$this->party} Whamageddon: Added song to party");
         $this->settings->set($this->party, self::CODE, 'upcoming_song_id', $upcoming->id);
+
+        return $upcoming;
     }
 
     protected function storeDecoration(UpcomingSong $upcoming, string $key, mixed $value): void
@@ -163,7 +166,7 @@ class Whamageddon
         if ($upcoming->queued_at !== null) {
             Log::info("{$this->party} Whamageddon: The song has already been played");
         }
-        $upcoming->score_adjustment += $this->settings->value($this->party, self::CODE, 'score_per_hour', 1);
+        $upcoming->increment('score_adjustment', $this->settings->value($this->party, self::CODE, 'score_per_hour', 1));
         $upcoming->updateScore();
         $sign = '';
         if ($upcoming->score_adjustment > 0) {

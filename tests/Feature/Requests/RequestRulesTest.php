@@ -221,6 +221,19 @@ describe('moderation', function () {
 
         expect(rulesCheck($party, rulesMember($party), $track))->toBe([false, 'Artist is not allowed']);
     });
+
+    it('enforces an artist filter only while it is enabled', function () {
+        $party = rulesParty();
+        rulesModeration($party, PartyModerationType::mtArtist, 'Guest');
+        $track = rulesVariant(rulesTrack(), ['artists' => [new ArtistRef('b', 'Guest')]]);
+        $member = rulesMember($party);
+
+        $party->moderations()->update(['enabled' => false]);
+        expect(rulesCheck($party, $member, $track))->toBe([true, null]);
+
+        $party->moderations()->update(['enabled' => true]);
+        expect(rulesCheck($party, $member, $track))->toBe([false, 'Artist is not allowed']);
+    });
 });
 
 describe('queue and history', function () {
@@ -230,6 +243,14 @@ describe('queue and history', function () {
         $remaster = rulesVariant(rulesTrack(), ['id' => 'remaster']);
 
         expect(rulesCheck($party, rulesMember($party), $remaster))->toBe([false, 'A similar song is already in the queue']);
+    });
+
+    it('rejects a case variant of a waiting request', function () {
+        $party = rulesParty();
+        rulesWaiting($party, rulesTrack());
+        $shouty = rulesVariant(rulesTrack(), ['id' => 'shouty', 'name' => strtoupper(rulesTrack()->name)]);
+
+        expect(rulesCheck($party, rulesMember($party), $shouty))->toBe([false, 'A similar song is already in the queue']);
     });
 
     it('ignores a similar request that is held for approval', function () {
@@ -345,31 +366,11 @@ describe('checkMany', function () {
             return count(DB::getQueryLog());
         };
 
+        $queries([rulesTrack('fake-track-1')]);
         $one = $queries([rulesTrack('fake-track-1')]);
         $many = $queries(array_map(rulesTrack(...), ['fake-track-1', 'fake-track-2', 'fake-track-3', 'fake-track-4', 'fake-track-5']));
 
         expect($many)->toBe($one);
-    });
-});
-
-describe('checkById', function () {
-    it('checks the track the provider returns', function () {
-        $party = rulesParty(['explicit' => false]);
-        $provider = app(FakeMusicProvider::class);
-        $member = rulesMember($party);
-
-        $ok = app(RequestRules::class)->checkById($party, $member, $provider, 'fake-track-1');
-        $explicit = app(RequestRules::class)->checkById($party, $member, $provider, 'fake-track-7');
-
-        expect($ok->allowed)->toBeTrue()->and($explicit->reason)->toBe('Explicit songs are not allowed');
-    });
-
-    it('reports an unknown id as not found', function () {
-        $party = rulesParty();
-
-        $decision = app(RequestRules::class)->checkById($party, rulesMember($party), app(FakeMusicProvider::class), 'missing');
-
-        expect($decision->allowed)->toBeFalse()->and($decision->reason)->toBe('Song is not found in Spotify');
     });
 });
 

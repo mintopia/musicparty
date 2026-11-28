@@ -5,7 +5,9 @@ use App\Enums\PartyModerationType;
 use App\Events\FlaggedRequestAdded;
 use App\Events\FlaggedRequestRejected;
 use App\Events\FlaggedRequestResolved;
+use App\Events\UpcomingSong\RemovedEvent;
 use App\Events\UpcomingSong\UpdatedEvent;
+use App\Http\Controllers\FlaggedRequestController;
 use App\Models\AiReview;
 use App\Models\Party;
 use App\Models\PartyMember;
@@ -18,6 +20,7 @@ use App\Mods\AiRequestReview\AiRequestReviewMod;
 use App\Mods\PartyMods;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\QueueSelector;
+use App\Services\Requests\DeleteRequest;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestMode;
 use App\Services\Requests\RequestRules;
@@ -27,6 +30,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Laravel\Sanctum\Sanctum;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 use Tests\Support\FakeFallbackPlaylist;
 
 function flaggedPost(string $trackId = 't1')
@@ -246,7 +250,62 @@ describe('approval queue', function () {
     it('cannot approve a request that is not flagged', function () {
         $request = flaggedRequest($this->party, null, ['flagged_at' => null]);
 
-        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $request]))->assertNotFound();
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $request]))->assertConflict();
+    });
+
+    it('gives an approved request score 1 and the requester vote', function () {
+        $request = flaggedRequest($this->party, $this->member->user);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $request]))->assertRedirect();
+
+        $request->refresh();
+        expect($request->score)->toBe(1)->and($request->votes()->count())->toBe(1)
+            ->and($request->votes()->first()->user_id)->toBe($this->member->user_id);
+    });
+
+    it('broadcasts the removal when a request is rejected', function () {
+        Event::fake([RemovedEvent::class]);
+        $request = flaggedRequest($this->party, $this->member->user);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.reject', [$this->party, $request]))->assertRedirect();
+
+        Event::assertDispatched(RemovedEvent::class, fn ($event) => $event->broadcastWith()['id'] === $request->id);
+    });
+
+    it('reports already handled when rejecting then approving', function () {
+        $request = flaggedRequest($this->party, $this->member->user);
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.reject', [$this->party, $request]))->assertRedirect();
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $request]))->assertConflict();
+        expect(UpcomingSong::count())->toBe(0);
+    });
+
+    it('reports already handled when approving then rejecting', function () {
+        $request = flaggedRequest($this->party, $this->member->user);
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.approve', [$this->party, $request]))->assertRedirect();
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.reject', [$this->party, $request]))->assertConflict();
+        expect(UpcomingSong::count())->toBe(1);
+    });
+
+    it('never rejects a request already sent to the player', function () {
+        $request = flaggedRequest($this->party, null, ['queued_at' => now()]);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.reject', [$this->party, $request]))->assertConflict();
+        expect(UpcomingSong::count())->toBe(1);
+    });
+
+    it('affects no rows when the flag is cleared between load and act', function () {
+        $request = flaggedRequest($this->party, $this->member->user);
+        $stale = UpcomingSong::findOrFail($request->id);
+        UpcomingSong::whereKey($request->id)->update(['flagged_at' => null, 'flag_reason' => null]);
+        $this->actingAs($this->manager, 'sanctum');
+        $controller = app(FlaggedRequestController::class);
+        $resolve = fn (string $method, array $args) => (new ReflectionMethod($controller, $method))->invoke($controller, ...$args);
+
+        expect(fn () => $resolve('resolveApproved', [$this->party, $stale]))->toThrow(ConflictHttpException::class, 'already been handled')
+            ->and(fn () => $resolve('resolveRejected', [$this->party, $stale, null, app(DeleteRequest::class)]))->toThrow(ConflictHttpException::class, 'already been handled');
+        expect($request->votes()->count())->toBe(0)->and(UpcomingSong::count())->toBe(1);
     });
 });
 

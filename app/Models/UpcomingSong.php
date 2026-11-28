@@ -13,6 +13,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -145,33 +146,27 @@ class UpcomingSong extends Model
         if ($member->role->code === 'banned') {
             throw new VoteException('You are banned from voting for songs');
         }
-        // Check downvotes
-        if ($value < 0) {
-            $this->party->checkDownvotesForUser($user);
-        }
-        $vote = $this->votes()->whereUserId($user->id)->first();
-        if (! $vote) {
-            try {
-                $vote = new Vote;
-                $vote->upcomingSong()->associate($this);
-                $vote->user()->associate($user);
-                $vote->value = $value;
-                $vote->save();
-            } catch (UniqueConstraintViolationException) {
-                $vote = $this->votes()->whereUserId($user->id)->firstOrFail();
-            }
-        }
-        $vote->value = $value;
-        $vote->save();
 
-        return $vote;
+        return Cache::lock("vote-user:{$user->id}", 10)->block(5, function () use ($user, $value): Vote {
+            if ($value < 0) {
+                $this->party->checkDownvotesForUser($user);
+            }
+            $attributes = ['user_id' => $user->id];
+            try {
+                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+            } catch (UniqueConstraintViolationException) {
+                return $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+            }
+        });
     }
 
     public function updateScore(): void
     {
-        $this->score = (int) $this->votes()->sum('value') + $this->score_adjustment;
-        if ($this->isDirty()) {
-            $this->save();
-        }
+        $score = Vote::query()
+            ->selectRaw('COALESCE(SUM(value), 0) + upcoming_songs.score_adjustment')
+            ->whereColumn('votes.upcoming_song_id', 'upcoming_songs.id');
+        static::query()->whereKey($this->id)->update(['score' => $score]);
+        $stored = static::query()->whereKey($this->id)->firstOrFail(['score', 'score_adjustment']);
+        $this->forceFill(['score' => $stored->score, 'score_adjustment' => $stored->score_adjustment])->syncOriginalAttributes(['score', 'score_adjustment']);
     }
 }

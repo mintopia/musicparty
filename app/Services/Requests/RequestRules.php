@@ -7,7 +7,6 @@ use App\Models\PartyMember;
 use App\Mods\Contracts\ContributesRequestRules;
 use App\Mods\ModRegistry;
 use App\Mods\PartyMods;
-use App\Services\Contracts\MusicProvider;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Requests\Rules\AcceptingRequestsRule;
@@ -75,13 +74,6 @@ class RequestRules
         }
 
         return $decisions;
-    }
-
-    public function checkById(Party $party, PartyMember $member, MusicProvider $provider, string $id): RequestDecision
-    {
-        $track = $provider->findTrack($id);
-
-        return $track === null ? RequestDecision::reject('Song is not found in Spotify') : $this->check($party, $member, $track);
     }
 
     protected function decide(RequestContext $context, Track $track): RequestDecision

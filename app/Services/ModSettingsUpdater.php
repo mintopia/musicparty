@@ -130,7 +130,7 @@ class ModSettingsUpdater
                     continue;
                 }
                 try {
-                    $this->store->validated($definition, $value, $party);
+                    $normalised = $this->store->validated($definition, $value, $party);
                 } catch (ValidationException $e) {
                     if ($this->keepsStoredSecret($definition, $value, $party)) {
                         continue;
@@ -139,7 +139,7 @@ class ModSettingsUpdater
 
                     continue;
                 }
-                $writes[] = [$modCode, $definition, $value];
+                $writes[] = [$modCode, $definition, $normalised];
             }
         }
         if ($errors !== []) {

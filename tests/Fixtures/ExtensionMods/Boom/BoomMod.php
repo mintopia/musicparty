@@ -33,11 +33,6 @@ class BoomMod implements DecoratesTracks, Mod, ModifiesScore
         return [];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['score-modifiers', 'decorations'];
-    }
-
     public function modifyScore(Party $party, UpcomingSong $request, int $score): int
     {
         throw new RuntimeException('boom');

@@ -70,15 +70,16 @@ function openSchedule(song: LegacyUpcomingSong, event?: MouseEvent): void {
     scheduling.value = song;
 }
 
-function sortUpcoming(): void {
-    upcoming.value.sort((alpha, bravo) => {
-        if (alpha.score !== bravo.score) {
-            return Math.sign(bravo.score - alpha.score);
-        }
-        const diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
+let resyncTimer: ReturnType<typeof setTimeout> | null = null;
 
-        return diff === 0 ? Math.sign(alpha.id - bravo.id) : diff;
-    });
+function scheduleResync(): void {
+    if (resyncTimer !== null) {
+        clearTimeout(resyncTimer);
+    }
+    resyncTimer = setTimeout(() => {
+        resyncTimer = null;
+        void resync();
+    }, 150);
 }
 
 function addOrUpdateItem(newItem: LegacyUpcomingSong, fromPubSub = false): void {
@@ -102,7 +103,7 @@ async function vote(songId: number, value: number): Promise<void> {
     try {
         const response = await axios.request({url: route.url, method: route.method, data: {vote: value}});
         addOrUpdateItem(response.data.data);
-        sortUpcoming();
+        scheduleResync();
     } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 400) {
             showMessage((error.response.data as {message: string}).message);
@@ -149,7 +150,7 @@ function undoRemoval(): void {
     pending = null;
     notice.value = null;
     addOrUpdateItem(song);
-    sortUpcoming();
+    scheduleResync();
 }
 
 async function commitPending(): Promise<void> {
@@ -173,7 +174,7 @@ async function commitPending(): Promise<void> {
         }
         failedIds.value.add(song.id);
         addOrUpdateItem(song);
-        sortUpcoming();
+        scheduleResync();
         clearNoticeTimer();
         notice.value = {
             kind: 'failed',
@@ -219,7 +220,6 @@ async function getPage({loaded, error}: LoadAction): Promise<void> {
         if (items.length > 0) {
             page.value += 1;
             items.forEach((item) => addOrUpdateItem(item));
-            sortUpcoming();
         }
         loaded(items.length, PAGE_SIZE);
     } catch {
@@ -228,15 +228,12 @@ async function getPage({loaded, error}: LoadAction): Promise<void> {
 }
 
 async function resync(): Promise<void> {
-    const last = Math.max(page.value - 1, 1);
     try {
-        const fresh: LegacyUpcomingSong[] = [];
-        for (let number = 1; number <= last; number += 1) {
-            fresh.push(...(await fetchPage(number)));
-        }
+        const fresh = await fetchPage(1);
         const votes = new Map(upcoming.value.map((song) => [song.id, song.vote]));
         upcoming.value = fresh.map((song) => ({...song, vote: votes.get(song.id) ?? song.vote}));
-        sortUpcoming();
+        listComplete.value = fresh.length < PAGE_SIZE;
+        page.value = fresh.length < PAGE_SIZE ? 1 : 2;
     } catch {
         showMessage('Could not refresh the queue.');
     }
@@ -257,7 +254,7 @@ const channel = echo.privateChannel(`party.${props.party}`) as {
 };
 channel.listen<LegacyUpcomingSong>('UpcomingSong\\UpdatedEvent', (payload) => {
     addOrUpdateItem(payload, true);
-    sortUpcoming();
+    scheduleResync();
 });
 channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
     removeItem(payload.id);
@@ -265,6 +262,9 @@ channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
 echo.onReconnect(() => void resync());
 
 onBeforeUnmount(() => {
+    if (resyncTimer !== null) {
+        clearTimeout(resyncTimer);
+    }
     clearNoticeTimer();
     void commitPending();
 });

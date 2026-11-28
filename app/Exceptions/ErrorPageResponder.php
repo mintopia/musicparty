@@ -3,7 +3,6 @@
 namespace App\Exceptions;
 
 use App\Models\Party;
-use App\Models\PartyMember;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -141,7 +140,7 @@ class ErrorPageResponder
         $owner = $party->user->nickname;
         $askOwner = "Ask {$owner}, the owner";
 
-        if ($member instanceof PartyMember && $member->banned) {
+        if ($party->roleCodeFor($user) === 'banned') {
             return [
                 ...$props,
                 'title' => "You can't join {$party->name}",

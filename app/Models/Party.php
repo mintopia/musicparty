@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * @property int $id
@@ -115,6 +117,8 @@ class Party extends Model
 
     const PUSHED_PLAYBACK_FRESH_SECONDS = 30;
 
+    const int UPDATE_DEBOUNCE_SECONDS = 5;
+
     protected $attributes = [
         'allow_requests' => true,
         'explicit' => true,
@@ -148,6 +152,22 @@ class Party extends Model
     ];
 
     protected bool $coalescingBroadcasts = false;
+
+    public function saveWithGeneratedCode(int $attempts = 5): void
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                $this->save();
+
+                return;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= $attempts) {
+                    throw $e;
+                }
+                $this->setAttribute('code', null);
+            }
+        }
+    }
 
     public function toStringName(): string
     {
@@ -232,6 +252,16 @@ class Party extends Model
         }
     }
 
+    public function updatedWithinDebounce(): bool
+    {
+        return Cache::has($this->debounceKey()) || $this->last_updated_at > now()->subSeconds(self::UPDATE_DEBOUNCE_SECONDS);
+    }
+
+    public function debounceKey(): string
+    {
+        return "party-sync-debounce:{$this->id}";
+    }
+
     public function current(): ?PlayedSong
     {
         return $this->history()->orderBy('played_at', 'desc')->first();
@@ -264,7 +294,7 @@ class Party extends Model
     public function getState(): object
     {
         $next = $this->next();
-        $current = $this->history()->orderBy('played_at', 'desc')->first();
+        $current = $this->current();
 
         return (object) [
             'code' => $this->code,
@@ -286,19 +316,25 @@ class Party extends Model
         if ($member) {
             return $member;
         }
-        $member = new PartyMember;
-        $member->party()->associate($this);
-        $member->user()->associate($user);
 
-        $roleCode = 'user';
-        if ($user->id === $this->user_id) {
-            $roleCode = 'owner';
+        $roleCode = $user->id === $this->user_id ? 'owner' : 'user';
+        $roleId = PartyMemberRole::whereCode($roleCode)->value('id');
+
+        try {
+            return $this->members()->firstOrCreate(['user_id' => $user->id], ['role_id' => $roleId]);
+        } catch (UniqueConstraintViolationException) {
+            return $this->members()->whereUserId($user->id)->firstOrFail();
         }
-        $role = PartyMemberRole::whereCode($roleCode)->first();
-        $member->role()->associate($role);
-        $member->save();
+    }
 
-        return $member;
+    public function canParticipate(User $user): bool
+    {
+        if ($user->id === $this->user_id) {
+            return true;
+        }
+        $member = $this->members()->whereUserId($user->id)->with('role')->first();
+
+        return $member !== null && $member->role->code !== 'banned';
     }
 
     public function hasFreshPushedPlayback(): bool
@@ -308,28 +344,35 @@ class Party extends Model
             && $this->playback_received_at->greaterThan(now()->subSeconds(self::PUSHED_PLAYBACK_FRESH_SECONDS));
     }
 
-    public function canBeManagedBy(?User $user): bool
+    public function roleCodeFor(?User $user): ?string
     {
         if ($user === null) {
-            return false;
+            return null;
         }
         if ($user->id === $this->user_id) {
-            return true;
+            return 'owner';
         }
 
-        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner']))->count() > 0;
+        return $this->members()->whereUserId($user->id)->first()?->role?->code;
+    }
+
+    public function roleCodeForMember(PartyMember $member): ?string
+    {
+        if ($member->user_id === $this->user_id) {
+            return 'owner';
+        }
+
+        return $member->role->code;
+    }
+
+    public function canBeManagedBy(?User $user): bool
+    {
+        return $this->roleCodeFor($user) === 'owner';
     }
 
     public function canBeModeratedBy(?User $user): bool
     {
-        if ($user === null) {
-            return false;
-        }
-        if ($user->id === $this->user_id) {
-            return true;
-        }
-
-        return $this->members()->whereUserId($user->id)->whereHas('role', fn ($query) => $query->whereIn('code', ['owner', 'moderator']))->exists();
+        return in_array($this->roleCodeFor($user), ['owner', 'moderator'], true);
     }
 
     public function pushUpdate(): void
@@ -356,7 +399,7 @@ class Party extends Model
         }
         $downvotes = Vote::whereUserId($user->id)
             ->where('value', '<', 0)
-            ->where('created_at', '>=', now()->subHour())
+            ->where('value_changed_at', '>=', now()->subHour())
             ->whereHas('upcomingSong', function ($query) {
                 $query->wherePartyId($this->id);
             })->count();

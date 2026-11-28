@@ -3,6 +3,7 @@
 use App\Exceptions\ErrorPageResponder;
 use App\Http\Middleware\Authenticate;
 use App\Http\Middleware\EncryptCookies;
+use App\Http\Middleware\EnsureUserIsNotSuspended;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\PreventRequestsDuringMaintenance;
 use App\Http\Middleware\RedirectIfAuthenticated;
@@ -64,12 +65,14 @@ return Application::configure(basePath: dirname(__DIR__))
             ShareErrorsFromSession::class,
             VerifyCsrfToken::class,
             HandleInertiaRequests::class,
+            EnsureUserIsNotSuspended::class,
             SubstituteBindings::class,
         ]);
 
         $middleware->group('api', [
             EnsureFrontendRequestsAreStateful::class,
             ThrottleRequests::class.':api',
+            EnsureUserIsNotSuspended::class,
             SubstituteBindings::class,
         ]);
 

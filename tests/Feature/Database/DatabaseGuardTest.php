@@ -21,4 +21,5 @@ it('accepts sqlite memory as the default connection', function () {
 
 it('cannot open any non-sqlite connection', function (string $name) {
     DB::connection($name);
-})->with(['mysql', 'mariadb', 'pgsql', 'sqlsrv'])->throws(InvalidArgumentException::class);
+})->with(['mysql', 'mariadb', 'pgsql', 'sqlsrv'])->throws(InvalidArgumentException::class)
+    ->skip(fn () => TestCase::usesMariaDb(), 'SQLite-only guard');

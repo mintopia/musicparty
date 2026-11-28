@@ -227,9 +227,13 @@ function toggleChip(key: string): void {
                                     <Link class="dropdown-item" :href="`/admin/users/${user.id}/edit`"
                                         ><i class="icon ti ti-edit me-2" aria-hidden="true"></i>Edit</Link
                                     >
-                                    <a class="dropdown-item" :href="`/admin/users/${user.id}/impersonate`"
+                                    <Link
+                                        class="dropdown-item"
+                                        :href="`/admin/users/${user.id}/impersonate`"
+                                        method="post"
+                                        as="button"
                                         ><i class="icon ti ti-spy me-2" aria-hidden="true"></i>Impersonate
-                                        {{ user.nickname }}</a
+                                        {{ user.nickname }}</Link
                                     >
                                     <div class="dropdown-divider"></div>
                                     <Link class="dropdown-item text-danger" :href="`/admin/users/${user.id}/delete`"
@@ -343,9 +347,13 @@ function toggleChip(key: string): void {
                                             <Link class="dropdown-item" :href="`/admin/users/${user.id}/edit`"
                                                 ><i class="icon ti ti-edit me-2" aria-hidden="true"></i>Edit</Link
                                             >
-                                            <a class="dropdown-item" :href="`/admin/users/${user.id}/impersonate`"
+                                            <Link
+                                                class="dropdown-item"
+                                                :href="`/admin/users/${user.id}/impersonate`"
+                                                method="post"
+                                                as="button"
                                                 ><i class="icon ti ti-spy me-2" aria-hidden="true"></i>Impersonate
-                                                {{ user.nickname }}</a
+                                                {{ user.nickname }}</Link
                                             >
                                             <div class="dropdown-divider"></div>
                                             <Link

@@ -10,6 +10,7 @@ const state = vi.hoisted(() => ({props: {} as unknown, url: '/'}));
 
 vi.mock('@inertiajs/vue3', () => ({
     Head: {render: () => null},
+    Link: {props: ['href'], template: '<a :href="href"><slot /></a>'},
     usePage: () => ({props: state.props, url: state.url}),
 }));
 vi.mock('@/components/FlashMessages.vue', () => ({default: {render: () => null}}));

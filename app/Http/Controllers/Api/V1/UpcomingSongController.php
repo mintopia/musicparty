@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Enums\Purpose;
-use App\Events\FlaggedRequestResolved;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Api\V1\UpcomingSongRequest;
 use App\Http\Resources\V1\Collections\UpcomingSongResourceCollection;
@@ -15,7 +14,9 @@ use App\Models\UpcomingSong;
 use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
-use App\Services\Playback\PartyDashboardCache;
+use App\Services\Queue\QueueListing;
+use App\Services\QueueSelector;
+use App\Services\Requests\DeleteRequest;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
 use App\Services\UpcomingSongAugmentService;
@@ -23,6 +24,8 @@ use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -35,24 +38,19 @@ class UpcomingSongController extends Controller
         $this->authorizeResource(UpcomingSong::class, 'upcomingsong');
     }
 
-    public function index(UpcomingSongAugmentService $augmentService, Request $request, Party $party): UpcomingSongResourceCollection
+    public function index(UpcomingSongAugmentService $augmentService, QueueListing $queue, Request $request, Party $party): UpcomingSongResourceCollection
     {
-        $params = [];
-        if ($request->has('per_page')) {
-            $params['per_page'] = $request->input('per_page');
-        }
-        $page = $party->upcoming()
-            ->with(['user', 'song'])
-            ->whereNull('queued_at')
-            ->whereNull('flagged_at')
-            ->orderBy('score', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->paginate($params['per_page'] ?? 20)->appends($params);
+        $validated = $request->validate(['per_page' => ['sometimes', 'integer', 'between:1,100']]);
+        $params = isset($validated['per_page']) ? ['per_page' => (int) $validated['per_page']] : [];
+        $perPage = $params['per_page'] ?? 20;
+        $currentPage = Paginator::resolveCurrentPage();
+        $listing = $queue->page($party, ($currentPage - 1) * $perPage, $perPage);
+        $page = (new LengthAwarePaginator($listing['items'], $listing['total'], $perPage, $currentPage, ['path' => Paginator::resolveCurrentPath()]))->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 
         $augmentedData = $augmentService->augmentCollection(collect($page->items()), $this->resolveAuthenticatedUser($request));
         $collection->augment($augmentedData->toArray());
+        $collection->queueStates($listing['states']);
 
         return $collection;
     }
@@ -86,8 +84,8 @@ class UpcomingSongController extends Controller
 
         try {
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
-                ->block($wait, fn (): UpcomingSong|JsonResponse => Cache::lock("request-store:{$party->id}:track:{$trackId}", self::REQUEST_LOCK_SECONDS)
-                    ->block($wait, function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
+                ->block($wait, fn (): UpcomingSong|JsonResponse => app(QueueSelector::class)->withRequestLock($party,
+                    function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
                         $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
                             $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
                         })->first();
@@ -133,11 +131,7 @@ class UpcomingSongController extends Controller
                                     'reason' => $checkResponse->reason,
                                 ], 202);
                             }
-                            $upcoming = new UpcomingSong;
-                            $upcoming->party()->associate($party);
-                            $upcoming->user()->associate($user);
-                            $upcoming->song()->associate($song);
-                            $upcoming->save();
+                            $upcoming = app(QueueSelector::class)->addRequestLocked($party, $song, $user);
                             app(AiReviewRecorder::class)->linkRequest($upcoming, $user, $trackId);
                         }
 
@@ -155,7 +149,7 @@ class UpcomingSongController extends Controller
                         $upcoming->upvote($user);
 
                         return $upcoming;
-                    }));
+                    }, $wait));
         } catch (LockTimeoutException) {
             abort(429, 'Another request is already being processed');
         }
@@ -171,18 +165,9 @@ class UpcomingSongController extends Controller
         return $resource;
     }
 
-    public function destroy(Party $party, UpcomingSong $upcomingsong): Response
+    public function destroy(Party $party, UpcomingSong $upcomingsong, DeleteRequest $deleteRequest): Response
     {
-        if ($upcomingsong->queued_at) {
-            abort(400, 'Unable to delete an upcoming song that has been queued');
-        }
-        $wasFlagged = $upcomingsong->flagged_at !== null;
-        $id = $upcomingsong->id;
-        $upcomingsong->delete();
-        if ($wasFlagged) {
-            FlaggedRequestResolved::dispatch($party, $id);
-        }
-        PartyDashboardCache::forget($party);
+        $deleteRequest->handle($upcomingsong);
 
         return response()->noContent();
     }

@@ -61,12 +61,25 @@ it('filters unplayable tracks', function () {
 it('backfills up to the minimum upcoming and creates songs', function () {
     $party = fallbackParty();
     FakeFallbackPlaylist::seed(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+    app(FallbackPlaylist::class)->refresh($party);
 
     app(FallbackPlaylist::class)->backfill($party);
 
     $upcoming = UpcomingSong::query()->where('party_id', $party->id)->whereNull('queued_at')->with('song')->get();
     expect($upcoming)->toHaveCount(Party::MINIMUM_UPCOMING)
         ->and($upcoming->pluck('song.provider_track_id')->unique()->all())->each->toBeIn(['A', 'B', 'C', 'D', 'E', 'F', 'G']);
+});
+
+it('dispatches a refresh and makes no provider call when backfill misses the cache', function () {
+    $party = fallbackParty();
+    FakeFallbackPlaylist::seed(['A', 'B', 'C']);
+    Queue::fake();
+
+    app(FallbackPlaylist::class)->backfill($party);
+
+    Queue::assertPushed(RefreshFallbackPlaylist::class, 1);
+    expect(app(FakeMusicProvider::class)->callsTo('getPlaylistTracks'))->toBe([])
+        ->and(UpcomingSong::query()->where('party_id', $party->id)->count())->toBe(0);
 });
 
 it('dispatches a refresh job without fetching when the backup playlist id changes', function () {

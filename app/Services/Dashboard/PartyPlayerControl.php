@@ -8,6 +8,7 @@ use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
 use App\Models\Party;
 use App\Models\Song;
+use App\Models\UpcomingSong;
 use App\Services\Music\Data\Device;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\Data\PlaybackState;
@@ -35,9 +36,10 @@ class PartyPlayerControl
     ) {}
 
     /**
+     * @param  UpcomingSong|false|null  $sent  The already-loaded Sent to Player Request (null for none); false to look it up.
      * @return array<string, mixed>
      */
-    public function control(Party $party): array
+    public function control(Party $party, UpcomingSong|false|null $sent = false): array
     {
         $needsRelink = $this->providers->partyNeedsRelink($party);
         $state = $needsRelink ? null : $this->playback($party);
@@ -49,7 +51,7 @@ class PartyPlayerControl
             'playingFrom' => $playingFrom,
             'nowPlaying' => $this->nowPlaying($party),
             'health' => $this->health($party, $recalled, $needsRelink),
-            'start' => $this->start($party, $state, $playingFrom['kind'], $playing, $needsRelink),
+            'start' => $this->start($party, $state, $playingFrom['kind'], $playing, $needsRelink, $sent),
         ];
     }
 
@@ -57,6 +59,11 @@ class PartyPlayerControl
     {
         if ($this->providers->partyNeedsRelink($party)) {
             return null;
+        }
+
+        $remembered = $this->status->recall($party);
+        if ($remembered !== null && $remembered->trackId === null) {
+            return $remembered;
         }
 
         try {
@@ -145,7 +152,7 @@ class PartyPlayerControl
     /**
      * @return array<string, mixed>
      */
-    private function start(Party $party, ?PlaybackState $state, string $playingFromKind, bool $playing, bool $needsRelink): array
+    private function start(Party $party, ?PlaybackState $state, string $playingFromKind, bool $playing, bool $needsRelink, UpcomingSong|false|null $sent): array
     {
         $empty = ['target' => null, 'devices' => [], 'selectedDeviceId' => null];
 
@@ -161,7 +168,7 @@ class PartyPlayerControl
 
         $devices = $this->devices->devices($party);
         $usable = array_values(array_filter($devices, fn (Device $device): bool => ! $device->isRestricted && $device->id !== null));
-        $target = $this->targetFor($party, $state);
+        $target = $this->targetFor($party, $state, $sent);
         $kind = match (true) {
             $usable === [] => 'no_device',
             $playing => 'outside',
@@ -177,10 +184,10 @@ class PartyPlayerControl
         ];
     }
 
-    private function targetFor(Party $party, ?PlaybackState $state): ?StartTarget
+    private function targetFor(Party $party, ?PlaybackState $state, UpcomingSong|false|null $sent): ?StartTarget
     {
         try {
-            return $this->startPlayback->target($party, $state);
+            return $this->startPlayback->target($party, $state, $sent);
         } catch (Throwable $e) {
             report($e);
 

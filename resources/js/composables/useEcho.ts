@@ -18,6 +18,8 @@ type PusherConnection = {
     unbind(event: string, cb: (states: {previous: string; current: string}) => void): void;
 };
 
+export const RECONNECT_JITTER_MS = 3000;
+
 const LOST_STATES = ['unavailable', 'failed', 'disconnected'];
 
 export type EchoFactory = (config: RealtimeConfig) => EchoLike;
@@ -35,6 +37,10 @@ export function setEchoFactory(next: EchoFactory | null): void {
     channelRefs.clear();
 }
 
+/**
+ * Echo listeners on shared channels rely on this composable detaching them on unmount
+ * (finding #69, left as is); a persistent layout would have to detach its own.
+ */
 export function useEcho() {
     const page = usePage<SharedProps>();
     instance ??= factory(page.props.reverb);
@@ -80,6 +86,8 @@ export function useEcho() {
         return echo.channel(name);
     }
 
+    const reconnectTimers = new Set<ReturnType<typeof setTimeout>>();
+
     function onReconnect(callback: () => void): void {
         let wasDisconnected = false;
         const handler = ({current}: {previous: string; current: string}) => {
@@ -87,7 +95,11 @@ export function useEcho() {
                 wasDisconnected = true;
             } else if (wasDisconnected) {
                 wasDisconnected = false;
-                callback();
+                const timer = setTimeout(() => {
+                    reconnectTimers.delete(timer);
+                    callback();
+                }, Math.random() * RECONNECT_JITTER_MS);
+                reconnectTimers.add(timer);
             }
         };
         reconnectHandlers.push(handler);
@@ -105,6 +117,8 @@ export function useEcho() {
             echo.leave(name);
         });
         joined.clear();
+        reconnectTimers.forEach((timer) => clearTimeout(timer));
+        reconnectTimers.clear();
         reconnectHandlers.forEach((handler) => connection.unbind('state_change', handler));
         reconnectHandlers.length = 0;
     });

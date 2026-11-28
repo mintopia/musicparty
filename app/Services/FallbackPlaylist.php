@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Enums\Purpose;
+use App\Jobs\RefreshFallbackPlaylist;
 use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
@@ -51,6 +52,19 @@ class FallbackPlaylist
         return $tracks;
     }
 
+    /**
+     * @return list<Track>|null
+     */
+    protected function cachedTracks(Party $party): ?array
+    {
+        if ($party->backup_playlist_id === null) {
+            return [];
+        }
+        $cached = Cache::get($this->cacheKey($party));
+
+        return is_array($cached) ? array_values($cached) : null;
+    }
+
     public function refresh(Party $party): void
     {
         $this->tracks($party, true);
@@ -64,7 +78,12 @@ class FallbackPlaylist
             return;
         }
 
-        $tracks = $this->tracks($party);
+        $tracks = $this->cachedTracks($party);
+        if ($tracks === null) {
+            RefreshFallbackPlaylist::dispatch($party);
+
+            return;
+        }
 
         $existingIds = $party->upcoming()
             ->where(function ($query) {
