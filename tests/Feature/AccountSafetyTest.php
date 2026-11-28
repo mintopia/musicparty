@@ -5,6 +5,7 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
+use Illuminate\Support\Facades\Gate;
 
 beforeEach(function () {
     $this->withoutVite();
@@ -78,8 +79,9 @@ it('refuses to delete yourself or the last admin', function () {
     $second = User::factory()->create(['first_login' => false]);
     $second->roles()->attach($this->adminRole);
     $this->admin->roles()->detach($this->adminRole);
+    Gate::before(fn () => true);
     $this->actingAs($this->admin)->delete(route('admin.users.destroy', $second), ['confirm' => 'delete'])
-        ->assertForbidden();
+        ->assertSessionHas('errorMessage');
     expect($second->fresh())->not->toBeNull();
 
     $this->admin->roles()->attach($this->adminRole);

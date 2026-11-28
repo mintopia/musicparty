@@ -17,8 +17,7 @@ const plural = (count: number, noun: string): string => `${count} ${noun}${count
 const impactSummary = computed(() => {
     const {accounts, accounts_count, memberships_count} = props.impact;
     const accountList = accounts.length > 0 ? ` (${accounts.join(', ')})` : '';
-    let text = `Removes ${plural(accounts_count, 'linked account')}${accountList} and their membership of ${plural(memberships_count, 'party').replace('partys', 'parties')}.`;
-    return text;
+    return `Removes ${plural(accounts_count, 'linked account')}${accountList} and their membership of ${plural(memberships_count, 'party').replace('partys', 'parties')}.`;
 });
 
 const form = useForm({confirm: ''});
@@ -68,7 +67,11 @@ function submit(): void {
                 <div class="card-footer">
                     <div class="d-flex align-items-center">
                         <Link :href="`/admin/users/${user.id}`" class="btn btn-link">Cancel</Link>
-                        <button type="submit" class="btn btn-danger ms-auto" :disabled="form.processing || !!blocked_reason">
+                        <button
+                            type="submit"
+                            class="btn btn-danger ms-auto"
+                            :disabled="form.processing || !!blocked_reason"
+                        >
                             Delete {{ user.nickname }}
                         </button>
                     </div>

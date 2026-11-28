@@ -123,7 +123,13 @@ useFlaggedCountSync();
                                     </a>
                                 </div>
                             </template>
-                            <Link v-else-if="item.method" class="nav-link" :href="item.href!" :method="item.method" as="button">
+                            <Link
+                                v-else-if="item.method"
+                                class="nav-link"
+                                :href="item.href!"
+                                :method="item.method"
+                                as="button"
+                            >
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="icon ti" :class="item.icon"></i>
                                 </span>

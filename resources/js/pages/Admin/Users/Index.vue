@@ -227,7 +227,11 @@ function toggleChip(key: string): void {
                                     <Link class="dropdown-item" :href="`/admin/users/${user.id}/edit`"
                                         ><i class="icon ti ti-edit me-2" aria-hidden="true"></i>Edit</Link
                                     >
-                                    <Link class="dropdown-item" :href="`/admin/users/${user.id}/impersonate`" method="post" as="button"
+                                    <Link
+                                        class="dropdown-item"
+                                        :href="`/admin/users/${user.id}/impersonate`"
+                                        method="post"
+                                        as="button"
                                         ><i class="icon ti ti-spy me-2" aria-hidden="true"></i>Impersonate
                                         {{ user.nickname }}</Link
                                     >
@@ -343,7 +347,11 @@ function toggleChip(key: string): void {
                                             <Link class="dropdown-item" :href="`/admin/users/${user.id}/edit`"
                                                 ><i class="icon ti ti-edit me-2" aria-hidden="true"></i>Edit</Link
                                             >
-                                            <Link class="dropdown-item" :href="`/admin/users/${user.id}/impersonate`" method="post" as="button"
+                                            <Link
+                                                class="dropdown-item"
+                                                :href="`/admin/users/${user.id}/impersonate`"
+                                                method="post"
+                                                as="button"
                                                 ><i class="icon ti ti-spy me-2" aria-hidden="true"></i>Impersonate
                                                 {{ user.nickname }}</Link
                                             >
