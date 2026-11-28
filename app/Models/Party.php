@@ -333,6 +333,15 @@ class Party extends Model
         return $this->members()->whereUserId($user->id)->first()?->role?->code;
     }
 
+    public function roleCodeForMember(PartyMember $member): ?string
+    {
+        if ($member->user_id === $this->user_id) {
+            return 'owner';
+        }
+
+        return $member->role->code;
+    }
+
     public function canBeManagedBy(?User $user): bool
     {
         return $this->roleCodeFor($user) === 'owner';

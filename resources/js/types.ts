@@ -310,13 +310,8 @@ export interface DashboardProps {
     upcoming: {items: DashboardRequest[]; total: number};
     attention: {issues: DashboardIssue[]; flagged: FlaggedRequest[]; flaggedTotal: number};
     links: {
-        queue: string;
         songs: string;
         flagged: string;
-        settings: string;
-        members: string;
-        moderation: string;
-        mods: string;
         tv: string;
         webPlayer: string | null;
         encoreRelay: string;

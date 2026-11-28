@@ -122,7 +122,7 @@ class User extends Authenticatable
             $role = $role->code;
         }
 
-        return (bool) $this->roles()->whereCode($role)->count();
+        return $this->roles->contains('code', $role);
     }
 
     public function getEmail(): ?string

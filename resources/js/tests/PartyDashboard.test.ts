@@ -220,13 +220,8 @@ function makeProps(options: Options = {}): DashboardProps {
         upcoming: {items: options.upcoming ?? [request(4, 'Kernkraft 400')], total: 24},
         attention: {issues: options.issues ?? [], flagged: items, flaggedTotal: items.length},
         links: {
-            queue: '/q',
             songs: '/songs',
             flagged: '/flagged',
-            settings: '/settings',
-            members: '/members',
-            moderation: '/moderation',
-            mods: '/mods',
             tv: '/tv',
             webPlayer: options.webPlayer === undefined ? '/player' : options.webPlayer,
             encoreRelay: '/settings#encore-relay',

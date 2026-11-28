@@ -28,10 +28,11 @@ class PartyListing
             ->orderBy('name')
             ->get()
             ->map(function (Party $party) use ($user, $isAdmin) {
-                $canManage = $isAdmin || $party->canBeManagedBy($user);
-                $canModerate = $isAdmin || $party->canBeModeratedBy($user);
                 $member = $party->members->first();
                 $isOwner = $party->user_id === $user->id;
+                $memberRoleCode = $isOwner ? 'owner' : $member?->role->code;
+                $canManage = $isAdmin || $memberRoleCode === 'owner';
+                $canModerate = $isAdmin || in_array($memberRoleCode, ['owner', 'moderator'], true);
 
                 return [
                     'code' => $party->code,

@@ -4,11 +4,28 @@ namespace App\Mods;
 
 use App\Models\Mod as ModModel;
 use App\Models\Party;
+use Illuminate\Support\Facades\DB;
 
 class PartyMods
 {
     /** @var array<int, array<string, true>> */
     protected array $enabled = [];
+
+    /**
+     * @param  array<int, int>  $partyIds
+     * @return array<int, int>
+     */
+    public function partyIdsWithEnabled(array $partyIds, string $code): array
+    {
+        return DB::table('party_mods')
+            ->join('mods', 'mods.id', '=', 'party_mods.mod_id')
+            ->where('mods.code', $code)
+            ->whereNull('mods.removed_at')
+            ->whereIn('party_mods.party_id', $partyIds)
+            ->pluck('party_mods.party_id')
+            ->map(fn (mixed $id): int => (int) $id)
+            ->all();
+    }
 
     public function isEnabled(Party $party, string $code): bool
     {

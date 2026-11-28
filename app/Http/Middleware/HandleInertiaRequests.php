@@ -83,20 +83,27 @@ class HandleInertiaRequests extends Middleware
             return [];
         }
 
-        return $user->partyMembers()->with('party')->get()
-            ->map(function (PartyMember $member) use ($user): array {
-                $canManage = $member->party->canBeManagedBy($user);
-                $canModerate = $user->can('moderate', $member->party);
+        $isAdmin = $user->hasRole('admin');
+        $members = $user->partyMembers()->with(['party', 'role'])->get()
+            ->map(fn (PartyMember $member): array => [
+                'member' => $member,
+                'canManage' => $member->party->roleCodeForMember($member) === 'owner',
+                'canModerate' => $isAdmin || in_array($member->party->roleCodeForMember($member), ['owner', 'moderator'], true),
+            ]);
 
-                return [
-                    'code' => $member->party->code,
-                    'name' => $member->party->name,
-                    'canManage' => $canManage,
-                    'canModerate' => $canModerate,
-                    'aiReviewEnabled' => $canModerate && app(PartyMods::class)->isEnabled($member->party, AiRequestReviewMod::CODE),
-                    'flaggedCount' => $canModerate ? app(ModerationTabs::class)->flaggedCount($member->party) : 0,
-                ];
-            })
+        $moderatedIds = $members->where('canModerate', true)->map(fn (array $row): int => $row['member']->party_id)->all();
+        $flaggedCounts = $moderatedIds === [] ? [] : app(ModerationTabs::class)->flaggedCounts($moderatedIds);
+        $aiReviewIds = $moderatedIds === [] ? [] : app(PartyMods::class)->partyIdsWithEnabled($moderatedIds, AiRequestReviewMod::CODE);
+
+        return $members
+            ->map(fn (array $row): array => [
+                'code' => $row['member']->party->code,
+                'name' => $row['member']->party->name,
+                'canManage' => $row['canManage'],
+                'canModerate' => $row['canModerate'],
+                'aiReviewEnabled' => in_array($row['member']->party_id, $aiReviewIds, true),
+                'flaggedCount' => $flaggedCounts[$row['member']->party_id] ?? 0,
+            ])
             ->values()
             ->all();
     }
