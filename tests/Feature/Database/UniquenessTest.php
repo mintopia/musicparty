@@ -32,7 +32,12 @@ it('yields one vote row when a concurrent insert wins the race', function () {
     $user = User::factory()->create();
     PartyMember::factory()->for($upcoming->party)->for($user)->create();
 
-    Vote::creating(function (Vote $vote) {
+    $raced = false;
+    Vote::creating(function (Vote $vote) use (&$raced) {
+        if ($raced) {
+            return;
+        }
+        $raced = true;
         Vote::withoutEvents(fn () => DB::table('votes')->insert([
             'upcoming_song_id' => $vote->upcoming_song_id,
             'user_id' => $vote->user_id,

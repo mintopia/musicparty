@@ -46,6 +46,30 @@ function castRating(Party $party, PlayedSong $played, User $user, int|string $va
 }
 
 describe('votes', function () {
+    it('leaves the correct score when two stale models cast votes in interleaved order', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        $first = UpcomingSong::findOrFail($song->id);
+        $second = UpcomingSong::findOrFail($song->id);
+
+        $first->upvote(voteMember($party));
+        $second->upvote(voteMember($party));
+
+        expect($song->fresh()->score)->toBe(2);
+    });
+
+    it('leaves the correct rating when two stale models rate in interleaved order', function () {
+        $party = voteParty();
+        $played = PlayedSong::factory()->for($party)->create();
+        $first = PlayedSong::findOrFail($played->id);
+        $second = PlayedSong::findOrFail($played->id);
+
+        $first->like(voteMember($party));
+        $second->like(voteMember($party));
+
+        expect($played->fresh()->rating)->toBe(2);
+    });
+
     it('records an upvote and updates the score', function () {
         $party = voteParty();
         $song = voteSong($party);

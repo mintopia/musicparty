@@ -149,29 +149,23 @@ class UpcomingSong extends Model
         if ($value < 0) {
             $this->party->checkDownvotesForUser($user);
         }
-        $vote = $this->votes()->whereUserId($user->id)->first();
-        if (! $vote) {
-            try {
-                $vote = new Vote;
-                $vote->upcomingSong()->associate($this);
-                $vote->user()->associate($user);
-                $vote->value = $value;
-                $vote->save();
-            } catch (UniqueConstraintViolationException) {
-                $vote = $this->votes()->whereUserId($user->id)->firstOrFail();
-            }
+        $attributes = ['user_id' => $user->id];
+        try {
+            $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
+        } catch (UniqueConstraintViolationException) {
+            $vote = $this->votes()->updateOrCreate($attributes, ['value' => $value]);
         }
-        $vote->value = $value;
-        $vote->save();
 
         return $vote;
     }
 
     public function updateScore(): void
     {
-        $this->score = (int) $this->votes()->sum('value') + $this->score_adjustment;
-        if ($this->isDirty()) {
-            $this->save();
-        }
+        $score = Vote::query()
+            ->selectRaw('COALESCE(SUM(value), 0) + upcoming_songs.score_adjustment')
+            ->whereColumn('votes.upcoming_song_id', 'upcoming_songs.id');
+        static::query()->whereKey($this->id)->update(['score' => $score]);
+        $stored = static::query()->whereKey($this->id)->firstOrFail(['score', 'score_adjustment']);
+        $this->forceFill(['score' => $stored->score, 'score_adjustment' => $stored->score_adjustment])->syncOriginalAttributes(['score', 'score_adjustment']);
     }
 }

@@ -152,10 +152,9 @@ class PlayedSong extends Model
 
     public function updateRating(): void
     {
-        $this->rating = (int) $this->ratings()->sum('value');
-        if ($this->isDirty()) {
-            $this->save();
-        }
+        $sum = SongRating::query()->selectRaw('COALESCE(SUM(value), 0)')->whereColumn('song_ratings.played_song_id', 'played_songs.id');
+        static::query()->whereKey($this->id)->update(['rating' => $sum]);
+        $this->forceFill(['rating' => (int) static::query()->whereKey($this->id)->value('rating')])->syncOriginalAttribute('rating');
     }
 
     /** @return array{provider_track_id: string, name: string, album: array{provider_album_id: string, name: string, image_url: string}, artists: array<int, array{provider_artist_id: string, name: string}>, length: int, id: int, rating: int, played_at: string, user: string|null} */

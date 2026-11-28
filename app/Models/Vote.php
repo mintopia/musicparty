@@ -36,6 +36,8 @@ class Vote extends Model
     /** @use HasFactory<VoteFactory> */
     use HasFactory;
 
+    protected $fillable = ['upcoming_song_id', 'user_id', 'value'];
+
     /** @return BelongsTo<UpcomingSong, $this> */
     public function upcomingSong(): BelongsTo
     {
