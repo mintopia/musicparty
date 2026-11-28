@@ -116,7 +116,9 @@ describe('Upcoming schedule actions', () => {
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(false);
 
         await wrapper.findAll('[data-test="schedule"]')[1].trigger('click');
-        expect(wrapper.find('#sched-title').text()).toBe('Schedule Song 2');
+        const dialog = wrapper.get('[data-test="schedule-sheet"]');
+        expect(dialog.attributes('aria-label')).toBe('Schedule Song 2');
+        expect(dialog.text()).not.toContain('Song 2');
         expect(wrapper.get('[data-test="schedule-summary"]').text()).not.toContain('after');
     });
 

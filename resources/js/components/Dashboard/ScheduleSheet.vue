@@ -103,12 +103,15 @@ const saving = ref(false);
 
 const POPOVER_WIDTH = 340;
 const isPopover = Boolean(props.anchor) && window.matchMedia?.('(min-width: 768px)').matches === true;
+const sheet = ref<HTMLElement | null>(null);
+const sheetHeight = ref(0);
 const popoverStyle = computed(() => {
     if (!props.anchor || !isPopover) {
         return undefined;
     }
     const left = Math.max(16, Math.min(props.anchor.right - POPOVER_WIDTH, window.innerWidth - POPOVER_WIDTH - 16));
-    return {top: `${props.anchor.bottom + 8}px`, left: `${left}px`};
+    const top = Math.max(16, Math.min(props.anchor.bottom + 8, window.innerHeight - sheetHeight.value - 16));
+    return {top: `${top}px`, left: `${left}px`};
 });
 
 const chips = computed(() => {
@@ -160,26 +163,30 @@ function onKeydown(event: KeyboardEvent): void {
     }
 }
 
-onMounted(() => document.addEventListener('keydown', onKeydown));
+onMounted(() => {
+    document.addEventListener('keydown', onKeydown);
+    sheetHeight.value = sheet.value?.offsetHeight ?? 0;
+});
 onBeforeUnmount(() => document.removeEventListener('keydown', onKeydown));
 </script>
 
 <template>
     <div class="sheet-dim" data-test="schedule-dim" @click="emit('close')"></div>
     <div
+        ref="sheet"
         class="sched-sheet"
         :class="{'is-anchored': isPopover}"
         :style="popoverStyle"
         :aria-modal="isPopover ? undefined : 'true'"
         role="dialog"
-        aria-labelledby="sched-title"
+        :aria-label="title"
         data-test="schedule-sheet"
     >
         <button type="button" class="sched-grab" aria-label="Close" data-test="schedule-handle" @click="emit('close')">
             <span></span>
         </button>
         <div class="sched-head">
-            <h2 id="sched-title">{{ title }}</h2>
+            <h2>Schedule</h2>
             <button type="button" class="btn-close" aria-label="Close" @click="emit('close')"></button>
         </div>
         <p class="sched-hint">
