@@ -22,6 +22,8 @@ fi
 
 # This network has no database or redis. Pulse records the InvalidOrigin exception that a
 # header-less probe triggers via a blocking DB lookup, which stalls Reverb's event loop.
+# DB_HOST points at a closed local port so any stray query fails at once; the image's default
+# host does not resolve here and each lookup would hold a FrankenPHP worker until it times out.
 ENV_ARGS=(
     -e APP_KEY=base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
     -e SESSION_DRIVER=array
@@ -29,6 +31,7 @@ ENV_ARGS=(
     -e QUEUE_CONNECTION=sync
     -e BROADCAST_CONNECTION=null
     -e PULSE_ENABLED=false
+    -e DB_HOST=127.0.0.1
     -e REVERB_UPSTREAM_HOST="$REVERB"
     -e REVERB_UPSTREAM_PORT=8080
 )
@@ -44,8 +47,10 @@ probe() {
     docker run --rm --network "$NETWORK" curlimages/curl:8.10.1 "$@"
 }
 
+# Readiness uses the unmatched websocket path, which answers 404 without touching the database.
+# The home page is public and queries the database, so it is not a safe readiness probe here.
 for _ in $(seq 1 60); do
-    code="$(probe -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${APP}:8080/" || true)"
+    code="$(probe -s -o /dev/null -w '%{http_code}' --max-time 3 "http://${APP}:8080/app/musicparty?protocol=7" || true)"
     [ -n "$code" ] && [ "$code" != "000" ] && break
     sleep 2
 done
