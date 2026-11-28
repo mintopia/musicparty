@@ -355,6 +355,7 @@ it('fills a short weighted draw from the remaining requests ordered by score, cr
 it('tops up to five waiting requests from the Fallback Playlist after sending, so the first run sends nothing and the second sends the topped-up requests', function () {
     $party = selectionParty();
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6', 'F7']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(11);
 
     runSync($party);
@@ -374,6 +375,7 @@ it('tops up after sending, so a freshly sent request counts as recently queued a
     waitingRequest($party, 'F1', 0);
     waitingRequest($party, 'F2', 0);
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(3);
 
     runSync($party);
@@ -389,6 +391,7 @@ it('tops up only the shortfall from the Fallback Playlist and never duplicates a
     waitingRequest($party, 'F2', 0);
     queueWith(['X', 'Y']);
     FakeFallbackPlaylist::seed(['F1', 'F2', 'F3', 'F4', 'F5', 'F6']);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(3);
 
     runSync($party);
@@ -418,6 +421,7 @@ it('excludes fallback tracks sent to the player in the last 30 minutes but allow
     waitingRequest($party, 'RECENT', 0, ['queued_at' => now()->subMinutes(10)]);
     waitingRequest($party, 'OLD', 0, ['queued_at' => now()->subMinutes(45)]);
     FakeFallbackPlaylist::seed(['RECENT', 'OLD']);
+    app(FallbackPlaylist::class)->refresh($party);
     queueWith(['X', 'Y']);
     seedRandomness(2);
 
@@ -433,6 +437,7 @@ it('skips fallback entries that are not playable', function () {
         FakeFallbackPlaylist::track('NOPLAY', false),
         FakeFallbackPlaylist::track('GOOD'),
     ]);
+    app(FallbackPlaylist::class)->refresh($party);
     seedRandomness(2);
 
     runSync($party);

@@ -76,6 +76,10 @@ class StartPlayback
             throw new PartyRelinkRequiredException;
         }
 
+        if ($party->backup_playlist_id !== null) {
+            $this->fallback->tracks($party);
+        }
+
         $result = null;
         $ran = $this->sync->withLock($party, function () use ($party, $deviceId, $mode, &$result): void {
             $result = $this->startLocked($party, $deviceId, $mode);

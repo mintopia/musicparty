@@ -6,6 +6,7 @@ use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
 use App\Models\Party;
 use App\Services\Playback\ContextPlaylist;
+use App\Services\PlaybackSync;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -21,6 +22,8 @@ class EmptyContextPlaylist implements ShouldBeUnique, ShouldQueue
     use Queueable;
     use SerializesModels;
 
+    public const int LOCK_BUSY_RELEASE_SECONDS = 2;
+
     public int $tries = 3;
 
     public function __construct(protected Party $party)
@@ -33,10 +36,14 @@ class EmptyContextPlaylist implements ShouldBeUnique, ShouldQueue
         return (string) $this->party->id;
     }
 
-    public function handle(ContextPlaylist $context): void
+    public function handle(ContextPlaylist $context, PlaybackSync $sync): void
     {
         try {
-            $context->enforceEmpty($this->party);
+            $ran = $sync->withLock($this->party, fn () => $context->enforceEmpty($this->party));
+            if (! $ran) {
+                Log::info("{$this->party}: sync lock busy, releasing for ".self::LOCK_BUSY_RELEASE_SECONDS.'s');
+                $this->release(self::LOCK_BUSY_RELEASE_SECONDS);
+            }
         } catch (ProviderBackoffException $e) {
             Log::info("{$this->party}: backoff active, releasing for {$e->retryAfterSeconds()}s");
             $this->release($e->retryAfterSeconds());

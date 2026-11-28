@@ -23,7 +23,7 @@ use Illuminate\Support\Facades\Log;
 
 class PlaybackSync
 {
-    public const LOCK_SECONDS = 30;
+    public const LOCK_SECONDS = 120;
 
     public const int PUSHED_WAIT_SECONDS = 15;
 
