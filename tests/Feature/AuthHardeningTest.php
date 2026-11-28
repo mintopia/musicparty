@@ -130,13 +130,13 @@ it('dedupes existing linked accounts then enforces uniqueness per provider and e
     $migration->down();
     $provider = SocialProvider::factory()->create();
     $other = SocialProvider::factory()->create();
-    $first = LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'x']);
     LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'x']);
+    $newest = LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'x']);
     $otherProvider = LinkedAccount::factory()->create(['social_provider_id' => $other->id, 'external_id' => 'x']);
 
     $migration->up();
 
-    expect(LinkedAccount::pluck('id')->sort()->values()->all())->toBe([$first->id, $otherProvider->id])
+    expect(LinkedAccount::pluck('id')->sort()->values()->all())->toBe([$newest->id, $otherProvider->id])
         ->and(fn () => LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'x']))
         ->toThrow(UniqueConstraintViolationException::class);
 });
