@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Support\Facades\Cache;
 use App\Casts\MillisecondTimestamp;
 use App\Events\Party\UpdatedEvent;
 use App\Exceptions\VoteException;
@@ -115,6 +116,8 @@ class Party extends Model
     const MINIMUM_UPCOMING = 5;
 
     const PUSHED_PLAYBACK_FRESH_SECONDS = 30;
+
+    const int UPDATE_DEBOUNCE_SECONDS = 5;
 
     protected $attributes = [
         'allow_requests' => true,
@@ -247,6 +250,16 @@ class Party extends Model
             default:
                 return parent::resolveChildRouteBinding($childType, $value, $field);
         }
+    }
+
+    public function updatedWithinDebounce(): bool
+    {
+        return Cache::has($this->debounceKey()) || $this->last_updated_at > now()->subSeconds(self::UPDATE_DEBOUNCE_SECONDS);
+    }
+
+    public function debounceKey(): string
+    {
+        return "party-sync-debounce:{$this->id}";
     }
 
     public function current(): ?PlayedSong

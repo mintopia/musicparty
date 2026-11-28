@@ -27,11 +27,10 @@ class PlaybackSync
 
     public const int PUSHED_WAIT_SECONDS = 15;
 
-    private const int POLL_DEBOUNCE_SECONDS = 5;
-
     private const int RECEIVED_ORDER_SECONDS = 300;
 
-    private const int PROGRESS_HEARTBEAT_SECONDS = 5;
+    private const int POLLING_FRESH_SECONDS = 120;
+
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -51,7 +50,7 @@ class PlaybackSync
 
                 return;
             }
-            if ($party->poll && $party->last_updated_at > now()->subSeconds(self::POLL_DEBOUNCE_SECONDS)) {
+            if ($party->poll && $party->updatedWithinDebounce()) {
                 Log::debug("{$party}: Already updated state recently");
 
                 return;
@@ -69,6 +68,7 @@ class PlaybackSync
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
                 $progressOnly = $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
             } finally {
+                Cache::put($party->debounceKey(), true, Party::UPDATE_DEBOUNCE_SECONDS);
                 if (! $progressOnly) {
                     $this->touchLastUpdated($party);
                 }
@@ -212,7 +212,7 @@ class PlaybackSync
         $progressOnly = $previous !== null
             && $previous->differsOnlyInProgress($state)
             && $party->playback_received_at !== null
-            && $party->playback_received_at->greaterThan(now()->subSeconds(self::PROGRESS_HEARTBEAT_SECONDS));
+            && $party->playback_received_at->greaterThan(now()->subSeconds($this->receivedHeartbeatSeconds($state->source)));
         $this->status->remember($party, $state);
         if ($progressOnly) {
             if ($party->active) {
@@ -245,6 +245,14 @@ class PlaybackSync
         Log::info("{$party}: Finished updating state");
 
         return false;
+    }
+
+    /**
+     * How stale the persisted received-at may get before a progress-only state refreshes it, a third of the freshness window health checks use.
+     */
+    protected function receivedHeartbeatSeconds(PlaybackSource $source): int
+    {
+        return intdiv($source->isPushed() ? Party::PUSHED_PLAYBACK_FRESH_SECONDS : self::POLLING_FRESH_SECONDS, 3);
     }
 
     protected function touchLastUpdated(Party $party): void

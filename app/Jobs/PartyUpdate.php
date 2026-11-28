@@ -87,8 +87,7 @@ class PartyUpdate implements ShouldQueue
             return;
         }
 
-        $cutoff = now()->subSeconds(5);
-        if ($this->party->last_updated_at > $cutoff) {
+        if ($this->party->updatedWithinDebounce()) {
             if ($this->source === PlaybackSource::Webhook) {
                 Log::debug("{$this->party}: Webhook update inside debounce, releasing for ".self::WEBHOOK_DEBOUNCE_RELEASE_SECONDS.'s');
                 $this->release(self::WEBHOOK_DEBOUNCE_RELEASE_SECONDS);

@@ -366,7 +366,7 @@ it('neither broadcasts nor writes for a progress-only change, but broadcasts a t
 
     Event::fake([PartyUpdatedEvent::class]);
     $savedAt = $party->fresh()->updated_at;
-    $this->travel(1)->seconds();
+    $this->travel(20)->seconds();
 
     $sync->apply($party, playbackOf('PUSHED', true, 2000));
     Event::assertNotDispatched(PartyUpdatedEvent::class);
@@ -376,4 +376,22 @@ it('neither broadcasts nor writes for a progress-only change, but broadcasts a t
     $sync->apply($party, playbackOf('PUSHED', false, 3000));
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
     expect($party->getState()->status->progressMs)->toBe(3000);
+});
+
+it('does not write or broadcast for a progress-only poll', function () {
+    [$party, $fake] = syncParty();
+    nowPlaying($fake, 'POLLED', true, 1000);
+    $sync = app(PlaybackSync::class);
+    $sync->sync($party);
+
+    Event::fake([PartyUpdatedEvent::class]);
+    $touchedAt = $party->fresh()->last_updated_at;
+    $this->travel(20)->seconds();
+    nowPlaying($fake, 'POLLED', true, 21000);
+
+    $sync->sync($party->fresh());
+
+    Event::assertNotDispatched(PartyUpdatedEvent::class);
+    expect($party->fresh()->last_updated_at->equalTo($touchedAt))->toBeTrue()
+        ->and($party->getState()->status->progressMs)->toBe(21000);
 });
