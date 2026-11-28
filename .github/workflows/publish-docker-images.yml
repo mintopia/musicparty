@@ -52,6 +52,18 @@ jobs:
             type=raw,value=develop,enable=${{ github.ref == format('refs/heads/{0}', 'develop') }}
             type=semver,pattern={{version}}
 
+      - name: Build image for secret audit
+        uses: docker/build-push-action@v6
+        with:
+          file: docker/production/Dockerfile
+          context: .
+          load: true
+          tags: musicparty-secret-audit:ci
+          cache-from: type=gha
+
+      - name: Verify image contains no baked secrets
+        run: docker/production/verify-no-secrets.sh musicparty-secret-audit:ci
+
       - name: Build and push Docker image
         id: build-and-push
         uses: docker/build-push-action@v6
