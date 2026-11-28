@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Middleware\TrustProxies;
 use App\Models\LinkedAccount;
 use App\Models\SocialProvider;
 use App\Models\Theme;
@@ -9,6 +10,7 @@ use App\Services\SocialProviders\DiscordProvider;
 use Illuminate\Database\Events\TransactionRolledBack;
 use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\Event;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\URL;
 
 function dedupeMigration(): object
@@ -16,9 +18,9 @@ function dedupeMigration(): object
     return require database_path('migrations/2026_11_28_120000_add_unique_index_to_linked_accounts.php');
 }
 
-function sessionConfigWith(?string $env, ?string $secure): array
+function sessionConfigWith(?string $appUrl, ?string $secure): array
 {
-    $names = ['APP_ENV' => $env, 'SESSION_SECURE_COOKIE' => $secure];
+    $names = ['APP_URL' => $appUrl, 'SESSION_SECURE_COOKIE' => $secure];
     $previous = array_map(getenv(...), array_keys($names));
     $apply = function (string $name, string|false|null $value): void {
         if ($value === null || $value === false) {
@@ -55,11 +57,44 @@ it('builds urls from app.url in production even with a forged host header', func
         ->and(URL::to('/x'))->toBe('https://music.example.com/x');
 });
 
-it('defaults the session cookie to secure in production only', function () {
-    expect(sessionConfigWith('production', null)['secure'])->toBeTrue()
-        ->and(sessionConfigWith('local', null)['secure'])->toBeFalse()
-        ->and(sessionConfigWith('production', 'false')['secure'])->toBeFalse();
+it('defaults the session cookie secure flag from the app url scheme', function () {
+    expect(sessionConfigWith('https://music.example.com', null)['secure'])->toBeTrue()
+        ->and(sessionConfigWith('http://music.example.com', null)['secure'])->toBeFalse()
+        ->and(sessionConfigWith('https://music.example.com', 'false')['secure'])->toBeFalse();
 });
+
+it('trusts proxies from the configured TRUSTED_PROXIES list', function (string $configured, string|array $expected) {
+    config(['app.trusted_proxies' => $configured]);
+    $middleware = new TrustProxies;
+
+    expect((fn () => $this->proxies())->call($middleware))->toBe($expected);
+})->with([
+    'wildcard' => ['*', '*'],
+    'list' => ['10.0.0.0/8, 172.16.0.1', ['10.0.0.0/8', '172.16.0.1']],
+    'blank falls back to wildcard' => ['', '*'],
+]);
+
+it('fails fast in production on an empty or localhost app url', function (string $url) {
+    config(['app.url' => $url]);
+    app()['env'] = 'production';
+
+    expect(fn () => new TrustedRootUrlServiceProvider(app())->boot())->toThrow(RuntimeException::class, 'APP_URL');
+})->with(['', 'http://localhost', 'https://127.0.0.1:8080']);
+
+it('warns at boot when the cookie secure flag mismatches the app url scheme', function (string $url, bool $secure, bool $warns) {
+    config(['app.url' => $url, 'session.secure' => $secure]);
+    app()['env'] = 'production';
+    Log::spy();
+
+    new TrustedRootUrlServiceProvider(app())->boot();
+
+    $warns ? Log::shouldHaveReceived('warning')->once() : Log::shouldNotHaveReceived('warning');
+})->with([
+    'http with secure cookie' => ['http://music.example.com', true, true],
+    'https without secure cookie' => ['https://music.example.com', false, true],
+    'http matching' => ['http://music.example.com', false, false],
+    'https matching' => ['https://music.example.com', true, false],
+]);
 
 it('creates a single linked account when two first logins race', function () {
     $provider = providerFor(DiscordProvider::class, 'discord');

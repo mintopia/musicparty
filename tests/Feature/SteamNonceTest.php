@@ -116,3 +116,15 @@ it('configures the callback return_to with the nonce it sent to Steam', function
 
     expect((fn () => $this->redirectUrl)->call($driver))->toBe('https://example.test/return?nonce='.$nonce);
 });
+
+it('derives the steam realm host from the app url, not the request host', function () {
+    config(['app.url' => 'https://music.example.com']);
+    app()->forgetInstance(Factory::class);
+    Socialite::clearResolvedInstances();
+    app()->instance('request', Request::create('https://evil.example/return', 'GET', ['nonce' => 'n']));
+    $steam = new SteamProvider(SocialProvider::whereCode('steam')->sole(), 'https://music.example.com/return');
+
+    $driver = (fn () => $this->getSocialiteProvider())->call($steam);
+
+    expect((fn () => $this->config['allowed_hosts'])->call($driver))->toBe('music.example.com');
+});
