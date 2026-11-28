@@ -115,3 +115,15 @@ it('serves the api listing in selector order and rejects an oversized per_page',
     $this->getJson(route('api.v1.parties.upcomingsongs.index', [$party, 'per_page' => 1000]))->assertJsonValidationErrors('per_page');
     $this->getJson(route('api.v1.parties.upcomingsongs.index', [$party, 'per_page' => 0]))->assertJsonValidationErrors('per_page');
 });
+
+it('renders the party page queue in selector order with next flagged', function () {
+    [$party, $low, $high] = trustedQueue();
+    $viewer = dashboardUser($party, 'user');
+
+    $this->actingAs($viewer)->get(route('parties.show', $party->code))
+        ->assertInertia(fn ($page) => $page
+            ->where('upcoming.0.id', $high->id)
+            ->where('upcoming.0.next', true)
+            ->where('upcoming.1.id', $low->id)
+            ->where('upcoming.1.next', false));
+});

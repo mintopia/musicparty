@@ -30,6 +30,7 @@ use App\Services\PartyProviderOptions;
 use App\Services\PartyTimezone;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackControl;
+use App\Services\Queue\QueueListing;
 use App\Services\Requests\TrackEligibility;
 use App\Services\Search\PartySearchSuggestions;
 use App\Services\UpcomingSongAugmentService;
@@ -114,23 +115,17 @@ class PartyController extends Controller
         ]);
     }
 
-    public function show(UpcomingSongAugmentService $augmentService, Request $request, Party $party): Response
+    public function show(UpcomingSongAugmentService $augmentService, QueueListing $queue, Request $request, Party $party): Response
     {
         $member = $party->getMember($this->resolveAuthenticatedUser($request));
-        $upcomingSongs = $party->upcoming()
-            ->with(['user', 'song', 'song.album', 'song.artists'])
-            ->whereNull('queued_at')
-            ->whereNull('flagged_at')
-            ->orderBy('score', 'desc')
-            ->orderBy('created_at', 'asc')
-            ->orderBy('id', 'asc')
-            ->take(20)
-            ->get();
+        $listing = $queue->page($party, 0, 20);
+        $upcomingSongs = $listing['items'];
 
         $augmentData = $augmentService->augmentCollection($upcomingSongs, $this->resolveAuthenticatedUser($request));
-        $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData) {
+        $upcoming = $upcomingSongs->map(function (UpcomingSong $song) use ($request, $augmentData, $listing) {
             $resource = new UpcomingSongResource($song);
             $resource->augment($augmentData[$song->id] ?? null);
+            $resource->queueState($listing['states'][$song->id] ?? null);
 
             return $resource->toArray($request);
         });
