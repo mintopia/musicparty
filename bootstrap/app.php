@@ -20,7 +20,6 @@ use Illuminate\Foundation\Http\Middleware\ConvertEmptyStringsToNull;
 use Illuminate\Foundation\Http\Middleware\ValidatePostSize;
 use Illuminate\Http\Middleware\HandleCors;
 use Illuminate\Routing\Middleware\SubstituteBindings;
-use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Route;
@@ -71,7 +70,6 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->group('api', [
             EnsureFrontendRequestsAreStateful::class,
-            ThrottleRequests::class.':api',
             EnsureUserIsNotSuspended::class,
             SubstituteBindings::class,
         ]);

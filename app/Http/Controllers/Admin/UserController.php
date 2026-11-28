@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Events\UserSuspended;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Admin\DeleteRequest;
 use App\Http\Requests\Admin\UserUpdateRequest;
@@ -12,6 +13,7 @@ use App\Models\SocialProvider;
 use App\Models\User;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -247,6 +249,7 @@ class UserController extends Controller
         }
 
         $user->first_login = ! $request->input('first_login', false);
+        $wasSuspended = $user->suspended;
         $user->suspended = (bool) $request->input('suspended', false);
 
         $wantedRoles = array_values(array_intersect($request->input('roles', []), self::MANAGED_ROLES));
@@ -256,7 +259,7 @@ class UserController extends Controller
                 continue;
             }
             if (! in_array($role->code, $wantedRoles)) {
-                $user->roles()->detach($role);
+                $user->revokeRole($role);
 
                 continue;
             }
@@ -264,22 +267,32 @@ class UserController extends Controller
         }
         foreach ($wantedRoles as $role) {
             if (! in_array($role, $hasRoles)) {
-                $role = Role::whereCode($role)->first();
-                $user->roles()->attach($role);
+                $user->grantRole(Role::whereCode($role)->firstOrFail());
             }
         }
 
         $user->save();
+
+        if ($user->suspended && ! $wasSuspended) {
+            UserSuspended::dispatch($user->id);
+        }
     }
 
     public function destroy(DeleteRequest $request, User $user): RedirectResponse
     {
-        $blocker = $this->deletionBlocker($request, $user);
+        $blocker = DB::transaction(function () use ($request, $user): ?string {
+            DB::table('role_user')->join('roles', 'roles.id', '=', 'role_user.role_id')
+                ->where('roles.code', 'admin')->lockForUpdate()->pluck('role_user.user_id');
+            $blocker = $this->deletionBlocker($request, $user);
+            if ($blocker === null) {
+                $user->delete();
+            }
+
+            return $blocker;
+        });
         if ($blocker !== null) {
             return response()->redirectToRoute('admin.users.show', $user->id)->with('errorMessage', $blocker);
         }
-
-        $user->delete();
 
         return response()->redirectToRoute('admin.users.index')->with('successMessage', 'The user has been deleted');
     }
@@ -292,8 +305,8 @@ class UserController extends Controller
         if ($user->parties()->exists()) {
             return 'This user owns parties. Transfer or delete them first.';
         }
-        if ($user->hasRole('admin') && User::whereHas('roles', fn ($roles) => $roles->where('code', 'admin'))->count() <= 1) {
-            return 'This is the last admin and cannot be deleted.';
+        if ($user->roles()->where('code', 'admin')->exists() && User::whereHas('roles', fn ($roles) => $roles->where('code', 'admin'))->count() <= 1) {
+            return 'The last admin cannot be deleted. Make another user an admin first.';
         }
 
         return null;

@@ -4,6 +4,7 @@ import {computed, ref} from 'vue';
 import AppliedEntropyFooter from '@/components/AppliedEntropyFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
 import {useColorMode} from '@/composables/useColorMode';
+import {useSuspensionSync} from '@/composables/useSuspensionSync';
 import {flaggedCountFor, useFlaggedCountSync} from '@/composables/useFlaggedCounts';
 import {buildNavigation, isActive, isLinkActive} from '@/lib/navigation';
 import {home} from '@/routes';
@@ -46,6 +47,7 @@ function toggleDropdown(key: string, active: boolean): void {
 
 useColorMode();
 useFlaggedCountSync();
+useSuspensionSync();
 </script>
 
 <template>
@@ -152,7 +154,9 @@ useFlaggedCountSync();
                 <div class="container-fluid">
                     <div class="navbar-text">You are impersonating {{ user.nickname }}</div>
                     <div class="nav-item">
-                        <a :href="unimpersonate().url" class="btn btn-primary">Remove Impersonation</a>
+                        <Link :href="unimpersonate().url" method="post" as="button" class="btn btn-primary"
+                            >Remove Impersonation</Link
+                        >
                     </div>
                 </div>
             </div>
