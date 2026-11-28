@@ -229,8 +229,12 @@ async function getPage({loaded, error}: LoadAction): Promise<void> {
 
 async function resync(): Promise<void> {
     try {
-        (await fetchPage(1)).forEach((item) => addOrUpdateItem(item));
+        const fresh = await fetchPage(1);
+        const votes = new Map(upcoming.value.map((song) => [song.id, song.vote]));
+        upcoming.value = fresh.map((song) => ({...song, vote: votes.get(song.id) ?? song.vote}));
         sortUpcoming();
+        listComplete.value = fresh.length < PAGE_SIZE;
+        page.value = fresh.length < PAGE_SIZE ? 1 : 2;
     } catch {
         showMessage('Could not refresh the queue.');
     }
