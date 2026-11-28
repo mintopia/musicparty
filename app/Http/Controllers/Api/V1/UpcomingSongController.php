@@ -11,6 +11,7 @@ use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Song;
 use App\Models\UpcomingSong;
+use App\Models\User;
 use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
@@ -84,72 +85,7 @@ class UpcomingSongController extends Controller
 
         try {
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
-                ->block($wait, fn (): UpcomingSong|JsonResponse => app(QueueSelector::class)->withRequestLock($party,
-                    function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
-                        $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
-                            $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
-                        })->first();
-                        if ($upcoming?->flagged_at !== null) {
-                            $message = 'This request is awaiting approval';
-
-                            return response()->json(['message' => $message, 'errors' => ['provider_track_id' => [$message]]], 400);
-                        }
-                        if (! $upcoming) {
-                            $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($trackId);
-                            if (! $track) {
-                                return response()->json([
-                                    'message' => 'Unable to find the song in Spotify.',
-                                    'errors' => [
-                                        'provider_track_id' => [
-                                            'Unable to find the song in Spotify.',
-                                        ],
-                                    ],
-                                ], 422);
-                            }
-
-                            $checkResponse = app(RequestRules::class)->check($party, $member, $track);
-                            if (! $checkResponse->allowed) {
-                                return response()->json([
-                                    'message' => $checkResponse->reason,
-                                    'errors' => [
-                                        'provider_track_id' => [
-                                            $checkResponse->reason,
-                                        ],
-                                    ],
-                                ])->setStatusCode(400);
-                            }
-
-                            $song = Song::fromTrack($track);
-                            if ($checkResponse->isFlagged()) {
-                                $flagged = app(FlaggedRequests::class)->flag($party, $song, $user, (string) $checkResponse->reason, $scheduledFor);
-                                app(AiReviewRecorder::class)->linkRequest($flagged, $user, $trackId);
-
-                                return response()->json([
-                                    'message' => 'Your request is awaiting approval',
-                                    'awaiting_approval' => true,
-                                    'id' => $flagged->id,
-                                    'reason' => $checkResponse->reason,
-                                ], 202);
-                            }
-                            $upcoming = app(QueueSelector::class)->addRequestLocked($party, $song, $user);
-                            app(AiReviewRecorder::class)->linkRequest($upcoming, $user, $trackId);
-                        }
-
-                        if ($scheduledFor !== null) {
-                            $upcoming->forceFill(['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor])->save();
-                        }
-
-                        $denial = $this->voteDenialReason($party, $member);
-                        if ($denial) {
-                            return response()->json([
-                                'message' => $denial,
-                                'errors' => ['provider_track_id' => [$denial]],
-                            ], 400);
-                        }
-                        $upcoming->upvote($user);
-
-                        return $upcoming;
-                    }, $wait));
+                ->block($wait, fn (): UpcomingSong|JsonResponse => $this->storeRequest($party, $member, $user, $trackId, $scheduledFor, $wait));
         } catch (LockTimeoutException) {
             abort(429, 'Another request is already being processed');
         }
@@ -163,6 +99,80 @@ class UpcomingSongController extends Controller
         $resource->augment($data);
 
         return $resource;
+    }
+
+    private function waitingRequest(Party $party, string $trackId): ?UpcomingSong
+    {
+        return $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
+            $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
+        })->first();
+    }
+
+    private function rejection(string $message, int $status): JsonResponse
+    {
+        return response()->json(['message' => $message, 'errors' => ['provider_track_id' => [$message]]], $status);
+    }
+
+    private function storeRequest(Party $party, PartyMember $member, User $user, string $trackId, ?Carbon $scheduledFor, int $wait): UpcomingSong|JsonResponse
+    {
+        $song = null;
+        $check = null;
+        $existing = $this->waitingRequest($party, $trackId);
+        if ($existing?->flagged_at !== null) {
+            return $this->rejection('This request is awaiting approval', 400);
+        }
+        if (! $existing) {
+            $track = app(MusicProviderFactory::class)->forParty($party, Purpose::Control)->getTrack($trackId);
+            if (! $track) {
+                return $this->rejection('Unable to find the song in Spotify.', 422);
+            }
+
+            $check = app(RequestRules::class)->check($party, $member, $track);
+            if (! $check->allowed) {
+                return response()->json([
+                    'message' => $check->reason,
+                    'errors' => ['provider_track_id' => [$check->reason]],
+                ])->setStatusCode(400);
+            }
+            $song = Song::fromTrack($track);
+        }
+
+        return app(QueueSelector::class)->withRequestLock($party, function () use ($party, $member, $user, $trackId, $scheduledFor, $song, $check): UpcomingSong|JsonResponse {
+            $upcoming = $this->waitingRequest($party, $trackId);
+            if ($upcoming?->flagged_at !== null) {
+                return $this->rejection('This request is awaiting approval', 400);
+            }
+            if (! $upcoming) {
+                if ($song === null) {
+                    return $this->rejection('The request changed while it was being processed, please try again', 409);
+                }
+                if ($check->isFlagged()) {
+                    $flagged = app(FlaggedRequests::class)->flag($party, $song, $user, (string) $check->reason, $scheduledFor);
+                    app(AiReviewRecorder::class)->linkRequest($flagged, $user, $trackId);
+
+                    return response()->json([
+                        'message' => 'Your request is awaiting approval',
+                        'awaiting_approval' => true,
+                        'id' => $flagged->id,
+                        'reason' => $check->reason,
+                    ], 202);
+                }
+                $upcoming = app(QueueSelector::class)->addRequestLocked($party, $song, $user);
+                app(AiReviewRecorder::class)->linkRequest($upcoming, $user, $trackId);
+            }
+
+            if ($scheduledFor !== null) {
+                $upcoming->forceFill(['scheduled_for' => $scheduledFor, 'not_before' => $scheduledFor])->save();
+            }
+
+            $denial = $this->voteDenialReason($party, $member);
+            if ($denial) {
+                return $this->rejection($denial, 400);
+            }
+            $upcoming->upvote($user);
+
+            return $upcoming;
+        }, $wait);
     }
 
     public function destroy(Party $party, UpcomingSong $upcomingsong, DeleteRequest $deleteRequest): Response

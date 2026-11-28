@@ -20,6 +20,10 @@ return new class extends Migration
     public function down(): void
     {
         Schema::table('song_ratings', function (Blueprint $table) {
+            $table->index('played_song_id');
+        });
+
+        Schema::table('song_ratings', function (Blueprint $table) {
             $table->dropUnique(['played_song_id', 'user_id']);
         });
     }

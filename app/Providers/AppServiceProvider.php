@@ -38,6 +38,7 @@ use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\Playback\WebPlayerStateMapper;
 use App\Services\PlayedSongAugmentService;
+use App\Services\Requests\RequestLocks;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ModDataStore::class);
         $this->app->scoped(PartyMods::class);
         $this->app->scoped(TrustScores::class);
+        $this->app->scoped(RequestLocks::class);
         $fakeAllowed = MusicProviderFactory::fakeAllowed();
         if ($fakeAllowed) {
             $this->app->scoped(FakeMusicProvider::class);
@@ -128,9 +130,6 @@ class AppServiceProvider extends ServiceProvider
         Event::listen(MessageReceived::class, DispatchPushedPlaybackState::class);
         Event::listen(ChannelRemoved::class, [DispatchPushedPlaybackState::class, 'handleChannelRemoved']);
 
-        RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
-
-        RateLimiter::for('theme-css', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
         RateLimiter::for('search', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('playback', fn (Request $request) => Limit::perMinute(30)->by(($request->user()?->id ?: $request->ip()).':'.($request->route('party') instanceof Party ? $request->route('party')->code : '')));
 

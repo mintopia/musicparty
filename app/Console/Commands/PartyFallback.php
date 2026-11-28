@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Jobs\PartyUpdate;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PlaybackStatus;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 
@@ -35,7 +36,12 @@ class PartyFallback extends Command
         })->get();
 
         $factory = app(MusicProviderFactory::class);
+        $status = app(PlaybackStatus::class);
+        $cutoff = now()->subSeconds(90);
         foreach ($parties as $party) {
+            if ($status->lastSyncedAt($party)?->greaterThan($cutoff)) {
+                continue;
+            }
             if ($party->hasFreshPushedPlayback() || $factory->partyNeedsRelink($party)) {
                 continue;
             }

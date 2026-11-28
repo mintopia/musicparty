@@ -8,7 +8,12 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import {create as linkAccount} from '@/routes/linkedaccounts';
 import {create as createParty} from '@/routes/parties';
 
-const props = defineProps<{spotify: {name: string} | null; search: {name: string} | null}>();
+const props = defineProps<{
+    spotify: {name: string} | null;
+    search: {name: string} | null;
+    spotifyEnabled: boolean;
+    searchEnabled: boolean;
+}>();
 
 const missing = computed(() => [props.spotify ? null : 'Playback', props.search ? null : 'Search'].filter(Boolean));
 </script>
@@ -43,6 +48,7 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                                 <template v-else><span class="status-dot status-secondary"></span>Not linked</template>
                             </div>
                             <a
+                                v-if="spotifyEnabled"
                                 class="btn"
                                 :class="spotify ? 'btn-outline-secondary' : 'btn-success'"
                                 :href="linkAccount('spotify').url"
@@ -50,6 +56,9 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                                 <i class="icon ti" :class="spotify ? 'ti-refresh' : 'ti-brand-spotify'"></i>
                                 {{ spotify ? 'Re-link' : 'Link Spotify for playback' }}
                             </a>
+                            <p v-else class="text-secondary mb-0" data-test="link-playback-disabled">
+                                Linking is disabled by an administrator.
+                            </p>
                         </div>
                     </div>
                 </div>
@@ -73,6 +82,7 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                                 <template v-else><span class="status-dot status-secondary"></span>Not linked</template>
                             </div>
                             <a
+                                v-if="searchEnabled"
                                 class="btn"
                                 :class="search ? 'btn-outline-secondary' : 'btn-success'"
                                 :href="linkAccount('spotifysearch').url"
@@ -80,6 +90,9 @@ const missing = computed(() => [props.spotify ? null : 'Playback', props.search 
                                 <i class="icon ti" :class="search ? 'ti-refresh' : 'ti-brand-spotify'"></i>
                                 {{ search ? 'Re-link' : 'Link Spotify for search' }}
                             </a>
+                            <p v-else class="text-secondary mb-0" data-test="link-search-disabled">
+                                Linking is disabled by an administrator.
+                            </p>
                         </div>
                     </div>
                 </div>

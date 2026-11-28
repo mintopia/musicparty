@@ -12,6 +12,7 @@ x-app: &app
   environment:
     PUID: "${PUID:-1000}"
     PGID: "${PGID:-1000}"
+    TRUSTED_PROXIES: "*"
   volumes:
     - ./logs:/app/storage/logs
   depends_on:
