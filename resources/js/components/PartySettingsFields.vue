@@ -11,6 +11,7 @@ import type {NamedOption, PartyFormState, PlaylistOption} from '@/lib/partyForm'
 const props = defineProps<{
     tab: 'general' | 'requests' | 'playback' | 'screens';
     form: PartyFormState;
+    canEditCode?: boolean;
     playlists: PlaylistOption[];
     hostName?: string;
     devices: NamedOption[];
@@ -82,6 +83,24 @@ function err(field: string): string | undefined {
                     class="form-control"
                     :class="{'is-invalid': err('name')}"
                     placeholder="Name"
+                />
+            </SettingRow>
+            <SettingRow
+                v-if="canEditCode"
+                label="Code"
+                for="code"
+                hint="Site admins only. Changing it breaks existing join links and QR codes."
+                :error="err('code')"
+            >
+                <input
+                    id="code"
+                    v-model="(form as unknown as {code: string}).code"
+                    type="text"
+                    name="code"
+                    class="form-control text-uppercase"
+                    :class="{'is-invalid': err('code')}"
+                    maxlength="10"
+                    placeholder="Code"
                 />
             </SettingRow>
             <SettingRow label="Music provider" hint="Set when the party was created">

@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 
 /**
@@ -148,6 +149,22 @@ class Party extends Model
     ];
 
     protected bool $coalescingBroadcasts = false;
+
+    public function saveWithGeneratedCode(int $attempts = 5): void
+    {
+        for ($attempt = 1; ; $attempt++) {
+            try {
+                $this->save();
+
+                return;
+            } catch (UniqueConstraintViolationException $e) {
+                if ($attempt >= $attempts) {
+                    throw $e;
+                }
+                $this->setAttribute('code', null);
+            }
+        }
+    }
 
     public function toStringName(): string
     {

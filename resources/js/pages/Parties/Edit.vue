@@ -57,6 +57,7 @@ const ANCHOR_TAB: Record<string, TabId> = {
 const props = defineProps<{
     party: PartyFormValues & {code: string};
     providerName: string;
+    canEditCode?: boolean;
     playlists: PlaylistOption[];
     hostName?: string | null;
     devices: NamedOption[];
@@ -72,7 +73,10 @@ const props = defineProps<{
 
 const isTab = (value: string | null | undefined): value is TabId => TABS.some((t) => t.id === value);
 
-const initialValues = initialPartyForm(props.party, props.playlists, props.defaultCountry);
+const initialValues = {
+    ...initialPartyForm(props.party, props.playlists, props.defaultCountry),
+    ...(props.canEditCode ? {code: props.party.code} : {}),
+};
 const form = useForm(initialValues);
 const baseline = reactive<Record<string, unknown>>({...initialValues});
 
@@ -299,6 +303,7 @@ function holdFlagged(): void {
                         v-else
                         :tab="activeTab"
                         :form="form"
+                        :can-edit-code="canEditCode"
                         :playlists="playlists"
                         :host-name="hostName ?? undefined"
                         :devices="devices"

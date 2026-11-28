@@ -516,6 +516,7 @@ class PartyController extends Controller
 
         return Inertia::render('Parties/Edit', $this->formProps($options, $party, $this->resolveAuthenticatedUser($request)) + [
             'party' => $this->formValues($party) + ['code' => $party->code],
+            'canEditCode' => $isAdmin,
             'providerName' => ucfirst((string) $party->provider_id),
             'hostName' => $party->user->nickname,
             'playerState' => $party->getState(),
@@ -596,8 +597,14 @@ class PartyController extends Controller
 
     public function update(PartyRequest $request, Party $party): RedirectResponse
     {
+        if ($request->user()?->can('admin') && $request->filled('code')) {
+            $party->code = $request->string('code')->toString();
+        }
         $this->updateObject($party, $request);
-        $party->save();
+
+        if ($party->wasChanged('code')) {
+            return redirect()->route('parties.edit', $party->code)->with('successMessage', 'The party has been updated');
+        }
 
         return redirect()->to(url()->previous(route('parties.edit', $party->code)))->with('successMessage', 'The party has been updated');
     }
@@ -660,6 +667,10 @@ class PartyController extends Controller
         } else {
             $party->history_playlist_id = null;
         }
-        $party->save();
+        if ($party->exists) {
+            $party->save();
+        } else {
+            $party->saveWithGeneratedCode();
+        }
     }
 }

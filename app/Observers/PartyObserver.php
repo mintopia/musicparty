@@ -4,14 +4,14 @@ namespace App\Observers;
 
 use App\Jobs\RefreshFallbackPlaylist;
 use App\Models\Party;
-use Illuminate\Support\Str;
+use App\Services\PartyCodeGenerator;
 
 class PartyObserver
 {
     public function creating(Party $party): void
     {
         if (! $party->code) {
-            $party->code = Str::upper(Str::password(4, numbers: false, symbols: false));
+            $party->code = app(PartyCodeGenerator::class)->unused();
         }
     }
 
