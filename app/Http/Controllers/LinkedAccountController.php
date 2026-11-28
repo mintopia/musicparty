@@ -15,6 +15,7 @@ class LinkedAccountController extends Controller
 {
     public function create(Request $request, SocialProvider $socialprovider): RedirectResponse
     {
+        abort_unless($socialprovider->enabled, 404);
         if ($request->header('referer') == route('user.spotify')) {
             $request->session()->flash('returnToSpotify', true);
         }
@@ -24,6 +25,7 @@ class LinkedAccountController extends Controller
 
     public function store(Request $request, SocialProvider $socialprovider): RedirectResponse
     {
+        abort_unless($socialprovider->enabled, 404);
         $url = 'user.profile';
         if ($request->session()->get('returnToSpotify')) {
             $url = 'user.spotify';

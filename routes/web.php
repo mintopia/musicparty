@@ -27,7 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Always available
-Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
+Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->middleware('throttle:theme-css')->name('theme.css');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
 Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');

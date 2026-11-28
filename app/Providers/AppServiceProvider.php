@@ -130,6 +130,7 @@ class AppServiceProvider extends ServiceProvider
 
         RateLimiter::for('api', fn (Request $request) => Limit::perMinute(180)->by($request->user()?->id ?: $request->ip()));
 
+        RateLimiter::for('theme-css', fn (Request $request) => Limit::perMinute(60)->by($request->ip()));
         RateLimiter::for('search', fn (Request $request) => Limit::perMinute(120)->by($request->user()?->id ?: $request->ip()));
         RateLimiter::for('playback', fn (Request $request) => Limit::perMinute(30)->by(($request->user()?->id ?: $request->ip()).':'.($request->route('party') instanceof Party ? $request->route('party')->code : '')));
 
