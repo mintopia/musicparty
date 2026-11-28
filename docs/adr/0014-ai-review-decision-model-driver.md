@@ -8,9 +8,7 @@ Jev-style TypeSafe models are not chat models: they take `{model, state, questio
 
 **Fail open.** Timeouts, non-2xx responses, missing keys and malformed answers allow the request, matching the other drivers. Log lines carry only a fixed message or exception class, never the response body or the key. Redirects are not followed so the bearer token cannot be forwarded.
 
-**Settings and secrets.** `decision_endpoint` (validated `url:https`, default the OpenRouter URL), `decision_model` (default `typesafe/jev-1.13`) and `confidence_percentage` (an integer 0-100) are new settings; the existing `api_key` secret is shared by all drivers. `stSecret` already encrypts at rest and is never returned to the frontend, so no new setting types were needed. The endpoint is manager-supplied, so the reviewer also refuses localhost, `.internal`/`.local` names and private or reserved IP literals before sending the key.
-
-**Known limit.** Hostnames that resolve to internal addresses are not blocked, only literals and obvious names.
+**Settings and secrets.** `decision_endpoint` (validated `url`, default the OpenRouter URL), `decision_model` (default `typesafe/jev-1.13`) and `confidence_percentage` (an integer 0-100) are new settings; the existing `api_key` secret is shared by all drivers. `stSecret` already encrypts at rest and is never returned to the frontend, so no new setting types were needed. The endpoint is manager-supplied, so the reviewer refuses it before sending the key unless a site admin has allowed internal endpoints (see the amendment below).
 
 ## Amendment: the TypeSafe chat driver is removed
 
@@ -25,3 +23,17 @@ The payload carries a second question, `criterion`, of type `choice`, next to `s
 The criterion never changes the decision: allow, flag and reject still come only from the score bands and confidence threshold. When the outcome is flag or reject and a criterion other than `none` was chosen, its label prefixes the reason ("Vibe: ..."). The chosen key and its probability are stored on `ai_reviews` (`criterion`, `criterion_confidence`) and logged on `ai-review.decision`.
 
 A refusal, a missing answer, a non-`choice` answer or an unknown key leaves the criterion null and the review proceeds as before, so fail-open still holds.
+
+## Amendment: endpoint safety, the override and a circuit breaker
+
+**DNS check.** Before any request or key is sent, for both the decision-model and OpenAI-compatible drivers, the endpoint's hostname is resolved and the review is refused if any address is private, loopback, link-local (including 169.254.169.254) or reserved, or if the name is localhost, `.internal` or `.local`. A refused endpoint sends no key and fails open. The decision-model request pins the vetted address with curl's resolve option so a second lookup cannot rebind to an internal one.
+
+**Site-admin override.** `allow_internal_endpoints` is an instance-only mod setting, so only site admins can set it and a Party Owner cannot. When on, the check is skipped so self-hosted models on internal addresses still work.
+
+**HTTPS rule dropped.** `decision_endpoint` is validated as `url` rather than `url:https`; both http and https are accepted for both drivers.
+
+**Timeout cap.** The review timeout is capped at 20 seconds, in the setting's validation and again at runtime for values stored earlier.
+
+**Circuit breaker.** After 3 consecutive failures for a Party, the AI stage is skipped for 60 seconds and the Request is allowed and logged (`circuit_open`), consistent with fail-open. A success resets the count.
+
+**Verdict cache.** Successful verdicts are cached per Party and track for 5 minutes, so retrying a rejected track does not bill the model again. Failures are never cached.

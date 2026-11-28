@@ -34,15 +34,15 @@ class DecisionModelReviewer
         'Clearly fine for the party',
     ];
 
-    public function __construct(protected Factory $http, protected AiReviewLog $log) {}
+    public function __construct(protected Factory $http, protected AiReviewLog $log, protected EndpointGuard $guard) {}
 
     /**
      * @param  array<string, mixed>  $state
      * @param  array<string, mixed>  $log
      */
-    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $state, int $timeout, float $confidenceThreshold, array $log = [], ?AiReviewTrace $trace = null): RequestDecision
+    public function review(string $endpoint, string $apiKey, string $model, ?string $guidelines, array $state, int $timeout, float $confidenceThreshold, array $log = [], ?AiReviewTrace $trace = null, bool $allowInternal = false): RequestDecision
     {
-        $this->assertSafeEndpoint($endpoint);
+        $addresses = $this->guard->assertSafe($endpoint, $allowInternal);
 
         $payload = $this->payload($model, $guidelines, $state);
         $log += ['model' => $model, 'endpoint_host' => parse_url($endpoint, PHP_URL_HOST), 'timeout' => $timeout, 'confidence_threshold' => $confidenceThreshold];
@@ -66,6 +66,7 @@ class DecisionModelReviewer
                 ->asJson()
                 ->timeout($timeout)
                 ->connectTimeout(min($timeout, 5))
+                ->withOptions($this->pinnedOptions($endpoint, $addresses))
                 ->post($endpoint, $payload);
         } catch (ConnectionException) {
             throw new DecisionModelException('Decision model request failed to connect or timed out');
@@ -214,18 +215,19 @@ class DecisionModelReviewer
         return is_string($text) && trim($text) !== '' ? trim($text) : null;
     }
 
-    protected function assertSafeEndpoint(string $endpoint): void
+    /**
+     * @param  list<string>  $addresses
+     * @return array<string, mixed>
+     */
+    protected function pinnedOptions(string $endpoint, array $addresses): array
     {
         $parts = parse_url($endpoint);
-        $host = is_array($parts) ? strtolower(trim((string) ($parts['host'] ?? ''), '[]')) : '';
-        if (($parts['scheme'] ?? null) !== 'https' || $host === '') {
-            throw new DecisionModelException('Decision model endpoint must be an https URL');
+        if ($addresses === [] || ! is_array($parts) || ! isset($parts['host'])) {
+            return [];
         }
-        $internalName = $host === 'localhost' || str_ends_with($host, '.localhost') || str_ends_with($host, '.internal') || str_ends_with($host, '.local');
-        $internalIp = filter_var($host, FILTER_VALIDATE_IP) !== false
-            && filter_var($host, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false;
-        if ($internalName || $internalIp) {
-            throw new DecisionModelException('Decision model endpoint must not be an internal address');
-        }
+        $port = $parts['port'] ?? (($parts['scheme'] ?? 'https') === 'http' ? 80 : 443);
+        $ip = str_contains($addresses[0], ':') ? "[{$addresses[0]}]" : $addresses[0];
+
+        return ['curl' => [CURLOPT_RESOLVE => ["{$parts['host']}:{$port}:{$ip}"]]];
     }
 }
