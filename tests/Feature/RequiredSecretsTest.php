@@ -8,11 +8,13 @@ use Illuminate\Support\Facades\File;
  */
 function bootRequiredSecrets(array $overrides = [], string $environment = 'production'): void
 {
+    $defaultConnection = config('database.default');
+
     config(array_merge([
         'app.key' => 'base64:'.base64_encode(random_bytes(32)),
-        'database.default' => 'sqlite',
-        'database.connections.sqlite.driver' => 'mysql',
-        'database.connections.sqlite.password' => 'a-real-db-password',
+        'database.default' => 'secrets_probe',
+        'database.connections.secrets_probe.driver' => 'mysql',
+        'database.connections.secrets_probe.password' => 'a-real-db-password',
         'broadcasting.connections.reverb.app_id' => 'app-id-123',
         'broadcasting.connections.reverb.key' => 'reverb-key-123',
         'broadcasting.connections.reverb.secret' => 'reverb-secret-123',
@@ -27,6 +29,7 @@ function bootRequiredSecrets(array $overrides = [], string $environment = 'produ
     } finally {
         $_SERVER['argv'] = $argv;
         app()['env'] = 'testing';
+        config(['database.default' => $defaultConnection]);
     }
 }
 
@@ -44,8 +47,8 @@ it('names the variable when a secret is missing, empty or a default', function (
     'missing reverb id' => ['broadcasting.connections.reverb.app_id', 'REVERB_APP_ID', null],
     'default reverb key' => ['broadcasting.connections.reverb.key', 'REVERB_APP_KEY', 'musicparty'],
     'default reverb secret' => ['broadcasting.connections.reverb.secret', 'REVERB_APP_SECRET', 'swordfish'],
-    'default db password' => ['database.connections.sqlite.password', 'DB_PASSWORD', 'musicparty'],
-    'null-string db password' => ['database.connections.sqlite.password', 'DB_PASSWORD', 'null'],
+    'default db password' => ['database.connections.secrets_probe.password', 'DB_PASSWORD', 'musicparty'],
+    'null-string db password' => ['database.connections.secrets_probe.password', 'DB_PASSWORD', 'null'],
 ]);
 
 it('does not enforce secrets outside production', function () {
