@@ -4,18 +4,25 @@ namespace App\Http\Controllers;
 
 use App\Events\FlaggedRequestRejected;
 use App\Events\FlaggedRequestResolved;
+use App\Events\UpcomingSong\UpdatedEvent;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Models\Vote;
+use App\Services\Requests\DeleteRequest;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\ModerationTabs;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 use Inertia\Response;
+use Symfony\Component\HttpKernel\Exception\ConflictHttpException;
 
 class FlaggedRequestController extends Controller
 {
+    public const ALREADY_HANDLED = 'This Request has already been handled';
+
     public function index(Request $request, Party $party, FlaggedRequests $flagged, ModerationTabs $tabs): Response
     {
         $this->authorize('moderate', $party);
@@ -31,18 +38,16 @@ class FlaggedRequestController extends Controller
     public function approve(Party $party, UpcomingSong $upcomingSong): RedirectResponse
     {
         $this->authorize('approve', $upcomingSong);
-        $this->ensureFlagged($upcomingSong);
         $this->resolveApproved($party, $upcomingSong);
 
         return back();
     }
 
-    public function reject(Request $request, Party $party, UpcomingSong $upcomingSong): RedirectResponse
+    public function reject(Request $request, Party $party, UpcomingSong $upcomingSong, DeleteRequest $deleteRequest): RedirectResponse
     {
         $this->authorize('reject', $upcomingSong);
-        $this->ensureFlagged($upcomingSong);
         $validated = $request->validate(['message' => ['nullable', 'string', 'max:255']]);
-        $this->resolveRejected($party, $upcomingSong, $validated['message'] ?? null);
+        $this->resolveRejected($party, $upcomingSong, $validated['message'] ?? null, $deleteRequest);
 
         return back();
     }
@@ -50,17 +55,25 @@ class FlaggedRequestController extends Controller
     public function bulkApprove(Request $request, Party $party): RedirectResponse
     {
         foreach ($this->bulkTargets($request, $party, 'approve') as $upcomingSong) {
-            $this->resolveApproved($party, $upcomingSong);
+            try {
+                $this->resolveApproved($party, $upcomingSong);
+            } catch (ConflictHttpException) {
+                continue;
+            }
         }
 
         return back();
     }
 
-    public function bulkReject(Request $request, Party $party): RedirectResponse
+    public function bulkReject(Request $request, Party $party, DeleteRequest $deleteRequest): RedirectResponse
     {
         $message = $request->validate(['message' => ['nullable', 'string', 'max:255']])['message'] ?? null;
         foreach ($this->bulkTargets($request, $party, 'reject') as $upcomingSong) {
-            $this->resolveRejected($party, $upcomingSong, $message);
+            try {
+                $this->resolveRejected($party, $upcomingSong, $message, $deleteRequest);
+            } catch (ConflictHttpException) {
+                continue;
+            }
         }
 
         return back();
@@ -98,25 +111,36 @@ class FlaggedRequestController extends Controller
 
     protected function resolveApproved(Party $party, UpcomingSong $upcomingSong): void
     {
-        $upcomingSong->forceFill(['flagged_at' => null, 'flag_reason' => null])->save();
+        DB::transaction(function () use ($upcomingSong): void {
+            $cleared = UpcomingSong::query()
+                ->whereKey($upcomingSong->id)
+                ->whereNull('queued_at')
+                ->whereNotNull('flagged_at')
+                ->update(['flagged_at' => null, 'flag_reason' => null]);
+            if ($cleared === 0) {
+                throw new ConflictHttpException(self::ALREADY_HANDLED);
+            }
+
+            if ($upcomingSong->user_id !== null) {
+                Vote::query()->updateOrCreate(['upcoming_song_id' => $upcomingSong->id, 'user_id' => $upcomingSong->user_id], ['value' => 1]);
+            }
+            $upcomingSong->refresh();
+            $upcomingSong->updateScore();
+        });
+
+        UpdatedEvent::dispatch($upcomingSong);
         FlaggedRequestResolved::dispatch($party, $upcomingSong->id);
     }
 
-    protected function resolveRejected(Party $party, UpcomingSong $upcomingSong, ?string $message): void
+    protected function resolveRejected(Party $party, UpcomingSong $upcomingSong, ?string $message, DeleteRequest $deleteRequest): void
     {
         $message ??= $upcomingSong->flag_reason;
         $userId = $upcomingSong->user_id;
         $id = $upcomingSong->id;
         $trackName = $upcomingSong->song->name;
-        $upcomingSong->delete();
-        FlaggedRequestResolved::dispatch($party, $id);
+        $deleteRequest->handle($upcomingSong, requireFlagged: true);
         if ($userId !== null) {
             FlaggedRequestRejected::dispatch($party, $userId, $id, $trackName, $message);
         }
-    }
-
-    protected function ensureFlagged(UpcomingSong $upcomingSong): void
-    {
-        abort_if($upcomingSong->flagged_at === null, 404);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Requests;
 
 use App\Events\FlaggedRequestResolved;
+use App\Events\UpcomingSong\RemovedEvent;
 use App\Models\UpcomingSong;
 use App\Services\Playback\PartyDashboardCache;
 use Illuminate\Support\Facades\Gate;
@@ -14,7 +15,7 @@ class DeleteRequest
      * Played Songs link back to their Request with null-on-delete, so a Request that was
      * Sent to the Player is refused rather than losing its history.
      */
-    public function handle(UpcomingSong $request): void
+    public function handle(UpcomingSong $request, bool $requireFlagged = false): void
     {
         Gate::authorize('delete', $request);
 
@@ -26,9 +27,16 @@ class DeleteRequest
         $id = $request->id;
         $wasFlagged = $request->flagged_at !== null;
 
-        $request->delete();
+        $query = UpcomingSong::query()->whereKey($id)->whereNull('queued_at');
+        if ($requireFlagged) {
+            $query->whereNotNull('flagged_at');
+        }
+        if ($query->delete() === 0) {
+            throw new ConflictHttpException($requireFlagged ? 'This Request has already been handled' : 'Unable to delete a Request that has been sent to the Player');
+        }
 
-        if ($wasFlagged) {
+        RemovedEvent::dispatch($party, $id);
+        if ($wasFlagged || $requireFlagged) {
             FlaggedRequestResolved::dispatch($party, $id);
         }
         PartyDashboardCache::forget($party);
