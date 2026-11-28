@@ -62,7 +62,7 @@ it('renders the list for a manager newest first with the requester and tokens', 
             ->component('Parties/AiReviews/Index')
             ->where('party.code', $this->party->code)
             ->has('playerState')
-            ->has('outcomes', 4)
+            ->has('outcomes', 5)
             ->has('reviews.data', 2)
             ->where('reviews.data.0.track.title', 'Newer')
             ->where('reviews.data.0.user', 'Dana')

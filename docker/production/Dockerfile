@@ -7,7 +7,7 @@ RUN apk add --no-cache git unzip
 COPY . /app/
 COPY docker/production/production.env /app/.env
 
-RUN composer install \
+RUN REVERB_APP_ID=build REVERB_APP_KEY=build REVERB_APP_SECRET=build composer install \
         --no-dev \
         --no-progress \
         --optimize-autoloader \
@@ -22,7 +22,7 @@ ENV HOME=/tmp
 COPY --from=composer /app/ /app
 
 RUN npm ci --include=dev && \
-    npm run build
+    REVERB_APP_ID=build REVERB_APP_KEY=build REVERB_APP_SECRET=build npm run build
 
 # Wayfinder must emit relative URLs; an absolute host here means the build-time
 # APP_URL leaked into the bundle and every route would point at it at runtime.

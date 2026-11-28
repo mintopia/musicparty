@@ -8,6 +8,7 @@ use App\Exceptions\PartyFeatureDisabledException;
 use App\Models\AiReview;
 use App\Models\Party;
 use App\Mods\AiRequestReview\AiRequestReviewMod;
+use App\Mods\AiRequestReview\AiReviewBreaker;
 use App\Mods\AiRequestReview\DecisionModelReviewer;
 use App\Mods\PartyMods;
 use App\Services\ModSettingsStore;
@@ -57,6 +58,7 @@ class PartyAiReviewController extends Controller
             'holdsFlagged' => (bool) $party->flag_requests,
             'settingsUrl' => route('parties.edit', $party->code).'#flag_requests',
             'counts' => $this->counts($party),
+            'breaker' => app(AiReviewBreaker::class)->state($party),
             'reviews' => $reviews,
             'moderationTabs' => app(ModerationTabs::class)->for($party),
         ]);

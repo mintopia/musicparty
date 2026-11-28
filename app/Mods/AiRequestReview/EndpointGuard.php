@@ -47,6 +47,25 @@ class EndpointGuard
         return $addresses;
     }
 
+    /**
+     * @param  list<string>  $addresses
+     * @return array<string, mixed>
+     */
+    public function pinnedOptions(string $endpoint, array $addresses): array
+    {
+        $parts = parse_url($endpoint);
+        if (! is_array($parts) || ! isset($parts['host'])) {
+            return ['allow_redirects' => false];
+        }
+        if ($addresses === []) {
+            return ['allow_redirects' => false];
+        }
+        $port = $parts['port'] ?? (($parts['scheme'] ?? 'https') === 'http' ? 80 : 443);
+        $ip = str_contains($addresses[0], ':') ? "[{$addresses[0]}]" : $addresses[0];
+
+        return ['allow_redirects' => false, 'curl' => [CURLOPT_RESOLVE => ["{$parts['host']}:{$port}:{$ip}"]]];
+    }
+
     protected function isInternal(string $ip): bool
     {
         return filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE) === false

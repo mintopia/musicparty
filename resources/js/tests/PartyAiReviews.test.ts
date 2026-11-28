@@ -115,6 +115,7 @@ function mountIndex(
             criteria: [{code: 'troll', name: 'Troll'}],
             holdsFlagged: true,
             counts: {total: 5, outcome: {flag: 2}, criterion: {troll: 1}},
+            breaker: {open: false, failures: 0, threshold: 3, openSeconds: 60},
             settingsUrl: '/parties/ABCD/edit#flag_requests',
             reviews: paginator(data, extra),
             ...props,

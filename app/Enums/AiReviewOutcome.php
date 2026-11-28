@@ -8,6 +8,7 @@ enum AiReviewOutcome: string
     case Flag = 'flag';
     case Reject = 'reject';
     case Error = 'error';
+    case Skipped = 'skipped';
 
     public function label(): string
     {
@@ -16,6 +17,7 @@ enum AiReviewOutcome: string
             self::Flag => 'Flagged',
             self::Reject => 'Rejected',
             self::Error => 'Error',
+            self::Skipped => 'Skipped',
         };
     }
 }
