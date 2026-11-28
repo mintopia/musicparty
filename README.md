@@ -90,6 +90,10 @@ docker compose pull && docker compose up -d
 docker compose ps
 ```
 
+Redis moved from `6.2.6` to `7.4`. The append-only data in the `redisdata` volume is read by 7.4 without conversion,
+but it does not roll back to 6.2, so take the database backup and keep a copy of the `redisdata` volume before
+upgrading an existing deployment.
+
 ### Reverse proxy
 
 Only the `app` container is exposed. Put your own reverse proxy (Caddy, Traefik, nginx...) in front of it and forward a
