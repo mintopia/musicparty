@@ -10,6 +10,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use Illuminate\Database\UniqueConstraintViolationException;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\Sanctum;
 
 function voteParty(array $attributes = []): Party
@@ -56,6 +57,46 @@ describe('votes', function () {
         $second->upvote(voteMember($party));
 
         expect($song->fresh()->score)->toBe(2);
+    });
+
+    it('keeps the stored score_adjustment when a stale model casts a vote', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        $stale = UpcomingSong::findOrFail($song->id);
+        UpcomingSong::findOrFail($song->id)->increment('score_adjustment', 5);
+
+        $stale->upvote(voteMember($party));
+
+        expect($song->fresh()->score)->toBe(6)
+            ->and($song->fresh()->score_adjustment)->toBe(5);
+    });
+
+    it('recomputes the score in one UPDATE with no separate sum read', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        Vote::factory()->create(['upcoming_song_id' => $song->id, 'user_id' => voteMember($party)->id, 'value' => 1]);
+
+        DB::enableQueryLog();
+        $song->updateScore();
+        $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn ($sql) => stripos($sql, 'sum(') !== false);
+        DB::disableQueryLog();
+
+        expect($queries)->toHaveCount(1)
+            ->and($queries->first())->toStartWith('update "upcoming_songs"');
+    });
+
+    it('recomputes the rating in one UPDATE with no separate sum read', function () {
+        $party = voteParty();
+        $played = PlayedSong::factory()->for($party)->create();
+        SongRating::factory()->create(['played_song_id' => $played->id, 'user_id' => voteMember($party)->id, 'value' => 1]);
+
+        DB::enableQueryLog();
+        $played->updateRating();
+        $queries = collect(DB::getQueryLog())->pluck('query')->filter(fn ($sql) => stripos($sql, 'sum(') !== false);
+        DB::disableQueryLog();
+
+        expect($queries)->toHaveCount(1)
+            ->and($queries->first())->toStartWith('update "played_songs"');
     });
 
     it('leaves the correct rating when two stale models rate in interleaved order', function () {
