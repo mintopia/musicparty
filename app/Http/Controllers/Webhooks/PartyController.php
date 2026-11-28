@@ -18,7 +18,7 @@ class PartyController extends Controller
 
     protected function dispatchUpdate(Party $party, bool $afterResponse = false): void
     {
-        if (! Cache::add("party-webhook-update-pending:{$party->id}", true, self::PENDING_GUARD_SECONDS)) {
+        if (! Cache::add($party->webhookPendingKey(), true, self::PENDING_GUARD_SECONDS)) {
             Log::debug("{$party}: PartyUpdate already pending, skipping dispatch");
 
             return;

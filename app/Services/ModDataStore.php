@@ -84,6 +84,20 @@ class ModDataStore
     }
 
     /**
+     * @param  Collection<int, covariant Model>  $owners
+     */
+    public function purgeAll(Collection $owners): void
+    {
+        $query = ModData::query();
+        foreach ($owners->groupBy(fn (Model $owner): string => $owner->getMorphClass()) as $type => $group) {
+            $query->orWhere(fn (Builder $inner) => $inner
+                ->where('owner_type', $type)
+                ->whereIn('owner_id', $group->map(fn (Model $owner): mixed => $owner->getKey())->all()));
+        }
+        $query->delete();
+    }
+
+    /**
      * @return array<string, mixed>
      */
     public function all(Model $owner, string $modCode): array
