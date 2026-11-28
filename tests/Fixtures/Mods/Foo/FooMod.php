@@ -36,11 +36,6 @@ class FooMod implements Mod
         ];
     }
 
-    public function extensionPoints(): array
-    {
-        return [];
-    }
-
     /** @var list<ScheduledAction> */
     public static array $actions = [];
 

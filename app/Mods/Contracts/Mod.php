@@ -17,9 +17,6 @@ interface Mod
     /** @return list<SettingDefinition> */
     public function settings(): array;
 
-    /** @return list<string> */
-    public function extensionPoints(): array;
-
     /** @return list<ScheduledAction> */
     public function scheduledActions(): array;
 

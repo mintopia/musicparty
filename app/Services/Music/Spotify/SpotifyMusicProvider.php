@@ -239,17 +239,6 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
         }
     }
 
-    public function getTracks(array $ids): array
-    {
-        $tracks = [];
-        foreach (array_chunk($ids, 50) as $chunk) {
-            $result = SpotifyPayload::object($this->reader()->getTracks($chunk, ['market' => $this->market()]));
-            array_push($tracks, ...$this->mapTracks((array) $result->tracks));
-        }
-
-        return $tracks;
-    }
-
     public function getAlbum(string $id): ?Album
     {
         return Cache::remember("music.spotify.album.{$id}.{$this->market()}", self::BROWSE_CACHE_SECONDS, function () use ($id): ?Album {
@@ -498,11 +487,6 @@ class SpotifyMusicProvider implements MusicProvider, ProviderPlayback
     public function next(): void
     {
         $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->next());
-    }
-
-    public function previous(): void
-    {
-        $this->playerCommand(fn (SpotifyWebAPI $api): bool => $api->previous());
     }
 
     public function seek(int $positionMs): void

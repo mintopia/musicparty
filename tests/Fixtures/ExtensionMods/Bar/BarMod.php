@@ -35,11 +35,6 @@ class BarMod implements DecoratesTracks, Mod, ModifiesScore
         return [];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['score-modifiers', 'decorations'];
-    }
-
     public function modifyScore(Party $party, UpcomingSong $request, int $score): int
     {
         return $score + (self::$bonuses[$request->song->provider_track_id] ?? 0);

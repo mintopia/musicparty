@@ -44,11 +44,6 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod
         ];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['request-rules'];
-    }
-
     public function modRequestRules(): array
     {
         return [];

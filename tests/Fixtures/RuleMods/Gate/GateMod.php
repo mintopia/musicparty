@@ -32,11 +32,6 @@ class GateMod implements ContributesRequestRules, Mod
         return [];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['request-rules'];
-    }
-
     public function modRequestRules(): array
     {
         return [new class implements RequestRule

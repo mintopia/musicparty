@@ -4,7 +4,6 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Services\Music\Fake\FakeMusicProvider;
-use App\Services\Queue\CandidateFilter;
 use App\Services\QueueSelector;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -36,23 +35,6 @@ it('filters out flagged requests and requests still on hold', function () {
     app(QueueSelector::class)->sendNext($this->party);
 
     expect(sentTrackIds())->toBe(['RELEASED']);
-});
-
-it('runs filters registered by mods', function () {
-    app()->bind('test.veto', fn () => new class implements CandidateFilter
-    {
-        public function allows(UpcomingSong $request): bool
-        {
-            return $request->song->provider_track_id !== 'VETOED';
-        }
-    });
-    app()->tag(['test.veto'], 'queue.candidate-filters');
-    hookRequest($this->party, 'VETOED', ['score' => 5]);
-    hookRequest($this->party, 'OK', ['score' => 1]);
-
-    app(QueueSelector::class)->sendNext($this->party);
-
-    expect(sentTrackIds())->toBe(['OK']);
 });
 
 it('adds a request with hold time and score adjustment that any feature can set', function () {

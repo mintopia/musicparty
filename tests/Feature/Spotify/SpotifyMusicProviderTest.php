@@ -91,7 +91,6 @@ it('transports through the control client', function () {
 
     $provider->pause();
     $provider->next();
-    $provider->previous();
     $provider->seek(5000);
 
     expect($api->callsTo('seek'))->toBe([[['position_ms' => 5000]]])

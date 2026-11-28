@@ -69,12 +69,6 @@ interface MusicProvider
      */
     public function findTrack(string $id): ?Track;
 
-    /**
-     * @param  list<string>  $ids
-     * @return list<Track>
-     */
-    public function getTracks(array $ids): array;
-
     public function getAlbum(string $id): ?Album;
 
     public function getArtist(string $id): ?Artist;

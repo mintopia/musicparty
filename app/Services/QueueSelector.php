@@ -10,7 +10,6 @@ use App\Models\User;
 use App\Mods\Contracts\ModifiesScore;
 use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
-use App\Services\Queue\CandidateFilter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
@@ -116,15 +115,13 @@ class QueueSelector
 
     /**
      * The Party's waiting Requests in the order the selector ranks them, computed once with a single Effective Score per Request.
-     * Ready Requests are selectable; held ones (only returned when $includeHeld) are released later or rejected by a candidate filter.
+     * Ready Requests are selectable; held ones (only returned when $includeHeld) are released later.
      *
      * @return array{ready: Collection<int, UpcomingSong>, held: Collection<int, UpcomingSong>, scores: array<int, int>}
      */
     public function rankedQueue(Party $party, bool $includeHeld = false): array
     {
         return $this->whileSelecting(function () use ($party, $includeHeld): array {
-            /** @var list<CandidateFilter> $filters */
-            $filters = iterator_to_array(app()->tagged('queue.candidate-filters'), false);
             $now = Carbon::now();
 
             $waiting = $party->upcoming()
@@ -139,8 +136,7 @@ class QueueSelector
             $scores = $this->scoreMap($waiting);
 
             /** @var array{0: Collection<int, UpcomingSong>, 1: Collection<int, UpcomingSong>} $parts */
-            $parts = $waiting->partition(fn (UpcomingSong $request): bool => ($request->not_before === null || $request->not_before <= $now)
-                && collect($filters)->every(fn (CandidateFilter $filter): bool => $filter->allows($request)))->all();
+            $parts = $waiting->partition(fn (UpcomingSong $request): bool => $request->not_before === null || $request->not_before <= $now)->all();
 
             return [
                 'ready' => $this->sortRanked($parts[0], $scores),

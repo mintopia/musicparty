@@ -9,7 +9,6 @@ use App\Http\Controllers\Admin\ThemeController;
 use App\Http\Controllers\Admin\UserController as AdminUserController;
 use App\Http\Controllers\FlaggedRequestController;
 use App\Http\Controllers\HomeController;
-use App\Http\Controllers\InertiaShellController;
 use App\Http\Controllers\LinkedAccountController;
 use App\Http\Controllers\ModUserSearchController;
 use App\Http\Controllers\PartyAiReviewController;
@@ -30,9 +29,6 @@ use Illuminate\Support\Facades\Route;
 // Always available
 Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
 
-if (app()->environment('testing')) {
-    Route::get('ui/shell', InertiaShellController::class)->name('inertia.shell');
-}
 Route::get('/', [HomeController::class, 'home'])->name('home');
 Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
 Route::post('logout', [UserController::class, 'logout'])->name('logout');

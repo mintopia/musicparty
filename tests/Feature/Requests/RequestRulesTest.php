@@ -366,27 +366,6 @@ describe('checkMany', function () {
     });
 });
 
-describe('checkById', function () {
-    it('checks the track the provider returns', function () {
-        $party = rulesParty(['explicit' => false]);
-        $provider = app(FakeMusicProvider::class);
-        $member = rulesMember($party);
-
-        $ok = app(RequestRules::class)->checkById($party, $member, $provider, 'fake-track-1');
-        $explicit = app(RequestRules::class)->checkById($party, $member, $provider, 'fake-track-7');
-
-        expect($ok->allowed)->toBeTrue()->and($explicit->reason)->toBe('Explicit songs are not allowed');
-    });
-
-    it('reports an unknown id as not found', function () {
-        $party = rulesParty();
-
-        $decision = app(RequestRules::class)->checkById($party, rulesMember($party), app(FakeMusicProvider::class), 'missing');
-
-        expect($decision->allowed)->toBeFalse()->and($decision->reason)->toBe('Song is not found in Spotify');
-    });
-});
-
 describe('TrackEligibility', function () {
     it('annotates queue state, vote, requester and eligibility per track', function () {
         $party = rulesParty(['explicit' => false]);
