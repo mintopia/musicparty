@@ -33,6 +33,8 @@ final class AiReviewTrace
 
     public ?int $totalTokens = null;
 
+    public ?string $skipReason = null;
+
     public ?string $errorClass = null;
 
     public ?string $errorMessage = null;

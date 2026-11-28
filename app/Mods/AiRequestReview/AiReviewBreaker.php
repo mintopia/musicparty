@@ -16,6 +16,19 @@ class AiReviewBreaker
         return Cache::has($this->openKey($party));
     }
 
+    /**
+     * @return array{open: bool, failures: int, threshold: int, openSeconds: int}
+     */
+    public function state(Party $party): array
+    {
+        return [
+            'open' => $this->isOpen($party),
+            'failures' => (int) Cache::get($this->failuresKey($party), 0),
+            'threshold' => self::FAILURE_THRESHOLD,
+            'openSeconds' => self::OPEN_SECONDS,
+        ];
+    }
+
     public function recordFailure(Party $party): void
     {
         $key = $this->failuresKey($party);
