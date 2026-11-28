@@ -12,7 +12,7 @@ defineProps<{providers: {code: string; name: string}[]; fromParty?: boolean}>();
         <Head title="Login" />
         <JoinSteps v-if="fromParty" :current="1" />
         <div class="text-center">
-            <h1 v-if="!fromParty" class="visually-hidden">Login</h1>
+            <h1 class="visually-hidden">Login</h1>
             <p v-if="!fromParty">Login to join the party!</p>
             <p v-for="provider in providers" :key="provider.code">
                 <a :href="redirect(provider.code).url" :class="`d-block ms-auto btn btn-${provider.code}`">
