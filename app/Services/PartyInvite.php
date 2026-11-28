@@ -46,7 +46,7 @@ class PartyInvite
     private function onlineCount(Party $party): int
     {
         $since = now()->subMinutes(self::ONLINE_MINUTES);
-        $memberIds = $party->members()->where('banned', false)->pluck('user_id');
+        $memberIds = $party->members()->whereHas('role', fn ($roles) => $roles->where('code', '!=', 'banned'))->pluck('user_id');
 
         $voters = Vote::query()
             ->whereIn('user_id', $memberIds)

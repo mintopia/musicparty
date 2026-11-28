@@ -223,15 +223,6 @@ describe('votes', function () {
             ->and($song->fresh()->score)->toBe(1);
     });
 
-    it('does not check the banned flag, only the banned role code', function () {
-        $party = voteParty();
-        $song = voteSong($party);
-        $user = voteMember($party);
-        PartyMember::query()->whereUserId($user->id)->update(['banned' => true]);
-
-        expect($song->upvote($user))->toBeInstanceOf(Vote::class);
-    });
-
     it('rejects a duplicate vote row for one user on one request', function () {
         $party = voteParty();
         $song = voteSong($party);

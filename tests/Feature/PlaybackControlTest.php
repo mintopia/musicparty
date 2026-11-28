@@ -14,6 +14,7 @@ use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\PlaybackSync;
 use App\Services\Spotify\SpotifyBackoffException;
 use Carbon\CarbonImmutable;
+use Database\Seeders\PartyMemberRoleSeeder;
 use Illuminate\Broadcasting\BroadcastException;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Event;
@@ -158,6 +159,7 @@ it('makes no provider calls when a party is created or saved with a device', fun
 
 it('dispatches PartyUpdate when a party is created through the web route and resolves the device name', function () {
     Queue::fake();
+    $this->seed(PartyMemberRoleSeeder::class);
     $fake = app(FakeMusicProvider::class)->withDevices([new Device('dev1', 'Dev One', 'Speaker', true)]);
     $user = User::factory()->create(['first_login' => false]);
     $user->roles()->attach(Role::query()->forceCreate(['code' => 'create-party', 'name' => 'Create Party']));

@@ -203,7 +203,8 @@ it('lets a site admin who is not a member moderate but not manage', function () 
 });
 
 it('only links the web player to those who can use it', function () {
-    expect(dashboardControl($this, 'links.webPlayer'))->toBeNull();
+    $moderator = dashboardUser($this->party, 'moderator');
+    $this->actingAs($moderator)->get($this->url)->assertInertia(fn (Assert $page) => $page->where('links.webPlayer', null));
 
     $owner = dashboardUser($this->party, 'owner');
     $this->actingAs($owner)->get($this->url)->assertInertia(fn (Assert $page) => $page
