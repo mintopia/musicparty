@@ -301,7 +301,7 @@ describe('approval queue', function () {
         UpcomingSong::whereKey($request->id)->update(['flagged_at' => null, 'flag_reason' => null]);
         $this->actingAs($this->manager, 'sanctum');
         $controller = app(FlaggedRequestController::class);
-        $resolve = fn (string $method, array $args) => (new ReflectionMethod($controller, $method))->invoke($controller, ...$args);
+        $resolve = fn (string $method, array $args) => new ReflectionMethod($controller, $method)->invoke($controller, ...$args);
 
         expect(fn () => $resolve('resolveApproved', [$this->party, $stale]))->toThrow(ConflictHttpException::class, 'already been handled')
             ->and(fn () => $resolve('resolveRejected', [$this->party, $stale, null, app(DeleteRequest::class)]))->toThrow(ConflictHttpException::class, 'already been handled');

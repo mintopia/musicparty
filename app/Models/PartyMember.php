@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\PartyMemberFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,12 +33,11 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
+#[Fillable(['party_id', 'user_id', 'role_id'])]
 class PartyMember extends Model
 {
     /** @use HasFactory<PartyMemberFactory> */
     use HasFactory;
-
-    protected $fillable = ['party_id', 'user_id', 'role_id'];
 
     /** @return BelongsTo<User, $this> */
     public function user(): BelongsTo
