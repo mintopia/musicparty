@@ -15,9 +15,9 @@ class DeleteRequest
      * Played Songs link back to their Request with null-on-delete, so a Request that was
      * Sent to the Player is refused rather than losing its history.
      */
-    public function handle(UpcomingSong $request, bool $requireFlagged = false): void
+    public function handle(UpcomingSong $request, bool $requireFlagged = false, string $ability = 'delete'): void
     {
-        Gate::authorize('delete', $request);
+        Gate::authorize($ability, $request);
 
         if ($request->queued_at !== null) {
             throw new ConflictHttpException('Unable to delete a Request that has been sent to the Player');
