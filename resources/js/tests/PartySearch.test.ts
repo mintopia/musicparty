@@ -30,11 +30,14 @@ vi.mock('@/layouts/AppLayout.vue', () => ({
     default: {template: '<div><slot name="breadcrumbs" /><slot name="header" /><slot /></div>'},
 }));
 
-const listeners = vi.hoisted(() => ({handlers: {} as Record<string, (payload: unknown) => void>}));
+const listeners = vi.hoisted(() => ({
+    handlers: {} as Record<string, (payload: unknown) => void>,
+    reconnects: [] as Array<() => void>,
+}));
 
 vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
-        onReconnect: () => undefined,
+        onReconnect: (cb: () => void) => listeners.reconnects.push(cb),
         trackConnection: () => ref(true),
         privateChannel: () => ({
             listen: (event: string, cb: (payload: unknown) => void) => {
@@ -306,5 +309,35 @@ describe('Party search page', () => {
 
         expect(inertia.reload).not.toHaveBeenCalled();
         expect(inertia.get).not.toHaveBeenCalled();
+    });
+
+    it('keeps the requested badge when the track was removed because it was played', async () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: 'abba', perPage: 10},
+                results: results([track('t2', {in_queue: true, upcoming_id: 9, score: 2, requested_by: 'sam'})]),
+                playerState: idle,
+            },
+        });
+
+        listeners.handlers['UpcomingSong\\RemovedEvent']({id: 9, played: true});
+        await flushPromises();
+        expect(wrapper.text()).toContain('Requested by sam');
+
+        listeners.handlers['UpcomingSong\\RemovedEvent']({id: 9, played: false});
+        await flushPromises();
+        expect(wrapper.text()).not.toContain('Requested by sam');
+    });
+
+    it('reloads the results when the connection returns', () => {
+        listeners.reconnects.length = 0;
+        mount(Search, {
+            props: {party, params: {query: 'abba', perPage: 10}, results: results([track('t1')]), playerState: idle},
+        });
+
+        listeners.reconnects.forEach((callback) => callback());
+
+        expect(inertia.reload).toHaveBeenCalledWith({only: ['results']});
     });
 });
