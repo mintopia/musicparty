@@ -50,9 +50,7 @@ class SteamProvider extends AbstractSocialProvider
         $config = new Config(
             '',
             $this->getSetting('client_secret'),
-            $this->returnNonce === null
-                ? $this->redirectUrl
-                : $this->redirectUrl.'?'.http_build_query(['nonce' => $this->returnNonce]),
+            $this->returnUrl(),
             [
                 'allowed_hosts' => $host,
             ]
@@ -64,6 +62,15 @@ class SteamProvider extends AbstractSocialProvider
         }
 
         return $provider->setConfig($config);
+    }
+
+    private function returnUrl(): string
+    {
+        $nonce = $this->returnNonce ?? request()->query('nonce');
+
+        return is_string($nonce)
+            ? $this->redirectUrl.'?'.http_build_query(['nonce' => $nonce])
+            : $this->redirectUrl;
     }
 
     public function redirect(): RedirectResponse

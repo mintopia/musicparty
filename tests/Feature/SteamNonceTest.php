@@ -5,6 +5,9 @@ use App\Models\SocialProvider;
 use App\Models\User;
 use App\Services\SocialProviders\SteamProvider;
 use Database\Seeders\RolesSeeder;
+use Illuminate\Http\Request;
+use Laravel\Socialite\Contracts\Factory;
+use Laravel\Socialite\Facades\Socialite;
 
 const STEAM_NONCE = 'valid-nonce';
 
@@ -100,4 +103,16 @@ it('links with a matching nonce', function () {
         ->assertRedirect(route('user.profile'));
 
     expect($user->accounts()->count())->toBe(1);
+});
+
+it('configures the callback return_to with the nonce it sent to Steam', function () {
+    app()->forgetInstance(Factory::class);
+    Socialite::clearResolvedInstances();
+    $nonce = str_repeat('a', 40);
+    app()->instance('request', Request::create('/return', 'GET', ['nonce' => $nonce]));
+    $steam = new SteamProvider(SocialProvider::whereCode('steam')->sole(), 'https://example.test/return');
+
+    $driver = (fn () => $this->getSocialiteProvider())->call($steam);
+
+    expect((fn () => $this->redirectUrl)->call($driver))->toBe('https://example.test/return?nonce='.$nonce);
 });
