@@ -84,7 +84,7 @@ describe('votes', function () {
         DB::disableQueryLog();
 
         expect($queries)->toHaveCount(1)
-            ->and($queries->first())->toStartWith('update "upcoming_songs"');
+            ->and($queries->first())->toMatch('/^update [`"]upcoming_songs[`"]/');
     });
 
     it('recomputes the rating in one UPDATE with no separate sum read', function () {
@@ -98,7 +98,7 @@ describe('votes', function () {
         DB::disableQueryLog();
 
         expect($queries)->toHaveCount(1)
-            ->and($queries->first())->toStartWith('update "played_songs"');
+            ->and($queries->first())->toMatch('/^update [`"]played_songs[`"]/');
     });
 
     it('leaves the correct rating when two stale models rate in interleaved order', function () {

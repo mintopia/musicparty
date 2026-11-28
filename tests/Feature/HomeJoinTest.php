@@ -8,6 +8,7 @@ use App\Models\UpcomingSong;
 use App\Models\User;
 use App\Models\Vote;
 use App\Services\SocialProviders\DiscordProvider;
+use Database\Seeders\PartyMemberRoleSeeder;
 use Database\Seeders\RolesSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -120,6 +121,7 @@ it('returns the guest to the party after login', function () {
 
 it('keeps the party through the nickname step for a first-time guest', function () {
     $this->seed(RolesSeeder::class);
+    $this->seed(PartyMemberRoleSeeder::class);
     $party = Party::factory()->create(['code' => 'KXQB']);
     providerFor(DiscordProvider::class, 'discord');
     fakeRemoteUser('d2', 'new@example.com', ['verified' => true]);

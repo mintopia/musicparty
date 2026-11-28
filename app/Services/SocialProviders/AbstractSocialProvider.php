@@ -197,6 +197,7 @@ abstract class AbstractSocialProvider implements SocialProviderContract
                     $localUser = new User;
                     $localUser->nickname = $remoteUser->getNickname() ?? throw new SocialProviderException('Unable to login with this account');
                     $localUser->save();
+                    $localUser->refresh();
                 }
             }
 
