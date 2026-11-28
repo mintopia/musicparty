@@ -112,19 +112,19 @@ it('shows a user with linked accounts', function () {
             ->where('accounts.0.id', $account->id)
             ->where('accounts.0.can_delete', false)
             ->where('accounts.0.needs_relink', false)
-            ->where('accounts.0.token_expires_human', null)
+            ->missing('accounts.0.token_expires_human')
+            ->missing('accounts.0.token_expired')
             ->has('accounts.0.linked_human')
             ->has('user.avatar_url')
             ->where('parties', []));
 });
 
-it('shows link state, token expiry and party memberships on the user page', function () {
+it('shows link state and party memberships on the user page', function () {
     $spotify = SocialProvider::factory()->create(['code' => 'spotify']);
     LinkedAccount::factory()->create([
         'user_id' => $this->target->id,
         'social_provider_id' => $spotify->id,
         'needs_relink_at' => now(),
-        'access_token_expires_at' => now()->subDays(12),
     ]);
     $party = Party::factory()->create(['name' => 'Retro Room']);
     PartyMember::factory()->create(['user_id' => $this->target->id, 'party_id' => $party->id]);
@@ -132,8 +132,6 @@ it('shows link state, token expiry and party memberships on the user page', func
     $this->actingAs($this->admin)->get(route('admin.users.show', $this->target))
         ->assertInertia(fn (Assert $page) => $page
             ->where('accounts.0.needs_relink', true)
-            ->where('accounts.0.token_expired', true)
-            ->where('accounts.0.token_expires_human', fn ($human) => str_contains($human, 'ago'))
             ->where('parties.0.name', 'Retro Room')
             ->where('parties.0.code', $party->code)
             ->has('parties.0.role'));

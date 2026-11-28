@@ -201,8 +201,6 @@ describe('admin users', () => {
                         linked_human: '1 day ago',
                         linked_at: '2026-01-01 00:00:00',
                         needs_relink: false,
-                        token_expires_human: null,
-                        token_expired: false,
                         can_delete: false,
                     },
                 ],
@@ -216,10 +214,9 @@ describe('admin users', () => {
         expect(wrapper.text()).toContain('This user is suspended');
         expect(wrapper.find('a[href="/admin/users/7/accounts/1"]').exists()).toBe(false);
         expect(wrapper.find('.btn.disabled').exists()).toBe(true);
-        expect(wrapper.find('[data-test="token-note"]').exists()).toBe(false);
     });
 
-    it('shows the token note only where the provider supplies an expiry', () => {
+    it('shows link state and party memberships without a token note', () => {
         const base = {
             id: 1,
             provider: 'Spotify',
@@ -230,18 +227,17 @@ describe('admin users', () => {
             linked_human: '1 day ago',
             linked_at: null,
             needs_relink: true,
-            token_expired: true,
             can_delete: true,
         };
         const wrapper = mount(UserShow, {
             props: {
                 user,
-                accounts: [{...base, token_expires_human: '12 days ago'}],
+                accounts: [base],
                 parties: [{code: 'HZMN', name: 'Retro Room', role: 'Owner'}],
             },
         });
 
-        expect(wrapper.find('[data-test="token-note"]').text()).toBe('Token expired 12 days ago');
+        expect(wrapper.text()).not.toContain('Token expire');
         expect(wrapper.text()).toContain('Needs re-link');
         expect(wrapper.text()).toContain('Retro Room');
 
