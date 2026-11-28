@@ -358,7 +358,7 @@ it('does not apply a pushed state while another sync holds the lock past the wai
     $lock->release();
 });
 
-it('neither broadcasts nor writes for a progress-only change, but broadcasts a track or play-state change', function () {
+it('stays silent while progress advances as extrapolated, but broadcasts a play-state change', function () {
     [$party, $fake] = syncParty();
     $fake->withTrack(new Track('fake', 'PUSHED', 'Pushed', 200000, false, true, new AlbumRef('album-p', 'Test Album', null), [new ArtistRef('artist1', 'Test Artist')]));
     $sync = app(PlaybackSync::class);
@@ -373,10 +373,28 @@ it('neither broadcasts nor writes for a progress-only change, but broadcasts a t
     expect($party->fresh()->updated_at->equalTo($savedAt))->toBeTrue()
         ->and($party->getState()->status->progressMs)->toBe(21000);
 
-    $sync->apply($party, playbackOf('PUSHED', false, 3000));
+    $sync->apply($party, playbackOf('PUSHED', false, 22000));
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
-    expect($party->getState()->status->progressMs)->toBe(3000);
+    expect($party->getState()->status->progressMs)->toBe(22000);
 });
+
+it('broadcasts a seek so other clients jump to the new position', function (int $elapsedSeconds, int $reportedMs) {
+    [$party, $fake] = syncParty();
+    $fake->withTrack(new Track('fake', 'SEEK', 'Seek', 200000, false, true, new AlbumRef('album-s', 'Test Album', null), [new ArtistRef('artist1', 'Test Artist')]));
+    $sync = app(PlaybackSync::class);
+    $sync->apply($party, playbackOf('SEEK', true, 100000));
+
+    Event::fake([PartyUpdatedEvent::class]);
+    $this->travel($elapsedSeconds)->seconds();
+    $sync->apply($party, playbackOf('SEEK', true, $reportedMs));
+
+    Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);
+    expect($party->getState()->status->progressMs)->toBe($reportedMs);
+})->with([
+    'a 19 second rewind' => [20, 101000],
+    'a skip far ahead' => [5, 170000],
+    'a restart of the same track' => [10, 500],
+]);
 
 it('does not write or broadcast for a progress-only poll', function () {
     [$party, $fake] = syncParty();
