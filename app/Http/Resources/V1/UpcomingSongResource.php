@@ -15,7 +15,7 @@ class UpcomingSongResource extends JsonResource
 
     protected ?int $position = null;
 
-    /** @var array{held: bool, next: bool}|null */
+    /** @var array{held: bool, next?: bool, random_order?: bool}|null */
     protected ?array $queueState = null;
 
     /**
@@ -47,7 +47,7 @@ class UpcomingSongResource extends JsonResource
     }
 
     /**
-     * @param  array{held: bool, next: bool}|null  $state
+     * @param  array{held: bool, next?: bool, random_order?: bool}|null  $state
      */
     public function queueState(?array $state): void
     {
