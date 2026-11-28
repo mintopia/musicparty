@@ -389,7 +389,7 @@ describe('Encore as the source of truth', function () {
     it('releases the frame back to the queue when the lock stays held, and warns on the last attempt', function () {
         config(['musicparty.prevent_overlapping_updates' => true]);
         $party = encoreParty();
-        Cache::lock("party-sync:{$party->id}", PlaybackSync::LOCK_SECONDS)->get();
+        Cache::lock("party-sync:{$party->id}", 600)->get();
         Sleep::fake(syncWithCarbon: true);
         Log::spy();
         $frame = encorePlaybackState('t1', 1000, now()->getTimestampMs());
