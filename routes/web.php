@@ -18,6 +18,7 @@ use App\Http\Controllers\PartyJoinController;
 use App\Http\Controllers\PartyMemberController;
 use App\Http\Controllers\PartyModerationController;
 use App\Http\Controllers\PartyModsController;
+use App\Http\Controllers\PartySearchController;
 use App\Http\Controllers\ThemeStylesheetController;
 use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
@@ -68,9 +69,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::resource('parties.users', PartyMemberController::class)->only(['edit', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['index', 'show'])->scoped();
         });
-        Route::get('parties/{party}/search', [PartyController::class, 'search'])->middleware('throttle:search')->name('parties.search');
-        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->middleware('throttle:search')->name('parties.albums.show');
-        Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->middleware('throttle:search')->name('parties.artists.show');
+        Route::get('parties/{party}/search', [PartySearchController::class, 'search'])->middleware('throttle:search')->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartySearchController::class, 'album'])->middleware('throttle:search')->name('parties.albums.show');
+        Route::get('parties/{party}/artists/{artist}', [PartySearchController::class, 'artist'])->middleware('throttle:search')->name('parties.artists.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
         Route::post('parties/{party}/flagged/approve', [FlaggedRequestController::class, 'bulkApprove'])->name('parties.flagged.bulk-approve');
