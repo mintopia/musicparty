@@ -34,7 +34,7 @@ trait CreatesApplication
             'BCRYPT_ROUNDS' => '4',
             'CACHE_STORE' => 'array',
             ...(self::usesMariaDb()
-                ? ['DB_CONNECTION' => 'mariadb', 'DB_DATABASE' => (string) getenv('TEST_DB_DATABASE'), 'DB_URL' => '']
+                ? ['DB_CONNECTION' => 'mysql', 'DB_DATABASE' => (string) getenv('TEST_DB_DATABASE'), 'DB_URL' => '']
                 : ['DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:', 'DB_URL' => '']),
             'MAIL_MAILER' => 'array',
             'QUEUE_CONNECTION' => 'sync',
@@ -59,7 +59,7 @@ trait CreatesApplication
     private static function isSafeConnection(array $connection): bool
     {
         if (self::usesMariaDb()) {
-            return ($connection['driver'] ?? null) === 'mariadb'
+            return ($connection['driver'] ?? null) === 'mysql'
                 && str_ends_with((string) ($connection['database'] ?? ''), '_test');
         }
 
