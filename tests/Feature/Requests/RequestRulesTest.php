@@ -221,6 +221,19 @@ describe('moderation', function () {
 
         expect(rulesCheck($party, rulesMember($party), $track))->toBe([false, 'Artist is not allowed']);
     });
+
+    it('enforces an artist filter only while it is enabled', function () {
+        $party = rulesParty();
+        rulesModeration($party, PartyModerationType::mtArtist, 'Guest');
+        $track = rulesVariant(rulesTrack(), ['artists' => [new ArtistRef('b', 'Guest')]]);
+        $member = rulesMember($party);
+
+        $party->moderations()->update(['enabled' => false]);
+        expect(rulesCheck($party, $member, $track))->toBe([true, null]);
+
+        $party->moderations()->update(['enabled' => true]);
+        expect(rulesCheck($party, $member, $track))->toBe([false, 'Artist is not allowed']);
+    });
 });
 
 describe('queue and history', function () {
