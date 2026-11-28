@@ -212,6 +212,7 @@ describe('admin users', () => {
 
         const impersonate = wrapper.find('a[href="/admin/users/7/impersonate"]');
         expect(impersonate.exists()).toBe(true);
+        expect(impersonate.attributes('method')).toBe('post');
         expect(wrapper.text()).toContain('This user is suspended');
         expect(wrapper.find('a[href="/admin/users/7/accounts/1"]').exists()).toBe(false);
         expect(wrapper.find('.btn.disabled').exists()).toBe(true);
@@ -253,6 +254,7 @@ describe('admin users', () => {
         const del = mount(UserDelete, {
             props: {
                 user: {id: 7, nickname: 'alice'},
+                blocked_reason: null,
                 impact: {accounts: ['Discord', 'Spotify'], accounts_count: 2, memberships_count: 1, owned_parties: []},
             },
         });

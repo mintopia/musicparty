@@ -136,7 +136,7 @@ it('lets an admin impersonate a user', function () {
     $admin = makeFirstUserAdmin();
     $target = User::factory()->create(['first_login' => false]);
 
-    $this->actingAs($admin)->get(route('admin.users.impersonate', $target))
+    $this->actingAs($admin)->post(route('admin.users.impersonate', $target))
         ->assertRedirect(route('home'));
 
     expect(session(auth('web')->getName()))->toBe($target->id)
@@ -160,7 +160,7 @@ it('forbids impersonation by non-admins', function () {
     $user = User::factory()->create(['first_login' => false]);
     $target = User::factory()->create(['first_login' => false]);
 
-    $this->actingAs($user)->get(route('admin.users.impersonate', $target))->assertForbidden();
+    $this->actingAs($user)->post(route('admin.users.impersonate', $target))->assertForbidden();
 
     $this->assertAuthenticatedAs($user);
 });
@@ -172,6 +172,6 @@ it('forbids unimpersonate outside an impersonation session', function () {
 it('redirects guests away from impersonation', function () {
     $target = User::factory()->create(['first_login' => false]);
 
-    $this->get(route('admin.users.impersonate', $target))->assertRedirect();
+    $this->post(route('admin.users.impersonate', $target))->assertRedirect();
     $this->assertGuest();
 });

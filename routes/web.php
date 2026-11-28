@@ -24,6 +24,7 @@ use App\Http\Controllers\UpcomingSongController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\WebPlayerController;
 use App\Http\Middleware\RedirectOnFirstLoginMiddleware;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Always available
@@ -34,7 +35,7 @@ if (app()->environment('testing')) {
 }
 Route::get('/', [HomeController::class, 'home'])->name('home');
 Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
-Route::get('logout', [UserController::class, 'logout'])->name('logout');
+Route::post('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
 // Authenticated routes
@@ -97,7 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::resource('users', AdminUserController::class)->except(['create', 'store']);
             Route::get('users/{user}/delete', [AdminUserController::class, 'delete'])->name('users.delete');
-            Route::get('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
+            Route::post('users/{user}/impersonate', [AdminUserController::class, 'impersonate'])->name('users.impersonate');
             Route::get('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'delete'])->name('users.accounts.delete')->scopeBindings();
             Route::delete('users/{user}/accounts/{account}', [AdminLinkedAccountController::class, 'destroy'])->name('users.accounts.destroy')->scopeBindings();
 
@@ -124,4 +125,10 @@ Route::middleware('guest')->group(function () {
     Route::get('login/{socialprovider:code}/return', [UserController::class, 'login_return'])->name('login.return');
 });
 
-Route::fallback(fn () => abort(404));
+Route::fallback(function (Request $request): never {
+    $writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
+    $matched = collect(Route::getRoutes()->getRoutes())->contains(fn ($route): bool => ! $route->isFallback
+        && collect($writeMethods)->contains(fn (string $method): bool => $route->matches(Request::create($request->path(), $method))));
+
+    abort($matched ? 405 : 404);
+});

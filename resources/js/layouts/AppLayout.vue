@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Head, usePage} from '@inertiajs/vue3';
+import {Head, Link, usePage} from '@inertiajs/vue3';
 import {computed, ref} from 'vue';
 import AppliedEntropyFooter from '@/components/AppliedEntropyFooter.vue';
 import FlashMessages from '@/components/FlashMessages.vue';
@@ -123,6 +123,18 @@ useFlaggedCountSync();
                                     </a>
                                 </div>
                             </template>
+                            <Link
+                                v-else-if="item.method"
+                                class="nav-link"
+                                :href="item.href!"
+                                :method="item.method"
+                                as="button"
+                            >
+                                <span class="nav-link-icon d-md-none d-lg-inline-block">
+                                    <i class="icon ti" :class="item.icon"></i>
+                                </span>
+                                <span class="nav-link-title">{{ item.title }}</span>
+                            </Link>
                             <a v-else class="nav-link" :href="item.href">
                                 <span class="nav-link-icon d-md-none d-lg-inline-block">
                                     <i class="icon ti" :class="item.icon"></i>

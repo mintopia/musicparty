@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import {Head, useForm} from '@inertiajs/vue3';
+import {Head, Link, useForm} from '@inertiajs/vue3';
 import JoinSteps from '@/components/JoinSteps.vue';
 import type {PartyInvite} from '@/components/PartyInviteCard.vue';
 import GuestLayout from '@/layouts/GuestLayout.vue';
@@ -71,7 +71,7 @@ function submit(): void {
                 </div>
             </div>
             <div class="d-flex">
-                <a :href="logout().url" class="btn btn-link">Cancel</a>
+                <Link :href="logout().url" method="post" as="button" class="btn btn-link">Cancel</Link>
                 <button type="submit" class="btn btn-primary ms-auto" :disabled="form.processing">
                     {{ party ? 'Continue to the party' : 'Continue' }}
                 </button>

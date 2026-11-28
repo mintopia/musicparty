@@ -84,10 +84,15 @@ const summary = [
                     <i class="icon ti ti-edit" aria-hidden="true"></i>
                     Edit
                 </Link>
-                <a :href="`/admin/users/${user.id}/impersonate`" class="btn btn-outline-secondary order-2 order-sm-1">
+                <Link
+                    :href="`/admin/users/${user.id}/impersonate`"
+                    method="post"
+                    as="button"
+                    class="btn btn-outline-secondary order-2 order-sm-1"
+                >
                     <i class="icon ti ti-spy" aria-hidden="true"></i>
                     Impersonate<span class="d-none d-sm-inline">&nbsp;{{ user.nickname }}</span>
-                </a>
+                </Link>
             </PageHead>
 
             <div v-if="user.suspended" class="alert alert-warning alert-important" role="alert">

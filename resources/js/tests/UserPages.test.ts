@@ -120,6 +120,7 @@ describe('user pages', () => {
         expect(wrapper.text()).toContain('Privacy Policy');
         expect(wrapper.find('.invalid-feedback').text()).toBe('You must accept');
         expect(wrapper.find('a.btn-link').attributes('href')).toBe('/logout');
+        expect(wrapper.find('a.btn-link').attributes('method')).toBe('post');
         await wrapper.find('input[name=terms]').setValue(true);
         await wrapper.find('form').trigger('submit');
         expect(inertia.submitted[0]).toMatchObject({method: 'put', url: '/login/signup'});
