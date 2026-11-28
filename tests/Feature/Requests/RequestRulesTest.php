@@ -245,6 +245,14 @@ describe('queue and history', function () {
         expect(rulesCheck($party, rulesMember($party), $remaster))->toBe([false, 'A similar song is already in the queue']);
     });
 
+    it('rejects a case variant of a waiting request', function () {
+        $party = rulesParty();
+        rulesWaiting($party, rulesTrack());
+        $shouty = rulesVariant(rulesTrack(), ['id' => 'shouty', 'name' => strtoupper(rulesTrack()->name)]);
+
+        expect(rulesCheck($party, rulesMember($party), $shouty))->toBe([false, 'A similar song is already in the queue']);
+    });
+
     it('ignores a similar request that is held for approval', function () {
         $party = rulesParty();
         rulesWaiting($party, rulesTrack())->forceFill(['flagged_at' => now(), 'flag_reason' => 'Flagged by the AI review'])->save();

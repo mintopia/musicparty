@@ -73,6 +73,16 @@ it('adds a request with hold time and score adjustment that any feature can set'
     expect(sentTrackIds())->toBe(['ADDED']);
 });
 
+it('leaves one request when the same song is added repeatedly', function () {
+    $song = hookRequest($this->party, 'ONCE')->song;
+
+    foreach (range(1, 3) as $_) {
+        app(QueueSelector::class)->addRequest($this->party, $song);
+    }
+
+    expect($this->party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->count())->toBe(1);
+});
+
 it('reuses a waiting request for the same song', function () {
     $existing = hookRequest($this->party, 'DUP');
 

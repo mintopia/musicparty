@@ -13,6 +13,7 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\Queue\CandidateFilter;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Random\Randomizer;
 use Throwable;
@@ -233,16 +234,18 @@ class QueueSelector
      */
     public function addRequest(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
     {
-        $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
-        if (! $request->exists) {
-            $request->party()->associate($party);
-            $request->song()->associate($song);
-            $request->user()->associate($user);
-        }
-        $request->forceFill($attributes)->save();
-        $request->updateScore();
+        return Cache::lock("add-request:{$party->id}:{$song->id}", 10)->block(10, function () use ($party, $song, $user, $attributes): UpcomingSong {
+            $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
+            if (! $request->exists) {
+                $request->party()->associate($party);
+                $request->song()->associate($song);
+                $request->user()->associate($user);
+            }
+            $request->forceFill($attributes)->save();
+            $request->updateScore();
 
-        return $request;
+            return $request;
+        });
     }
 
     /**
