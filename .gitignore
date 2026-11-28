@@ -37,3 +37,7 @@ frankenphp-worker.php
 
 /.visual-companion/
 /.impeccable/
+
+/tests/smoke/image/node_modules
+/tests/smoke/image/smoke-compose.log
+/tests/smoke/image/test-results

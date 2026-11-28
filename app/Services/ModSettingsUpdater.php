@@ -6,6 +6,8 @@ use App\Enums\SettingType;
 use App\Models\Mod;
 use App\Models\ModSetting;
 use App\Models\Party;
+use App\Mods\Contracts\ValidatesSettings;
+use App\Mods\ModRegistry;
 use App\Mods\PartyMods;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -142,11 +144,38 @@ class ModSettingsUpdater
                 $writes[] = [$modCode, $definition, $normalised];
             }
         }
+        foreach ($this->crossChecked($writes) as $key => $message) {
+            $errors[$key] = [$message];
+        }
         if ($errors !== []) {
             throw ValidationException::withMessages($errors);
         }
 
         return $writes;
+    }
+
+    /**
+     * @param  list<array{0: string, 1: ModSetting, 2: mixed}>  $writes
+     * @return array<string, string>
+     */
+    protected function crossChecked(array $writes): array
+    {
+        $byMod = [];
+        foreach ($writes as [$modCode, $definition, $value]) {
+            $byMod[$modCode][$definition->code] = $value;
+        }
+        $errors = [];
+        foreach ($byMod as $modCode => $submitted) {
+            $mod = app(ModRegistry::class)->find($modCode);
+            if (! $mod instanceof ValidatesSettings) {
+                continue;
+            }
+            foreach ($mod->validateSettings($submitted) as $code => $message) {
+                $errors["mods.{$modCode}.settings.{$code}"] = $message;
+            }
+        }
+
+        return $errors;
     }
 
     protected function keepsStoredSecret(ModSetting $definition, mixed $value, ?Party $party): bool

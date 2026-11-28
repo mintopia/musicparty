@@ -16,7 +16,7 @@ class UpcomingSongResourceCollection extends ResourceCollection
     /** @var array<int, object> */
     protected array $augmentedData = [];
 
-    /** @var array<int, array{held: bool, next: bool}> */
+    /** @var array<int, array{held: bool, next?: bool, random_order?: bool}> */
     protected array $queueStates = [];
 
     /**
@@ -38,7 +38,7 @@ class UpcomingSongResourceCollection extends ResourceCollection
     }
 
     /**
-     * @param  array<int, array{held: bool, next: bool}>  $states
+     * @param  array<int, array{held: bool, next?: bool, random_order?: bool}>  $states
      */
     public function queueStates(array $states): void
     {

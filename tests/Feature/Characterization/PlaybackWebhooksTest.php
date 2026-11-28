@@ -198,3 +198,18 @@ it('records the Webhook source when a webhook update syncs and Polling for the p
     new PartyUpdate($party->fresh())->handle();
     expect($party->fresh()->playback_source)->toBe(PlaybackSource::Polling);
 });
+
+it('accepts a second webhook once the first job has started', function () {
+    config(['musicparty.webhook_should_queue' => true, 'musicparty.webhook_dispatch_after_request' => false]);
+    $party = webhookParty();
+    Sanctum::actingAs($party->user);
+
+    $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
+    $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
+    Queue::assertPushed(PartyUpdate::class, 1);
+
+    new PartyUpdate($party, PlaybackSource::Webhook)->handle();
+    $this->postJson(route('webhooks.parties.simple', $party))->assertNoContent();
+
+    Queue::assertPushed(PartyUpdate::class, 2);
+});

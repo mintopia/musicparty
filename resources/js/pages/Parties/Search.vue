@@ -100,7 +100,9 @@ function annotatedTracks(): TrackAnnotation[] {
     return found.type === 'track' ? found.items.data : [];
 }
 
-const partyChannel = useEcho().privateChannel(`party.${props.party.code}`) as {
+const echo = useEcho();
+echo.onReconnect(() => router.reload({only: ['results']}));
+const partyChannel = echo.privateChannel(`party.${props.party.code}`) as {
     listen<T>(event: string, cb: (payload: T) => void): unknown;
 };
 partyChannel.listen<{
@@ -124,7 +126,10 @@ partyChannel.listen<{
             };
         });
 });
-partyChannel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
+partyChannel.listen<{id: number; played?: boolean}>('UpcomingSong\\RemovedEvent', (payload) => {
+    if (payload.played) {
+        return;
+    }
     annotatedTracks()
         .filter((track) => track.queue.upcoming_id === payload.id)
         .forEach((track) => {

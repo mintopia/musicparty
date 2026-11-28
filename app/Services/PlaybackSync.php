@@ -16,6 +16,8 @@ use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\Playback\PartyDashboardCache;
+use Carbon\CarbonInterface;
+use Illuminate\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -23,13 +25,19 @@ use Illuminate\Support\Facades\Log;
 
 class PlaybackSync
 {
-    public const LOCK_SECONDS = 120;
+    public const int LOCK_SECONDS = 15;
 
     public const int PUSHED_WAIT_SECONDS = 15;
 
     private const int RECEIVED_ORDER_SECONDS = 300;
 
     private const int POLLING_FRESH_SECONDS = 120;
+
+    private const int SEEK_THRESHOLD_MS = 3000;
+
+    private bool $seekDetected = false;
+
+    private ?Lock $heldLock = null;
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -64,7 +72,9 @@ class PlaybackSync
                 }
 
                 $provider = $this->providers->forParty($party, Purpose::Control);
+                $this->refreshLock();
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
+                $this->refreshLock();
                 $progressOnly = $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
             } finally {
                 Cache::put($party->debounceKey(), true, Party::UPDATE_DEBOUNCE_SECONDS);
@@ -99,7 +109,7 @@ class PlaybackSync
             if ($state === null) {
                 return;
             }
-            if ($state->source !== PlaybackSource::Encore && $party->playback_sampled_at !== null && $state->sampledAt->lessThan($party->playback_sampled_at)) {
+            if ($state->source !== PlaybackSource::Encore && $this->orderingStamp($party)?->greaterThan($state->sampledAt)) {
                 Log::debug("{$party}: Dropping stale-ordered playback state from {$state->source->value}");
 
                 return;
@@ -138,13 +148,46 @@ class PlaybackSync
             return false;
         }
 
+        $outer = $this->heldLock;
+        $this->heldLock = $lock instanceof Lock ? $lock : null;
         try {
             $this->coalescingBroadcasts($party, $callback);
         } finally {
+            $this->heldLock = $outer;
             $lock->release();
         }
 
         return true;
+    }
+
+    /**
+     * Extends the held sync lock's TTL. The lock is owner-aware, so a lock that expired and was taken by another caller is not touched.
+     */
+    public function refreshLock(): bool
+    {
+        return $this->heldLock?->refresh(self::LOCK_SECONDS) ?? false;
+    }
+
+    protected function orderingStamp(Party $party): ?CarbonInterface
+    {
+        $persisted = $party->playback_sampled_at;
+        $recalled = $this->status->recall($party)?->sampledAt;
+
+        return match (true) {
+            $persisted === null => $recalled,
+            $recalled === null => $persisted,
+            default => $recalled->greaterThan($persisted) ? $recalled : $persisted,
+        };
+    }
+
+    protected function deviatesFromExtrapolation(?PlaybackState $previous, PlaybackState $state): bool
+    {
+        if ($previous === null) {
+            return false;
+        }
+        $elapsedMs = $previous->isPlaying ? max(0, $previous->sampledAt->diffInMilliseconds($state->sampledAt, false)) : 0;
+
+        return abs($state->progressMs - ($previous->progressMs + $elapsedMs)) > self::SEEK_THRESHOLD_MS;
     }
 
     public function nextUpdateDelay(Party $party): ?int
@@ -179,16 +222,25 @@ class PlaybackSync
     protected function coalescingBroadcasts(Party $party, callable $sync): void
     {
         $party->suppressRenderedBroadcasts(true);
+        $this->seekDetected = false;
         $stateBefore = $this->renderedStateFingerprint($party);
 
         try {
             $sync();
         } finally {
             $party->suppressRenderedBroadcasts(false);
-            if ($this->renderedStateFingerprint($party) !== $stateBefore) {
+            if ($this->consumeSeek() || $this->renderedStateFingerprint($party) !== $stateBefore) {
                 UpdatedEvent::dispatch($party);
             }
         }
+    }
+
+    protected function consumeSeek(): bool
+    {
+        $seeked = $this->seekDetected;
+        $this->seekDetected = false;
+
+        return $seeked;
     }
 
     protected function renderedStateFingerprint(Party $party): string
@@ -207,12 +259,17 @@ class PlaybackSync
      */
     protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): bool
     {
+        $this->refreshLock();
         $previous = $this->status->recall($party);
+        $seeked = $previous !== null && $previous->differsOnlyInProgress($state) && $this->deviatesFromExtrapolation($previous, $state);
+        $this->seekDetected = $seeked;
         $progressOnly = $previous !== null
+            && ! $seeked
             && $previous->differsOnlyInProgress($state)
             && $party->playback_received_at !== null
             && $party->playback_received_at->greaterThan(now()->subSeconds($this->receivedHeartbeatSeconds($state->source)));
         $this->status->remember($party, $state);
+        $this->status->markSynced($party);
         if ($progressOnly) {
             if ($party->active) {
                 $this->selector->run($party);

@@ -66,7 +66,7 @@ class DecisionModelReviewer
                 ->asJson()
                 ->timeout($timeout)
                 ->connectTimeout(min($timeout, 5))
-                ->withOptions($this->pinnedOptions($endpoint, $addresses))
+                ->withOptions($this->guard->pinnedOptions($endpoint, $addresses))
                 ->post($endpoint, $payload);
         } catch (ConnectionException) {
             throw new DecisionModelException('Decision model request failed to connect or timed out');
@@ -213,21 +213,5 @@ class DecisionModelReviewer
         $text = is_array($legend) ? ($legend[$level] ?? null) : null;
 
         return is_string($text) && trim($text) !== '' ? trim($text) : null;
-    }
-
-    /**
-     * @param  list<string>  $addresses
-     * @return array<string, mixed>
-     */
-    protected function pinnedOptions(string $endpoint, array $addresses): array
-    {
-        $parts = parse_url($endpoint);
-        if ($addresses === [] || ! is_array($parts) || ! isset($parts['host'])) {
-            return [];
-        }
-        $port = $parts['port'] ?? (($parts['scheme'] ?? 'https') === 'http' ? 80 : 443);
-        $ip = str_contains($addresses[0], ':') ? "[{$addresses[0]}]" : $addresses[0];
-
-        return ['curl' => [CURLOPT_RESOLVE => ["{$parts['host']}:{$port}:{$ip}"]]];
     }
 }

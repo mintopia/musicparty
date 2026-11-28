@@ -329,6 +329,16 @@ describe('withdrawing', function () {
         expect(UpcomingSong::count())->toBe(1);
     });
 
+    it('refuses safely when the flag is cleared between load and withdraw', function () {
+        $request = flaggedRequest($this->party, $this->member->user);
+        $stale = UpcomingSong::findOrFail($request->id);
+        UpcomingSong::whereKey($request->id)->update(['flagged_at' => null, 'flag_reason' => null]);
+        $this->actingAs($this->member->user, 'sanctum');
+
+        expect(fn () => app(DeleteRequest::class)->handle($stale, requireFlagged: true, ability: 'withdraw'))->toThrow(ConflictHttpException::class, 'already been handled');
+        expect(UpcomingSong::count())->toBe(1);
+    });
+
     it('refuses withdrawing a request that is already in the queue', function () {
         $request = flaggedRequest($this->party, $this->member->user, ['flagged_at' => null]);
 
@@ -389,17 +399,20 @@ describe('bulk resolution', function () {
         expect($request->fresh()->flagged_at)->toBeNull();
     });
 
-    it('is all-or-nothing when an id is not a flagged request of this party', function () {
+    it('skips ids that are already handled or not flagged here and reports the counts', function () {
         $mine = flaggedRequest($this->party);
+        $gone = flaggedRequest($this->party);
         $other = flaggedRequest(Party::factory()->create(['provider_id' => 'fake', 'flag_requests' => true]));
         $queued = flaggedRequest($this->party, null, ['flagged_at' => null]);
+        $gone->delete();
 
-        foreach ([$other, $queued] as $bad) {
-            $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$mine->id, $bad->id]])->assertNotFound();
-        }
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-approve', $this->party), ['ids' => [$mine->id, $gone->id, $other->id, $queued->id]])
+            ->assertRedirect()->assertSessionHas('successMessage', '1 handled, 3 already handled and skipped');
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-reject', $this->party), ['ids' => [$gone->id]])
+            ->assertRedirect()->assertSessionHas('successMessage', '0 handled, 1 already handled and skipped');
         $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.bulk-reject', $this->party), ['ids' => []])->assertSessionHasErrors('ids');
 
-        expect($mine->fresh()->flagged_at)->not->toBeNull();
+        expect($mine->fresh()->flagged_at)->toBeNull()->and($other->fresh()->flagged_at)->not->toBeNull();
     });
 });
 

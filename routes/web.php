@@ -28,10 +28,10 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 // Always available
-Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->middleware('throttle:theme-css')->name('theme.css');
+Route::get('theme/{code}.css', ThemeStylesheetController::class)->where('code', '[a-z0-9-]+')->name('theme.css');
 
 Route::get('/', [HomeController::class, 'home'])->name('home');
-Route::post('parties/join', [PartyJoinController::class, 'store'])->middleware('throttle:20,1')->name('parties.join');
+Route::post('parties/join', [PartyJoinController::class, 'store'])->name('parties.join');
 Route::post('logout', [UserController::class, 'logout'])->name('logout');
 Route::get('parties/{party}/tv', [PartyController::class, 'tv'])->name('parties.tv');
 
@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'destroy'])->name('linkedaccounts.destroy');
         });
 
-        Route::get('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
+        Route::post('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
 
         Route::middleware('can:admin')->name('admin.')->prefix('admin')->group(function () {
             Route::get('/', [AdminHomeController::class, 'dashboard'])->name('dashboard');
@@ -123,9 +123,8 @@ Route::middleware('guest')->group(function () {
 });
 
 Route::fallback(function (Request $request): never {
-    $writeMethods = ['POST', 'PUT', 'PATCH', 'DELETE'];
-    $matched = collect(Route::getRoutes()->getRoutes())->contains(fn ($route): bool => ! $route->isFallback
-        && collect($writeMethods)->contains(fn (string $method): bool => $route->matches(Request::create($request->path(), $method))));
+    $legacy = in_array($request->path(), ['logout', 'admin/unimpersonate'], true)
+        || preg_match('#^admin/users/[^/]+/impersonate$#', $request->path()) === 1;
 
-    abort($matched ? 405 : 404);
+    abort($legacy ? 405 : 404);
 });

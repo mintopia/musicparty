@@ -10,9 +10,19 @@ x-app: &app
   environment:
     PUID: "${PUID:-1000}"
     PGID: "${PGID:-1000}"
+    TRUSTED_PROXIES: "*"
+    APP_KEY: "${APP_KEY:?set APP_KEY}"
+    DB_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
+    REVERB_APP_ID: "${REVERB_APP_ID:?set REVERB_APP_ID}"
+    REVERB_APP_KEY: "${REVERB_APP_KEY:?set REVERB_APP_KEY}"
+    REVERB_APP_SECRET: "${REVERB_APP_SECRET:?set REVERB_APP_SECRET}"
   depends_on:
-    - database
-    - redis
+    database:
+      condition: service_healthy
+    redis:
+      condition: service_healthy
+  volumes:
+    - logs:/app/storage/logs
 
 services:
   app:
@@ -42,21 +52,34 @@ services:
     image: mariadb:11.4
     restart: unless-stopped
     environment:
+      MARIADB_AUTO_UPGRADE: "1"
       MYSQL_ROOT_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
       MYSQL_DATABASE: "${DB_DATABASE:?set DB_DATABASE}"
       MYSQL_USER: "${DB_USERNAME:?set DB_USERNAME}"
       MYSQL_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
     volumes:
       - dbdata:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "healthcheck.sh", "--connect", "--innodb_initialized" ]
+      interval: 5s
+      timeout: 5s
+      retries: 20
 
   redis:
-    image: redis:6.2.6
+    image: redis:7.4
     restart: unless-stopped
     command: redis-server --appendonly yes
     volumes:
       - redisdata:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 3s
+      retries: 20
 
 volumes:
+  logs:
+    driver: local
   dbdata:
     driver: local
   redisdata:

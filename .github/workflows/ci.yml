@@ -63,6 +63,7 @@ jobs:
         run: npm run build
 
       - name: Pest (parallel, with coverage)
+        if: ${{ !cancelled() }}
         env:
           XDEBUG_MODE: coverage
         run: >
@@ -94,11 +95,11 @@ jobs:
           if-no-files-found: ignore
 
   tests-mariadb:
-    name: Tests (MariaDB 11)
+    name: Tests (MariaDB 11.4)
     runs-on: ubuntu-latest
     services:
       db:
-        image: mariadb:11
+        image: mariadb:11.4
         env:
           MARIADB_ROOT_PASSWORD: musicparty
           MARIADB_DATABASE: musicparty_test
@@ -150,6 +151,50 @@ jobs:
       - name: Pest (MariaDB)
         run: vendor/bin/pest
 
+  tests-production:
+    name: Tests (production profile, ${{ matrix.scheme }} APP_URL)
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        scheme: [https, http]
+    services:
+      redis:
+        image: redis:7.4
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=5s
+          --health-timeout=5s
+          --health-retries=20
+    env:
+      TEST_APP_URL: ${{ matrix.scheme }}://music.example.test
+      TEST_CACHE_STORE: redis
+      TEST_SESSION_DRIVER: redis
+      TEST_QUEUE_CONNECTION: redis
+      REDIS_HOST: 127.0.0.1
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath, intl, pcntl, zip, redis, opentelemetry
+          coverage: none
+          tools: composer:v2
+
+      - name: Install dependencies
+        run: composer install --no-interaction --prefer-dist --no-progress --ignore-platform-req=php --ignore-platform-req=ext-opentelemetry --ignore-platform-req=ext-grpc
+
+      - name: Prepare environment
+        run: |
+          cp .env.example .env
+          php artisan key:generate --ansi
+
+      - name: Pest (production profile)
+        run: vendor/bin/pest -c phpunit.production.xml
+
   pint:
     name: Pint
     runs-on: ubuntu-latest
@@ -199,18 +244,23 @@ jobs:
         run: npm ci
 
       - name: Lint
+        if: ${{ !cancelled() }}
         run: npm run lint
 
       - name: Format check
+        if: ${{ !cancelled() }}
         run: npm run format:check
 
       - name: Build
+        if: ${{ !cancelled() }}
         run: npm run build
 
       - name: Type-check
+        if: ${{ !cancelled() }}
         run: npm run typecheck
 
       - name: Vitest
+        if: ${{ !cancelled() }}
         run: npm test
 
   phpstan:
@@ -271,6 +321,40 @@ jobs:
           cache-from: type=gha,scope=${{ matrix.image }}
           cache-to: type=gha,scope=${{ matrix.image }},mode=max
 
+  image-smoke:
+    name: Production image smoke test
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: docker/setup-buildx-action@v3
+
+      - name: Build production image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/production/Dockerfile
+          load: true
+          tags: musicparty:smoke
+          cache-from: type=gha,scope=production
+          cache-to: type=gha,scope=production,mode=max
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Smoke test the built image
+        run: tests/smoke/image/smoke.sh
+
+      - name: Upload compose logs
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: image-smoke-logs
+          path: tests/smoke/image/smoke-compose.log
+          if-no-files-found: ignore
+
   websocket-smoke:
     name: Websocket routing smoke test
     runs-on: ubuntu-latest
@@ -309,3 +393,27 @@ jobs:
         run: |
           touch .env
           docker compose -f docker-compose.production.example.yml config --quiet
+
+  ci-gate:
+    name: CI gate
+    if: ${{ always() }}
+    needs:
+      - tests
+      - tests-mariadb
+      - tests-production
+      - pint
+      - build
+      - phpstan
+      - rector
+      - docker
+      - image-smoke
+      - websocket-smoke
+      - compose
+    runs-on: ubuntu-latest
+    steps:
+      - name: Every job must have succeeded
+        env:
+          RESULTS: ${{ toJSON(needs) }}
+        run: |
+          echo "$RESULTS" | jq -r 'to_entries[] | "\(.key): \(.value.result)"'
+          echo "$RESULTS" | jq -e 'all(.[]; .value.result == "success")' >/dev/null

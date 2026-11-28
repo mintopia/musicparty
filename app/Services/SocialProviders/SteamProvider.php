@@ -46,7 +46,7 @@ class SteamProvider extends AbstractSocialProvider
 
     protected function getSocialiteProvider(): AbstractProvider
     {
-        $host = request()->getHost();
+        $host = (string) parse_url((string) config('app.url'), PHP_URL_HOST);
         $config = new Config(
             '',
             $this->getSetting('client_secret'),

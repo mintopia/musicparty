@@ -1,10 +1,14 @@
 <?php
 
+use App\Events\UserSuspended;
 use App\Models\ModData;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\Role;
 use App\Models\User;
+use App\Observers\UserObserver;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 
 beforeEach(function () {
@@ -103,4 +107,77 @@ it('removes mod data when a user or party is deleted', function () {
 
     $party->delete();
     expect(ModData::count())->toBe(0);
+});
+
+it('gives only one of two simultaneous first sign-ins the admin role', function () {
+    $this->adminRole->users()->detach();
+    DB::table('users')->delete();
+    $users = User::withoutEvents(fn () => User::factory()->count(2)->create());
+
+    $users->each(fn (User $user) => app(UserObserver::class)->created($user));
+
+    expect($this->adminRole->users()->count())->toBe(1)
+        ->and($users->first()->hasRole('admin'))->toBeTrue()
+        ->and($users->last()->hasRole('admin'))->toBeFalse();
+});
+
+it('does not make a later user an admin when older users exist but no admin does', function () {
+    $this->adminRole->users()->detach();
+
+    $later = User::factory()->create(['first_login' => false]);
+
+    expect($later->hasRole('admin'))->toBeFalse()
+        ->and($this->adminRole->users()->count())->toBe(0);
+});
+
+it('refuses to delete the last admin with an accurate message', function () {
+    $other = User::factory()->create(['first_login' => false]);
+    $other->grantRole($this->adminRole);
+    $this->admin->revokeRole($this->adminRole);
+    Gate::before(fn () => true);
+
+    $this->actingAs($this->admin)->delete(route('admin.users.destroy', $other), ['confirm' => 'delete'])
+        ->assertSessionHas('errorMessage', 'The last admin cannot be deleted. Make another user an admin first.');
+    expect($other->fresh())->not->toBeNull();
+});
+
+it('purges mod data of a user and their memberships in one query', function () {
+    $user = User::factory()->create(['first_login' => false]);
+    $members = PartyMember::factory()->count(3)->create(['user_id' => $user->id]);
+    foreach ([$user, ...$members] as $owner) {
+        ModData::create(['mod_code' => 'trust', 'owner_type' => $owner->getMorphClass(), 'owner_id' => $owner->getKey(), 'key' => 'k', 'value' => 1]);
+    }
+    $user->load('partyMembers');
+
+    $deletes = 0;
+    DB::listen(function ($query) use (&$deletes) {
+        if (str_starts_with($query->sql, 'delete from `mod_data`') || str_starts_with($query->sql, 'delete from "mod_data"')) {
+            $deletes++;
+        }
+    });
+    $user->delete();
+
+    expect($deletes)->toBe(1)->and(ModData::count())->toBe(0);
+});
+
+it('broadcasts a suspension to the user only when they become suspended', function () {
+    Event::fake([UserSuspended::class]);
+    $user = User::factory()->create(['first_login' => false]);
+
+    $this->actingAs($this->admin)->put(route('admin.users.update', $user), ['nickname' => $user->nickname, 'suspended' => true, 'first_login' => true]);
+    Event::assertDispatched(UserSuspended::class, fn (UserSuspended $event) => $event->userId === $user->id);
+
+    $this->actingAs($this->admin)->put(route('admin.users.update', $user), ['nickname' => $user->nickname, 'suspended' => true, 'first_login' => true]);
+    Event::assertDispatchedTimes(UserSuspended::class, 1);
+});
+
+it('reflects a role change immediately on the same user instance', function () {
+    $user = User::factory()->create(['first_login' => false]);
+    expect($user->hasRole('admin'))->toBeFalse();
+
+    $user->grantRole($this->adminRole);
+    expect($user->hasRole('admin'))->toBeTrue();
+
+    $user->revokeRole($this->adminRole);
+    expect($user->hasRole('admin'))->toBeFalse();
 });

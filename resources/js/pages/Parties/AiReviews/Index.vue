@@ -25,6 +25,7 @@ const props = defineProps<{
     holdsFlagged: boolean;
     moderationTabs: ModerationTabsProps;
     settingsUrl: string;
+    breaker: {open: boolean; failures: number; threshold: number; openSeconds: number};
     counts: {total: number; outcome: Record<string, number>; criterion: Record<string, number>};
     reviews: Paginator<AiReviewRow> & {from: number | null; to: number | null; total: number};
 }>();
@@ -137,6 +138,23 @@ const showUrl = (review: AiReviewRow): string =>
             <i class="icon ti ti-flag me-2" aria-hidden="true"></i>
             Flagged Requests aren't held. They go straight to the Queue.
             <a :href="settingsUrl" class="ms-1" data-test="turn-on-approval">Turn on approval</a>
+        </div>
+
+        <div
+            v-if="breaker.open || breaker.failures > 0"
+            class="alert py-2"
+            :class="breaker.open ? 'alert-danger' : 'alert-warning'"
+            role="status"
+            data-test="breaker-state"
+        >
+            <i class="icon ti ti-plug-connected-x me-2" aria-hidden="true"></i>
+            <template v-if="breaker.open">
+                The AI review is paused for up to {{ breaker.openSeconds }} seconds after repeated failures. Requests
+                are allowed without review.
+            </template>
+            <template v-else>
+                The AI review has failed {{ breaker.failures }} of {{ breaker.threshold }} times before it pauses.
+            </template>
         </div>
 
         <SearchBar

@@ -17,7 +17,7 @@ function themeAdmin(): User
 }
 
 beforeEach(function () {
-    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Shell'))->name('inertia.shell');
+    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Error'))->name('inertia.shell');
     app('router')->getRoutes()->refreshNameLookups();
 });
 

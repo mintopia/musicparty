@@ -29,16 +29,18 @@ trait CreatesApplication
      */
     public static function applyTestEnvironment(): void
     {
+        $production = self::usesProductionProfile();
         $environment = [
-            'APP_ENV' => 'testing',
+            'APP_ENV' => $production ? 'production' : 'testing',
+            ...($production ? ['REVERB_APP_ID' => 'profile-app-id', 'REVERB_APP_KEY' => 'profile-reverb-key-3f9a', 'REVERB_APP_SECRET' => 'profile-reverb-secret-7c1d', 'APP_DEBUG' => 'false', 'APP_URL' => self::profileValue('TEST_APP_URL', 'https://music.example.test')] : []),
             'BCRYPT_ROUNDS' => '4',
-            'CACHE_STORE' => 'array',
+            'CACHE_STORE' => $production ? self::profileValue('TEST_CACHE_STORE', 'array') : 'array',
             ...(self::usesMariaDb()
                 ? ['DB_CONNECTION' => 'mysql', 'DB_DATABASE' => (string) getenv('TEST_DB_DATABASE'), 'DB_URL' => '']
                 : ['DB_CONNECTION' => 'sqlite', 'DB_DATABASE' => ':memory:', 'DB_URL' => '']),
             'MAIL_MAILER' => 'array',
-            'QUEUE_CONNECTION' => 'sync',
-            'SESSION_DRIVER' => 'array',
+            'QUEUE_CONNECTION' => $production ? self::profileValue('TEST_QUEUE_CONNECTION', 'sync') : 'sync',
+            'SESSION_DRIVER' => $production ? self::profileValue('TEST_SESSION_DRIVER', 'array') : 'array',
         ];
 
         foreach ($environment as $key => $value) {
@@ -46,6 +48,18 @@ trait CreatesApplication
             $_ENV[$key] = $value;
             $_SERVER[$key] = $value;
         }
+    }
+
+    public static function usesProductionProfile(): bool
+    {
+        return getenv('TEST_PROFILE') === 'production';
+    }
+
+    private static function profileValue(string $name, string $default): string
+    {
+        $value = getenv($name);
+
+        return $value === false || $value === '' ? $default : $value;
     }
 
     /**

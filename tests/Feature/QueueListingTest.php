@@ -2,6 +2,7 @@
 
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
+use App\Mods\ModExtensions;
 use App\Mods\PartyMods;
 use App\Mods\Trust\TrustMod;
 use App\Services\ModDataStore;
@@ -67,13 +68,14 @@ it('lists a page with a fixed query count regardless of queue size', function ()
     foreach (range(1, 20) as $i) {
         dashboardRequest($party, ['user_id' => $user->id, 'queued_at' => null]);
     }
-    app(QueueListing::class)->page($party, 0, 20);
     $small = queryCount(fn () => app(QueueListing::class)->page($party, 0, 20));
+    QueueListing::forget($party->id);
 
     foreach (range(1, 40) as $i) {
         dashboardRequest($party, ['user_id' => $user->id, 'queued_at' => null]);
     }
     $page = null;
+    QueueListing::forget($party->id);
     $large = queryCount(function () use ($party, &$page): void {
         $page = app(QueueListing::class)->page($party, 0, 20);
     });
@@ -126,4 +128,38 @@ it('renders the party page queue in selector order with next flagged', function 
             ->where('upcoming.0.next', true)
             ->where('upcoming.1.id', $low->id)
             ->where('upcoming.1.next', false));
+});
+
+it('does not rescore the queue for repeat listings within the cache window and refreshes after a change', function () {
+    $party = dashboardParty();
+    $first = dashboardRequest($party, ['score' => 2, 'queued_at' => null]);
+    $selector = Mockery::spy(app(QueueSelector::class));
+    $selector->shouldReceive('rankedQueue')->passthru();
+    $listing = new QueueListing($selector, app(ModExtensions::class));
+
+    $listing->page($party, 0, 10);
+    $listing->page($party, 0, 10);
+    $selector->shouldHaveReceived('rankedQueue')->once();
+
+    $second = dashboardRequest($party, ['score' => 1, 'queued_at' => null]);
+    $page = $listing->page($party, 0, 10);
+    expect($page['total'])->toBe(2)->and($page['items']->pluck('id')->all())->toBe([$first->id, $second->id]);
+    $selector->shouldHaveReceived('rankedQueue')->twice();
+
+    $second->votes()->create(['user_id' => dashboardUser($party, 'user')->id, 'value' => 1]);
+    $listing->page($party, 0, 10);
+    $selector->shouldHaveReceived('rankedQueue')->times(3);
+
+    $first->delete();
+    expect($listing->page($party, 0, 10)['total'])->toBe(1);
+});
+
+it('omits the next flag and signals random order for a weighted party', function () {
+    $party = dashboardParty(['weighted' => true]);
+    $request = dashboardRequest($party, ['score' => 2, 'queued_at' => null]);
+
+    $page = app(QueueListing::class)->page($party, 0, 10);
+
+    expect($page['random_order'])->toBeTrue()
+        ->and($page['states'][$request->id])->toBe(['held' => false, 'random_order' => true]);
 });

@@ -135,7 +135,9 @@ it('renders the Spotify page with the linked spotify accounts', function () {
         ->assertInertia(fn (Assert $page) => $page
             ->component('Users/Spotify', false)
             ->where('spotify', ['name' => 'DJ'])
-            ->where('search', null));
+            ->where('search', null)
+            ->where('spotifyEnabled', true)
+            ->where('searchEnabled', false));
 });
 
 it('renders the linked account delete confirmation', function () {

@@ -81,6 +81,15 @@ function sortUpcoming(): void {
     });
 }
 
+function placeAtPosition(item: LegacyUpcomingSong): void {
+    if (item.position === undefined) {
+        sortUpcoming();
+        return;
+    }
+    removeItem(item.id);
+    upcoming.value.splice(Math.min(item.position - 1, upcoming.value.length), 0, item);
+}
+
 let resyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleResync(): void {
@@ -113,12 +122,13 @@ async function vote(songId: number, value: number): Promise<void> {
     const route = storeVote({party: props.party, upcomingsong: songId});
     try {
         const response = await axios.request({url: route.url, method: route.method, data: {vote: value}});
-        addOrUpdateItem(response.data.data);
-        sortUpcoming();
+        const updated = response.data.data as LegacyUpcomingSong;
+        addOrUpdateItem(updated);
+        placeAtPosition(updated);
         scheduleResync();
     } catch (error) {
-        if (axios.isAxiosError(error) && error.response?.status === 400) {
-            showMessage((error.response.data as {message: string}).message);
+        if (axios.isAxiosError(error) && [400, 403, 429].includes(error.response?.status ?? 0)) {
+            showMessage((error.response?.data as {message: string}).message);
         }
     }
 }

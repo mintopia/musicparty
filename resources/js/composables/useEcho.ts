@@ -19,6 +19,7 @@ type PusherConnection = {
 };
 
 export const RECONNECT_JITTER_MS = 3000;
+export const DASHBOARD_RECONNECT_JITTER_MS = 10000;
 
 const LOST_STATES = ['unavailable', 'failed', 'disconnected'];
 
@@ -88,7 +89,7 @@ export function useEcho() {
 
     const reconnectTimers = new Set<ReturnType<typeof setTimeout>>();
 
-    function onReconnect(callback: () => void): void {
+    function onReconnect(callback: () => void, jitterMs: number = RECONNECT_JITTER_MS): void {
         let wasDisconnected = false;
         const handler = ({current}: {previous: string; current: string}) => {
             if (current !== 'connected') {
@@ -98,7 +99,7 @@ export function useEcho() {
                 const timer = setTimeout(() => {
                     reconnectTimers.delete(timer);
                     callback();
-                }, Math.random() * RECONNECT_JITTER_MS);
+                }, Math.random() * jitterMs);
                 reconnectTimers.add(timer);
             }
         };

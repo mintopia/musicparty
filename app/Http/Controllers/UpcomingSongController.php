@@ -262,6 +262,7 @@ class UpcomingSongController extends Controller
                 AiReviewOutcome::Flag => 'AI review flagged it for a moderator',
                 AiReviewOutcome::Reject => 'AI review rejected it',
                 AiReviewOutcome::Error => 'AI review could not run',
+                AiReviewOutcome::Skipped => 'AI review was skipped',
             }, 'moment' => $review->created_at, 'url' => route('parties.ai-reviews.show', [$party->code, $review->id])];
         }
         if ($song->scheduled_for) {

@@ -12,6 +12,7 @@ x-app: &app
   environment:
     PUID: "${PUID:-1000}"
     PGID: "${PGID:-1000}"
+    TRUSTED_PROXIES: "*"
   volumes:
     - ./logs:/app/storage/logs
   depends_on:
@@ -63,10 +64,11 @@ services:
       disable: true
 
   database:
-    image: mariadb:11.8
+    image: mariadb:11.4
     restart: unless-stopped
     environment:
       MARIADB_RANDOM_ROOT_PASSWORD: "1"
+      MARIADB_AUTO_UPGRADE: "1"
       MARIADB_DATABASE: "${DB_DATABASE:?set DB_DATABASE in .env}"
       MARIADB_USER: "${DB_USERNAME:?set DB_USERNAME in .env}"
       MARIADB_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD in .env}"
@@ -79,7 +81,7 @@ services:
       retries: 20
 
   redis:
-    image: redis:8-alpine
+    image: redis:7.4
     restart: unless-stopped
     volumes:
       - redisdata:/data

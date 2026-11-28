@@ -5,6 +5,8 @@ namespace App\Console\Commands;
 use App\Models\SocialProvider;
 use App\Services\Music\Spotify\SpotifyMusicProvider;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class PartyRefreshAccessTokens extends Command
 {
@@ -36,8 +38,13 @@ class PartyRefreshAccessTokens extends Command
         $provider->accounts()->whereNull('needs_relink_at')->where('access_token_expires_at', '<', now()->addMinutes(4))->chunk(50, function ($chunk) {
             foreach ($chunk as $account) {
                 $this->output->writeln("Refreshing Spotify access token for {$account->user}");
-                if (! SpotifyMusicProvider::refreshAccessToken($account->user)) {
-                    $this->output->writeln("Spotify needs re-linking for {$account->user}");
+                try {
+                    if (! SpotifyMusicProvider::refreshAccessToken($account->user)) {
+                        $this->output->writeln("Spotify needs re-linking for {$account->user}");
+                    }
+                } catch (Throwable $e) {
+                    Log::warning("Spotify token refresh failed for linked account {$account->id}: {$e->getMessage()}");
+                    $this->output->writeln("Spotify token refresh failed for {$account->user}");
                 }
             }
         });
