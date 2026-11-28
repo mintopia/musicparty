@@ -878,7 +878,7 @@ describe('upcoming list', () => {
         expect(row.find('[data-test="row-menu"]').classes()).not.toContain('show');
         expect(wrapper.find('[data-test="schedule-sheet"]').exists()).toBe(true);
         expect(wrapper.find('[data-test="schedule-dim"]').exists()).toBe(true);
-        expect(wrapper.find('#sched-title').text()).toBe('Schedule Kernkraft 400');
+        expect(wrapper.find('[data-test="schedule-sheet"]').attributes('aria-label')).toBe('Schedule Kernkraft 400');
         expect(wrapper.findAll('[data-test="schedule-day"]').length).toBeGreaterThanOrEqual(28);
 
         const chips = wrapper.findAll('[data-test="schedule-chip"]').map((chip) => chip.text());
