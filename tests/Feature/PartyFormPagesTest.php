@@ -10,6 +10,7 @@ use App\Models\User;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Inertia\Testing\AssertableInertia as Assert;
 
@@ -151,4 +152,51 @@ it('clears the length and repeat limits when they are blanked or zeroed', functi
         ->min_song_length->toBeNull()
         ->max_song_length->toBeNull()
         ->no_repeat_interval->toBeNull();
+});
+
+it('leaves limits unchanged when their fields are omitted from an update', function () {
+    $admin = partyFormAdmin();
+    $party = Party::factory()->for($admin)->create([
+        'provider_id' => 'spotify',
+        'min_song_length' => 60,
+        'max_song_length' => 600,
+        'no_repeat_interval' => 30,
+        'max_requests' => 4,
+        'downvotes_per_hour' => 5,
+    ]);
+
+    $this->actingAs($admin)->patch(route('parties.update', $party->code), [
+        'name' => 'Renamed',
+        'backup_playlist_id' => 'fake-playlist',
+    ])->assertRedirect();
+
+    expect($party->fresh())
+        ->min_song_length->toBe(60)
+        ->max_song_length->toBe(600)
+        ->no_repeat_interval->toBe(30)
+        ->max_requests->toBe(4)
+        ->downvotes_per_hour->toBe(5);
+});
+
+it('returns a validation error when a party code rename loses a unique race', function () {
+    $admin = partyFormAdmin();
+    $party = Party::factory()->for($admin)->create(['provider_id' => 'spotify']);
+    Party::updating(function (): void {
+        throw new UniqueConstraintViolationException('sqlite', 'update parties', [], new Exception('duplicate'));
+    });
+
+    $this->actingAs($admin)->from(route('parties.edit', $party->code))
+        ->patch(route('parties.update', $party->code), [
+            'name' => $party->name,
+            'backup_playlist_id' => 'fake-playlist',
+            'code' => 'NEWCODE',
+        ])
+        ->assertRedirect(route('parties.edit', $party->code))
+        ->assertSessionHasErrors('code');
+});
+
+it('answers 405 only for the legacy GET paths and 404 for other unknown GETs', function () {
+    $this->get('/logout')->assertStatus(405);
+    $this->get('/admin/users/1/impersonate')->assertStatus(405);
+    $this->get('/nope/whatever')->assertNotFound();
 });

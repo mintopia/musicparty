@@ -22,8 +22,10 @@ use App\Services\PlaybackControl;
 use App\Services\Queue\QueueListing;
 use App\Services\UpcomingSongAugmentService;
 use App\Support\QrCode;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -219,7 +221,11 @@ class PartyController extends Controller
         if ($request->user()?->can('admin') && $request->filled('code')) {
             $party->code = $request->string('code')->toString();
         }
-        $this->updateObject($party, $request);
+        try {
+            $this->updateObject($party, $request);
+        } catch (UniqueConstraintViolationException) {
+            throw ValidationException::withMessages(['code' => 'That party code is already in use.']);
+        }
 
         if ($party->wasChanged('code')) {
             return redirect()->route('parties.edit', $party->code)->with('successMessage', 'The party has been updated');
@@ -254,19 +260,11 @@ class PartyController extends Controller
             $party->device_name = app(PlaybackControl::class)->deviceName($party, $deviceId);
         }
         $party->device_id = $deviceId;
-        if ($request->input('downvotes_per_hour')) {
-            $party->downvotes_per_hour = $request->input('downvotes_per_hour');
-        } else {
-            $party->downvotes_per_hour = null;
+        foreach (['downvotes_per_hour', 'max_requests', 'min_song_length', 'max_song_length', 'no_repeat_interval'] as $limit) {
+            if ($request->has($limit)) {
+                $party->{$limit} = $request->input($limit) ?: null;
+            }
         }
-        if ($request->input('max_requests')) {
-            $party->max_requests = $request->input('max_requests');
-        } else {
-            $party->max_requests = null;
-        }
-        $party->min_song_length = $request->input('min_song_length') ?: null;
-        $party->max_song_length = $request->input('max_song_length') ?: null;
-        $party->no_repeat_interval = $request->input('no_repeat_interval') ?: null;
         if ($party->exists && $request->has('context_playlist_id')) {
             $contextPlaylistId = $request->input('context_playlist_id') ?: null;
             if ($contextPlaylistId !== $party->context_playlist_id) {
