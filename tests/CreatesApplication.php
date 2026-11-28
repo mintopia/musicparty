@@ -32,7 +32,7 @@ trait CreatesApplication
         $production = self::usesProductionProfile();
         $environment = [
             'APP_ENV' => $production ? 'production' : 'testing',
-            ...($production ? ['APP_DEBUG' => 'false', 'APP_URL' => self::profileValue('TEST_APP_URL', 'https://music.example.test')] : []),
+            ...($production ? ['REVERB_APP_ID' => 'profile-app-id', 'REVERB_APP_KEY' => 'profile-reverb-key-3f9a', 'REVERB_APP_SECRET' => 'profile-reverb-secret-7c1d', 'APP_DEBUG' => 'false', 'APP_URL' => self::profileValue('TEST_APP_URL', 'https://music.example.test')] : []),
             'BCRYPT_ROUNDS' => '4',
             'CACHE_STORE' => $production ? self::profileValue('TEST_CACHE_STORE', 'array') : 'array',
             ...(self::usesMariaDb()

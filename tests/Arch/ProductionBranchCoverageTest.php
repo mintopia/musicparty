@@ -15,6 +15,7 @@ function productionBranchCoverage(): array
     return [
         'app/Providers/TrustedRootUrlServiceProvider.php' => 'tests/Production/ProductionProfileTest.php',
         'app/Providers/AppServiceProvider.php' => 'tests/Production/ProductionProfileTest.php',
+        'app/Providers/RequiredSecretsServiceProvider.php' => 'tests/Production/ProductionProfileTest.php',
         'app/Services/Music/MusicProviderFactory.php' => 'tests/Production/ProductionProfileTest.php',
         'app/Console/Review/ReviewSeed.php' => 'tests/Production/ProductionProfileTest.php',
         'config/session.php' => 'tests/Production/ProductionProfileTest.php',

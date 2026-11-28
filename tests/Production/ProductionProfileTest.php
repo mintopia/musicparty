@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\TrustProxies;
+use App\Providers\RequiredSecretsServiceProvider;
 use App\Services\Contracts\MusicProvider;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Music\MusicProviderFactory;
@@ -55,7 +56,7 @@ it('serves the realtime config for the APP_URL host with no localhost', function
 
     $response->assertOk()->assertDontSee('localhost');
     expect($response->getContent())->toContain($host)
-        ->and(app(RealtimeConfig::class)->forRequest(request())['forceTLS'])->toBe($https);
+        ->and(app(RealtimeConfig::class)->forApp()['forceTLS'])->toBe($https);
 });
 
 it('keeps the Fake Music Provider out of MusicProviderFactory in production', function () {
@@ -69,4 +70,11 @@ it('does not register the ReviewSeed command in production', function () {
 
 it('leaves the AppServiceProvider test-only provider bindings out in production', function () {
     expect(app()->bound(MusicProvider::class))->toBeFalse();
+});
+
+it('refuses to boot via RequiredSecretsServiceProvider when a secret is missing', function () {
+    config(['broadcasting.connections.reverb.secret' => '']);
+
+    expect(fn () => new RequiredSecretsServiceProvider(app())->boot())
+        ->toThrow(RuntimeException::class, 'REVERB_APP_SECRET');
 });

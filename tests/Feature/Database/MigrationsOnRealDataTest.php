@@ -73,13 +73,17 @@ it('keeps one linked account per provider identity and leaves every other accoun
     restoreLegacySchemaWithDuplicatesAllowed();
     $provider = SocialProvider::forceCreate(['name' => 'Test', 'code' => 'test', 'provider_class' => 'x']);
     $first = LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'dup']);
-    DB::table('linked_accounts')->insert(['user_id' => User::factory()->create()->id, 'social_provider_id' => $provider->id, 'external_id' => 'dup', 'created_at' => now(), 'updated_at' => now()]);
+    $newest = DB::table('linked_accounts')->insertGetId(['user_id' => User::factory()->create()->id, 'social_provider_id' => $provider->id, 'external_id' => 'dup', 'created_at' => now(), 'updated_at' => now()]);
     $other = LinkedAccount::factory()->create(['social_provider_id' => $provider->id, 'external_id' => 'solo']);
+
+    Log::spy();
 
     applyDataMigrations();
 
-    expect(DB::table('linked_accounts')->where('external_id', 'dup')->pluck('id')->all())->toBe([$first->id])
+    expect(DB::table('linked_accounts')->where('external_id', 'dup')->pluck('id')->all())->toBe([$newest])
+        ->and(LinkedAccount::find($first->id))->toBeNull()
         ->and(LinkedAccount::find($other->id))->not->toBeNull();
+    Log::shouldHaveReceived('warning')->withArgs(fn (string $message, array $context): bool => $message === 'Linked account duplicate spans different users' && $context['kept_id'] === $newest)->once();
 });
 
 it('renames duplicate Party codes, reports each rename and keeps the oldest Party on its code', function () {
