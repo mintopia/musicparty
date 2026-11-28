@@ -271,6 +271,7 @@ describe('AppLayout navigation', () => {
 
         expect(banner.text()).toContain('You are impersonating Sam');
         expect(leave.attributes('href')).toBe('/admin/unimpersonate');
+        expect(leave.attributes('method')).toBe('post');
         expect(mountLayout(makeProps({})).text()).not.toContain('impersonating');
     });
 
@@ -333,7 +334,7 @@ describe('live moderation badges', () => {
         const wrapper = mountLive([{code: 'ABC', name: 'Fun', canManage: true, flaggedCount: 2}]);
         const badge = () => wrapper.find('#sidebar-menu .badge').text();
 
-        expect(echo.channels).toEqual(['party.ABC.managers']);
+        expect(echo.channels).toEqual(['party.ABC.managers', 'user.1']);
         expect(badge()).toBe('2');
 
         fire('FlaggedRequestAdded', {id: 9, flaggedCount: 3});
@@ -356,7 +357,7 @@ describe('live moderation badges', () => {
             {code: 'XYZ', name: 'Other', canManage: false},
         ]);
 
-        expect(echo.channels).toEqual(['party.ABC.managers']);
+        expect(echo.channels).toEqual(['party.ABC.managers', 'user.1']);
 
         wrapper.unmount();
         expect(echo.stopped).toEqual(['FlaggedRequestAdded', 'FlaggedRequestResolved']);

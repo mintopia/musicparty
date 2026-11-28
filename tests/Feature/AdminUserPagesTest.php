@@ -250,7 +250,7 @@ it('impersonates a user', function () {
 it('leaves impersonation back to the impersonated user page', function () {
     $this->actingAs($this->target)
         ->withSession(['impersonating' => true, 'originalUserId' => $this->admin->id])
-        ->get(route('admin.unimpersonate'))
+        ->post(route('admin.unimpersonate'))
         ->assertRedirect(route('admin.users.show', $this->target))
         ->assertSessionMissing('impersonating');
 
@@ -258,5 +258,12 @@ it('leaves impersonation back to the impersonated user page', function () {
 });
 
 it('forbids leaving impersonation when not impersonating', function () {
-    $this->actingAs($this->admin)->get(route('admin.unimpersonate'))->assertForbidden();
+    $this->actingAs($this->admin)->post(route('admin.unimpersonate'))->assertForbidden();
+});
+
+it('no longer leaves impersonation over GET', function () {
+    $this->actingAs($this->target)
+        ->withSession(['impersonating' => true, 'originalUserId' => $this->admin->id])
+        ->get('/admin/unimpersonate')
+        ->assertStatus(405);
 });
