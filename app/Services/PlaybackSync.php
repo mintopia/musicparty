@@ -17,6 +17,7 @@ use App\Services\Music\MusicProviderFactory;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\Playback\PartyDashboardCache;
 use Carbon\CarbonInterface;
+use Illuminate\Cache\Lock;
 use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Log;
 
 class PlaybackSync
 {
-    public const LOCK_SECONDS = 120;
+    public const int LOCK_SECONDS = 15;
 
     public const int PUSHED_WAIT_SECONDS = 15;
 
@@ -35,6 +36,8 @@ class PlaybackSync
     private const int SEEK_THRESHOLD_MS = 3000;
 
     private bool $seekDetected = false;
+
+    private ?Lock $heldLock = null;
 
     public function __construct(
         protected MusicProviderFactory $providers,
@@ -69,7 +72,9 @@ class PlaybackSync
                 }
 
                 $provider = $this->providers->forParty($party, Purpose::Control);
+                $this->refreshLock();
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
+                $this->refreshLock();
                 $progressOnly = $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
             } finally {
                 Cache::put($party->debounceKey(), true, Party::UPDATE_DEBOUNCE_SECONDS);
@@ -143,13 +148,24 @@ class PlaybackSync
             return false;
         }
 
+        $outer = $this->heldLock;
+        $this->heldLock = $lock instanceof Lock ? $lock : null;
         try {
             $this->coalescingBroadcasts($party, $callback);
         } finally {
+            $this->heldLock = $outer;
             $lock->release();
         }
 
         return true;
+    }
+
+    /**
+     * Extends the held sync lock's TTL. The lock is owner-aware, so a lock that expired and was taken by another caller is not touched.
+     */
+    public function refreshLock(): bool
+    {
+        return $this->heldLock?->refresh(self::LOCK_SECONDS) ?? false;
     }
 
     protected function orderingStamp(Party $party): ?CarbonInterface
@@ -243,6 +259,7 @@ class PlaybackSync
      */
     protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): bool
     {
+        $this->refreshLock();
         $previous = $this->status->recall($party);
         $seeked = $previous !== null && $previous->differsOnlyInProgress($state) && $this->deviatesFromExtrapolation($previous, $state);
         $this->seekDetected = $seeked;

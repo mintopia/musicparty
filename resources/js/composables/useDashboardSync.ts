@@ -1,6 +1,6 @@
 import {router} from '@inertiajs/vue3';
 import {onBeforeUnmount, type Ref} from 'vue';
-import {useEcho} from '@/composables/useEcho';
+import {DASHBOARD_RECONNECT_JITTER_MS, useEcho} from '@/composables/useEcho';
 import type {LegacyPartyState} from '@/types';
 
 type Subscription = {
@@ -10,7 +10,7 @@ type Subscription = {
 
 const QUEUE = ['upNext', 'upcoming'];
 const CONNECTION_REFRESH_MS = 15000;
-const ALL = ['playerState', 'myRating', 'control', 'upNext', 'upcoming', 'attention'];
+const VOLATILE = ['playerState', 'upNext', 'upcoming'];
 
 export function useDashboardSync(code: string, onState: (state: LegacyPartyState) => void): {connected: Ref<boolean>} {
     const pending = new Set<string>();
@@ -47,7 +47,7 @@ export function useDashboardSync(code: string, onState: (state: LegacyPartyState
     managers.listen('FlaggedRequestAdded', onManagers);
     managers.listen('FlaggedRequestResolved', onManagers);
     const connectionTimer = setInterval(() => router.reload({only: ['control', 'attention']}), CONNECTION_REFRESH_MS);
-    echo.onReconnect(() => router.reload({only: ALL}));
+    echo.onReconnect(() => router.reload({only: VOLATILE}), DASHBOARD_RECONNECT_JITTER_MS);
     const connected = echo.trackConnection();
 
     onBeforeUnmount(() => {

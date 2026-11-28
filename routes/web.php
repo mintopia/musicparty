@@ -88,7 +88,7 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::delete('/profile/accounts/{linkedaccount}', [LinkedAccountController::class, 'destroy'])->name('linkedaccounts.destroy');
         });
 
-        Route::get('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
+        Route::post('/admin/unimpersonate', [AdminHomeController::class, 'unimpersonate'])->name('admin.unimpersonate');
 
         Route::middleware('can:admin')->name('admin.')->prefix('admin')->group(function () {
             Route::get('/', [AdminHomeController::class, 'dashboard'])->name('dashboard');
