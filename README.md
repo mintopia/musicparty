@@ -72,8 +72,27 @@ docker compose run --rm app php artisan setup:discord
 docker compose up -d
 ```
 
+Logs go to stderr, so `docker compose logs` shows them; the `logs` volume holds file-based logs such as the AI review
+log.
+
 You should now be able to visit the site and login. The first user is given the admin role; use the admin menu to
 configure the site.
+
+### Upgrading and backups
+
+MariaDB and Redis are pinned to `mariadb:11.4` and `redis:7.4`, and the `database` container runs with
+`MARIADB_AUTO_UPGRADE=1` so an existing data volume is upgraded in place when the version changes. Before changing
+either version or pulling a new image, back up the database and wait for the services to report healthy afterwards:
+
+```bash
+docker compose exec database sh -c 'mariadb-dump -uroot -p"$MYSQL_ROOT_PASSWORD" --all-databases' > backup.sql
+docker compose pull && docker compose up -d
+docker compose ps
+```
+
+Redis moved from `6.2.6` to `7.4`. The append-only data in the `redisdata` volume is read by 7.4 without conversion,
+but it does not roll back to 6.2, so take the database backup and keep a copy of the `redisdata` volume before
+upgrading an existing deployment.
 
 ### Reverse proxy
 
