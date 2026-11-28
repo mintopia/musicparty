@@ -13,7 +13,7 @@ final class ModerationRule implements RequestRule
     public function decide(RequestContext $context, Track $track): RequestDecision
     {
         foreach ($context->party->moderations as $moderation) {
-            if ($moderation->match($track)) {
+            if ($moderation->enabled && $moderation->match($track)) {
                 return $moderation->action === PartyModerationAction::Flag
                     ? RequestDecision::flag($moderation->getMessage())
                     : RequestDecision::reject($moderation->getMessage());
