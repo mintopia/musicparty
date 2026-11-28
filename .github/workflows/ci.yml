@@ -266,6 +266,8 @@ jobs:
   phpstan:
     name: PHPStan
     runs-on: ubuntu-latest
+    env:
+      APP_ENV: local
     steps:
       - uses: actions/checkout@v4
 
@@ -389,7 +391,11 @@ jobs:
         env:
           DB_DATABASE: musicparty
           DB_USERNAME: musicparty
-          DB_PASSWORD: musicparty
+          DB_PASSWORD: ci-compose-db-password
+          APP_KEY: base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
+          REVERB_APP_ID: ci-compose
+          REVERB_APP_KEY: ci-compose-key
+          REVERB_APP_SECRET: ci-compose-secret
         run: |
           touch .env
           docker compose -f docker-compose.production.example.yml config --quiet

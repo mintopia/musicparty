@@ -10,6 +10,7 @@ function bootRequiredSecrets(array $overrides = [], string $environment = 'produ
 {
     config(array_merge([
         'app.key' => 'base64:'.base64_encode(random_bytes(32)),
+        'database.default' => 'sqlite',
         'database.connections.sqlite.driver' => 'mysql',
         'database.connections.sqlite.password' => 'a-real-db-password',
         'broadcasting.connections.reverb.app_id' => 'app-id-123',
