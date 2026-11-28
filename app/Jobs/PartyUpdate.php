@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
+use App\Jobs\Concerns\ReleasesOnProviderBackoff;
 use App\Models\Party;
 use App\Services\Music\Data\PlaybackSource;
 use App\Services\Music\MusicProviderFactory;
@@ -20,7 +21,12 @@ class PartyUpdate implements ShouldQueue
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
+    use ReleasesOnProviderBackoff;
     use SerializesModels;
+
+    public const int WEBHOOK_DEBOUNCE_RELEASE_SECONDS = 6;
+
+    public bool $deleteWhenMissingModels = true;
 
     public int $maxExceptions = 5;
 
@@ -35,7 +41,7 @@ class PartyUpdate implements ShouldQueue
     }
 
     /**
-     * Lock-contention and Spotify-backoff releases also count as attempts, so retries are bounded by time and thrown exceptions rather than a try count.
+     * Bounded by time, not a try count, so releases do not use up retries.
      */
     public function retryUntil(): \DateTimeInterface
     {
@@ -58,8 +64,7 @@ class PartyUpdate implements ShouldQueue
         try {
             $this->update(app(PlaybackSync::class));
         } catch (ProviderBackoffException $e) {
-            Log::info("{$this->party}: provider backoff active, releasing for {$e->retryAfterSeconds()}s");
-            $this->release($e->retryAfterSeconds());
+            $this->releaseForBackoff($e);
         } catch (ProviderRelinkRequiredException) {
             Log::warning("{$this->party}: provider needs re-linking, stopping poll chain");
         }
@@ -84,6 +89,13 @@ class PartyUpdate implements ShouldQueue
 
         $cutoff = now()->subSeconds(5);
         if ($this->party->last_updated_at > $cutoff) {
+            if ($this->source === PlaybackSource::Webhook) {
+                Log::debug("{$this->party}: Webhook update inside debounce, releasing for ".self::WEBHOOK_DEBOUNCE_RELEASE_SECONDS.'s');
+                $this->release(self::WEBHOOK_DEBOUNCE_RELEASE_SECONDS);
+
+                return;
+            }
+
             Log::debug("{$this->party}: No further processing");
 
             return;

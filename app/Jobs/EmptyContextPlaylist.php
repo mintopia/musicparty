@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
+use App\Jobs\Concerns\ReleasesOnProviderBackoff;
 use App\Models\Party;
 use App\Services\Playback\ContextPlaylist;
 use App\Services\PlaybackSync;
@@ -20,11 +21,19 @@ class EmptyContextPlaylist implements ShouldBeUnique, ShouldQueue
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
+    use ReleasesOnProviderBackoff;
     use SerializesModels;
 
     public const int LOCK_BUSY_RELEASE_SECONDS = 2;
 
-    public int $tries = 3;
+    public bool $deleteWhenMissingModels = true;
+
+    public int $maxExceptions = 3;
+
+    public function retryUntil(): \DateTimeInterface
+    {
+        return now()->addMinutes(5);
+    }
 
     public function __construct(protected Party $party)
     {
@@ -45,8 +54,7 @@ class EmptyContextPlaylist implements ShouldBeUnique, ShouldQueue
                 $this->release(self::LOCK_BUSY_RELEASE_SECONDS);
             }
         } catch (ProviderBackoffException $e) {
-            Log::info("{$this->party}: backoff active, releasing for {$e->retryAfterSeconds()}s");
-            $this->release($e->retryAfterSeconds());
+            $this->releaseForBackoff($e);
         } catch (ProviderRelinkRequiredException) {
             Log::warning("{$this->party}: relink required, context playlist not checked");
         }
