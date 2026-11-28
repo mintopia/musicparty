@@ -50,7 +50,7 @@ class HandleInertiaRequests extends Middleware
                 'coverImage' => Setting::fetch('cover-image'),
                 'favicon' => Setting::fetch('favicon'),
             ],
-            'reverb' => fn (): array => app(RealtimeConfig::class)->forRequest($request),
+            'reverb' => fn (): array => app(RealtimeConfig::class)->forApp(),
             'theme' => fn (): array => app(ActiveTheme::class)->shared() ?? ['tokens' => [], 'stylesheet' => null, 'darkMode' => false],
             'instanceName' => fn (): ?string => Setting::fetch('name'),
         ];

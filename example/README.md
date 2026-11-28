@@ -29,7 +29,10 @@ openssl rand -hex 10
 openssl rand -hex 20
 ```
 
-Set `APP_URL` to the public URL, for example `https://music.example.com` (no trailing slash). OAuth redirect URLs
+Set `APP_URL` to the public URL, for example `https://music.example.com` (no trailing slash). `APP_URL` is the single trusted public URL: URLs, redirects, the websocket host and the Steam
+realm all derive from it, so only one hostname is supported and aliases are not. In production the app refuses to boot
+if `APP_URL` is empty or points at localhost. The session cookie is secure only for an `https://` `APP_URL`, so plain
+HTTP deployments work; set `SESSION_SECURE_COOKIE` only to override that, and a mismatch logs a boot warning. OAuth redirect URLs
 are built from it.
 
 Set `PUID` and `PGID` to your user and group (`id -u`, `id -g`). The containers run as that user, and the image
@@ -64,8 +67,9 @@ music.example.com {
 ```
 
 For nginx set `proxy_http_version 1.1`, `proxy_set_header Upgrade $http_upgrade`,
-`proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`. If you want the real client IP in the app
-logs, set `TRUSTED_PROXIES` in `.env` to your proxy's address range.
+`proxy_set_header Connection "upgrade"` and a large `proxy_read_timeout`. The container trusts `X-Forwarded-*` headers from any
+proxy; `TRUSTED_PROXIES` is set only in the compose file's `environment` (never in `.env`). Narrow it there to your
+proxy's address range if the container port is reachable by anything else.
 
 ### Encore (Soloist relay)
 
@@ -124,3 +128,11 @@ docker compose exec database sh -c 'mariadb-dump -u"$MARIADB_USER" -p"$MARIADB_P
 
 MariaDB and Redis use the named volumes `dbdata` and `redisdata`. Logs are in `./logs`. `docker compose down -v`
 deletes the volumes and all data.
+
+## Upgrade notes
+
+- The linked-accounts migration is destructive: it deletes duplicate `linked_accounts` rows (same provider and external
+  id), keeping the oldest, then adds a unique index. Back up the database before running `php artisan migrate`.
+- `APP_URL` must be set to your public URL in production; boot fails on an empty or localhost value.
+- The session cookie's secure flag now follows the `APP_URL` scheme instead of the environment.
+- `TRUSTED_PROXIES` is configured on the container (compose `environment`), not in `.env`.
