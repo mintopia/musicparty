@@ -101,7 +101,7 @@ jobs:
         image: mariadb:11
         env:
           MARIADB_ROOT_PASSWORD: musicparty
-          MARIADB_DATABASE: musicparty
+          MARIADB_DATABASE: musicparty_test
           MARIADB_USER: musicparty
           MARIADB_PASSWORD: musicparty
         ports:
@@ -112,10 +112,10 @@ jobs:
           --health-timeout=5s
           --health-retries=20
     env:
-      DB_CONNECTION: mysql
+      TEST_DB_DRIVER: mariadb
       DB_HOST: 127.0.0.1
       DB_PORT: 3306
-      DB_DATABASE: musicparty
+      TEST_DB_DATABASE: musicparty_test
       DB_USERNAME: root
       DB_PASSWORD: musicparty
     steps:
@@ -147,16 +147,8 @@ jobs:
       - name: Build frontend assets
         run: npm run build
 
-      - name: Point phpunit at MariaDB
-        run: |
-          cp phpunit.xml phpunit.mariadb.xml
-          sed -i \
-            -e 's|<env name="DB_CONNECTION" value="sqlite"|<env name="DB_CONNECTION" value="mysql"|' \
-            -e "s|<env name=\"DB_DATABASE\" value=\":memory:\"|<env name=\"DB_DATABASE\" value=\"${DB_DATABASE}\"|" \
-            phpunit.mariadb.xml
-
-      - name: Pest (parallel, MariaDB)
-        run: vendor/bin/pest --configuration=phpunit.mariadb.xml --parallel --processes=4
+      - name: Pest (MariaDB)
+        run: vendor/bin/pest
 
   pint:
     name: Pint
