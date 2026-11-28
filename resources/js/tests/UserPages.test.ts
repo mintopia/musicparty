@@ -4,6 +4,7 @@ import {reactive} from 'vue';
 import Home from '@/pages/Home.vue';
 import Edit from '@/pages/Users/Edit.vue';
 import LinkedAccountDelete from '@/pages/Users/LinkedAccountDelete.vue';
+import JoinSteps from '@/components/JoinSteps.vue';
 import PartyInviteCard from '@/components/PartyInviteCard.vue';
 import Login from '@/pages/Users/Login.vue';
 import Profile from '@/pages/Users/Profile.vue';
@@ -108,6 +109,14 @@ describe('user pages', () => {
         expect(link.attributes('href')).toBe('/login/discord');
         expect(link.find('i').classes()).toContain('ti-brand-discord');
         expect(link.text()).toBe('Login with Discord');
+    });
+
+    it('shows the steps without party details when arriving from a party', () => {
+        const wrapper = mount(Login, {props: {providers: [{code: 'discord', name: 'Discord'}], fromParty: true}});
+        expect(wrapper.findComponent(JoinSteps).exists()).toBe(true);
+        expect(wrapper.findComponent(PartyInviteCard).exists()).toBe(false);
+        expect(wrapper.text()).not.toContain('straight back');
+        expect(wrapper.find('a.btn-discord').exists()).toBe(true);
     });
 
     it('submits signup with PUT and shows terms links and errors', async () => {
