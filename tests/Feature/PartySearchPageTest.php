@@ -20,6 +20,7 @@ use App\Services\Spotify\SpotifyBackoffException;
 use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Route;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\Support\FakeSpotify;
 
@@ -236,20 +237,20 @@ it('shows the try again shortly state once a member exhausts the search bucket',
     config(['musicparty.search_burst' => 2, 'musicparty.search_leak_per_second' => 0.001]);
     Cache::flush();
     pageSearchResults($this->fake, FakeSpotify::track('fresh'));
-    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+    $url = fn (string $query) => route('parties.search', ['party' => $this->party->code, 'query' => $query]);
 
-    $load = fn ($user, Closure $assert) => $this->actingAs($user, 'sanctum')->get($url)
+    $load = fn ($user, Closure $assert, string $query = 'q') => $this->actingAs($user, 'sanctum')->get($url($query))
         ->assertInertia(fn (Assert $page) => $page->loadDeferredProps($assert));
 
-    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'));
-    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'));
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'), 'q1');
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'), 'q2');
     expect($this->fake->callsTo('search'))->toHaveCount(2);
 
-    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.error.code', 'busy'));
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.error.code', 'busy'), 'q3');
     expect($this->fake->callsTo('search'))->toHaveCount(2);
 
     $other = pageSearchMember($this->party);
-    $load($other->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'));
+    $load($other->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'), 'q3');
 });
 
 it('renders the page immediately without calling the provider until the deferred props load', function () {
@@ -290,4 +291,63 @@ it('rescues an unexpected failure in the deferred results instead of erroring th
 
     $this->actingAs($this->member->user, 'sanctum')->get($url)
         ->assertInertia(fn (Assert $page) => $page->reload(fn (Assert $loaded) => $loaded->missing('results'), only: 'results'));
+});
+
+it('serves a repeated search within a minute from cache with one provider call and per-viewer badges', function () {
+    Cache::flush();
+    config(['musicparty.search_burst' => 1, 'musicparty.search_leak_per_second' => 0.001]);
+    $track = FakeSpotify::track('fresh');
+    pageSearchResults($this->fake, $track);
+    pageSearchUpcoming($this->party, $track, $this->member->user, score: 4);
+    $other = pageSearchMember($this->party);
+    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+
+    $load = fn ($user, Closure $assert) => $this->actingAs($user, 'sanctum')->get($url)
+        ->assertInertia(fn (Assert $page) => $page->loadDeferredProps($assert));
+
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.top.track.queue.requested_by_you', true));
+    $load($other->user, fn (Assert $loaded) => $loaded->where('results.top.track.queue.requested_by_you', false));
+    $load($this->member->user, fn (Assert $loaded) => $loaded->where('results.view', 'overview'));
+
+    expect($this->fake->callsTo('search'))->toHaveCount(1);
+});
+
+it('makes another provider call for a different page or country', function () {
+    app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose, ?string $market = null) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose, $market));
+    Cache::flush();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+    $get = fn (int $page) => $this->actingAs($this->member->user, 'sanctum')
+        ->get(route('parties.search', ['party' => $this->party->code, 'query' => 'q', 'type' => 'track', 'page' => $page]))
+        ->assertInertia(fn (Assert $p) => $p->loadDeferredProps(fn (Assert $loaded) => $loaded->where('results.view', 'type')));
+
+    $get(1);
+    $get(1);
+    expect($this->fake->callsTo('search'))->toHaveCount(1);
+
+    $get(2);
+    expect($this->fake->callsTo('search'))->toHaveCount(2);
+
+    $this->party->forceFill(['country' => 'DE'])->save();
+    $get(1);
+    expect($this->fake->callsTo('search'))->toHaveCount(3);
+});
+
+it('rejects a query over 200 characters', function () {
+    $this->actingAs($this->member->user, 'sanctum')
+        ->getJson(route('parties.search', ['party' => $this->party->code, 'query' => str_repeat('a', 201)]))
+        ->assertUnprocessable();
+});
+
+it('returns 429 from the search route past the throttle and guards album and artist the same way', function () {
+    foreach (['parties.search', 'parties.albums.show', 'parties.artists.show'] as $name) {
+        expect(Route::getRoutes()->getByName($name)->gatherMiddleware())->toContain('throttle:search');
+    }
+
+    $this->actingAs($this->member->user, 'sanctum');
+    $url = route('parties.search', $this->party->code);
+    for ($i = 0; $i < 120; $i++) {
+        $this->get($url)->assertOk();
+    }
+
+    $this->get($url)->assertStatus(429);
 });

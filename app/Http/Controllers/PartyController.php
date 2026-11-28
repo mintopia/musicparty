@@ -40,6 +40,7 @@ use Closure;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Cache;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -48,6 +49,10 @@ class PartyController extends Controller
     private const array SETTINGS_TABS = ['general', 'requests', 'playback', 'screens', 'mods'];
 
     private const int SEARCH_PAGE_SIZE = 10;
+
+    private const int SEARCH_CACHE_SECONDS = 60;
+
+    private const string SEARCH_BUSY_MESSAGE = 'The music provider is busy right now. Please try again shortly.';
 
     private const int SEARCH_OVERVIEW_LIMIT = 10;
 
@@ -216,16 +221,12 @@ class PartyController extends Controller
      */
     protected function searchResults(Party $party, PartyMember $member, MusicProviderFactory $factory, Closure $search): array
     {
-        if (! $this->withinSearchLimit($party, $member)) {
-            return $this->searchError('busy', 'The music provider is busy right now. Please try again shortly.');
-        }
-
         try {
             return $search($factory->forParty($party, Purpose::Search));
         } catch (ProviderRelinkRequiredException) {
             return $this->searchError('relink', 'The music provider needs re-linking before search is available.', false);
         } catch (ProviderBackoffException) {
-            return $this->searchError('busy', 'The music provider is busy right now. Please try again shortly.');
+            return $this->searchError('busy', self::SEARCH_BUSY_MESSAGE);
         } catch (ProviderUnavailableException $e) {
             return $this->searchError(
                 $e->timedOut ? 'timeout' : 'unavailable',
@@ -239,7 +240,15 @@ class PartyController extends Controller
      */
     protected function searchOverview(Party $party, PartyMember $member, TrackEligibility $eligibility, MusicProvider $provider, string $query): array
     {
-        $found = $provider->searchOverview($query, self::SEARCH_OVERVIEW_LIMIT);
+        $found = $this->cachedProviderSearch(
+            $party,
+            $member,
+            ['overview', $query, 1, self::SEARCH_OVERVIEW_LIMIT],
+            fn (): SearchOverview => $provider->searchOverview($query, self::SEARCH_OVERVIEW_LIMIT),
+        );
+        if ($found === null) {
+            return $this->searchError('busy', self::SEARCH_BUSY_MESSAGE);
+        }
 
         $topArtist = $this->exactArtistMatch($query, $found->artists->items);
         $tracks = $found->tracks->items;
@@ -294,11 +303,15 @@ class PartyController extends Controller
      */
     protected function searchSingleType(Party $party, PartyMember $member, TrackEligibility $eligibility, MusicProvider $provider, SearchType $type, string $query, int $page, int $perPage, array $params): array
     {
+        $key = [$type->value, $query, $page, $perPage];
         $found = match ($type) {
-            SearchType::Track => $provider->searchTracks($query, $page, $perPage),
-            SearchType::Album => $provider->searchAlbums($query, $page, $perPage),
-            SearchType::Artist => $provider->searchArtists($query, $page, $perPage),
+            SearchType::Track => $this->cachedProviderSearch($party, $member, $key, fn () => $provider->searchTracks($query, $page, $perPage)),
+            SearchType::Album => $this->cachedProviderSearch($party, $member, $key, fn () => $provider->searchAlbums($query, $page, $perPage)),
+            SearchType::Artist => $this->cachedProviderSearch($party, $member, $key, fn () => $provider->searchArtists($query, $page, $perPage)),
         };
+        if ($found === null) {
+            return $this->searchError('busy', self::SEARCH_BUSY_MESSAGE);
+        }
 
         $items = match ($type) {
             SearchType::Track => array_map(
@@ -498,6 +511,35 @@ class PartyController extends Controller
             'tracks' => $tracks,
             'albums' => $albums,
         ] + $props);
+    }
+
+    /**
+     * Provider responses are shared between members for SEARCH_CACHE_SECONDS; a hit makes no provider call and draws nothing from the member's bucket. Null means the member is over their limit.
+     *
+     * @template T of object
+     *
+     * @param  list<string|int>  $keyParts
+     * @param  Closure(): T  $fetch
+     * @return T|null
+     */
+    protected function cachedProviderSearch(Party $party, PartyMember $member, array $keyParts, Closure $fetch): ?object
+    {
+        $key = 'search-response:'.sha1(json_encode([$party->getAttribute('provider_id'), $party->country, ...$keyParts], JSON_THROW_ON_ERROR));
+
+        $cached = Cache::get($key);
+        if (is_object($cached)) {
+            /** @var T $cached */
+            return $cached;
+        }
+
+        if (! $this->withinSearchLimit($party, $member)) {
+            return null;
+        }
+
+        $found = $fetch();
+        Cache::put($key, $found, self::SEARCH_CACHE_SECONDS);
+
+        return $found;
     }
 
     protected function withinSearchLimit(Party $party, PartyMember $member): bool

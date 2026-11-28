@@ -36,7 +36,11 @@ vi.mock('@/composables/useEcho', () => ({
     useEcho: () => ({
         onReconnect: () => undefined,
         trackConnection: () => ({value: true}),
-        privateChannel: () => ({listen: () => undefined}),
+        privateChannel: () => ({
+            listen: (event: string, cb: (payload: unknown) => void) => {
+                listeners.handlers[event] = cb;
+            },
+        }),
         publicChannel: () => ({
             listen: (event: string, cb: (payload: unknown) => void) => {
                 listeners.handlers[event] = cb;
@@ -275,5 +279,32 @@ describe('Party search page', () => {
 
         expect(hrefs).toContain('/parties/ABCD/artists/x');
         expect(hrefs).toContain('/parties/ABCD/albums/a');
+    });
+
+    it('patches queue badges from broadcasts without reloading the search', async () => {
+        const wrapper = mount(Search, {
+            props: {
+                party,
+                params: {query: 'abba', perPage: 10},
+                results: results([track('t1'), track('t2', {in_queue: true, upcoming_id: 9, score: 2})]),
+                playerState: idle,
+            },
+        });
+
+        listeners.handlers['UpcomingSong\\UpdatedEvent']({
+            id: 5,
+            provider_track_id: 't1',
+            score: 3,
+            user: 'sam',
+            user_id: 7,
+        });
+        await flushPromises();
+        expect(wrapper.text()).toContain('Requested by sam');
+
+        listeners.handlers['UpcomingSong\\RemovedEvent']({id: 9});
+        await flushPromises();
+
+        expect(inertia.reload).not.toHaveBeenCalled();
+        expect(inertia.get).not.toHaveBeenCalled();
     });
 });

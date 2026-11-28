@@ -72,9 +72,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::resource('parties.users', PartyMemberController::class)->only(['edit', 'update'])->scoped();
             Route::resource('parties.moderation', PartyModerationController::class)->except(['index', 'show'])->scoped();
         });
-        Route::get('parties/{party}/search', [PartyController::class, 'search'])->name('parties.search');
-        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->name('parties.albums.show');
-        Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->name('parties.artists.show');
+        Route::get('parties/{party}/search', [PartyController::class, 'search'])->middleware('throttle:search')->name('parties.search');
+        Route::get('parties/{party}/albums/{album}', [PartyController::class, 'album'])->middleware('throttle:search')->name('parties.albums.show');
+        Route::get('parties/{party}/artists/{artist}', [PartyController::class, 'artist'])->middleware('throttle:search')->name('parties.artists.show');
 
         Route::get('parties/{party}/flagged', [FlaggedRequestController::class, 'index'])->name('parties.flagged.index');
         Route::post('parties/{party}/flagged/approve', [FlaggedRequestController::class, 'bulkApprove'])->name('parties.flagged.bulk-approve');
