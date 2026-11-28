@@ -321,7 +321,7 @@ class Party extends Model
         }
         $member = $this->members()->whereUserId($user->id)->with('role')->first();
 
-        return $member !== null && ! $member->banned && $member->role->code !== 'banned';
+        return $member !== null && $member->role->code !== 'banned';
     }
 
     public function hasFreshPushedPlayback(): bool
