@@ -88,7 +88,7 @@ it('broadcasts an upcoming song update on the private party channel with the son
         ->and($payload['created_at'])->toBe($song->created_at->toIso8601String());
 });
 
-it('broadcasts an upcoming song removal on the private party channel with only the id', function () {
+it('broadcasts an upcoming song removal on the private party channel with the id and whether it was played', function () {
     $event = new RemovedEvent(realtimeParty(), 42);
 
     $channel = $event->broadcastOn();
@@ -96,7 +96,7 @@ it('broadcasts an upcoming song removal on the private party channel with only t
     expect($event)->toBeInstanceOf(ShouldBroadcast::class)
         ->and($channel)->toBeInstanceOf(PrivateChannel::class)
         ->and($channel->name)->toBe('private-party.RTPT')
-        ->and($event->broadcastWith())->toBe(['id' => 42]);
+        ->and($event->broadcastWith())->toBe(['id' => 42, 'played' => false]);
 });
 
 it('keeps the Spotify token update out of the broadcast queue and sends the Web Player token immediately', function () {

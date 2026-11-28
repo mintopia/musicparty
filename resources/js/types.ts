@@ -172,6 +172,7 @@ export interface LegacyUpcomingSong extends LegacyTrack {
     scheduled_for?: string | null;
     held?: boolean;
     next?: boolean;
+    position?: number;
 }
 
 export interface PlaybackState {

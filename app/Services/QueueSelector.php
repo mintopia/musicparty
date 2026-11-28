@@ -10,19 +10,16 @@ use App\Models\User;
 use App\Mods\Contracts\ModifiesScore;
 use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\Requests\RequestLocks;
 use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Random\Randomizer;
 use Throwable;
 
 class QueueSelector
 {
-    /** @var array<int, true> */
-    protected static array $heldRequestLocks = [];
-
     public const QUEUE_LENGTH = 1;
 
     /** @var array<int, list<ModifiesScore>> */
@@ -247,18 +244,7 @@ class QueueSelector
      */
     public function withRequestLock(Party $party, Closure $callback, ?int $waitSeconds = null): mixed
     {
-        if (isset(self::$heldRequestLocks[$party->id])) {
-            return $callback();
-        }
-
-        return Cache::lock("add-request:{$party->id}", 30)->block($waitSeconds ?? (int) config('musicparty.request_lock_wait_seconds'), function () use ($party, $callback): mixed {
-            self::$heldRequestLocks[$party->id] = true;
-            try {
-                return $callback();
-            } finally {
-                unset(self::$heldRequestLocks[$party->id]);
-            }
-        });
+        return app(RequestLocks::class)->run($party, $callback, $waitSeconds);
     }
 
     /**
