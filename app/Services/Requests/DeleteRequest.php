@@ -3,6 +3,7 @@
 namespace App\Services\Requests;
 
 use App\Events\FlaggedRequestResolved;
+use App\Events\UpcomingSong\RemovedEvent;
 use App\Models\UpcomingSong;
 use App\Services\Playback\PartyDashboardCache;
 use Illuminate\Support\Facades\Gate;
@@ -34,6 +35,7 @@ class DeleteRequest
             throw new ConflictHttpException($requireFlagged ? 'This Request has already been handled' : 'Unable to delete a Request that has been sent to the Player');
         }
 
+        RemovedEvent::dispatch($party, $id);
         if ($wasFlagged || $requireFlagged) {
             FlaggedRequestResolved::dispatch($party, $id);
         }

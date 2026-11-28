@@ -5,6 +5,7 @@ use App\Enums\PartyModerationType;
 use App\Events\FlaggedRequestAdded;
 use App\Events\FlaggedRequestRejected;
 use App\Events\FlaggedRequestResolved;
+use App\Events\UpcomingSong\RemovedEvent;
 use App\Events\UpcomingSong\UpdatedEvent;
 use App\Http\Controllers\FlaggedRequestController;
 use App\Models\AiReview;
@@ -260,6 +261,15 @@ describe('approval queue', function () {
         $request->refresh();
         expect($request->score)->toBe(1)->and($request->votes()->count())->toBe(1)
             ->and($request->votes()->first()->user_id)->toBe($this->member->user_id);
+    });
+
+    it('broadcasts the removal when a request is rejected', function () {
+        Event::fake([RemovedEvent::class]);
+        $request = flaggedRequest($this->party, $this->member->user);
+
+        $this->actingAs($this->manager, 'sanctum')->post(route('parties.flagged.reject', [$this->party, $request]))->assertRedirect();
+
+        Event::assertDispatched(RemovedEvent::class, fn ($event) => $event->broadcastWith()['id'] === $request->id);
     });
 
     it('reports already handled when rejecting then approving', function () {
