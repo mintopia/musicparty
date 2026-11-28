@@ -1,18 +1,24 @@
 <?php
 
 use App\Services\RealtimeConfig;
-use Illuminate\Http\Request;
 use Inertia\Testing\AssertableInertia as Assert;
 
 it('shares the same-origin realtime config through Inertia', function () {
     config(['reverb.apps.apps.0.key' => 'party-key']);
+    config(['app.url' => 'https://party.example.test:8443']);
     $expected = ['appKey' => 'party-key', 'host' => 'party.example.test', 'port' => 8443, 'forceTLS' => true];
 
-    expect(app(RealtimeConfig::class)->forRequest(Request::create('https://party.example.test:8443/login')))->toBe($expected);
-    $this->withoutVite()->get('https://party.example.test:8443/login')
+    expect(app(RealtimeConfig::class)->forApp())->toBe($expected);
+    $this->withoutVite()->get('https://alias.example.test/login')
         ->assertInertia(fn (Assert $page) => $page->where('reverb', $expected))
         ->assertDontSee('window.pusherConfig', false);
 });
+
+it('derives default ports from the app url scheme', function (string $url, int $port, bool $tls) {
+    config(['app.url' => $url]);
+
+    expect(app(RealtimeConfig::class)->forApp())->toMatchArray(['port' => $port, 'forceTLS' => $tls]);
+})->with([['http://a.test', 80, false], ['https://a.test', 443, true]]);
 
 it('does not call env() in any Blade view', function () {
     $offenders = collect(glob(resource_path('views/{,*/,*/*/}*.blade.php'), GLOB_BRACE))

@@ -26,6 +26,8 @@ class PartyPlayerControl
 {
     private const int POLLING_FRESH_SECONDS = 120;
 
+    private const int IDLE_TRUST_SECONDS = 30;
+
     public function __construct(
         private readonly MusicProviderFactory $providers,
         private readonly PlaybackStatus $status,
@@ -62,7 +64,7 @@ class PartyPlayerControl
         }
 
         $remembered = $this->status->recall($party);
-        if ($remembered !== null && $remembered->trackId === null) {
+        if ($remembered !== null && $remembered->trackId === null && $remembered->sampledAt->greaterThan(now()->subSeconds(self::IDLE_TRUST_SECONDS))) {
             return $remembered;
         }
 

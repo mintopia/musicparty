@@ -177,15 +177,28 @@ describe('user pages', () => {
     });
 
     it('enables Create Party only when both spotify links exist', () => {
-        const partial = mount(Spotify, {props: {spotify: {name: 'Ada'}, search: null}});
+        const partial = mount(Spotify, {
+            props: {spotify: {name: 'Ada'}, search: null, spotifyEnabled: true, searchEnabled: true},
+        });
         expect(partial.find('button[disabled]').exists()).toBe(true);
         expect(partial.find('a[href="/profile/accounts/spotifysearch/link"]').exists()).toBe(true);
 
-        const full = mount(Spotify, {props: {spotify: {name: 'Ada'}, search: {name: 'Ada S'}}});
+        const full = mount(Spotify, {
+            props: {spotify: {name: 'Ada'}, search: {name: 'Ada S'}, spotifyEnabled: true, searchEnabled: true},
+        });
         expect(full.find('a.btn-primary').attributes('href')).toBe('/parties/create');
         expect(partial.text()).toContain('Search still needs linking.');
         expect(partial.text()).toContain('Link Spotify for search');
         expect(full.text()).toContain('Ada S');
+    });
+
+    it('hides link buttons for disabled providers', () => {
+        const wrapper = mount(Spotify, {
+            props: {spotify: null, search: null, spotifyEnabled: false, searchEnabled: true},
+        });
+        expect(wrapper.find('a[href="/profile/accounts/spotify/link"]').exists()).toBe(false);
+        expect(wrapper.find('[data-test="link-playback-disabled"]').exists()).toBe(true);
+        expect(wrapper.find('a[href="/profile/accounts/spotifysearch/link"]').exists()).toBe(true);
     });
 
     it('submits the profile edit with PATCH', async () => {

@@ -368,10 +368,10 @@ it('neither broadcasts nor writes for a progress-only change, but broadcasts a t
     $savedAt = $party->fresh()->updated_at;
     $this->travel(20)->seconds();
 
-    $sync->apply($party, playbackOf('PUSHED', true, 2000));
+    $sync->apply($party, playbackOf('PUSHED', true, 21000));
     Event::assertNotDispatched(PartyUpdatedEvent::class);
     expect($party->fresh()->updated_at->equalTo($savedAt))->toBeTrue()
-        ->and($party->getState()->status->progressMs)->toBe(2000);
+        ->and($party->getState()->status->progressMs)->toBe(21000);
 
     $sync->apply($party, playbackOf('PUSHED', false, 3000));
     Event::assertDispatchedTimes(PartyUpdatedEvent::class, 1);

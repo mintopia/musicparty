@@ -182,6 +182,18 @@ describe('Upcoming queue', () => {
         expect(wrapper.find('[data-test="heart"]').attributes('aria-pressed')).toBe('true');
     });
 
+    it('places the voted row at the position the server returns instead of re-sorting by score', async () => {
+        axios.defaults.adapter = () => Promise.resolve(response({data: song(2, {score: 5, vote: 1, position: 2})}));
+        const wrapper = mountQueue();
+
+        await wrapper.findAll('[data-test="heart"]')[1].trigger('click');
+        await flushPromises();
+
+        const rows = wrapper.findAll('[data-test="track-row"]');
+        expect(rows[0].text()).toContain('Song 1');
+        expect(rows[1].text()).toContain('Song 2');
+    });
+
     it('shows the server message when a vote is refused', async () => {
         axios.defaults.adapter = (config) =>
             Promise.reject(

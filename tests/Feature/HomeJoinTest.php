@@ -148,10 +148,8 @@ it('says the Fallback Playlist is next for an idle party that has one', function
             ->where('parties.0.detail', 'Fallback Playlist is next'));
 });
 
-it('throttles code entry', function () {
-    for ($attempt = 0; $attempt < 20; $attempt++) {
-        $this->post(route('parties.join'), ['code' => 'ZZZZ']);
+it('does not rate limit code entry by address', function () {
+    for ($attempt = 0; $attempt < 30; $attempt++) {
+        $this->post(route('parties.join'), ['code' => 'ZZZZ'])->assertStatus(302);
     }
-
-    $this->post(route('parties.join'), ['code' => 'ZZZZ'])->assertTooManyRequests();
 });

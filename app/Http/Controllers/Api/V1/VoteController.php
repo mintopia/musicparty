@@ -8,10 +8,11 @@ use App\Http\Requests\Api\V1\VoteRequest;
 use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
 use App\Models\UpcomingSong;
+use App\Services\Queue\QueueListing;
 
 class VoteController extends Controller
 {
-    public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong): UpcomingSongResource
+    public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong, QueueListing $queue): UpcomingSongResource
     {
         $user = $this->resolveAuthenticatedUser($request);
         abort_unless($party->canParticipate($user), 403);
@@ -29,7 +30,9 @@ class VoteController extends Controller
                     $vote = null;
                 }
             }
-            $resource = new UpcomingSongResource($upcomingsong->refresh());
+            $upcomingsong->refresh();
+            $resource = new UpcomingSongResource($upcomingsong);
+            $resource->position($queue->position($party, $upcomingsong));
             $resource->augment((object) [
                 'vote' => $vote,
             ]);

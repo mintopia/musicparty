@@ -54,46 +54,55 @@ class FlaggedRequestController extends Controller
 
     public function bulkApprove(Request $request, Party $party): RedirectResponse
     {
-        foreach ($this->bulkTargets($request, $party, 'approve') as $upcomingSong) {
+        $handled = 0;
+        $targets = $this->bulkTargets($request, $party, 'approve');
+        foreach ($targets['requests'] as $upcomingSong) {
             try {
                 $this->resolveApproved($party, $upcomingSong);
+                $handled++;
             } catch (ConflictHttpException) {
                 continue;
             }
         }
 
-        return back();
+        return $this->bulkResult($handled, $targets['total']);
     }
 
     public function bulkReject(Request $request, Party $party, DeleteRequest $deleteRequest): RedirectResponse
     {
         $message = $request->validate(['message' => ['nullable', 'string', 'max:255']])['message'] ?? null;
-        foreach ($this->bulkTargets($request, $party, 'reject') as $upcomingSong) {
+        $handled = 0;
+        $targets = $this->bulkTargets($request, $party, 'reject');
+        foreach ($targets['requests'] as $upcomingSong) {
             try {
                 $this->resolveRejected($party, $upcomingSong, $message, $deleteRequest);
+                $handled++;
             } catch (ConflictHttpException) {
                 continue;
             }
         }
 
+        return $this->bulkResult($handled, $targets['total']);
+    }
+
+    public function withdraw(Party $party, UpcomingSong $upcomingSong, DeleteRequest $deleteRequest): RedirectResponse
+    {
+        $deleteRequest->handle($upcomingSong, requireFlagged: true, ability: 'withdraw');
+
         return back();
     }
 
-    public function withdraw(Party $party, UpcomingSong $upcomingSong): RedirectResponse
+    protected function bulkResult(int $handled, int $total): RedirectResponse
     {
-        $this->authorize('withdraw', $upcomingSong);
+        $skipped = $total - $handled;
 
-        $id = $upcomingSong->id;
-        $upcomingSong->delete();
-        FlaggedRequestResolved::dispatch($party, $id);
-
-        return back();
+        return back()->with('successMessage', "{$handled} handled, {$skipped} already handled and skipped");
     }
 
     /**
-     * @return Collection<int, UpcomingSong>
+     * @return array{requests: Collection<int, UpcomingSong>, total: int}
      */
-    protected function bulkTargets(Request $request, Party $party, string $ability): Collection
+    protected function bulkTargets(Request $request, Party $party, string $ability): array
     {
         $ids = $request->validate([
             'ids' => ['required', 'array', 'min:1', 'max:200'],
@@ -101,12 +110,11 @@ class FlaggedRequestController extends Controller
         ])['ids'];
 
         $targets = $party->upcoming()->whereNull('queued_at')->whereNotNull('flagged_at')->whereIn('id', $ids)->with('song')->get();
-        abort_if($targets->count() !== count(array_unique($ids)), 404);
         foreach ($targets as $upcomingSong) {
             $this->authorize($ability, $upcomingSong);
         }
 
-        return $targets;
+        return ['requests' => $targets, 'total' => count(array_unique($ids))];
     }
 
     protected function resolveApproved(Party $party, UpcomingSong $upcomingSong): void
