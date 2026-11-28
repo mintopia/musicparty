@@ -19,6 +19,7 @@ export const outcomeBadge: Record<AiReviewOutcome, {class: string; icon: string}
     flag: {class: 'bg-yellow-lt', icon: 'ti-flag'},
     reject: {class: 'bg-red-lt', icon: 'ti-ban'},
     error: {class: 'bg-orange-lt', icon: 'ti-alert-triangle'},
+    skipped: {class: 'bg-secondary-lt', icon: 'ti-player-skip-forward'},
 };
 
 export interface TextBlock {

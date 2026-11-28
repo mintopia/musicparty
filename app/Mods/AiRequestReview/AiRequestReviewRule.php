@@ -12,6 +12,7 @@ use App\Services\Requests\RequestDecision;
 use App\Services\Requests\RequestMode;
 use App\Services\Requests\RequestRule;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Laravel\Ai\Ai;
 use Throwable;
@@ -49,12 +50,15 @@ class AiRequestReviewRule implements RequestRule
 
         $cached = Cache::get($this->verdictKey($context->party, $track));
         if ($cached instanceof RequestDecision) {
-            return $this->logged($cached, $log, $startedAt, 'cached_verdict');
+            $trace->skipReason = "Reused a cached verdict ({$cached->outcome->value})";
+
+            return $this->logged($cached, $log, $startedAt, 'cached_verdict', $trace);
         }
         if ($this->breaker->isOpen($context->party)) {
             Log::warning('AI Request Review skipped: circuit breaker open');
+            $trace->skipReason = 'Skipped: the circuit breaker is open after repeated failures';
 
-            return $this->logged(RequestDecision::allow(), $log, $startedAt, 'circuit_open');
+            return $this->logged(RequestDecision::allow(), $log, $startedAt, 'circuit_open', $trace);
         }
 
         if ($driver === self::DRIVER_DECISION_MODEL) {
@@ -71,15 +75,14 @@ class AiRequestReviewRule implements RequestRule
             $guidelines = is_string($guidelines) ? $guidelines : null;
             $timeout = $this->timeout($context->party);
             $endpoint = $this->setting($context->party, 'endpoint');
-            if (is_string($endpoint) && $endpoint !== '') {
-                $this->guard->assertSafe($endpoint, $this->allowsInternalEndpoints());
-            }
+            $addresses = is_string($endpoint) && $endpoint !== '' ? $this->guard->assertSafe($endpoint, $this->allowsInternalEndpoints()) : [];
             $provider = $this->providerName($context->party);
             $partyContext = $this->partyContext($context->party);
             $log += ['provider' => $provider, 'model' => $model, 'timeout' => $timeout, 'party_context_included' => $partyContext !== null];
             $trace->model = $model;
             $trace->endpointHost = is_string($endpoint) ? (parse_url($endpoint, PHP_URL_HOST) ?: null) : null;
-            [$verdict, $reason] = $this->prompt($track, $guidelines, $provider, $model, $timeout, $partyContext, $log, $trace);
+            $options = $this->guard->pinnedOptions(is_string($endpoint) && $endpoint !== '' ? $endpoint : 'https://api.openai.com', $addresses);
+            [$verdict, $reason] = $this->withClientOptions($options, fn (): array => $this->prompt($track, $guidelines, $provider, $model, $timeout, $partyContext, $log, $trace));
 
             $decision = $this->logged($this->interpret($verdict, $reason), $log, $startedAt, is_string($verdict) ? "verdict:{$verdict}" : 'no_verdict', $trace);
 
@@ -101,7 +104,35 @@ class AiRequestReviewRule implements RequestRule
 
     protected function verdictKey(Party $party, Track $track): string
     {
-        return "ai-review.verdict.{$party->id}.{$track->providerId}.{$track->id}";
+        return "ai-review.verdict.{$party->id}.{$this->settingsHash($party)}.{$track->providerId}.{$track->id}";
+    }
+
+    protected function settingsHash(Party $party): string
+    {
+        $values = [];
+        foreach (['driver', 'endpoint', 'api_key', 'model', 'decision_endpoint', 'decision_model', 'confidence_percentage', 'include_party_context', 'timeout', 'guidelines'] as $code) {
+            $values[$code] = $this->setting($party, $code);
+        }
+        $values['allow_internal_endpoints'] = $this->allowsInternalEndpoints();
+
+        return substr(hash('sha256', serialize($values)), 0, 16);
+    }
+
+    /**
+     * @template T
+     *
+     * @param  array<string, mixed>  $options
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    protected function withClientOptions(array $options, callable $callback): mixed
+    {
+        Http::globalOptions($options);
+        try {
+            return $callback();
+        } finally {
+            Http::globalOptions([]);
+        }
     }
 
     protected function timeout(Party $party): int

@@ -16,11 +16,11 @@ class AiReviewRecorder
     public function record(AiReviewTrace $trace, RequestDecision $decision, float $latencyMs): ?AiReview
     {
         try {
-            $outcome = $trace->errorClass !== null ? AiReviewOutcome::Error : match ($decision->outcome) {
+            $outcome = $trace->errorClass !== null ? AiReviewOutcome::Error : ($trace->skipReason !== null ? AiReviewOutcome::Skipped : match ($decision->outcome) {
                 RequestOutcome::Allow => AiReviewOutcome::Allow,
                 RequestOutcome::Flag => AiReviewOutcome::Flag,
                 RequestOutcome::Reject => AiReviewOutcome::Reject,
-            };
+            });
 
             return AiReview::query()->create([
                 'party_id' => $trace->party->id,
@@ -36,7 +36,7 @@ class AiReviewRecorder
                 'request' => $this->scrubbed($trace->request, $trace->secret),
                 'response' => $trace->response === null ? null : $this->scrubbed($trace->response, $trace->secret),
                 'outcome' => $outcome,
-                'reason' => $decision->reason,
+                'reason' => $trace->skipReason ?? $decision->reason,
                 'score' => $trace->score,
                 'confidence' => $trace->confidence,
                 'criterion' => $trace->criterion,

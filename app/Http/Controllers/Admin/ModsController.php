@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Enums\AiReviewOutcome;
 use App\Http\Controllers\Controller;
 use App\Models\AiReview;
 use App\Models\Mod;
@@ -30,15 +31,17 @@ class ModsController extends Controller
     }
 
     /**
-     * @return array{last_review_at: string|null, reviews_today: int}
+     * @return array{last_review_at: string|null, reviews_today: int, last_failure: array{at: string, message: string|null}|null}
      */
     protected function reviewStats(): array
     {
         $last = AiReview::query()->max('created_at');
+        $failure = AiReview::query()->where('outcome', AiReviewOutcome::Error)->latest('id')->first(['created_at', 'error_message']);
 
         return [
             'last_review_at' => $last === null ? null : Carbon::parse($last, 'UTC')->toIso8601String(),
             'reviews_today' => AiReview::query()->where('created_at', '>=', now()->startOfDay())->count(),
+            'last_failure' => $failure?->created_at === null ? null : ['at' => $failure->created_at->toIso8601String(), 'message' => $failure->error_message],
         ];
     }
 

@@ -223,12 +223,18 @@ export interface PartyMod {
     settings: ModSetting[];
 }
 
+export interface AdminReviewStats {
+    last_review_at: string | null;
+    reviews_today: number;
+    last_failure?: {at: string; message: string | null} | null;
+}
+
 export interface AdminMod {
     code: string;
     name: string;
     description: string;
     settings: ModSetting[];
-    review_stats?: {last_review_at: string | null; reviews_today: number} | null;
+    review_stats?: AdminReviewStats | null;
 }
 
 export interface When {
@@ -375,7 +381,7 @@ export type SearchTypeResults =
 
 export type SearchResults = SearchOverviewResults | SearchTypeResults;
 
-export type AiReviewOutcome = 'allow' | 'flag' | 'reject' | 'error';
+export type AiReviewOutcome = 'allow' | 'flag' | 'reject' | 'error' | 'skipped';
 
 export interface AiReviewRow {
     id: number;

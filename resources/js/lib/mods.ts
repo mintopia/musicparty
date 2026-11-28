@@ -1,4 +1,4 @@
-import type {ModSetting, PartyMod} from '@/types';
+import type {AdminReviewStats, ModSetting, PartyMod} from '@/types';
 
 export interface ModDraft {
     enabled: boolean;
@@ -206,7 +206,7 @@ export function formatRelativeTime(iso: string, now: Date = new Date()): string 
 }
 
 export function aiReviewActivityStats(
-    reviewStats: {last_review_at: string | null; reviews_today: number} | null | undefined,
+    reviewStats: AdminReviewStats | null | undefined,
     now: Date = new Date(),
 ): ModStat[] {
     if (!reviewStats) {
@@ -218,5 +218,12 @@ export function aiReviewActivityStats(
             value: reviewStats.last_review_at ? formatRelativeTime(reviewStats.last_review_at, now) : 'Never',
         },
         {label: 'Reviews today', value: String(reviewStats.reviews_today)},
+        reviewStats.last_failure
+            ? {
+                  label: 'Last failure',
+                  value: `${formatRelativeTime(reviewStats.last_failure.at, now)}: ${reviewStats.last_failure.message ?? 'Unknown error'}`,
+                  tone: 'warning',
+              }
+            : {label: 'Last failure', value: 'None'},
     ];
 }
