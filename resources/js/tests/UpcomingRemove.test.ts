@@ -114,6 +114,16 @@ describe('Upcoming safe remove', () => {
         expect(rowNames(wrapper)).toEqual(['Song 1', 'Song 3']);
     });
 
+    it.each([403, 429])('shows the %i message from a refused vote', async (status) => {
+        axiosRequest.mockRejectedValueOnce({response: {status, data: {message: 'Vote refused'}}});
+        const wrapper = mountQueue();
+
+        await wrapper.findAll('[data-test="heart"]')[0].trigger('click');
+        await flushPromises();
+
+        expect(wrapper.text()).toContain('Vote refused');
+    });
+
     it('commits a pending removal when the page is left', async () => {
         axiosRequest.mockResolvedValue({});
         const wrapper = mountQueue();

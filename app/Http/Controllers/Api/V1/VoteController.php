@@ -9,19 +9,23 @@ use App\Http\Resources\V1\UpcomingSongResource;
 use App\Models\Party;
 use App\Models\UpcomingSong;
 use App\Services\Queue\QueueListing;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 
 class VoteController extends Controller
 {
     public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong, QueueListing $queue): UpcomingSongResource
     {
         $user = $this->resolveAuthenticatedUser($request);
-        abort_unless($party->canParticipate($user), 403);
+        $input = (int) $request->input('vote');
+        if ($input !== 0 && $party->getMember($user)->role->code === 'banned') {
+            abort(403, 'You are banned from voting for songs');
+        }
 
         try {
-            if ($request->input('vote') < 0) {
+            if ($input < 0) {
                 $vote = $upcomingsong->downvote($user);
                 abort_if($vote === null, 403, 'Downvotes are disabled for this party');
-            } elseif ($request->input('vote') > 0) {
+            } elseif ($input > 0) {
                 $vote = $upcomingsong->upvote($user);
             } else {
                 $vote = $user->votes()->whereUpcomingSongId($upcomingsong->id)->first();
@@ -38,6 +42,8 @@ class VoteController extends Controller
             ]);
 
             return $resource;
+        } catch (LockTimeoutException) {
+            abort(429, 'Too many votes at once. Try again in a moment');
         } catch (VoteException $ex) {
             abort(400, $ex->getMessage());
         }

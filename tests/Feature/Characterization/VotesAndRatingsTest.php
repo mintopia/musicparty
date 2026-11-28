@@ -1,6 +1,7 @@
 <?php
 
 use App\Exceptions\VoteException;
+use App\Models\DownvoteLog;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
@@ -296,7 +297,7 @@ describe('downvote throttle', function () {
         expect(voteSong($party)->downvote(voteMember($party))->value)->toBe(-1);
     });
 
-    it('stops counting a downvote once it is switched to an upvote', function () {
+    it('keeps counting a downvote after it is switched to an upvote', function () {
         $party = voteParty(['downvotes' => true, 'downvotes_per_hour' => 1]);
         $user = voteMember($party);
         $first = voteSong($party);
@@ -304,17 +305,31 @@ describe('downvote throttle', function () {
         $first->downvote($user);
         $first->upvote($user);
 
-        expect(voteSong($party)->downvote($user)->value)->toBe(-1);
+        expect(fn () => voteSong($party)->downvote($user))->toThrow(VoteException::class);
     });
 
-    it('re-downvoting a song already downvoted still counts against the limit and is blocked at the limit', function () {
+    it('keeps counting a downvote after the vote is deleted and redone', function () {
         $party = voteParty(['downvotes' => true, 'downvotes_per_hour' => 1]);
         $user = voteMember($party);
         $song = voteSong($party);
 
-        $song->downvote($user);
+        castVote($party, $song, $user, -1)->assertOk();
+        castVote($party, $song, $user, 0)->assertOk();
 
-        expect(fn () => $song->downvote($user))->toThrow(VoteException::class);
+        castVote($party, $song, $user, -1)->assertStatus(400);
+        castVote($party, voteSong($party), $user, -1)->assertStatus(400);
+        expect(Vote::count())->toBe(0);
+    });
+
+    it('re-sending a downvote at the limit is harmless and not counted twice', function () {
+        $party = voteParty(['downvotes' => true, 'downvotes_per_hour' => 1]);
+        $user = voteMember($party);
+        $song = voteSong($party);
+
+        castVote($party, $song, $user, -1)->assertOk();
+        castVote($party, $song, $user, -1)->assertOk()->assertJsonPath('data.score', -1);
+
+        expect(Vote::count())->toBe(1)->and(DownvoteLog::count())->toBe(1);
     });
 
     it('counts a vote switched from up to down at the switch time, not the original cast time', function () {
@@ -376,14 +391,14 @@ describe('downvote throttle', function () {
         $user = voteMember($party);
         $lockHeldDuring = [];
         DB::listen(function ($query) use ($user, &$lockHeldDuring) {
-            if (preg_match('/^(select count\(\*\) as [`"]?aggregate[`"]? from|insert into) [`"]votes[`"]/', $query->sql)) {
+            if (preg_match('/^(select count\(\*\) as [`"]?aggregate[`"]? from|insert into) [`"](votes|downvote_logs)[`"]/', $query->sql)) {
                 $lockHeldDuring[] = ! Cache::lock("vote-user:{$user->id}", 5)->get();
             }
         });
 
         voteSong($party)->downvote($user);
 
-        expect($lockHeldDuring)->toHaveCount(2)->each->toBeTrue();
+        expect($lockHeldDuring)->toHaveCount(3)->each->toBeTrue();
     });
 
     it('does not apply a downvote while another request holds the user lock', function () {
@@ -429,13 +444,31 @@ describe('vote endpoint', function () {
         expect(Vote::count())->toBe(0);
     });
 
-    it('returns 403 for a user who is not a party member and records nothing', function () {
+    it('creates a membership and records the vote for a non-member who is not banned', function () {
         $party = voteParty();
         $song = voteSong($party);
+        PartyMemberRole::factory()->user()->create();
+        $user = User::factory()->create();
 
-        castVote($party, $song, User::factory()->create(), 1)->assertForbidden();
+        castVote($party, $song, $user, 1)->assertOk();
 
-        expect(Vote::count())->toBe(0)->and($party->members()->count())->toBe(0);
+        expect(Vote::count())->toBe(1)->and($party->members()->whereUserId($user->id)->count())->toBe(1);
+    });
+
+    it('returns 429 when the vote lock cannot be acquired', function () {
+        $party = voteParty();
+        $song = voteSong($party);
+        $user = voteMember($party);
+        $held = Cache::lock("vote-user:{$user->id}", 30);
+        $held->get();
+
+        try {
+            castVote($party, $song, $user, 1)->assertStatus(429);
+        } finally {
+            $held->release();
+        }
+
+        expect(Vote::count())->toBe(0);
     });
 
     it('rejects vote values outside -1, 0 and 1', function (mixed $value) {
