@@ -4,6 +4,7 @@ use App\Events\Party\UpdatedEvent as PartyUpdatedEvent;
 use App\Events\UpcomingSong\RemovedEvent;
 use App\Events\UpcomingSong\UpdatedEvent as UpcomingSongUpdatedEvent;
 use App\Events\User\SpotifyAccessTokenUpdatedEvent;
+use App\Events\WebPlayerTokenRefreshed;
 use App\Models\Party;
 use App\Models\PartyMember;
 use App\Models\PartyMemberRole;
@@ -20,6 +21,7 @@ use Carbon\CarbonImmutable;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Broadcasting\PrivateChannel;
 use Illuminate\Contracts\Broadcasting\ShouldBroadcast;
+use Illuminate\Contracts\Broadcasting\ShouldBroadcastNow;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Event;
 use Tests\Support\FakeSpotify;
@@ -97,16 +99,9 @@ it('broadcasts an upcoming song removal on the private party channel with only t
         ->and($event->broadcastWith())->toBe(['id' => 42]);
 });
 
-it('broadcasts the Spotify token on the private per-user channel', function () {
-    $user = User::factory()->create();
-    $event = new SpotifyAccessTokenUpdatedEvent($user, 'tok');
-
-    $channels = $event->broadcastOn();
-
-    expect($event)->toBeInstanceOf(ShouldBroadcast::class)
-        ->and($channels[0])->toBeInstanceOf(PrivateChannel::class)
-        ->and($channels[0]->name)->toBe("private-spotifytoken.{$user->id}")
-        ->and($event->broadcastWith())->toBe(['accessToken' => 'tok']);
+it('keeps the Spotify token update out of the broadcast queue and sends the Web Player token immediately', function () {
+    expect(SpotifyAccessTokenUpdatedEvent::class)->not->toImplement(ShouldBroadcast::class)
+        ->and(WebPlayerTokenRefreshed::class)->toImplement(ShouldBroadcastNow::class);
 });
 
 it('does not broadcast Party UpdatedEvent for bookkeeping bumps to last_updated_at', function () {
@@ -220,12 +215,6 @@ it('authorises the party owner channel for the host, an owner-role member and no
         ->and($callback(User::factory()->create(), $party))->toBeFalse();
 });
 
-it('authorises the Spotify token channel only for the matching user id', function () {
-    $callback = channelCallback('spotifytoken.{userId}');
-    $user = User::factory()->create();
-    $other = User::factory()->create();
-
-    expect($callback($user, $user->id))->toBeTrue()
-        ->and($callback($user, (string) $user->id))->toBeTrue()
-        ->and($callback($other, $user->id))->toBeFalse();
+it('no longer registers a per-user Spotify token channel', function () {
+    expect(Broadcast::driver()->getChannels()->get('spotifytoken.{userId}'))->toBeNull();
 });

@@ -20,8 +20,6 @@ Broadcast::channel('party.{party}', fn ($user, Party $party) => true);
 
 Broadcast::channel('party.{party}.owner', fn ($user, Party $party) => $party->canBeManagedBy($user));
 
-Broadcast::channel('spotifytoken.{userId}', fn ($user, int $userId) => (int) $user->id === (int) $userId);
-
 Broadcast::channel('party.{party}.managers', fn (User $user, Party $party) => Gate::forUser($user)->allows('moderate', $party));
 
 Broadcast::channel('user.{userId}', fn ($user, int $userId) => (int) $user->id === (int) $userId);
