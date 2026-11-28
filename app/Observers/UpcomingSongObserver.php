@@ -18,7 +18,7 @@ class UpcomingSongObserver
     public function updated(UpcomingSong $upcomingSong): void
     {
         if ($upcomingSong->queued_at) {
-            RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id);
+            RemovedEvent::dispatch($upcomingSong->party, $upcomingSong->id, played: true);
         } elseif ($upcomingSong->flagged_at === null) {
             UpdatedEvent::dispatch($upcomingSong);
         }
