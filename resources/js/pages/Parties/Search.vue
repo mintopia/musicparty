@@ -9,7 +9,6 @@ import PartyPlayer from '@/components/PartyPlayer.vue';
 import SearchResultsSection from '@/components/SearchResultsSection.vue';
 import SearchSuggestions from '@/components/Search/SearchSuggestions.vue';
 import {useEcho} from '@/composables/useEcho';
-import {useQueueSync} from '@/composables/useQueueSync';
 import {useRequestTrack} from '@/composables/useRequestTrack';
 import AppLayout from '@/layouts/AppLayout.vue';
 import {flaggedWithdrawUrl} from '@/lib/flagged';
@@ -90,7 +89,54 @@ function retry(): void {
     });
 }
 
-useQueueSync(props.party.code, ['results']);
+function annotatedTracks(): TrackAnnotation[] {
+    const found = current.value;
+    if (!found || !('view' in found)) {
+        return [];
+    }
+    if (found.view === 'overview') {
+        return [...(found.top?.kind === 'track' ? [found.top.track] : []), ...found.tracks];
+    }
+    return found.type === 'track' ? found.items.data : [];
+}
+
+const partyChannel = useEcho().privateChannel(`party.${props.party.code}`) as {
+    listen<T>(event: string, cb: (payload: T) => void): unknown;
+};
+partyChannel.listen<{id: number; provider_track_id: string; score: number; user: string | null; user_id: number | null}>(
+    'UpcomingSong\\UpdatedEvent',
+    (payload) => {
+        const viewerId = authUser?.id ?? null;
+        annotatedTracks()
+            .filter((track) => track.id === payload.provider_track_id)
+            .forEach((track) => {
+                track.queue = {
+                    ...track.queue,
+                    in_queue: true,
+                    upcoming_id: payload.id,
+                    score: payload.score,
+                    requested_by: payload.user,
+                    requested_by_you: viewerId !== null && payload.user_id === viewerId,
+                };
+            });
+    },
+);
+partyChannel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
+    annotatedTracks()
+        .filter((track) => track.queue.upcoming_id === payload.id)
+        .forEach((track) => {
+            track.queue = {
+                ...track.queue,
+                in_queue: false,
+                upcoming_id: null,
+                score: 0,
+                vote: null,
+                requested_by: null,
+                requested_by_you: false,
+                requested_ago: null,
+            };
+        });
+});
 
 const authUser = usePage<SharedProps>().props.auth.user;
 if (authUser) {

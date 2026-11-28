@@ -23,7 +23,7 @@ class SearchRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'query' => 'sometimes|string',
+            'query' => 'sometimes|string|max:200',
         ];
     }
 }
