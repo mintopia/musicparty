@@ -31,7 +31,6 @@ class PlaybackSync
 
     private const int POLLING_FRESH_SECONDS = 120;
 
-
     public function __construct(
         protected MusicProviderFactory $providers,
         protected QueueSelector $selector,
