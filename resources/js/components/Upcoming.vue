@@ -228,14 +228,8 @@ async function getPage({loaded, error}: LoadAction): Promise<void> {
 }
 
 async function resync(): Promise<void> {
-    const last = Math.max(page.value - 1, 1);
     try {
-        const fresh: LegacyUpcomingSong[] = [];
-        for (let number = 1; number <= last; number += 1) {
-            fresh.push(...(await fetchPage(number)));
-        }
-        const votes = new Map(upcoming.value.map((song) => [song.id, song.vote]));
-        upcoming.value = fresh.map((song) => ({...song, vote: votes.get(song.id) ?? song.vote}));
+        (await fetchPage(1)).forEach((item) => addOrUpdateItem(item));
         sortUpcoming();
     } catch {
         showMessage('Could not refresh the queue.');
