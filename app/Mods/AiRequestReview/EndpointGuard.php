@@ -6,6 +6,11 @@ class EndpointGuard
 {
     public function __construct(protected HostResolver $resolver) {}
 
+    protected function internalAddress(): DecisionModelException
+    {
+        return new DecisionModelException('AI review endpoint must not be an internal address');
+    }
+
     /**
      * Validates the endpoint and returns the addresses its host resolved to (empty for literals or when internal endpoints are allowed).
      *
@@ -24,11 +29,11 @@ class EndpointGuard
 
         $internalName = $host === 'localhost' || str_ends_with($host, '.localhost') || str_ends_with($host, '.internal') || str_ends_with($host, '.local');
         if ($internalName) {
-            throw new DecisionModelException('AI review endpoint must not be an internal address');
+            throw $this->internalAddress();
         }
         if (filter_var($host, FILTER_VALIDATE_IP) !== false) {
             if ($this->isInternal($host)) {
-                throw new DecisionModelException('AI review endpoint must not be an internal address');
+                throw $this->internalAddress();
             }
 
             return [];

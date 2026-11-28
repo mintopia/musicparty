@@ -20,7 +20,7 @@ class UserObserver
         }
 
         Cache::lock('first-admin', 10)->block(5, function () use ($user, $admin): void {
-            if (! $admin->users()->exists()) {
+            if ((int) User::query()->min('id') === $user->id && ! $admin->users()->exists()) {
                 $user->grantRole($admin);
             }
         });
