@@ -24,6 +24,10 @@ COPY --from=composer /app/ /app
 RUN npm ci --include=dev && \
     npm run build
 
+# Wayfinder must emit relative URLs; an absolute host here means the build-time
+# APP_URL leaked into the bundle and every route would point at it at runtime.
+RUN test -d resources/js/routes && ! grep -rIE 'url: ?.https?://localhost' resources/js/routes public/build
+
 FROM ghcr.io/mintopia/php:8.5-frankenphp
 LABEL org.opencontainers.image.authors="jess@mintopia.net"
 
