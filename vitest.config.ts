@@ -7,10 +7,6 @@ export default defineConfig({
     resolve: {
         alias: [
             {
-                find: '@/routes/inertia',
-                replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-inertia.ts'),
-            },
-            {
                 find: /^@\/routes\/api\/v1\/parties\/upcomingsongs$/,
                 replacement: path.resolve(import.meta.dirname, 'resources/js/tests/stubs/routes-upcomingsongs.ts'),
             },

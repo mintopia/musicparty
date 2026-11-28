@@ -257,6 +257,11 @@ class Party extends Model
         return Cache::has($this->debounceKey()) || $this->last_updated_at > now()->subSeconds(self::UPDATE_DEBOUNCE_SECONDS);
     }
 
+    public function webhookPendingKey(): string
+    {
+        return "party-webhook-update-pending:{$this->id}";
+    }
+
     public function debounceKey(): string
     {
         return "party-sync-debounce:{$this->id}";

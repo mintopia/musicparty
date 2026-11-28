@@ -125,6 +125,18 @@ class User extends Authenticatable
         return $this->roles->contains('code', $role);
     }
 
+    public function grantRole(Role $role): void
+    {
+        $this->roles()->attach($role);
+        $this->unsetRelation('roles');
+    }
+
+    public function revokeRole(Role $role): void
+    {
+        $this->roles()->detach($role);
+        $this->unsetRelation('roles');
+    }
+
     public function getEmail(): ?string
     {
         if ($this->email !== null) {

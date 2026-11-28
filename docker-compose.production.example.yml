@@ -11,6 +11,11 @@ x-app: &app
     PUID: "${PUID:-1000}"
     PGID: "${PGID:-1000}"
     TRUSTED_PROXIES: "*"
+    APP_KEY: "${APP_KEY:?set APP_KEY}"
+    DB_PASSWORD: "${DB_PASSWORD:?set DB_PASSWORD}"
+    REVERB_APP_ID: "${REVERB_APP_ID:?set REVERB_APP_ID}"
+    REVERB_APP_KEY: "${REVERB_APP_KEY:?set REVERB_APP_KEY}"
+    REVERB_APP_SECRET: "${REVERB_APP_SECRET:?set REVERB_APP_SECRET}"
   depends_on:
     - database
     - redis

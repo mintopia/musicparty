@@ -221,3 +221,38 @@ it('releases a retry back to the queue while a sync holds the lock', function ()
 
     expect($this->provider->callsTo('currentPlayback'))->toBe([]);
 });
+
+it('lets a killed job lock expire within the short TTL so the next sync proceeds', function () {
+    Cache::lock("party-sync:{$this->party->id}", PlaybackSync::LOCK_SECONDS)->get();
+    expect(app(PlaybackSync::class)->sync($this->party))->toBeFalse();
+
+    $this->travel(PlaybackSync::LOCK_SECONDS + 1)->seconds();
+
+    expect(app(PlaybackSync::class)->sync($this->party))->toBeTrue();
+});
+
+it('refreshes the lock TTL while a sync runs', function () {
+    $sync = app(PlaybackSync::class);
+    $key = "party-sync:{$this->party->id}";
+
+    $sync->withLock($this->party, function () use ($sync, $key) {
+        $this->travel(PlaybackSync::LOCK_SECONDS - 1)->seconds();
+        expect($sync->refreshLock())->toBeTrue();
+        $this->travel(PlaybackSync::LOCK_SECONDS - 1)->seconds();
+
+        expect(Cache::lock($key, 5)->get())->toBeFalse();
+    });
+});
+
+it('does not refresh a lock that expired and was taken by another owner', function () {
+    $sync = app(PlaybackSync::class);
+    $key = "party-sync:{$this->party->id}";
+
+    $sync->withLock($this->party, function () use ($sync, $key) {
+        $this->travel(PlaybackSync::LOCK_SECONDS + 1)->seconds();
+        $thief = Cache::lock($key, 60);
+        expect($thief->get())->toBeTrue()
+            ->and($sync->refreshLock())->toBeFalse()
+            ->and($thief->isOwnedByCurrentProcess())->toBeTrue();
+    });
+});

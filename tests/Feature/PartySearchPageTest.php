@@ -312,6 +312,21 @@ it('serves a repeated search within a minute from cache with one provider call a
     expect($this->fake->callsTo('search'))->toHaveCount(1);
 });
 
+it('serves a repeated search from a serialising cache store', function () {
+    config(['cache.stores.array.serialize' => true, 'musicparty.search_burst' => 1, 'musicparty.search_leak_per_second' => 0.001]);
+    Cache::purge('array');
+    Cache::flush();
+    pageSearchResults($this->fake, FakeSpotify::track('fresh'));
+    $url = route('parties.search', ['party' => $this->party->code, 'query' => 'q']);
+
+    foreach ([1, 2] as $_) {
+        $this->actingAs($this->member->user, 'sanctum')->get($url)
+            ->assertInertia(fn (Assert $page) => $page->loadDeferredProps(fn (Assert $loaded) => $loaded->where('results.view', 'overview')));
+    }
+
+    expect($this->fake->callsTo('search'))->toHaveCount(1);
+});
+
 it('makes another provider call for a different page or country', function () {
     app(MusicProviderFactory::class)->register('spotify', fn (User $user, Purpose $purpose, ?string $market = null) => new SpotifyMusicProvider(app(SpotifyGateway::class), $user, $purpose, $market));
     Cache::flush();
