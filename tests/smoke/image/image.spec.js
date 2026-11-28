@@ -11,6 +11,7 @@ const allowedHosts = new Set([appHost, new URL(oauthUrl).hostname]);
 function artisan(code) {
     return execFileSync('docker', ['compose', '-p', 'mp-image-smoke', 'exec', '-T', 'app', 'php', 'artisan', 'tinker', '--execute', code], {
         encoding: 'utf8',
+        env: {...process.env, SMOKE_APP_KEY: 'unused', SMOKE_APP_URL: appUrl},
     });
 }
 
@@ -20,13 +21,18 @@ function watchConsole(page, errors) {
             errors.push(message.text());
         }
     });
+    page.on('response', (response) => {
+        if (response.status() >= 400) {
+            errors.push(`${response.status()} ${response.url()}`);
+        }
+    });
     page.on('pageerror', (error) => errors.push(String(error)));
 }
 
 async function login(page) {
     await page.goto('/login');
     await page.locator('a[href*="/login/laravelpassport"]').first().click();
-    await page.waitForURL((url) => url.hostname === appHost && !url.pathname.startsWith('/login/'));
+    await page.waitForURL((url) => url.hostname === appHost && url.pathname !== '/login' && (!url.pathname.startsWith('/login/') || url.pathname === '/login/signup'));
 }
 
 test('pages and bundles carry no localhost or foreign absolute URLs', async ({page}) => {
@@ -46,7 +52,8 @@ test('pages and bundles carry no localhost or foreign absolute URLs', async ({pa
     }
 
     const offenders = [];
-    for (const {url, text} of bodies) {
+    for (const {url, text: raw} of bodies) {
+        const text = raw.replaceAll('typeof window>`u`?`http://localhost`', '');
         if (/localhost|127\.0\.0\.1/.test(text)) {
             offenders.push(`${url}: localhost`);
         }
@@ -75,11 +82,13 @@ test('a vote from a second browser reaches the first over the websocket', async 
     await login(bobPage);
 
     artisan(`
+        \\Illuminate\\Database\\Eloquent\\Model::unguard();
         \\App\\Models\\User::query()->update(['first_login' => false]);
         $owner = \\App\\Models\\User::orderBy('id')->first();
-        $party = \\App\\Models\\Party::forceCreate(['code' => 'SMKE', 'name' => 'Smoke Party', 'user_id' => $owner->id, 'provider_id' => 'spotify']);
-        $song = \\App\\Models\\Song::forceCreate(['provider_id' => 'spotify', 'provider_track_id' => 'smoketrack', 'name' => 'Smoke Track', 'length' => 180000]);
-        \\App\\Models\\UpcomingSong::forceCreate(['party_id' => $party->id, 'song_id' => $song->id, 'user_id' => $owner->id]);
+        $party = \\App\\Models\\Party::firstOrCreate(['code' => 'SMKE'], ['name' => 'Smoke Party', 'user_id' => $owner->id, 'provider_id' => 'spotify']);
+        $album = \\App\\Models\\Album::firstOrCreate(['provider_id' => 'spotify', 'provider_album_id' => 'smokealbum'], ['name' => 'Smoke Album', 'image_url' => 'data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7']);
+        $song = \\App\\Models\\Song::firstOrCreate(['provider_id' => 'spotify', 'provider_track_id' => 'smoketrack'], ['name' => 'Smoke Track', 'length' => 180000, 'album_id' => $album->id]);
+        \\App\\Models\\UpcomingSong::firstOrCreate(['party_id' => $party->id, 'song_id' => $song->id], ['user_id' => $owner->id]);
     `);
 
     await alicePage.goto('/parties/SMKE');

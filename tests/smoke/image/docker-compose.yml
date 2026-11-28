@@ -30,7 +30,7 @@ services:
   app:
     <<: *app
     ports:
-      - "8080:8080"
+      - "18080:8080"
 
   reverb:
     <<: *app
@@ -47,10 +47,12 @@ services:
   fakeoauth:
     image: node:22-alpine
     command: ["node", "/srv/server.js"]
+    environment:
+      PORT: "19000"
     volumes:
       - ./fake-oauth/server.js:/srv/server.js:ro
     ports:
-      - "9000:9000"
+      - "19000:19000"
     networks:
       default:
         aliases:

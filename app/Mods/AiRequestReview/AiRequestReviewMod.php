@@ -42,7 +42,7 @@ class AiRequestReviewMod implements ContributesRequestRules, Mod, ValidatesSetti
             new SettingDefinition('include_party_context', 'Include party context', SettingType::stBoolean, true, 'Sends the model a short music-only summary of this Party: recent, best-rated and most downvoted tracks, the most upvoted and downvoted requests, top artists and a few stats. No names or user data.'),
             new SettingDefinition('timeout', 'Timeout (seconds)', SettingType::stInteger, 10, 'Capped at 20 seconds.', validation: ['min:1', 'max:20']),
             new SettingDefinition('guidelines', 'Guidelines', SettingType::stText, null, 'What this Party does and does not want to hear, passed to the model.'),
-            new SettingDefinition('allow_internal_endpoints', 'Allow internal endpoints', SettingType::stBoolean, false, 'Site admins only. Lets endpoints on private, loopback or link-local addresses be used, for self-hosted models. Off by default. Without it a LAN IP or docker service name (such as http://ollama:11434/v1) is refused when saving and the admin Mods page shows the last failure.', instanceOnly: true),
+            new SettingDefinition('allow_internal_endpoints', 'Allow internal endpoints', SettingType::stBoolean, false, 'Site admins only. Allows private, loopback or link-local endpoints, for self-hosted models. Off by default; otherwise a LAN IP or docker service name is refused when saving.', instanceOnly: true),
         ];
     }
 

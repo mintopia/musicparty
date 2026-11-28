@@ -8,8 +8,8 @@ cd "$(dirname "$0")"
 
 export SMOKE_IMAGE="${IMAGE:-musicparty:smoke}"
 export SMOKE_APP_KEY="base64:$(head -c 32 /dev/urandom | base64)"
-export SMOKE_APP_URL="http://musicparty.smoke.test:8080"
-export SMOKE_OAUTH_URL="http://oauth.smoke.test:9000"
+export SMOKE_APP_URL="http://musicparty.smoke.test:18080"
+export SMOKE_OAUTH_URL="http://oauth.smoke.test:19000"
 COMPOSE=(docker compose -p mp-image-smoke -f docker-compose.yml)
 
 cleanup() {
@@ -42,7 +42,7 @@ expect_boot_failure APP_KEY -e APP_ENV=production -e "APP_URL=${SMOKE_APP_URL}"
 "${COMPOSE[@]}" up -d
 
 for _ in $(seq 1 90); do
-    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 -H "Host: musicparty.smoke.test:8080" http://127.0.0.1:8080/up || true)"
+    code="$(curl -s -o /dev/null -w '%{http_code}' --max-time 3 -H "Host: musicparty.smoke.test:18080" http://127.0.0.1:18080/api/v1/ping || true)"
     [ "$code" = "200" ] && break
     sleep 2
 done
