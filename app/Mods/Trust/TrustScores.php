@@ -16,6 +16,9 @@ use Illuminate\Support\Facades\Log;
 
 class TrustScores
 {
+    /** @var array<int, array<int, float>> */
+    protected array $memberScoresByParty = [];
+
     public function __construct(
         protected ModDataStore $store,
         protected ModSettingsStore $settings,
@@ -63,6 +66,7 @@ class TrustScores
             }
         }
 
+        unset($this->memberScoresByParty[$party->id]);
         DB::transaction(function () use ($party, $members, $scores, $now): void {
             foreach ($members as $member) {
                 $this->store->set($member, TrustMod::CODE, 'trustscore', $scores[$member->user_id] ?? 0.0);
@@ -87,11 +91,30 @@ class TrustScores
 
     public function scoreFor(Party $party, int $userId): float
     {
-        return (float) $this->memberScores($party, $userId)->value('value');
+        return $this->scoresByUser($party)[$userId] ?? 0.0;
+    }
+
+    /**
+     * @return array<int, float>
+     */
+    protected function scoresByUser(Party $party): array
+    {
+        if (isset($this->memberScoresByParty[$party->id])) {
+            return $this->memberScoresByParty[$party->id];
+        }
+
+        $values = $this->memberScores($party)->pluck('value', 'owner_id');
+        $scores = [];
+        foreach (PartyMember::query()->where('party_id', $party->id)->get(['id', 'user_id']) as $member) {
+            $scores[$member->user_id] ??= (float) ($values[$member->id] ?? 0.0);
+        }
+
+        return $this->memberScoresByParty[$party->id] = $scores;
     }
 
     public function forget(Party $party): void
     {
+        unset($this->memberScoresByParty[$party->id]);
         DB::transaction(function () use ($party): void {
             $this->memberScores($party)->delete();
             $this->store->forget($party, TrustMod::CODE, 'calculated_at');

@@ -72,6 +72,8 @@ function formatPlaysAt(iso: string): string {
         <div class="q-main">
             <div class="q-title">
                 <span>{{ song.name }}</span>
+                <span v-if="song.next" class="badge bg-green-lt" data-test="next-request">Next</span>
+                <span v-if="song.held" class="badge bg-yellow-lt" data-test="held-request">Held</span>
                 <span v-if="isMine" class="badge bg-blue-lt" data-test="your-request">You</span>
                 <span v-if="song.decoration?.label" class="badge bg-azure-lt" data-test="decoration-label">{{
                     song.decoration.label

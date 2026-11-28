@@ -6,6 +6,9 @@ use App\Models\Party;
 use App\Models\Song;
 use App\Models\UpcomingSong;
 use App\Mods\Contracts\DecoratesTracks;
+use App\Mods\Contracts\Mod;
+use App\Services\ModDataStore;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -29,6 +32,20 @@ class ModExtensions
         }
 
         return $extensions;
+    }
+
+    /**
+     * Fetches the data every track-decorating mod needs for a page of Requests in one query per mod.
+     *
+     * @param  Collection<int, UpcomingSong>  $requests
+     */
+    public function preloadDecorations(Party $party, Collection $requests): void
+    {
+        foreach ($this->for($party, DecoratesTracks::class) as $mod) {
+            if ($mod instanceof Mod) {
+                app(ModDataStore::class)->preload($requests, $mod->code());
+            }
+        }
     }
 
     public function decorationFor(Party $party, Song $song, ?UpcomingSong $request = null): ?TrackDecoration

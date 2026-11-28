@@ -13,6 +13,9 @@ class UpcomingSongResource extends JsonResource
 {
     protected ?object $augmentedData = null;
 
+    /** @var array{held: bool, next: bool}|null */
+    protected ?array $queueState = null;
+
     /**
      * Transform the resource into an array.
      *
@@ -26,8 +29,19 @@ class UpcomingSongResource extends JsonResource
         $data['updated_at'] = $this->updated_at?->toIso8601String();
         $data['vote'] = $this->augmentedData->vote->value ?? null;
         $data['user'] = $this->user->nickname ?? null;
+        if ($this->queueState !== null) {
+            $data += $this->queueState;
+        }
 
         return $data;
+    }
+
+    /**
+     * @param  array{held: bool, next: bool}|null  $state
+     */
+    public function queueState(?array $state): void
+    {
+        $this->queueState = $state;
     }
 
     public function augment(?object $data = null): void

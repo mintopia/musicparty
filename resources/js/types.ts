@@ -170,6 +170,8 @@ export interface LegacyUpcomingSong extends LegacyTrack {
     vote: number;
     created_at: string;
     scheduled_for?: string | null;
+    held?: boolean;
+    next?: boolean;
 }
 
 export interface PlaybackState {
