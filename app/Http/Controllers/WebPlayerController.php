@@ -9,8 +9,10 @@ use App\Services\Spotify\SpotifyGateway;
 use App\Services\Spotify\SpotifyRelinkRequiredException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
+use Throwable;
 
 class WebPlayerController extends Controller
 {
@@ -36,6 +38,8 @@ class WebPlayerController extends Controller
             $this->playback->perform($party, 'play', $deviceId);
         } catch (SpotifyRelinkRequiredException) {
             return response()->json(['message' => 'Spotify needs re-linking.'], 409);
+        } catch (Throwable $e) {
+            return $this->spotifyUnavailable($party, $e);
         }
 
         $party->device_id = $deviceId;
@@ -53,6 +57,8 @@ class WebPlayerController extends Controller
             $token = $gateway->accessToken($party->user);
         } catch (SpotifyRelinkRequiredException) {
             return response()->json(['message' => 'Spotify needs re-linking.'], 409);
+        } catch (Throwable $e) {
+            return $this->spotifyUnavailable($party, $e);
         }
 
         if ($token === null) {
@@ -60,5 +66,12 @@ class WebPlayerController extends Controller
         }
 
         return response()->json(['accessToken' => $token])->header('Cache-Control', 'no-store, private');
+    }
+
+    private function spotifyUnavailable(Party $party, Throwable $e): JsonResponse
+    {
+        Log::warning("Web player Spotify call failed for party {$party->id}: {$e->getMessage()}");
+
+        return response()->json(['message' => 'Spotify is unavailable, try again shortly.'], 503);
     }
 }
