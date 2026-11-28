@@ -11,6 +11,7 @@ use App\Mods\Contracts\ModifiesScore;
 use App\Mods\ModExtensions;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\Queue\CandidateFilter;
+use Closure;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
@@ -20,6 +21,9 @@ use Throwable;
 
 class QueueSelector
 {
+    /** @var array<int, true> */
+    protected array $heldRequestLocks = [];
+
     public const QUEUE_LENGTH = 1;
 
     /** @var array<int, list<ModifiesScore>> */
@@ -234,18 +238,50 @@ class QueueSelector
      */
     public function addRequest(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
     {
-        return Cache::lock("add-request:{$party->id}:{$song->id}", 10)->block(10, function () use ($party, $song, $user, $attributes): UpcomingSong {
-            $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
-            if (! $request->exists) {
-                $request->party()->associate($party);
-                $request->song()->associate($song);
-                $request->user()->associate($user);
-            }
-            $request->forceFill($attributes)->save();
-            $request->updateScore();
+        return $this->withRequestLock($party, fn (): UpcomingSong => $this->addRequestLocked($party, $song, $user, $attributes));
+    }
 
-            return $request;
+    /**
+     * Runs $callback holding the Party's request lock, which serialises every path that creates Requests. Re-entrant within one call stack, as cache locks are not.
+     *
+     * @template T
+     *
+     * @param  Closure(): T  $callback
+     * @return T
+     */
+    public function withRequestLock(Party $party, Closure $callback, ?int $waitSeconds = null): mixed
+    {
+        if (isset($this->heldRequestLocks[$party->id])) {
+            return $callback();
+        }
+
+        return Cache::lock("add-request:{$party->id}", 30)->block($waitSeconds ?? (int) config('musicparty.request_lock_wait_seconds'), function () use ($party, $callback): mixed {
+            $this->heldRequestLocks[$party->id] = true;
+            try {
+                return $callback();
+            } finally {
+                unset($this->heldRequestLocks[$party->id]);
+            }
         });
+    }
+
+    /**
+     * addRequest for callers already inside withRequestLock.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    public function addRequestLocked(Party $party, Song $song, ?User $user = null, array $attributes = []): UpcomingSong
+    {
+        $request = $party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->first() ?? new UpcomingSong;
+        if (! $request->exists) {
+            $request->party()->associate($party);
+            $request->song()->associate($song);
+            $request->user()->associate($user);
+        }
+        $request->forceFill($attributes)->save();
+        $request->updateScore();
+
+        return $request;
     }
 
     /**

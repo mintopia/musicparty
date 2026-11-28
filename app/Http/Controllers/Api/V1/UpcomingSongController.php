@@ -15,6 +15,7 @@ use App\Mods\AiRequestReview\AiReviewRecorder;
 use App\Services\Music\MusicProviderFactory;
 use App\Services\PartyTimezone;
 use App\Services\Queue\QueueListing;
+use App\Services\QueueSelector;
 use App\Services\Requests\DeleteRequest;
 use App\Services\Requests\FlaggedRequests;
 use App\Services\Requests\RequestRules;
@@ -83,8 +84,8 @@ class UpcomingSongController extends Controller
 
         try {
             $outcome = Cache::lock("request-store:{$party->id}:{$member->id}", self::REQUEST_LOCK_SECONDS)
-                ->block($wait, fn (): UpcomingSong|JsonResponse => Cache::lock("request-store:{$party->id}:track:{$trackId}", self::REQUEST_LOCK_SECONDS)
-                    ->block($wait, function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
+                ->block($wait, fn (): UpcomingSong|JsonResponse => app(QueueSelector::class)->withRequestLock($party,
+                    function () use ($party, $member, $user, $trackId, $scheduledFor): UpcomingSong|JsonResponse {
                         $upcoming = $party->upcoming()->whereNull('queued_at')->whereHas('song', function ($query) use ($party, $trackId) {
                             $query->where(['provider_id' => $party->provider_id, 'provider_track_id' => $trackId]);
                         })->first();
@@ -130,11 +131,7 @@ class UpcomingSongController extends Controller
                                     'reason' => $checkResponse->reason,
                                 ], 202);
                             }
-                            $upcoming = new UpcomingSong;
-                            $upcoming->party()->associate($party);
-                            $upcoming->user()->associate($user);
-                            $upcoming->song()->associate($song);
-                            $upcoming->save();
+                            $upcoming = app(QueueSelector::class)->addRequestLocked($party, $song, $user);
                             app(AiReviewRecorder::class)->linkRequest($upcoming, $user, $trackId);
                         }
 
@@ -152,7 +149,7 @@ class UpcomingSongController extends Controller
                         $upcoming->upvote($user);
 
                         return $upcoming;
-                    }));
+                    }, $wait));
         } catch (LockTimeoutException) {
             abort(429, 'Another request is already being processed');
         }

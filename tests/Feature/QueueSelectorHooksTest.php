@@ -6,6 +6,7 @@ use App\Models\UpcomingSong;
 use App\Services\Music\Fake\FakeMusicProvider;
 use App\Services\Queue\CandidateFilter;
 use App\Services\QueueSelector;
+use Illuminate\Contracts\Cache\LockTimeoutException;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -73,14 +74,27 @@ it('adds a request with hold time and score adjustment that any feature can set'
     expect(sentTrackIds())->toBe(['ADDED']);
 });
 
-it('leaves one request when the same song is added repeatedly', function () {
-    $song = hookRequest($this->party, 'ONCE')->song;
+it('takes the party request lock so an add cannot interleave with another creator', function () {
+    config(['musicparty.request_lock_wait_seconds' => 0]);
+    $song = hookRequest($this->party, 'LOCKED')->song;
+    $held = Cache::lock("add-request:{$this->party->id}", 30);
+    $held->get();
 
-    foreach (range(1, 3) as $_) {
-        app(QueueSelector::class)->addRequest($this->party, $song);
-    }
+    expect(fn () => app(QueueSelector::class)->addRequest($this->party, $song))->toThrow(LockTimeoutException::class);
 
-    expect($this->party->upcoming()->whereNull('queued_at')->where('song_id', $song->id)->count())->toBe(1);
+    $held->release();
+    expect(app(QueueSelector::class)->addRequest($this->party, $song)->song_id)->toBe($song->id);
+});
+
+it('lets an add nest inside the party request lock without deadlocking', function () {
+    config(['musicparty.request_lock_wait_seconds' => 0]);
+    $song = hookRequest($this->party, 'NESTED')->song;
+    $selector = app(QueueSelector::class);
+
+    $result = $selector->withRequestLock($this->party, fn () => $selector->addRequest($this->party, $song));
+
+    expect($result->song_id)->toBe($song->id)
+        ->and(Cache::lock("add-request:{$this->party->id}", 5)->get())->toBeTrue();
 });
 
 it('reuses a waiting request for the same song', function () {
