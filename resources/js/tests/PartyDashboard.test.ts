@@ -803,6 +803,22 @@ describe('live updates', () => {
         expect([...only].sort()).toEqual(['attention', 'control', 'upNext', 'upcoming']);
     });
 
+    it('reloads only the volatile props after a reconnect, spread over a wide jitter window', () => {
+        vi.useFakeTimers();
+        vi.spyOn(Math, 'random').mockReturnValue(0.99);
+        mountPage();
+
+        echo.states.forEach((cb) => cb({previous: 'connected', current: 'unavailable'}));
+        echo.states.forEach((cb) => cb({previous: 'unavailable', current: 'connected'}));
+        vi.advanceTimersByTime(5000);
+        expect(inertia.reload).not.toHaveBeenCalled();
+        vi.advanceTimersByTime(5000);
+
+        expect(inertia.reload).toHaveBeenCalledTimes(1);
+        expect(inertia.reload).toHaveBeenCalledWith({only: ['playerState', 'upNext', 'upcoming']});
+        vi.restoreAllMocks();
+    });
+
     it('refreshes control and attention periodically, since Encore connecting sends no event', () => {
         vi.useFakeTimers();
         mountPage();
