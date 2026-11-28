@@ -47,8 +47,7 @@ class StartPlayback
 
     /**
      * What Start Playback would play right now, without changing anything.
-     */
-    /**
+     *
      * @param  UpcomingSong|false|null  $sent  The already-loaded Sent to Player Request (null for none); false to look it up.
      */
     public function target(Party $party, ?PlaybackState $state, UpcomingSong|false|null $sent = false): ?StartTarget
