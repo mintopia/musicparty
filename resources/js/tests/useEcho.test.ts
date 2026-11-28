@@ -1,5 +1,5 @@
 import {mount} from '@vue/test-utils';
-import {afterEach, describe, expect, it, vi} from 'vitest';
+import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
 import {defineComponent} from 'vue';
 import {setEchoFactory, useEcho} from '@/composables/useEcho';
 
@@ -27,7 +27,10 @@ function fakeEcho() {
     return {echo, handlers};
 }
 
-afterEach(() => setEchoFactory(null));
+afterEach(() => {
+    setEchoFactory(null);
+    vi.useRealTimers();
+});
 
 describe('useEcho', () => {
     it('leaves every joined channel once its last holder unmounts and shares one instance', () => {
@@ -61,9 +64,75 @@ describe('useEcho', () => {
         expect(handlers).toHaveLength(0);
     });
 
+    it('stops channel listeners when the component using useEcho unmounts', () => {
+        const {echo} = fakeEcho();
+        setEchoFactory(() => echo);
+        const wrapper = mount(
+            defineComponent({
+                setup() {
+                    useEcho().privateChannel('party.ABC');
+                    return () => null;
+                },
+            }),
+        );
+
+        expect(echo.leave).not.toHaveBeenCalled();
+        wrapper.unmount();
+        expect(echo.leave).toHaveBeenCalledWith('party.ABC');
+    });
+
+    describe('reconnect jitter', () => {
+        beforeEach(() => vi.useFakeTimers());
+        afterEach(() => vi.useRealTimers());
+
+        it('runs the callback once, only after a random 0-3s delay', () => {
+            vi.spyOn(Math, 'random').mockReturnValue(0.5);
+            const {echo, handlers} = fakeEcho();
+            setEchoFactory(() => echo);
+            const callback = vi.fn();
+            mount(
+                defineComponent({
+                    setup() {
+                        useEcho().onReconnect(callback);
+                        return () => null;
+                    },
+                }),
+            );
+
+            handlers[0]({previous: 'connected', current: 'unavailable'});
+            handlers[0]({previous: 'unavailable', current: 'connected'});
+            vi.advanceTimersByTime(1499);
+            expect(callback).not.toHaveBeenCalled();
+            vi.advanceTimersByTime(1);
+            expect(callback).toHaveBeenCalledTimes(1);
+            vi.restoreAllMocks();
+        });
+
+        it('cancels a pending resync on unmount', () => {
+            const {echo, handlers} = fakeEcho();
+            setEchoFactory(() => echo);
+            const callback = vi.fn();
+            const wrapper = mount(
+                defineComponent({
+                    setup() {
+                        useEcho().onReconnect(callback);
+                        return () => null;
+                    },
+                }),
+            );
+
+            handlers[0]({previous: 'connected', current: 'unavailable'});
+            handlers[0]({previous: 'unavailable', current: 'connected'});
+            wrapper.unmount();
+            vi.advanceTimersByTime(3000);
+            expect(callback).not.toHaveBeenCalled();
+        });
+    });
+
     it('calls the reconnect hook only after a disconnect', () => {
         const {echo, handlers} = fakeEcho();
         setEchoFactory(() => echo);
+        vi.useFakeTimers();
         const callback = vi.fn();
 
         mount(
@@ -80,6 +149,7 @@ describe('useEcho', () => {
 
         handlers[0]({previous: 'connected', current: 'unavailable'});
         handlers[0]({previous: 'unavailable', current: 'connected'});
+        vi.advanceTimersByTime(3000);
         expect(callback).toHaveBeenCalledTimes(1);
     });
 
