@@ -17,6 +17,14 @@ class QueueListing
 {
     public function __construct(private readonly QueueSelector $selector, private readonly ModExtensions $mods) {}
 
+    public function position(Party $party, UpcomingSong $request): ?int
+    {
+        $queue = $this->selector->rankedQueue($party, includeHeld: true);
+        $index = $queue['ready']->concat($queue['held'])->values()->search(fn (UpcomingSong $candidate): bool => $candidate->id === $request->id);
+
+        return $index === false ? null : $index + 1;
+    }
+
     /**
      * @return array{items: Collection<int, UpcomingSong>, total: int, states: array<int, array{held: bool, next: bool}>}
      */

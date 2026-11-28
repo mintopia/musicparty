@@ -13,6 +13,8 @@ class UpcomingSongResource extends JsonResource
 {
     protected ?object $augmentedData = null;
 
+    protected ?int $position = null;
+
     /** @var array{held: bool, next: bool}|null */
     protected ?array $queueState = null;
 
@@ -29,11 +31,19 @@ class UpcomingSongResource extends JsonResource
         $data['updated_at'] = $this->updated_at?->toIso8601String();
         $data['vote'] = $this->augmentedData->vote->value ?? null;
         $data['user'] = $this->user->nickname ?? null;
+        if ($this->position !== null) {
+            $data['position'] = $this->position;
+        }
         if ($this->queueState !== null) {
             $data += $this->queueState;
         }
 
         return $data;
+    }
+
+    public function position(?int $position): void
+    {
+        $this->position = $position;
     }
 
     /**

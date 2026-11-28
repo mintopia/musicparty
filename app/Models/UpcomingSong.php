@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Events\UpcomingSong\UpdatedEvent;
 use App\Exceptions\VoteException;
 use App\Mods\ModExtensions;
 use Database\Factories\UpcomingSongFactory;
@@ -165,8 +166,12 @@ class UpcomingSong extends Model
         $score = Vote::query()
             ->selectRaw('COALESCE(SUM(value), 0) + upcoming_songs.score_adjustment')
             ->whereColumn('votes.upcoming_song_id', 'upcoming_songs.id');
+        $previous = static::query()->whereKey($this->id)->value('score');
         static::query()->whereKey($this->id)->update(['score' => $score]);
         $stored = static::query()->whereKey($this->id)->firstOrFail(['score', 'score_adjustment']);
         $this->forceFill(['score' => $stored->score, 'score_adjustment' => $stored->score_adjustment])->syncOriginalAttributes(['score', 'score_adjustment']);
+        if ($previous !== $stored->score && $this->flagged_at === null && $this->queued_at === null) {
+            UpdatedEvent::dispatch($this);
+        }
     }
 }
