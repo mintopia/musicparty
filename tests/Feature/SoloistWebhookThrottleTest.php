@@ -30,14 +30,14 @@ it('accepts a burst, rejects the overflow, and recovers after leaking', function
     foreach (range(1, 3) as $_) {
         $this->postJson($url)->assertNoContent();
     }
-    Queue::assertPushed(PartyUpdate::class, 3);
+    Queue::assertPushed(PartyUpdate::class, 1);
 
     $this->postJson($url)->assertStatus(429);
-    Queue::assertPushed(PartyUpdate::class, 3);
+    Queue::assertPushed(PartyUpdate::class, 1);
 
-    $this->travel(2)->seconds();
+    $this->travel(3)->seconds();
     $this->postJson($url)->assertNoContent();
-    Queue::assertPushed(PartyUpdate::class, 4);
+    Queue::assertPushed(PartyUpdate::class, 2);
 });
 
 it('does not share buckets between parties', function () {

@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Exceptions\ProviderBackoffException;
 use App\Exceptions\ProviderRelinkRequiredException;
+use App\Jobs\Concerns\ReleasesOnProviderBackoff;
 use App\Models\Party;
 use App\Services\FallbackPlaylist;
 use Illuminate\Bus\Queueable;
@@ -18,7 +19,10 @@ class RefreshFallbackPlaylist implements ShouldQueue
     use Dispatchable;
     use InteractsWithQueue;
     use Queueable;
+    use ReleasesOnProviderBackoff;
     use SerializesModels;
+
+    public bool $deleteWhenMissingModels = true;
 
     public int $maxExceptions = 3;
 
@@ -45,8 +49,7 @@ class RefreshFallbackPlaylist implements ShouldQueue
         try {
             $fallbackPlaylist->refresh($this->party);
         } catch (ProviderBackoffException $e) {
-            Log::info("{$this->party}: backoff active, releasing for {$e->retryAfterSeconds()}s");
-            $this->release($e->retryAfterSeconds());
+            $this->releaseForBackoff($e);
         } catch (ProviderRelinkRequiredException) {
             Log::warning("{$this->party}: relink required, fallback playlist not refreshed");
         }
