@@ -57,6 +57,13 @@ const emit = defineEmits<{vote: [value: -1 | 0 | 1]}>();
 </template>
 
 <style scoped>
+.vote-button,
+.vote-button:hover,
+.vote-button:focus,
+.vote-button:active {
+    text-decoration: none;
+}
+
 .vote-button {
     min-width: 28px;
     min-height: 28px;
