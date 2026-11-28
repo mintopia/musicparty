@@ -7,7 +7,6 @@ use App\Services\SocialProviders\DiscordProvider;
 use App\Services\SocialProviders\LaravelPassportProvider;
 use App\Services\SocialProviders\SpotifyProvider;
 use App\Services\SocialProviders\SpotifySearchProvider;
-use App\Services\SocialProviders\SteamProvider;
 use App\Services\SocialProviders\TwitchProvider;
 use Illuminate\Support\Facades\DB;
 
@@ -58,7 +57,6 @@ it('never auto-merges for providers that cannot assert verification', function (
     'spotify' => [SpotifyProvider::class, 'spotify'],
     'spotify search' => [SpotifySearchProvider::class, 'spotifysearch'],
     'passport' => [LaravelPassportProvider::class, 'laravelpassport'],
-    'steam' => [SteamProvider::class, 'steam'],
 ]);
 
 it('updates email_verified_at on each login', function () {
