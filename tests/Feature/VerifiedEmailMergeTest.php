@@ -7,6 +7,7 @@ use App\Services\SocialProviders\DiscordProvider;
 use App\Services\SocialProviders\LaravelPassportProvider;
 use App\Services\SocialProviders\SpotifyProvider;
 use App\Services\SocialProviders\SpotifySearchProvider;
+use App\Services\SocialProviders\SteamProvider;
 use App\Services\SocialProviders\TwitchProvider;
 use Illuminate\Support\Facades\DB;
 
@@ -50,6 +51,8 @@ it('never auto-merges for providers that cannot assert verification', function (
     $existing = LinkedAccount::factory()->verified()->create(['email' => 'a@example.com']);
     $provider = providerFor($class, $code);
     fakeRemoteUser('x1', 'a@example.com', ['verified' => true]);
+    session()->put(SteamProvider::NONCE_SESSION_KEY, 'n');
+    request()->query->set('nonce', 'n');
 
     expect($provider->user()->id)->not->toBe($existing->user_id)
         ->and($provider->accounts()->first()->email_verified_at)->toBeNull();
@@ -57,6 +60,7 @@ it('never auto-merges for providers that cannot assert verification', function (
     'spotify' => [SpotifyProvider::class, 'spotify'],
     'spotify search' => [SpotifySearchProvider::class, 'spotifysearch'],
     'passport' => [LaravelPassportProvider::class, 'laravelpassport'],
+    'steam' => [SteamProvider::class, 'steam'],
 ]);
 
 it('updates email_verified_at on each login', function () {
