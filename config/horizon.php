@@ -183,8 +183,7 @@ return [
         'supervisor-1' => [
             'connection' => 'redis',
             'queue' => ['default'],
-            'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
+            'balance' => 'simple',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -196,8 +195,7 @@ return [
         'supervisor-partyupdates' => [
             'connection' => 'redis',
             'queue' => ['partyupdates'],
-            'balance' => 'auto',
-            'autoScalingStrategy' => 'time',
+            'balance' => 'simple',
             'maxProcesses' => 1,
             'maxTime' => 0,
             'maxJobs' => 0,
@@ -211,14 +209,10 @@ return [
     'environments' => [
         'production' => [
             'supervisor-1' => [
-                'maxProcesses' => 10,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'maxProcesses' => 6,
             ],
             'supervisor-partyupdates' => [
-                'maxProcesses' => 5,
-                'balanceMaxShift' => 1,
-                'balanceCooldown' => 3,
+                'maxProcesses' => 3,
             ],
         ],
 

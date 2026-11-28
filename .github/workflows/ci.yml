@@ -94,11 +94,11 @@ jobs:
           if-no-files-found: ignore
 
   tests-mariadb:
-    name: Tests (MariaDB 11)
+    name: Tests (MariaDB 11.4)
     runs-on: ubuntu-latest
     services:
       db:
-        image: mariadb:11
+        image: mariadb:11.4
         env:
           MARIADB_ROOT_PASSWORD: musicparty
           MARIADB_DATABASE: musicparty_test
