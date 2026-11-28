@@ -11,7 +11,7 @@ use Illuminate\Support\Collection;
 
 /**
  * Pages through the Party's waiting Requests in the order the selector ranks them, with the Request that plays next flagged
- * and held Requests (not yet released, or rejected by a candidate filter) listed after it and flagged as held.
+ * and held Requests (not yet released) listed after it and flagged as held.
  */
 class QueueListing
 {

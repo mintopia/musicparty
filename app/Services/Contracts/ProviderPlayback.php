@@ -30,8 +30,6 @@ interface ProviderPlayback
 
     public function next(): void;
 
-    public function previous(): void;
-
     public function seek(int $positionMs): void;
 
     /**

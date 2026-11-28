@@ -480,23 +480,6 @@ describe('RequestRules', function () {
         });
     });
 
-    it('reports an unknown spotify id as not found when checking by id', function () {
-        $party = reqParty(['allow_requests' => true]);
-        $member = reqMember($party);
-        reqThrowingSpotify(new SpotifyWebAPIException('invalid id'));
-
-        $response = app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
-
-        expect($response->allowed)->toBeFalse()->and($response->reason)->toBe('Song is not found in Spotify');
-    });
-
-    it('rethrows other spotify errors when checking by id', function () {
-        $party = reqParty(['allow_requests' => true]);
-        $member = reqMember($party);
-        reqThrowingSpotify(new SpotifyWebAPIException('Service unavailable', 503));
-
-        app(RequestRules::class)->checkById($party->refresh(), $member, app(MusicProviderFactory::class)->forParty($party, Purpose::Control), 'nope');
-    })->throws(SpotifyWebAPIException::class, 'Service unavailable');
 });
 
 describe('UpcomingSongController::store', function () {

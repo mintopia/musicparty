@@ -385,13 +385,6 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
         return $this->getTrack($id);
     }
 
-    public function getTracks(array $ids): array
-    {
-        $this->record(__FUNCTION__, func_get_args());
-
-        return array_values(array_filter(array_map(fn (string $id): ?Track => $this->tracks[$id] ?? null, $ids)));
-    }
-
     public function getAlbum(string $id): ?Album
     {
         $this->record(__FUNCTION__, func_get_args());
@@ -550,12 +543,6 @@ class FakeMusicProvider implements MusicProvider, ProviderPlayback
     }
 
     public function next(): void
-    {
-        $this->record(__FUNCTION__, func_get_args());
-        $this->failIfScheduled();
-    }
-
-    public function previous(): void
     {
         $this->record(__FUNCTION__, func_get_args());
         $this->failIfScheduled();

@@ -41,11 +41,6 @@ class TrustMod implements Mod, ModifiesScore
         ];
     }
 
-    public function extensionPoints(): array
-    {
-        return ['scheduled-actions', 'score-modifiers'];
-    }
-
     public function scheduledActions(): array
     {
         return [

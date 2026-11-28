@@ -4,6 +4,8 @@ use App\Models\Role;
 use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
+use Inertia\Inertia;
 use Inertia\Testing\AssertableInertia as Assert;
 
 function themeAdmin(): User
@@ -13,6 +15,11 @@ function themeAdmin(): User
 
     return $user;
 }
+
+beforeEach(function () {
+    Route::middleware('web')->get('ui/shell', fn () => Inertia::render('Shell'))->name('inertia.shell');
+    app('router')->getRoutes()->refreshNameLookups();
+});
 
 it('serves the theme stylesheet as cacheable text/css', function () {
     $theme = Theme::factory()->create([
