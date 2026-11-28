@@ -8,6 +8,7 @@ use App\Exceptions\ProviderRelinkRequiredException;
 use App\Http\Concerns\ResolvesAuthenticatedUser;
 use App\Models\Party;
 use App\Services\Music\MusicProviderFactory;
+use App\Services\PartyCodeGenerator;
 use App\Services\PartyProviderOptions;
 use App\Services\Playback\ContextPlaylist;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -29,6 +30,9 @@ class PartyRequest extends FormRequest
 
     protected function prepareForValidation(): void
     {
+        if ($this->has('code') && is_string($this->input('code'))) {
+            $this->merge(['code' => strtoupper(trim($this->input('code')))]);
+        }
         if (! $this->route('party') instanceof Party && ! $this->has('provider_id')) {
             $this->merge(['provider_id' => MusicProviderFactory::DEFAULT_PROVIDER_ID]);
         }
@@ -100,7 +104,12 @@ class PartyRequest extends FormRequest
             ));
         }
 
-        return [
+        $codeRules = [];
+        if ($party instanceof Party && $this->user()?->can('admin')) {
+            $codeRules = ['code' => ['sometimes', 'string', 'regex:'.PartyCodeGenerator::FORMAT, Rule::unique('parties', 'code')->ignore($party->getKey())]];
+        }
+
+        return $codeRules + [
             'provider_id' => $party instanceof Party
                 ? 'prohibited'
                 : ['required', 'string', Rule::in(app(MusicProviderFactory::class)->selectableIds())],
