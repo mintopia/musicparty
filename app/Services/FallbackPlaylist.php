@@ -6,7 +6,6 @@ use App\Enums\Purpose;
 use App\Jobs\RefreshFallbackPlaylist;
 use App\Models\Party;
 use App\Models\Song;
-use App\Models\UpcomingSong;
 use App\Services\Music\Data\Track;
 use App\Services\Music\MusicProviderFactory;
 use Illuminate\Support\Carbon;
@@ -73,8 +72,7 @@ class FallbackPlaylist
     public function backfill(Party $party): void
     {
         Log::debug("{$party}: Backfilling upcoming songs");
-        $toAdd = Party::MINIMUM_UPCOMING - $party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->count();
-        if ($toAdd <= 0) {
+        if ($this->missingUpcoming($party) <= 0) {
             return;
         }
 
@@ -85,29 +83,34 @@ class FallbackPlaylist
             return;
         }
 
-        $existingIds = $party->upcoming()
-            ->where(function ($query) {
-                $query->whereNull('queued_at')
-                    ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));
-            })
-            ->with('song')
-            ->get()
-            ->pluck('song.provider_track_id')
-            ->toArray();
-
-        $tracks = array_values(array_filter($tracks, fn (Track $track) => ! in_array($track->id, $existingIds)));
-
-        $toAdd = min($toAdd, count($tracks));
         $tracks = app(Randomizer::class)->shuffleArray($tracks);
+        $queue = app(QueueSelector::class);
 
-        for ($i = 0; $i < $toAdd; $i++) {
-            $song = Song::fromTrack($tracks[$i]);
-            Log::info("{$party}: Adding {$song} from backup playlist");
-            $upcoming = new UpcomingSong;
-            $upcoming->party()->associate($party);
-            $upcoming->song()->associate($song);
-            $upcoming->save();
-        }
+        $queue->withRequestLock($party, function () use ($party, $tracks, $queue): void {
+            $existingIds = $party->upcoming()
+                ->where(function ($query) {
+                    $query->whereNull('queued_at')
+                        ->orWhere('queued_at', '>', Carbon::now()->subMinutes(30));
+                })
+                ->with('song')
+                ->get()
+                ->pluck('song.provider_track_id')
+                ->toArray();
+
+            $tracks = array_values(array_filter($tracks, fn (Track $track) => ! in_array($track->id, $existingIds)));
+            $toAdd = min($this->missingUpcoming($party), count($tracks));
+
+            for ($i = 0; $i < $toAdd; $i++) {
+                $song = Song::fromTrack($tracks[$i]);
+                Log::info("{$party}: Adding {$song} from backup playlist");
+                $queue->addRequestLocked($party, $song);
+            }
+        });
+    }
+
+    protected function missingUpcoming(Party $party): int
+    {
+        return Party::MINIMUM_UPCOMING - $party->upcoming()->whereNull('queued_at')->whereNull('flagged_at')->count();
     }
 
     protected function cacheKey(Party $party): string

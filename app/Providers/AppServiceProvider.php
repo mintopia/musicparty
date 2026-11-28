@@ -38,6 +38,7 @@ use App\Services\Playback\EncoreStateMapper;
 use App\Services\Playback\PushedStateRouter;
 use App\Services\Playback\WebPlayerStateMapper;
 use App\Services\PlayedSongAugmentService;
+use App\Services\Requests\RequestLocks;
 use App\Services\UpcomingSongAugmentService;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Http\Request;
@@ -76,6 +77,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->scoped(ModDataStore::class);
         $this->app->scoped(PartyMods::class);
         $this->app->scoped(TrustScores::class);
+        $this->app->scoped(RequestLocks::class);
         $fakeAllowed = MusicProviderFactory::fakeAllowed();
         if ($fakeAllowed) {
             $this->app->scoped(FakeMusicProvider::class);
