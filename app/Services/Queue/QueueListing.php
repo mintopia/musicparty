@@ -73,8 +73,8 @@ class QueueListing
             $queue = $this->selector->rankedQueue($party, includeHeld: true);
 
             return [
-                'ready' => $queue['ready']->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
-                'held' => $queue['held']->pluck('id')->map(fn ($id): int => (int) $id)->values()->all(),
+                'ready' => array_values($queue['ready']->pluck('id')->map(fn ($id): int => (int) $id)->all()),
+                'held' => array_values($queue['held']->pluck('id')->map(fn ($id): int => (int) $id)->all()),
             ];
         });
     }

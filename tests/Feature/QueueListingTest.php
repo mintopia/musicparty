@@ -2,6 +2,7 @@
 
 use App\Models\PartyMember;
 use App\Models\UpcomingSong;
+use App\Mods\ModExtensions;
 use App\Mods\PartyMods;
 use App\Mods\Trust\TrustMod;
 use App\Services\ModDataStore;
@@ -134,7 +135,7 @@ it('does not rescore the queue for repeat listings within the cache window and r
     $first = dashboardRequest($party, ['score' => 2, 'queued_at' => null]);
     $selector = Mockery::spy(app(QueueSelector::class));
     $selector->shouldReceive('rankedQueue')->passthru();
-    $listing = new QueueListing($selector, app(App\Mods\ModExtensions::class));
+    $listing = new QueueListing($selector, app(ModExtensions::class));
 
     $listing->page($party, 0, 10);
     $listing->page($party, 0, 10);
