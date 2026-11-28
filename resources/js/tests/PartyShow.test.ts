@@ -1,3 +1,4 @@
+import {ref} from 'vue';
 import {flushPromises, mount} from '@vue/test-utils';
 import axios from 'axios';
 import {afterEach, beforeEach, describe, expect, it, vi} from 'vitest';
@@ -29,7 +30,7 @@ vi.mock('@/composables/useEcho', () => {
     return {
         useEcho: () => ({
             onReconnect: (cb: () => void) => echo.reconnects.push(cb),
-            trackConnection: () => ({value: true}),
+            trackConnection: () => ref(true),
             publicChannel: () => ({listen}),
             privateChannel: () => ({listen}),
         }),

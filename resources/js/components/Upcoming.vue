@@ -70,6 +70,17 @@ function openSchedule(song: LegacyUpcomingSong, event?: MouseEvent): void {
     scheduling.value = song;
 }
 
+function sortUpcoming(): void {
+    upcoming.value.sort((alpha, bravo) => {
+        if (alpha.score !== bravo.score) {
+            return Math.sign(bravo.score - alpha.score);
+        }
+        const diff = Math.sign(Date.parse(alpha.created_at) - Date.parse(bravo.created_at));
+
+        return diff === 0 ? Math.sign(alpha.id - bravo.id) : diff;
+    });
+}
+
 let resyncTimer: ReturnType<typeof setTimeout> | null = null;
 
 function scheduleResync(): void {
@@ -103,6 +114,7 @@ async function vote(songId: number, value: number): Promise<void> {
     try {
         const response = await axios.request({url: route.url, method: route.method, data: {vote: value}});
         addOrUpdateItem(response.data.data);
+        sortUpcoming();
         scheduleResync();
     } catch (error) {
         if (axios.isAxiosError(error) && error.response?.status === 400) {
@@ -150,6 +162,7 @@ function undoRemoval(): void {
     pending = null;
     notice.value = null;
     addOrUpdateItem(song);
+    sortUpcoming();
     scheduleResync();
 }
 
@@ -174,6 +187,7 @@ async function commitPending(): Promise<void> {
         }
         failedIds.value.add(song.id);
         addOrUpdateItem(song);
+        sortUpcoming();
         scheduleResync();
         clearNoticeTimer();
         notice.value = {
@@ -254,6 +268,7 @@ const channel = echo.privateChannel(`party.${props.party}`) as {
 };
 channel.listen<LegacyUpcomingSong>('UpcomingSong\\UpdatedEvent', (payload) => {
     addOrUpdateItem(payload, true);
+    sortUpcoming();
     scheduleResync();
 });
 channel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
