@@ -76,7 +76,6 @@ trait CreatesApplication
                 "Refusing to run tests: default connection [{$default}] must be SQLite :memory: (or a *_test MariaDB database when TEST_DB_DRIVER=mariadb)."
             );
         }
-
     }
 
     public static function forbidNonSqliteConnections(Repository $config): void
