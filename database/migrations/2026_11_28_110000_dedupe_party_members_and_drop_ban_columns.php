@@ -8,7 +8,7 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    private const ROLE_PRIVILEGE = ['owner', 'moderator', 'vip', 'user', 'banned'];
+    private const array ROLE_PRIVILEGE = ['owner', 'moderator', 'vip', 'user', 'banned'];
 
     public function up(): void
     {
@@ -56,7 +56,12 @@ return new class extends Migration
                 ->sortBy(fn (object $row): int => $privilege[$row->role_id] ?? PHP_INT_MAX)
                 ->values();
 
-            $keepId = $rows->first()->id;
+            $keep = $rows->first();
+            if ($keep === null) {
+                continue;
+            }
+
+            $keepId = $keep->id;
 
             foreach ($rows->slice(1) as $loser) {
                 DB::table('ai_reviews')->where('party_member_id', $loser->id)->update(['party_member_id' => $keepId]);

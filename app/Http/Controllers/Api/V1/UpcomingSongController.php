@@ -45,7 +45,7 @@ class UpcomingSongController extends Controller
         $perPage = $params['per_page'] ?? 20;
         $currentPage = Paginator::resolveCurrentPage();
         $listing = $queue->page($party, ($currentPage - 1) * $perPage, $perPage);
-        $page = (new LengthAwarePaginator($listing['items'], $listing['total'], $perPage, $currentPage, ['path' => Paginator::resolveCurrentPath()]))->appends($params);
+        $page = new LengthAwarePaginator($listing['items'], $listing['total'], $perPage, $currentPage, ['path' => Paginator::resolveCurrentPath()])->appends($params);
         $collection = new UpcomingSongResourceCollection($page);
 
         $augmentedData = $augmentService->augmentCollection(collect($page->items()), $this->resolveAuthenticatedUser($request));

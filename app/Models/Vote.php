@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Database\Factories\VoteFactory;
+use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -32,12 +33,11 @@ use Illuminate\Support\Carbon;
  *
  * @mixin \Eloquent
  */
+#[Fillable(['upcoming_song_id', 'user_id', 'value', 'value_changed_at'])]
 class Vote extends Model
 {
     /** @use HasFactory<VoteFactory> */
     use HasFactory;
-
-    protected $fillable = ['upcoming_song_id', 'user_id', 'value', 'value_changed_at'];
 
     protected $casts = ['value_changed_at' => 'datetime'];
 

@@ -20,7 +20,7 @@ return new class extends Migration
             ->pluck('code');
 
         foreach ($duplicateCodes as $code) {
-            $newer = DB::table('parties')->where('code', $code)->orderBy('id')->pluck('id')->slice(1);
+            $newer = DB::table('parties')->where('code', $code)->orderBy('id')->offset(1)->limit(PHP_INT_MAX)->pluck('id');
 
             foreach ($newer as $id) {
                 $replacement = $generator->unused();

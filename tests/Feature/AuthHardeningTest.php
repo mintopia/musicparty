@@ -19,7 +19,7 @@ function dedupeMigration(): object
 function sessionConfigWith(?string $env, ?string $secure): array
 {
     $names = ['APP_ENV' => $env, 'SESSION_SECURE_COOKIE' => $secure];
-    $previous = array_map(fn (string $name) => getenv($name), array_keys($names));
+    $previous = array_map(getenv(...), array_keys($names));
     $apply = function (string $name, string|false|null $value): void {
         if ($value === null || $value === false) {
             putenv($name);
@@ -47,7 +47,7 @@ function sessionConfigWith(?string $env, ?string $secure): array
 it('builds urls from app.url in production even with a forged host header', function () {
     config(['app.url' => 'https://music.example.com']);
     app()['env'] = 'production';
-    (new TrustedRootUrlServiceProvider(app()))->boot();
+    new TrustedRootUrlServiceProvider(app())->boot();
 
     $this->get('http://evil.example/login', ['Host' => 'evil.example']);
 

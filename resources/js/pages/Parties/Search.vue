@@ -103,24 +103,27 @@ function annotatedTracks(): TrackAnnotation[] {
 const partyChannel = useEcho().privateChannel(`party.${props.party.code}`) as {
     listen<T>(event: string, cb: (payload: T) => void): unknown;
 };
-partyChannel.listen<{id: number; provider_track_id: string; score: number; user: string | null; user_id: number | null}>(
-    'UpcomingSong\\UpdatedEvent',
-    (payload) => {
-        const viewerId = authUser?.id ?? null;
-        annotatedTracks()
-            .filter((track) => track.id === payload.provider_track_id)
-            .forEach((track) => {
-                track.queue = {
-                    ...track.queue,
-                    in_queue: true,
-                    upcoming_id: payload.id,
-                    score: payload.score,
-                    requested_by: payload.user,
-                    requested_by_you: viewerId !== null && payload.user_id === viewerId,
-                };
-            });
-    },
-);
+partyChannel.listen<{
+    id: number;
+    provider_track_id: string;
+    score: number;
+    user: string | null;
+    user_id: number | null;
+}>('UpcomingSong\\UpdatedEvent', (payload) => {
+    const viewerId = authUser?.id ?? null;
+    annotatedTracks()
+        .filter((track) => track.id === payload.provider_track_id)
+        .forEach((track) => {
+            track.queue = {
+                ...track.queue,
+                in_queue: true,
+                upcoming_id: payload.id,
+                score: payload.score,
+                requested_by: payload.user,
+                requested_by_you: viewerId !== null && payload.user_id === viewerId,
+            };
+        });
+});
 partyChannel.listen<{id: number}>('UpcomingSong\\RemovedEvent', (payload) => {
     annotatedTracks()
         .filter((track) => track.queue.upcoming_id === payload.id)
