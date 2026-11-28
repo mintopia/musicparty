@@ -279,17 +279,38 @@ class UserController extends Controller
 
     public function destroy(DeleteRequest $request, User $user): RedirectResponse
     {
+        $blocker = $this->deletionBlocker($request, $user);
+        if ($blocker !== null) {
+            return response()->redirectToRoute('admin.users.show', $user->id)->with('errorMessage', $blocker);
+        }
+
         $user->delete();
 
         return response()->redirectToRoute('admin.users.index')->with('successMessage', 'The user has been deleted');
     }
 
-    public function delete(User $user): Response
+    protected function deletionBlocker(Request $request, User $user): ?string
+    {
+        if ($user->is($this->resolveAuthenticatedUser($request))) {
+            return 'You cannot delete your own account.';
+        }
+        if ($user->parties()->exists()) {
+            return 'This user owns parties. Transfer or delete them first.';
+        }
+        if ($user->hasRole('admin') && User::whereHas('roles', fn ($roles) => $roles->where('code', 'admin'))->count() <= 1) {
+            return 'This is the last admin and cannot be deleted.';
+        }
+
+        return null;
+    }
+
+    public function delete(Request $request, User $user): Response
     {
         $user->load(['accounts.provider']);
 
         return Inertia::render('Admin/Users/Delete', [
             'user' => ['id' => $user->id, 'nickname' => $user->nickname],
+            'blocked_reason' => $this->deletionBlocker($request, $user),
             'impact' => [
                 'accounts' => $user->accounts->map(fn (LinkedAccount $account): ?string => $account->provider?->name)->filter()->values()->all(),
                 'accounts_count' => $user->accounts->count(),

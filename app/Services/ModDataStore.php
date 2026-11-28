@@ -32,6 +32,14 @@ class ModDataStore
         $this->query($owner, $modCode)->where('key', $key)->delete();
     }
 
+    public function purge(Model $owner): void
+    {
+        ModData::query()
+            ->where('owner_type', $owner->getMorphClass())
+            ->where('owner_id', $owner->getKey())
+            ->delete();
+    }
+
     /**
      * @return array<string, mixed>
      */

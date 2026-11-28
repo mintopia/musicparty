@@ -26,6 +26,7 @@ export interface NavItem {
     title: string;
     icon: string;
     href?: string;
+    method?: 'post';
     children?: NavLink[];
 }
 
@@ -99,7 +100,7 @@ export function buildNavigation(props: NavigationProps): NavItem[] {
         items.push({key: 'admin', title: 'Admin', icon: 'ti-settings', children: adminLinks()});
     }
 
-    items.push({key: 'logout', title: 'Logout', icon: 'ti-logout', href: logout().url});
+    items.push({key: 'logout', title: 'Logout', icon: 'ti-logout', href: logout().url, method: 'post'});
 
     return items;
 }
