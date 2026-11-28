@@ -29,6 +29,16 @@ final readonly class PlaybackState
         return new self($this->isPlaying, $this->trackId, $this->linkedFromId, $this->durationMs, $this->progressMs, $this->sampledAt, $this->shuffle, $this->repeat, $this->deviceId, $this->deviceName, $source, $this->upcomingTrackIds, $this->connectionStatus, $this->contextUri);
     }
 
+    public function differsOnlyInProgress(self $other): bool
+    {
+        return $this->withProgress($other->progressMs, $other->sampledAt) == $other;
+    }
+
+    public function withProgress(int $progressMs, CarbonImmutable $sampledAt): self
+    {
+        return new self($this->isPlaying, $this->trackId, $this->linkedFromId, $this->durationMs, $progressMs, $sampledAt, $this->shuffle, $this->repeat, $this->deviceId, $this->deviceName, $this->source, $this->upcomingTrackIds, $this->connectionStatus, $this->contextUri);
+    }
+
     public static function idle(PlaybackSource $source): self
     {
         return new self(false, null, null, null, 0, CarbonImmutable::now(), false, 'off', null, null, $source);

@@ -31,6 +31,8 @@ class PlaybackSync
 
     private const int RECEIVED_ORDER_SECONDS = 300;
 
+    private const int PROGRESS_HEARTBEAT_SECONDS = 5;
+
     public function __construct(
         protected MusicProviderFactory $providers,
         protected QueueSelector $selector,
@@ -55,6 +57,7 @@ class PlaybackSync
                 return;
             }
 
+            $progressOnly = false;
             try {
                 if ($this->providers->partyNeedsRelink($party)) {
                     Log::debug("{$party}: Provider needs re-linking, skipping update");
@@ -64,10 +67,11 @@ class PlaybackSync
 
                 $provider = $this->providers->forParty($party, Purpose::Control);
                 $playback = $this->forcePlayback($party, $provider, $provider->currentPlayback());
-                $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
+                $progressOnly = $this->applyState($party, $provider, $playback?->withSource($source) ?? PlaybackState::idle($source));
             } finally {
-                $party->last_updated_at = now();
-                $party->save();
+                if (! $progressOnly) {
+                    $this->touchLastUpdated($party);
+                }
             }
         });
     }
@@ -193,16 +197,32 @@ class PlaybackSync
         $state = (array) $party->getState();
         unset($state['updated_at']);
         $status = (array) $state['status'];
-        unset($status['updatedAt']);
+        unset($status['updatedAt'], $status['sampledAt'], $status['progress'], $status['progressMs']);
         $state['status'] = $status;
 
         return json_encode($state, JSON_THROW_ON_ERROR);
     }
 
-    protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): void
+    /**
+     * Returns true when only progress changed, in which case nothing is persisted or broadcast.
+     */
+    protected function applyState(Party $party, MusicProvider&ProviderPlayback $provider, PlaybackState $state): bool
     {
-        PartyDashboardCache::forget($party);
+        $previous = $this->status->recall($party);
+        $progressOnly = $previous !== null
+            && $previous->differsOnlyInProgress($state)
+            && $party->playback_received_at !== null
+            && $party->playback_received_at->greaterThan(now()->subSeconds(self::PROGRESS_HEARTBEAT_SECONDS));
         $this->status->remember($party, $state);
+        if ($progressOnly) {
+            if ($party->active) {
+                $this->selector->run($party);
+            }
+
+            return true;
+        }
+
+        PartyDashboardCache::forget($party);
         $party->playback_source = $state->source;
         $party->playback_received_at = $state->connectionStatus === null || $state->connectionStatus === PlaybackConnectionStatus::Connected ? now() : null;
         $party->playback_sampled_at = Carbon::instance($state->sampledAt);
@@ -213,17 +233,24 @@ class PlaybackSync
             $this->updateCurrentTrack($party, $provider, $state);
             $party->save();
 
-            return;
+            return false;
         }
 
         try {
             $this->updateCurrentTrack($party, $provider, $state);
             $this->selector->run($party);
         } finally {
-            $party->last_updated_at = now();
-            $party->save();
+            $this->touchLastUpdated($party);
         }
         Log::info("{$party}: Finished updating state");
+
+        return false;
+    }
+
+    protected function touchLastUpdated(Party $party): void
+    {
+        $party->last_updated_at = now();
+        $party->save();
     }
 
     protected function updateCurrentTrack(Party $party, MusicProvider $provider, PlaybackState $state): void

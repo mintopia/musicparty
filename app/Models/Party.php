@@ -281,7 +281,7 @@ class Party extends Model
     public function getState(): object
     {
         $next = $this->next();
-        $current = $this->history()->orderBy('played_at', 'desc')->first();
+        $current = $this->current();
 
         return (object) [
             'code' => $this->code,
