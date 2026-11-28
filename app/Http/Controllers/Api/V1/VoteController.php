@@ -13,19 +13,23 @@ class VoteController extends Controller
 {
     public function store(VoteRequest $request, Party $party, UpcomingSong $upcomingsong): UpcomingSongResource
     {
+        $user = $this->resolveAuthenticatedUser($request);
+        abort_unless($party->canParticipate($user), 403);
+
         try {
             if ($request->input('vote') < 0) {
-                $vote = $upcomingsong->downvote($this->resolveAuthenticatedUser($request));
+                $vote = $upcomingsong->downvote($user);
+                abort_if($vote === null, 403, 'Downvotes are disabled for this party');
             } elseif ($request->input('vote') > 0) {
-                $vote = $upcomingsong->upvote($this->resolveAuthenticatedUser($request));
+                $vote = $upcomingsong->upvote($user);
             } else {
-                $vote = $this->resolveAuthenticatedUser($request)->votes()->whereUpcomingSongId($upcomingsong->id)->first();
+                $vote = $user->votes()->whereUpcomingSongId($upcomingsong->id)->first();
                 if ($vote) {
                     $vote->delete();
                     $vote = null;
                 }
             }
-            $resource = new UpcomingSongResource($upcomingsong);
+            $resource = new UpcomingSongResource($upcomingsong->refresh());
             $resource->augment((object) [
                 'vote' => $vote,
             ]);

@@ -12,12 +12,14 @@ class SongRatingController extends Controller
 {
     public function store(SongRatingRequest $request, Party $party, PlayedSong $playedsong): PlayedSongResource
     {
+        $user = $this->resolveAuthenticatedUser($request);
+        abort_unless($party->canParticipate($user), 403);
         $current = $playedsong->party->current();
         if ($current === null || ! $current->is($playedsong)) {
             abort(400);
         }
-        $rating = $playedsong->setRating($this->resolveAuthenticatedUser($request), $request->integer('rating'));
-        $resource = new PlayedSongResource($playedsong);
+        $rating = $playedsong->setRating($user, $request->integer('rating'));
+        $resource = new PlayedSongResource($playedsong->refresh());
         $resource->augment((object) [
             'rating' => $rating,
         ]);
