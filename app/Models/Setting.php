@@ -66,36 +66,43 @@ class Setting extends Model implements Sortable
         'type' => SettingType::class,
     ];
 
+    public const MISSING = '__missing__';
+
+    public const MISSING_TTL = 3600;
+
+    public static function flushRequestCache(): void
+    {
+        static::$cached = [];
+    }
+
     public static function fetch(string $code, mixed $default = null): mixed
     {
-        if (isset(static::$cached[$code])) {
-            return static::$cached[$code];
+        if (! array_key_exists($code, static::$cached)) {
+            static::$cached[$code] = static::loadFromStore($code);
         }
+
+        return static::$cached[$code] ?? $default;
+    }
+
+    protected static function loadFromStore(string $code): mixed
+    {
         $key = "settings.{$code}";
-        if ($setting = Cache::get($key)) {
-            if ($setting->value === null) {
-                return $default;
+        $payload = Cache::get($key);
+        if ($payload === null) {
+            $setting = Setting::whereCode($code)->first();
+            if ($setting === null) {
+                Cache::put($key, self::MISSING, self::MISSING_TTL);
+
+                return null;
             }
-            if ($setting->encrypted) {
-                static::$cached[$code] = $setting->value;
-
-                return Crypt::decrypt($setting->value);
-            }
-            static::$cached[$code] = $setting->value;
-
-            return $setting->value;
+            $payload = $setting->getValue();
+            Cache::put($key, $payload);
         }
-        $setting = Setting::whereCode($code)->first();
-        if ($setting === null) {
-            Cache::put($key, $setting);
-            static::$cached[$code] = null;
-
-            return $default;
+        if ($payload === self::MISSING || $payload->value === null) {
+            return null;
         }
-        Cache::put($key, $setting->getValue());
-        static::$cached[$code] = $setting->value;
 
-        return $setting->value ?? $default;
+        return $payload->encrypted ? Crypt::decrypt($payload->value) : $payload->value;
     }
 
     public function clearCache(): void
